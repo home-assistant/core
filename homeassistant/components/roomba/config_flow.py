@@ -2,7 +2,7 @@
 
 import asyncio
 
-from roombapy import Roomba
+from roombapy import RoombaFactory
 from roombapy.discovery import RoombaDiscovery
 from roombapy.getpassword import RoombaPassword
 import voluptuous as vol
@@ -40,7 +40,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    roomba = Roomba(
+    roomba = RoombaFactory.create_roomba(
         address=data[CONF_HOST],
         blid=data[CONF_BLID],
         password=data[CONF_PASSWORD],
@@ -78,16 +78,16 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_dhcp(self, dhcp_discovery):
+    async def async_step_dhcp(self, discovery_info):
         """Handle dhcp discovery."""
-        if self._async_host_already_configured(dhcp_discovery[IP_ADDRESS]):
+        if self._async_host_already_configured(discovery_info[IP_ADDRESS]):
             return self.async_abort(reason="already_configured")
 
-        if not dhcp_discovery[HOSTNAME].startswith(("irobot-", "roomba-")):
+        if not discovery_info[HOSTNAME].startswith(("irobot-", "roomba-")):
             return self.async_abort(reason="not_irobot_device")
 
-        self.host = dhcp_discovery[IP_ADDRESS]
-        self.blid = _async_blid_from_hostname(dhcp_discovery[HOSTNAME])
+        self.host = discovery_info[IP_ADDRESS]
+        self.blid = _async_blid_from_hostname(discovery_info[HOSTNAME])
         await self.async_set_unique_id(self.blid)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
 
@@ -328,9 +328,8 @@ async def _async_discover_roombas(hass, host):
             discovery = _async_get_roomba_discovery()
             try:
                 if host:
-                    discovered = [
-                        await hass.async_add_executor_job(discovery.get, host)
-                    ]
+                    device = await hass.async_add_executor_job(discovery.get, host)
+                    discovered = [device] if device else []
                 else:
                     discovered = await hass.async_add_executor_job(discovery.get_all)
             except OSError:

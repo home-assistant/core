@@ -8,13 +8,19 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_FRIENDLY_NAME, CONF_NAME
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_FRIENDLY_NAME,
+    CONF_NAME,
+    DEVICE_CLASS_TIMESTAMP,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util.dt import as_utc
 
 from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DATA_COORDINATOR, DOMAIN, LOGGER
 
@@ -25,7 +31,6 @@ ATTR_NEXT_PICKUP_DATE = "next_pickup_date"
 
 DEFAULT_ATTRIBUTION = "Pickup data provided by ReCollect Waste"
 DEFAULT_NAME = "recollect_waste"
-DEFAULT_ICON = "mdi:trash-can-outline"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -88,14 +93,14 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
         self._state = None
 
     @property
+    def device_class(self) -> dict:
+        """Return the device class."""
+        return DEVICE_CLASS_TIMESTAMP
+
+    @property
     def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return self._attributes
-
-    @property
-    def icon(self) -> str:
-        """Icon to use in the frontend."""
-        return DEFAULT_ICON
 
     @property
     def name(self) -> str:
@@ -128,9 +133,8 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
         """Update the state."""
         pickup_event = self.coordinator.data[0]
         next_pickup_event = self.coordinator.data[1]
-        next_date = str(next_pickup_event.date)
 
-        self._state = pickup_event.date
+        self._state = as_utc(pickup_event.date).isoformat()
         self._attributes.update(
             {
                 ATTR_PICKUP_TYPES: async_get_pickup_type_names(
@@ -140,6 +144,6 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
                 ATTR_NEXT_PICKUP_TYPES: async_get_pickup_type_names(
                     self._entry, next_pickup_event.pickup_types
                 ),
-                ATTR_NEXT_PICKUP_DATE: next_date,
+                ATTR_NEXT_PICKUP_DATE: as_utc(next_pickup_event.date).isoformat(),
             }
         )

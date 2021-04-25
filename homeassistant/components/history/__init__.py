@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Iterable
 from datetime import datetime as dt, timedelta
 from itertools import groupby
 import json
 import logging
 import time
-from typing import Iterable, cast
+from typing import cast
 
 from aiohttp import web
 from sqlalchemy import and_, bindparam, func, not_, or_
@@ -715,7 +716,7 @@ class LazyState(State):
                 self._attributes = json.loads(self._row.attributes)
             except ValueError:
                 # When json.loads fails
-                _LOGGER.exception("Error converting row to state: %s", self)
+                _LOGGER.exception("Error converting row to state: %s", self._row)
                 self._attributes = {}
         return self._attributes
 

@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/agent_dvr/",
   "requirements": ["agent-py==0.0.23"],
   "config_flow": true,
-  "codeowners": ["@ispysoftware"]
+  "codeowners": ["@ispysoftware"],
+  "iot_class": "local_polling"
 }

@@ -9,9 +9,12 @@ from homeassistant.components.climate.const import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    CURRENT_HVAC_COOL,
     CURRENT_HVAC_IDLE,
     DOMAIN as CLIMATE_DOMAIN,
     HVAC_MODE_COOL,
@@ -348,7 +351,10 @@ async def test_thermostat_different_endpoints(
     """Test an entity with values on a different endpoint from the primary value."""
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
 
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.8
+    assert state.attributes[ATTR_FAN_MODE] == "Auto low"
+    assert state.attributes[ATTR_FAN_STATE] == "Idle / off"
+    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
 
 
 async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integration):
@@ -444,6 +450,8 @@ async def test_thermostat_heatit(hass, client, climate_heatit_z_trm3, integratio
     assert state.attributes[ATTR_TEMPERATURE] == 22.5
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TARGET_TEMPERATURE
+    assert state.attributes[ATTR_MIN_TEMP] == 5
+    assert state.attributes[ATTR_MAX_TEMP] == 35
 
 
 async def test_thermostat_srt321_hrt4_zw(hass, client, srt321_hrt4_zw, integration):

@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 import voluptuous as vol
+from zigpy.config.validators import cv_boolean
 from zigpy.types.named import EUI64
 import zigpy.zdo.types as zdo_types
 
@@ -40,6 +41,7 @@ from .core.const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
+    CUSTOM_CONFIGURATION,
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
     DOMAIN,
@@ -52,6 +54,7 @@ from .core.const import (
     WARNING_DEVICE_SQUAWK_MODE_ARMED,
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
+    ZHA_CONFIG_SCHEMAS,
 )
 from .core.group import GroupMember
 from .core.helpers import (
@@ -882,6 +885,63 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
         zdo.debug(fmt, *(log_msg[2] + (outcome,)))
 
 
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command({vol.Required(TYPE): "zha/configuration"})
+async def websocket_get_configuration(hass, connection, msg):
+    """Get ZHA configuration."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    import voluptuous_serialize  # pylint: disable=import-outside-toplevel
+
+    def custom_serializer(schema: Any) -> Any:
+        """Serialize additional types for voluptuous_serialize."""
+        if schema is cv_boolean:
+            return {"type": "bool"}
+        if schema is vol.Schema:
+            return voluptuous_serialize.convert(
+                schema, custom_serializer=custom_serializer
+            )
+
+        return cv.custom_serializer(schema)
+
+    data = {"schemas": {}, "data": {}}
+    for section, schema in ZHA_CONFIG_SCHEMAS.items():
+        data["schemas"][section] = voluptuous_serialize.convert(
+            schema, custom_serializer=custom_serializer
+        )
+        data["data"][section] = zha_gateway.config_entry.options.get(
+            CUSTOM_CONFIGURATION, {}
+        ).get(section, {})
+    connection.send_result(msg[ID], data)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/configuration/update",
+        vol.Required("data"): ZHA_CONFIG_SCHEMAS,
+    }
+)
+async def websocket_update_zha_configuration(hass, connection, msg):
+    """Update the ZHA configuration."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    options = zha_gateway.config_entry.options
+    data_to_save = {**options, **{CUSTOM_CONFIGURATION: msg["data"]}}
+
+    _LOGGER.info(
+        "Updating ZHA custom configuration options from %s to %s",
+        options,
+        data_to_save,
+    )
+
+    hass.config_entries.async_update_entry(
+        zha_gateway.config_entry, options=data_to_save
+    )
+    status = await hass.config_entries.async_reload(zha_gateway.config_entry.entry_id)
+    connection.send_result(msg[ID], status)
+
+
 @callback
 def async_load_api(hass):
     """Set up the web socket API."""
@@ -1189,6 +1249,8 @@ def async_load_api(hass):
     websocket_api.async_register_command(hass, websocket_bind_devices)
     websocket_api.async_register_command(hass, websocket_unbind_devices)
     websocket_api.async_register_command(hass, websocket_update_topology)
+    websocket_api.async_register_command(hass, websocket_get_configuration)
+    websocket_api.async_register_command(hass, websocket_update_zha_configuration)
 
 
 @callback

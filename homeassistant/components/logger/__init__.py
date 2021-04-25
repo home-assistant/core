@@ -114,7 +114,7 @@ def _add_log_filter(logger, patterns):
     """Add a Filter to the logger based on a regexp of the filter_str."""
 
     def filter_func(logrecord):
-        return not any(p.match(logrecord.getMessage()) for p in patterns)
+        return not any(p.search(logrecord.getMessage()) for p in patterns)
 
     logger.addFilter(filter_func)
 

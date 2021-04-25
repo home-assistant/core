@@ -495,7 +495,7 @@ async def test_poll_value(
     assert args["valueId"] == {
         "commandClassName": "Thermostat Mode",
         "commandClass": 64,
-        "endpoint": 0,
+        "endpoint": 1,
         "property": "mode",
         "propertyName": "mode",
         "metadata": {
@@ -503,19 +503,16 @@ async def test_poll_value(
             "readable": True,
             "writeable": True,
             "min": 0,
-            "max": 31,
+            "max": 255,
             "label": "Thermostat mode",
             "states": {
                 "0": "Off",
                 "1": "Heat",
                 "2": "Cool",
-                "3": "Auto",
-                "11": "Energy heat",
-                "12": "Energy cool",
             },
         },
-        "value": 1,
-        "ccVersion": 2,
+        "value": 2,
+        "ccVersion": 0,
     }
 
     client.async_send_command.reset_mock()

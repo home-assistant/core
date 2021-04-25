@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
@@ -30,7 +30,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import verify_domain_control
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,7 +96,7 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Create a Genius Hub system."""
     hass.data[DOMAIN] = {}
 
@@ -129,7 +129,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 
 @callback
-def setup_service_functions(hass: HomeAssistantType, broker):
+def setup_service_functions(hass: HomeAssistant, broker):
     """Set up the service functions."""
 
     @verify_domain_control(hass, DOMAIN)

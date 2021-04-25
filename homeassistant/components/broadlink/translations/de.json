@@ -25,7 +25,8 @@
             },
             "user": {
                 "data": {
-                    "host": "Host"
+                    "host": "Host",
+                    "timeout": "Zeit\u00fcberschreitung"
                 }
             }
         }

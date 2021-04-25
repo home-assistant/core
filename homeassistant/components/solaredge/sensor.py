@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Iterable
 from datetime import date, datetime, timedelta
 import logging
-from typing import Any, Callable, Iterable
+from typing import Any, Callable
 
 from requests.exceptions import ConnectTimeout, HTTPError
 from solaredge import Solaredge
@@ -153,7 +154,7 @@ class SolarEdgeSensor(CoordinatorEntity, SensorEntity):
     @property
     def name(self) -> str:
         """Return the name."""
-        return "{} ({})".format(self.platform_name, SENSOR_TYPES[self.sensor_key][1])
+        return f"{self.platform_name} ({SENSOR_TYPES[self.sensor_key][1]})"
 
     @property
     def icon(self) -> str | None:

@@ -5,17 +5,18 @@ from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
-    CONF_BINARY_SENSORS,
     CONF_INPUT_TYPE,
     CONF_INPUTS,
 )
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_BINARY_SENSORS,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_SLAVE,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 
 from .conftest import base_config_test, base_test
@@ -75,6 +76,10 @@ async def test_config_binary_sensor(hass, do_discovery, do_options):
         (
             [0xFE],
             STATE_OFF,
+        ),
+        (
+            None,
+            STATE_UNAVAILABLE,
         ),
     ],
 )

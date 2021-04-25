@@ -8,7 +8,8 @@ import pytest
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 from .common import async_recorder_block_till_done
 
@@ -45,7 +46,7 @@ async def async_setup_recorder_instance() -> AsyncGenerator[
     """Yield callable to setup recorder instance."""
 
     async def async_setup_recorder(
-        hass: HomeAssistantType, config: ConfigType | None = None
+        hass: HomeAssistant, config: ConfigType | None = None
     ) -> Recorder:
         """Setup and return recorder instance."""  # noqa: D401
         await async_init_recorder_component(hass, config)

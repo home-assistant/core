@@ -25,13 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [DOMAIN_BINARY_SENSOR, DOMAIN_SWITCH]
 
 
-async def async_setup(hass: HomeAssistant, config):
-    """Set up the Goal Zero Yeti component."""
-    hass.data[DOMAIN] = {}
-
-    return True
-
-
 async def async_setup_entry(hass, entry):
     """Set up Goal Zero Yeti from a config entry."""
     name = entry.data[CONF_NAME]
@@ -59,6 +52,7 @@ async def async_setup_entry(hass, entry):
         update_method=async_update_data,
         update_interval=MIN_TIME_BETWEEN_UPDATES,
     )
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_KEY_API: api,
         DATA_KEY_COORDINATOR: coordinator,

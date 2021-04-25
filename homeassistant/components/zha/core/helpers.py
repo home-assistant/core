@@ -8,13 +8,14 @@ from __future__ import annotations
 
 import asyncio
 import binascii
+from collections.abc import Iterator
 from dataclasses import dataclass
 import functools
 import itertools
 import logging
 from random import uniform
 import re
-from typing import Any, Callable, Iterator
+from typing import Any, Callable
 
 import voluptuous as vol
 import zigpy.exceptions
@@ -24,7 +25,14 @@ import zigpy.zdo.types as zdo_types
 
 from homeassistant.core import State, callback
 
-from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, DATA_ZHA, DATA_ZHA_GATEWAY
+from .const import (
+    CLUSTER_TYPE_IN,
+    CLUSTER_TYPE_OUT,
+    CUSTOM_CONFIGURATION,
+    DATA_ZHA,
+    DATA_ZHA_GATEWAY,
+    ZHA_OPTIONS,
+)
 from .registries import BINDABLE_CLUSTERS
 from .typing import ZhaDeviceType, ZigpyClusterType
 
@@ -120,6 +128,16 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
             if any(bindable in BINDABLE_CLUSTERS for bindable in matches):
                 return True
     return False
+
+
+@callback
+def async_get_zha_config_value(config_entry, config_key, default):
+    """Get the value for the specified configuration from the zha config entry."""
+    return (
+        config_entry.options.get(CUSTOM_CONFIGURATION, {})
+        .get(ZHA_OPTIONS, {})
+        .get(config_key, default)
+    )
 
 
 async def async_get_zha_device(hass, device_id):

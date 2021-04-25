@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Callable, Iterable
+from collections.abc import Iterable
+from typing import Any, Callable
 
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
@@ -112,7 +113,7 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
         self._state = ALARM_STATE_TO_HA.get(
             self.coordinator.data["alarm"]["statusType"]
         )
-        self._changed_by = self.coordinator.data["alarm"]["name"]
+        self._changed_by = self.coordinator.data["alarm"].get("name")
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:

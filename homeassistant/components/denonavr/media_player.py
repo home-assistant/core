@@ -1,8 +1,23 @@
 """Support for Denon AVR receivers using their HTTP interface."""
+from __future__ import annotations
 
-from contextlib import suppress
+from collections.abc import Coroutine
+from datetime import timedelta
+from functools import wraps
 import logging
 
+from denonavr import DenonAVR
+from denonavr.const import POWER_ON
+from denonavr.exceptions import (
+    AvrCommandError,
+    AvrForbiddenError,
+    AvrNetworkError,
+    AvrTimoutError,
+    DenonAvrError,
+)
+import voluptuous as vol
+
+from homeassistant import config_entries
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
@@ -20,18 +35,9 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_MAC,
-    ENTITY_MATCH_ALL,
-    ENTITY_MATCH_NONE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.const import ATTR_COMMAND, STATE_PAUSED, STATE_PLAYING
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_platform
 
 from . import CONF_RECEIVER
 from .config_flow import (
@@ -39,12 +45,15 @@ from .config_flow import (
     CONF_MODEL,
     CONF_SERIAL_NUMBER,
     CONF_TYPE,
+    CONF_UPDATE_AUDYSSEY,
+    DEFAULT_UPDATE_AUDYSSEY,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOUND_MODE_RAW = "sound_mode_raw"
+ATTR_DYNAMIC_EQ = "dynamic_eq"
 
 SUPPORT_DENON = (
     SUPPORT_VOLUME_STEP
@@ -64,102 +73,160 @@ SUPPORT_MEDIA_MODES = (
     | SUPPORT_PLAY
 )
 
+SCAN_INTERVAL = timedelta(seconds=10)
+PARALLEL_UPDATES = 1
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+# Services
+SERVICE_GET_COMMAND = "get_command"
+SERVICE_SET_DYNAMIC_EQ = "set_dynamic_eq"
+SERVICE_UPDATE_AUDYSSEY = "update_audyssey"
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: config_entries.ConfigEntry,
+    async_add_entities: entity_platform.EntityPlatform.async_add_entities,
+):
     """Set up the DenonAVR receiver from a config entry."""
     entities = []
-    receiver = hass.data[DOMAIN][config_entry.entry_id][CONF_RECEIVER]
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    receiver = data[CONF_RECEIVER]
+    update_audyssey = data.get(CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY)
     for receiver_zone in receiver.zones.values():
         if config_entry.data[CONF_SERIAL_NUMBER] is not None:
             unique_id = f"{config_entry.unique_id}-{receiver_zone.zone}"
         else:
-            unique_id = None
-        entities.append(DenonDevice(receiver_zone, unique_id, config_entry))
+            unique_id = f"{config_entry.entry_id}-{receiver_zone.zone}"
+        await receiver_zone.async_setup()
+        entities.append(
+            DenonDevice(
+                receiver_zone,
+                unique_id,
+                config_entry,
+                update_audyssey,
+            )
+        )
     _LOGGER.debug(
         "%s receiver at host %s initialized", receiver.manufacturer, receiver.host
     )
-    async_add_entities(entities)
+
+    # Register additional services
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_GET_COMMAND,
+        {vol.Required(ATTR_COMMAND): cv.string},
+        f"async_{SERVICE_GET_COMMAND}",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_DYNAMIC_EQ,
+        {vol.Required(ATTR_DYNAMIC_EQ): cv.boolean},
+        f"async_{SERVICE_SET_DYNAMIC_EQ}",
+    )
+    platform.async_register_entity_service(
+        SERVICE_UPDATE_AUDYSSEY,
+        {},
+        f"async_{SERVICE_UPDATE_AUDYSSEY}",
+    )
+
+    async_add_entities(entities, update_before_add=True)
 
 
 class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon Media Player Device."""
 
-    def __init__(self, receiver, unique_id, config_entry):
+    def __init__(
+        self,
+        receiver: DenonAVR,
+        unique_id: str,
+        config_entry: config_entries.ConfigEntry,
+        update_audyssey: bool,
+    ):
         """Initialize the device."""
         self._receiver = receiver
-        self._name = self._receiver.name
         self._unique_id = unique_id
         self._config_entry = config_entry
-        self._muted = self._receiver.muted
-        self._volume = self._receiver.volume
-        self._current_source = self._receiver.input_func
-        self._source_list = self._receiver.input_func_list
-        self._state = self._receiver.state
-        self._power = self._receiver.power
-        self._media_image_url = self._receiver.image_url
-        self._title = self._receiver.title
-        self._artist = self._receiver.artist
-        self._album = self._receiver.album
-        self._band = self._receiver.band
-        self._frequency = self._receiver.frequency
-        self._station = self._receiver.station
-
-        self._sound_mode_support = self._receiver.support_sound_mode
-        if self._sound_mode_support:
-            self._sound_mode = self._receiver.sound_mode
-            self._sound_mode_raw = self._receiver.sound_mode_raw
-            self._sound_mode_list = self._receiver.sound_mode_list
-        else:
-            self._sound_mode = None
-            self._sound_mode_raw = None
-            self._sound_mode_list = None
+        self._update_audyssey = update_audyssey
 
         self._supported_features_base = SUPPORT_DENON
         self._supported_features_base |= (
-            self._sound_mode_support and SUPPORT_SELECT_SOUND_MODE
+            self._receiver.support_sound_mode and SUPPORT_SELECT_SOUND_MODE
         )
+        self._available = True
 
-    async def async_added_to_hass(self):
-        """Register signal handler."""
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, DOMAIN, self.signal_handler)
-        )
+    def async_log_errors(
+        func: Coroutine,
+    ) -> Coroutine:
+        """
+        Log errors occurred when calling a Denon AVR receiver.
 
-    def signal_handler(self, data):
-        """Handle domain-specific signal by calling appropriate method."""
-        entity_ids = data[ATTR_ENTITY_ID]
+        Decorates methods of DenonDevice class.
+        Declaration of staticmethod for this method is at the end of this class.
+        """
 
-        if entity_ids == ENTITY_MATCH_NONE:
-            return
+        @wraps(func)
+        async def wrapper(self, *args, **kwargs):
+            # pylint: disable=protected-access
+            available = True
+            try:
+                return await func(self, *args, **kwargs)
+            except AvrTimoutError:
+                available = False
+                if self._available is True:
+                    _LOGGER.warning(
+                        "Timeout connecting to Denon AVR receiver at host %s. Device is unavailable",
+                        self._receiver.host,
+                    )
+                    self._available = False
+            except AvrNetworkError:
+                available = False
+                if self._available is True:
+                    _LOGGER.warning(
+                        "Network error connecting to Denon AVR receiver at host %s. Device is unavailable",
+                        self._receiver.host,
+                    )
+                    self._available = False
+            except AvrForbiddenError:
+                available = False
+                if self._available is True:
+                    _LOGGER.warning(
+                        "Denon AVR receiver at host %s responded with HTTP 403 error. Device is unavailable. Please consider power cycling your receiver",
+                        self._receiver.host,
+                    )
+                    self._available = False
+            except AvrCommandError as err:
+                _LOGGER.error(
+                    "Command %s failed with error: %s",
+                    func.__name__,
+                    err,
+                )
+            except DenonAvrError as err:
+                _LOGGER.error(
+                    "Error %s occurred in method %s for Denon AVR receiver",
+                    err,
+                    func.__name__,
+                    exc_info=True,
+                )
+            finally:
+                if available is True and self._available is False:
+                    _LOGGER.info(
+                        "Denon AVR receiver at host %s is available again",
+                        self._receiver.host,
+                    )
+                    self._available = True
 
-        if entity_ids == ENTITY_MATCH_ALL or self.entity_id in entity_ids:
-            params = {
-                key: value
-                for key, value in data.items()
-                if key not in ["entity_id", "method"]
-            }
-            getattr(self, data["method"])(**params)
+        return wrapper
 
-    def update(self):
+    @async_log_errors
+    async def async_update(self) -> None:
         """Get the latest status information from device."""
-        self._receiver.update()
-        self._name = self._receiver.name
-        self._muted = self._receiver.muted
-        self._volume = self._receiver.volume
-        self._current_source = self._receiver.input_func
-        self._source_list = self._receiver.input_func_list
-        self._state = self._receiver.state
-        self._power = self._receiver.power
-        self._media_image_url = self._receiver.image_url
-        self._title = self._receiver.title
-        self._artist = self._receiver.artist
-        self._album = self._receiver.album
-        self._band = self._receiver.band
-        self._frequency = self._receiver.frequency
-        self._station = self._receiver.station
-        if self._sound_mode_support:
-            self._sound_mode = self._receiver.sound_mode
-            self._sound_mode_raw = self._receiver.sound_mode_raw
+        await self._receiver.async_update()
+        if self._update_audyssey:
+            await self._receiver.async_update_audyssey()
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
 
     @property
     def unique_id(self):
@@ -177,60 +244,59 @@ class DenonDevice(MediaPlayerEntity):
             "manufacturer": self._config_entry.data[CONF_MANUFACTURER],
             "name": self._config_entry.title,
             "model": f"{self._config_entry.data[CONF_MODEL]}-{self._config_entry.data[CONF_TYPE]}",
+            "serial_number": self._config_entry.data[CONF_SERIAL_NUMBER],
         }
-        if self._config_entry.data[CONF_MAC] is not None:
-            device_info["connections"] = {
-                (dr.CONNECTION_NETWORK_MAC, self._config_entry.data[CONF_MAC])
-            }
 
         return device_info
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self._name
+        return self._receiver.name
 
     @property
     def state(self):
         """Return the state of the device."""
-        return self._state
+        return self._receiver.state
 
     @property
     def is_volume_muted(self):
         """Return boolean if volume is currently muted."""
-        return self._muted
+        return self._receiver.muted
 
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
         # Volume is sent in a format like -50.0. Minimum is -80.0,
         # maximum is 18.0
-        return (float(self._volume) + 80) / 100
+        if self._receiver.volume is None:
+            return None
+        return (float(self._receiver.volume) + 80) / 100
 
     @property
     def source(self):
         """Return the current input source."""
-        return self._current_source
+        return self._receiver.input_func
 
     @property
     def source_list(self):
         """Return a list of available input sources."""
-        return self._source_list
+        return self._receiver.input_func_list
 
     @property
     def sound_mode(self):
         """Return the current matched sound mode."""
-        return self._sound_mode
+        return self._receiver.sound_mode
 
     @property
     def sound_mode_list(self):
         """Return a list of available sound modes."""
-        return self._sound_mode_list
+        return self._receiver.sound_mode_list
 
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        if self._current_source in self._receiver.netaudio_func_list:
+        if self._receiver.input_func in self._receiver.netaudio_func_list:
             return self._supported_features_base | SUPPORT_MEDIA_MODES
         return self._supported_features_base
 
@@ -242,7 +308,10 @@ class DenonDevice(MediaPlayerEntity):
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        if self._state == STATE_PLAYING or self._state == STATE_PAUSED:
+        if (
+            self._receiver.state == STATE_PLAYING
+            or self._receiver.state == STATE_PAUSED
+        ):
             return MEDIA_TYPE_MUSIC
         return MEDIA_TYPE_CHANNEL
 
@@ -254,32 +323,32 @@ class DenonDevice(MediaPlayerEntity):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        if self._current_source in self._receiver.playing_func_list:
-            return self._media_image_url
+        if self._receiver.input_func in self._receiver.playing_func_list:
+            return self._receiver.image_url
         return None
 
     @property
     def media_title(self):
         """Title of current playing media."""
-        if self._current_source not in self._receiver.playing_func_list:
-            return self._current_source
-        if self._title is not None:
-            return self._title
-        return self._frequency
+        if self._receiver.input_func not in self._receiver.playing_func_list:
+            return self._receiver.input_func
+        if self._receiver.title is not None:
+            return self._receiver.title
+        return self._receiver.frequency
 
     @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
-        if self._artist is not None:
-            return self._artist
-        return self._band
+        if self._receiver.artist is not None:
+            return self._receiver.artist
+        return self._receiver.band
 
     @property
     def media_album_name(self):
         """Album name of current playing media, music track only."""
-        if self._album is not None:
-            return self._album
-        return self._station
+        if self._receiver.album is not None:
+            return self._receiver.album
+        return self._receiver.station
 
     @property
     def media_album_artist(self):
@@ -309,78 +378,119 @@ class DenonDevice(MediaPlayerEntity):
     @property
     def extra_state_attributes(self):
         """Return device specific state attributes."""
+        if self._receiver.power != POWER_ON:
+            return {}
+        state_attributes = {}
         if (
-            self._sound_mode_raw is not None
-            and self._sound_mode_support
-            and self._power == "ON"
+            self._receiver.sound_mode_raw is not None
+            and self._receiver.support_sound_mode
         ):
-            return {ATTR_SOUND_MODE_RAW: self._sound_mode_raw}
-        return {}
+            state_attributes[ATTR_SOUND_MODE_RAW] = self._receiver.sound_mode_raw
+        if self._receiver.dynamic_eq is not None:
+            state_attributes[ATTR_DYNAMIC_EQ] = self._receiver.dynamic_eq
+        return state_attributes
 
-    def media_play_pause(self):
+    @property
+    def dynamic_eq(self):
+        """Status of DynamicEQ."""
+        return self._receiver.dynamic_eq
+
+    @async_log_errors
+    async def async_media_play_pause(self):
         """Play or pause the media player."""
-        return self._receiver.toggle_play_pause()
+        await self._receiver.async_toggle_play_pause()
 
-    def media_play(self):
+    @async_log_errors
+    async def async_media_play(self):
         """Send play command."""
-        return self._receiver.play()
+        await self._receiver.async_play()
 
-    def media_pause(self):
+    @async_log_errors
+    async def async_media_pause(self):
         """Send pause command."""
-        return self._receiver.pause()
+        await self._receiver.async_pause()
 
-    def media_previous_track(self):
+    @async_log_errors
+    async def async_media_previous_track(self):
         """Send previous track command."""
-        return self._receiver.previous_track()
+        await self._receiver.async_previous_track()
 
-    def media_next_track(self):
+    @async_log_errors
+    async def async_media_next_track(self):
         """Send next track command."""
-        return self._receiver.next_track()
+        await self._receiver.async_next_track()
 
-    def select_source(self, source):
+    @async_log_errors
+    async def async_select_source(self, source: str):
         """Select input source."""
         # Ensure that the AVR is turned on, which is necessary for input
         # switch to work.
-        self.turn_on()
-        return self._receiver.set_input_func(source)
+        await self.async_turn_on()
+        await self._receiver.async_set_input_func(source)
 
-    def select_sound_mode(self, sound_mode):
+    @async_log_errors
+    async def async_select_sound_mode(self, sound_mode: str):
         """Select sound mode."""
-        return self._receiver.set_sound_mode(sound_mode)
+        await self._receiver.async_set_sound_mode(sound_mode)
 
-    def turn_on(self):
+    @async_log_errors
+    async def async_turn_on(self):
         """Turn on media player."""
-        if self._receiver.power_on():
-            self._state = STATE_ON
+        await self._receiver.async_power_on()
 
-    def turn_off(self):
+    @async_log_errors
+    async def async_turn_off(self):
         """Turn off media player."""
-        if self._receiver.power_off():
-            self._state = STATE_OFF
+        await self._receiver.async_power_off()
 
-    def volume_up(self):
+    @async_log_errors
+    async def async_volume_up(self):
         """Volume up the media player."""
-        return self._receiver.volume_up()
+        await self._receiver.async_volume_up()
 
-    def volume_down(self):
+    @async_log_errors
+    async def async_volume_down(self):
         """Volume down media player."""
-        return self._receiver.volume_down()
+        await self._receiver.async_volume_down()
 
-    def set_volume_level(self, volume):
+    @async_log_errors
+    async def async_set_volume_level(self, volume: int):
         """Set volume level, range 0..1."""
         # Volume has to be sent in a format like -50.0. Minimum is -80.0,
         # maximum is 18.0
         volume_denon = float((volume * 100) - 80)
         if volume_denon > 18:
             volume_denon = float(18)
-        with suppress(ValueError):
-            if self._receiver.set_volume(volume_denon):
-                self._volume = volume_denon
+        await self._receiver.async_set_volume(volume_denon)
 
-    def mute_volume(self, mute):
+    @async_log_errors
+    async def async_mute_volume(self, mute: bool):
         """Send mute command."""
-        return self._receiver.mute(mute)
+        await self._receiver.async_mute(mute)
 
-    def get_command(self, command, **kwargs):
+    @async_log_errors
+    async def async_get_command(self, command: str, **kwargs):
         """Send generic command."""
-        self._receiver.send_get_command(command)
+        return await self._receiver.async_get_command(command)
+
+    @async_log_errors
+    async def async_update_audyssey(self):
+        """Get the latest audyssey information from device."""
+        await self._receiver.async_update_audyssey()
+
+    @async_log_errors
+    async def async_set_dynamic_eq(self, dynamic_eq: bool):
+        """Turn DynamicEQ on or off."""
+        if dynamic_eq:
+            result = await self._receiver.async_dynamic_eq_on()
+        else:
+            result = await self._receiver.async_dynamic_eq_off()
+
+        if self._update_audyssey:
+            await self._receiver.async_update_audyssey()
+        return result
+
+    # Decorator defined before is a staticmethod
+    async_log_errors = staticmethod(  # pylint: disable=no-staticmethod-decorator
+        async_log_errors
+    )

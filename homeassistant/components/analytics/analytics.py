@@ -1,5 +1,6 @@
 """Analytics helper class for the analytics integration."""
 import asyncio
+import uuid
 
 import aiohttp
 import async_timeout
@@ -7,7 +8,7 @@ import async_timeout
 from homeassistant.components import hassio
 from homeassistant.components.api import ATTR_INSTALLATION_TYPE
 from homeassistant.components.automation.const import DOMAIN as AUTOMATION_DOMAIN
-from homeassistant.const import __version__ as HA_VERSION
+from homeassistant.const import ATTR_DOMAIN, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
@@ -17,14 +18,15 @@ from homeassistant.setup import async_get_loaded_integrations
 
 from .const import (
     ANALYTICS_ENDPOINT_URL,
+    ANALYTICS_ENDPOINT_URL_DEV,
     ATTR_ADDON_COUNT,
     ATTR_ADDONS,
     ATTR_AUTO_UPDATE,
     ATTR_AUTOMATION_COUNT,
     ATTR_BASE,
+    ATTR_CUSTOM_INTEGRATIONS,
     ATTR_DIAGNOSTICS,
     ATTR_HEALTHY,
-    ATTR_HUUID,
     ATTR_INTEGRATION_COUNT,
     ATTR_INTEGRATIONS,
     ATTR_ONBOARDED,
@@ -37,6 +39,7 @@ from .const import (
     ATTR_SUPPORTED,
     ATTR_USAGE,
     ATTR_USER_COUNT,
+    ATTR_UUID,
     ATTR_VERSION,
     LOGGER,
     PREFERENCE_SCHEMA,
@@ -52,7 +55,7 @@ class Analytics:
         """Initialize the Analytics class."""
         self.hass: HomeAssistant = hass
         self.session = async_get_clientsession(hass)
-        self._data = {ATTR_PREFERENCES: {}, ATTR_ONBOARDED: False}
+        self._data = {ATTR_PREFERENCES: {}, ATTR_ONBOARDED: False, ATTR_UUID: None}
         self._store: Store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @property
@@ -72,6 +75,19 @@ class Analytics:
         return self._data[ATTR_ONBOARDED]
 
     @property
+    def uuid(self) -> bool:
+        """Return the uuid for the analytics integration."""
+        return self._data[ATTR_UUID]
+
+    @property
+    def endpoint(self) -> str:
+        """Return the endpoint that will receive the payload."""
+        if HA_VERSION.endswith("0.dev0"):
+            # dev installations will contact the dev analytics environment
+            return ANALYTICS_ENDPOINT_URL_DEV
+        return ANALYTICS_ENDPOINT_URL
+
+    @property
     def supervisor(self) -> bool:
         """Return bool if a supervisor is present."""
         return hassio.is_hassio(self.hass)
@@ -81,6 +97,7 @@ class Analytics:
         stored = await self._store.async_load()
         if stored:
             self._data = stored
+
         if self.supervisor:
             supervisor_info = hassio.get_supervisor_info(self.hass)
             if not self.onboarded:
@@ -99,6 +116,7 @@ class Analytics:
         preferences = PREFERENCE_SCHEMA(preferences)
         self._data[ATTR_PREFERENCES].update(preferences)
         self._data[ATTR_ONBOARDED] = True
+
         await self._store.async_save(self._data)
 
         if self.supervisor:
@@ -114,16 +132,19 @@ class Analytics:
             LOGGER.debug("Nothing to submit")
             return
 
-        huuid = await self.hass.helpers.instance_id.async_get()
+        if self._data.get(ATTR_UUID) is None:
+            self._data[ATTR_UUID] = uuid.uuid4().hex
+            await self._store.async_save(self._data)
 
         if self.supervisor:
             supervisor_info = hassio.get_supervisor_info(self.hass)
 
         system_info = await async_get_system_info(self.hass)
         integrations = []
+        custom_integrations = []
         addons = []
         payload: dict = {
-            ATTR_HUUID: huuid,
+            ATTR_UUID: self.uuid,
             ATTR_VERSION: HA_VERSION,
             ATTR_INSTALLATION_TYPE: system_info[ATTR_INSTALLATION_TYPE],
         }
@@ -152,7 +173,16 @@ class Analytics:
                 if isinstance(integration, BaseException):
                     raise integration
 
-                if integration.disabled or not integration.is_built_in:
+                if integration.disabled:
+                    continue
+
+                if not integration.is_built_in:
+                    custom_integrations.append(
+                        {
+                            ATTR_DOMAIN: integration.domain,
+                            ATTR_VERSION: integration.version,
+                        }
+                    )
                     continue
 
                 integrations.append(integration.domain)
@@ -176,6 +206,7 @@ class Analytics:
 
         if self.preferences.get(ATTR_USAGE, False):
             payload[ATTR_INTEGRATIONS] = integrations
+            payload[ATTR_CUSTOM_INTEGRATIONS] = custom_integrations
             if supervisor_info is not None:
                 payload[ATTR_ADDONS] = addons
 
@@ -197,7 +228,7 @@ class Analytics:
 
         try:
             with async_timeout.timeout(30):
-                response = await self.session.post(ANALYTICS_ENDPOINT_URL, json=payload)
+                response = await self.session.post(self.endpoint, json=payload)
                 if response.status == 200:
                     LOGGER.info(
                         (
@@ -208,7 +239,9 @@ class Analytics:
                     )
                 else:
                     LOGGER.warning(
-                        "Sending analytics failed with statuscode %s", response.status
+                        "Sending analytics failed with statuscode %s from %s",
+                        response.status,
+                        self.endpoint,
                     )
         except asyncio.TimeoutError:
             LOGGER.error("Timeout sending analytics to %s", ANALYTICS_ENDPOINT_URL)

@@ -15,7 +15,8 @@ from xknx.io import (
     ConnectionConfig,
     ConnectionType,
 )
-from xknx.telegram import AddressFilter, GroupAddress, Telegram
+from xknx.telegram import AddressFilter, Telegram
+from xknx.telegram.address import parse_device_group_address
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 from homeassistant.const import (
@@ -56,8 +57,6 @@ from .schema import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_KNX_CONFIG = "config_file"
-
 CONF_KNX_ROUTING = "routing"
 CONF_KNX_TUNNELING = "tunneling"
 CONF_KNX_FIRE_EVENT = "fire_event"
@@ -81,13 +80,12 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             # deprecated since 2021.4
-            cv.deprecated(CONF_KNX_CONFIG),
+            cv.deprecated("config_file"),
             # deprecated since 2021.2
             cv.deprecated(CONF_KNX_FIRE_EVENT),
             cv.deprecated("fire_event_filter", replacement_key=CONF_KNX_EVENT_FILTER),
             vol.Schema(
                 {
-                    vol.Optional(CONF_KNX_CONFIG): cv.string,
                     vol.Exclusive(
                         CONF_KNX_ROUTING, "connection_type"
                     ): ConnectionSchema.ROUTING_SCHEMA,
@@ -238,7 +236,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # We need to wait until all entities are loaded into the device list since they could also be created from other platforms
     for platform in SupportedPlatforms:
         hass.async_create_task(
-            discovery.async_load_platform(hass, platform.value, DOMAIN, {}, config)
+            discovery.async_load_platform(
+                hass,
+                platform.value,
+                DOMAIN,
+                {
+                    "platform_config": config[DOMAIN].get(platform.value),
+                },
+                config,
+            )
         )
 
     hass.services.async_register(
@@ -313,7 +319,6 @@ class KNXModule:
     def init_xknx(self) -> None:
         """Initialize XKNX object."""
         self.xknx = XKNX(
-            config=self.config_file(),
             own_address=self.config[DOMAIN][CONF_KNX_INDIVIDUAL_ADDRESS],
             rate_limit=self.config[DOMAIN][CONF_KNX_RATE_LIMIT],
             multicast_group=self.config[DOMAIN][CONF_KNX_MCAST_GRP],
@@ -331,15 +336,6 @@ class KNXModule:
     async def stop(self, event: Event) -> None:
         """Stop XKNX object. Disconnect from tunneling or Routing device."""
         await self.xknx.stop()
-
-    def config_file(self) -> str | None:
-        """Resolve and return the full path of xknx.yaml if configured."""
-        config_file = self.config[DOMAIN].get(CONF_KNX_CONFIG)
-        if not config_file:
-            return None
-        if not config_file.startswith("/"):
-            return self.hass.config.path(config_file)
-        return config_file  # type: ignore
 
     def connection_config(self) -> ConnectionConfig:
         """Return the connection_config."""
@@ -417,7 +413,7 @@ class KNXModule:
     async def service_event_register_modify(self, call: ServiceCall) -> None:
         """Service for adding or removing a GroupAddress to the knx_event filter."""
         attr_address = call.data[KNX_ADDRESS]
-        group_addresses = map(GroupAddress, attr_address)
+        group_addresses = map(parse_device_group_address, attr_address)
 
         if call.data.get(SERVICE_KNX_ATTR_REMOVE):
             for group_address in group_addresses:
@@ -488,7 +484,7 @@ class KNXModule:
 
         for address in attr_address:
             telegram = Telegram(
-                destination_address=GroupAddress(address),
+                destination_address=parse_device_group_address(address),
                 payload=GroupValueWrite(payload),
             )
             await self.xknx.telegrams.put(telegram)
@@ -497,7 +493,7 @@ class KNXModule:
         """Service for sending a GroupValueRead telegram to the KNX bus."""
         for address in call.data[KNX_ADDRESS]:
             telegram = Telegram(
-                destination_address=GroupAddress(address),
+                destination_address=parse_device_group_address(address),
                 payload=GroupValueRead(),
             )
             await self.xknx.telegrams.put(telegram)

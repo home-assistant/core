@@ -2,9 +2,11 @@
   "domain": "devolo_home_control",
   "name": "devolo Home Control",
   "documentation": "https://www.home-assistant.io/integrations/devolo_home_control",
-  "requirements": ["devolo-home-control-api==0.17.1"],
+  "requirements": ["devolo-home-control-api==0.17.3"],
   "after_dependencies": ["zeroconf"],
   "config_flow": true,
   "codeowners": ["@2Fake", "@Shutgun"],
-  "quality_scale": "silver"
+  "quality_scale": "silver",
+  "iot_class": "local_push",
+  "zeroconf": ["_dvl-deviceapi._tcp.local."]
 }

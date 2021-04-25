@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/juicenet",
   "requirements": ["python-juicenet==1.0.1"],
   "codeowners": ["@jesserockz"],
-  "config_flow": true
+  "config_flow": true,
+  "iot_class": "cloud_polling"
 }

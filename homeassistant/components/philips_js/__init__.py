@@ -18,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -26,12 +25,6 @@ from .const import DOMAIN
 PLATFORMS = ["media_player", "remote"]
 
 LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Philips TV component."""
-    hass.data[DOMAIN] = {}
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -47,6 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coordinator = PhilipsTVDataUpdateCoordinator(hass, tvapi)
 
     await coordinator.async_refresh()
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     for platform in PLATFORMS:
@@ -101,7 +95,7 @@ class PluggableAction:
 
         return _remove
 
-    async def async_run(self, hass: HomeAssistantType, context: Context | None = None):
+    async def async_run(self, hass: HomeAssistant, context: Context | None = None):
         """Run all turn on triggers."""
         for job, variables in self._actions.values():
             hass.async_run_hass_job(job, variables, context)
@@ -134,8 +128,12 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _notify_task(self):
         while self.api.on and self.api.notify_change_supported:
-            if await self.api.notifyChange(130):
+            res = await self.api.notifyChange(130)
+            if res:
                 self.async_set_updated_data(None)
+            elif res is None:
+                LOGGER.debug("Aborting notify due to unexpected return")
+                break
 
     @callback
     def _async_notify_stop(self):

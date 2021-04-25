@@ -4,5 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sentry",
   "requirements": ["sentry-sdk==1.0.0"],
-  "codeowners": ["@dcramer", "@frenck"]
+  "codeowners": ["@dcramer", "@frenck"],
+  "iot_class": "cloud_polling"
 }

@@ -35,6 +35,8 @@ from homeassistant.components.light import (
     SUPPORT_WHITE_VALUE,
     VALID_COLOR_MODES,
     LightEntity,
+    legacy_supported_features,
+    valid_supported_color_modes,
 )
 from homeassistant.const import (
     CONF_BRIGHTNESS,
@@ -130,7 +132,10 @@ PLATFORM_SCHEMA_JSON = vol.All(
             vol.Optional(CONF_RGB, default=DEFAULT_RGB): cv.boolean,
             vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Inclusive(CONF_SUPPORTED_COLOR_MODES, "color_mode"): vol.All(
-                cv.ensure_list, [vol.In(VALID_COLOR_MODES)], vol.Unique()
+                cv.ensure_list,
+                [vol.In(VALID_COLOR_MODES)],
+                vol.Unique(),
+                valid_supported_color_modes,
             ),
             vol.Optional(CONF_WHITE_VALUE, default=DEFAULT_WHITE_VALUE): cv.boolean,
             vol.Optional(CONF_XY, default=DEFAULT_XY): cv.boolean,
@@ -197,7 +202,9 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self._supported_features |= config[CONF_BRIGHTNESS] and SUPPORT_BRIGHTNESS
             self._supported_features |= config[CONF_COLOR_TEMP] and SUPPORT_COLOR_TEMP
             self._supported_features |= config[CONF_HS] and SUPPORT_COLOR
-            self._supported_features |= config[CONF_RGB] and SUPPORT_COLOR
+            self._supported_features |= config[CONF_RGB] and (
+                SUPPORT_COLOR | SUPPORT_BRIGHTNESS
+            )
             self._supported_features |= config[CONF_WHITE_VALUE] and SUPPORT_WHITE_VALUE
             self._supported_features |= config[CONF_XY] and SUPPORT_COLOR
 
@@ -452,7 +459,9 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return self._supported_features
+        return legacy_supported_features(
+            self._supported_features, self._config.get(CONF_SUPPORTED_COLOR_MODES)
+        )
 
     def _set_flash_and_transition(self, message, **kwargs):
         if ATTR_TRANSITION in kwargs:
@@ -478,7 +487,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     def _supports_color_mode(self, color_mode):
         return self.supported_color_modes and color_mode in self.supported_color_modes
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):  # noqa: C901
         """Turn the device on.
 
         This method is a coroutine.

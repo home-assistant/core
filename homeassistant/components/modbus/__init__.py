@@ -1,5 +1,7 @@
 """Support for Modbus."""
-from typing import Any, Union
+from __future__ import annotations
+
+from typing import Any
 
 import voluptuous as vol
 
@@ -16,10 +18,11 @@ from homeassistant.components.switch import (
     DEVICE_CLASSES_SCHEMA as SWITCH_DEVICE_CLASSES_SCHEMA,
 )
 from homeassistant.const import (
-    ATTR_STATE,
     CONF_ADDRESS,
+    CONF_BINARY_SENSORS,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
+    CONF_COUNT,
     CONF_COVERS,
     CONF_DELAY,
     CONF_DEVICE_CLASS,
@@ -29,8 +32,11 @@ from homeassistant.const import (
     CONF_OFFSET,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
+    CONF_SENSORS,
     CONF_SLAVE,
     CONF_STRUCTURE,
+    CONF_SWITCHES,
+    CONF_TEMPERATURE_UNIT,
     CONF_TIMEOUT,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
@@ -40,6 +46,7 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     ATTR_ADDRESS,
     ATTR_HUB,
+    ATTR_STATE,
     ATTR_UNIT,
     ATTR_VALUE,
     CALL_TYPE_COIL,
@@ -47,10 +54,8 @@ from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CONF_BAUDRATE,
-    CONF_BINARY_SENSORS,
     CONF_BYTESIZE,
     CONF_CLIMATES,
-    CONF_COUNT,
     CONF_CURRENT_TEMP,
     CONF_CURRENT_TEMP_REGISTER_TYPE,
     CONF_DATA_COUNT,
@@ -63,7 +68,6 @@ from .const import (
     CONF_REGISTER,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
-    CONF_SENSORS,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OFF,
@@ -74,10 +78,9 @@ from .const import (
     CONF_STATUS_REGISTER_TYPE,
     CONF_STEP,
     CONF_STOPBITS,
-    CONF_SWITCHES,
     CONF_TARGET_TEMP,
-    CONF_UNIT,
     CONF_VERIFY_REGISTER,
+    CONF_VERIFY_STATE,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
@@ -94,7 +97,7 @@ from .modbus import modbus_setup
 BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
 
 
-def number(value: Any) -> Union[int, float]:
+def number(value: Any) -> int | float:
     """Coerce a value to number without losing precision."""
     if isinstance(value, int):
         return value
@@ -142,7 +145,7 @@ CLIMATE_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
         vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
         vol.Optional(CONF_STRUCTURE, default=DEFAULT_STRUCTURE_PREFIX): cv.string,
-        vol.Optional(CONF_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
+        vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
     }
 )
 
@@ -178,6 +181,7 @@ SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_STATE_OFF): cv.positive_int,
         vol.Optional(CONF_STATE_ON): cv.positive_int,
         vol.Optional(CONF_VERIFY_REGISTER): cv.positive_int,
+        vol.Optional(CONF_VERIFY_STATE, default=True): cv.boolean,
     }
 )
 
@@ -280,7 +284,9 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
         vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
         vol.Required(ATTR_UNIT): cv.positive_int,
         vol.Required(ATTR_ADDRESS): cv.positive_int,
-        vol.Required(ATTR_STATE): cv.boolean,
+        vol.Required(ATTR_STATE): vol.Any(
+            cv.boolean, vol.All(cv.ensure_list, [cv.boolean])
+        ),
     }
 )
 

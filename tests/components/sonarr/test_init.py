@@ -35,8 +35,12 @@ async def test_config_entry_reauth(
 
     mock_flow_init.assert_called_once_with(
         DOMAIN,
-        context={CONF_SOURCE: SOURCE_REAUTH},
-        data={"config_entry_id": entry.entry_id, **entry.data},
+        context={
+            CONF_SOURCE: SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "unique_id": entry.unique_id,
+        },
+        data=entry.data,
     )
 
 

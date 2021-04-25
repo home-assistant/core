@@ -188,6 +188,60 @@ async def test_fail_setup_if_color_mode_deprecated(hass, mqtt_mock, deprecated):
     assert hass.states.get("light.test") is None
 
 
+@pytest.mark.parametrize(
+    "supported_color_modes", [["onoff", "rgb"], ["brightness", "rgb"], ["unknown"]]
+)
+async def test_fail_setup_if_color_modes_invalid(
+    hass, mqtt_mock, supported_color_modes
+):
+    """Test if setup fails if supported color modes is invalid."""
+    config = {
+        light.DOMAIN: {
+            "brightness": True,
+            "color_mode": True,
+            "command_topic": "test_light_rgb/set",
+            "name": "test",
+            "platform": "mqtt",
+            "schema": "json",
+            "supported_color_modes": supported_color_modes,
+        }
+    }
+    assert await async_setup_component(
+        hass,
+        light.DOMAIN,
+        config,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("light.test") is None
+
+
+async def test_rgb_light(hass, mqtt_mock):
+    """Test RGB light flags brightness support."""
+    assert await async_setup_component(
+        hass,
+        light.DOMAIN,
+        {
+            light.DOMAIN: {
+                "platform": "mqtt",
+                "schema": "json",
+                "name": "test",
+                "command_topic": "test_light_rgb/set",
+                "rgb": True,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test")
+    expected_features = (
+        light.SUPPORT_BRIGHTNESS
+        | light.SUPPORT_COLOR
+        | light.SUPPORT_FLASH
+        | light.SUPPORT_TRANSITION
+    )
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
+
+
 async def test_no_color_brightness_color_temp_white_val_if_no_topics(hass, mqtt_mock):
     """Test for no RGB, brightness, color temp, effect, white val or XY."""
     assert await async_setup_component(
@@ -207,7 +261,8 @@ async def test_no_color_brightness_color_temp_white_val_if_no_topics(hass, mqtt_
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 40
+    expected_features = light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
     assert state.attributes.get("color_temp") is None
@@ -256,7 +311,16 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 191
+    expected_features = (
+        light.SUPPORT_BRIGHTNESS
+        | light.SUPPORT_COLOR
+        | light.SUPPORT_COLOR_TEMP
+        | light.SUPPORT_EFFECT
+        | light.SUPPORT_FLASH
+        | light.SUPPORT_TRANSITION
+        | light.SUPPORT_WHITE_VALUE
+    )
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
     assert state.attributes.get("color_temp") is None
@@ -375,7 +439,15 @@ async def test_controlling_state_via_topic2(hass, mqtt_mock, caplog):
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 44
+    expected_features = (
+        light.SUPPORT_BRIGHTNESS
+        | light.SUPPORT_COLOR
+        | light.SUPPORT_COLOR_TEMP
+        | light.SUPPORT_EFFECT
+        | light.SUPPORT_FLASH
+        | light.SUPPORT_TRANSITION
+    )
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
     assert state.attributes.get("brightness") is None
     assert state.attributes.get("color_mode") is None
     assert state.attributes.get("color_temp") is None
@@ -556,7 +628,16 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     assert state.attributes.get("effect") == "random"
     assert state.attributes.get("color_temp") == 100
     assert state.attributes.get("white_value") == 50
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 191
+    expected_features = (
+        light.SUPPORT_BRIGHTNESS
+        | light.SUPPORT_COLOR
+        | light.SUPPORT_COLOR_TEMP
+        | light.SUPPORT_EFFECT
+        | light.SUPPORT_FLASH
+        | light.SUPPORT_TRANSITION
+        | light.SUPPORT_WHITE_VALUE
+    )
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_on(hass, "light.test")
@@ -684,7 +765,15 @@ async def test_sending_mqtt_commands_and_optimistic2(hass, mqtt_mock):
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 44
+    expected_features = (
+        light.SUPPORT_BRIGHTNESS
+        | light.SUPPORT_COLOR
+        | light.SUPPORT_COLOR_TEMP
+        | light.SUPPORT_EFFECT
+        | light.SUPPORT_FLASH
+        | light.SUPPORT_TRANSITION
+    )
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
     assert state.attributes.get("brightness") == 95
     assert state.attributes.get("color_mode") == "rgb"
     assert state.attributes.get("color_temp") is None
@@ -1259,7 +1348,10 @@ async def test_effect(hass, mqtt_mock):
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 44
+    expected_features = (
+        light.SUPPORT_EFFECT | light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
+    )
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
 
     await common.async_turn_on(hass, "light.test")
 
@@ -1319,7 +1411,8 @@ async def test_flash_short_and_long(hass, mqtt_mock):
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 40
+    expected_features = light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
 
     await common.async_turn_on(hass, "light.test", flash="short")
 
@@ -1377,8 +1470,8 @@ async def test_transition(hass, mqtt_mock):
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 40
-
+    expected_features = light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
     await common.async_turn_on(hass, "light.test", transition=15)
 
     mqtt_mock.async_publish.assert_called_once_with(
@@ -1469,7 +1562,15 @@ async def test_invalid_values(hass, mqtt_mock):
 
     state = hass.states.get("light.test")
     assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 187
+    expected_features = (
+        light.SUPPORT_BRIGHTNESS
+        | light.SUPPORT_COLOR
+        | light.SUPPORT_COLOR_TEMP
+        | light.SUPPORT_FLASH
+        | light.SUPPORT_TRANSITION
+        | light.SUPPORT_WHITE_VALUE
+    )
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
     assert state.attributes.get("white_value") is None

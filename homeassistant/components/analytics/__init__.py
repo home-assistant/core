@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
 from .analytics import Analytics
-from .const import ATTR_HUUID, ATTR_PREFERENCES, DOMAIN, INTERVAL, PREFERENCE_SCHEMA
+from .const import ATTR_PREFERENCES, DOMAIN, INTERVAL, PREFERENCE_SCHEMA
 
 
 async def async_setup(hass: HomeAssistant, _):
@@ -44,10 +44,9 @@ async def websocket_analytics(
 ) -> None:
     """Return analytics preferences."""
     analytics: Analytics = hass.data[DOMAIN]
-    huuid = await hass.helpers.instance_id.async_get()
     connection.send_result(
         msg["id"],
-        {ATTR_PREFERENCES: analytics.preferences, ATTR_HUUID: huuid},
+        {ATTR_PREFERENCES: analytics.preferences},
     )
 
 

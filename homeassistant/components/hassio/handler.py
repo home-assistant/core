@@ -148,7 +148,7 @@ class HassIO:
 
         This method return a coroutine.
         """
-        return self.send_command("/discovery", method="get")
+        return self.send_command("/discovery", method="get", timeout=60)
 
     @api_data
     def get_discovery_message(self, uuid):

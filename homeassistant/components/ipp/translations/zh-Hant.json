@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "connection_upgrade": "\u7531\u65bc\u9700\u8981\u5148\u5347\u7d1a\u9023\u7dda\u3001\u9023\u7dda\u81f3\u5370\u8868\u6a5f\u5931\u6557\u3002",
             "ipp_error": "\u767c\u751f IPP \u932f\u8aa4\u3002",

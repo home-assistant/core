@@ -1,8 +1,11 @@
 """Test the flow classes."""
+import asyncio
+from unittest.mock import patch
+
 import pytest
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.util.decorator import Registry
 
 from tests.common import async_capture_events
@@ -179,7 +182,9 @@ async def test_discovery_init_flow(manager):
 
     data = {"id": "hello", "token": "secret"}
 
-    await manager.async_init("test", context={"source": "discovery"}, data=data)
+    await manager.async_init(
+        "test", context={"source": config_entries.SOURCE_DISCOVERY}, data=data
+    )
     assert len(manager.async_progress()) == 0
     assert len(manager.mock_created_entries) == 1
 
@@ -188,7 +193,7 @@ async def test_discovery_init_flow(manager):
     assert entry["handler"] == "test"
     assert entry["title"] == "hello"
     assert entry["data"] == data
-    assert entry["source"] == "discovery"
+    assert entry["source"] == config_entries.SOURCE_DISCOVERY
 
 
 async def test_finish_callback_change_result_type(hass):
@@ -367,3 +372,28 @@ async def test_abort_flow_exception(manager):
     assert form["type"] == "abort"
     assert form["reason"] == "mock-reason"
     assert form["description_placeholders"] == {"placeholder": "yo"}
+
+
+async def test_initializing_flows_canceled_on_shutdown(hass, manager):
+    """Test that initializing flows are canceled on shutdown."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            await asyncio.sleep(1)
+
+    task = asyncio.create_task(manager.async_init("test"))
+    await hass.async_block_till_done()
+    await manager.async_shutdown()
+
+    with pytest.raises(asyncio.exceptions.CancelledError):
+        await task
+
+
+async def test_init_unknown_flow(manager):
+    """Test that UnknownFlow is raised when async_create_flow returns None."""
+
+    with pytest.raises(data_entry_flow.UnknownFlow), patch.object(
+        manager, "async_create_flow", return_value=None
+    ):
+        await manager.async_init("test")

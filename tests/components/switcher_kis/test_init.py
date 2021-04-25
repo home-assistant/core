@@ -19,11 +19,10 @@ from homeassistant.components.switcher_kis.switch import (
     SERVICE_TURN_ON_WITH_TIMER_NAME,
 )
 from homeassistant.const import CONF_ENTITY_ID
-from homeassistant.core import Context, callback
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import UnknownUser
 from homeassistant.helpers.config_validation import time_period_str
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
@@ -47,21 +46,21 @@ from tests.common import MockUser, async_fire_time_changed
 
 
 async def test_failed_config(
-    hass: HomeAssistantType, mock_failed_bridge: Generator[None, Any, None]
+    hass: HomeAssistant, mock_failed_bridge: Generator[None, Any, None]
 ) -> None:
     """Test failed configuration."""
     assert await async_setup_component(hass, DOMAIN, MANDATORY_CONFIGURATION) is False
 
 
 async def test_minimal_config(
-    hass: HomeAssistantType, mock_bridge: Generator[None, Any, None]
+    hass: HomeAssistant, mock_bridge: Generator[None, Any, None]
 ) -> None:
     """Test setup with configuration minimal entries."""
     assert await async_setup_component(hass, DOMAIN, MANDATORY_CONFIGURATION)
 
 
 async def test_discovery_data_bucket(
-    hass: HomeAssistantType, mock_bridge: Generator[None, Any, None]
+    hass: HomeAssistant, mock_bridge: Generator[None, Any, None]
 ) -> None:
     """Test the event send with the updated device."""
     assert await async_setup_component(hass, DOMAIN, MANDATORY_CONFIGURATION)
@@ -82,7 +81,7 @@ async def test_discovery_data_bucket(
 
 
 async def test_set_auto_off_service(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     mock_bridge: Generator[None, Any, None],
     mock_api: Generator[None, Any, None],
     hass_owner_user: MockUser,
@@ -130,7 +129,7 @@ async def test_set_auto_off_service(
 
 
 async def test_turn_on_with_timer_service(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     mock_bridge: Generator[None, Any, None],
     mock_api: Generator[None, Any, None],
     hass_owner_user: MockUser,
@@ -184,7 +183,7 @@ async def test_turn_on_with_timer_service(
 
 
 async def test_signal_dispatcher(
-    hass: HomeAssistantType, mock_bridge: Generator[None, Any, None]
+    hass: HomeAssistant, mock_bridge: Generator[None, Any, None]
 ) -> None:
     """Test signal dispatcher dispatching device updates every 4 seconds."""
     assert await async_setup_component(hass, DOMAIN, MANDATORY_CONFIGURATION)

@@ -1,14 +1,21 @@
 """Test the config manager."""
 import asyncio
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+import logging
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, loader
-from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import CoreState, callback
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
@@ -33,6 +40,10 @@ def mock_handlers():
         """Define a mock flow handler."""
 
         VERSION = 1
+
+        async def async_step_reauth(self, data):
+            """Mock Reauth."""
+            return self.async_show_form(step_id="reauth")
 
     with patch.dict(
         config_entries.HANDLERS, {"comp": MockFlowHandler, "test": MockFlowHandler}
@@ -493,7 +504,9 @@ async def test_domains_gets_domains_excludes_ignore_and_disabled(manager):
         domain="ignored", source=config_entries.SOURCE_IGNORE
     ).add_to_manager(manager)
     MockConfigEntry(domain="test3").add_to_manager(manager)
-    MockConfigEntry(domain="disabled", disabled_by="user").add_to_manager(manager)
+    MockConfigEntry(
+        domain="disabled", disabled_by=config_entries.DISABLED_USER
+    ).add_to_manager(manager)
     assert manager.async_domains() == ["test", "test2", "test3"]
     assert manager.async_domains(include_ignore=False) == ["test", "test2", "test3"]
     assert manager.async_domains(include_disabled=False) == ["test", "test2", "test3"]
@@ -854,12 +867,14 @@ async def test_setup_raise_not_ready(hass, caplog):
     assert p_hass is hass
     assert p_wait_time == 5
     assert entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
+    assert entry.reason == "The internet connection is offline"
 
     mock_setup_entry.side_effect = None
     mock_setup_entry.return_value = True
 
     await p_setup(None)
     assert entry.state == config_entries.ENTRY_STATE_LOADED
+    assert entry.reason is None
 
 
 async def test_setup_raise_not_ready_from_exception(hass, caplog):
@@ -902,6 +917,33 @@ async def test_setup_retrying_during_unload(hass):
 
     assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
     assert len(mock_call.return_value.mock_calls) == 1
+
+
+async def test_setup_retrying_during_unload_before_started(hass):
+    """Test if we unload an entry that is in retry mode before started."""
+    entry = MockConfigEntry(domain="test")
+    hass.state = CoreState.starting
+    initial_listeners = hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED]
+
+    mock_setup_entry = AsyncMock(side_effect=ConfigEntryNotReady)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+
+    assert entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
+    assert (
+        hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED] == initial_listeners + 1
+    )
+
+    await entry.async_unload(hass)
+    await hass.async_block_till_done()
+
+    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert (
+        hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED] == initial_listeners + 0
+    )
 
 
 async def test_entry_options(hass, manager):
@@ -1308,7 +1350,7 @@ async def test_reload_entry_entity_registry_ignores_no_entry(hass):
 
     # Test we ignore entities without config entry
     entry = registry.async_get_or_create("light", "hue", "123")
-    registry.async_update_entity(entry.entity_id, disabled_by="user")
+    registry.async_update_entity(entry.entity_id, disabled_by=er.DISABLED_USER)
     await hass.async_block_till_done()
     assert not handler.changed
     assert handler._remove_call_later is None
@@ -1347,7 +1389,7 @@ async def test_reload_entry_entity_registry_works(hass):
     assert handler._remove_call_later is None
 
     # Disable entity, we should not do anything, only act when enabled.
-    registry.async_update_entity(entity_entry.entity_id, disabled_by="user")
+    registry.async_update_entity(entity_entry.entity_id, disabled_by=er.DISABLED_USER)
     await hass.async_block_till_done()
     assert not handler.changed
     assert handler._remove_call_later is None
@@ -1367,7 +1409,7 @@ async def test_reload_entry_entity_registry_works(hass):
     assert len(mock_unload_entry.mock_calls) == 1
 
 
-async def test_unqiue_id_persisted(hass, manager):
+async def test_unique_id_persisted(hass, manager):
     """Test that a unique ID is stored in the config entry."""
     mock_setup_entry = AsyncMock(return_value=True)
 
@@ -2026,7 +2068,7 @@ async def test_unignore_create_entry(hass, manager):
         # But after a 'tick' the unignore step has run and we can see a config entry.
         await hass.async_block_till_done()
         entry = hass.config_entries.async_entries("comp")[0]
-        assert entry.source == "unignore"
+        assert entry.source == config_entries.SOURCE_UNIGNORE
         assert entry.unique_id == "mock-unique-id"
         assert entry.title == "yo"
 
@@ -2461,3 +2503,210 @@ async def test_updating_entry_with_and_without_changes(manager):
     assert manager.async_update_entry(entry, title="newtitle") is True
     assert manager.async_update_entry(entry, unique_id="abc123") is False
     assert manager.async_update_entry(entry, unique_id="abc1234") is True
+
+
+async def test_entry_reload_calls_on_unload_listeners(hass, manager):
+    """Test reload calls the on unload listeners."""
+    entry = MockConfigEntry(domain="comp", state=config_entries.ENTRY_STATE_LOADED)
+    entry.add_to_hass(hass)
+
+    async_setup = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=True)
+    async_unload_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=async_setup,
+            async_setup_entry=mock_setup_entry,
+            async_unload_entry=async_unload_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    mock_unload_callback = Mock()
+
+    entry.async_on_unload(mock_unload_callback)
+
+    assert await manager.async_reload(entry.entry_id)
+    assert len(async_unload_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_unload_callback.mock_calls) == 1
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+    assert await manager.async_reload(entry.entry_id)
+    assert len(async_unload_entry.mock_calls) == 2
+    assert len(mock_setup_entry.mock_calls) == 2
+    # Since we did not register another async_on_unload it should
+    # have only been called once
+    assert len(mock_unload_callback.mock_calls) == 1
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+
+async def test_setup_raise_auth_failed(hass, caplog):
+    """Test a setup raising ConfigEntryAuthFailed."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    mock_setup_entry = AsyncMock(
+        side_effect=ConfigEntryAuthFailed("The password is no longer valid")
+    )
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+    assert "could not authenticate: The password is no longer valid" in caplog.text
+
+    assert entry.state == config_entries.ENTRY_STATE_SETUP_ERROR
+    assert entry.reason == "The password is no longer valid"
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
+    assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
+
+    caplog.clear()
+    entry.state = config_entries.ENTRY_STATE_NOT_LOADED
+    entry.reason = None
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+    assert "could not authenticate: The password is no longer valid" in caplog.text
+
+    # Verify multiple ConfigEntryAuthFailed does not generate a second flow
+    assert entry.state == config_entries.ENTRY_STATE_SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+
+async def test_setup_raise_auth_failed_from_first_coordinator_update(hass, caplog):
+    """Test async_config_entry_first_refresh raises ConfigEntryAuthFailed."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    async def async_setup_entry(hass, entry):
+        """Mock setup entry with a simple coordinator."""
+
+        async def _async_update_data():
+            raise ConfigEntryAuthFailed("The password is no longer valid")
+
+        coordinator = DataUpdateCoordinator(
+            hass,
+            logging.getLogger(__name__),
+            name="any",
+            update_method=_async_update_data,
+            update_interval=timedelta(seconds=1000),
+        )
+
+        await coordinator.async_config_entry_first_refresh()
+        return True
+
+    mock_integration(hass, MockModule("test", async_setup_entry=async_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+    assert "could not authenticate: The password is no longer valid" in caplog.text
+
+    assert entry.state == config_entries.ENTRY_STATE_SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
+    assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
+
+    caplog.clear()
+    entry.state = config_entries.ENTRY_STATE_NOT_LOADED
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+    assert "could not authenticate: The password is no longer valid" in caplog.text
+
+    # Verify multiple ConfigEntryAuthFailed does not generate a second flow
+    assert entry.state == config_entries.ENTRY_STATE_SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+
+async def test_setup_raise_auth_failed_from_future_coordinator_update(hass, caplog):
+    """Test a coordinator raises ConfigEntryAuthFailed in the future."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    async def async_setup_entry(hass, entry):
+        """Mock setup entry with a simple coordinator."""
+
+        async def _async_update_data():
+            raise ConfigEntryAuthFailed("The password is no longer valid")
+
+        coordinator = DataUpdateCoordinator(
+            hass,
+            logging.getLogger(__name__),
+            name="any",
+            update_method=_async_update_data,
+            update_interval=timedelta(seconds=1000),
+        )
+
+        await coordinator.async_refresh()
+        return True
+
+    mock_integration(hass, MockModule("test", async_setup_entry=async_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+    assert "Authentication failed while fetching" in caplog.text
+    assert "The password is no longer valid" in caplog.text
+
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
+    assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
+
+    caplog.clear()
+    entry.state = config_entries.ENTRY_STATE_NOT_LOADED
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+    assert "Authentication failed while fetching" in caplog.text
+    assert "The password is no longer valid" in caplog.text
+
+    # Verify multiple ConfigEntryAuthFailed does not generate a second flow
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+
+async def test_initialize_and_shutdown(hass):
+    """Test we call the shutdown function at stop."""
+    manager = config_entries.ConfigEntries(hass, {})
+
+    with patch.object(manager, "_async_shutdown") as mock_async_shutdown:
+        await manager.async_initialize()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+    assert mock_async_shutdown.called
+
+
+async def test_setup_retrying_during_shutdown(hass):
+    """Test if we shutdown an entry that is in retry mode."""
+    entry = MockConfigEntry(domain="test")
+
+    mock_setup_entry = AsyncMock(side_effect=ConfigEntryNotReady)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.test", None)
+
+    with patch("homeassistant.helpers.event.async_call_later") as mock_call:
+        await entry.async_setup(hass)
+
+    assert entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
+    assert len(mock_call.return_value.mock_calls) == 0
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert len(mock_call.return_value.mock_calls) == 0
+
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(hours=4))
+    await hass.async_block_till_done()
+
+    assert len(mock_call.return_value.mock_calls) == 0

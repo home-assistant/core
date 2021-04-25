@@ -1,8 +1,15 @@
 """Support for monitoring the local system."""
+from __future__ import annotations
+
+import asyncio
+from dataclasses import dataclass
+import datetime
+from functools import lru_cache
 import logging
 import os
 import socket
 import sys
+from typing import Any, Callable, cast
 
 import psutil
 import voluptuous as vol
@@ -10,21 +17,29 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_RESOURCES,
+    CONF_SCAN_INTERVAL,
     CONF_TYPE,
     DATA_GIBIBYTES,
     DATA_MEBIBYTES,
     DATA_RATE_MEGABYTES_PER_SECOND,
     DEVICE_CLASS_TIMESTAMP,
+    EVENT_HOMEASSISTANT_STOP,
     PERCENTAGE,
     STATE_OFF,
     STATE_ON,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,71 +50,80 @@ if sys.maxsize > 2 ** 32:
 else:
     CPU_ICON = "mdi:cpu-32-bit"
 
+SENSOR_TYPE_NAME = 0
+SENSOR_TYPE_UOM = 1
+SENSOR_TYPE_ICON = 2
+SENSOR_TYPE_DEVICE_CLASS = 3
+SENSOR_TYPE_MANDATORY_ARG = 4
+
+SIGNAL_SYSTEMMONITOR_UPDATE = "systemmonitor_update"
+
 # Schema: [name, unit of measurement, icon, device class, flag if mandatory arg]
-SENSOR_TYPES = {
-    "disk_free": ["Disk free", DATA_GIBIBYTES, "mdi:harddisk", None, False],
-    "disk_use": ["Disk use", DATA_GIBIBYTES, "mdi:harddisk", None, False],
-    "disk_use_percent": [
+SENSOR_TYPES: dict[str, tuple[str, str | None, str | None, str | None, bool]] = {
+    "disk_free": ("Disk free", DATA_GIBIBYTES, "mdi:harddisk", None, False),
+    "disk_use": ("Disk use", DATA_GIBIBYTES, "mdi:harddisk", None, False),
+    "disk_use_percent": (
         "Disk use (percent)",
         PERCENTAGE,
         "mdi:harddisk",
         None,
         False,
-    ],
-    "ipv4_address": ["IPv4 address", "", "mdi:server-network", None, True],
-    "ipv6_address": ["IPv6 address", "", "mdi:server-network", None, True],
-    "last_boot": ["Last boot", None, "mdi:clock", DEVICE_CLASS_TIMESTAMP, False],
-    "load_15m": ["Load (15m)", " ", CPU_ICON, None, False],
-    "load_1m": ["Load (1m)", " ", CPU_ICON, None, False],
-    "load_5m": ["Load (5m)", " ", CPU_ICON, None, False],
-    "memory_free": ["Memory free", DATA_MEBIBYTES, "mdi:memory", None, False],
-    "memory_use": ["Memory use", DATA_MEBIBYTES, "mdi:memory", None, False],
-    "memory_use_percent": [
+    ),
+    "ipv4_address": ("IPv4 address", "", "mdi:server-network", None, True),
+    "ipv6_address": ("IPv6 address", "", "mdi:server-network", None, True),
+    "last_boot": ("Last boot", None, "mdi:clock", DEVICE_CLASS_TIMESTAMP, False),
+    "load_15m": ("Load (15m)", " ", CPU_ICON, None, False),
+    "load_1m": ("Load (1m)", " ", CPU_ICON, None, False),
+    "load_5m": ("Load (5m)", " ", CPU_ICON, None, False),
+    "memory_free": ("Memory free", DATA_MEBIBYTES, "mdi:memory", None, False),
+    "memory_use": ("Memory use", DATA_MEBIBYTES, "mdi:memory", None, False),
+    "memory_use_percent": (
         "Memory use (percent)",
         PERCENTAGE,
         "mdi:memory",
         None,
         False,
-    ],
-    "network_in": ["Network in", DATA_MEBIBYTES, "mdi:server-network", None, True],
-    "network_out": ["Network out", DATA_MEBIBYTES, "mdi:server-network", None, True],
-    "packets_in": ["Packets in", " ", "mdi:server-network", None, True],
-    "packets_out": ["Packets out", " ", "mdi:server-network", None, True],
-    "throughput_network_in": [
+    ),
+    "network_in": ("Network in", DATA_MEBIBYTES, "mdi:server-network", None, True),
+    "network_out": ("Network out", DATA_MEBIBYTES, "mdi:server-network", None, True),
+    "packets_in": ("Packets in", " ", "mdi:server-network", None, True),
+    "packets_out": ("Packets out", " ", "mdi:server-network", None, True),
+    "throughput_network_in": (
         "Network throughput in",
         DATA_RATE_MEGABYTES_PER_SECOND,
         "mdi:server-network",
         None,
         True,
-    ],
-    "throughput_network_out": [
+    ),
+    "throughput_network_out": (
         "Network throughput out",
         DATA_RATE_MEGABYTES_PER_SECOND,
         "mdi:server-network",
+        None,
         True,
-    ],
-    "process": ["Process", " ", CPU_ICON, None, True],
-    "processor_use": ["Processor use (percent)", PERCENTAGE, CPU_ICON, None, False],
-    "processor_temperature": [
+    ),
+    "process": ("Process", " ", CPU_ICON, None, True),
+    "processor_use": ("Processor use (percent)", PERCENTAGE, CPU_ICON, None, False),
+    "processor_temperature": (
         "Processor temperature",
         TEMP_CELSIUS,
         CPU_ICON,
         None,
         False,
-    ],
-    "swap_free": ["Swap free", DATA_MEBIBYTES, "mdi:harddisk", None, False],
-    "swap_use": ["Swap use", DATA_MEBIBYTES, "mdi:harddisk", None, False],
-    "swap_use_percent": ["Swap use (percent)", PERCENTAGE, "mdi:harddisk", None, False],
+    ),
+    "swap_free": ("Swap free", DATA_MEBIBYTES, "mdi:harddisk", None, False),
+    "swap_use": ("Swap use", DATA_MEBIBYTES, "mdi:harddisk", None, False),
+    "swap_use_percent": ("Swap use (percent)", PERCENTAGE, "mdi:harddisk", None, False),
 }
 
 
-def check_required_arg(value):
+def check_required_arg(value: Any) -> Any:
     """Validate that the required "arg" for the sensor types that need it are set."""
     for sensor in value:
         sensor_type = sensor[CONF_TYPE]
         sensor_arg = sensor.get(CONF_ARG)
 
-        if sensor_arg is None and SENSOR_TYPES[sensor_type][4]:
+        if sensor_arg is None and SENSOR_TYPES[sensor_type][SENSOR_TYPE_MANDATORY_ARG]:
             raise vol.RequiredFieldInvalid(
                 f"Mandatory 'arg' is missing for sensor type '{sensor_type}'."
             )
@@ -155,186 +179,335 @@ CPU_SENSOR_PREFIXES = [
     "radeon 1",
     "soc-thermal 1",
     "soc_thermal 1",
+    "Tctl",
+    "cpu0-thermal",
 ]
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+@dataclass
+class SensorData:
+    """Data for a sensor."""
+
+    argument: Any
+    state: str | None
+    value: Any | None
+    update_time: datetime.datetime | None
+    last_exception: BaseException | None
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: Callable,
+    discovery_info: Any | None = None,
+) -> None:
     """Set up the system monitor sensors."""
-    dev = []
+    entities = []
+    sensor_registry: dict[str, SensorData] = {}
+
     for resource in config[CONF_RESOURCES]:
+        type_ = resource[CONF_TYPE]
         # Initialize the sensor argument if none was provided.
         # For disk monitoring default to "/" (root) to prevent runtime errors, if argument was not specified.
         if CONF_ARG not in resource:
-            resource[CONF_ARG] = ""
+            argument = ""
             if resource[CONF_TYPE].startswith("disk_"):
-                resource[CONF_ARG] = "/"
+                argument = "/"
+        else:
+            argument = resource[CONF_ARG]
 
         # Verify if we can retrieve CPU / processor temperatures.
         # If not, do not create the entity and add a warning to the log
         if (
-            resource[CONF_TYPE] == "processor_temperature"
-            and SystemMonitorSensor.read_cpu_temperature() is None
+            type_ == "processor_temperature"
+            and await hass.async_add_executor_job(_read_cpu_temperature) is None
         ):
             _LOGGER.warning("Cannot read CPU / processor temperature information")
             continue
 
-        dev.append(SystemMonitorSensor(resource[CONF_TYPE], resource[CONF_ARG]))
+        sensor_registry[type_] = SensorData(argument, None, None, None, None)
+        entities.append(SystemMonitorSensor(sensor_registry, type_, argument))
 
-    add_entities(dev, True)
+    scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    await async_setup_sensor_registry_updates(hass, sensor_registry, scan_interval)
+
+    async_add_entities(entities)
+
+
+async def async_setup_sensor_registry_updates(
+    hass: HomeAssistant,
+    sensor_registry: dict[str, SensorData],
+    scan_interval: datetime.timedelta,
+) -> None:
+    """Update the registry and create polling."""
+
+    _update_lock = asyncio.Lock()
+
+    def _update_sensors() -> None:
+        """Update sensors and store the result in the registry."""
+        for type_, data in sensor_registry.items():
+            try:
+                state, value, update_time = _update(type_, data)
+            except Exception as ex:  # pylint: disable=broad-except
+                _LOGGER.exception("Error updating sensor: %s", type_)
+                data.last_exception = ex
+            else:
+                data.state = state
+                data.value = value
+                data.update_time = update_time
+                data.last_exception = None
+
+        # Only fetch these once per iteration as we use the same
+        # data source multiple times in _update
+        _disk_usage.cache_clear()
+        _swap_memory.cache_clear()
+        _virtual_memory.cache_clear()
+        _net_io_counters.cache_clear()
+        _net_if_addrs.cache_clear()
+        _getloadavg.cache_clear()
+
+    async def _async_update_data(*_: Any) -> None:
+        """Update all sensors in one executor jump."""
+        if _update_lock.locked():
+            _LOGGER.warning(
+                "Updating systemmonitor took longer than the scheduled update interval %s",
+                scan_interval,
+            )
+            return
+
+        async with _update_lock:
+            await hass.async_add_executor_job(_update_sensors)
+            async_dispatcher_send(hass, SIGNAL_SYSTEMMONITOR_UPDATE)
+
+    polling_remover = async_track_time_interval(hass, _async_update_data, scan_interval)
+
+    @callback
+    def _async_stop_polling(*_: Any) -> None:
+        polling_remover()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_polling)
+
+    await _async_update_data()
 
 
 class SystemMonitorSensor(SensorEntity):
     """Implementation of a system monitor sensor."""
 
-    def __init__(self, sensor_type, argument=""):
+    def __init__(
+        self,
+        sensor_registry: dict[str, SensorData],
+        sensor_type: str,
+        argument: str = "",
+    ) -> None:
         """Initialize the sensor."""
-        self._name = "{} {}".format(SENSOR_TYPES[sensor_type][0], argument)
-        self._unique_id = slugify(f"{sensor_type}_{argument}")
-        self.argument = argument
-        self.type = sensor_type
-        self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._available = True
-        if sensor_type in ["throughput_network_out", "throughput_network_in"]:
-            self._last_value = None
-            self._last_update_time = None
+        self._type: str = sensor_type
+        self._name: str = f"{self.sensor_type[SENSOR_TYPE_NAME]} {argument}".rstrip()
+        self._unique_id: str = slugify(f"{sensor_type}_{argument}")
+        self._sensor_registry = sensor_registry
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
-        return self._name.rstrip()
+        return self._name
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique ID."""
         return self._unique_id
 
     @property
-    def device_class(self):
+    def device_class(self) -> str | None:
         """Return the class of this sensor."""
-        return SENSOR_TYPES[self.type][3]
+        return self.sensor_type[SENSOR_TYPE_DEVICE_CLASS]  # type: ignore[no-any-return]
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
-        return SENSOR_TYPES[self.type][2]
+        return self.sensor_type[SENSOR_TYPE_ICON]  # type: ignore[no-any-return]
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
-        return self._state
+        return self.data.state
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        return self.sensor_type[SENSOR_TYPE_UOM]  # type: ignore[no-any-return]
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
-        return self._available
+        return self.data.last_exception is None
 
-    def update(self):
-        """Get the latest system information."""
-        if self.type == "disk_use_percent":
-            self._state = psutil.disk_usage(self.argument).percent
-        elif self.type == "disk_use":
-            self._state = round(psutil.disk_usage(self.argument).used / 1024 ** 3, 1)
-        elif self.type == "disk_free":
-            self._state = round(psutil.disk_usage(self.argument).free / 1024 ** 3, 1)
-        elif self.type == "memory_use_percent":
-            self._state = psutil.virtual_memory().percent
-        elif self.type == "memory_use":
-            virtual_memory = psutil.virtual_memory()
-            self._state = round(
-                (virtual_memory.total - virtual_memory.available) / 1024 ** 2, 1
+    @property
+    def should_poll(self) -> bool:
+        """Entity does not poll."""
+        return False
+
+    @property
+    def sensor_type(self) -> list:
+        """Return sensor type data for the sensor."""
+        return SENSOR_TYPES[self._type]  # type: ignore
+
+    @property
+    def data(self) -> SensorData:
+        """Return registry entry for the data."""
+        return self._sensor_registry[self._type]
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_SYSTEMMONITOR_UPDATE, self.async_write_ha_state
             )
-        elif self.type == "memory_free":
-            self._state = round(psutil.virtual_memory().available / 1024 ** 2, 1)
-        elif self.type == "swap_use_percent":
-            self._state = psutil.swap_memory().percent
-        elif self.type == "swap_use":
-            self._state = round(psutil.swap_memory().used / 1024 ** 2, 1)
-        elif self.type == "swap_free":
-            self._state = round(psutil.swap_memory().free / 1024 ** 2, 1)
-        elif self.type == "processor_use":
-            self._state = round(psutil.cpu_percent(interval=None))
-        elif self.type == "processor_temperature":
-            self._state = self.read_cpu_temperature()
-        elif self.type == "process":
-            for proc in psutil.process_iter():
-                try:
-                    if self.argument == proc.name():
-                        self._state = STATE_ON
-                        return
-                except psutil.NoSuchProcess as err:
-                    _LOGGER.warning(
-                        "Failed to load process with ID: %s, old name: %s",
-                        err.pid,
-                        err.name,
-                    )
-            self._state = STATE_OFF
-        elif self.type in ["network_out", "network_in"]:
-            counters = psutil.net_io_counters(pernic=True)
-            if self.argument in counters:
-                counter = counters[self.argument][IO_COUNTER[self.type]]
-                self._state = round(counter / 1024 ** 2, 1)
-            else:
-                self._state = None
-        elif self.type in ["packets_out", "packets_in"]:
-            counters = psutil.net_io_counters(pernic=True)
-            if self.argument in counters:
-                self._state = counters[self.argument][IO_COUNTER[self.type]]
-            else:
-                self._state = None
-        elif self.type in ["throughput_network_out", "throughput_network_in"]:
-            counters = psutil.net_io_counters(pernic=True)
-            if self.argument in counters:
-                counter = counters[self.argument][IO_COUNTER[self.type]]
-                now = dt_util.utcnow()
-                if self._last_value and self._last_value < counter:
-                    self._state = round(
-                        (counter - self._last_value)
-                        / 1000 ** 2
-                        / (now - self._last_update_time).seconds,
-                        3,
-                    )
-                else:
-                    self._state = None
-                self._last_update_time = now
-                self._last_value = counter
-            else:
-                self._state = None
-        elif self.type in ["ipv4_address", "ipv6_address"]:
-            addresses = psutil.net_if_addrs()
-            if self.argument in addresses:
-                for addr in addresses[self.argument]:
-                    if addr.family == IF_ADDRS_FAMILY[self.type]:
-                        self._state = addr.address
-            else:
-                self._state = None
-        elif self.type == "last_boot":
-            # Only update on initial setup
-            if self._state is None:
-                self._state = dt_util.as_local(
-                    dt_util.utc_from_timestamp(psutil.boot_time())
-                ).isoformat()
-        elif self.type == "load_1m":
-            self._state = round(os.getloadavg()[0], 2)
-        elif self.type == "load_5m":
-            self._state = round(os.getloadavg()[1], 2)
-        elif self.type == "load_15m":
-            self._state = round(os.getloadavg()[2], 2)
+        )
 
-    @staticmethod
-    def read_cpu_temperature():
-        """Attempt to read CPU / processor temperature."""
-        temps = psutil.sensors_temperatures()
 
-        for name, entries in temps.items():
-            for i, entry in enumerate(entries, start=1):
-                # In case the label is empty (e.g. on Raspberry PI 4),
-                # construct it ourself here based on the sensor key name.
-                _label = f"{name} {i}" if not entry.label else entry.label
-                if _label in CPU_SENSOR_PREFIXES:
-                    return round(entry.current, 1)
+def _update(  # noqa: C901
+    type_: str, data: SensorData
+) -> tuple[str | None, str | None, datetime.datetime | None]:
+    """Get the latest system information."""
+    state = None
+    value = None
+    update_time = None
+
+    if type_ == "disk_use_percent":
+        state = _disk_usage(data.argument).percent
+    elif type_ == "disk_use":
+        state = round(_disk_usage(data.argument).used / 1024 ** 3, 1)
+    elif type_ == "disk_free":
+        state = round(_disk_usage(data.argument).free / 1024 ** 3, 1)
+    elif type_ == "memory_use_percent":
+        state = _virtual_memory().percent
+    elif type_ == "memory_use":
+        virtual_memory = _virtual_memory()
+        state = round((virtual_memory.total - virtual_memory.available) / 1024 ** 2, 1)
+    elif type_ == "memory_free":
+        state = round(_virtual_memory().available / 1024 ** 2, 1)
+    elif type_ == "swap_use_percent":
+        state = _swap_memory().percent
+    elif type_ == "swap_use":
+        state = round(_swap_memory().used / 1024 ** 2, 1)
+    elif type_ == "swap_free":
+        state = round(_swap_memory().free / 1024 ** 2, 1)
+    elif type_ == "processor_use":
+        state = round(psutil.cpu_percent(interval=None))
+    elif type_ == "processor_temperature":
+        state = _read_cpu_temperature()
+    elif type_ == "process":
+        state = STATE_OFF
+        for proc in psutil.process_iter():
+            try:
+                if data.argument == proc.name():
+                    state = STATE_ON
+                    break
+            except psutil.NoSuchProcess as err:
+                _LOGGER.warning(
+                    "Failed to load process with ID: %s, old name: %s",
+                    err.pid,
+                    err.name,
+                )
+    elif type_ in ["network_out", "network_in"]:
+        counters = _net_io_counters()
+        if data.argument in counters:
+            counter = counters[data.argument][IO_COUNTER[type_]]
+            state = round(counter / 1024 ** 2, 1)
+        else:
+            state = None
+    elif type_ in ["packets_out", "packets_in"]:
+        counters = _net_io_counters()
+        if data.argument in counters:
+            state = counters[data.argument][IO_COUNTER[type_]]
+        else:
+            state = None
+    elif type_ in ["throughput_network_out", "throughput_network_in"]:
+        counters = _net_io_counters()
+        if data.argument in counters:
+            counter = counters[data.argument][IO_COUNTER[type_]]
+            now = dt_util.utcnow()
+            if data.value and data.value < counter:
+                state = round(
+                    (counter - data.value)
+                    / 1000 ** 2
+                    / (now - (data.update_time or now)).total_seconds(),
+                    3,
+                )
+            else:
+                state = None
+            update_time = now
+            value = counter
+        else:
+            state = None
+    elif type_ in ["ipv4_address", "ipv6_address"]:
+        addresses = _net_if_addrs()
+        if data.argument in addresses:
+            for addr in addresses[data.argument]:
+                if addr.family == IF_ADDRS_FAMILY[type_]:
+                    state = addr.address
+        else:
+            state = None
+    elif type_ == "last_boot":
+        # Only update on initial setup
+        if data.state is None:
+            state = dt_util.utc_from_timestamp(psutil.boot_time()).isoformat()
+        else:
+            state = data.state
+    elif type_ == "load_1m":
+        state = round(_getloadavg()[0], 2)
+    elif type_ == "load_5m":
+        state = round(_getloadavg()[1], 2)
+    elif type_ == "load_15m":
+        state = round(_getloadavg()[2], 2)
+
+    return state, value, update_time
+
+
+# When we drop python 3.8 support these can be switched to
+# @cache https://docs.python.org/3.9/library/functools.html#functools.cache
+@lru_cache(maxsize=None)
+def _disk_usage(path: str) -> Any:
+    return psutil.disk_usage(path)
+
+
+@lru_cache(maxsize=None)
+def _swap_memory() -> Any:
+    return psutil.swap_memory()
+
+
+@lru_cache(maxsize=None)
+def _virtual_memory() -> Any:
+    return psutil.virtual_memory()
+
+
+@lru_cache(maxsize=None)
+def _net_io_counters() -> Any:
+    return psutil.net_io_counters(pernic=True)
+
+
+@lru_cache(maxsize=None)
+def _net_if_addrs() -> Any:
+    return psutil.net_if_addrs()
+
+
+@lru_cache(maxsize=None)
+def _getloadavg() -> tuple[float, float, float]:
+    return os.getloadavg()
+
+
+def _read_cpu_temperature() -> float | None:
+    """Attempt to read CPU / processor temperature."""
+    temps = psutil.sensors_temperatures()
+
+    for name, entries in temps.items():
+        for i, entry in enumerate(entries, start=1):
+            # In case the label is empty (e.g. on Raspberry PI 4),
+            # construct it ourself here based on the sensor key name.
+            _label = f"{name} {i}" if not entry.label else entry.label
+            # check both name and label because some systems embed cpu# in the
+            # name, which makes label not match because label adds cpu# at end.
+            if _label in CPU_SENSOR_PREFIXES or name in CPU_SENSOR_PREFIXES:
+                return cast(float, round(entry.current, 1))
+
+    return None

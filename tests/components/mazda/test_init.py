@@ -14,6 +14,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_REGION
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
@@ -59,7 +60,7 @@ async def test_init_auth_failure(hass: HomeAssistant):
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth"
+    assert flows[0]["step_id"] == "user"
 
 
 async def test_update_auth_failure(hass: HomeAssistant):
@@ -98,7 +99,7 @@ async def test_update_auth_failure(hass: HomeAssistant):
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth"
+    assert flows[0]["step_id"] == "user"
 
 
 async def test_unload_config_entry(hass: HomeAssistant) -> None:
@@ -109,3 +110,31 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state == ENTRY_STATE_NOT_LOADED
+
+
+async def test_device_nickname(hass):
+    """Test creation of the device when vehicle has a nickname."""
+    await init_integration(hass, use_nickname=True)
+
+    device_registry = dr.async_get(hass)
+    reg_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "JM000000000000000")},
+    )
+
+    assert reg_device.model == "2021 MAZDA3 2.5 S SE AWD"
+    assert reg_device.manufacturer == "Mazda"
+    assert reg_device.name == "My Mazda3"
+
+
+async def test_device_no_nickname(hass):
+    """Test creation of the device when vehicle has no nickname."""
+    await init_integration(hass, use_nickname=False)
+
+    device_registry = dr.async_get(hass)
+    reg_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "JM000000000000000")},
+    )
+
+    assert reg_device.model == "2021 MAZDA3 2.5 S SE AWD"
+    assert reg_device.manufacturer == "Mazda"
+    assert reg_device.name == "2021 MAZDA3 2.5 S SE AWD"
