@@ -17,6 +17,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -34,11 +35,27 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up climate(s) for KNX platform."""
+    await _migrate_unique_id(hass)
     entities = []
     for device in hass.data[DOMAIN].xknx.devices:
         if isinstance(device, XknxClimate):
             entities.append(KNXClimate(device))
     async_add_entities(entities)
+
+
+async def _migrate_unique_id(hass: HomeAssistant) -> None:
+    """Change unique_ids used in 2021.4 to include target_temperature GA."""
+    entity_registry = er.async_get(hass)
+    for device in hass.data[DOMAIN].xknx.devices:
+        if isinstance(device, XknxClimate):
+            old_uid = str(device.temperature.group_address_state)
+            entity_id = entity_registry.async_get_entity_id("climate", DOMAIN, old_uid)
+            if entity_id is not None:
+                new_uid = (
+                    f"{device.temperature.group_address_state}_"
+                    f"{device.target_temperature.group_address}"
+                )
+                entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
 
 
 class KNXClimate(KnxEntity, ClimateEntity):
@@ -48,7 +65,10 @@ class KNXClimate(KnxEntity, ClimateEntity):
         """Initialize of a KNX climate device."""
         self._device: XknxClimate
         super().__init__(device)
-        self._unique_id = f"{self._device.temperature.group_address_state}"
+        self._unique_id = (
+            f"{device.temperature.group_address_state}_"
+            f"{device.target_temperature.group_address}"
+        )
         self._unit_of_measurement = TEMP_CELSIUS
 
     @property
