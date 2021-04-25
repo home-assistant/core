@@ -15,7 +15,6 @@ CONF_DESCRIPTION = "description"
 CONF_MANUFACTURER = "manufacturer"
 CONF_MODEL = "model"
 CONF_ON_ACTION = "turn_on_action"
-CONF_SERIALNO = "serial_number"
 
 RESULT_AUTH_MISSING = "auth_missing"
 RESULT_ID_MISSING = "id_missing"
