@@ -9,7 +9,7 @@ from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
@@ -87,7 +87,7 @@ class ZWaveBaseEntity(Entity):
         )
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Return device information for the device registry."""
         # device is precreated in main handler
         return {

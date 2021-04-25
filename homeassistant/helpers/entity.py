@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import functools as ft
 import logging
 from timeit import default_timer as timer
-from typing import Any
+from typing import Any, TypedDict
 
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
@@ -102,6 +102,23 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
     return entry.supported_features or 0
+
+
+class DeviceInfo(TypedDict, total=False):
+    """Entity device information for device registry."""
+
+    name: str
+    connections: set[tuple[str, str]]
+    identifiers: set[tuple[str, str]]
+    manufacturer: str
+    model: str
+    suggested_area: str
+    sw_version: str
+    via_device: tuple[str, str]
+    entry_type: str | None
+    default_name: str
+    default_manufacturer: str
+    default_model: str
 
 
 class Entity(ABC):
@@ -208,7 +225,7 @@ class Entity(ABC):
         return None
 
     @property
-    def device_info(self) -> Mapping[str, Any] | None:
+    def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes.
 
         Implemented by platform classes.

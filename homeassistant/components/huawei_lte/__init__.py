@@ -49,7 +49,7 @@ from homeassistant.helpers import (
     discovery,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -606,7 +606,7 @@ class HuaweiLteBaseEntity(Entity):
         return False
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Get info for matching with parent router."""
         return {
             "identifiers": self.router.device_identifiers,
