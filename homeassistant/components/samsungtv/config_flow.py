@@ -100,7 +100,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._id.startswith("uuid:"):
             self._id = self._id[5:]
 
-        await self.async_set_unique_id(self._id)
+        await self.async_set_unique_id(self._id, raise_on_progress=raise_on_progress)
         self._abort_if_unique_id_configured()
 
     def _try_connect(self):
