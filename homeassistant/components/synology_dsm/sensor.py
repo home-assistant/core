@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any, Callable
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -34,12 +35,12 @@ from .const import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up the Synology NAS Sensor."""
 
     data = hass.data[DOMAIN][entry.unique_id]
-    api = data[SYNO_API]
+    api: SynoApi = data[SYNO_API]
     coordinator = data[COORDINATOR_CENTRAL]
 
     entities = [
@@ -102,7 +103,7 @@ class SynoDSMUtilSensor(SynoDSMSensor, SensorEntity):
     """Representation a Synology Utilisation sensor."""
 
     @property
-    def state(self):
+    def state(self) -> Any | None:
         """Return the state."""
         attr = getattr(self._api.utilisation, self.entity_type)
         if callable(attr):
@@ -134,7 +135,7 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor, SensorEntity)
     """Representation a Synology Storage sensor."""
 
     @property
-    def state(self):
+    def state(self) -> Any | None:
         """Return the state."""
         attr = getattr(self._api.storage, self.entity_type)(self._device_id)
         if attr is None:
@@ -160,14 +161,14 @@ class SynoDSMInfoSensor(SynoDSMSensor, SensorEntity):
         entity_type: str,
         entity_info: dict[str, str],
         coordinator: DataUpdateCoordinator,
-    ):
+    ) -> None:
         """Initialize the Synology SynoDSMInfoSensor entity."""
         super().__init__(api, entity_type, entity_info, coordinator)
         self._previous_uptime = None
         self._last_boot = None
 
     @property
-    def state(self):
+    def state(self) -> Any | None:
         """Return the state."""
         attr = getattr(self._api.information, self.entity_type)
         if attr is None:

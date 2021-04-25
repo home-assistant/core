@@ -1,12 +1,14 @@
 """Support for Synology DSM binary sensors."""
 from __future__ import annotations
 
+from typing import Callable
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISKS
 from homeassistant.core import HomeAssistant
 
-from . import SynologyDSMBaseEntity, SynologyDSMDeviceEntity
+from . import SynoApi, SynologyDSMBaseEntity, SynologyDSMDeviceEntity
 from .const import (
     COORDINATOR_CENTRAL,
     DOMAIN,
@@ -18,12 +20,12 @@ from .const import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up the Synology NAS binary sensor."""
 
     data = hass.data[DOMAIN][entry.unique_id]
-    api = data[SYNO_API]
+    api: SynoApi = data[SYNO_API]
     coordinator = data[COORDINATOR_CENTRAL]
 
     entities = [

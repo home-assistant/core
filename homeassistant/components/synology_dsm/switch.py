@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Callable
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 
@@ -18,12 +19,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up the Synology NAS switch."""
 
     data = hass.data[DOMAIN][entry.unique_id]
-    api = data[SYNO_API]
+    api: SynoApi = data[SYNO_API]
 
     entities = []
 
@@ -32,7 +33,7 @@ async def async_setup_entry(
         version = info["data"]["CMSMinVersion"]
 
         # initial data fetch
-        coordinator = data[COORDINATOR_SWITCHES]
+        coordinator: DataUpdateCoordinator = data[COORDINATOR_SWITCHES]
         await coordinator.async_refresh()
         entities += [
             SynoDSMSurveillanceHomeModeToggle(
@@ -54,7 +55,7 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
         entity_info: dict[str, str],
         version: str,
         coordinator: DataUpdateCoordinator,
-    ):
+    ) -> None:
         """Initialize a Synology Surveillance Station Home Mode."""
         super().__init__(
             api,
