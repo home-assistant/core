@@ -359,7 +359,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
             tpl.hass = self.hass
         self._command_templates = command_templates
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self):  # noqa: C901
         """(Re)Subscribe to topics."""
         topics = {}
         qos = self._config[CONF_QOS]

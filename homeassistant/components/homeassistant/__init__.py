@@ -50,7 +50,7 @@ SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
 SHUTDOWN_SERVICES = (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
 
 
-async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:  # noqa: C901
     """Set up general services related to Home Assistant."""
 
     async def async_handle_turn_service(service):

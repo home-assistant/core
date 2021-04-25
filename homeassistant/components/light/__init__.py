@@ -242,7 +242,7 @@ def filter_turn_off_params(params):
     return {k: v for k, v in params.items() if k in (ATTR_TRANSITION, ATTR_FLASH)}
 
 
-async def async_setup(hass, config):
+async def async_setup(hass, config):  # noqa: C901
     """Expose light control via state machine and services."""
     component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL

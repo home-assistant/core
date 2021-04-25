@@ -533,7 +533,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         return response
 
 
-def build_item_response(spotify, user, payload):
+def build_item_response(spotify, user, payload):  # noqa: C901
     """Create response payload for the provided media query."""
     media_content_type = payload["media_content_type"]
     media_content_id = payload["media_content_id"]

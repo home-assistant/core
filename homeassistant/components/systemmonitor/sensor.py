@@ -365,7 +365,7 @@ class SystemMonitorSensor(SensorEntity):
         )
 
 
-def _update(
+def _update(  # noqa: C901
     type_: str, data: SensorData
 ) -> tuple[str | None, str | None, datetime.datetime | None]:
     """Get the latest system information."""

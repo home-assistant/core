@@ -46,7 +46,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_scanner(hass, config, see, discovery_info=None):
+def setup_scanner(hass, config, see, discovery_info=None):  # noqa: C901
     """Set up the Bluetooth LE Scanner."""
 
     new_devices = {}

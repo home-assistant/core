@@ -755,7 +755,7 @@ async def merge_packages_config(
     return config
 
 
-async def async_process_component_config(
+async def async_process_component_config(  # noqa: C901
     hass: HomeAssistant, config: ConfigType, integration: Integration
 ) -> ConfigType | None:
     """Check component configuration and return processed configuration.

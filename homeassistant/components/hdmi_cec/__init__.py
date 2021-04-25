@@ -187,7 +187,7 @@ def parse_mapping(mapping, parents=None):
                 yield (val, pad_physical_address(cur))
 
 
-def setup(hass: HomeAssistant, base_config):
+def setup(hass: HomeAssistant, base_config):  # noqa: C901
     """Set up the CEC capability."""
 
     # Parse configuration into a dict of device name to physical address

@@ -336,7 +336,7 @@ def get_supervisor_ip():
     return os.environ["SUPERVISOR"].partition(":")[0]
 
 
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
+async def async_setup(hass: HomeAssistant, config: Config) -> bool:  # noqa: C901
     """Set up the Hass.io component."""
     # Check local setup
     for env in ("HASSIO", "HASSIO_TOKEN"):

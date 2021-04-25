@@ -157,7 +157,7 @@ class DataUpdateCoordinator(Generic[T]):
         """Refresh data and log errors."""
         await self._async_refresh(log_failures=True)
 
-    async def _async_refresh(
+    async def _async_refresh(  # noqa: C901
         self,
         log_failures: bool = True,
         raise_on_auth_failed: bool = False,

@@ -271,7 +271,7 @@ class BrSensor(SensorEntity):
             self.async_write_ha_state()
 
     @callback
-    def _load_data(self, data):
+    def _load_data(self, data):  # noqa: C901
         """Load the sensor with relevant data."""
         # Find sensor
 
