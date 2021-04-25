@@ -9,7 +9,7 @@ from pyheos import Heos, HeosError, const as heos_const
 import voluptuous as vol
 
 from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -47,7 +47,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
         # Create new entry based on config
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": "import"}, data={CONF_HOST: host}
+                DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: host}
             )
         )
     else:

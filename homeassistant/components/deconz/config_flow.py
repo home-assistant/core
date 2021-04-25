@@ -199,7 +199,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
 
         entry = await self.async_set_unique_id(self.bridge_id)
-        if entry and entry.source == "hassio":
+        if entry and entry.source == config_entries.SOURCE_HASSIO:
             return self.async_abort(reason="already_configured")
 
         self._abort_if_unique_id_configured(
