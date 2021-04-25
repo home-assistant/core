@@ -11,7 +11,6 @@ from pysonos.events_base import Event as SonosEvent, SubscriptionBase
 from pysonos.exceptions import SoCoException
 
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
     dispatcher_connect,
@@ -19,7 +18,6 @@ from homeassistant.helpers.dispatcher import (
 )
 
 from .const import (
-    DOMAIN as SONOS_DOMAIN,
     PLATFORMS,
     SCAN_INTERVAL,
     SEEN_EXPIRE_TIME,
@@ -42,10 +40,8 @@ _LOGGER = logging.getLogger(__name__)
 class SonosSpeaker:
     """Representation of a Sonos speaker."""
 
-    def __init__(self, hass: HomeAssistant, soco: SoCo):
+    def __init__(self, hass: HomeAssistant, soco: SoCo, speaker_info: dict[str, Any]):
         """Initialize a SonosSpeaker."""
-        speaker_info = soco.get_speaker_info(True)
-
         self._is_ready: bool = False
         self._subscriptions: list[SubscriptionBase] = []
         self._poll_timer: Callable | None = None
@@ -90,19 +86,6 @@ class SonosSpeaker:
     def available(self) -> bool:
         """Return whether this speaker is available."""
         return self._seen_timer is not None
-
-    @property
-    def device_info(self) -> dict[str, Any]:
-        """Return information about the device."""
-        return {
-            "identifiers": {(SONOS_DOMAIN, self.soco.uid)},
-            "name": self.zone_name,
-            "model": self.model_name.replace("Sonos ", ""),
-            "sw_version": self.version,
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-            "manufacturer": "Sonos",
-            "suggested_area": self.zone_name,
-        }
 
     async def async_subscribe(self) -> bool:
         """Initiate event subscriptions."""

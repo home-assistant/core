@@ -126,7 +126,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
                 if soco.uid not in data.discovered:
                     _LOGGER.debug("Adding new speaker")
-                    speaker = SonosSpeaker(hass, soco)
+                    speaker_info = soco.get_speaker_info(True)
+                    speaker = SonosSpeaker(hass, soco, speaker_info)
                     data.discovered[soco.uid] = speaker
                     speaker.setup()
                 else:

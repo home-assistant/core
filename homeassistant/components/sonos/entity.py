@@ -7,11 +7,12 @@ from typing import Any
 from pysonos.core import SoCo
 
 from homeassistant.core import callback
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from . import SonosData
-from .const import SONOS_ENTITY_UPDATE, SONOS_STATE_UPDATED
+from .const import DOMAIN, SONOS_ENTITY_UPDATE, SONOS_STATE_UPDATED
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +53,15 @@ class SonosEntity(Entity):
     @property
     def device_info(self) -> dict[str, Any]:
         """Return information about the device."""
-        return self.speaker.device_info
+        return {
+            "identifiers": {(DOMAIN, self.soco.uid)},
+            "name": self.speaker.zone_name,
+            "model": self.speaker.model_name.replace("Sonos ", ""),
+            "sw_version": self.speaker.version,
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address)},
+            "manufacturer": "Sonos",
+            "suggested_area": self.speaker.zone_name,
+        }
 
     @property
     def available(self) -> bool:
