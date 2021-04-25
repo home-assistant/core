@@ -1,6 +1,5 @@
 """The Screenlogic integration."""
 import asyncio
-from collections import defaultdict
 from datetime import timedelta
 import logging
 
@@ -73,31 +72,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await coordinator.async_config_entry_first_refresh()
 
-    device_data = defaultdict(list)
-
-    for circuit in coordinator.data["circuits"]:
-        device_data["switch"].append(circuit)
-
-    for sensor in coordinator.data["sensors"]:
-        if sensor == "chem_alarm":
-            device_data["binary_sensor"].append(sensor)
-        else:
-            if coordinator.data["sensors"][sensor]["value"] != 0:
-                device_data["sensor"].append(sensor)
-
-    for pump in coordinator.data["pumps"]:
-        if (
-            coordinator.data["pumps"][pump]["data"] != 0
-            and "currentWatts" in coordinator.data["pumps"][pump]
-        ):
-            device_data["pump"].append(pump)
-
-    for body in coordinator.data["bodies"]:
-        device_data["body"].append(body)
-
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
-        "devices": device_data,
         "listener": entry.add_update_listener(async_update_listener),
     }
 
