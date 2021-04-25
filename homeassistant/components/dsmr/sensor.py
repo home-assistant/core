@@ -7,6 +7,7 @@ from contextlib import suppress
 from datetime import timedelta
 from functools import partial
 import logging
+from typing import Any
 
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
@@ -361,7 +362,7 @@ class DSMREntity(SensorEntity):
         return self._unique_id
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> dict[str, Any]:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._device_serial)},

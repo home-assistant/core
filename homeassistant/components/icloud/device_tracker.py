@@ -1,6 +1,8 @@
 """Support for tracking for iCloud devices."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
@@ -105,12 +107,12 @@ class IcloudTrackerEntity(TrackerEntity):
         return icon_for_icloud_device(self._device)
 
     @property
-    def extra_state_attributes(self) -> dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return self._device.extra_state_attributes
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> dict[str, Any]:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._device.unique_id)},

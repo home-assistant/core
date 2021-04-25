@@ -1,6 +1,7 @@
 """Test the MySensors config flow."""
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -369,7 +370,7 @@ async def test_config_invalid(
     mqtt: config_entries.ConfigEntry,
     gateway_type: ConfGatewayType,
     expected_step_id: str,
-    user_input: dict[str, any],
+    user_input: dict[str, Any],
     err_field,
     err_string,
 ) -> None:

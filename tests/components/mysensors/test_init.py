@@ -1,6 +1,7 @@
 """Test function in __init__.py."""
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -232,7 +233,7 @@ async def test_import(
     config: ConfigType,
     expected_calls: int,
     expected_to_succeed: bool,
-    expected_config_flow_user_input: dict[str, any],
+    expected_config_flow_user_input: dict[str, Any],
 ) -> None:
     """Test importing a gateway."""
     await async_setup_component(hass, "persistent_notification", {})
