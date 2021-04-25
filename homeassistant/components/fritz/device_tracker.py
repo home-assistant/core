@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -143,7 +144,7 @@ class FritzBoxTracker(ScannerEntity):
         return SOURCE_TYPE_ROUTER
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> dict[str, Any]:
         """Return the device information."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
