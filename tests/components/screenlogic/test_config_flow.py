@@ -241,9 +241,13 @@ async def test_form_manual_entry(hass):
 
 async def test_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    with patch(
+        "homeassistant.components.screenlogic.config_flow.discovery.async_discover",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
     with patch(
         "homeassistant.components.screenlogic.config_flow.login.create_socket",
