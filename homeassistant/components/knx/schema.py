@@ -44,7 +44,8 @@ def ga_validator(value: Any) -> str | int:
         except CouldNotParseAddress:
             pass
     raise vol.Invalid(
-        f"value '{value}' is not a valid KNX group address '<main>/<middle>/<sub>', '<main>/<sub>' or '<free>' (eg.'1/2/3', '9/234', '123'), nor xknx internal address 'i-<string>'."
+        f"'{value}' is not a valid KNX group address '<main>/<middle>/<sub>', '<main>/<sub>'"
+        " or '<free>' (eg.'1/2/3', '9/234', '123'), nor xknx internal address 'i-<string>'."
     )
 
 
