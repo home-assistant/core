@@ -59,7 +59,7 @@ PLATFORMS = ["camera"]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
-) -> bool:
+) -> None:
     """Set up motionEye from a config entry."""
     entry_data = hass.data[DOMAIN][entry.entry_id]
 
@@ -82,7 +82,6 @@ async def async_setup_entry(
         )
 
     listen_for_new_cameras(hass, entry, camera_add)
-    return True
 
 
 class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
@@ -96,7 +95,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         camera: dict[str, Any],
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
-    ):
+    ) -> None:
         """Initialize a MJPEG camera."""
         self._surveillance_username = username
         self._surveillance_password = password
@@ -109,7 +108,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
             config_entry_id, self._camera_id, TYPE_MOTIONEYE_MJPEG_CAMERA
         )
         self._motion_detection_enabled: bool = camera.get(KEY_MOTION_DETECTION, False)
-        self._available = MotionEyeMjpegCamera._is_acceptable_streaming_camera(camera)
+        self._available = self._is_acceptable_streaming_camera(camera)
 
         # motionEye cameras are always streaming or unavailable.
         self.is_streaming = True
@@ -184,7 +183,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         available = False
         if self.coordinator.last_update_success:
             camera = get_camera_from_cameras(self._camera_id, self.coordinator.data)
-            if MotionEyeMjpegCamera._is_acceptable_streaming_camera(camera):
+            if self._is_acceptable_streaming_camera(camera):
                 assert camera
                 self._set_mjpeg_camera_state_for_camera(camera)
                 self._motion_detection_enabled = camera.get(KEY_MOTION_DETECTION, False)

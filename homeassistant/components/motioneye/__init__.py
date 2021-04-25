@@ -13,10 +13,10 @@ from motioneye_client.client import (
 from motioneye_client.const import KEY_CAMERAS, KEY_ID, KEY_NAME
 
 from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_SOURCE, CONF_URL
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -28,7 +28,6 @@ from .const import (
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
     CONF_CLIENT,
-    CONF_CONFIG_ENTRY,
     CONF_COORDINATOR,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
@@ -98,22 +97,6 @@ def listen_for_new_cameras(
     )
 
 
-async def _create_reauth_flow(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-) -> None:
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                CONF_SOURCE: SOURCE_REAUTH,
-                CONF_CONFIG_ENTRY: config_entry,
-            },
-            data=config_entry.data,
-        )
-    )
-
-
 @callback
 def _add_camera(
     hass: HomeAssistant,
@@ -155,10 +138,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await client.async_client_login()
-    except MotionEyeClientInvalidAuthError:
+    except MotionEyeClientInvalidAuthError as exc:
         await client.async_client_close()
-        await _create_reauth_flow(hass, entry)
-        return False
+        raise ConfigEntryAuthFailed from exc
     except MotionEyeClientError as exc:
         await client.async_client_close()
         raise ConfigEntryNotReady from exc
