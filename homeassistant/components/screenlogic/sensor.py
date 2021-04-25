@@ -31,9 +31,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for sensor in coordinator.data[SL_DATA.KEY_SENSORS]:
         if sensor == "chem_alarm":
             continue
-        else:
-            if coordinator.data[SL_DATA.KEY_SENSORS][sensor]["value"] != 0:
-                entities.append(ScreenLogicSensor(coordinator, sensor))
+        if coordinator.data[SL_DATA.KEY_SENSORS][sensor]["value"] != 0:
+            entities.append(ScreenLogicSensor(coordinator, sensor))
 
     # Pump sensors
     for pump in coordinator.data[SL_DATA.KEY_PUMPS]:
