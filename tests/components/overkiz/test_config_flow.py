@@ -13,7 +13,6 @@ from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.components.overkiz import config_flow
 from homeassistant.components.overkiz.const import DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_LOADED
 
 from tests.common import MockConfigEntry, mock_device_registry
 
@@ -139,43 +138,6 @@ async def test_allow_multiple_unique_entries(hass):
         "password": TEST_PASSWORD,
         "hub": TEST_HUB,
     }
-
-
-async def test_options_flow(hass):
-    """Test options flow."""
-
-    entry = MockConfigEntry(
-        domain=config_flow.DOMAIN,
-        unique_id=TEST_EMAIL,
-        data={"username": TEST_EMAIL, "password": TEST_PASSWORD},
-    )
-
-    with patch("pyhoma.client.TahomaClient.login", return_value=True), patch(
-        "pyhoma.client.TahomaClient.get_gateways", return_value=MOCK_GATEWAY_RESPONSE
-    ), patch("homeassistant.components.overkiz.async_setup_entry", return_value=True):
-        entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state == ENTRY_STATE_LOADED
-
-    result = await hass.config_entries.options.async_init(
-        entry.entry_id, context={"source": "test"}, data=None
-    )
-    assert result["type"] == "form"
-    assert result["step_id"] == "update_interval"
-
-    assert entry.options == {}
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "update_interval": 12000,
-        },
-    )
-
-    assert entry.options == {"update_interval": 12000}
 
 
 async def test_dhcp_flow(hass):
