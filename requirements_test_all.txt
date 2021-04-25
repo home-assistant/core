@@ -1247,6 +1247,7 @@ xbox-webapi==2.0.8
 xknx==0.18.1
 
 # homeassistant.components.bluesound
+# homeassistant.components.fritz
 # homeassistant.components.rest
 # homeassistant.components.startca
 # homeassistant.components.ted5000
