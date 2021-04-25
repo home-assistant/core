@@ -116,9 +116,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         cleaned_data[CONF_API_KEY] = config[CONF_API_KEY]
         cleaned_data[CONF_API_TOKEN] = config[CONF_YAML_API_TOKEN]
         if CONF_CURRENCIES in config:
-            cleaned_data[CONF_CURRENCIES] = ",".join(config[CONF_CURRENCIES])
+            cleaned_data[CONF_CURRENCIES] = config[CONF_CURRENCIES]
         if CONF_EXCHANGE_RATES in config:
-            cleaned_data[CONF_EXCHANGE_RATES] = ",".join(config[CONF_EXCHANGE_RATES])
+            cleaned_data[CONF_EXCHANGE_RATES] = config[CONF_EXCHANGE_RATES]
 
         return await self.async_step_user(user_input=cleaned_data)
 
