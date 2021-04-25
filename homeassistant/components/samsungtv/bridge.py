@@ -110,7 +110,7 @@ class SamsungTVBridge(ABC):
         """Send the key."""
 
     @abstractmethod
-    def _get_remote(self):
+    def _get_remote(self, avoid_open: bool = False):
         """Get Remote object."""
 
     def close_remote(self):
@@ -176,7 +176,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         """Try to gather infos of this device."""
         return None
 
-    def _get_remote(self):
+    def _get_remote(self, avoid_open: bool = False):
         """Create or return a remote control instance."""
         if self._remote is None:
             # We need to create a new instance to reconnect.
