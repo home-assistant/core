@@ -292,7 +292,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
-async-upnp-client==0.16.1
+async-upnp-client==0.16.2
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
