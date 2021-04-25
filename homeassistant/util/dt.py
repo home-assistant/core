@@ -229,6 +229,12 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> lis
     return res
 
 
+def _dst_offset_diff(now: dt.datetime) -> dt.timedelta:
+    """Return the offset when crossing the DST barrier."""
+    delta = dt.timedelta(hours=24)
+    return (now + delta).utcoffset() - (now - delta).utcoffset()  # type: ignore[operator]
+
+
 def find_next_time_expression_time(
     now: dt.datetime,  # pylint: disable=redefined-outer-name
     seconds: list[int],
@@ -324,5 +330,18 @@ def find_next_time_expression_time(
         return find_next_time_expression_time(
             result + dt.timedelta(seconds=1), seconds, minutes, hours
         )
+
+    # Another edge-case when leaving DST:
+    # When now is in DST and ambiguous *and* the next trigger time we *should*
+    # trigger is ambiguous and outside DST, the excepts above won't catch it.
+    # For example: if triggering on 2:30 and now is 28.10.2018 2:30 (in DST)
+    # we should trigger next on 28.10.2018 2:30 (out of DST), but our
+    # algorithm above would produce 29.10.2018 2:30 (out of DST)
+    if tz.datetime_ambiguous(now):
+        check_result = find_next_time_expression_time(
+            now + _dst_offset_diff(now), seconds, minutes, hours
+        )
+        if tz.datetime_ambiguous(check_result):
+            return check_result
 
     return result
