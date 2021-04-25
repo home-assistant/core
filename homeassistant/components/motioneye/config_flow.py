@@ -11,8 +11,16 @@ from motioneye_client.client import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow
+
+from homeassistant.config_entries import (
+    CONN_CLASS_LOCAL_POLL,
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigFlow,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_SOURCE, CONF_URL
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
@@ -22,6 +30,10 @@ from .const import (
     CONF_ADMIN_USERNAME,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
+    CONF_WEBHOOK_SET,
+    CONF_WEBHOOK_SET_OVERWRITE,
+    DEFAULT_WEBHOOK_SET,
+    DEFAULT_WEBHOOK_SET_OVERWRITE,
     DOMAIN,
 )
 
@@ -167,3 +179,43 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         return await self.async_step_user()
+
+    @staticmethod
+    @callback  # type: ignore[misc]
+    def async_get_options_flow(config_entry: ConfigEntry) -> MotionEyeOptionsFlow:
+        """Get the Hyperion Options flow."""
+        return MotionEyeOptionsFlow(config_entry)
+
+
+class MotionEyeOptionsFlow(OptionsFlow):  # type: ignore[misc]
+    """motionEye options flow."""
+
+    def __init__(self, config_entry: ConfigEntry):
+        """Initialize a motionEye options flow."""
+        self._config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        schema: dict[Any, Any] = {
+            vol.Required(
+                CONF_WEBHOOK_SET,
+                default=self._config_entry.options.get(
+                    CONF_WEBHOOK_SET,
+                    DEFAULT_WEBHOOK_SET,
+                ),
+            ): bool,
+            vol.Required(
+                CONF_WEBHOOK_SET_OVERWRITE,
+                default=self._config_entry.options.get(
+                    CONF_WEBHOOK_SET_OVERWRITE,
+                    DEFAULT_WEBHOOK_SET_OVERWRITE,
+                ),
+            ): bool,
+        }
+
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(schema))
