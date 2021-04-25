@@ -26,7 +26,7 @@ BINARY_SENSOR_DICT = {
 }
 
 SWITCH_DICT = {
-    "v12PortStatus": ["12V Port Status", DEVICE_CLASS_POWER],
-    "usbPortStatus": ["USB Port Status", DEVICE_CLASS_POWER],
-    "acPortStatus": ["AC Port Status", DEVICE_CLASS_POWER],
+    "v12PortStatus": "12V Port Status",
+    "usbPortStatus": "USB Port Status",
+    "acPortStatus": "AC Port Status",
 }

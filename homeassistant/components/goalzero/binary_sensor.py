@@ -35,10 +35,9 @@ class YetiBinarySensor(YetiEntity, BinarySensorEntity):
         name,
         sensor_name,
         server_unique_id,
-        device_class: str = None,
     ):
         """Initialize a Goal Zero Yeti sensor."""
-        super().__init__(api, coordinator, name, server_unique_id, device_class)
+        super().__init__(api, coordinator, name, server_unique_id)
 
         self._condition = sensor_name
 

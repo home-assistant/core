@@ -82,7 +82,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class YetiEntity(CoordinatorEntity):
     """Representation of a Goal Zero Yeti entity."""
 
-    def __init__(self, api, coordinator, name, server_unique_id, device_class):
+    def __init__(self, api, coordinator, name, server_unique_id):
         """Initialize a Goal Zero Yeti entity."""
         super().__init__(coordinator)
         self.api = api
