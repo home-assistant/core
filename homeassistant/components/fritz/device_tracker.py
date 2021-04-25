@@ -1,6 +1,8 @@
 """Support for FRITZ!Box routers."""
+from __future__ import annotations
+
 import logging
-from typing import Dict
+from typing import Any
 
 import voluptuous as vol
 
@@ -42,7 +44,6 @@ PLATFORM_SCHEMA = vol.All(
 
 async def async_get_scanner(hass: HomeAssistant, config: ConfigType):
     """Import legacy FRITZ!Box configuration."""
-
     _LOGGER.debug("Import legacy FRITZ!Box configuration from YAML")
 
     hass.async_create_task(
@@ -143,7 +144,7 @@ class FritzBoxTracker(ScannerEntity):
         return SOURCE_TYPE_ROUTER
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> dict[str, Any]:
         """Return the device information."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
@@ -168,7 +169,6 @@ class FritzBoxTracker(ScannerEntity):
     @callback
     def async_process_update(self) -> None:
         """Update device."""
-
         device = self._router.devices[self._mac]
         self._active = device.is_connected
 
