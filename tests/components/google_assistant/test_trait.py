@@ -2703,12 +2703,14 @@ async def test_channel(hass):
     }
     assert trt.query_attributes() == {}
 
-    player_media = async_mock_service(hass, media_player.DOMAIN, SERVICE_PLAY_MEDIA)
+    media_player_calls = async_mock_service(
+        hass, media_player.DOMAIN, SERVICE_PLAY_MEDIA
+    )
     await trt.execute(
         trait.COMMAND_SELECT_CHANNEL, BASIC_DATA, {"channelNumber": "1"}, {}
     )
-    assert len(player_media) == 1
-    assert player_media[0].data == {
+    assert len(media_player_calls) == 1
+    assert media_player_calls[0].data == {
         ATTR_ENTITY_ID: "media_player.demo",
         media_player.ATTR_MEDIA_CONTENT_ID: "1",
         media_player.ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
@@ -2717,8 +2719,8 @@ async def test_channel(hass):
     await trt.execute(
         trait.COMMAND_SELECT_CHANNEL, BASIC_DATA, {"channelCode": "Channel 2"}, {}
     )
-    assert len(player_media) == 2
-    assert player_media[1].data == {
+    assert len(media_player_calls) == 2
+    assert media_player_calls[1].data == {
         ATTR_ENTITY_ID: "media_player.demo",
         media_player.ATTR_MEDIA_CONTENT_ID: "2",
         media_player.ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
@@ -2728,4 +2730,8 @@ async def test_channel(hass):
         await trt.execute(
             trait.COMMAND_SELECT_CHANNEL, BASIC_DATA, {"channelCode": "Channel 3"}, {}
         )
-    assert len(player_media) == 2
+    assert len(media_player_calls) == 2
+
+    with pytest.raises(SmartHomeError, match="Unsupported command"):
+        await trt.execute("Unknown command", BASIC_DATA, {"channelNumber": "1"}, {})
+    assert len(media_player_calls) == 2
