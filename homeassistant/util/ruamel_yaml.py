@@ -6,7 +6,7 @@ from contextlib import suppress
 import logging
 import os
 from os import O_CREAT, O_TRUNC, O_WRONLY, stat_result
-from typing import Dict, List, Union
+from typing import Union
 
 import ruamel.yaml
 from ruamel.yaml import YAML  # type: ignore
@@ -19,7 +19,7 @@ from homeassistant.util.yaml import secret_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
-JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
+JSON_TYPE = Union[list, dict, str]  # pylint: disable=invalid-name
 
 
 class ExtSafeConstructor(SafeConstructor):
