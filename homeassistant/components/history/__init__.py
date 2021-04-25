@@ -540,10 +540,6 @@ class HistoryPeriodView(HomeAssistantView):
     ):
         """Fetch significant stats from the database as json."""
         timer_start = time.perf_counter()
-        import cProfile
-
-        pr = cProfile.Profile()
-        pr.enable()
 
         with session_scope(hass=hass) as session:
             result = _get_significant_states(
@@ -576,11 +572,7 @@ class HistoryPeriodView(HomeAssistantView):
             sorted_result.extend(result)
             result = sorted_result
 
-        ret = self.json(result)
-        pr.disable()
-        pr.create_stats()
-        pr.dump_stats("history.cprof")
-        return ret
+        return self.json(result)
 
 
 def sqlalchemy_filter_from_include_exclude_conf(conf):
