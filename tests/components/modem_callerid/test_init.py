@@ -52,11 +52,11 @@ async def test_unload_config_entry(hass):
     with patch(
         "homeassistant.components.modem_callerid.async_setup_entry",
         return_value=True,
-    ) as yeti_setup:
+    ) as modem_setup:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert len(yeti_setup.mock_calls) == 1
+        assert len(modem_setup.mock_calls) == 1
         assert config_entry.state == ENTRY_STATE_LOADED
 
     with patch.object(
@@ -79,11 +79,11 @@ async def test_failed_unload_config_entry(hass):
     with patch(
         "homeassistant.components.modem_callerid.async_setup_entry",
         return_value=True,
-    ) as yeti_setup:
+    ) as modem_setup:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert len(yeti_setup.mock_calls) == 1
+        assert len(modem_setup.mock_calls) == 1
         assert config_entry.state == ENTRY_STATE_LOADED
 
     with patch.object(

@@ -1,6 +1,7 @@
 reject_call:
+  name: Reject Call
   description: Reject incoming call.
-  fields:
-    entity_id:
-      description: Target sensor entity
-      example: modem_callerid.phone_modem
+  target:
+    entity:
+      integration: modem_callerid
+      domain: sensor
