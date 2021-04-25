@@ -7,7 +7,7 @@ from contextvars import ContextVar
 import functools
 import logging
 from types import MappingProxyType, MethodType
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, Iterable, Optional, cast
 import weakref
 
 import attr
@@ -999,6 +999,14 @@ class ConfigEntries:
 
         return True
 
+    @callback
+    def async_setup_platforms(
+        self, entry: ConfigEntry, platforms: Iterable[str]
+    ) -> None:
+        """Forward the setup of an entry to platforms."""
+        for platform in platforms:
+            self.hass.async_create_task(self.async_forward_entry_setup(entry, platform))
+
     async def async_forward_entry_setup(self, entry: ConfigEntry, domain: str) -> bool:
         """Forward the setup of an entry to a different component.
 
@@ -1020,6 +1028,19 @@ class ConfigEntries:
 
         await entry.async_setup(self.hass, integration=integration)
         return True
+
+    async def async_unload_platforms(
+        self, entry: ConfigEntry, platforms: Iterable[str]
+    ) -> bool:
+        """Forward the unloading of an entry to platforms."""
+        return all(
+            await asyncio.gather(
+                *[
+                    self.async_forward_entry_unload(entry, platform)
+                    for platform in platforms
+                ]
+            )
+        )
 
     async def async_forward_entry_unload(self, entry: ConfigEntry, domain: str) -> bool:
         """Forward the unloading of an entry to a different component."""
