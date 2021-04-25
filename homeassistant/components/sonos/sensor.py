@@ -85,7 +85,7 @@ class SonosBatteryEntity(SonosEntity, Entity):
         """Initialize a SonosBatteryEntity."""
         super().__init__(speaker, sonos_data)
         self._battery_info: dict[str, Any] = battery_info
-        self._last_update: datetime.datetime = None
+        self._last_event: datetime.datetime = None
 
     async def async_added_to_hass(self) -> None:
         """Register polling callback when added to hass."""
