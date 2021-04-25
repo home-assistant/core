@@ -28,11 +28,6 @@ from homeassistant.helpers.update_coordinator import (
 from .const import CONF_CONNECTIONS, CONF_COORDINATOR, DOMAIN, LOGGER, PLATFORMS
 
 
-async def async_setup(hass: HomeAssistant, config: dict[str, str]) -> bool:
-    """Set up the AVM Fritz!Box integration."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the AVM Fritz!Box platforms."""
     fritz = Fritzhome(
