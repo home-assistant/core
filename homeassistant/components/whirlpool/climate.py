@@ -49,7 +49,9 @@ class AirConEntity(ClimateEntity):
         self._aircon = Aircon(auth, said, self.schedule_update_ha_state)
 
         self._name = said
-        self._supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE
+        self._supported_features = (
+            SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE
+        )
 
     async def async_added_to_hass(self) -> None:
         """Connect aircon to the cloud."""
@@ -59,8 +61,8 @@ class AirConEntity(ClimateEntity):
             name = await self._aircon.fetch_name()
             if name is not None:
                 self._name = name
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.exception("Failed to get name: %s", exc)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Failed to get name")
 
     @property
     def min_temp(self) -> float:
@@ -171,6 +173,7 @@ class AirConEntity(ClimateEntity):
             mode = AirconMode.Fan
 
         if not mode:
+            _LOGGER.warning("Unexpected hvac mode")
             return
 
         await self._aircon.set_mode(mode)
@@ -180,7 +183,7 @@ class AirConEntity(ClimateEntity):
     @property
     def fan_modes(self):
         """List of available fan modes."""
-        return [FAN_OFF, FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+        return [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW, FAN_OFF]
 
     @property
     def fan_mode(self):

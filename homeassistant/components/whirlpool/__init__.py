@@ -7,6 +7,7 @@ from whirlpool.auth import Auth
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import AUTH_INSTANCE_KEY, DOMAIN
 
@@ -21,14 +22,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     auth = Auth(entry.data["username"], entry.data["password"])
     try:
-        await auth.load_auth_file()
-    except aiohttp.ClientConnectionError:
+        await auth.do_auth(store=False)
+    except aiohttp.ClientError:
         _LOGGER.error("Connection error")
-        return False
+        raise ConfigEntryNotReady("Cannot connect")
 
     if not auth.is_access_token_valid():
         _LOGGER.error("Authentication failed")
-        return False
+        raise ConfigEntryNotReady("Authentication failed")
 
     hass.data[DOMAIN][entry.entry_id] = {AUTH_INSTANCE_KEY: auth}
 

@@ -1220,7 +1220,7 @@ wakeonlan==2.0.1
 watchdog==2.0.2
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.15
+whirlpool-sixth-sense==0.15.1
 
 # homeassistant.components.wiffi
 wiffi==1.0.1

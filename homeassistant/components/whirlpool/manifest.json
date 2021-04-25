@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/whirlpool",
   "requirements": [
-    "whirlpool-sixth-sense==0.15"
+    "whirlpool-sixth-sense==0.15.1"
   ],
   "ssdp": [],
   "zeroconf": [],

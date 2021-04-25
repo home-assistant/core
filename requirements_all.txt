@@ -2320,7 +2320,7 @@ webexteamssdk==1.1.1
 websocket-client==0.54.0
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.15
+whirlpool-sixth-sense==0.15.1
 
 # homeassistant.components.wiffi
 wiffi==1.0.1
