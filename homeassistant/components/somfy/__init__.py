@@ -94,8 +94,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         previous_devices = data[COORDINATOR].data
         # Sometimes Somfy returns an empty list.
         if not devices and previous_devices:
-            _LOGGER.warn(
-                "No devices returned. Assuming the previous ones are still valid."
+            _LOGGER.warning(
+                "No devices returned. Assuming the previous ones are still valid"
             )
             return previous_devices
         return {dev.id: dev for dev in devices}
