@@ -137,7 +137,7 @@ async def test_dhcp(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "dhcp"},
+        context={"source": config_entries.SOURCE_DHCP},
         data={
             HOSTNAME: "Pentair: 01-01-01",
             IP_ADDRESS: "1.1.1.1",

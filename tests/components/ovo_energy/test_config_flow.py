@@ -105,7 +105,9 @@ async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
         return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
+            DOMAIN,
+            context={"source": config_entries.SOURCE_REAUTH},
+            data=FIXTURE_USER_INPUT,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -129,7 +131,9 @@ async def test_reauth_connection_error(hass: HomeAssistant) -> None:
         side_effect=aiohttp.ClientError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
+            DOMAIN,
+            context={"source": config_entries.SOURCE_REAUTH},
+            data=FIXTURE_USER_INPUT,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -158,7 +162,9 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         mock_config.add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
+            DOMAIN,
+            context={"source": config_entries.SOURCE_REAUTH},
+            data=FIXTURE_USER_INPUT,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

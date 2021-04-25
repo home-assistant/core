@@ -69,7 +69,9 @@ async def test_form_homekit(hass):
     """Test we get the form with homekit source."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    ignored_config_entry = MockConfigEntry(domain=DOMAIN, data={}, source="ignore")
+    ignored_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, source=config_entries.SOURCE_IGNORE
+    )
     ignored_config_entry.add_to_hass(hass)
 
     mock_powerview_userdata = _get_mock_powerview_userdata()
@@ -79,7 +81,7 @@ async def test_form_homekit(hass):
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "homekit"},
+            context={"source": config_entries.SOURCE_HOMEKIT},
             data={
                 "host": "1.2.3.4",
                 "properties": {"id": "AA::BB::CC::DD::EE::FF"},
@@ -114,7 +116,7 @@ async def test_form_homekit(hass):
 
     result3 = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "homekit"},
+        context={"source": config_entries.SOURCE_HOMEKIT},
         data={
             "host": "1.2.3.4",
             "properties": {"id": "AA::BB::CC::DD::EE::FF"},

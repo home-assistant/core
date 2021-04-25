@@ -10,6 +10,7 @@ from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_RETRY,
+    SOURCE_USER,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -29,7 +30,7 @@ async def test_owserver_connect_failure(hass):
     """Test connection failure raises ConfigEntryNotReady."""
     config_entry_owserver = MockConfigEntry(
         domain=DOMAIN,
-        source="user",
+        source=SOURCE_USER,
         data={
             CONF_TYPE: CONF_TYPE_OWSERVER,
             CONF_HOST: "1.2.3.4",
@@ -58,7 +59,7 @@ async def test_failed_owserver_listing(hass):
     """Create the 1-Wire integration."""
     config_entry_owserver = MockConfigEntry(
         domain=DOMAIN,
-        source="user",
+        source=SOURCE_USER,
         data={
             CONF_TYPE: CONF_TYPE_OWSERVER,
             CONF_HOST: "1.2.3.4",

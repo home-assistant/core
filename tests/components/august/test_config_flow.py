@@ -238,7 +238,7 @@ async def test_form_reauth(hass):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=entry.data
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=entry.data
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
@@ -284,7 +284,7 @@ async def test_form_reauth_with_2fa(hass):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=entry.data
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=entry.data
     )
     assert result["type"] == "form"
     assert result["errors"] == {}

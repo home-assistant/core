@@ -12,7 +12,12 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_UDN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    SOURCE_REAUTH,
+    SOURCE_SSDP,
+    SOURCE_USER,
+)
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
@@ -182,7 +187,7 @@ async def test_reauth_not_successful(hass: HomeAssistant, fritz: Mock):
 async def test_import(hass: HomeAssistant, fritz: Mock):
     """Test starting a flow by import."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "import"}, data=MOCK_USER_DATA
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_USER_DATA
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "fake_host"

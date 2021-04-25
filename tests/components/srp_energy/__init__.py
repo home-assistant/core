@@ -23,7 +23,7 @@ async def init_integration(
     config=None,
     options=None,
     entry_id="1",
-    source="user",
+    source=config_entries.SOURCE_USER,
     side_effect=None,
     usage=None,
 ):

@@ -6,6 +6,7 @@ from unittest.mock import patch
 import aiohttp
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.setup import async_setup_component
@@ -39,7 +40,9 @@ async def test_scan_match_st(hass, caplog):
 
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
-    assert mock_init.mock_calls[0][2]["context"] == {"source": "ssdp"}
+    assert mock_init.mock_calls[0][2]["context"] == {
+        "source": config_entries.SOURCE_SSDP
+    }
     assert mock_init.mock_calls[0][2]["data"] == {
         ssdp.ATTR_SSDP_ST: "mock-st",
         ssdp.ATTR_SSDP_LOCATION: None,
@@ -88,7 +91,9 @@ async def test_scan_match_upnp_devicedesc(hass, aioclient_mock, key):
     assert len(aioclient_mock.mock_calls) == 1
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
-    assert mock_init.mock_calls[0][2]["context"] == {"source": "ssdp"}
+    assert mock_init.mock_calls[0][2]["context"] == {
+        "source": config_entries.SOURCE_SSDP
+    }
 
 
 async def test_scan_not_all_present(hass, aioclient_mock):
@@ -266,7 +271,9 @@ async def test_invalid_characters(hass, aioclient_mock):
 
     assert len(mock_init.mock_calls) == 1
     assert mock_init.mock_calls[0][1][0] == "mock-domain"
-    assert mock_init.mock_calls[0][2]["context"] == {"source": "ssdp"}
+    assert mock_init.mock_calls[0][2]["context"] == {
+        "source": config_entries.SOURCE_SSDP
+    }
     assert mock_init.mock_calls[0][2]["data"] == {
         "ssdp_location": "http://1.1.1.1",
         "ssdp_st": "mock-st",

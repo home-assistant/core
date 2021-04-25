@@ -1,5 +1,6 @@
 """Test Met weather entity."""
 
+from homeassistant import config_entries
 from homeassistant.components.met import DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.helpers import entity_registry as er
@@ -55,7 +56,7 @@ async def test_not_tracking_home(hass, mock_weather):
 
     await hass.config_entries.flow.async_init(
         "met",
-        context={"source": "user"},
+        context={"source": config_entries.SOURCE_USER},
         data={"name": "Somewhere", "latitude": 10, "longitude": 20, "elevation": 0},
     )
     await hass.async_block_till_done()

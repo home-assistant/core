@@ -411,7 +411,9 @@ async def test_discovery(hass):
         return_value=MockConnection(),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=TEST_DISCOVERY,
         )
 
     assert result["type"] == "form"
@@ -450,7 +452,9 @@ async def test_discovery_cannot_connect_http(hass):
         return_value=MockConnection(),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=TEST_DISCOVERY,
         )
 
     assert result["type"] == "abort"
@@ -471,7 +475,9 @@ async def test_discovery_cannot_connect_ws(hass):
         new=get_kodi_connection,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=TEST_DISCOVERY,
         )
 
     assert result["type"] == "form"
@@ -489,7 +495,9 @@ async def test_discovery_exception_http(hass, user_flow):
         return_value=MockConnection(),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=TEST_DISCOVERY,
         )
 
     assert result["type"] == "abort"
@@ -506,7 +514,9 @@ async def test_discovery_invalid_auth(hass):
         return_value=MockConnection(),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=TEST_DISCOVERY,
         )
 
     assert result["type"] == "form"
@@ -524,14 +534,16 @@ async def test_discovery_duplicate_data(hass):
         return_value=MockConnection(),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=TEST_DISCOVERY,
         )
 
     assert result["type"] == "form"
     assert result["step_id"] == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=TEST_DISCOVERY
     )
 
     assert result["type"] == "abort"
@@ -549,7 +561,7 @@ async def test_discovery_updates_unique_id(hass):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=TEST_DISCOVERY
     )
 
     assert result["type"] == "abort"
@@ -563,7 +575,9 @@ async def test_discovery_updates_unique_id(hass):
 async def test_discovery_without_unique_id(hass):
     """Test a discovery flow with no unique id aborts."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY_WO_UUID
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=TEST_DISCOVERY_WO_UUID,
     )
 
     assert result["type"] == "abort"

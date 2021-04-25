@@ -32,7 +32,7 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_UDN,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, SOURCE_SSDP
+from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -109,7 +109,7 @@ async def setup_deconz_integration(
     get_state_response=DECONZ_WEB_REQUEST,
     entry_id="1",
     unique_id=BRIDGEID,
-    source="user",
+    source=SOURCE_USER,
 ):
     """Create the deCONZ gateway."""
     config_entry = MockConfigEntry(

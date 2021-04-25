@@ -159,7 +159,9 @@ async def test_already_configured_with_ignored(hass):
     """Test ignored entries do not break checking for existing entries."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, source="ignore")
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, source=config_entries.SOURCE_IGNORE
+    )
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -220,7 +222,7 @@ async def test_form_reauth(hass):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=entry.data
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=entry.data
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
