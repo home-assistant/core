@@ -34,10 +34,12 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_TRACK_WIRED_CLIENTS,
+    CONF_UNAUTHENTICATED_MODE,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
     DEFAULT_NOTIFY_SERVICE_NAME,
     DEFAULT_TRACK_WIRED_CLIENTS,
+    DEFAULT_UNAUTHENTICATED_MODE,
     DOMAIN,
 )
 
@@ -76,10 +78,10 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         ),
                     ): str,
                     vol.Optional(
-                        CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME) or ""
                     ): str,
                     vol.Optional(
-                        CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
+                        CONF_PASSWORD, default=user_input.get(CONF_PASSWORD) or ""
                     ): str,
                 }
             ),
@@ -92,15 +94,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle import initiated config flow."""
         return await self.async_step_user(user_input)
 
-    def _already_configured(self, user_input: dict[str, Any]) -> bool:
-        """See if we already have a router matching user input configured."""
-        existing_urls = {
-            url_normalize(entry.data[CONF_URL], default_scheme="http")
-            for entry in self._async_current_entries()
-        }
-        return user_input[CONF_URL] in existing_urls
-
-    async def async_step_user(  # noqa: C901
+    async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle user initiated config flow."""
@@ -119,9 +113,6 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input=user_input, errors=errors
             )
 
-        if self._already_configured(user_input):
-            return self.async_abort(reason="already_configured")
-
         conn: Connection | None = None
 
         def logout() -> None:
@@ -133,54 +124,28 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         def try_connect(user_input: dict[str, Any]) -> Connection:
             """Try connecting with given credentials."""
-            username = user_input.get(CONF_USERNAME)
-            password = user_input.get(CONF_PASSWORD)
-            conn: Connection
-            if username or password:
-                conn = AuthorizedConnection(
-                    user_input[CONF_URL],
-                    username=username,
-                    password=password,
-                    timeout=CONNECTION_TIMEOUT,
-                )
-            else:
-                try:
-                    conn = AuthorizedConnection(
-                        user_input[CONF_URL],
-                        username="",
-                        password="",
-                        timeout=CONNECTION_TIMEOUT,
-                    )
-                    user_input[CONF_USERNAME] = ""
-                    user_input[CONF_PASSWORD] = ""
-                except ResponseErrorException:
-                    _LOGGER.debug(
-                        "Could not login with empty credentials, proceeding unauthenticated",
-                        exc_info=True,
-                    )
-                    conn = Connection(user_input[CONF_URL], timeout=CONNECTION_TIMEOUT)
-                    del user_input[CONF_USERNAME]
-                    del user_input[CONF_PASSWORD]
+            username = user_input.get(CONF_USERNAME) or ""
+            password = user_input.get(CONF_PASSWORD) or ""
+            conn = AuthorizedConnection(
+                user_input[CONF_URL],
+                username=username,
+                password=password,
+                timeout=CONNECTION_TIMEOUT,
+            )
             return conn
 
-        def get_router_title(conn: Connection) -> str:
-            """Get title for router."""
-            title = None
+        def get_device_info(conn: Connection) -> dict[str, Any]:
+            """Get router info."""
             client = Client(conn)
             try:
-                info = client.device.basic_information()
+                return client.device.information()
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.debug("Could not get device.information", exc_info=True)
+            try:
+                return client.device.basic_information()
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.debug("Could not get device.basic_information", exc_info=True)
-            else:
-                title = info.get("devicename")
-            if not title:
-                try:
-                    info = client.device.information()
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.debug("Could not get device.information", exc_info=True)
-                else:
-                    title = info.get("DeviceName")
-            return title or DEFAULT_DEVICE_NAME
+            return {}
 
         try:
             conn = await self.hass.async_add_executor_job(try_connect, user_input)
@@ -207,10 +172,21 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input=user_input, errors=errors
             )
 
-        title = self.context.get("title_placeholders", {}).get(
-            CONF_NAME
-        ) or await self.hass.async_add_executor_job(get_router_title, conn)
+        info = await self.hass.async_add_executor_job(get_device_info, conn)
         await self.hass.async_add_executor_job(logout)
+
+        if not self.unique_id:
+            if serial_number := info.get("SerialNumber"):
+                await self.async_set_unique_id(serial_number)
+                self._abort_if_unique_id_configured()
+            await self._async_handle_discovery_without_unique_id()
+
+        title = (
+            self.context.get("title_placeholders", {}).get(CONF_NAME)
+            or info.get("DeviceName")  # device.information
+            or info.get("devicename")  # device.basic_information
+            or DEFAULT_DEVICE_NAME
+        )
 
         return self.async_create_entry(title=title, data=user_input)
 
@@ -224,21 +200,19 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if "mobile" not in discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "").lower():
             return self.async_abort(reason="not_huawei_lte")
 
-        url = self.context[CONF_URL] = url_normalize(
+        url = url_normalize(
             discovery_info.get(
                 ssdp.ATTR_UPNP_PRESENTATION_URL,
                 f"http://{urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname}/",
             )
         )
 
-        if any(
-            url == flow["context"].get(CONF_URL) for flow in self._async_in_progress()
-        ):
-            return self.async_abort(reason="already_in_progress")
+        if serial_number := discovery_info.get(ssdp.ATTR_UPNP_SERIAL):
+            await self.async_set_unique_id(serial_number)
+            self._abort_if_unique_id_configured()
+        await self._async_handle_discovery_without_unique_id()
 
         user_input = {CONF_URL: url}
-        if self._already_configured(user_input):
-            return self.async_abort(reason="already_configured")
 
         self.context["title_placeholders"] = {
             CONF_NAME: discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
@@ -287,6 +261,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_TRACK_WIRED_CLIENTS,
                     default=self.config_entry.options.get(
                         CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
+                    ),
+                ): bool,
+                vol.Optional(
+                    CONF_UNAUTHENTICATED_MODE,
+                    default=self.config_entry.options.get(
+                        CONF_UNAUTHENTICATED_MODE, DEFAULT_UNAUTHENTICATED_MODE
                     ),
                 ): bool,
             }
