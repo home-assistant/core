@@ -146,7 +146,7 @@ ATTR_STATUS_LIGHT = "status_light"
 UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 
 
-async def async_setup_entry(  # noqa: C901
+async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up Sonos from a config entry."""
