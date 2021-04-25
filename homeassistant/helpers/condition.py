@@ -301,7 +301,7 @@ def numeric_state(
     ).result()
 
 
-def async_numeric_state(
+def async_numeric_state(  # noqa: C901
     hass: HomeAssistant,
     entity: None | str | State,
     below: float | str | None = None,
