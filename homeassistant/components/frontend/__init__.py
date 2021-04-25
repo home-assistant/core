@@ -36,7 +36,6 @@ mimetypes.add_type("application/javascript", ".js")
 
 DOMAIN = "frontend"
 CONF_THEMES = "themes"
-CONF_THEMES_DEFAULTS = "defaults"
 CONF_THEMES_STYLES = "styles"
 CONF_THEMES_LIGHT = "light"
 CONF_THEMES_DARK = "dark"
@@ -72,21 +71,8 @@ PRIMARY_COLOR = "primary-color"
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULTS_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_THEMES_PRIMARY_COLOR): cv.string,
-        vol.Required(CONF_THEMES_ACCENT_COLOR): cv.string,
-    }
-)
-
 EXTENDED_THEME_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_THEMES_DEFAULTS): vol.Schema(
-            {
-                vol.Optional(CONF_THEMES_LIGHT): DEFAULTS_SCHEMA,
-                vol.Optional(CONF_THEMES_DARK): DEFAULTS_SCHEMA,
-            }
-        ),
         vol.Optional(CONF_THEMES_STYLES): vol.Schema(
             {
                 vol.Optional(CONF_THEMES_LIGHT): vol.Schema({cv.string: cv.string}),
@@ -102,7 +88,7 @@ THEME_SCHEMA = vol.Schema(
             vol.Any(
                 # Legacy theme scheme
                 {cv.string: cv.string},
-                # New extended schema with "dark styles" and "defaults" support
+                # New extended schema with "dark styles" support
                 EXTENDED_THEME_SCHEMA,
             )
         )
