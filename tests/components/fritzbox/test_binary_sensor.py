@@ -58,7 +58,7 @@ async def test_is_off(hass: HomeAssistant, fritz: Mock):
 
 
 async def test_update(hass: HomeAssistant, fritz: Mock):
-    """Test update with error."""
+    """Test update without error."""
     device = FritzDeviceBinarySensorMock()
     fritz().get_devices.return_value = [device]
 
@@ -91,4 +91,4 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock):
     await hass.async_block_till_done()
 
     assert device.update.call_count == 2
-    assert fritz().login.call_count == 2
+    assert fritz().login.call_count == 1

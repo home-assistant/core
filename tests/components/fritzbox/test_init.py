@@ -2,6 +2,7 @@
 from unittest.mock import Mock, call, patch
 
 from pyfritzhome import LoginError
+from requests.exceptions import HTTPError
 
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -57,6 +58,39 @@ async def test_setup_duplicate_config(hass: HomeAssistant, fritz: Mock, caplog):
     assert "duplicate host entries found" in caplog.text
 
 
+async def test_coordinator_update_after_reboot(hass: HomeAssistant, fritz: Mock):
+    """Test coordinator after reboot."""
+    entry = MockConfigEntry(
+        domain=FB_DOMAIN,
+        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        unique_id="any",
+    )
+    entry.add_to_hass(hass)
+    fritz().get_devices.side_effect = [HTTPError(), ""]
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    assert fritz().get_devices.call_count == 2
+    assert fritz().login.call_count == 2
+
+
+async def test_coordinator_update_after_password_change(
+    hass: HomeAssistant, fritz: Mock
+):
+    """Test coordinator after password change."""
+    entry = MockConfigEntry(
+        domain=FB_DOMAIN,
+        data=MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+        unique_id="any",
+    )
+    entry.add_to_hass(hass)
+    fritz().get_devices.side_effect = HTTPError()
+    fritz().login.side_effect = ["", HTTPError()]
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert fritz().get_devices.call_count == 1
+    assert fritz().login.call_count == 2
+
+
 async def test_unload_remove(hass: HomeAssistant, fritz: Mock):
     """Test unload and remove of integration."""
     fritz().get_devices.return_value = [FritzDeviceSwitchMock()]
@@ -107,9 +141,10 @@ async def test_raise_config_entry_not_ready_when_offline(hass):
     with patch(
         "homeassistant.components.fritzbox.Fritzhome.login",
         side_effect=LoginError("user"),
-    ):
+    ) as mock_login:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
+        mock_login.assert_called_once()
 
     entries = hass.config_entries.async_entries()
     config_entry = entries[0]

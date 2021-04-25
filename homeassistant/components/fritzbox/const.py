@@ -14,12 +14,13 @@ ATTR_TOTAL_CONSUMPTION = "total_consumption"
 ATTR_TOTAL_CONSUMPTION_UNIT = "total_consumption_unit"
 
 CONF_CONNECTIONS = "connections"
+CONF_COORDINATOR = "coordinator"
 
 DEFAULT_HOST = "fritz.box"
 DEFAULT_USERNAME = "admin"
 
 DOMAIN = "fritzbox"
 
-LOGGER = logging.getLogger(__package__)
+LOGGER: logging.Logger = logging.getLogger(__package__)
 
 PLATFORMS = ["binary_sensor", "climate", "switch", "sensor"]
