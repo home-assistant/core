@@ -160,7 +160,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             await self.hass.async_add_executor_job(self._try_connect)
 
-            await self._async_set_unique_id()
+            await self._async_set_unique_id(raise_on_progress=False)
 
             return self._get_entry()
 
