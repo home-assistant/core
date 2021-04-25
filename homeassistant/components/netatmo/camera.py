@@ -1,6 +1,7 @@
 """Support for the Netatmo cameras."""
 import logging
 
+import aiohttp
 import pyatmo
 import voluptuous as vol
 
@@ -183,7 +184,10 @@ class NetatmoCamera(NetatmoBase, Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        return await self._data.async_get_live_snapshot(camera_id=self._id)
+        try:
+            return await self._data.async_get_live_snapshot(camera_id=self._id)
+        except aiohttp.ClientPayloadError as err:
+            _LOGGER.error(err)
 
     @property
     def extra_state_attributes(self):

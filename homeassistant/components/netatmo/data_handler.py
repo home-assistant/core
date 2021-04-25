@@ -1,6 +1,7 @@
 """The Netatmo data handler."""
 from __future__ import annotations
 
+import asyncio
 from collections import deque
 from datetime import timedelta
 from functools import partial
@@ -128,18 +129,20 @@ class NetatmoDataHandler:
         try:
             await self.data[data_class_entry].async_update()
 
-            for update_callback in self._data_classes[data_class_entry][
-                "subscriptions"
-            ]:
-                if update_callback:
-                    update_callback()
-
         except pyatmo.NoDevice as err:
             _LOGGER.debug(err)
             self.data[data_class_entry] = None
 
         except pyatmo.ApiError as err:
             _LOGGER.debug(err)
+
+        except asyncio.exceptions.TimeoutError as err:
+            _LOGGER.debug(err)
+            return
+
+        for update_callback in self._data_classes[data_class_entry]["subscriptions"]:
+            if update_callback:
+                update_callback()
 
     async def register_data_class(
         self, data_class_name, data_class_entry, update_callback, **kwargs
