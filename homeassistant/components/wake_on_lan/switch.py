@@ -3,20 +3,14 @@ import logging
 import platform
 import subprocess as sp
 
+import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 import wakeonlan
-
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
-from homeassistant.const import (
-    CONF_BROADCAST_ADDRESS,
-    CONF_BROADCAST_PORT,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.script import Script
+from homeassistant.const import (CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT,
+                                 CONF_HOST, CONF_MAC, CONF_NAME)
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.script import Script
 
 _LOGGER = logging.getLogger(__name__)
 
