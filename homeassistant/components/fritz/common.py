@@ -94,7 +94,7 @@ class FritzBoxTools:
         )
 
     @callback
-    async def async_unload(self):
+    def async_unload(self):
         """Unload FritzboxTools class."""
         _LOGGER.debug("Unloading FRITZ!Box router integration")
         if self._cancel_scan is not None:
