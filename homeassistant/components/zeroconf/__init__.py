@@ -1,6 +1,7 @@
 """Support for exposing Home Assistant via Zeroconf."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from contextlib import suppress
 import fnmatch
 from functools import partial
@@ -8,7 +9,7 @@ import ipaddress
 from ipaddress import ip_address
 import logging
 import socket
-from typing import Any, Iterable, TypedDict, cast
+from typing import Any, TypedDict, cast
 
 from pyroute2 import IPRoute
 import voluptuous as vol

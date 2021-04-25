@@ -953,6 +953,9 @@ mitemp_bt==0.0.3
 # homeassistant.components.motion_blinds
 motionblinds==0.4.10
 
+# homeassistant.components.motioneye
+motioneye-client==0.3.2
+
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
 
@@ -2350,7 +2353,7 @@ xbox-webapi==2.0.8
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.18.0
+xknx==0.18.1
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest
@@ -2366,7 +2369,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.1.6
 
 # homeassistant.components.august
-yalexs==1.1.10
+yalexs==1.1.11
 
 # homeassistant.components.yeelight
 yeelight==0.6.1

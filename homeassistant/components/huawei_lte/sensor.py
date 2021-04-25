@@ -69,7 +69,9 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         name="WAN IPv6 address", icon="mdi:ip"
     ),
     (KEY_DEVICE_SIGNAL, "band"): SensorMeta(name="Band"),
-    (KEY_DEVICE_SIGNAL, "cell_id"): SensorMeta(name="Cell ID"),
+    (KEY_DEVICE_SIGNAL, "cell_id"): SensorMeta(
+        name="Cell ID", icon="mdi:transmission-tower"
+    ),
     (KEY_DEVICE_SIGNAL, "dl_mcs"): SensorMeta(name="Downlink MCS"),
     (KEY_DEVICE_SIGNAL, "dlbandwidth"): SensorMeta(
         name="Downlink bandwidth",
@@ -102,8 +104,13 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     (KEY_DEVICE_SIGNAL, "mode"): SensorMeta(
         name="Mode",
         formatter=lambda x: ({"0": "2G", "2": "3G", "7": "4G"}.get(x, "Unknown"), None),
+        icon=lambda x: (
+            {"2G": "mdi:signal-2g", "3G": "mdi:signal-3g", "4G": "mdi:signal-4g"}.get(
+                str(x), "mdi:signal"
+            )
+        ),
     ),
-    (KEY_DEVICE_SIGNAL, "pci"): SensorMeta(name="PCI"),
+    (KEY_DEVICE_SIGNAL, "pci"): SensorMeta(name="PCI", icon="mdi:transmission-tower"),
     (KEY_DEVICE_SIGNAL, "rsrq"): SensorMeta(
         name="RSRQ",
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
@@ -173,6 +180,23 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
             "mdi:signal-cellular-2",
             "mdi:signal-cellular-3",
         )[bisect((-20, -10, -6), x if x is not None else -1000)],
+    ),
+    (KEY_DEVICE_SIGNAL, "transmode"): SensorMeta(name="Transmission mode"),
+    (KEY_DEVICE_SIGNAL, "cqi0"): SensorMeta(
+        name="CQI 0",
+        icon="mdi:speedometer",
+    ),
+    (KEY_DEVICE_SIGNAL, "cqi1"): SensorMeta(
+        name="CQI 1",
+        icon="mdi:speedometer",
+    ),
+    (KEY_DEVICE_SIGNAL, "ltedlfreq"): SensorMeta(
+        name="Downlink frequency",
+        formatter=lambda x: (round(int(x) / 10), "MHz"),
+    ),
+    (KEY_DEVICE_SIGNAL, "lteulfreq"): SensorMeta(
+        name="Uplink frequency",
+        formatter=lambda x: (round(int(x) / 10), "MHz"),
     ),
     KEY_MONITORING_CHECK_NOTIFICATIONS: SensorMeta(
         exclude=re.compile(

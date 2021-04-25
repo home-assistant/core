@@ -513,6 +513,9 @@ minio==4.0.9
 # homeassistant.components.motion_blinds
 motionblinds==0.4.10
 
+# homeassistant.components.motioneye
+motioneye-client==0.3.2
+
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
 
@@ -1244,7 +1247,7 @@ wolf_smartset==0.1.8
 xbox-webapi==2.0.8
 
 # homeassistant.components.knx
-xknx==0.18.0
+xknx==0.18.1
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest
@@ -1254,7 +1257,7 @@ xknx==0.18.0
 xmltodict==0.12.0
 
 # homeassistant.components.august
-yalexs==1.1.10
+yalexs==1.1.11
 
 # homeassistant.components.yeelight
 yeelight==0.6.1
