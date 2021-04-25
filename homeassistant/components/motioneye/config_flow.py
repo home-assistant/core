@@ -21,7 +21,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import create_motioneye_client
-from .const import (  # pylint:disable=unused-import
+from .const import (
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
     CONF_CONFIG_ENTRY,

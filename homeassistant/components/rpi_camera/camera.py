@@ -56,9 +56,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # If no file path is defined, use a temporary file
     if file_path is None:
-        temp_file = NamedTemporaryFile(suffix=".jpg", delete=False)
-        temp_file.close()
-        file_path = temp_file.name
+        with NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+            file_path = temp_file.name
         setup_config[CONF_FILE_PATH] = file_path
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, delete_temp_file)
 
