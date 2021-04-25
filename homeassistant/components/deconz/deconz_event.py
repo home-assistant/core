@@ -19,7 +19,6 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -169,11 +168,14 @@ class DeconzAlarmEvent(DeconzEvent):
 
         state, code, _area = self._device.action.split(",")
 
+        if state not in DECONZ_TO_ALARM_STATE:
+            return
+
         data = {
             CONF_ID: self.event_id,
             CONF_UNIQUE_ID: self.serial,
             CONF_DEVICE_ID: self.device_id,
-            CONF_EVENT: DECONZ_TO_ALARM_STATE.get(state, STATE_UNKNOWN),
+            CONF_EVENT: DECONZ_TO_ALARM_STATE[state],
             CONF_CODE: code,
         }
 

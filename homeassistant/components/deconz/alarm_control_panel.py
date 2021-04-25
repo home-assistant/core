@@ -22,7 +22,6 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import entity_platform
@@ -154,7 +153,7 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
     @property
     def state(self) -> str:
         """Return the state of the control panel."""
-        return DECONZ_TO_ALARM_STATE.get(self._device.state, STATE_UNKNOWN)
+        return DECONZ_TO_ALARM_STATE.get(self._device.state, None)
 
     async def async_alarm_arm_away(self, code: None = None) -> None:
         """Send arm away command."""
