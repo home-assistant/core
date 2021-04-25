@@ -1,5 +1,5 @@
 """Test the init file of IFTTT."""
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ifttt
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import callback
@@ -13,7 +13,7 @@ async def test_config_flow_registers_webhook(hass, aiohttp_client):
     )
 
     result = await hass.config_entries.flow.async_init(
-        "ifttt", context={"source": "user"}
+        "ifttt", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM, result
 

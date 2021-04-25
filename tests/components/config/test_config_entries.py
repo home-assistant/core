@@ -330,7 +330,7 @@ async def test_create_account(hass, client):
             "disabled_by": None,
             "domain": "test",
             "entry_id": entries[0].entry_id,
-            "source": "user",
+            "source": core_ce.SOURCE_USER,
             "state": "loaded",
             "supports_options": False,
             "supports_unload": False,
@@ -401,7 +401,7 @@ async def test_two_step_flow(hass, client):
                 "disabled_by": None,
                 "domain": "test",
                 "entry_id": entries[0].entry_id,
-                "source": "user",
+                "source": core_ce.SOURCE_USER,
                 "state": "loaded",
                 "supports_options": False,
                 "supports_unload": False,
@@ -476,7 +476,7 @@ async def test_get_progress_index(hass, hass_ws_client):
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         form = await hass.config_entries.flow.async_init(
-            "test", context={"source": "hassio"}
+            "test", context={"source": core_ce.SOURCE_HASSIO}
         )
 
     await ws_client.send_json({"id": 5, "type": "config_entries/flow/progress"})
@@ -488,7 +488,7 @@ async def test_get_progress_index(hass, hass_ws_client):
             "flow_id": form["flow_id"],
             "handler": "test",
             "step_id": "account",
-            "context": {"source": "hassio"},
+            "context": {"source": core_ce.SOURCE_HASSIO},
         }
     ]
 
@@ -886,7 +886,7 @@ async def test_ignore_flow(hass, hass_ws_client):
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         result = await hass.config_entries.flow.async_init(
-            "test", context={"source": "user"}
+            "test", context={"source": core_ce.SOURCE_USER}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 

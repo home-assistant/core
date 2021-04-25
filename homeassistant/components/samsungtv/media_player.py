@@ -18,24 +18,19 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.components.ssdp import ATTR_UPNP_UDN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     CONF_HOST,
+    CONF_ID,
     CONF_IP_ADDRESS,
-    CONF_MAC,
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
     CONF_TOKEN,
-    EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
@@ -67,20 +62,18 @@ SUPPORT_SAMSUNGTV = (
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Samsung TV from a config entry."""
-    host = config_entry.data[CONF_HOST]
+    ip_address = config_entry.data[CONF_IP_ADDRESS]
     on_script = None
     if (
         DOMAIN in hass.data
-        and host in hass.data[DOMAIN]
-        and CONF_ON_ACTION in hass.data[DOMAIN][host]
-        and hass.data[DOMAIN][host][CONF_ON_ACTION]
+        and ip_address in hass.data[DOMAIN]
+        and CONF_ON_ACTION in hass.data[DOMAIN][ip_address]
+        and hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
     ):
-        turn_on_action = hass.data[DOMAIN][host][CONF_ON_ACTION]
+        turn_on_action = hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
         on_script = Script(
             hass, turn_on_action, config_entry.data.get(CONF_NAME, DEFAULT_NAME), DOMAIN
         )
-
-    await _migrate_old_unique_ids(hass, config_entry)
 
     # Initialize bridge
     data = config_entry.data.copy()
@@ -101,44 +94,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             data.get(CONF_TOKEN),
         )
 
-    async def stop_bridge(event):
-        """Stop SamsungTV bridge connection."""
-        bridge.stop()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
-
     async_add_entities([SamsungTVDevice(bridge, config_entry, on_script)])
-
-
-async def _migrate_old_unique_ids(hass, config_entry):
-    unique_id = config_entry.data[ATTR_UPNP_UDN]
-    ip_address = config_entry.data[CONF_IP_ADDRESS]
-
-    @callback
-    def _async_migrator(entity_entry: entity_registry.RegistryEntry):
-
-        LOGGER.info(
-            "Migrating unique_id from [%s] to [%s]",
-            ip_address,
-            unique_id,
-        )
-        return {"new_unique_id": unique_id}
-
-    await entity_registry.async_migrate_entries(
-        hass, config_entry.entry_id, _async_migrator
-    )
-
-
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Unload Samsung TV config entry."""
-    data = config_entry.data.copy()
-    bridge = SamsungTVBridge.get_bridge(
-        data[CONF_METHOD],
-        data[CONF_HOST],
-        data[CONF_PORT],
-        data.get(CONF_TOKEN),
-    )
-    bridge.stop()
 
 
 class SamsungTVDevice(MediaPlayerEntity):
@@ -147,12 +103,11 @@ class SamsungTVDevice(MediaPlayerEntity):
     def __init__(self, bridge, config_entry, on_script):
         """Initialize the Samsung device."""
         self._config_entry = config_entry
-        self._mac = config_entry.data.get(CONF_MAC)
         self._manufacturer = config_entry.data.get(CONF_MANUFACTURER)
         self._model = config_entry.data.get(CONF_MODEL)
         self._name = config_entry.data.get(CONF_NAME)
         self._on_script = on_script
-        self._uuid = config_entry.unique_id
+        self._uuid = config_entry.data.get(CONF_ID)
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
@@ -211,22 +166,14 @@ class SamsungTVDevice(MediaPlayerEntity):
         return self._state
 
     @property
-    def available(self):
-        """Return the availability of the device."""
-        return self._state == STATE_ON or self._on_script
-
-    @property
     def device_info(self):
         """Return device specific attributes."""
-        info = {
+        return {
             "name": self.name,
             "identifiers": {(DOMAIN, self.unique_id)},
             "manufacturer": self._manufacturer,
             "model": self._model,
         }
-        if self._mac:
-            info["connections"] = {(CONNECTION_NETWORK_MAC, self._mac)}
-        return info
 
     @property
     def is_volume_muted(self):
