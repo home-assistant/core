@@ -36,6 +36,9 @@ CONF_REPORT_STATE = "report_state"
 CONF_SERVICE_ACCOUNT = "service_account"
 CONF_CLIENT_EMAIL = "client_email"
 CONF_PRIVATE_KEY = "private_key"
+CONF_CHANNEL_LIST = "channel_list"
+CONF_CHANNEL_NAME = "channel_name"
+CONF_CHANNEL_NUMBER = "channel_number"
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
@@ -99,6 +102,7 @@ ERR_PROTOCOL_ERROR = "protocolError"
 ERR_UNKNOWN_ERROR = "unknownError"
 ERR_FUNCTION_NOT_SUPPORTED = "functionNotSupported"
 ERR_UNSUPPORTED_INPUT = "unsupportedInput"
+ERR_NO_AVAILABLE_CHANNEL = "noAvailableChannel"
 
 ERR_ALREADY_DISARMED = "alreadyDisarmed"
 ERR_ALREADY_ARMED = "alreadyArmed"

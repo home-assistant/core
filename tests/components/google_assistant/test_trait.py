@@ -26,6 +26,10 @@ from homeassistant.components.climate import const as climate
 from homeassistant.components.google_assistant import const, error, helpers, trait
 from homeassistant.components.google_assistant.error import SmartHomeError
 from homeassistant.components.humidifier import const as humidifier
+from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_CHANNEL,
+    SERVICE_PLAY_MEDIA,
+)
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -2653,3 +2657,75 @@ async def test_media_state(hass, state):
         "activityState": trt.activity_lookup.get(state),
         "playbackState": trt.playback_lookup.get(state),
     }
+
+
+async def test_channel(hass):
+    """Test Channel trait support."""
+    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
+    assert trait.ChannelTrait.supported(
+        media_player.DOMAIN, media_player.SUPPORT_PLAY_MEDIA, None, None
+    )
+    assert trait.ChannelTrait.supported(media_player.DOMAIN, 0, None, None) is False
+
+    config = MockConfig(
+        entity_config={
+            "media_player.demo": {
+                const.CONF_CHANNEL_LIST: [
+                    {
+                        const.CONF_CHANNEL_NAME: "Channel 1",
+                        const.CONF_CHANNEL_NUMBER: "1",
+                    },
+                    {
+                        const.CONF_CHANNEL_NAME: "Channel 2",
+                        const.CONF_CHANNEL_NUMBER: "2",
+                    },
+                ],
+            }
+        },
+    )
+
+    trt = trait.ChannelTrait(hass, State("media_player.demo", STATE_ON), config)
+
+    assert trt.sync_attributes() == {
+        "availableChannels": [
+            {
+                "key": "Channel 1",
+                "names": ["Channel 1"],
+                "number": "1",
+            },
+            {
+                "key": "Channel 2",
+                "names": ["Channel 2"],
+                "number": "2",
+            },
+        ],
+        "commandOnlyChannels": True,
+    }
+    assert trt.query_attributes() == {}
+
+    player_media = async_mock_service(hass, media_player.DOMAIN, SERVICE_PLAY_MEDIA)
+    await trt.execute(
+        trait.COMMAND_SELECT_CHANNEL, BASIC_DATA, {"channelNumber": "1"}, {}
+    )
+    assert len(player_media) == 1
+    assert player_media[0].data == {
+        ATTR_ENTITY_ID: "media_player.demo",
+        media_player.ATTR_MEDIA_CONTENT_ID: "1",
+        media_player.ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+    }
+
+    await trt.execute(
+        trait.COMMAND_SELECT_CHANNEL, BASIC_DATA, {"channelCode": "Channel 2"}, {}
+    )
+    assert len(player_media) == 2
+    assert player_media[1].data == {
+        ATTR_ENTITY_ID: "media_player.demo",
+        media_player.ATTR_MEDIA_CONTENT_ID: "2",
+        media_player.ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
+    }
+
+    with pytest.raises(SmartHomeError, match="Channel is not available"):
+        await trt.execute(
+            trait.COMMAND_SELECT_CHANNEL, BASIC_DATA, {"channelCode": "Channel 3"}, {}
+        )
+    assert len(player_media) == 2
