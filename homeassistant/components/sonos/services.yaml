@@ -168,9 +168,8 @@ update_alarm:
   name: Update alarm
   description: Updates an alarm with new time and volume settings.
   target:
-    entity:
+    device:
       integration: sonos
-      domain: media_player
   fields:
     alarm_id:
       name: Alarm ID
