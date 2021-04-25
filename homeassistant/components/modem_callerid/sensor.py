@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ENTITY_ID, CONF_DEVICE, CONF_NAME, STATE_IDLE
+from homeassistant.const import CONF_DEVICE, CONF_NAME, STATE_IDLE
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import (
@@ -24,8 +24,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
     }
 )
-
-SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids})
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,9 +47,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     platform = entity_platform.current_platform.get()
 
-    platform.async_register_entity_service(
-        SERVICE_REJECT_CALL, SERVICE_SCHEMA, "reject_call"
-    )
+    platform.async_register_entity_service(SERVICE_REJECT_CALL, {}, "reject_call")
 
 
 class ModemCalleridSensor(SensorEntity):
@@ -66,7 +62,11 @@ class ModemCalleridSensor(SensorEntity):
         self._state = STATE_IDLE
         self._name = name
         self._server_unique_id = server_unique_id
-        api.registercallback(self._incomingcallcallback)
+
+    async def async_added_to_hass(self):
+        """Call when the modem sensor is added to Home Assistant."""
+        self.api.registercallback(self._incomingcallcallback)
+        await super().async_added_to_hass()
 
     def set_state(self, state):
         """Set the state."""
