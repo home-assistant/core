@@ -33,6 +33,7 @@ from .const import (
     POLLING_TIMEOUT_SEC,
     REST,
     REST_SENSORS_UPDATE_INTERVAL,
+    SHBTN_MODELS,
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
 )
@@ -180,6 +181,17 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Handle device updates."""
         if not self.device.initialized:
             return
+
+        # For buttons which are battery powered - set initial value for last_event_count
+        if self.model in SHBTN_MODELS and self._last_input_events_count.get(1) is None:
+            for block in self.device.blocks:
+                if block.type != "device":
+                    continue
+
+                if block.wakeupEvent[0] == "button":
+                    self._last_input_events_count[1] = -1
+
+                break
 
         # Check for input events
         for block in self.device.blocks:
