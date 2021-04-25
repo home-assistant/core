@@ -143,7 +143,7 @@ play_queue:
       selector:
         number:
           min: 0
-          max: 100
+          max: 10000
           mode: box
 
 remove_from_queue:
@@ -161,7 +161,7 @@ remove_from_queue:
       selector:
         number:
           min: 0
-          max: 100
+          max: 10000
           mode: box
 
 update_alarm:
