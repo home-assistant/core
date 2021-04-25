@@ -54,18 +54,18 @@ class HostSubProcess:
 
     def ping(self):
         """Send an ICMP echo request and return True if success."""
-        pinger = subprocess.Popen(
+        with subprocess.Popen(
             self._ping_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
-        )
-        try:
-            pinger.communicate(timeout=1 + PING_TIMEOUT)
-            return pinger.returncode == 0
-        except subprocess.TimeoutExpired:
-            kill_subprocess(pinger)
-            return False
+        ) as pinger:
+            try:
+                pinger.communicate(timeout=1 + PING_TIMEOUT)
+                return pinger.returncode == 0
+            except subprocess.TimeoutExpired:
+                kill_subprocess(pinger)
+                return False
 
-        except subprocess.CalledProcessError:
-            return False
+            except subprocess.CalledProcessError:
+                return False
 
     def update(self) -> bool:
         """Update device state by sending one or more ping messages."""
