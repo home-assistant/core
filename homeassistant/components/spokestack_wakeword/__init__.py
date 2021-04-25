@@ -25,24 +25,24 @@ async def async_setup(hass, config):
     def start_service(call):
         """Start the pipeline service."""
         pipeline.start()
-        _LOGGER.info("pipeline started")
+        _LOGGER.info("Pipeline started")
 
     def run_service(call):
         """Run the wake word service."""
-        _LOGGER.info("pipeline running")
+        _LOGGER.info("Pipeline running")
         pipeline.run()
 
     def stop_service(call):
         """Stop the wake word service."""
         pipeline.stop()
-        _LOGGER.info("pipeline stopped")
+        _LOGGER.info("Pipeline stopped")
 
     # Register wake word services with Home Assistant.
     hass.services.async_register(DOMAIN, "start", start_service)
     hass.services.async_register(DOMAIN, "run", run_service)
     hass.services.async_register(DOMAIN, "stop", stop_service)
 
-    # Return boolean to indicate that initialization was successfully.
+    # Return boolean to indicate that initialization was successful.
     return True
 
 

@@ -10,5 +10,6 @@
     "pyaudio-wheels==0.0.1",
     "spokestack==0.0.18"
   ],
-  "codeowners": ["@spokestack", "@will-rice"]
+  "codeowners": ["@spokestack", "@will-rice"],
+  "iot_class": "local_polling"
 }
