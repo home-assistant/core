@@ -78,6 +78,11 @@ from .const import (
     CONF_STATUS_REGISTER_TYPE,
     CONF_STEP,
     CONF_STOPBITS,
+    CONF_SWAP,
+    CONF_SWAP_BYTE,
+    CONF_SWAP_NONE,
+    CONF_SWAP_WORD,
+    CONF_SWAP_WORDBYTE,
     CONF_TARGET_TEMP,
     CONF_VERIFY_REGISTER,
     CONF_VERIFY_STATE,
@@ -204,7 +209,10 @@ SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
             [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
         ),
-        vol.Optional(CONF_REVERSE_ORDER, default=False): cv.boolean,
+        vol.Optional(CONF_REVERSE_ORDER): cv.boolean,
+        vol.Optional(CONF_SWAP, default=CONF_SWAP_NONE): vol.In(
+            [CONF_SWAP_NONE, CONF_SWAP_BYTE, CONF_SWAP_WORD, CONF_SWAP_WORDBYTE]
+        ),
         vol.Optional(CONF_SCALE, default=1): number,
         vol.Optional(CONF_STRUCTURE): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,

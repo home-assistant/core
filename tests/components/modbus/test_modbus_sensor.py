@@ -1,5 +1,6 @@
 """The tests for the Modbus sensor component."""
 from unittest import mock
+import logging
 
 import pytest
 
@@ -14,6 +15,11 @@ from homeassistant.components.modbus.const import (
     CONF_REGISTERS,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
+    CONF_SWAP,
+    CONF_SWAP_BYTE,
+    CONF_SWAP_NONE,
+    CONF_SWAP_WORD,
+    CONF_SWAP_WORDBYTE,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
@@ -110,6 +116,38 @@ from .conftest import base_config_test, base_test
                 CONF_OFFSET: 0,
                 CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
                 CONF_DEVICE_CLASS: "battery",
+            },
+        ),
+        (
+            True,
+            {
+                CONF_ADDRESS: 51,
+                CONF_COUNT: 1,
+                CONF_SWAP: CONF_SWAP_NONE,
+            },
+        ),
+        (
+            True,
+            {
+                CONF_ADDRESS: 51,
+                CONF_COUNT: 1,
+                CONF_SWAP: CONF_SWAP_BYTE,
+            },
+        ),
+        (
+            True,
+            {
+                CONF_ADDRESS: 51,
+                CONF_COUNT: 2,
+                CONF_SWAP: CONF_SWAP_WORD,
+            },
+        ),
+        (
+            True,
+            {
+                CONF_ADDRESS: 51,
+                CONF_COUNT: 2,
+                CONF_SWAP: CONF_SWAP_WORDBYTE,
             },
         ),
     ],
@@ -408,6 +446,51 @@ async def test_config_wrong_struct_sensor(hass, do_config):
             None,
             STATE_UNAVAILABLE,
         ),
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_SWAP: CONF_SWAP_NONE,
+            },
+            [0x0102],
+            str(int(0x0102)),
+        ),
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_SWAP: CONF_SWAP_BYTE,
+            },
+            [0x0201],
+            str(int(0x0102)),
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_SWAP: CONF_SWAP_BYTE,
+            },
+            [0x0102, 0x0304],
+            str(int(0x02010403)),
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_SWAP: CONF_SWAP_WORD,
+            },
+            [0x0102, 0x0304],
+            str(int(0x03040102)),
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_DATA_TYPE: DATA_TYPE_INT,
+                CONF_SWAP: CONF_SWAP_WORDBYTE,
+            },
+            [0x0102, 0x0304],
+            str(int(0x04030201)),
+        ),
     ],
 )
 async def test_all_sensor(hass, cfg, regs, expected):
@@ -508,3 +591,32 @@ async def test_restore_state_sensor(hass):
         )
         entity_id = f"{SENSOR_DOMAIN}.{sensor_name}"
         assert hass.states.get(entity_id).state == test_value
+
+@pytest.mark.parametrize(
+    "swap_type",
+    [CONF_SWAP_WORD, CONF_SWAP_WORDBYTE],
+)
+async def test_swap_sensor_wrong_config(hass, caplog, swap_type):
+    """Run test for sensor swap."""
+    sensor_name = "modbus_test_sensor"
+    config = {
+        CONF_NAME: sensor_name,
+        CONF_ADDRESS: 1234,
+        CONF_COUNT: 1,
+        CONF_SWAP: swap_type,
+        CONF_DATA_TYPE: DATA_TYPE_INT,
+    }
+
+    caplog.set_level(logging.ERROR)
+    caplog.clear()
+    await base_config_test(
+        hass,
+        config,
+        sensor_name,
+        SENSOR_DOMAIN,
+        CONF_SENSORS,
+        None,
+        method_discovery=True,
+        expect_init_to_fail=True,
+    )
+    assert caplog.messages[-1].startswith("Error in sensor " + sensor_name + " swap")
