@@ -82,7 +82,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Set device unique_id."""
 
         if self._id:
-            await self.async_set_unique_id(self._id)
+            await self.async_set_unique_id(self._id, raise_on_progress=raise_on_progress)
             self._abort_if_unique_id_configured()
 
         await self._async_get_and_check_device_info()
