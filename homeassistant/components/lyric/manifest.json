@@ -10,15 +10,15 @@
   "dhcp": [
     {
       "hostname": "lyric-*",
-      "macaddress": "48A2E6"
+      "macaddress": "48A2E6*"
     },
     {
       "hostname": "lyric-*",
-      "macaddress": "B82CA0"
+      "macaddress": "B82CA0*"
     },
     {
       "hostname": "lyric-*",
-      "macaddress": "00D02D"
+      "macaddress": "00D02D*"
     }
   ],
   "iot_class": "cloud_polling"

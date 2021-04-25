@@ -23,8 +23,6 @@ async def test_form(hass):
         "homeassistant.components.kmtronic.config_flow.KMTronicHubAPI.async_get_status",
         return_value=[Mock()],
     ), patch(
-        "homeassistant.components.kmtronic.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.kmtronic.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -45,7 +43,6 @@ async def test_form(hass):
         "password": "test-password",
     }
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

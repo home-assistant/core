@@ -72,6 +72,7 @@ class FlowResultDict(TypedDict, total=False):
     reason: str
     context: dict[str, Any]
     result: Any
+    last_step: bool | None
 
 
 class FlowManager(abc.ABC):
@@ -164,7 +165,7 @@ class FlowManager(abc.ABC):
         handler: str,
         context: dict,
         data: Any,
-    ) -> tuple[FlowHandler, Any]:
+    ) -> tuple[FlowHandler, FlowResultDict]:
         """Run the init in a task to allow it to be canceled at shutdown."""
         flow = await self.async_create_flow(handler, context=context, data=data)
         if not flow:
@@ -345,6 +346,7 @@ class FlowHandler:
         data_schema: vol.Schema = None,
         errors: dict[str, str] | None = None,
         description_placeholders: dict[str, Any] | None = None,
+        last_step: bool | None = None,
     ) -> FlowResultDict:
         """Return the definition of a form to gather user input."""
         return {
@@ -355,6 +357,7 @@ class FlowHandler:
             "data_schema": data_schema,
             "errors": errors,
             "description_placeholders": description_placeholders,
+            "last_step": last_step,  # Display next or submit button in frontend
         }
 
     @callback

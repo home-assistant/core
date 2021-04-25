@@ -1,7 +1,8 @@
 """Support for KNX scenes."""
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable
+from collections.abc import Iterable
+from typing import Any, Callable
 
 from xknx import XKNX
 from xknx.devices import Scene as XknxScene

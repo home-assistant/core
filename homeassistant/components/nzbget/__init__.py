@@ -13,8 +13,8 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -59,7 +59,7 @@ SPEED_LIMIT_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the NZBGet integration."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -78,7 +78,7 @@ async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up NZBGet from a config entry."""
     if not entry.options:
         options = {
@@ -113,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
@@ -132,7 +132,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
 
 
 def _async_register_services(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     coordinator: NZBGetDataUpdateCoordinator,
 ) -> None:
     """Register integration-level services."""
@@ -156,7 +156,7 @@ def _async_register_services(
     )
 
 
-async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) -> None:
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 

@@ -3,8 +3,8 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from aiohttp.client_exceptions import ClientConnectorError
-from pyrituals import Account
+import aiohttp
+from pyrituals import Account, Diffuser
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -19,6 +19,7 @@ PLATFORMS = ["binary_sensor", "sensor", "switch"]
 EMPTY_CREDENTIALS = ""
 
 _LOGGER = logging.getLogger(__name__)
+
 UPDATE_INTERVAL = timedelta(seconds=30)
 
 
@@ -30,38 +31,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         account_devices = await account.get_devices()
-    except ClientConnectorError as ex:
-        raise ConfigEntryNotReady from ex
-
-    hublots = []
-    devices = {}
-    for device in account_devices:
-        hublot = device.data[HUB][HUBLOT]
-        hublots.append(hublot)
-        devices[hublot] = device
+    except aiohttp.ClientError as err:
+        raise ConfigEntryNotReady from err
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         COORDINATORS: {},
-        DEVICES: devices,
+        DEVICES: {},
     }
 
-    for hublot in hublots:
-        device = hass.data[DOMAIN][entry.entry_id][DEVICES][hublot]
+    for device in account_devices:
+        hublot = device.data[HUB][HUBLOT]
 
-        async def async_update_data():
-            await device.update_data()
-            return device.data
-
-        coordinator = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name=f"{DOMAIN}-{hublot}",
-            update_method=async_update_data,
-            update_interval=UPDATE_INTERVAL,
-        )
-
+        coordinator = RitualsPerufmeGenieDataUpdateCoordinator(hass, device)
         await coordinator.async_refresh()
 
+        hass.data[DOMAIN][entry.entry_id][DEVICES][hublot] = device
         hass.data[DOMAIN][entry.entry_id][COORDINATORS][hublot] = coordinator
 
     for platform in PLATFORMS:
@@ -86,3 +70,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+class RitualsPerufmeGenieDataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to manage fetching Rituals Perufme Genie device data from single endpoint."""
+
+    def __init__(self, hass: HomeAssistant, device: Diffuser):
+        """Initialize global Rituals Perufme Genie data updater."""
+        self._device = device
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}-{device.data[HUB][HUBLOT]}",
+            update_interval=UPDATE_INTERVAL,
+        )
+
+    async def _async_update_data(self) -> dict:
+        """Fetch data from Rituals."""
+        await self._device.update_data()
+        return self._device.data

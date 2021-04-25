@@ -92,7 +92,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _, hub_name = await _validate_input(self.hass, self._discovered)
         self._discovered[CONF_NAME] = hub_name
 
-    async def async_step_zeroconf(  # type: ignore[override]
+    async def async_step_zeroconf(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResultDict:
         """Handle a flow initialized by zeroconf discovery."""

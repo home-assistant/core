@@ -4,12 +4,10 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 import io
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from aiohttp import web
 import attr
-import av.container
-import av.video
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
@@ -17,6 +15,10 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
 
 from .const import ATTR_STREAMS, DOMAIN
+
+if TYPE_CHECKING:
+    import av.container
+    import av.video
 
 PROVIDERS = Registry()
 

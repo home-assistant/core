@@ -37,6 +37,7 @@
             "init": {
                 "data": {
                     "show_all_sources": "Kuva k\u00f5ik sisendid",
+                    "update_audyssey": "Uuenda Audyssey s\u00e4tteid",
                     "zone2": "Seadista tsoon 2",
                     "zone3": "Seadista tsoon 3"
                 },

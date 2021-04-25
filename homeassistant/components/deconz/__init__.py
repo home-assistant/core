@@ -45,7 +45,9 @@ async def async_setup_entry(hass, config_entry):
 
     await async_setup_services(hass)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gateway.shutdown)
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gateway.shutdown)
+    )
 
     return True
 

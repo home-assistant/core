@@ -16,11 +16,11 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_CUSTOM, CONF_GROUP, DEVICE_INFO, GROUPS
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import CONF_CUSTOM, CONF_GROUP, DEVICE_INFO, DOMAIN, GROUPS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """First step in config flow."""
         errors = {}
         if user_input is not None:
@@ -118,7 +118,7 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(
         self, import_config: dict[str, Any] | None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Import a config flow from configuration."""
         device_info = await validate_input(self.hass, import_config)
         import_config[DEVICE_INFO] = device_info

@@ -22,16 +22,11 @@ from .const import CONF_TOKEN_EXPIRES_IN, CONF_TOKEN_EXPIRY, DOMAIN
 CONF_ID_TOKEN = "id_token"
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Flick Electric component."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Flick Electric from a config entry."""
     auth = HassFlickAuth(hass, entry)
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = FlickAPI(auth)
 
     hass.async_create_task(

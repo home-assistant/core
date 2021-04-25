@@ -25,6 +25,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .config_flow import async_discover_gateways_by_unique_id, name_for_mac
 from .const import DEFAULT_SCAN_INTERVAL, DISCOVERED_GATEWAYS, DOMAIN
+from .services import async_load_screenlogic_services, async_unload_screenlogic_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,9 +69,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass, config_entry=entry, gateway=gateway, api_lock=api_lock
     )
 
-    device_data = defaultdict(list)
+    async_load_screenlogic_services(hass)
 
     await coordinator.async_config_entry_first_refresh()
+
+    device_data = defaultdict(list)
 
     for circuit in coordinator.data["circuits"]:
         device_data["switch"].append(circuit)
@@ -120,6 +123,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
+    async_unload_screenlogic_services(hass)
+
     return unload_ok
 
 
@@ -137,6 +142,7 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
         self.gateway = gateway
         self.api_lock = api_lock
         self.screenlogic_data = {}
+
         interval = timedelta(
             seconds=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         )

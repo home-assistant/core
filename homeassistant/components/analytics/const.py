@@ -5,6 +5,7 @@ import logging
 import voluptuous as vol
 
 ANALYTICS_ENDPOINT_URL = "https://analytics-api.home-assistant.io/v1"
+ANALYTICS_ENDPOINT_URL_DEV = "https://analytics-api-dev.home-assistant.io/v1"
 DOMAIN = "analytics"
 INTERVAL = timedelta(days=1)
 STORAGE_KEY = "core.analytics"

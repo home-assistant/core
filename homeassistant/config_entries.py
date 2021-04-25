@@ -138,6 +138,7 @@ class ConfigEntry:
         "disabled_by",
         "_setup_lock",
         "update_listeners",
+        "reason",
         "_async_cancel_retry_setup",
         "_on_unload",
     )
@@ -202,6 +203,9 @@ class ConfigEntry:
             weakref.ReferenceType[UpdateListenerType] | weakref.WeakMethod
         ] = []
 
+        # Reason why config entry is in a failed state
+        self.reason: str | None = None
+
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
 
@@ -236,6 +240,7 @@ class ConfigEntry:
             )
             if self.domain == integration.domain:
                 self.state = ENTRY_STATE_SETUP_ERROR
+                self.reason = "Import error"
             return
 
         if self.domain == integration.domain:
@@ -249,12 +254,16 @@ class ConfigEntry:
                     err,
                 )
                 self.state = ENTRY_STATE_SETUP_ERROR
+                self.reason = "Import error"
                 return
 
             # Perform migration
             if not await self.async_migrate(hass):
                 self.state = ENTRY_STATE_MIGRATION_ERROR
+                self.reason = None
                 return
+
+        error_reason = None
 
         try:
             result = await component.async_setup_entry(hass, self)  # type: ignore
@@ -267,6 +276,7 @@ class ConfigEntry:
         except ConfigEntryAuthFailed as ex:
             message = str(ex)
             auth_base_message = "could not authenticate"
+            error_reason = message or auth_base_message
             auth_message = (
                 f"{auth_base_message}: {message}" if message else auth_base_message
             )
@@ -281,6 +291,7 @@ class ConfigEntry:
             result = False
         except ConfigEntryNotReady as ex:
             self.state = ENTRY_STATE_SETUP_RETRY
+            self.reason = str(ex) or None
             wait_time = 2 ** min(tries, 4) * 5
             tries += 1
             message = str(ex)
@@ -329,8 +340,10 @@ class ConfigEntry:
 
         if result:
             self.state = ENTRY_STATE_LOADED
+            self.reason = None
         else:
             self.state = ENTRY_STATE_SETUP_ERROR
+            self.reason = error_reason
 
     async def async_shutdown(self) -> None:
         """Call when Home Assistant is stopping."""
@@ -352,6 +365,7 @@ class ConfigEntry:
         """
         if self.source == SOURCE_IGNORE:
             self.state = ENTRY_STATE_NOT_LOADED
+            self.reason = None
             return True
 
         if integration is None:
@@ -363,6 +377,7 @@ class ConfigEntry:
                 # that has been renamed without removing the config
                 # entry.
                 self.state = ENTRY_STATE_NOT_LOADED
+                self.reason = None
                 return True
 
         component = integration.get_component()
@@ -375,6 +390,7 @@ class ConfigEntry:
                 self.async_cancel_retry_setup()
 
                 self.state = ENTRY_STATE_NOT_LOADED
+                self.reason = None
                 return True
 
         supports_unload = hasattr(component, "async_unload_entry")
@@ -382,6 +398,7 @@ class ConfigEntry:
         if not supports_unload:
             if integration.domain == self.domain:
                 self.state = ENTRY_STATE_FAILED_UNLOAD
+                self.reason = "Unload not supported"
             return False
 
         try:
@@ -392,6 +409,7 @@ class ConfigEntry:
             # Only adjust state if we unloaded the component
             if result and integration.domain == self.domain:
                 self.state = ENTRY_STATE_NOT_LOADED
+                self.reason = None
 
             self._async_process_on_unload()
 
@@ -402,6 +420,7 @@ class ConfigEntry:
             )
             if integration.domain == self.domain:
                 self.state = ENTRY_STATE_FAILED_UNLOAD
+                self.reason = "Unknown error"
             return False
 
     async def async_remove(self, hass: HomeAssistant) -> None:
@@ -1229,12 +1248,41 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             reason=reason, description_placeholders=description_placeholders
         )
 
-    async_step_hassio = async_step_discovery
-    async_step_homekit = async_step_discovery
-    async_step_mqtt = async_step_discovery
-    async_step_ssdp = async_step_discovery
-    async_step_zeroconf = async_step_discovery
-    async_step_dhcp = async_step_discovery
+    async def async_step_hassio(
+        self, discovery_info: DiscoveryInfoType
+    ) -> data_entry_flow.FlowResultDict:
+        """Handle a flow initialized by HASS IO discovery."""
+        return await self.async_step_discovery(discovery_info)
+
+    async def async_step_homekit(
+        self, discovery_info: DiscoveryInfoType
+    ) -> data_entry_flow.FlowResultDict:
+        """Handle a flow initialized by Homekit discovery."""
+        return await self.async_step_discovery(discovery_info)
+
+    async def async_step_mqtt(
+        self, discovery_info: DiscoveryInfoType
+    ) -> data_entry_flow.FlowResultDict:
+        """Handle a flow initialized by MQTT discovery."""
+        return await self.async_step_discovery(discovery_info)
+
+    async def async_step_ssdp(
+        self, discovery_info: DiscoveryInfoType
+    ) -> data_entry_flow.FlowResultDict:
+        """Handle a flow initialized by SSDP discovery."""
+        return await self.async_step_discovery(discovery_info)
+
+    async def async_step_zeroconf(
+        self, discovery_info: DiscoveryInfoType
+    ) -> data_entry_flow.FlowResultDict:
+        """Handle a flow initialized by Zeroconf discovery."""
+        return await self.async_step_discovery(discovery_info)
+
+    async def async_step_dhcp(
+        self, discovery_info: DiscoveryInfoType
+    ) -> data_entry_flow.FlowResultDict:
+        """Handle a flow initialized by DHCP discovery."""
+        return await self.async_step_discovery(discovery_info)
 
 
 class OptionsFlowManager(data_entry_flow.FlowManager):

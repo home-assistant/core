@@ -31,4 +31,4 @@ CONFIG_ENTRY_SCAN_INTERVAL = "scan_interval"
 CONFIG_ENTRY_ST = "st"
 CONFIG_ENTRY_UDN = "udn"
 CONFIG_ENTRY_HOSTNAME = "hostname"
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=30).seconds
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=30).total_seconds()

@@ -926,7 +926,7 @@ async def test_entity_disabled_by_integration(hass):
     entry_default = registry.async_get_or_create(DOMAIN, DOMAIN, "default")
     assert entry_default.disabled_by is None
     entry_disabled = registry.async_get_or_create(DOMAIN, DOMAIN, "disabled")
-    assert entry_disabled.disabled_by == "integration"
+    assert entry_disabled.disabled_by == er.DISABLED_INTEGRATION
 
 
 async def test_entity_info_added_to_entity_registry(hass):

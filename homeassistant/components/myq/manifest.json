@@ -6,7 +6,8 @@
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "homekit": {
-    "models": ["819LMB"]
+    "models": ["819LMB", "MYQ"]
   },
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "dhcp": [{ "macaddress": "645299*" }]
 }

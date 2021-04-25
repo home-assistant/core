@@ -50,6 +50,7 @@ from .const import (
     ATTR_TYPE,
     ATTR_VALUE,
     ATTR_VALUE_RAW,
+    CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INTEGRATION_CREATED_ADDON,
     CONF_NETWORK_KEY,
     CONF_USB_PATH,
@@ -64,7 +65,7 @@ from .const import (
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
 )
 from .discovery import async_discover_values
-from .helpers import get_device_id
+from .helpers import async_enable_statistics, get_device_id
 from .migrate import async_migrate_discovered_value
 from .services import ZWaveServices
 
@@ -107,7 +108,9 @@ def register_node_in_dev_reg(
     return device
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up Z-Wave JS from a config entry."""
     use_addon = entry.data.get(CONF_USE_ADDON)
     if use_addon:
@@ -321,6 +324,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return
 
         LOGGER.info("Connection to Zwave JS Server initialized")
+
+        # If opt in preference hasn't been specified yet, we do nothing, otherwise
+        # we apply the preference
+        if opted_in := entry.data.get(CONF_DATA_COLLECTION_OPTED_IN):
+            await async_enable_statistics(client)
+        elif opted_in is False:
+            await client.driver.async_disable_statistics()
 
         # Check for nodes that no longer exist and remove them
         stored_devices = device_registry.async_entries_for_config_entry(
