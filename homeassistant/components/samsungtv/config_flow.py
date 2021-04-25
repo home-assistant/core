@@ -78,16 +78,19 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data=data,
         )
 
-    async def _async_set_unique_id(self, raise_on_progress=True):
+    async def _async_set_device_unique_id(self, raise_on_progress=True):
         """Set device unique_id."""
 
         if self._id:
-            await self.async_set_unique_id(self._id, raise_on_progress=raise_on_progress)
+            await self.async_set_unique_id(
+                self._id, raise_on_progress=raise_on_progress
+            )
             self._abort_if_unique_id_configured()
 
         await self._async_get_and_check_device_info()
 
-        self._id = self._device_info.get("device", {}).get(ATTR_UPNP_UDN.lower())
+        if uuid := self._device_info.get("device", {}).get(ATTR_UPNP_UDN.lower()):
+            self._id = uuid
 
         if not self._id:
             LOGGER.debug(
@@ -160,7 +163,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             await self.hass.async_add_executor_job(self._try_connect)
 
-            await self._async_set_unique_id(raise_on_progress=False)
+            await self._async_set_device_unique_id(raise_on_progress=False)
 
             return self._get_entry()
 
@@ -171,7 +174,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
 
         LOGGER.debug("Found Samsung device via ssdp at %s", self._host)
-        await self._async_set_unique_id()
+        await self._async_set_device_unique_id()
 
         self._manufacturer = discovery_info.get(ATTR_UPNP_MANUFACTURER)
         if not self._model:
@@ -189,7 +192,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         LOGGER.debug("Found Samsung device via zeroconf at %s", self._host)
 
-        await self._async_set_unique_id()
+        await self._async_set_device_unique_id()
 
         self._mac = discovery_info[ATTR_PROPERTIES].get("deviceid")
         self._manufacturer = discovery_info[ATTR_PROPERTIES].get("manufacturer")
