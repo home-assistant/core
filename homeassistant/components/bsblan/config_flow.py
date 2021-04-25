@@ -2,21 +2,17 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from bsblan import BSBLan, BSBLanError, Info
 import voluptuous as vol
 
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # pylint:disable=unused-import
-    CONF_DEVICE_IDENT,
-    CONF_PASSKEY,
-    DOMAIN,
-)
+from .const import CONF_DEVICE_IDENT, CONF_PASSKEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +25,7 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: ConfigType | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._show_setup_form()
@@ -61,7 +57,7 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    def _show_setup_form(self, errors: dict | None = None) -> dict[str, Any]:
+    def _show_setup_form(self, errors: dict | None = None) -> FlowResultDict:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from contextlib import suppress
 from datetime import datetime
 from ipaddress import ip_address
 import logging
@@ -99,12 +100,10 @@ async def process_wrong_login(request):
 
     remote_addr = ip_address(request.remote)
     remote_host = request.remote
-    try:
+    with suppress(herror):
         remote_host, _, _ = await hass.async_add_executor_job(
             gethostbyaddr, request.remote
         )
-    except herror:
-        pass
 
     base_msg = f"Login attempt or request with invalid authentication from {remote_host} ({remote_addr})."
 

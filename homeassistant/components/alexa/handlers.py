@@ -653,10 +653,9 @@ def temperature_from_object(hass, temp_obj, interval=False):
 
     if temp_obj["scale"] == "FAHRENHEIT":
         from_unit = TEMP_FAHRENHEIT
-    elif temp_obj["scale"] == "KELVIN":
+    elif temp_obj["scale"] == "KELVIN" and not interval:
         # convert to Celsius if absolute temperature
-        if not interval:
-            temp -= 273.15
+        temp -= 273.15
 
     return convert_temperature(temp, from_unit, to_unit, interval)
 
@@ -1375,10 +1374,7 @@ async def async_api_seek(hass, config, directive, context):
         msg = f"{entity} did not return the current media position."
         raise AlexaVideoActionNotPermittedForContentError(msg)
 
-    seek_position = int(current_position) + int(position_delta / 1000)
-
-    if seek_position < 0:
-        seek_position = 0
+    seek_position = max(int(current_position) + int(position_delta / 1000), 0)
 
     media_duration = entity.attributes.get(media_player.ATTR_MEDIA_DURATION)
     if media_duration and 0 < int(media_duration) < seek_position:

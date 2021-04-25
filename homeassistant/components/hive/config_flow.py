@@ -13,11 +13,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import callback
 
-from .const import (  # pylint:disable=unused-import
-    CONF_CODE,
-    CONFIG_ENTRY_VERSION,
-    DOMAIN,
-)
+from .const import CONF_CODE, CONFIG_ENTRY_VERSION, DOMAIN
 
 
 class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

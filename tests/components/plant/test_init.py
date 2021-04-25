@@ -58,7 +58,7 @@ async def test_valid_data(hass):
             State(GOOD_CONFIG["sensors"][reading], value),
         )
     assert sensor.state == "ok"
-    attrib = sensor.state_attributes
+    attrib = sensor.extra_state_attributes
     for reading, value in GOOD_DATA.items():
         # battery level has a different name in
         # the JSON format than in hass
@@ -70,13 +70,13 @@ async def test_low_battery(hass):
     sensor = plant.Plant("other plant", GOOD_CONFIG)
     sensor.entity_id = "sensor.mqtt_plant_battery"
     sensor.hass = hass
-    assert sensor.state_attributes["problem"] == "none"
+    assert sensor.extra_state_attributes["problem"] == "none"
     sensor.state_changed(
         "sensor.mqtt_plant_battery",
         State("sensor.mqtt_plant_battery", 10),
     )
     assert sensor.state == "problem"
-    assert sensor.state_attributes["problem"] == "battery low"
+    assert sensor.extra_state_attributes["problem"] == "battery low"
 
 
 async def test_initial_states(hass):

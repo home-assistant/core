@@ -18,7 +18,10 @@ from . import (
     TYPE_BATT8,
     TYPE_BATT9,
     TYPE_BATT10,
+    TYPE_BATT_CO2,
     TYPE_BATTOUT,
+    TYPE_PM25_BATT,
+    TYPE_PM25IN_BATT,
     AmbientWeatherEntity,
 )
 from .const import ATTR_LAST_DATA, ATTR_MONITORED_CONDITIONS, DATA_CLIENT, DOMAIN
@@ -64,7 +67,10 @@ class AmbientWeatherBinarySensor(AmbientWeatherEntity, BinarySensorEntity):
             TYPE_BATT7,
             TYPE_BATT8,
             TYPE_BATT9,
+            TYPE_BATT_CO2,
             TYPE_BATTOUT,
+            TYPE_PM25_BATT,
+            TYPE_PM25IN_BATT,
         ):
             return self._state == 0
 

@@ -10,6 +10,13 @@
             "unknown": "Onverwachte fout"
         },
         "step": {
+            "reauth_validate": {
+                "data": {
+                    "password": "Wachtwoord"
+                },
+                "description": "Voer het wachtwoord in voor {username} .",
+                "title": "Verifieer een August-account opnieuw"
+            },
             "user": {
                 "data": {
                     "login_method": "Aanmeldmethode",
@@ -19,6 +26,15 @@
                 },
                 "description": "Als de aanmeldingsmethode 'e-mail' is, is gebruikersnaam het e-mailadres. Als de aanmeldingsmethode 'telefoon' is, is gebruikersnaam het telefoonnummer in de indeling '+ NNNNNNNNN'.",
                 "title": "Stel een augustus-account in"
+            },
+            "user_validate": {
+                "data": {
+                    "login_method": "Inlogmethode",
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "Als de aanmeldingsmethode 'e-mail' is, is de gebruikersnaam het e-mailadres. Als de aanmeldingsmethode 'telefoon' is, is de gebruikersnaam het telefoonnummer in de indeling '+ NNNNNNNNN'.",
+                "title": "Stel een August account in"
             },
             "validation": {
                 "data": {

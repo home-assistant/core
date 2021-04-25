@@ -6,7 +6,7 @@ import re
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_NAME,
@@ -17,7 +17,6 @@ from homeassistant.const import (
     TIME_MINUTES,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class WashingtonStateTransportSensor(Entity):
+class WashingtonStateTransportSensor(SensorEntity):
     """
     Sensor that reads the WSDOT web API.
 

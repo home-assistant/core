@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -22,7 +23,6 @@ from .const import (
     DATA_RATE_PACKETS_PER_SECOND,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    DOMAIN_COORDINATORS,
     DOMAIN_DEVICES,
     KIBIBYTE,
     LOGGER as _LOGGER,
@@ -73,7 +73,7 @@ SENSOR_TYPES = {
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config, async_add_entities, discovery_info=None
 ) -> None:
     """Old way of setting up UPnP/IGD sensors."""
     _LOGGER.debug(
@@ -82,7 +82,7 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up the UPnP/IGD sensors."""
     udn = config_entry.data[CONFIG_ENTRY_UDN]
@@ -101,8 +101,9 @@ async def async_setup_entry(
         update_method=device.async_get_traffic_data,
         update_interval=update_interval,
     )
+    device.coordinator = coordinator
+
     await coordinator.async_refresh()
-    hass.data[DOMAIN][DOMAIN_COORDINATORS][udn] = coordinator
 
     sensors = [
         RawUpnpSensor(coordinator, device, SENSOR_TYPES[BYTES_RECEIVED]),
@@ -117,7 +118,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class UpnpSensor(CoordinatorEntity):
+class UpnpSensor(CoordinatorEntity, SensorEntity):
     """Base class for UPnP/IGD sensors."""
 
     def __init__(
@@ -125,14 +126,11 @@ class UpnpSensor(CoordinatorEntity):
         coordinator: DataUpdateCoordinator[Mapping[str, Any]],
         device: Device,
         sensor_type: Mapping[str, str],
-        update_multiplier: int = 2,
     ) -> None:
         """Initialize the base sensor."""
         super().__init__(coordinator)
         self._device = device
         self._sensor_type = sensor_type
-        self._update_counter_max = update_multiplier
-        self._update_counter = 0
 
     @property
     def icon(self) -> str:
@@ -234,10 +232,10 @@ class DerivedUpnpSensor(UpnpSensor):
         if self._sensor_type["unit"] == DATA_BYTES:
             delta_value /= KIBIBYTE
         delta_time = current_timestamp - self._last_timestamp
-        if delta_time.seconds == 0:
+        if delta_time.total_seconds() == 0:
             # Prevent division by 0.
             return None
-        derived = delta_value / delta_time.seconds
+        derived = delta_value / delta_time.total_seconds()
 
         # Store current values for future use.
         self._last_value = current_value

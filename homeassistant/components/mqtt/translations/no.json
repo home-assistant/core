@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Aktiver oppdagelse"
                 },
-                "description": "Vil du konfigurere Home Assistant til \u00e5 koble til MQTT-megleren levert av Hass.io-tillegget {addon} ?",
-                "title": "MQTT Megler via Hass.io-tillegg"
+                "description": "Vil du konfigurere Home Assistant for \u00e5 koble til MQTT-megleren levert av tillegget {addon} ?",
+                "title": "MQTT Broker via Home Assistant-tillegg"
             }
         }
     },

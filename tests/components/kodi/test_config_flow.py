@@ -47,8 +47,6 @@ async def test_user_flow(hass, user_flow):
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
         return_value=MockConnection(),
     ), patch(
-        "homeassistant.components.kodi.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.kodi.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -66,7 +64,6 @@ async def test_user_flow(hass, user_flow):
         "timeout": DEFAULT_TIMEOUT,
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -92,8 +89,6 @@ async def test_form_valid_auth(hass, user_flow):
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
         return_value=MockConnection(),
     ), patch(
-        "homeassistant.components.kodi.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.kodi.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -112,7 +107,6 @@ async def test_form_valid_auth(hass, user_flow):
         "timeout": DEFAULT_TIMEOUT,
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -142,8 +136,6 @@ async def test_form_valid_ws_port(hass, user_flow):
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
         return_value=MockConnection(),
     ), patch(
-        "homeassistant.components.kodi.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.kodi.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -163,7 +155,6 @@ async def test_form_valid_ws_port(hass, user_flow):
         "timeout": DEFAULT_TIMEOUT,
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -187,8 +178,6 @@ async def test_form_empty_ws_port(hass, user_flow):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.kodi.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.kodi.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -208,7 +197,6 @@ async def test_form_empty_ws_port(hass, user_flow):
         "timeout": DEFAULT_TIMEOUT,
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -423,15 +411,15 @@ async def test_discovery(hass):
         return_value=MockConnection(),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=TEST_DISCOVERY,
         )
 
     assert result["type"] == "form"
     assert result["step_id"] == "discovery_confirm"
 
     with patch(
-        "homeassistant.components.kodi.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.kodi.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -451,7 +439,6 @@ async def test_discovery(hass):
         "timeout": DEFAULT_TIMEOUT,
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -465,7 +452,9 @@ async def test_discovery_cannot_connect_http(hass):
         return_value=MockConnection(),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=TEST_DISCOVERY,
         )
 
     assert result["type"] == "abort"
@@ -486,7 +475,9 @@ async def test_discovery_cannot_connect_ws(hass):
         new=get_kodi_connection,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=TEST_DISCOVERY,
         )
 
     assert result["type"] == "form"
@@ -504,7 +495,9 @@ async def test_discovery_exception_http(hass, user_flow):
         return_value=MockConnection(),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=TEST_DISCOVERY,
         )
 
     assert result["type"] == "abort"
@@ -521,7 +514,9 @@ async def test_discovery_invalid_auth(hass):
         return_value=MockConnection(),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=TEST_DISCOVERY,
         )
 
     assert result["type"] == "form"
@@ -539,14 +534,16 @@ async def test_discovery_duplicate_data(hass):
         return_value=MockConnection(),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=TEST_DISCOVERY,
         )
 
     assert result["type"] == "form"
     assert result["step_id"] == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=TEST_DISCOVERY
     )
 
     assert result["type"] == "abort"
@@ -564,7 +561,7 @@ async def test_discovery_updates_unique_id(hass):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=TEST_DISCOVERY
     )
 
     assert result["type"] == "abort"
@@ -578,7 +575,9 @@ async def test_discovery_updates_unique_id(hass):
 async def test_discovery_without_unique_id(hass):
     """Test a discovery flow with no unique id aborts."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY_WO_UUID
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=TEST_DISCOVERY_WO_UUID,
     )
 
     assert result["type"] == "abort"
@@ -594,8 +593,6 @@ async def test_form_import(hass):
         "homeassistant.components.kodi.config_flow.get_kodi_connection",
         return_value=MockConnection(),
     ), patch(
-        "homeassistant.components.kodi.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.kodi.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -610,7 +607,6 @@ async def test_form_import(hass):
     assert result["title"] == TEST_IMPORT["name"]
     assert result["data"] == TEST_IMPORT
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

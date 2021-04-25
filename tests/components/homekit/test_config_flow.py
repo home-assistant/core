@@ -5,7 +5,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.homekit.const import DOMAIN, SHORT_BRIDGE_NAME
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_PORT
 
 from tests.common import MockConfigEntry
@@ -145,6 +145,8 @@ async def test_setup_creates_entries_for_accessory_mode_devices(hass):
     hass.states.async_set("camera.one", "on")
     hass.states.async_set("camera.existing", "on")
     hass.states.async_set("media_player.two", "on", {"device_class": "tv"})
+    hass.states.async_set("remote.standard", "on")
+    hass.states.async_set("remote.activity", "on", {"supported_features": 4})
 
     bridge_mode_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -178,7 +180,7 @@ async def test_setup_creates_entries_for_accessory_mode_devices(hass):
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"include_domains": ["camera", "media_player", "light"]},
+        {"include_domains": ["camera", "media_player", "light", "remote"]},
     )
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "pairing"
@@ -205,7 +207,7 @@ async def test_setup_creates_entries_for_accessory_mode_devices(hass):
         "filter": {
             "exclude_domains": [],
             "exclude_entities": [],
-            "include_domains": ["media_player", "light"],
+            "include_domains": ["media_player", "light", "remote"],
             "include_entities": [],
         },
         "exclude_accessory_mode": True,
@@ -222,13 +224,16 @@ async def test_setup_creates_entries_for_accessory_mode_devices(hass):
     # 3 - new bridge
     # 4 - camera.one in accessory mode
     # 5 - media_player.two in accessory mode
-    assert len(mock_setup_entry.mock_calls) == 5
+    # 6 - remote.activity in accessory mode
+    assert len(mock_setup_entry.mock_calls) == 6
 
 
 async def test_import(hass):
     """Test we can import instance."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
+    ignored_entry = MockConfigEntry(domain=DOMAIN, data={}, source=SOURCE_IGNORE)
+    ignored_entry.add_to_hass(hass)
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )

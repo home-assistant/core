@@ -8,7 +8,7 @@ import aiohttp
 from pytrafikverket.trafikverket_weather import TrafikverketWeather
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -24,7 +24,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -145,7 +144,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         async_add_entities(dev, True)
 
 
-class TrafikverketWeatherStation(Entity):
+class TrafikverketWeatherStation(SensorEntity):
     """Representation of a Trafikverket sensor."""
 
     def __init__(self, weather_api, name, sensor_type, sensor_station):

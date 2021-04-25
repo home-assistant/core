@@ -119,6 +119,6 @@ async def async_get_condition_capabilities(hass, config):
         else:
             preset_modes = []
 
-        fields[vol.Required(const.ATTR_PRESET_MODES)] = vol.In(preset_modes)
+        fields[vol.Required(const.ATTR_PRESET_MODE)] = vol.In(preset_modes)
 
     return {"extra_fields": vol.Schema(fields)}

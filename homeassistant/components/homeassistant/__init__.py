@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, recorder
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
     async_extract_referenced_entity_ids,
@@ -47,7 +47,10 @@ SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
 )
 
 
-async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
+SHUTDOWN_SERVICES = (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
+
+
+async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:  # noqa: C901
     """Set up general services related to Home Assistant."""
 
     async def async_handle_turn_service(service):
@@ -125,26 +128,41 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
 
     async def async_handle_core_service(call):
         """Service handler for handling core services."""
+        if (
+            call.service in SHUTDOWN_SERVICES
+            and await recorder.async_migration_in_progress(hass)
+        ):
+            _LOGGER.error(
+                "The system cannot %s while a database upgrade in progress",
+                call.service,
+            )
+            raise HomeAssistantError(
+                f"The system cannot {call.service} while a database upgrade in progress."
+            )
+
         if call.service == SERVICE_HOMEASSISTANT_STOP:
-            hass.async_create_task(hass.async_stop())
+            asyncio.create_task(hass.async_stop())
             return
 
-        try:
-            errors = await conf_util.async_check_ha_config_file(hass)
-        except HomeAssistantError:
-            return
+        errors = await conf_util.async_check_ha_config_file(hass)
 
         if errors:
-            _LOGGER.error(errors)
+            _LOGGER.error(
+                "The system cannot %s because the configuration is not valid: %s",
+                call.service,
+                errors,
+            )
             hass.components.persistent_notification.async_create(
                 "Config error. See [the logs](/config/logs) for details.",
                 "Config validating",
                 f"{ha.DOMAIN}.check_config",
             )
-            return
+            raise HomeAssistantError(
+                f"The system cannot {call.service} because the configuration is not valid: {errors}"
+            )
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
-            hass.async_create_task(hass.async_stop(RESTART_EXIT_CODE))
+            asyncio.create_task(hass.async_stop(RESTART_EXIT_CODE))
 
     async def async_handle_update_service(call):
         """Service handler for updating an entity."""

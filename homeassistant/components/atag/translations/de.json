@@ -4,7 +4,8 @@
             "already_configured": "Dieses Ger\u00e4t wurde bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen"
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unauthorized": "Pairing verweigert, Ger\u00e4t auf Authentifizierungsanforderung pr\u00fcfen"
         },
         "step": {
             "user": {

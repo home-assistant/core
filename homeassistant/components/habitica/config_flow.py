@@ -11,7 +11,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_URL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_API_USER, DEFAULT_URL, DOMAIN  # pylint: disable=unused-import
+from .const import CONF_API_USER, DEFAULT_URL, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {

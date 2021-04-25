@@ -33,6 +33,7 @@ from .const import (
     POLLING_TIMEOUT_SEC,
     REST,
     REST_SENSORS_UPDATE_INTERVAL,
+    SHBTN_MODELS,
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
 )
@@ -75,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     dev_reg = await device_registry.async_get_registry(hass)
     identifier = (DOMAIN, entry.unique_id)
     device_entry = dev_reg.async_get_device(identifiers={identifier}, connections=set())
-    if entry.entry_id not in device_entry.config_entries:
+    if device_entry and entry.entry_id not in device_entry.config_entries:
         device_entry = None
 
     sleep_period = entry.data.get("sleep_period")
@@ -180,6 +181,17 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Handle device updates."""
         if not self.device.initialized:
             return
+
+        # For buttons which are battery powered - set initial value for last_event_count
+        if self.model in SHBTN_MODELS and self._last_input_events_count.get(1) is None:
+            for block in self.device.blocks:
+                if block.type != "device":
+                    continue
+
+                if block.wakeupEvent[0] == "button":
+                    self._last_input_events_count[1] = -1
+
+                break
 
         # Check for input events
         for block in self.device.blocks:

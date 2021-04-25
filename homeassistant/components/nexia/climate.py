@@ -334,12 +334,19 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
             new_cool_temp = min_temp + deadband
 
         # Check that we're within the deadband range, fix it if we're not
-        if new_heat_temp and new_heat_temp != cur_heat_temp:
-            if new_cool_temp - new_heat_temp < deadband:
-                new_cool_temp = new_heat_temp + deadband
-        if new_cool_temp and new_cool_temp != cur_cool_temp:
-            if new_cool_temp - new_heat_temp < deadband:
-                new_heat_temp = new_cool_temp - deadband
+        if (
+            new_heat_temp
+            and new_heat_temp != cur_heat_temp
+            and new_cool_temp - new_heat_temp < deadband
+        ):
+            new_cool_temp = new_heat_temp + deadband
+
+        if (
+            new_cool_temp
+            and new_cool_temp != cur_cool_temp
+            and new_cool_temp - new_heat_temp < deadband
+        ):
+            new_heat_temp = new_cool_temp - deadband
 
         self._zone.set_heat_cool_temp(
             heat_temperature=new_heat_temp,

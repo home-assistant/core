@@ -93,17 +93,16 @@ async def test_light_unavailable(
     with patch(
         "homeassistant.components.elgato.light.Elgato.light",
         side_effect=ElgatoError,
+    ), patch(
+        "homeassistant.components.elgato.light.Elgato.state",
+        side_effect=ElgatoError,
     ):
-        with patch(
-            "homeassistant.components.elgato.light.Elgato.state",
-            side_effect=ElgatoError,
-        ):
-            await hass.services.async_call(
-                LIGHT_DOMAIN,
-                SERVICE_TURN_OFF,
-                {ATTR_ENTITY_ID: "light.frenck"},
-                blocking=True,
-            )
-            await hass.async_block_till_done()
-            state = hass.states.get("light.frenck")
-            assert state.state == STATE_UNAVAILABLE
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "light.frenck"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get("light.frenck")
+        assert state.state == STATE_UNAVAILABLE

@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Impossibile connettersi"
         },
+        "flow_title": "ZHA: {name}",
         "step": {
             "pick_radio": {
                 "data": {

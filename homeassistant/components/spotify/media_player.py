@@ -52,6 +52,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import utc_from_timestamp
@@ -212,8 +213,12 @@ def spotify_exception_handler(func):
             result = func(self, *args, **kwargs)
             self.player_available = True
             return result
-        except (SpotifyException, requests.RequestException):
+        except requests.RequestException:
             self.player_available = False
+        except SpotifyException as exc:
+            self.player_available = False
+            if exc.reason == "NO_ACTIVE_DEVICE":
+                raise HomeAssistantError("No active playback device found") from None
 
     return wrapper
 
@@ -528,7 +533,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         return response
 
 
-def build_item_response(spotify, user, payload):
+def build_item_response(spotify, user, payload):  # noqa: C901
     """Create response payload for the provided media query."""
     media_content_type = payload["media_content_type"]
     media_content_id = payload["media_content_id"]
@@ -623,7 +628,7 @@ def build_item_response(spotify, user, payload):
             try:
                 item_id = item["id"]
             except KeyError:
-                _LOGGER.debug("Missing id for media item: %s", item)
+                _LOGGER.debug("Missing ID for media item: %s", item)
                 continue
             media_item.children.append(
                 BrowseMedia(
@@ -679,7 +684,7 @@ def item_payload(item):
         media_type = item["type"]
         media_id = item["uri"]
     except KeyError as err:
-        _LOGGER.debug("Missing type or uri for media item: %s", item)
+        _LOGGER.debug("Missing type or URI for media item: %s", item)
         raise MissingMediaInformation from err
 
     try:

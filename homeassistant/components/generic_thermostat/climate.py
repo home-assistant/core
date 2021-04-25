@@ -1,6 +1,7 @@
 """Adds support for generic thermostat units."""
 import asyncio
 import logging
+import math
 
 import voluptuous as vol
 
@@ -419,7 +420,10 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     def _async_update_temp(self, state):
         """Update thermostat with latest state from sensor."""
         try:
-            self._cur_temp = float(state.state)
+            cur_temp = float(state.state)
+            if math.isnan(cur_temp) or math.isinf(cur_temp):
+                raise ValueError(f"Sensor has illegal state {state.state}")
+            self._cur_temp = cur_temp
         except ValueError as ex:
             _LOGGER.error("Unable to update from sensor: %s", ex)
 
@@ -442,28 +446,27 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             if not self._active or self._hvac_mode == HVAC_MODE_OFF:
                 return
 
-            if not force and time is None:
-                # If the `force` argument is True, we
-                # ignore `min_cycle_duration`.
-                # If the `time` argument is not none, we were invoked for
-                # keep-alive purposes, and `min_cycle_duration` is irrelevant.
-                if self.min_cycle_duration:
-                    if self._is_device_active:
-                        current_state = STATE_ON
-                    else:
-                        current_state = HVAC_MODE_OFF
-                    try:
-                        long_enough = condition.state(
-                            self.hass,
-                            self.heater_entity_id,
-                            current_state,
-                            self.min_cycle_duration,
-                        )
-                    except ConditionError:
-                        long_enough = False
+            # If the `force` argument is True, we
+            # ignore `min_cycle_duration`.
+            # If the `time` argument is not none, we were invoked for
+            # keep-alive purposes, and `min_cycle_duration` is irrelevant.
+            if not force and time is None and self.min_cycle_duration:
+                if self._is_device_active:
+                    current_state = STATE_ON
+                else:
+                    current_state = HVAC_MODE_OFF
+                try:
+                    long_enough = condition.state(
+                        self.hass,
+                        self.heater_entity_id,
+                        current_state,
+                        self.min_cycle_duration,
+                    )
+                except ConditionError:
+                    long_enough = False
 
-                    if not long_enough:
-                        return
+                if not long_enough:
+                    return
 
             too_cold = self._target_temp >= self._cur_temp + self._cold_tolerance
             too_hot = self._cur_temp >= self._target_temp + self._hot_tolerance

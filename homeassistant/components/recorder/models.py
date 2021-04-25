@@ -18,6 +18,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
 
+from homeassistant.const import MAX_LENGTH_EVENT_TYPE
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
@@ -26,7 +27,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 12
+SCHEMA_VERSION = 14
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +40,10 @@ TABLE_SCHEMA_CHANGES = "schema_changes"
 
 ALL_TABLES = [TABLE_STATES, TABLE_EVENTS, TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES]
 
+DATETIME_TYPE = DateTime(timezone=True).with_variant(
+    mysql.DATETIME(timezone=True, fsp=6), "mysql"
+)
+
 
 class Events(Base):  # type: ignore
     """Event history data."""
@@ -49,11 +54,11 @@ class Events(Base):  # type: ignore
     }
     __tablename__ = TABLE_EVENTS
     event_id = Column(Integer, primary_key=True)
-    event_type = Column(String(32))
+    event_type = Column(String(MAX_LENGTH_EVENT_TYPE))
     event_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
     origin = Column(String(32))
-    time_fired = Column(DateTime(timezone=True), index=True)
-    created = Column(DateTime(timezone=True), default=dt_util.utcnow)
+    time_fired = Column(DATETIME_TYPE, index=True)
+    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
     context_id = Column(String(36), index=True)
     context_user_id = Column(String(36), index=True)
     context_parent_id = Column(String(36), index=True)
@@ -123,9 +128,9 @@ class States(Base):  # type: ignore
     event_id = Column(
         Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
     )
-    last_changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
-    last_updated = Column(DateTime(timezone=True), default=dt_util.utcnow, index=True)
-    created = Column(DateTime(timezone=True), default=dt_util.utcnow)
+    last_changed = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
+    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
     old_state_id = Column(
         Integer, ForeignKey("states.state_id", ondelete="NO ACTION"), index=True
     )

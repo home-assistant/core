@@ -1,6 +1,7 @@
 """Provides an HTTP API for mobile_app."""
 from __future__ import annotations
 
+from contextlib import suppress
 import secrets
 
 from aiohttp.web import Request, Response
@@ -98,10 +99,8 @@ class RegistrationsView(HomeAssistantView):
         )
 
         remote_ui_url = None
-        try:
+        with suppress(hass.components.cloud.CloudNotAvailable):
             remote_ui_url = hass.components.cloud.async_remote_ui_url()
-        except hass.components.cloud.CloudNotAvailable:
-            pass
 
         return self.json(
             {

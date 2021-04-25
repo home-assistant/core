@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 from unittest import mock
 
+from pymodbus.exceptions import ModbusException
 import pytest
 
 from homeassistant.components.modbus.const import DEFAULT_HUB, MODBUS_DOMAIN as DOMAIN
@@ -44,6 +45,7 @@ async def base_test(
     check_config_only=False,
     config_modbus=None,
     scan_interval=None,
+    expect_init_to_fail=False,
 ):
     """Run test on device for given config."""
 
@@ -68,11 +70,23 @@ async def base_test(
     ):
 
         # Setup inputs for the sensor
-        read_result = ReadResult(register_words)
-        mock_sync.read_coils.return_value = read_result
-        mock_sync.read_discrete_inputs.return_value = read_result
-        mock_sync.read_input_registers.return_value = read_result
-        mock_sync.read_holding_registers.return_value = read_result
+        if register_words is None:
+            mock_sync.read_coils.side_effect = ModbusException("fail read_coils")
+            mock_sync.read_discrete_inputs.side_effect = ModbusException(
+                "fail read_coils"
+            )
+            mock_sync.read_input_registers.side_effect = ModbusException(
+                "fail read_coils"
+            )
+            mock_sync.read_holding_registers.side_effect = ModbusException(
+                "fail read_coils"
+            )
+        else:
+            read_result = ReadResult(register_words)
+            mock_sync.read_coils.return_value = read_result
+            mock_sync.read_discrete_inputs.return_value = read_result
+            mock_sync.read_input_registers.return_value = read_result
+            mock_sync.read_holding_registers.return_value = read_result
 
         # mock timer and add old/new config
         now = dt_util.utcnow()
@@ -103,11 +117,14 @@ async def base_test(
                 assert await async_setup_component(hass, entity_domain, config_device)
                 await hass.async_block_till_done()
 
-        assert DOMAIN in hass.data
+        assert DOMAIN in hass.config.components
         if config_device is not None:
             entity_id = f"{entity_domain}.{device_name}"
             device = hass.states.get(entity_id)
-            if device is None:
+
+            if expect_init_to_fail:
+                assert device is None
+            elif device is None:
                 pytest.fail("CONFIG failed, see output")
         if check_config_only:
             return
@@ -132,6 +149,7 @@ async def base_config_test(
     array_name_old_config,
     method_discovery=False,
     config_modbus=None,
+    expect_init_to_fail=False,
 ):
     """Check config of device for given config."""
 
@@ -146,4 +164,6 @@ async def base_config_test(
         None,
         method_discovery=method_discovery,
         check_config_only=True,
+        config_modbus=config_modbus,
+        expect_init_to_fail=expect_init_to_fail,
     )

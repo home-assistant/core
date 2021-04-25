@@ -10,18 +10,16 @@ import voluptuous as vol
 from homeassistant.components.somfy import config_flow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_OPTIMISTIC
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
     device_registry as dr,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
-    UpdateFailed,
 )
 
 from . import api
@@ -73,7 +71,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Somfy from a config entry."""
     # Backwards compat
     if "auth_implementation" not in entry.data:
@@ -96,7 +94,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         previous_devices = data[COORDINATOR].data
         # Sometimes Somfy returns an empty list.
         if not devices and previous_devices:
-            raise UpdateFailed("No devices returned")
+            _LOGGER.debug(
+                "No devices returned. Assuming the previous ones are still valid"
+            )
+            return previous_devices
         return {dev.id: dev for dev in devices}
 
     coordinator = DataUpdateCoordinator(
@@ -108,7 +109,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     )
     data[COORDINATOR] = coordinator
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     if all(not bool(device.states) for device in coordinator.data.values()):
         _LOGGER.debug(
@@ -142,7 +143,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     hass.data[DOMAIN].pop(API, None)
     await asyncio.gather(

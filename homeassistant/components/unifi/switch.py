@@ -86,7 +86,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             add_dpi_entities(controller, async_add_entities, dpi_groups)
 
     for signal in (controller.signal_update, controller.signal_options_update):
-        controller.listeners.append(async_dispatcher_connect(hass, signal, items_added))
+        config_entry.async_on_unload(
+            async_dispatcher_connect(hass, signal, items_added)
+        )
 
     items_added()
     known_poe_clients.clear()
@@ -279,10 +281,11 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the clients state."""
-        if self.client.last_updated == SOURCE_EVENT:
-
-            if self.client.event.event in CLIENT_BLOCKED + CLIENT_UNBLOCKED:
-                self._is_blocked = self.client.event.event in CLIENT_BLOCKED
+        if (
+            self.client.last_updated == SOURCE_EVENT
+            and self.client.event.event in CLIENT_BLOCKED + CLIENT_UNBLOCKED
+        ):
+            self._is_blocked = self.client.event.event in CLIENT_BLOCKED
 
         super().async_update_callback()
 

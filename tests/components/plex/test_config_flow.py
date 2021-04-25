@@ -26,6 +26,7 @@ from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     SOURCE_INTEGRATION_DISCOVERY,
     SOURCE_REAUTH,
+    SOURCE_USER,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -52,7 +53,7 @@ async def test_bad_credentials(hass):
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -85,7 +86,7 @@ async def test_bad_hostname(hass, mock_plex_calls):
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -119,7 +120,7 @@ async def test_unknown_exception(hass):
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -150,7 +151,7 @@ async def test_no_servers_found(hass, mock_plex_calls, requests_mock, empty_payl
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -181,7 +182,7 @@ async def test_single_available_server(hass, mock_plex_calls):
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -226,7 +227,7 @@ async def test_multiple_servers_with_selection(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -290,7 +291,7 @@ async def test_adding_last_unconfigured_server(
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -350,7 +351,7 @@ async def test_all_available_servers_configured(
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -478,7 +479,7 @@ async def test_external_timed_out(hass):
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -508,7 +509,7 @@ async def test_callback_view(hass, aiohttp_client):
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -545,7 +546,7 @@ async def test_manual_config(hass, mock_plex_calls):
 
     # Basic mode
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        config_flow.DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] == "form"
@@ -555,7 +556,8 @@ async def test_manual_config(hass, mock_plex_calls):
 
     # Advanced automatic
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user", "show_advanced_options": True}
+        config_flow.DOMAIN,
+        context={"source": SOURCE_USER, "show_advanced_options": True},
     )
 
     assert result["data_schema"] is not None
@@ -572,7 +574,8 @@ async def test_manual_config(hass, mock_plex_calls):
 
     # Advanced manual
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user", "show_advanced_options": True}
+        config_flow.DOMAIN,
+        context={"source": SOURCE_USER, "show_advanced_options": True},
     )
 
     assert result["data_schema"] is not None
@@ -650,6 +653,7 @@ async def test_manual_config(hass, mock_plex_calls):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MANUAL_SERVER
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
 
@@ -667,7 +671,8 @@ async def test_manual_config_with_token(hass, mock_plex_calls):
     """Test creating via manual configuration with only token."""
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user", "show_advanced_options": True}
+        config_flow.DOMAIN,
+        context={"source": SOURCE_USER, "show_advanced_options": True},
     )
 
     assert result["type"] == "form"

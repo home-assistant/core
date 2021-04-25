@@ -12,12 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from .const import (  # pylint: disable=unused-import
-    CONF_CATEGORIES,
-    DEFAULT_RADIUS,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-)
+from .const import CONF_CATEGORIES, DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int}
@@ -58,7 +53,7 @@ class GdacsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        user_input[CONF_SCAN_INTERVAL] = scan_interval.seconds
+        user_input[CONF_SCAN_INTERVAL] = scan_interval.total_seconds()
 
         categories = user_input.get(CONF_CATEGORIES, [])
         user_input[CONF_CATEGORIES] = categories

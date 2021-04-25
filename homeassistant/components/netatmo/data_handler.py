@@ -7,12 +7,11 @@ from functools import partial
 from itertools import islice
 import logging
 from time import time
-from typing import Deque
 
 import pyatmo
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -60,7 +59,7 @@ class NetatmoDataHandler:
         self.listeners: list[CALLBACK_TYPE] = []
         self._data_classes: dict = {}
         self.data = {}
-        self._queue: Deque = deque()
+        self._queue = deque()
         self._webhook: bool = False
 
     async def async_setup(self):
@@ -98,6 +97,12 @@ class NetatmoDataHandler:
 
         self._queue.rotate(BATCH_SIZE)
 
+    @callback
+    def async_force_update(self, data_class_entry):
+        """Prioritize data retrieval for given data class entry."""
+        self._data_classes[data_class_entry][NEXT_SCAN] = time()
+        self._queue.rotate(-(self._queue.index(self._data_classes[data_class_entry])))
+
     async def async_cleanup(self):
         """Clean up the Netatmo data handler."""
         for listener in self.listeners:
@@ -115,7 +120,7 @@ class NetatmoDataHandler:
 
         elif event["data"]["push_type"] == "NACamera-connection":
             _LOGGER.debug("%s camera reconnected", MANUFACTURER)
-            self._data_classes[CAMERA_DATA_CLASS_NAME][NEXT_SCAN] = time()
+            self.async_force_update(CAMERA_DATA_CLASS_NAME)
 
     async def async_fetch_data(self, data_class, data_class_entry, **kwargs):
         """Fetch data and notify."""

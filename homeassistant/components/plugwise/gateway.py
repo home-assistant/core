@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 import async_timeout
 from plugwise.exceptions import (
@@ -103,16 +104,12 @@ async def async_setup_entry_gw(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=update_interval,
     )
 
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     api.get_all_devices()
 
-    if entry.unique_id is None:
-        if api.smile_version[0] != "1.8.0":
-            hass.config_entries.async_update_entry(entry, unique_id=api.smile_hostname)
+    if entry.unique_id is None and api.smile_version[0] != "1.8.0":
+        hass.config_entries.async_update_entry(entry, unique_id=api.smile_hostname)
 
     undo_listener = entry.add_update_listener(_update_listener)
 
@@ -201,7 +198,7 @@ class SmileGateway(CoordinatorEntity):
         return self._name
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> dict[str, Any]:
         """Return the device information."""
         device_information = {
             "identifiers": {(DOMAIN, self._dev_id)},

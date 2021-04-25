@@ -5,11 +5,10 @@ import logging
 from pysyncthru import SYNCTHRU_STATE_HUMAN, SyncThru
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_RESOURCE, CONF_URL, PERCENTAGE
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from . import device_identifiers
 from .const import DEFAULT_MODEL, DEFAULT_NAME_TEMPLATE, DOMAIN
@@ -81,7 +80,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(devices, True)
 
 
-class SyncThruSensor(Entity):
+class SyncThruSensor(SensorEntity):
     """Implementation of an abstract Samsung Printer sensor platform."""
 
     def __init__(self, syncthru, name):

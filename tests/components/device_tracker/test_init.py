@@ -120,6 +120,7 @@ async def test_reading_yaml_config(hass, yaml_devices):
     assert device.config_picture == config.config_picture
     assert device.consider_home == config.consider_home
     assert device.icon == config.icon
+    assert f"{device_tracker.DOMAIN}.test" in hass.config.components
 
 
 @patch("homeassistant.components.device_tracker.const.LOGGER.warning")
@@ -237,19 +238,18 @@ async def test_update_stale(hass, mock_device_tracker_conf):
     with patch(
         "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
         return_value=register_time,
-    ):
-        with assert_setup_component(1, device_tracker.DOMAIN):
-            assert await async_setup_component(
-                hass,
-                device_tracker.DOMAIN,
-                {
-                    device_tracker.DOMAIN: {
-                        CONF_PLATFORM: "test",
-                        device_tracker.CONF_CONSIDER_HOME: 59,
-                    }
-                },
-            )
-            await hass.async_block_till_done()
+    ), assert_setup_component(1, device_tracker.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            device_tracker.DOMAIN,
+            {
+                device_tracker.DOMAIN: {
+                    CONF_PLATFORM: "test",
+                    device_tracker.CONF_CONSIDER_HOME: 59,
+                }
+            },
+        )
+        await hass.async_block_till_done()
 
     assert hass.states.get("device_tracker.dev1").state == STATE_HOME
 
@@ -458,19 +458,18 @@ async def test_see_passive_zone_state(hass, mock_device_tracker_conf):
     with patch(
         "homeassistant.components.device_tracker.legacy.dt_util.utcnow",
         return_value=register_time,
-    ):
-        with assert_setup_component(1, device_tracker.DOMAIN):
-            assert await async_setup_component(
-                hass,
-                device_tracker.DOMAIN,
-                {
-                    device_tracker.DOMAIN: {
-                        CONF_PLATFORM: "test",
-                        device_tracker.CONF_CONSIDER_HOME: 59,
-                    }
-                },
-            )
-            await hass.async_block_till_done()
+    ), assert_setup_component(1, device_tracker.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            device_tracker.DOMAIN,
+            {
+                device_tracker.DOMAIN: {
+                    CONF_PLATFORM: "test",
+                    device_tracker.CONF_CONSIDER_HOME: 59,
+                }
+            },
+        )
+        await hass.async_block_till_done()
 
     state = hass.states.get("device_tracker.dev1")
     attrs = state.attributes
@@ -559,6 +558,8 @@ async def test_bad_platform(hass):
     config = {"device_tracker": [{"platform": "bad_platform"}]}
     with assert_setup_component(0, device_tracker.DOMAIN):
         assert await async_setup_component(hass, device_tracker.DOMAIN, config)
+
+    assert f"{device_tracker.DOMAIN}.bad_platform" not in hass.config.components
 
 
 async def test_adding_unknown_device_to_config(mock_device_tracker_conf, hass):

@@ -11,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.components.subaru import config_flow
 from homeassistant.components.subaru.const import CONF_UPDATE_ENABLED, DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, CONF_PIN
+from homeassistant.setup import async_setup_component
 
 from .conftest import (
     MOCK_API_CONNECT,
@@ -26,19 +27,16 @@ from .conftest import (
 
 from tests.common import MockConfigEntry
 
+ASYNC_SETUP_ENTRY = "homeassistant.components.subaru.async_setup_entry"
+
 
 async def test_user_form_init(user_form):
     """Test the initial user form for first step of the config flow."""
-    expected = {
-        "data_schema": mock.ANY,
-        "description_placeholders": None,
-        "errors": None,
-        "flow_id": mock.ANY,
-        "handler": DOMAIN,
-        "step_id": "user",
-        "type": "form",
-    }
-    assert expected == user_form
+    assert user_form["description_placeholders"] is None
+    assert user_form["errors"] is None
+    assert user_form["handler"] == DOMAIN
+    assert user_form["step_id"] == "user"
+    assert user_form["type"] == "form"
 
 
 async def test_user_form_repeat_identifier(hass, user_form):
@@ -96,13 +94,16 @@ async def test_user_form_pin_not_required(hass, user_form):
     with patch(MOCK_API_CONNECT, return_value=True,) as mock_connect, patch(
         MOCK_API_IS_PIN_REQUIRED,
         return_value=False,
-    ) as mock_is_pin_required:
+    ) as mock_is_pin_required, patch(
+        ASYNC_SETUP_ENTRY, return_value=True
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             user_form["flow_id"],
             TEST_CREDS,
         )
-    assert len(mock_connect.mock_calls) == 2
+    assert len(mock_connect.mock_calls) == 1
     assert len(mock_is_pin_required.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
     expected = {
         "title": TEST_USERNAME,
@@ -117,7 +118,7 @@ async def test_user_form_pin_not_required(hass, user_form):
     }
     expected["data"][CONF_PIN] = None
     result["data"][CONF_DEVICE_ID] = TEST_DEVICE_ID
-    assert expected == result
+    assert result == expected
 
 
 async def test_pin_form_init(pin_form):
@@ -130,8 +131,9 @@ async def test_pin_form_init(pin_form):
         "handler": DOMAIN,
         "step_id": "pin",
         "type": "form",
+        "last_step": None,
     }
-    assert expected == pin_form
+    assert pin_form == expected
 
 
 async def test_pin_form_bad_pin_format(hass, pin_form):
@@ -154,13 +156,16 @@ async def test_pin_form_success(hass, pin_form):
     with patch(MOCK_API_TEST_PIN, return_value=True,) as mock_test_pin, patch(
         MOCK_API_UPDATE_SAVED_PIN,
         return_value=True,
-    ) as mock_update_saved_pin:
+    ) as mock_update_saved_pin, patch(
+        ASYNC_SETUP_ENTRY, return_value=True
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             pin_form["flow_id"], user_input={CONF_PIN: TEST_PIN}
         )
 
     assert len(mock_test_pin.mock_calls) == 1
     assert len(mock_update_saved_pin.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
     expected = {
         "title": TEST_USERNAME,
         "description": None,
@@ -196,16 +201,10 @@ async def test_pin_form_incorrect_pin(hass, pin_form):
 
 async def test_option_flow_form(options_form):
     """Test config flow options form."""
-    expected = {
-        "data_schema": mock.ANY,
-        "description_placeholders": None,
-        "errors": None,
-        "flow_id": mock.ANY,
-        "handler": mock.ANY,
-        "step_id": "init",
-        "type": "form",
-    }
-    assert expected == options_form
+    assert options_form["description_placeholders"] is None
+    assert options_form["errors"] is None
+    assert options_form["step_id"] == "init"
+    assert options_form["type"] == "form"
 
 
 async def test_option_flow(hass, options_form):
@@ -247,4 +246,5 @@ async def options_form(hass):
     """Return options form for Subaru config flow."""
     entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
     entry.add_to_hass(hass)
+    await async_setup_component(hass, DOMAIN, {})
     return await hass.config_entries.options.async_init(entry.entry_id)

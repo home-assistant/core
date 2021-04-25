@@ -12,7 +12,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components import sensor
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -33,11 +33,11 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 _RESOURCE = "http://api.wunderground.com/api/{}/{}/{}/q/"
@@ -68,7 +68,7 @@ class WUSensorConfig:
         self,
         friendly_name: str | Callable,
         feature: str,
-        value: Callable[["WUndergroundData"], Any],
+        value: Callable[[WUndergroundData], Any],
         unit_of_measurement: str | None = None,
         entity_picture=None,
         icon: str = "mdi:gauge",
@@ -1085,7 +1085,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up the WUnderground sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
@@ -1117,10 +1117,10 @@ async def async_setup_platform(
     async_add_entities(sensors, True)
 
 
-class WUndergroundSensor(Entity):
+class WUndergroundSensor(SensorEntity):
     """Implementing the WUnderground sensor."""
 
-    def __init__(self, hass: HomeAssistantType, rest, condition, unique_id_base: str):
+    def __init__(self, hass: HomeAssistant, rest, condition, unique_id_base: str):
         """Initialize the sensor."""
         self.rest = rest
         self._condition = condition

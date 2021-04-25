@@ -1,7 +1,8 @@
 """The exceptions used by Home Assistant."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generator, Sequence
+from collections.abc import Generator, Sequence
+from typing import TYPE_CHECKING
 
 import attr
 
@@ -98,12 +99,24 @@ class ConditionErrorContainer(ConditionError):
             yield from item.output(indent)
 
 
-class PlatformNotReady(HomeAssistantError):
+class IntegrationError(HomeAssistantError):
+    """Base class for platform and config entry exceptions."""
+
+    def __str__(self) -> str:
+        """Return a human readable error."""
+        return super().__str__() or str(self.__cause__)
+
+
+class PlatformNotReady(IntegrationError):
     """Error to indicate that platform is not ready."""
 
 
-class ConfigEntryNotReady(HomeAssistantError):
+class ConfigEntryNotReady(IntegrationError):
     """Error to indicate that config entry is not ready."""
+
+
+class ConfigEntryAuthFailed(IntegrationError):
+    """Error to indicate that config entry could not authenticate."""
 
 
 class InvalidStateError(HomeAssistantError):
@@ -115,7 +128,7 @@ class Unauthorized(HomeAssistantError):
 
     def __init__(
         self,
-        context: "Context" | None = None,
+        context: Context | None = None,
         user_id: str | None = None,
         entity_id: str | None = None,
         config_entry_id: str | None = None,
@@ -154,3 +167,35 @@ class ServiceNotFound(HomeAssistantError):
     def __str__(self) -> str:
         """Return string representation."""
         return f"Unable to find service {self.domain}.{self.service}"
+
+
+class MaxLengthExceeded(HomeAssistantError):
+    """Raised when a property value has exceeded the max character length."""
+
+    def __init__(self, value: str, property_name: str, max_length: int) -> None:
+        """Initialize error."""
+        super().__init__(
+            self,
+            (
+                f"Value {value} for property {property_name} has a max length of "
+                f"{max_length} characters"
+            ),
+        )
+        self.value = value
+        self.property_name = property_name
+        self.max_length = max_length
+
+
+class RequiredParameterMissing(HomeAssistantError):
+    """Raised when a required parameter is missing from a function call."""
+
+    def __init__(self, parameter_names: list[str]) -> None:
+        """Initialize error."""
+        super().__init__(
+            self,
+            (
+                "Call must include at least one of the following parameters: "
+                f"{', '.join(parameter_names)}"
+            ),
+        )
+        self.parameter_names = parameter_names

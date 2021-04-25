@@ -9,18 +9,22 @@ ConfigType = Dict[str, Any]
 ContextType = homeassistant.core.Context
 DiscoveryInfoType = Dict[str, Any]
 EventType = homeassistant.core.Event
-HomeAssistantType = homeassistant.core.HomeAssistant
 ServiceCallType = homeassistant.core.ServiceCall
 ServiceDataType = Dict[str, Any]
 StateType = Union[None, str, int, float]
 TemplateVarsType = Optional[Mapping[str, Any]]
+
+# HomeAssistantType is not to be used,
+# It is not present in the core code base.
+# It is kept in order not to break custom components
+# In due time it will be removed.
+HomeAssistantType = homeassistant.core.HomeAssistant
 
 # Custom type for recorder Queries
 QueryType = Any
 
 
 class UndefinedType(Enum):
-    # pylint: disable=invalid-name
     """Singleton type for use with not set sentinel values."""
 
     _singleton = 0

@@ -21,11 +21,10 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -187,7 +186,7 @@ class AsusWrtDevInfo:
 class AsusWrtRouter:
     """Representation of a AsusWrt router."""
 
-    def __init__(self, hass: HomeAssistantType, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize a AsusWrt router."""
         self.hass = hass
         self._entry = entry
@@ -341,9 +340,8 @@ class AsusWrtRouter:
 
     async def close(self) -> None:
         """Close the connection."""
-        if self._api is not None:
-            if self._protocol == PROTOCOL_TELNET:
-                self._api.connection.disconnect()
+        if self._api is not None and self._protocol == PROTOCOL_TELNET:
+            self._api.connection.disconnect()
         self._api = None
 
         for func in self._on_close:

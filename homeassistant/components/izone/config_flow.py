@@ -1,6 +1,7 @@
 """Config flow for izone."""
 
 import asyncio
+from contextlib import suppress
 import logging
 
 from async_timeout import timeout
@@ -28,11 +29,9 @@ async def _async_has_devices(hass):
 
     disco = await async_start_discovery_service(hass)
 
-    try:
+    with suppress(asyncio.TimeoutError):
         async with timeout(TIMEOUT_DISCOVERY):
             await controller_ready.wait()
-    except asyncio.TimeoutError:
-        pass
 
     if not disco.pi_disco.controllers:
         await async_stop_discovery_service(hass)

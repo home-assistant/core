@@ -1,25 +1,23 @@
 """Support for KNX/IP sensors."""
 from __future__ import annotations
 
-from typing import Callable, Iterable
+from collections.abc import Iterable
+from typing import Any, Callable
 
 from xknx.devices import Sensor as XknxSensor
 
-from homeassistant.components.sensor import DEVICE_CLASSES
+from homeassistant.components.sensor import DEVICE_CLASSES, SensorEntity
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-    StateType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.util import dt
 
-from .const import DOMAIN
+from .const import ATTR_LAST_KNX_UPDATE, ATTR_SOURCE, DOMAIN
 from .knx_entity import KnxEntity
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: Callable[[Iterable[Entity]], None],
     discovery_info: DiscoveryInfoType | None = None,
@@ -32,7 +30,7 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class KNXSensor(KnxEntity, Entity):
+class KNXSensor(KnxEntity, SensorEntity):
     """Representation of a KNX sensor."""
 
     def __init__(self, device: XknxSensor) -> None:
@@ -57,6 +55,18 @@ class KNXSensor(KnxEntity, Entity):
         if device_class in DEVICE_CLASSES:
             return device_class
         return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return device specific state attributes."""
+        attr: dict[str, Any] = {}
+
+        if self._device.last_telegram is not None:
+            attr[ATTR_SOURCE] = str(self._device.last_telegram.source_address)
+            attr[ATTR_LAST_KNX_UPDATE] = str(
+                dt.as_utc(self._device.last_telegram.timestamp)
+            )
+        return attr
 
     @property
     def force_update(self) -> bool:

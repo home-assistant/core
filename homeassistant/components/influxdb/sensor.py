@@ -5,7 +5,10 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_API_VERSION,
     CONF_NAME,
@@ -16,7 +19,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady, TemplateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from . import create_influx_url, get_influx_connection, validate_version_specific_config
@@ -169,7 +171,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda _: influx.close())
 
 
-class InfluxSensor(Entity):
+class InfluxSensor(SensorEntity):
     """Implementation of a Influxdb sensor."""
 
     def __init__(self, hass, influx, query):

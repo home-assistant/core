@@ -16,10 +16,10 @@ from . import (
     CONF_NIGHTLIGHT_SWITCH_TYPE,
     CONF_SAVE_ON_CHANGE,
     CONF_TRANSITION,
+    DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
     _async_unique_name,
 )
-from . import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 

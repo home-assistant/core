@@ -3,15 +3,8 @@
   "name": "OpenZWave (beta)",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ozw",
-  "requirements": [
-    "python-openzwave-mqtt[mqtt-client]==1.4.0"
-  ],
-  "after_dependencies": [
-    "mqtt"
-  ],
-  "codeowners": [
-    "@cgarwood",
-    "@marcelveldt",
-    "@MartinHjelmare"
-  ]
+  "requirements": ["python-openzwave-mqtt[mqtt-client]==1.4.0"],
+  "after_dependencies": ["mqtt"],
+  "codeowners": ["@cgarwood", "@marcelveldt", "@MartinHjelmare"],
+  "iot_class": "local_push"
 }

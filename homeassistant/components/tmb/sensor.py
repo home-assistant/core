@@ -6,10 +6,9 @@ from requests import HTTPError
 from tmb import IBus
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class TMBSensor(Entity):
+class TMBSensor(SensorEntity):
     """Implementation of a TMB line/stop Sensor."""
 
     def __init__(self, ibus_client, stop, line, name):

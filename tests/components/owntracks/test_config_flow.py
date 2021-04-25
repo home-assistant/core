@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.owntracks import config_flow
 from homeassistant.components.owntracks.config_flow import CONF_CLOUDHOOK, CONF_SECRET
 from homeassistant.components.owntracks.const import DOMAIN
@@ -143,7 +143,7 @@ async def test_unload(hass):
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup"
     ) as mock_forward:
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "import"}, data={}
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
         )
 
     assert len(mock_forward.mock_calls) == 1
@@ -175,7 +175,7 @@ async def test_with_cloud_sub(hass):
         return_value="https://hooks.nabu.casa/ABCD",
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data={}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
         )
 
     entry = result["result"]

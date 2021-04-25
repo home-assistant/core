@@ -8,6 +8,7 @@ from withings_api.common import AuthScope
 
 from homeassistant import config_entries
 from homeassistant.components.withings import const
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util import slugify
 
@@ -51,7 +52,7 @@ class WithingsFlowHandler(
         errors = {}
         reauth_profile = (
             self.context.get(const.PROFILE)
-            if self.context.get("source") == "reauth"
+            if self.context.get("source") == SOURCE_REAUTH
             else None
         )
         profile = data.get(const.PROFILE) or reauth_profile

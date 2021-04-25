@@ -144,13 +144,6 @@ class HydrawiseEntity(Entity):
         self.async_schedule_update_ha_state(True)
 
     @property
-    def unit_of_measurement(self):
-        """Return the units of measurement."""
-        return DEVICE_MAP[self._sensor_type][
-            DEVICE_MAP_INDEX.index("UNIT_OF_MEASURE_INDEX")
-        ]
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION, "identifier": self.data.get("relay")}

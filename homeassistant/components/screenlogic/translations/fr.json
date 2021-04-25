@@ -1,5 +1,11 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion"
+        },
         "flow_title": "ScreenLogic {nom}",
         "step": {
             "gateway_entry": {
@@ -12,7 +18,7 @@
             },
             "gateway_select": {
                 "data": {
-                    "selected_gateway": "passerelle"
+                    "selected_gateway": "Passerelle"
                 },
                 "description": "Les passerelles ScreenLogic suivantes ont \u00e9t\u00e9 d\u00e9couvertes. S\u2019il vous pla\u00eet s\u00e9lectionner un \u00e0 configurer, ou choisissez de configurer manuellement une passerelle ScreenLogic.",
                 "title": "ScreenLogic"

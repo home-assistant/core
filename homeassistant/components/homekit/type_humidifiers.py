@@ -240,6 +240,8 @@ class HumidifierDehumidifier(HomeAccessory):
 
         # Update target humidity
         target_humidity = new_state.attributes.get(ATTR_HUMIDITY)
-        if isinstance(target_humidity, (int, float)):
-            if self.char_target_humidity.value != target_humidity:
-                self.char_target_humidity.set_value(target_humidity)
+        if (
+            isinstance(target_humidity, (int, float))
+            and self.char_target_humidity.value != target_humidity
+        ):
+            self.char_target_humidity.set_value(target_humidity)

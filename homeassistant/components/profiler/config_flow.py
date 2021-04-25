@@ -3,8 +3,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 
-from .const import DEFAULT_NAME
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DEFAULT_NAME, DOMAIN
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

@@ -1,7 +1,8 @@
 """Light support for switch entities."""
 from __future__ import annotations
 
-from typing import Any, Callable, Sequence, cast
+from collections.abc import Sequence
+from typing import Any, Callable, cast
 
 import voluptuous as vol
 
@@ -14,15 +15,11 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import State, callback
+from homeassistant.core import HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -37,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: Callable[[Sequence[Entity]], None],
     discovery_info: DiscoveryInfoType | None = None,

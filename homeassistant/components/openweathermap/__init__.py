@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
     CONF_LANGUAGE,
@@ -54,10 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         owm, latitude, longitude, forecast_mode, hass
     )
 
-    await weather_coordinator.async_refresh()
-
-    if not weather_coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await weather_coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {

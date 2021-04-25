@@ -42,11 +42,10 @@ def get_service(hass, config, discovery_info=None):
             _LOGGER.error("Invalid Apprise config url provided")
             return None
 
-    if config.get(CONF_URL):
-        # Ordered list of URLs
-        if not a_obj.add(config[CONF_URL]):
-            _LOGGER.error("Invalid Apprise URL(s) supplied")
-            return None
+    # Ordered list of URLs
+    if config.get(CONF_URL) and not a_obj.add(config[CONF_URL]):
+        _LOGGER.error("Invalid Apprise URL(s) supplied")
+        return None
 
     return AppriseNotificationService(a_obj)
 

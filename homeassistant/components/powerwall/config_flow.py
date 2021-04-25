@@ -14,7 +14,7 @@ from homeassistant.components.dhcp import IP_ADDRESS
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import callback
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,12 +59,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the powerwall flow."""
         self.ip_address = None
 
-    async def async_step_dhcp(self, dhcp_discovery):
+    async def async_step_dhcp(self, discovery_info):
         """Handle dhcp discovery."""
-        if self._async_ip_address_already_configured(dhcp_discovery[IP_ADDRESS]):
+        if self._async_ip_address_already_configured(discovery_info[IP_ADDRESS]):
             return self.async_abort(reason="already_configured")
 
-        self.ip_address = dhcp_discovery[IP_ADDRESS]
+        self.ip_address = discovery_info[IP_ADDRESS]
         self.context["title_placeholders"] = {CONF_IP_ADDRESS: self.ip_address}
         return await self.async_step_user()
 

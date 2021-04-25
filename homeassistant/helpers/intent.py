@@ -1,17 +1,17 @@
 """Module to coordinate user intentions."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 import logging
 import re
-from typing import Any, Callable, Dict, Iterable
+from typing import Any, Callable, Dict
 
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
-from homeassistant.core import Context, State, T, callback
+from homeassistant.core import Context, HomeAssistant, State, T, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ SPEECH_TYPE_SSML = "ssml"
 
 @callback
 @bind_hass
-def async_register(hass: HomeAssistantType, handler: IntentHandler) -> None:
+def async_register(hass: HomeAssistant, handler: IntentHandler) -> None:
     """Register an intent with Home Assistant."""
     intents = hass.data.get(DATA_KEY)
     if intents is None:
@@ -49,7 +49,7 @@ def async_register(hass: HomeAssistantType, handler: IntentHandler) -> None:
 
 @bind_hass
 async def async_handle(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     platform: str,
     intent_type: str,
     slots: _SlotsType | None = None,
@@ -103,7 +103,7 @@ class IntentUnexpectedError(IntentError):
 @callback
 @bind_hass
 def async_match_state(
-    hass: HomeAssistantType, name: str, states: Iterable[State] | None = None
+    hass: HomeAssistant, name: str, states: Iterable[State] | None = None
 ) -> State:
     """Find a state that matches the name."""
     if states is None:
@@ -222,7 +222,7 @@ class Intent:
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         platform: str,
         intent_type: str,
         slots: _SlotsType,

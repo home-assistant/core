@@ -214,7 +214,8 @@ async def test_handle_events(hass, utcnow, calls):
                         "data_template": {
                             "some": (
                                 "{{ trigger.platform}} - "
-                                "{{ trigger.type }} - {{ trigger.subtype }}"
+                                "{{ trigger.type }} - {{ trigger.subtype }} - "
+                                "{{ trigger.id }}"
                             )
                         },
                     },
@@ -233,7 +234,8 @@ async def test_handle_events(hass, utcnow, calls):
                         "data_template": {
                             "some": (
                                 "{{ trigger.platform}} - "
-                                "{{ trigger.type }} - {{ trigger.subtype }}"
+                                "{{ trigger.type }} - {{ trigger.subtype }} - "
+                                "{{ trigger.id }}"
                             )
                         },
                     },
@@ -249,7 +251,7 @@ async def test_handle_events(hass, utcnow, calls):
 
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["some"] == "device - button1 - single_press"
+    assert calls[0].data["some"] == "device - button1 - single_press - 0"
 
     # Make sure automation doesn't trigger for long press
     helper.pairing.testing.update_named_service(
@@ -274,7 +276,7 @@ async def test_handle_events(hass, utcnow, calls):
 
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[1].data["some"] == "device - button2 - long_press"
+    assert calls[1].data["some"] == "device - button2 - long_press - 0"
 
     # Turn the automations off
     await hass.services.async_call(

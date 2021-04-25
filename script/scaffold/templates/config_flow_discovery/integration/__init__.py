@@ -1,4 +1,6 @@
 """The NEW_NAME integration."""
+from __future__ import annotations
+
 import asyncio
 
 from homeassistant.config_entries import ConfigEntry
@@ -8,15 +10,10 @@ from .const import DOMAIN
 
 # TODO List the platforms that you want to support.
 # For your initial PR, limit it to 1 platform.
-PLATFORMS = ["light"]
+PLATFORMS = ["binary_sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the NEW_NAME component."""
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up NEW_NAME from a config entry."""
     # TODO Store an API object for your platforms to access
     # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
@@ -29,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(

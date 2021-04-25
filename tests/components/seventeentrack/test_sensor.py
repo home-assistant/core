@@ -106,7 +106,7 @@ class ProfileMock:
         show_archived: bool = False,
         tz: str = "UTC",
     ) -> list:
-        """Packages mock."""
+        """Packages mock."""  # noqa: D401
         return self.__class__.package_list[:]
 
     async def summary(self, show_archived: bool = False) -> dict:
