@@ -6,7 +6,7 @@ import asyncio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import mutesync
+import mutesync
 from .const import DOMAIN
 
 # TODO List the platforms that you want to support.
@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # TODO Store an API object for your platforms to access
     print(entry.data["token"])
     print(entry.data["host"])
-    print("************************************")
+    print("====================================")
     hass.data[DOMAIN][entry.entry_id] = mutesync.PyMutesync(
         entry.data["token"],
         entry.data["host"],

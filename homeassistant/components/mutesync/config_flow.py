@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.exceptions import HomeAssistantError
 
-from . import mutesync
+import mutesync
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
