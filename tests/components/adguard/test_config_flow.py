@@ -96,7 +96,7 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data={"host": "mock-adguard", "port": "3000"},
-        context={"source": "user"},
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -111,7 +111,7 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": "3000"},
-        context={"source": "hassio"},
+        context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
@@ -126,7 +126,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": "3000"},
-        context={"source": "hassio"},
+        context={"source": config_entries.SOURCE_HASSIO},
     )
 
     assert "type" in result
@@ -148,7 +148,7 @@ async def test_hassio_confirm(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": 3000},
-        context={"source": "hassio"},
+        context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "hassio_confirm"
@@ -176,7 +176,7 @@ async def test_hassio_connection_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data={"addon": "AdGuard Home Addon", "host": "mock-adguard", "port": 3000},
-        context={"source": "hassio"},
+        context={"source": config_entries.SOURCE_HASSIO},
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})

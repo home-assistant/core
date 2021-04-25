@@ -46,10 +46,10 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from . import (
     CONF_QOS,
@@ -251,7 +251,7 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, async_add_entities, config: ConfigType, discovery_info=None
+    hass: HomeAssistant, async_add_entities, config: ConfigType, discovery_info=None
 ):
     """Set up MQTT climate device through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
@@ -359,7 +359,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
             tpl.hass = self.hass
         self._command_templates = command_templates
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self):  # noqa: C901
         """(Re)Subscribe to topics."""
         topics = {}
         qos = self._config[CONF_QOS]

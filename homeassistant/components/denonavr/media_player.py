@@ -45,12 +45,15 @@ from .config_flow import (
     CONF_MODEL,
     CONF_SERIAL_NUMBER,
     CONF_TYPE,
+    CONF_UPDATE_AUDYSSEY,
+    DEFAULT_UPDATE_AUDYSSEY,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOUND_MODE_RAW = "sound_mode_raw"
+ATTR_DYNAMIC_EQ = "dynamic_eq"
 
 SUPPORT_DENON = (
     SUPPORT_VOLUME_STEP
@@ -75,6 +78,8 @@ PARALLEL_UPDATES = 1
 
 # Services
 SERVICE_GET_COMMAND = "get_command"
+SERVICE_SET_DYNAMIC_EQ = "set_dynamic_eq"
+SERVICE_UPDATE_AUDYSSEY = "update_audyssey"
 
 
 async def async_setup_entry(
@@ -84,14 +89,23 @@ async def async_setup_entry(
 ):
     """Set up the DenonAVR receiver from a config entry."""
     entities = []
-    receiver = hass.data[DOMAIN][config_entry.entry_id][CONF_RECEIVER]
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    receiver = data[CONF_RECEIVER]
+    update_audyssey = data.get(CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY)
     for receiver_zone in receiver.zones.values():
         if config_entry.data[CONF_SERIAL_NUMBER] is not None:
             unique_id = f"{config_entry.unique_id}-{receiver_zone.zone}"
         else:
             unique_id = f"{config_entry.entry_id}-{receiver_zone.zone}"
         await receiver_zone.async_setup()
-        entities.append(DenonDevice(receiver_zone, unique_id, config_entry))
+        entities.append(
+            DenonDevice(
+                receiver_zone,
+                unique_id,
+                config_entry,
+                update_audyssey,
+            )
+        )
     _LOGGER.debug(
         "%s receiver at host %s initialized", receiver.manufacturer, receiver.host
     )
@@ -102,6 +116,16 @@ async def async_setup_entry(
         SERVICE_GET_COMMAND,
         {vol.Required(ATTR_COMMAND): cv.string},
         f"async_{SERVICE_GET_COMMAND}",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_DYNAMIC_EQ,
+        {vol.Required(ATTR_DYNAMIC_EQ): cv.boolean},
+        f"async_{SERVICE_SET_DYNAMIC_EQ}",
+    )
+    platform.async_register_entity_service(
+        SERVICE_UPDATE_AUDYSSEY,
+        {},
+        f"async_{SERVICE_UPDATE_AUDYSSEY}",
     )
 
     async_add_entities(entities, update_before_add=True)
@@ -115,11 +139,13 @@ class DenonDevice(MediaPlayerEntity):
         receiver: DenonAVR,
         unique_id: str,
         config_entry: config_entries.ConfigEntry,
+        update_audyssey: bool,
     ):
         """Initialize the device."""
         self._receiver = receiver
         self._unique_id = unique_id
         self._config_entry = config_entry
+        self._update_audyssey = update_audyssey
 
         self._supported_features_base = SUPPORT_DENON
         self._supported_features_base |= (
@@ -127,7 +153,7 @@ class DenonDevice(MediaPlayerEntity):
         )
         self._available = True
 
-    def async_log_errors(  # pylint: disable=no-self-argument
+    def async_log_errors(
         func: Coroutine,
     ) -> Coroutine:
         """
@@ -142,7 +168,7 @@ class DenonDevice(MediaPlayerEntity):
             # pylint: disable=protected-access
             available = True
             try:
-                return await func(self, *args, **kwargs)  # pylint: disable=not-callable
+                return await func(self, *args, **kwargs)
             except AvrTimoutError:
                 available = False
                 if self._available is True:
@@ -177,7 +203,7 @@ class DenonDevice(MediaPlayerEntity):
                 _LOGGER.error(
                     "Error %s occurred in method %s for Denon AVR receiver",
                     err,
-                    func.__name__,  # pylint: disable=no-member
+                    func.__name__,
                     exc_info=True,
                 )
             finally:
@@ -194,6 +220,8 @@ class DenonDevice(MediaPlayerEntity):
     async def async_update(self) -> None:
         """Get the latest status information from device."""
         await self._receiver.async_update()
+        if self._update_audyssey:
+            await self._receiver.async_update_audyssey()
 
     @property
     def available(self):
@@ -350,13 +378,22 @@ class DenonDevice(MediaPlayerEntity):
     @property
     def extra_state_attributes(self):
         """Return device specific state attributes."""
+        if self._receiver.power != POWER_ON:
+            return {}
+        state_attributes = {}
         if (
             self._receiver.sound_mode_raw is not None
             and self._receiver.support_sound_mode
-            and self._receiver.power == POWER_ON
         ):
-            return {ATTR_SOUND_MODE_RAW: self._receiver.sound_mode_raw}
-        return {}
+            state_attributes[ATTR_SOUND_MODE_RAW] = self._receiver.sound_mode_raw
+        if self._receiver.dynamic_eq is not None:
+            state_attributes[ATTR_DYNAMIC_EQ] = self._receiver.dynamic_eq
+        return state_attributes
+
+    @property
+    def dynamic_eq(self):
+        """Status of DynamicEQ."""
+        return self._receiver.dynamic_eq
 
     @async_log_errors
     async def async_media_play_pause(self):
@@ -435,6 +472,23 @@ class DenonDevice(MediaPlayerEntity):
     async def async_get_command(self, command: str, **kwargs):
         """Send generic command."""
         return await self._receiver.async_get_command(command)
+
+    @async_log_errors
+    async def async_update_audyssey(self):
+        """Get the latest audyssey information from device."""
+        await self._receiver.async_update_audyssey()
+
+    @async_log_errors
+    async def async_set_dynamic_eq(self, dynamic_eq: bool):
+        """Turn DynamicEQ on or off."""
+        if dynamic_eq:
+            result = await self._receiver.async_dynamic_eq_on()
+        else:
+            result = await self._receiver.async_dynamic_eq_off()
+
+        if self._update_audyssey:
+            await self._receiver.async_update_audyssey()
+        return result
 
     # Decorator defined before is a staticmethod
     async_log_errors = staticmethod(  # pylint: disable=no-staticmethod-decorator

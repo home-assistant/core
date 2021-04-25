@@ -1,5 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "La cuenta ya ha sido configurada",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
+        },
+        "error": {
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
         "step": {
             "installation": {
                 "data": {
@@ -9,12 +17,16 @@
             },
             "reauth_confirm": {
                 "data": {
-                    "description": "Vuelva a autenticarse con su cuenta Verisure My Pages."
+                    "description": "Vuelva a autenticarse con su cuenta Verisure My Pages.",
+                    "email": "Correo electr\u00f3nico",
+                    "password": "Contrase\u00f1a"
                 }
             },
             "user": {
                 "data": {
-                    "description": "Inicia sesi\u00f3n con tu cuenta Verisure My Pages."
+                    "description": "Inicia sesi\u00f3n con tu cuenta Verisure My Pages.",
+                    "email": "Correo electr\u00f3nico",
+                    "password": "Contrase\u00f1a"
                 }
             }
         }

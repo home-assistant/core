@@ -23,7 +23,7 @@ from homeassistant.const import (
     STATE_ON,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -34,13 +34,13 @@ from tests.common import async_fire_time_changed
 ENTITY_ID = f"{DOMAIN}.fake_name"
 
 
-async def setup_fritzbox(hass: HomeAssistantType, config: dict):
+async def setup_fritzbox(hass: HomeAssistant, config: dict):
     """Set up mock AVM Fritz!Box."""
     assert await async_setup_component(hass, FB_DOMAIN, config)
     await hass.async_block_till_done()
 
 
-async def test_setup(hass: HomeAssistantType, fritz: Mock):
+async def test_setup(hass: HomeAssistant, fritz: Mock):
     """Test setup of platform."""
     device = FritzDeviceSwitchMock()
     fritz().get_devices.return_value = [device]
@@ -60,7 +60,7 @@ async def test_setup(hass: HomeAssistantType, fritz: Mock):
     assert state.attributes[ATTR_TOTAL_CONSUMPTION_UNIT] == ENERGY_KILO_WATT_HOUR
 
 
-async def test_turn_on(hass: HomeAssistantType, fritz: Mock):
+async def test_turn_on(hass: HomeAssistant, fritz: Mock):
     """Test turn device on."""
     device = FritzDeviceSwitchMock()
     fritz().get_devices.return_value = [device]
@@ -73,7 +73,7 @@ async def test_turn_on(hass: HomeAssistantType, fritz: Mock):
     assert device.set_switch_state_on.call_count == 1
 
 
-async def test_turn_off(hass: HomeAssistantType, fritz: Mock):
+async def test_turn_off(hass: HomeAssistant, fritz: Mock):
     """Test turn device off."""
     device = FritzDeviceSwitchMock()
     fritz().get_devices.return_value = [device]
@@ -86,36 +86,36 @@ async def test_turn_off(hass: HomeAssistantType, fritz: Mock):
     assert device.set_switch_state_off.call_count == 1
 
 
-async def test_update(hass: HomeAssistantType, fritz: Mock):
-    """Test update with error."""
+async def test_update(hass: HomeAssistant, fritz: Mock):
+    """Test update without error."""
     device = FritzDeviceSwitchMock()
     fritz().get_devices.return_value = [device]
 
     await setup_fritzbox(hass, MOCK_CONFIG)
-    assert device.update.call_count == 0
+    assert device.update.call_count == 1
     assert fritz().login.call_count == 1
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
 
-    assert device.update.call_count == 1
+    assert device.update.call_count == 2
     assert fritz().login.call_count == 1
 
 
-async def test_update_error(hass: HomeAssistantType, fritz: Mock):
+async def test_update_error(hass: HomeAssistant, fritz: Mock):
     """Test update with error."""
     device = FritzDeviceSwitchMock()
     device.update.side_effect = HTTPError("Boom")
     fritz().get_devices.return_value = [device]
 
     await setup_fritzbox(hass, MOCK_CONFIG)
-    assert device.update.call_count == 0
+    assert device.update.call_count == 1
     assert fritz().login.call_count == 1
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
 
-    assert device.update.call_count == 1
+    assert device.update.call_count == 2
     assert fritz().login.call_count == 2

@@ -575,7 +575,7 @@ async def test_warn_disabled(hass, caplog):
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
-        disabled_by="user",
+        disabled_by=entity_registry.DISABLED_USER,
     )
     mock_registry(hass, {"hello.world": entry})
 
@@ -616,7 +616,9 @@ async def test_disabled_in_entity_registry(hass):
     await ent.add_to_platform_finish()
     assert hass.states.get("hello.world") is not None
 
-    entry2 = registry.async_update_entity("hello.world", disabled_by="user")
+    entry2 = registry.async_update_entity(
+        "hello.world", disabled_by=entity_registry.DISABLED_USER
+    )
     await hass.async_block_till_done()
     assert entry2 != entry
     assert ent.registry_entry == entry2

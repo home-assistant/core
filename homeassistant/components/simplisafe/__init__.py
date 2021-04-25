@@ -114,21 +114,27 @@ SERVICE_SET_PIN_SCHEMA = SERVICE_BASE_SCHEMA.extend(
 SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
         vol.Optional(ATTR_ALARM_DURATION): vol.All(
-            cv.time_period, lambda value: value.seconds, vol.Range(min=30, max=480)
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(min=30, max=480),
         ),
         vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
         vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
         vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
-            cv.time_period, lambda value: value.seconds, vol.Range(min=30, max=255)
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(min=30, max=255),
         ),
         vol.Optional(ATTR_ENTRY_DELAY_HOME): vol.All(
-            cv.time_period, lambda value: value.seconds, vol.Range(max=255)
+            cv.time_period, lambda value: value.total_seconds(), vol.Range(max=255)
         ),
         vol.Optional(ATTR_EXIT_DELAY_AWAY): vol.All(
-            cv.time_period, lambda value: value.seconds, vol.Range(min=45, max=255)
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(min=45, max=255),
         ),
         vol.Optional(ATTR_EXIT_DELAY_HOME): vol.All(
-            cv.time_period, lambda value: value.seconds, vol.Range(max=255)
+            cv.time_period, lambda value: value.total_seconds(), vol.Range(max=255)
         ),
         vol.Optional(ATTR_LIGHT): cv.boolean,
         vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
@@ -175,7 +181,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass, config_entry):  # noqa: C901
     """Set up SimpliSafe as config entry."""
     hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = []
 

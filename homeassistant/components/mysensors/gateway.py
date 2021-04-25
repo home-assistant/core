@@ -16,9 +16,8 @@ import voluptuous as vol
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, callback
+from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     CONF_BAUD_RATE,
@@ -67,7 +66,7 @@ def is_socket_address(value):
         raise vol.Invalid("Device is not a valid domain name or ip address") from err
 
 
-async def try_connect(hass: HomeAssistantType, user_input: dict[str, str]) -> bool:
+async def try_connect(hass: HomeAssistant, user_input: dict[str, str]) -> bool:
     """Try to connect to a gateway and report if it worked."""
     if user_input[CONF_DEVICE] == MQTT_COMPONENT:
         return True  # dont validate mqtt. mqtt gateways dont send ready messages :(
@@ -113,7 +112,7 @@ async def try_connect(hass: HomeAssistantType, user_input: dict[str, str]) -> bo
 
 
 def get_mysensors_gateway(
-    hass: HomeAssistantType, gateway_id: GatewayId
+    hass: HomeAssistant, gateway_id: GatewayId
 ) -> BaseAsyncGateway | None:
     """Return the Gateway for a given GatewayId."""
     if MYSENSORS_GATEWAYS not in hass.data[DOMAIN]:
@@ -123,7 +122,7 @@ def get_mysensors_gateway(
 
 
 async def setup_gateway(
-    hass: HomeAssistantType, entry: ConfigEntry
+    hass: HomeAssistant, entry: ConfigEntry
 ) -> BaseAsyncGateway | None:
     """Set up the Gateway for the given ConfigEntry."""
 
@@ -145,7 +144,7 @@ async def setup_gateway(
 
 
 async def _get_gateway(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     device: str,
     version: str,
     event_callback: Callable[[Message], None],
@@ -233,7 +232,7 @@ async def _get_gateway(
 
 
 async def finish_setup(
-    hass: HomeAssistantType, entry: ConfigEntry, gateway: BaseAsyncGateway
+    hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncGateway
 ):
     """Load any persistent devices and platforms and start gateway."""
     discover_tasks = []
@@ -248,7 +247,7 @@ async def finish_setup(
 
 
 async def _discover_persistent_devices(
-    hass: HomeAssistantType, entry: ConfigEntry, gateway: BaseAsyncGateway
+    hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncGateway
 ):
     """Discover platforms for devices loaded via persistence file."""
     tasks = []
@@ -278,9 +277,7 @@ async def gw_stop(hass, entry: ConfigEntry, gateway: BaseAsyncGateway):
     await gateway.stop()
 
 
-async def _gw_start(
-    hass: HomeAssistantType, entry: ConfigEntry, gateway: BaseAsyncGateway
-):
+async def _gw_start(hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncGateway):
     """Start the gateway."""
     gateway_ready = asyncio.Event()
 
@@ -319,7 +316,7 @@ async def _gw_start(
 
 
 def _gw_callback_factory(
-    hass: HomeAssistantType, gateway_id: GatewayId
+    hass: HomeAssistant, gateway_id: GatewayId
 ) -> Callable[[Message], None]:
     """Return a new callback for the gateway."""
 

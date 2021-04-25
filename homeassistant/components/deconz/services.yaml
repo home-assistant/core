@@ -64,3 +64,29 @@ remove_orphaned_entries:
         It can be found as part of the integration name.
         Useful if you run multiple deCONZ integrations.
       example: "00212EFFFF012345"
+
+alarm_panel_state:
+  name: Alarm panel state
+  description: Put keypad panel in an intermediate state, to help with visual and audible cues to the user.
+  target:
+    entity:
+      integration: deconz
+      domain: alarm_control_panel
+  fields:
+    panel_state:
+      name: Panel state
+      description: >-
+        - "arming_away/home/night": set panel in right visual arming state.
+        - "entry_delay": make panel beep until panel is disarmed. Beep interval is short.
+        - "exit_delay": make panel beep until panel is set to armed state. Beep interval is long.
+        - "not_ready_to_arm": turn on yellow status led on the panel. Indicate not all conditions for arming are met.
+      required: true
+      selector:
+        select:
+          options:
+            - "arming_away"
+            - "arming_home"
+            - "arming_night"
+            - "entry_delay"
+            - "exit_delay"
+            - "not_ready_to_arm"

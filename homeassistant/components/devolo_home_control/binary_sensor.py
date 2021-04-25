@@ -4,6 +4,8 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_HEAT,
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_PROBLEM,
+    DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
     BinarySensorEntity,
 )
@@ -19,6 +21,7 @@ DEVICE_CLASS_MAPPING = {
     "Smoke Alarm": DEVICE_CLASS_SMOKE,
     "Heat Alarm": DEVICE_CLASS_HEAT,
     "door": DEVICE_CLASS_DOOR,
+    "overload": DEVICE_CLASS_SAFETY,
 }
 
 
@@ -84,6 +87,7 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
         self._value = self._binary_sensor_property.state
 
         if element_uid.startswith("devolo.WarningBinaryFI:"):
+            self._device_class = DEVICE_CLASS_PROBLEM
             self._enabled_default = False
 
     @property

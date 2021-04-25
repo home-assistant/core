@@ -4,7 +4,6 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import struct
-from typing import Any
 
 import voluptuous as vol
 
@@ -31,6 +30,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import number
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
@@ -56,25 +56,6 @@ from .const import (
 from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def number(value: Any) -> int | float:
-    """Coerce a value to number without losing precision."""
-    if isinstance(value, int):
-        return value
-
-    if isinstance(value, str):
-        try:
-            value = int(value)
-            return value
-        except (TypeError, ValueError):
-            pass
-
-    try:
-        value = float(value)
-        return value
-    except (TypeError, ValueError) as err:
-        raise vol.Invalid(f"invalid number {value}") from err
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -325,22 +306,16 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
                         v_result.append(f"{float(v_temp):.{self._precision}f}")
                 self._value = ",".join(map(str, v_result))
             else:
-                val = val[0]
-
                 # Apply scale and precision to floats and ints
-                if isinstance(val, (float, int)):
-                    val = self._scale * val + self._offset
+                val = self._scale * val[0] + self._offset
 
-                    # We could convert int to float, and the code would still work; however
-                    # we lose some precision, and unit tests will fail. Therefore, we do
-                    # the conversion only when it's absolutely necessary.
-                    if isinstance(val, int) and self._precision == 0:
-                        self._value = str(val)
-                    else:
-                        self._value = f"{float(val):.{self._precision}f}"
-                else:
-                    # Don't process remaining datatypes (bytes and booleans)
+                # We could convert int to float, and the code would still work; however
+                # we lose some precision, and unit tests will fail. Therefore, we do
+                # the conversion only when it's absolutely necessary.
+                if isinstance(val, int) and self._precision == 0:
                     self._value = str(val)
+                else:
+                    self._value = f"{float(val):.{self._precision}f}"
 
         self._available = True
         self.schedule_update_ha_state()

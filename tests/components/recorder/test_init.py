@@ -32,7 +32,6 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, callback
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
@@ -116,7 +115,7 @@ async def test_state_gets_saved_when_set_before_start_event(
 
 
 async def test_saving_state(
-    hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
     """Test saving and restoring a state."""
     instance = await async_setup_recorder_instance(hass)
@@ -139,7 +138,7 @@ async def test_saving_state(
 
 
 async def test_saving_many_states(
-    hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
     """Test we expire after many commits."""
     instance = await async_setup_recorder_instance(hass)
@@ -165,7 +164,7 @@ async def test_saving_many_states(
 
 
 async def test_saving_state_with_intermixed_time_changes(
-    hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
     """Test saving states with intermixed time changes."""
     instance = await async_setup_recorder_instance(hass)

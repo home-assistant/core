@@ -11,10 +11,12 @@ from homeassistant.helpers.httpx_client import get_async_client
 
 from .config_flow import (
     CONF_SHOW_ALL_SOURCES,
+    CONF_UPDATE_AUDYSSEY,
     CONF_ZONE2,
     CONF_ZONE3,
     DEFAULT_SHOW_SOURCES,
     DEFAULT_TIMEOUT,
+    DEFAULT_UPDATE_AUDYSSEY,
     DEFAULT_ZONE2,
     DEFAULT_ZONE3,
     DOMAIN,
@@ -53,6 +55,9 @@ async def async_setup_entry(
 
     hass.data[DOMAIN][entry.entry_id] = {
         CONF_RECEIVER: receiver,
+        CONF_UPDATE_AUDYSSEY: entry.options.get(
+            CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
+        ),
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 

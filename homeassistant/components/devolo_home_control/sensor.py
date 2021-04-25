@@ -1,6 +1,7 @@
 """Platform for sensor integration."""
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
@@ -21,7 +22,7 @@ DEVICE_CLASS_MAPPING = {
     "light": DEVICE_CLASS_ILLUMINANCE,
     "humidity": DEVICE_CLASS_HUMIDITY,
     "current": DEVICE_CLASS_POWER,
-    "total": DEVICE_CLASS_POWER,
+    "total": DEVICE_CLASS_ENERGY,
     "voltage": DEVICE_CLASS_VOLTAGE,
 }
 
