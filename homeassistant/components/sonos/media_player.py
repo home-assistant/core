@@ -1208,7 +1208,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         except asyncio.TimeoutError:
             _LOGGER.warning("Timeout waiting for target groups %s", groups)
 
-        for entity in hass.data[DATA_SONOS].media_player_entities:
+        for entity in hass.data[DATA_SONOS].media_player_entities.values():
             entity.soco._zgs_cache.clear()
 
     @soco_error()
