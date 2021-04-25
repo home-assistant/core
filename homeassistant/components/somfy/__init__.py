@@ -20,7 +20,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
-    UpdateFailed,
 )
 
 from . import api
@@ -95,7 +94,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         previous_devices = data[COORDINATOR].data
         # Sometimes Somfy returns an empty list.
         if not devices and previous_devices:
-            raise UpdateFailed("No devices returned")
+            _LOGGER.warn(
+                "No devices returned. Assuming the previous ones are still valid."
+            )
+            return previous_devices
         return {dev.id: dev for dev in devices}
 
     coordinator = DataUpdateCoordinator(
