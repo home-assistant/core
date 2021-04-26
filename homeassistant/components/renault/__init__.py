@@ -1,4 +1,6 @@
 """Support for Renault devices."""
+import asyncio
+
 import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
@@ -38,12 +40,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = True
-
-    for platform in PLATFORMS:
-        unload_ok = unload_ok and await hass.config_entries.async_forward_entry_unload(
-            config_entry, platform
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
+            ]
         )
+    )
 
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.unique_id)
