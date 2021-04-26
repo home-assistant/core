@@ -4,8 +4,10 @@ from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.netatmo import DOMAIN
+from homeassistant.components.webhook import async_handle_webhook
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
+from homeassistant.util.aiohttp import MockRequest
 
 from .common import (
     FAKE_WEBHOOK_ACTIVATION,
@@ -175,6 +177,14 @@ async def test_setup_without_https(hass, config_entry):
     await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK)
     await hass.async_block_till_done()
     assert hass.states.get(climate_entity_livingroom).state == "heat"
+
+    # Assert handling of erroneous webhook data
+    request = MockRequest(
+        content=bytes("", "utf-8"),
+        mock_source="test",
+    )
+    await async_handle_webhook(hass, webhook_id, request)
+    await hass.async_block_till_done()
 
 
 async def test_setup_with_cloud(hass, config_entry):

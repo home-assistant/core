@@ -89,6 +89,28 @@ async def test_setup_component_with_webhook(hass, config_entry):
     assert hass.states.get(camera_entity_indoor).state == "streaming"
     assert hass.states.get(camera_entity_outdoor).attributes["light_state"] == "auto"
 
+    with patch("pyatmo.camera.AsyncCameraData.async_set_state") as mock_set_state:
+        await hass.services.async_call(
+            "camera", "turn_off", service_data={"entity_id": "camera.netatmo_hall"}
+        )
+        await hass.async_block_till_done()
+        mock_set_state.assert_called_once_with(
+            home_id="91763b24c43d3e344f424e8b",
+            camera_id="12:34:56:00:f1:62",
+            monitoring="off",
+        )
+
+    with patch("pyatmo.camera.AsyncCameraData.async_set_state") as mock_set_state:
+        await hass.services.async_call(
+            "camera", "turn_on", service_data={"entity_id": "camera.netatmo_hall"}
+        )
+        await hass.async_block_till_done()
+        mock_set_state.assert_called_once_with(
+            home_id="91763b24c43d3e344f424e8b",
+            camera_id="12:34:56:00:f1:62",
+            monitoring="on",
+        )
+
 
 IMAGE_BYTES_FROM_STREAM = b"test stream image bytes"
 
