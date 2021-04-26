@@ -91,18 +91,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
+                data_schema=HOST_SCHEMA,
             )
-        return await self.async_step_user()
+        self.host = host = user_input[CONF_HOST]
+        self.info = info = await self._get_info(host)
+        await self.async_set_unique_id(info["unique_id"])
+        return await self.async_step_credentials()
 
     async def async_create_entry(self, title: str, data: dict) -> dict:
         """Create a config entry or update existing entry for reauth."""
-        existing_entry = await self.async_set_unique_id(DOMAIN)
+        existing_entry = await self.async_set_unique_id(self.info["unique_id"])
         if existing_entry:
             self.hass.config_entries.async_update_entry(existing_entry, data=data)
             await self.hass.config_entries.async_reload(existing_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
-        return await super().async_create_entry(title, data)
+        return super().async_create_entry(title=title, data=data)
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -118,7 +121,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(info["unique_id"])
-                # self._abort_if_unique_id_configured({CONF_HOST: host})
+                self._abort_if_unique_id_configured({CONF_HOST: host})
                 self.host = host
                 return await self.async_step_credentials()
 
@@ -150,12 +153,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.warning(
                     "SHC not in pairing mode! Please press the Bosch Smart Home Controller button until LED starts blinking"
                 )
-                errors["base"] = "pairing_mode"
+                errors["base"] = "pairing_failed"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(
+                return await self.async_create_entry(
                     title=self.info["title"],
                     data={
                         CONF_SSL_CERTIFICATE: self.hass.config.path(
