@@ -15,7 +15,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
-from . import SonosData
 from .const import DATA_SONOS, SONOS_DISCOVERY_UPDATE, SONOS_ENTITY_CREATED
 from .entity import SonosEntity
 from .speaker import SonosSpeaker
@@ -48,10 +47,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class SonosPowerEntity(SonosEntity, BinarySensorEntity):
     """Representation of a Sonos power entity."""
-
-    def __init__(self, speaker: SonosSpeaker, sonos_data: SonosData) -> None:
-        """Initialize a SonosPowerEntity."""
-        super().__init__(speaker, sonos_data)
 
     async def async_added_to_hass(self) -> None:
         """Register polling callback when added to hass."""
