@@ -1,9 +1,14 @@
 """Adds config flow for Mill integration."""
+from __future__ import annotations
+
+from typing import Any
+
 from mill import Mill
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -19,7 +24,9 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResultDict:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
