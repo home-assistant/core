@@ -33,13 +33,13 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator):
             # Disable because the account is not allowed to access this Renault endpoint.
             self.update_interval = None
             self.access_denied = True
-            raise UpdateFailed(f"This endpoint has been disabled: {err}") from err
+            raise UpdateFailed(f"This endpoint is denied: {err}") from err
 
         except NotSupportedException as err:
             # Disable because the vehicle does not support this Renault endpoint.
             self.update_interval = None
             self.not_supported = True
-            raise UpdateFailed(f"This endpoint has been disabled: {err}") from err
+            raise UpdateFailed(f"This endpoint is not supported: {err}") from err
 
         except KamereonResponseException as err:
             # Other Renault errors.
