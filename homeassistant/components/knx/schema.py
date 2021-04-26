@@ -106,6 +106,7 @@ class BinarySensorSchema:
     DEFAULT_NAME = "KNX Binary Sensor"
 
     SCHEMA = vol.All(
+        # deprecated since September 2020
         cv.deprecated("significant_bit"),
         cv.deprecated("automation"),
         vol.Schema(
@@ -168,6 +169,7 @@ class ClimateSchema:
     DEFAULT_ON_OFF_INVERT = False
 
     SCHEMA = vol.All(
+        # deprecated since September 2020
         cv.deprecated("setpoint_shift_step", replacement_key=CONF_TEMPERATURE_STEP),
         vol.Schema(
             {
@@ -242,26 +244,37 @@ class CoverSchema:
     DEFAULT_TRAVEL_TIME = 25
     DEFAULT_NAME = "KNX Cover"
 
-    SCHEMA = vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_MOVE_LONG_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_MOVE_SHORT_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_STOP_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_POSITION_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_POSITION_STATE_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_ANGLE_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_ANGLE_STATE_ADDRESS): ga_list_validator,
-            vol.Optional(
-                CONF_TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME
-            ): cv.positive_float,
-            vol.Optional(
-                CONF_TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME
-            ): cv.positive_float,
-            vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
-            vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
-            vol.Optional(CONF_DEVICE_CLASS): cv.string,
-        }
+    SCHEMA = vol.All(
+        vol.Schema(
+            {
+                vol.Required(
+                    vol.Any(CONF_MOVE_LONG_ADDRESS, CONF_POSITION_ADDRESS),
+                    msg=f"At least one of '{CONF_MOVE_LONG_ADDRESS}' or '{CONF_POSITION_ADDRESS}' is required.",
+                ): object,
+            },
+            extra=vol.ALLOW_EXTRA,
+        ),
+        vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_MOVE_LONG_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_MOVE_SHORT_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_STOP_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_POSITION_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_POSITION_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_ANGLE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_ANGLE_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(
+                    CONF_TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME
+                ): cv.positive_float,
+                vol.Optional(
+                    CONF_TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME
+                ): cv.positive_float,
+                vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
+                vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
+                vol.Optional(CONF_DEVICE_CLASS): cv.string,
+            }
+        ),
     )
 
 
@@ -431,7 +444,9 @@ class SceneSchema:
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Required(KNX_ADDRESS): ga_list_validator,
-            vol.Required(CONF_SCENE_NUMBER): cv.positive_int,
+            vol.Required(CONF_SCENE_NUMBER): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=64)
+            ),
         }
     )
 
