@@ -43,6 +43,7 @@ import homeassistant.util.dt as dt_util
 from . import migration, purge
 from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
 from .models import Base, Events, RecorderRuns, States
+from .pool import RecorderPool
 from .util import (
     dburl_to_path,
     end_incomplete_runs,
@@ -783,6 +784,8 @@ class Recorder(threading.Thread):
             kwargs["connect_args"] = {"check_same_thread": False}
             kwargs["poolclass"] = StaticPool
             kwargs["pool_reset_on_return"] = None
+        elif self.db_url.startswith(SQLITE_URL_PREFIX):
+            kwargs["poolclass"] = RecorderPool
         else:
             kwargs["echo"] = False
 
