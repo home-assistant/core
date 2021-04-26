@@ -57,6 +57,5 @@ async def test_battery_attributes(hass, config_entry, config, soco):
     # confirm initial state from conftest
     assert battery_state.state == "100"
     assert battery_state.attributes.get("unit_of_measurement") == "%"
-    assert battery_state.attributes.get("icon") == "mdi:battery-charging-100"
     assert battery_state.attributes.get("charging")
     assert battery_state.attributes.get("power_source") == "SONOS_CHARGING_RING"

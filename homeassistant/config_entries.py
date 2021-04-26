@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from contextvars import ContextVar
 import functools
 import logging
 from types import MappingProxyType, MethodType
-from typing import Any, Callable, Iterable, Optional, cast
+from typing import Any, Callable, Optional, cast
 import weakref
 
 import attr
