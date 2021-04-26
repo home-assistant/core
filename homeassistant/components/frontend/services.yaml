@@ -13,7 +13,8 @@ set_theme:
         text:
     mode:
       name: Mode
-      description: The mode the theme is for, either 'dark' or 'light' (default).
+      description: The mode the theme is for, either 'dark' or 'light'.
+      default: "light"
       example: "dark"
       selector:
         options:
