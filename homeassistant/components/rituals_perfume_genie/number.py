@@ -9,13 +9,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTES, COORDINATORS, DEVICES, DOMAIN, HUB
+from .const import ATTRIBUTES, COORDINATORS, DEVICES, DOMAIN, HUB, ROOM, SPEED
 from .entity import DiffuserEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-SPEED = "speedc"
-ROOM = "roomc"
 
 MIN_PERFUME_AMOUNT = 1
 MAX_PERFUME_AMOUNT = 3
