@@ -1,11 +1,8 @@
 """Test discovery of entities for device-specific schemas for the Z-Wave JS integration."""
-from typing import List
-
-from homeassistant.components.zwave_js.const import DOMAIN
-from homeassistant.components.zwave_js.discovery import ZwaveDiscoveryInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
-from tests.common import MockConfigEntry
+from homeassistant.helpers.entity_registry import (
+    async_entries_for_config_entry,
+    async_get as async_get_ent_reg,
+)
 
 
 async def test_iblinds_v2(hass, client, iblinds_v2, integration):
@@ -44,25 +41,16 @@ async def test_inovelli_lzw36(hass, client, inovelli_lzw36, integration):
     assert state
 
 
-async def test_vision_security_zl7432(hass, client, vision_security_zl7432):
+async def test_vision_security_zl7432(
+    hass, client, vision_security_zl7432, integration
+):
     """Test Vision Security ZL7432 is caught by the device specific discovery."""
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
-    entry.add_to_hass(hass)
-
-    disc_infos: List[ZwaveDiscoveryInfo] = []
-
-    def _capture_discovery_info(info: ZwaveDiscoveryInfo) -> None:
-        """Capture switch discovery info."""
-        disc_infos.append(info)
-
-    async_dispatcher_connect(
-        hass, f"{DOMAIN}_{entry.entry_id}_add_switch", _capture_discovery_info
+    entities = async_entries_for_config_entry(
+        async_get_ent_reg(hass), integration.entry_id
     )
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # We only get this platform hint if we are not using the standard switch discovery
-    # scheme
-    for disc_info in disc_infos:
-        assert disc_info.platform_hint == "force_update"
+    for entity in entities:
+        if entity.platform != "switch":
+            continue
+        state = hass.states.get(entity.entity_id)
+        assert state
+        assert state.attributes["assumed_state"]
