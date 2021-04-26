@@ -31,7 +31,7 @@ from homeassistant.helpers.selector import validate_selector
 from .const import CONF_ADVANCED, CONF_EXAMPLE, CONF_FIELDS, CONF_REQUIRED, DOMAIN
 from .helpers import async_get_blueprints
 
-PLATFORM_SCHEMA = make_script_schema(
+SCRIPT_ENTITY_SCHEMA = make_script_schema(
     {
         vol.Optional(CONF_ALIAS): cv.string,
         vol.Optional(CONF_ICON): cv.icon,
@@ -60,7 +60,7 @@ async def async_validate_config_item(hass, config, full_config=None):
         blueprints = async_get_blueprints(hass)
         return await blueprints.async_inputs_from_config(config)
 
-    config = PLATFORM_SCHEMA(config)
+    config = SCRIPT_ENTITY_SCHEMA(config)
     config[CONF_SEQUENCE] = await asyncio.gather(
         *[
             async_validate_action_config(hass, action)

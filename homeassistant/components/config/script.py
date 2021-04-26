@@ -1,7 +1,7 @@
 """Provide configuration end points for scripts."""
 from homeassistant.components.script import DOMAIN
 from homeassistant.components.script.config import (
-    PLATFORM_SCHEMA,
+    SCRIPT_ENTITY_SCHEMA,
     async_validate_config_item,
 )
 from homeassistant.config import SCRIPT_CONFIG_PATH
@@ -24,7 +24,7 @@ async def async_setup(hass):
             "config",
             SCRIPT_CONFIG_PATH,
             cv.slug,
-            PLATFORM_SCHEMA,
+            SCRIPT_ENTITY_SCHEMA,
             post_write_hook=hook,
             data_validator=async_validate_config_item,
         )
