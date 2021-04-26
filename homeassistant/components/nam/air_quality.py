@@ -59,13 +59,13 @@ class NAMAirQuality(CoordinatorEntity, AirQualityEntity):
     @round_state
     def particulate_matter_2_5(self) -> str | None:
         """Return the particulate matter 2.5 level."""
-        return getattr(self.coordinator.data, f"{self.sensor_type}_p2", None)
+        return getattr(self.coordinator.data, f"{self.sensor_type}_p2")
 
     @property
     @round_state
     def particulate_matter_10(self) -> str | None:
         """Return the particulate matter 10 level."""
-        return getattr(self.coordinator.data, f"{self.sensor_type}_p1", None)
+        return getattr(self.coordinator.data, f"{self.sensor_type}_p1")
 
     @property
     @round_state
@@ -82,3 +82,15 @@ class NAMAirQuality(CoordinatorEntity, AirQualityEntity):
     def device_info(self) -> dict[str, Any]:
         """Return the device info."""
         return self.coordinator.device_info
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        available = super().available
+
+        # For a short time after booting, the device does not return values for all
+        # sensors. For this reason, we mark entities for which data is missing as
+        # unavailable.
+        return available and bool(
+            getattr(self.coordinator.data, f"{self.sensor_type}_p2", None)
+        )
