@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import logging
 import socket
-from types import MappingProxyType
 from typing import Any
 import uuid
 
@@ -59,7 +58,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
                 _LOGGER.exception(ex)
             else:
-                title = user_input.get(CONF_URL)
+                title = str(user_input.get(CONF_URL))
                 return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
@@ -68,7 +67,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 async def validate_input(
-    hass: core.HomeAssistant, user_input: MappingProxyType
+    hass: core.HomeAssistant, user_input: dict[str, Any]
 ) -> JellyfinClient:
     """Validate that the provided url and credentials can be used to connect."""
     jellyfin = Jellyfin()
