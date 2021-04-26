@@ -19,12 +19,12 @@ send_command:
       selector:
         select:
           options:
-            - "ps"
-            - "ps_hold"
-            - "option"
-            - "enter"
             - "back"
-            - "up"
             - "down"
+            - "enter"
             - "left"
+            - "option"
+            - "ps_hold"
+            - "ps"
             - "right"
+            - "up"
