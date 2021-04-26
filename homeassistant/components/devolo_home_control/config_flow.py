@@ -24,13 +24,12 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_PASSWORD): str,
         }
         self._reauth_entry = None
+        self._url = DEFAULT_MYDEVOLO
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         if self.show_advanced_options:
-            self.data_schema[
-                vol.Required(CONF_MYDEVOLO, default=DEFAULT_MYDEVOLO)
-            ] = str
+            self.data_schema[vol.Required(CONF_MYDEVOLO, default=self._url)] = str
         if user_input is None:
             return self._show_form(step_id="user")
         try:
@@ -62,6 +61,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
+        self._url = user_input[CONF_MYDEVOLO]
         self.data_schema = {
             vol.Required(CONF_USERNAME, default=user_input[CONF_USERNAME]): str,
             vol.Required(CONF_PASSWORD): str,
@@ -85,6 +85,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _connect_mydevolo(self, user_input):
         """Connect to mydevolo."""
+        user_input[CONF_MYDEVOLO] = user_input.get(CONF_MYDEVOLO, self._url)
         mydevolo = configure_mydevolo(conf=user_input)
         credentials_valid = await self.hass.async_add_executor_job(
             mydevolo.credentials_valid

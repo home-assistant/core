@@ -166,7 +166,11 @@ async def test_form_reauth(hass):
             "source": config_entries.SOURCE_REAUTH,
             "entry_id": mock_config.entry_id,
         },
-        data={"username": "test-username", "password": "test-password"},
+        data={
+            "username": "test-username",
+            "password": "test-password",
+            "mydevolo_url": "https://test_mydevolo_url.test",
+        },
     )
 
     assert result["step_id"] == "reauth_confirm"
@@ -200,7 +204,11 @@ async def test_form_invalid_credentials_reauth(hass):
             "source": config_entries.SOURCE_REAUTH,
             "entry_id": mock_config.entry_id,
         },
-        data={"username": "test-username", "password": "test-password"},
+        data={
+            "username": "test-username",
+            "password": "test-password",
+            "mydevolo_url": "https://test_mydevolo_url.test",
+        },
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -221,7 +229,11 @@ async def test_form_uuid_change_reauth(hass):
             "source": config_entries.SOURCE_REAUTH,
             "entry_id": mock_config.entry_id,
         },
-        data={"username": "test-username", "password": "test-password"},
+        data={
+            "username": "test-username",
+            "password": "test-password",
+            "mydevolo_url": "https://test_mydevolo_url.test",
+        },
     )
 
     assert result["step_id"] == "reauth_confirm"
