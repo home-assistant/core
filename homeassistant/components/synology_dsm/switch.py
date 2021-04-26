@@ -52,7 +52,7 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
         self,
         api: SynoApi,
         entity_type: str,
-        entity_info: dict[str, str],
+        entity_info: dict[str, Any],
         version: str,
         coordinator: DataUpdateCoordinator,
     ) -> None:
@@ -68,7 +68,7 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        return self.coordinator.data["switches"][self.entity_type]
+        return self.coordinator.data["switches"][self.entity_type]  # type: ignore[index]
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on Home mode."""

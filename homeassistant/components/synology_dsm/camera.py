@@ -48,7 +48,7 @@ async def async_setup_entry(
 
     async_add_entities(
         SynoDSMCamera(api, coordinator, camera_id)
-        for camera_id in coordinator.data["cameras"]
+        for camera_id in coordinator.data["cameras"]  # type: ignore[index]
     )
 
 
@@ -63,8 +63,8 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
             api,
             f"{SynoSurveillanceStation.CAMERA_API_KEY}:{camera_id}",
             {
-                ENTITY_NAME: coordinator.data["cameras"][camera_id].name,
-                ENTITY_ENABLE: coordinator.data["cameras"][camera_id].is_enabled,
+                ENTITY_NAME: coordinator.data["cameras"][camera_id].name,  # type: ignore[index]
+                ENTITY_ENABLE: coordinator.data["cameras"][camera_id].is_enabled,  # type: ignore[index]
                 ENTITY_CLASS: None,
                 ENTITY_ICON: None,
                 ENTITY_UNIT: None,
@@ -74,12 +74,11 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         Camera.__init__(self)
 
         self._camera_id = camera_id
-        self._api = api
 
     @property
     def camera_data(self) -> SynoCamera:
         """Camera data."""
-        return self.coordinator.data["cameras"][self._camera_id]
+        return self.coordinator.data["cameras"][self._camera_id]  # type: ignore[index]
 
     @property
     def device_info(self) -> DeviceInfo:

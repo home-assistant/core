@@ -28,7 +28,11 @@ async def async_setup_entry(
     api: SynoApi = data[SYNO_API]
     coordinator = data[COORDINATOR_CENTRAL]
 
-    entities = [
+    entities: list[
+        SynoDSMSecurityBinarySensor
+        | SynoDSMUpgradeBinarySensor
+        | SynoDSMStorageBinarySensor
+    ] = [
         SynoDSMSecurityBinarySensor(
             api, sensor_type, SECURITY_BINARY_SENSORS[sensor_type], coordinator
         )

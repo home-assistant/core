@@ -154,7 +154,7 @@ async def async_setup_entry(  # noqa: C901
         ):
             return None
 
-        entity_type = None
+        entity_type = ""
         for entity_key, entity_attrs in entries.items():
             if (
                 device_id
@@ -219,7 +219,7 @@ async def async_setup_entry(  # noqa: C901
         )
 
     async def async_coordinator_update_data_cameras() -> dict[
-        str, dict[str, any]
+        str, dict[str, Any]
     ] | None:
         """Fetch all camera data from api."""
         if not hass.data[DOMAIN][entry.unique_id][SYSTEM_LOADED]:
@@ -251,7 +251,7 @@ async def async_setup_entry(  # noqa: C901
         return None
 
     async def async_coordinator_update_data_switches() -> dict[
-        str, dict[str, any]
+        str, dict[str, Any]
     ] | None:
         """Fetch all switch data from api."""
         if not hass.data[DOMAIN][entry.unique_id][SYSTEM_LOADED]:
@@ -373,7 +373,7 @@ class SynoApi:
         self.utilisation: SynoCoreUtilization = None
 
         # Should we fetch them
-        self._fetching_entities = {}
+        self._fetching_entities: dict[str, set] = {}
         self._with_information = True
         self._with_security = True
         self._with_storage = True
@@ -588,21 +588,21 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
         self,
         api: SynoApi,
         entity_type: str,
-        entity_info: dict[str, str],
+        entity_info: dict[str, Any],
         coordinator: DataUpdateCoordinator,
     ) -> None:
         """Initialize the Synology DSM entity."""
         super().__init__(coordinator)
 
-        self._api = api
-        self._api_key = entity_type.split(":")[0]
-        self.entity_type = entity_type.split(":")[-1]
-        self._name = f"{api.network.hostname} {entity_info[ENTITY_NAME]}"
-        self._class = entity_info[ENTITY_CLASS]
-        self._enable_default = entity_info[ENTITY_ENABLE]
-        self._icon = entity_info[ENTITY_ICON]
-        self._unit = entity_info[ENTITY_UNIT]
-        self._unique_id = f"{self._api.information.serial}_{entity_type}"
+        self._api: SynoApi = api
+        self._api_key: str = entity_type.split(":")[0]
+        self.entity_type: str = entity_type.split(":")[-1]
+        self._name: str = f"{api.network.hostname} {entity_info[ENTITY_NAME]}"
+        self._class: str | None = entity_info[ENTITY_CLASS]
+        self._enable_default: bool = entity_info[ENTITY_ENABLE]
+        self._icon: str | None = entity_info[ENTITY_ICON]
+        self._unit: str | None = entity_info[ENTITY_UNIT]
+        self._unique_id: str = f"{self._api.information.serial}_{entity_type}"
 
     @property
     def unique_id(self) -> str:
@@ -615,12 +615,12 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
         return self._name
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Return the icon."""
         return self._icon
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> str | None:
         """Return the class of this device."""
         return self._class
 
@@ -658,7 +658,7 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
         self,
         api: SynoApi,
         entity_type: str,
-        entity_info: dict[str, str],
+        entity_info: dict[str, Any],
         coordinator: DataUpdateCoordinator,
         device_id: str = None,
     ) -> None:

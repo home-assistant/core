@@ -43,7 +43,7 @@ async def async_setup_entry(
     api: SynoApi = data[SYNO_API]
     coordinator = data[COORDINATOR_CENTRAL]
 
-    entities = [
+    entities: list[SynoDSMUtilSensor | SynoDSMStorageSensor | SynoDSMInfoSensor] = [
         SynoDSMUtilSensor(
             api, sensor_type, UTILISATION_SENSORS[sensor_type], coordinator
         )
@@ -92,7 +92,7 @@ class SynoDSMSensor(SynologyDSMBaseEntity):
     """Mixin for sensor specific attributes."""
 
     @property
-    def unit_of_measurement(self) -> str:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         if self.entity_type in TEMP_SENSORS_KEYS:
             return self.hass.config.units.temperature_unit
@@ -159,13 +159,13 @@ class SynoDSMInfoSensor(SynoDSMSensor, SensorEntity):
         self,
         api: SynoApi,
         entity_type: str,
-        entity_info: dict[str, str],
+        entity_info: dict[str, Any],
         coordinator: DataUpdateCoordinator,
     ) -> None:
         """Initialize the Synology SynoDSMInfoSensor entity."""
         super().__init__(api, entity_type, entity_info, coordinator)
-        self._previous_uptime = None
-        self._last_boot = None
+        self._previous_uptime: str | None = None
+        self._last_boot: str | None = None
 
     @property
     def state(self) -> Any | None:
