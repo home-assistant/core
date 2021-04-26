@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 monitor["id"],
                 monitor["friendly_name"],
                 monitor["url"],
-                id_prefix=id_prefix
+                id_prefix=id_prefix,
             )
         )
 
@@ -62,7 +62,9 @@ class UptimeRobotBinarySensor(BinarySensorEntity):
         if id_prefix is None:
             id_prefix = ""
         self._id_prefix = id_prefix
-        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, self._id_prefix + self._name, [])
+        self.entity_id = generate_entity_id(
+            ENTITY_ID_FORMAT, self._id_prefix + self._name, []
+        )
         self._target = target
         self._up_robot = up_robot
         self._state = None
