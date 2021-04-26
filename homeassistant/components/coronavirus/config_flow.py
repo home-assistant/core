@@ -24,11 +24,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResultDict:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if self._options is None:
             coordinator = await get_coordinator(self.hass)
-            if not coordinator.last_update_success:
+            if not coordinator.last_update_success or coordinator.data is None:
                 return self.async_abort(reason="cannot_connect")
 
             self._options = {OPTION_WORLDWIDE: "Worldwide"}
