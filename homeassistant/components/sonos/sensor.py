@@ -16,7 +16,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import dt as dt_util
 
 from . import SonosData
@@ -183,11 +182,6 @@ class SonosBatteryEntity(SonosEntity, SensorEntity):
     def charging(self) -> bool:
         """Return the charging status of this battery."""
         return self.power_source not in ("BATTERY", STATE_UNKNOWN)
-
-    @property
-    def icon(self) -> str:
-        """Return the icon of the sensor."""
-        return icon_for_battery_level(self.battery_level, self.charging)
 
     @property
     def state(self) -> int | None:
