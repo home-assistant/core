@@ -1,12 +1,13 @@
 """Provides functionality to interact with lights."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 import csv
 import dataclasses
 from datetime import timedelta
 import logging
 import os
-from typing import Iterable, cast, final
+from typing import cast, final
 
 import voluptuous as vol
 
