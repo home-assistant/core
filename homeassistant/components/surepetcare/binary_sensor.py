@@ -47,13 +47,9 @@ async def async_setup_platform(
             )
 
         if surepy_entity.type == EntityType.PET:
-            entity = Pet(surepy_entity.id, spc)
+            entities.append(Pet(surepy_entity.id, spc))
         elif surepy_entity.type == EntityType.HUB:
-            entity = Hub(surepy_entity.id, spc)
-        else:
-            continue
-
-        entities.append(entity)
+            entities.append(Hub(surepy_entity.id, spc))
 
     async_add_entities(entities, True)
 
@@ -86,16 +82,9 @@ class SurePetcareBinarySensor(BinarySensorEntity):
 
         self._name = f"{self._surepy_entity.type.name.capitalize()} {name.capitalize()}"
 
-        self._async_unsub_dispatcher_connect = None
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if entity is on/unlocked."""
-        return bool(self._state)
-
     @property
     def should_poll(self) -> bool:
-        """Return true."""
+        """Return if the entity should use default polling."""
         return False
 
     @property
@@ -113,7 +102,8 @@ class SurePetcareBinarySensor(BinarySensorEntity):
         """Return an unique ID."""
         return f"{self._surepy_entity.household_id}-{self._id}"
 
-    async def async_update(self) -> None:
+    @callback
+    def _async_update(self) -> None:
         """Get the latest data and update the state."""
         self._surepy_entity = self._spc.states[self._id]
         self._state = self._surepy_entity.raw_data()["status"]
@@ -121,20 +111,10 @@ class SurePetcareBinarySensor(BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-
-        @callback
-        def update() -> None:
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, TOPIC_UPDATE, self._async_update)
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
+        self._async_update()
 
 
 class Hub(SurePetcareBinarySensor):
@@ -193,7 +173,8 @@ class Pet(SurePetcareBinarySensor):
 
         return attributes
 
-    async def async_update(self) -> None:
+    @callback
+    def _async_update(self) -> None:
         """Get the latest data and update the state."""
         self._surepy_entity = self._spc.states[self._id]
         self._state = self._surepy_entity.location
