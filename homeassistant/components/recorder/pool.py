@@ -1,13 +1,13 @@
 """A pool for sqlite connections."""
 import threading
 
-from sqlalchemy.pool import AssertionPool
+from sqlalchemy.pool import NullPool, StaticPool
 
 
-class RecorderPool(AssertionPool):
-    """A hybird of NullPool and AssertionPool.
+class RecorderPool(StaticPool, NullPool):
+    """A hybird of NullPool and StaticPool.
 
-    When called from the creating thread acts like AssertionPool
+    When called from the creating thread acts like StaticPool
 
     When called from any other thread, acts like NullPool
     """
@@ -15,7 +15,7 @@ class RecorderPool(AssertionPool):
     def __init__(self, *args, **kw):
         """Create the pool."""
         self._tid = threading.current_thread().ident
-        AssertionPool.__init__(self, *args, **kw)
+        StaticPool.__init__(self, *args, **kw)
 
     def status(self):
         """Status of the pool."""
@@ -48,4 +48,4 @@ class RecorderPool(AssertionPool):
     def _do_get(self):
         if threading.current_thread().ident == self._tid:
             return super()._do_get()
-        return self._create_connection()
+        return super(NullPool, self)._create_connection()
