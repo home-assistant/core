@@ -13,7 +13,13 @@ from homeassistant.components.deconz.const import (
     DOMAIN as DECONZ_DOMAIN,
 )
 from homeassistant.components.deconz.services import SERVICE_DEVICE_REFRESH
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    DEVICE_CLASS_TEMPERATURE,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
@@ -72,15 +78,21 @@ async def test_binary_sensors(hass, aioclient_mock, mock_deconz_websocket):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 5
     presence_sensor = hass.states.get("binary_sensor.presence_sensor")
     assert presence_sensor.state == STATE_OFF
-    assert presence_sensor.attributes["device_class"] == DEVICE_CLASS_MOTION
+    assert presence_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_MOTION
+    presence_temp = hass.states.get("sensor.presence_sensor_temperature_sensor")
+    assert presence_temp.state == "0.1"
+    assert presence_temp.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
     assert hass.states.get("binary_sensor.temperature_sensor") is None
     assert hass.states.get("binary_sensor.clip_presence_sensor") is None
     vibration_sensor = hass.states.get("binary_sensor.vibration_sensor")
     assert vibration_sensor.state == STATE_ON
-    assert vibration_sensor.attributes["device_class"] == DEVICE_CLASS_VIBRATION
+    assert vibration_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_VIBRATION
+    vibration_temp = hass.states.get("sensor.vibration_sensor_temperature_sensor")
+    assert vibration_temp.state == "0.1"
+    assert vibration_temp.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
 
     event_changed_sensor = {
         "t": "event",
