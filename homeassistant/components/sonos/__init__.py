@@ -65,12 +65,12 @@ class SonosData:
 
     def __init__(self) -> None:
         """Initialize the data."""
-        self.discovered = {}
+        self.discovered: dict[str, SonosSpeaker] = {}
         self.media_player_entities = {}
         self.topology_condition = asyncio.Condition()
         self.discovery_thread = None
         self.hosts_heartbeat = None
-        self.platforms_ready = set()
+        self.platforms_ready: set[str] = set()
 
 
 async def async_setup(hass, config):
@@ -89,7 +89,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sonos from a config entry."""
     pysonos.config.EVENTS_MODULE = events_asyncio
 

@@ -49,6 +49,7 @@ def fetch_battery_info_or_none(soco: SoCo) -> dict[str, Any] | None:
     """
     with contextlib.suppress(ConnectionError, TimeoutError, SoCoException):
         return soco.get_battery_info()
+    return None
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -79,11 +80,11 @@ class SonosBatteryEntity(SonosEntity, SensorEntity):
 
     def __init__(
         self, speaker: SonosSpeaker, sonos_data: SonosData, battery_info: dict[str, Any]
-    ) -> None:
+    ):
         """Initialize a SonosBatteryEntity."""
         super().__init__(speaker, sonos_data)
         self._battery_info: dict[str, Any] = battery_info
-        self._last_event: datetime.datetime = None
+        self._last_event: datetime.datetime | None = None
 
     async def async_added_to_hass(self) -> None:
         """Register polling callback when added to hass."""

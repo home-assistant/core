@@ -40,9 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 class SonosSpeaker:
     """Representation of a Sonos speaker."""
 
-    def __init__(
-        self, hass: HomeAssistant, soco: SoCo, speaker_info: dict[str, Any]
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, soco: SoCo, speaker_info: dict[str, Any]):
         """Initialize a SonosSpeaker."""
         self._is_ready: bool = False
         self._subscriptions: list[SubscriptionBase] = []
@@ -80,7 +78,7 @@ class SonosSpeaker:
             self._is_ready = True
 
     @callback
-    def async_write_entity_states(self) -> bool:
+    def async_write_entity_states(self) -> None:
         """Write states for associated SonosEntity instances."""
         async_dispatcher_send(self.hass, f"{SONOS_STATE_UPDATED}-{self.soco.uid}")
 

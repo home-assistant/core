@@ -318,7 +318,7 @@ def _timespan_secs(timespan: str | None) -> None | float:
 class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     """Representation of a Sonos entity."""
 
-    def __init__(self, speaker: SonosSpeaker, sonos_data: SonosData) -> None:
+    def __init__(self, speaker: SonosSpeaker, sonos_data: SonosData):
         """Initialize the Sonos entity."""
         super().__init__(speaker, sonos_data)
         self._volume_increment = 2
