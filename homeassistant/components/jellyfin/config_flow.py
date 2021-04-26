@@ -1,6 +1,10 @@
 """Config flow for the Jellyfin integration."""
+from __future__ import annotations
+
 import logging
 import socket
+from types import MappingProxyType
+from typing import Any
 import uuid
 
 from jellyfin_apiclient_python import Jellyfin, JellyfinClient
@@ -12,6 +16,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResultDict
 
 from .const import CLIENT_VERSION, DOMAIN, USER_AGENT, USER_APP_NAME
 
@@ -32,7 +37,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResultDict:
         """Handle a user defined configuration."""
         await self.async_set_unique_id(DOMAIN)
 
@@ -60,7 +67,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-async def validate_input(hass: core.HomeAssistant, user_input: dict) -> JellyfinClient:
+async def validate_input(
+    hass: core.HomeAssistant, user_input: MappingProxyType
+) -> JellyfinClient:
     """Validate that the provided url and credentials can be used to connect."""
     jellyfin = Jellyfin()
     client = jellyfin.get_client()
@@ -75,7 +84,7 @@ async def validate_input(hass: core.HomeAssistant, user_input: dict) -> Jellyfin
     return client
 
 
-def _setup_client(client: JellyfinClient):
+def _setup_client(client: JellyfinClient) -> None:
     """Configure the Jellyfin client with a number of required properties."""
     player_name = socket.gethostname()
     client_uuid = str(uuid.uuid4())
@@ -84,7 +93,7 @@ def _setup_client(client: JellyfinClient):
     client.config.http(USER_AGENT)
 
 
-def _connect(client: JellyfinClient, url, username, password) -> bool:
+def _connect(client: JellyfinClient, url: str, username: str, password: str) -> bool:
     """Connect to the Jellyfin server and assert that the user can login."""
     client.config.data["auth.ssl"] = url.startswith("https")
 
@@ -94,7 +103,7 @@ def _connect(client: JellyfinClient, url, username, password) -> bool:
     return True
 
 
-def _connect_to_address(connection_manager: ConnectionManager, url: str):
+def _connect_to_address(connection_manager: ConnectionManager, url: str) -> None:
     """Connect to the Jellyfin server."""
     state = connection_manager.connect_to_address(url)
     if state["State"] != CONNECTION_STATE["ServerSignIn"]:
@@ -111,7 +120,7 @@ def _login(
     url: str,
     username: str,
     password: str,
-):
+) -> None:
     """Assert that the user can log in to the Jellyfin server."""
     response = connection_manager.login(url, username, password)
     if "AccessToken" not in response:
