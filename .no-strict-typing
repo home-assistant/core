@@ -484,7 +484,6 @@ homeassistant.components.microsoft_face_detect.*
 homeassistant.components.microsoft_face_identify.*
 homeassistant.components.miflora.*
 homeassistant.components.mikrotik.*
-homeassistant.components.mill.*
 homeassistant.components.min_max.*
 homeassistant.components.minecraft_server.*
 homeassistant.components.minio.*
