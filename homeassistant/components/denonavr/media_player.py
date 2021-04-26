@@ -91,7 +91,9 @@ async def async_setup_entry(
     entities = []
     data = hass.data[DOMAIN][config_entry.entry_id]
     receiver = data[CONF_RECEIVER]
-    update_audyssey = data.get(CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY)
+    update_audyssey = config_entry.options.get(
+        CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
+    )
     for receiver_zone in receiver.zones.values():
         if config_entry.data[CONF_SERIAL_NUMBER] is not None:
             unique_id = f"{config_entry.unique_id}-{receiver_zone.zone}"
@@ -482,13 +484,12 @@ class DenonDevice(MediaPlayerEntity):
     async def async_set_dynamic_eq(self, dynamic_eq: bool):
         """Turn DynamicEQ on or off."""
         if dynamic_eq:
-            result = await self._receiver.async_dynamic_eq_on()
+            await self._receiver.async_dynamic_eq_on()
         else:
-            result = await self._receiver.async_dynamic_eq_off()
+            await self._receiver.async_dynamic_eq_off()
 
         if self._update_audyssey:
             await self._receiver.async_update_audyssey()
-        return result
 
     # Decorator defined before is a staticmethod
     async_log_errors = staticmethod(  # pylint: disable=no-staticmethod-decorator
