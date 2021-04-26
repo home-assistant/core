@@ -62,7 +62,7 @@ class TibberSensor(SensorEntity):
     def __init__(self, tibber_home: TibberHome) -> None:
         """Initialize the sensor."""
         self._tibber_home = tibber_home
-        self._last_updated: datetime | Any = None
+        self._last_updated: datetime | None = None
         self._state = None
         self._is_available = False
         self._extra_state_attributes: dict[str, str] = {}
