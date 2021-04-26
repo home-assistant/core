@@ -2,6 +2,8 @@
 from pysonos.exceptions import NotSupportedException
 
 from homeassistant.components.sonos import DOMAIN
+from homeassistant.components.sonos.binary_sensor import ATTR_BATTERY_POWER_SOURCE
+from homeassistant.const import STATE_ON
 from homeassistant.setup import async_setup_component
 
 
@@ -53,9 +55,12 @@ async def test_battery_attributes(hass, config_entry, config, soco):
 
     battery = entity_registry.entities["sensor.zone_a_battery"]
     battery_state = hass.states.get(battery.entity_id)
-
-    # confirm initial state from conftest
     assert battery_state.state == "100"
     assert battery_state.attributes.get("unit_of_measurement") == "%"
-    assert battery_state.attributes.get("charging")
-    assert battery_state.attributes.get("power_source") == "SONOS_CHARGING_RING"
+
+    power = entity_registry.entities["binary_sensor.zone_a_power"]
+    power_state = hass.states.get(power.entity_id)
+    assert power_state.state == STATE_ON
+    assert (
+        power_state.attributes.get(ATTR_BATTERY_POWER_SOURCE) == "SONOS_CHARGING_RING"
+    )

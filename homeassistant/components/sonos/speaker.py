@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from asyncio import gather
+import contextlib
 import datetime
 import logging
 from typing import Any, Callable
@@ -10,14 +11,17 @@ from pysonos.core import SoCo
 from pysonos.events_base import Event as SonosEvent, SubscriptionBase
 from pysonos.exceptions import SoCoException
 
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
     dispatcher_connect,
     dispatcher_send,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import (
+    BATTERY_SCAN_INTERVAL,
     PLATFORMS,
     SCAN_INTERVAL,
     SEEN_EXPIRE_TIME,
@@ -28,13 +32,27 @@ from .const import (
     SONOS_GROUP_UPDATE,
     SONOS_MEDIA_UPDATE,
     SONOS_PLAYER_RECONNECTED,
-    SONOS_PROPERTIES_UPDATE,
     SONOS_SEEN,
     SONOS_STATE_UPDATED,
     SONOS_VOLUME_UPDATE,
 )
 
+EVENT_CHARGING = {
+    "CHARGING": True,
+    "NOT_CHARGING": False,
+}
+
 _LOGGER = logging.getLogger(__name__)
+
+
+def fetch_battery_info_or_none(soco: SoCo) -> dict[str, Any] | None:
+    """Fetch battery_info from the given SoCo object.
+
+    Returns None if the device doesn't support battery info
+    or if the device is offline.
+    """
+    with contextlib.suppress(ConnectionError, TimeoutError, SoCoException):
+        return soco.get_battery_info()
 
 
 class SonosSpeaker:
@@ -60,8 +78,19 @@ class SonosSpeaker:
         self.version = speaker_info["software_version"]
         self.zone_name = speaker_info["zone_name"]
 
+        self.battery_info: dict[str, Any] | None = None
+        self._last_battery_event: datetime.datetime | None = None
+        self._battery_poll_timer: Callable | None = None
+
     def setup(self) -> None:
         """Run initial setup of the speaker."""
+        if (battery_info := fetch_battery_info_or_none(self.soco)) is not None:
+            # Battery events can be infrequent, polling is still necessary
+            self.battery_info = battery_info
+            self._battery_poll_timer = self.hass.helpers.event.track_time_interval(
+                self.async_poll_battery, BATTERY_SCAN_INTERVAL
+            )
+
         self._entity_creation_dispatcher = dispatcher_connect(
             self.hass,
             f"{SONOS_ENTITY_CREATED}-{self.soco.uid}",
@@ -149,9 +178,7 @@ class SonosSpeaker:
     @callback
     def async_dispatch_properties(self, event: SonosEvent | None = None) -> None:
         """Update properties from event."""
-        async_dispatcher_send(
-            self.hass, f"{SONOS_PROPERTIES_UPDATE}-{self.soco.uid}", event
-        )
+        self.hass.async_create_task(self.async_update_device_properties(event))
 
     @callback
     def async_dispatch_groups(self, event: SonosEvent | None = None) -> None:
@@ -217,3 +244,57 @@ class SonosSpeaker:
             await subscription.unsubscribe()
 
         self._subscriptions = []
+
+    async def async_update_device_properties(self, event: SonosEvent = None) -> None:
+        """Update device properties using the provided SonosEvent."""
+        if event is None:
+            return
+
+        if (more_info := event.variables.get("more_info")) is not None:
+            battery_dict = dict(x.split(":") for x in more_info.split(","))
+            await self.async_update_battery_info(battery_dict)
+
+        self.async_write_entity_states()
+
+    async def async_update_battery_info(self, battery_dict: dict[str, Any]) -> None:
+        """Update battery info using the decoded SonosEvent."""
+        self._last_battery_event = dt_util.utcnow()
+
+        is_charging = EVENT_CHARGING[battery_dict["BattChg"]]
+        if is_charging == self.charging:
+            self.battery_info.update({"Level": int(battery_dict["BattPct"])})
+        else:
+            if battery_info := await self.hass.async_add_executor_job(
+                fetch_battery_info_or_none, self.soco
+            ):
+                self.battery_info = battery_info
+
+    @property
+    def power_source(self) -> str:
+        """Return the name of the current power source.
+
+        Observed to be either BATTERY or SONOS_CHARGING_RING or USB_POWER.
+        """
+        return self.battery_info.get("PowerSource", STATE_UNKNOWN)
+
+    @property
+    def charging(self) -> bool:
+        """Return the charging status of the speaker."""
+        return self.power_source not in ("BATTERY", STATE_UNKNOWN)
+
+    async def async_poll_battery(self, now: datetime.datetime | None = None) -> None:
+        """Poll the device for the current battery state."""
+        if not self.available:
+            return
+
+        if (
+            self._last_battery_event
+            and dt_util.utcnow() - self._last_battery_event < BATTERY_SCAN_INTERVAL
+        ):
+            return
+
+        if battery_info := await self.hass.async_add_executor_job(
+            fetch_battery_info_or_none, self.soco
+        ):
+            self.battery_info = battery_info
+            self.async_write_entity_states()
