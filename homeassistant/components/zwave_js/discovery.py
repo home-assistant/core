@@ -21,6 +21,8 @@ class ZwaveDiscoveryInfo:
     node: ZwaveNode
     # the value object itself for primary value
     primary_value: ZwaveValue
+    # bool to specify whether state is assumed and events should be fired on value update
+    assumed_state: bool
     # the home assistant platform for which an entity should be created
     platform: str
     # hint for the platform about this discovered entity
@@ -87,6 +89,8 @@ class ZWaveDiscoverySchema:
     absent_values: list[ZWaveValueDiscoverySchema] | None = None
     # [optional] bool to specify if this primary value may be discovered by multiple platforms
     allow_multi: bool = False
+    # [optional] bool to specify whether state is assumed and events should be fired on value update
+    assumed_state: bool = False
 
 
 def get_config_parameter_discovery_schema(
@@ -204,11 +208,11 @@ DISCOVERY_SCHEMAS = [
     # Vision Security ZL7432 In Wall Dual Relay Switch
     ZWaveDiscoverySchema(
         platform="switch",
-        hint="force_update",
         manufacturer_id={0x0109},
         product_id={0x1711, 0x1717},
         product_type={0x2017},
         primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+        assumed_state=True,
     ),
     # ====== START OF CONFIG PARAMETER SPECIFIC MAPPING SCHEMAS =======
     # Door lock mode config parameter. Functionality equivalent to Notification CC
@@ -524,6 +528,7 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
             yield ZwaveDiscoveryInfo(
                 node=value.node,
                 primary_value=value,
+                assumed_state=schema.assumed_state,
                 platform=schema.platform,
                 platform_hint=schema.hint,
             )

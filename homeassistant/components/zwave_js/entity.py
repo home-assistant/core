@@ -7,11 +7,23 @@ from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import (
+    ATTR_COMMAND_CLASS,
+    ATTR_COMMAND_CLASS_NAME,
+    ATTR_ENDPOINT,
+    ATTR_PROPERTY,
+    ATTR_PROPERTY_KEY,
+    ATTR_PROPERTY_KEY_NAME,
+    ATTR_PROPERTY_NAME,
+    ATTR_VALUE,
+    DOMAIN,
+    ZWAVE_JS_VALUE_UPDATE_EVENT,
+)
 from .discovery import ZwaveDiscoveryInfo
 from .helpers import get_device_id, get_unique_id
 
@@ -164,6 +176,22 @@ class ZWaveBaseEntity(Entity):
             value.value,
         )
 
+        if self.info.assumed_state:
+            self.hass.bus.async_fire(
+                ZWAVE_JS_VALUE_UPDATE_EVENT,
+                {
+                    ATTR_ENTITY_ID: self.entity_id,
+                    ATTR_COMMAND_CLASS: value.command_class,
+                    ATTR_COMMAND_CLASS_NAME: value.command_class_name,
+                    ATTR_ENDPOINT: value.endpoint,
+                    ATTR_PROPERTY: value.property_,
+                    ATTR_PROPERTY_NAME: value.property_name,
+                    ATTR_PROPERTY_KEY: value.property_key,
+                    ATTR_PROPERTY_KEY_NAME: value.property_key_name,
+                    ATTR_VALUE: value.value,
+                },
+            )
+
         self.on_value_update()
         self.async_write_ha_state()
 
@@ -224,3 +252,8 @@ class ZWaveBaseEntity(Entity):
     def should_poll(self) -> bool:
         """No polling needed."""
         return False
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return True if unable to access real state of the entity."""
+        return self.info.assumed_state

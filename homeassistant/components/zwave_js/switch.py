@@ -36,8 +36,6 @@ async def async_setup_entry(
             entities.append(
                 ZWaveBarrierEventSignalingSwitch(config_entry, client, info)
             )
-        elif info.platform_hint == "force_update":
-            entities.append(ZWaveForceUpdateSwitch(config_entry, client, info))
         else:
             entities.append(ZWaveSwitch(config_entry, client, info))
 
@@ -74,15 +72,6 @@ class ZWaveSwitch(ZWaveBaseEntity, SwitchEntity):
         target_value = self.get_zwave_value("targetValue")
         if target_value is not None:
             await self.info.node.async_set_value(target_value, False)
-
-
-class ZWaveForceUpdateSwitch(ZWaveSwitch):
-    """Representation of a Z-Wave switch that requires force_update=True."""
-
-    @property
-    def force_update(self) -> bool:
-        """Return whether to force update."""
-        return True
 
 
 class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
