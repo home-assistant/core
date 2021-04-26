@@ -104,7 +104,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Create a gateway."""
     # host, identity, key, allow_tradfri_groups
-    tradfri_data = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
+    tradfri_data = hass.data[DOMAIN][entry.entry_id] = {}
     listeners = tradfri_data[LISTENERS] = []
 
     factory = await APIFactory.init(

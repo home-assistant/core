@@ -44,7 +44,7 @@ PLATFORMS = [MP_DOMAIN, REMOTE_DOMAIN]
 async def async_setup_entry(hass, entry):
     """Set up a config entry for Apple TV."""
     manager = AppleTVManager(hass, entry)
-    hass.data.setdefault(DOMAIN, {})[entry.unique_id] = manager
+    hass.data[DOMAIN][entry.unique_id] = manager
 
     async def on_hass_stop(event):
         """Stop push updates when hass stops."""

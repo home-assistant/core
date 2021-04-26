@@ -89,7 +89,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     entry_id = entry.entry_id
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(entry_id, {})
     http_session = requests.Session()
 

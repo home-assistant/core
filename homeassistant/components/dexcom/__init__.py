@@ -51,7 +51,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except SessionError as error:
             raise UpdateFailed(error) from error
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: DataUpdateCoordinator(
             hass,

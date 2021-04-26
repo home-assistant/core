@@ -66,7 +66,7 @@ async def async_setup_entry(
 
     _register_services(hass)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = bridge
+    hass.data[DOMAIN][entry.entry_id] = bridge
     config = bridge.api.config
 
     # For backwards compat

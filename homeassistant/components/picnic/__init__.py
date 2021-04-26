@@ -29,7 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # Fetch initial data so we have data when entities subscribe
     await picnic_coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         CONF_API: picnic_client,
         CONF_COORDINATOR: picnic_coordinator,

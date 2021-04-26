@@ -33,7 +33,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except BSBLanConnectionError as exception:
         raise ConfigEntryNotReady from exception
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {DATA_BSBLAN_CLIENT: bsblan}
 
     hass.async_create_task(

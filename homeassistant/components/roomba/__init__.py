@@ -61,7 +61,6 @@ async def async_setup_entry(hass, config_entry):
         EVENT_HOMEASSISTANT_STOP, _async_disconnect_roomba
     )
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {
         ROOMBA_SESSION: roomba,
         BLID: config_entry.data[CONF_BLID],

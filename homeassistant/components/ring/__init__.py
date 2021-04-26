@@ -68,7 +68,7 @@ async def async_setup_entry(hass, entry):
         _LOGGER.error("Access token is no longer valid. Please set up Ring again")
         return False
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+    hass.data[DOMAIN][entry.entry_id] = {
         "api": ring,
         "devices": ring.devices(),
         "device_data": GlobalDataUpdater(

@@ -115,7 +115,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder
     )
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_AD: controller,
         DATA_REMOVE_UPDATE_LISTENER: undo_listener,

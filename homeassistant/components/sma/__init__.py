@@ -179,7 +179,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         EVENT_HOMEASSISTANT_STOP, async_close_session
     )
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         PYSMA_OBJECT: sma,
         PYSMA_COORDINATOR: coordinator,

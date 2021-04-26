@@ -39,7 +39,6 @@ async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up the Xiaomi Miio components from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     if entry.data[
         CONF_FLOW_TYPE
     ] == CONF_GATEWAY and not await async_setup_gateway_entry(hass, entry):

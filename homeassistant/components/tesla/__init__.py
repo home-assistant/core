@@ -125,14 +125,12 @@ async def async_setup(hass, base_config):
                 data={CONF_USERNAME: email, CONF_PASSWORD: password},
             )
         )
-        hass.data.setdefault(DOMAIN, {})
         hass.data[DOMAIN][email] = {CONF_SCAN_INTERVAL: scan_interval}
     return True
 
 
 async def async_setup_entry(hass, config_entry):
     """Set up Tesla as config entry."""
-    hass.data.setdefault(DOMAIN, {})
     config = config_entry.data
     # Because users can have multiple accounts, we always create a new session so they have separate cookies
     websession = aiohttp_client.async_create_clientsession(hass)

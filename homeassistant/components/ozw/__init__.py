@@ -58,7 +58,6 @@ DATA_STOP_MQTT_CLIENT = "ozw_stop_mqtt_client"
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):  # noqa: C901
     """Set up ozw from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     ozw_data = hass.data[DOMAIN][entry.entry_id] = {}
     ozw_data[DATA_UNSUBSCRIBE] = []
 

@@ -50,7 +50,6 @@ async def async_setup_entry(hass, entry):
         update_method=async_update_data,
         update_interval=MIN_TIME_BETWEEN_UPDATES,
     )
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_KEY_API: api,
         DATA_KEY_COORDINATOR: coordinator,

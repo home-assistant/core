@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     unique_id = entry.data[CONF_ID]
-    hass.data.setdefault(DOMAIN, {})[unique_id] = twentemilieu
+    hass.data[DOMAIN][unique_id] = twentemilieu
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "sensor")

@@ -57,8 +57,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an Meteo-France account from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     latitude = entry.data.get(CONF_LATITUDE)
 
     client = MeteoFranceClient()

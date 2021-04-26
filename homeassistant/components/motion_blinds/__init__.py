@@ -104,7 +104,6 @@ async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up the motion_blinds components from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     host = entry.data[CONF_HOST]
     key = entry.data[CONF_API_KEY]
 

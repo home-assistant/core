@@ -138,7 +138,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         EVENT_HOMEASSISTANT_STOP, async_close_connection
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+    hass.data[DOMAIN][entry.entry_id] = {
         DATA_ASUSWRT: router,
         "stop_listener": stop_listener,
     }

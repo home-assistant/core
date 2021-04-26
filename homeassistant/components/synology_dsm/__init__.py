@@ -196,7 +196,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):  # noqa: C
         )
         raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.unique_id] = {
         UNDO_UPDATE_LISTENER: entry.add_update_listener(_async_update_listener),
         SYNO_API: api,

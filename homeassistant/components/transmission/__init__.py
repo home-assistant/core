@@ -113,7 +113,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up the Transmission Component."""
     client = TransmissionClient(hass, config_entry)
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = client
+    hass.data[DOMAIN][config_entry.entry_id] = client
 
     if not await client.async_setup():
         return False

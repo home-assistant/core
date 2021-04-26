@@ -31,8 +31,6 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the JuiceNet component."""
     conf = config.get(DOMAIN)
-    hass.data.setdefault(DOMAIN, {})
-
     if not conf:
         return True
 

@@ -59,8 +59,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Load the saved entities."""
-
-    hass.data.setdefault(DOMAIN, {})
     if (
         CONF_APPS not in hass.data[DOMAIN]
         and config_entry.data[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV

@@ -29,7 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         logging.getLogger(__name__).debug("Unable to connect: %s", exception)
         raise ConfigEntryNotReady from exception
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {DATA_ELGATO_CLIENT: elgato}
 
     hass.async_create_task(

@@ -106,9 +106,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an iCloud account from a config entry."""
-
-    hass.data.setdefault(DOMAIN, {})
-
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     with_family = entry.data[CONF_WITH_FAMILY]

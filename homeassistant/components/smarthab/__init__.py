@@ -32,9 +32,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config) -> bool:
     """Set up the SmartHab platform."""
-
-    hass.data.setdefault(DOMAIN, {})
-
     if DOMAIN not in config:
         return True
 

@@ -142,7 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass, _LOGGER, cooldown=DEBOUNCE_TIME, immediate=True
         ),
     )
-    nws_hass_data = hass.data.setdefault(DOMAIN, {})
+    nws_hass_data = hass.data[DOMAIN]
     nws_hass_data[entry.entry_id] = {
         NWS_DATA: nws_data,
         COORDINATOR_OBSERVATION: coordinator_observation,

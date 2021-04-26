@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     uuid = config_entry.data[CONF_ENTRY_ID]
     host = config_entry.data[CONF_ENTRY_HOST]
 
-    hass.data.setdefault(DOMAIN, {})[uuid] = twinkly_client.TwinklyClient(
+    hass.data[DOMAIN][uuid] = twinkly_client.TwinklyClient(
         host, async_get_clientsession(hass)
     )
 

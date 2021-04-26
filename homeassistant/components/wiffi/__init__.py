@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     api.async_setup(config_entry)
 
     # store api object
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = api
+    hass.data[DOMAIN][config_entry.entry_id] = api
 
     try:
         await api.server.start_server()

@@ -175,8 +175,6 @@ def _async_get_entries_by_name(current_entries):
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the HomeKit from yaml."""
-    hass.data.setdefault(DOMAIN, {})
-
     _async_register_events_and_services(hass)
 
     if DOMAIN not in config:

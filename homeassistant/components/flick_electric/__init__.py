@@ -25,8 +25,6 @@ CONF_ID_TOKEN = "id_token"
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Flick Electric from a config entry."""
     auth = HassFlickAuth(hass, entry)
-
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = FlickAPI(auth)
 
     hass.async_create_task(

@@ -22,7 +22,6 @@ PLATFORMS = ["binary_sensor", "sensor", "switch"]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up flo from a config entry."""
     session = async_get_clientsession(hass)
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {}
     try:
         hass.data[DOMAIN][entry.entry_id][CLIENT] = client = await async_get_api(

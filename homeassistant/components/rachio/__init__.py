@@ -92,7 +92,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     # Enable platform
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = person
     async_register_webhook(hass, webhook_id, entry.entry_id)
 

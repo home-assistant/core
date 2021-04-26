@@ -50,12 +50,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up the Islamic Prayer Component."""
     client = IslamicPrayerClient(hass, config_entry)
-
-    if not await client.async_setup():
-        return False
-
-    hass.data.setdefault(DOMAIN, client)
-    return True
+    return await client.async_setup()
 
 
 async def async_unload_entry(hass, config_entry):

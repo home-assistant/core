@@ -53,7 +53,6 @@ async def async_setup_entry(hass, config_entry):
     if config_entry.data.get(CONF_TRACK_HOME, False):
         coordinator.track_home()
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
     hass.async_create_task(

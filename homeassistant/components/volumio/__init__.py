@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except CannotConnectError as error:
         raise ConfigEntryNotReady from error
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+    hass.data[DOMAIN][entry.entry_id] = {
         DATA_VOLUMIO: volumio,
         DATA_INFO: info,
     }

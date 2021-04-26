@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Minecraft Server from a config entry."""
-    domain_data = hass.data.setdefault(DOMAIN, {})
+    domain_data = hass.data[DOMAIN]
 
     # Create and store server instance.
     unique_id = config_entry.unique_id

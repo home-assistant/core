@@ -20,7 +20,6 @@ async def async_setup_entry(
     if not await hub.async_setup():
         return False
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = hub
 
     for platform in PLATFORMS:

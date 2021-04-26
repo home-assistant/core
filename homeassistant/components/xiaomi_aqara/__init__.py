@@ -135,7 +135,6 @@ async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up the xiaomi aqara components from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(GATEWAYS_KEY, {})
 
     # Connect to Xiaomi Aqara Gateway

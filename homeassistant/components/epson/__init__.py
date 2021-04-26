@@ -41,7 +41,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except CannotConnect:
         _LOGGER.warning("Cannot connect to projector %s", entry.data[CONF_HOST])
         return False
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = projector
     for platform in PLATFORMS:
         hass.async_create_task(

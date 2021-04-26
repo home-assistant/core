@@ -52,8 +52,6 @@ def _update_devices(devices):
 
 async def async_setup(hass, config):
     """Set up the Nuki component."""
-    hass.data.setdefault(DOMAIN, {})
-
     for platform in PLATFORMS:
         confs = config.get(platform)
         if confs is None:
@@ -71,9 +69,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up the Nuki entry."""
-
-    hass.data.setdefault(DOMAIN, {})
-
     try:
         bridge = await hass.async_add_executor_job(
             NukiBridge,

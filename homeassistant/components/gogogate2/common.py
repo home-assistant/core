@@ -107,7 +107,6 @@ def get_data_update_coordinator(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> DeviceDataUpdateCoordinator:
     """Get an update coordinator."""
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
     config_entry_data = hass.data[DOMAIN][config_entry.entry_id]
 

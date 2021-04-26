@@ -61,8 +61,6 @@ SPEED_LIMIT_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the NZBGet integration."""
-    hass.data.setdefault(DOMAIN, {})
-
     if hass.config_entries.async_entries(DOMAIN):
         return True
 

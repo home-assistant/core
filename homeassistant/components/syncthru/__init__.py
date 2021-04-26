@@ -21,7 +21,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up config entry."""
 
     session = aiohttp_client.async_get_clientsession(hass)
-    hass.data.setdefault(DOMAIN, {})
     printer = hass.data[DOMAIN][entry.entry_id] = SyncThru(
         entry.data[CONF_URL], session
     )

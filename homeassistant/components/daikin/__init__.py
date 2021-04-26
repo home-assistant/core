@@ -80,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     if not daikin_api:
         return False
-    hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: daikin_api})
+    hass.data[DOMAIN].update({entry.entry_id: daikin_api})
     for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)

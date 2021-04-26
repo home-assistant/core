@@ -46,7 +46,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Establish connection with velbus."""
-    hass.data.setdefault(DOMAIN, {})
 
     def callback():
         modules = controller.get_modules()

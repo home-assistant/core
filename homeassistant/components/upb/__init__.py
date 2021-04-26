@@ -26,7 +26,6 @@ async def async_setup_entry(hass, config_entry):
 
     upb = upb_lib.UpbPim({"url": url, "UPStartExportFile": file})
     upb.connect()
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {"upb": upb}
 
     for platform in PLATFORMS:

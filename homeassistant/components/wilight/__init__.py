@@ -22,7 +22,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not await parent.async_setup():
         raise ConfigEntryNotReady
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = parent
 
     # Set up all platforms for this device/entry.

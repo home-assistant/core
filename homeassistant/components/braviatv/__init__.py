@@ -17,7 +17,6 @@ async def async_setup_entry(hass, config_entry):
 
     undo_listener = config_entry.add_update_listener(update_listener)
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {
         BRAVIARC: BraviaRC(host, mac),
         UNDO_UPDATE_LISTENER: undo_listener,

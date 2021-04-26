@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=session,
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_ADGUARD_CLIENT: adguard}
+    hass.data[DOMAIN][entry.entry_id] = {DATA_ADGUARD_CLIENT: adguard}
 
     try:
         await adguard.version()

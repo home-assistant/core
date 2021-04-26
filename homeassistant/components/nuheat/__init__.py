@@ -72,7 +72,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_interval=timedelta(minutes=5),
     )
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = (thermostat, coordinator)
 
     for platform in PLATFORMS:

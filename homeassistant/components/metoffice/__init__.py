@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
 
-    metoffice_hass_data = hass.data.setdefault(DOMAIN, {})
+    metoffice_hass_data = hass.data[DOMAIN]
     metoffice_hass_data[entry.entry_id] = {
         METOFFICE_DATA: metoffice_data,
         METOFFICE_COORDINATOR: metoffice_coordinator,

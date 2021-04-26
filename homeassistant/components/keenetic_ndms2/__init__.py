@@ -25,7 +25,6 @@ PLATFORMS = [device_tracker.DOMAIN, binary_sensor.DOMAIN]
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the component."""
-    hass.data.setdefault(DOMAIN, {})
     async_add_defaults(hass, config_entry)
 
     router = KeeneticRouter(hass, config_entry)

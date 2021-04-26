@@ -26,7 +26,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     await weather_coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {
         ENTRY_NAME: name,
         ENTRY_WEATHER_COORDINATOR: weather_coordinator,

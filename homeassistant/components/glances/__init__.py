@@ -72,7 +72,7 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 async def async_setup_entry(hass, config_entry):
     """Set up Glances from config entry."""
     client = GlancesData(hass, config_entry)
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = client
+    hass.data[DOMAIN][config_entry.entry_id] = client
     if not await client.async_setup():
         return False
 

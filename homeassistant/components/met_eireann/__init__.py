@@ -18,8 +18,6 @@ UPDATE_INTERVAL = timedelta(minutes=60)
 
 async def async_setup_entry(hass, config_entry):
     """Set up Met Éireann as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     raw_weather_data = meteireann.WeatherData(
         async_get_clientsession(hass),
         latitude=config_entry.data[CONF_LATITUDE],

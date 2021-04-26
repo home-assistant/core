@@ -154,7 +154,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Elk M1 platform."""
-    hass.data.setdefault(DOMAIN, {})
     _create_elk_services(hass)
 
     if DOMAIN not in hass_config:

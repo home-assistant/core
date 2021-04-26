@@ -83,7 +83,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if unique_id is None:
         unique_id = entry.entry_id
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: coordinator,
         PYNUT_DATA: data,

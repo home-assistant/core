@@ -42,7 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     router = FreeboxRouter(hass, entry)
     await router.setup()
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.unique_id] = router
 
     for platform in PLATFORMS:

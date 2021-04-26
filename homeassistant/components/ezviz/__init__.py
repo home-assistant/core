@@ -40,8 +40,6 @@ PLATFORMS = [
 
 async def async_setup_entry(hass, entry):
     """Set up Ezviz from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     if not entry.options:
         options = {
             CONF_FFMPEG_ARGUMENTS: entry.data.get(

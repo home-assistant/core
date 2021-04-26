@@ -23,8 +23,6 @@ from .const import (
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the devolo account from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     mydevolo = configure_mydevolo(entry.data)
 
     credentials_valid = await hass.async_add_executor_job(mydevolo.credentials_valid)

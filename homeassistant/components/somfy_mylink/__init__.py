@@ -70,8 +70,6 @@ async def async_setup(hass, config):
     """Set up the MyLink platform."""
 
     conf = config.get(DOMAIN)
-    hass.data.setdefault(DOMAIN, {})
-
     if not conf:
         return True
 

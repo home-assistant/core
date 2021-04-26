@@ -25,7 +25,6 @@ async def async_setup_entry(hass, entry):
     except (OSError, ConnectionRefusedError, TimeoutError) as error:
         raise ConfigEntryNotReady() from error
     coordinator = CoolmasterDataUpdateCoordinator(hass, coolmaster)
-    hass.data.setdefault(DOMAIN, {})
     await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_INFO: info,

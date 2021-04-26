@@ -130,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             EVENT_API_CALL_SUCCESS, {"name": name, "path": path, "data": data}
         )
 
-    data = hass.data.setdefault(DOMAIN, {})
+    data = hass.data[DOMAIN]
     config = config_entry.data
     websession = async_get_clientsession(hass)
     url = config[CONF_URL]

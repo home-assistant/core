@@ -86,7 +86,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the platform."""
-    hass.data.setdefault(DOMAIN, {})
 
     def build_client() -> ProxmoxAPI:
         """Build the Proxmox client connection."""

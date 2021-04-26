@@ -101,7 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await async_setup_webhook(hass, entry, session)
     client = MinutPointClient(hass, entry, session)
-    hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: client})
+    hass.data[DOMAIN].update({entry.entry_id: client})
     hass.async_create_task(client.update())
 
     return True

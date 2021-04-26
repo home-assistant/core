@@ -41,7 +41,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Roku from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     coordinator = hass.data[DOMAIN].get(entry.entry_id)
     if not coordinator:
         coordinator = RokuDataUpdateCoordinator(hass, host=entry.data[CONF_HOST])

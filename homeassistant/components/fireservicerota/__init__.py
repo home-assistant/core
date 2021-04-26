@@ -32,9 +32,6 @@ PLATFORMS = [SENSOR_DOMAIN, BINARYSENSOR_DOMAIN, SWITCH_DOMAIN]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up FireServiceRota from a config entry."""
-
-    hass.data.setdefault(DOMAIN, {})
-
     client = FireServiceRotaClient(hass, entry)
     await client.setup()
 

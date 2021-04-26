@@ -15,7 +15,6 @@ PLATFORMS = ["sensor", "switch", "vacuum"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Litter-Robot from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     hub = hass.data[DOMAIN][entry.entry_id] = LitterRobotHub(hass, entry.data)
     try:
         await hub.login(load_robots=True)

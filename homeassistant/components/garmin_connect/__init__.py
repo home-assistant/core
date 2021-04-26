@@ -49,7 +49,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return False
 
     garmin_data = GarminConnectData(hass, garmin_client)
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = garmin_data
 
     for platform in PLATFORMS:

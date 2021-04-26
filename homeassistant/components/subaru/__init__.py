@@ -82,7 +82,6 @@ async def async_setup_entry(hass, entry):
 
     await coordinator.async_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         ENTRY_CONTROLLER: controller,
         ENTRY_COORDINATOR: coordinator,

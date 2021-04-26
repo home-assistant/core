@@ -54,8 +54,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the component."""
-    hass.data.setdefault(DOMAIN, {})
-
     if len(hass.config_entries.async_entries(DOMAIN)) > 0:
         return True
 

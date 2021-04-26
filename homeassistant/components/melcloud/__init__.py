@@ -62,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Establish connection with MELClooud."""
     conf = entry.data
     mel_devices = await mel_devices_setup(hass, conf[CONF_TOKEN])
-    hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: mel_devices})
+    hass.data[DOMAIN].update({entry.entry_id: mel_devices})
     for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)

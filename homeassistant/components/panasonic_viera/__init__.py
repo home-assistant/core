@@ -67,7 +67,7 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up Panasonic Viera from a config entry."""
-    panasonic_viera_data = hass.data.setdefault(DOMAIN, {})
+    panasonic_viera_data = hass.data[DOMAIN]
 
     config = config_entry.data
 

@@ -189,8 +189,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
     """Set up the RFXtrx component."""
-    hass.data.setdefault(DOMAIN, {})
-
     hass.data[DOMAIN][DATA_CLEANUP_CALLBACKS] = []
 
     try:

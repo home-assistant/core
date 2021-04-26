@@ -30,7 +30,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except (ClientError, AsyncIOTimeoutError, OSError) as error:
         raise ConfigEntryNotReady from error
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = api
 
     device_registry = await dr.async_get_registry(hass)

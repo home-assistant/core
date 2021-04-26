@@ -15,8 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Set up a 1-Wire proxy for a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     onewirehub = OneWireHub(hass)
     try:
         await onewirehub.initialize(config_entry)

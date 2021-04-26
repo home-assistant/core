@@ -14,7 +14,6 @@ async def async_setup_entry(hass, entry):
     """Set up a smarttub config entry."""
 
     controller = SmartTubController(hass)
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         SMARTTUB_CONTROLLER: controller,
     }

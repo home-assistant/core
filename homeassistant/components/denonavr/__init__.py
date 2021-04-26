@@ -31,8 +31,6 @@ async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up the denonavr components from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     # Connect to receiver
     connect_denonavr = ConnectDenonAVR(
         entry.data[CONF_HOST],

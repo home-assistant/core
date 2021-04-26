@@ -67,8 +67,6 @@ PLATFORMS = ["light", "switch", "cover", "scene", "fan", "binary_sensor"]
 
 async def async_setup(hass, base_config):
     """Set up the Lutron component."""
-    hass.data.setdefault(DOMAIN, {})
-
     if DOMAIN in base_config:
         bridge_configs = base_config[DOMAIN]
         for config in bridge_configs:

@@ -11,7 +11,6 @@ from .const import DATA_LISTENER, DATA_TASK, DOMAIN, PLATFORMS
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up DSMR from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {}
 
     for platform in PLATFORMS:

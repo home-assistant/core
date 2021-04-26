@@ -76,7 +76,6 @@ UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the BMW Connected Drive component from configuration.yaml."""
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][DATA_HASS_CONFIG] = config
 
     if DOMAIN in config:
@@ -104,7 +103,6 @@ def _async_migrate_options_from_data_if_missing(hass, entry):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up BMW Connected Drive from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(DATA_ENTRIES, {})
 
     _async_migrate_options_from_data_if_missing(hass, entry)

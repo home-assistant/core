@@ -111,8 +111,6 @@ def _set_update_interval(hass: HomeAssistant, current_entry: ConfigEntry) -> tim
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up ClimaCell API from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     params = {}
     # If config entry options not set up, set them up
     if not config_entry.options:

@@ -72,7 +72,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up the HLK-SW16 switch."""
-    hass.data.setdefault(DOMAIN, {})
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
     address = f"{host}:{port}"

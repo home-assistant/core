@@ -16,7 +16,6 @@ async def async_setup_entry(hass, config_entry):
 
     player = DuneHDPlayer(host)
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = player
 
     for platform in PLATFORMS:

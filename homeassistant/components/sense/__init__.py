@@ -77,7 +77,6 @@ class SenseDevicesData:
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Sense component."""
-    hass.data.setdefault(DOMAIN, {})
     conf = config.get(DOMAIN)
     if not conf:
         return True

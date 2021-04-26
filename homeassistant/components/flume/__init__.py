@@ -67,7 +67,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.error("Invalid credentials for flume: %s", ex)
         return False
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         FLUME_DEVICES: flume_devices,
         FLUME_AUTH: flume_auth,

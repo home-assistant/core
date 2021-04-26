@@ -68,7 +68,7 @@ async def async_setup_entry(hass, config_entry):
     if not await hub.async_setup():
         return False
 
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = hub
+    hass.data[DOMAIN][config_entry.entry_id] = hub
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
