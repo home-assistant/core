@@ -20,17 +20,21 @@ class RecorderPool(StaticPool, NullPool):
         """Status of the pool."""
         return "RecorderPool"
 
+    @property
+    def _is_recorder(self):
+        return threading.current_thread().ident == self._tid
+
     def _do_return_conn(self, conn):
-        if threading.current_thread().ident == self._tid:
+        if self._is_recorder:
             return super()._do_return_conn(conn)
         conn.close()
 
     def dispose(self):
         """Dispose of the connection."""
-        if threading.current_thread().ident == self._tid:
+        if self._is_recorder:
             return super().dispose()
 
     def _do_get(self):
-        if threading.current_thread().ident == self._tid:
+        if self._is_recorder:
             return super()._do_get()
         return super(NullPool, self)._create_connection()
