@@ -5,6 +5,7 @@ show_lovelace_view:
     entity_id:
       name: Entity
       description: Media Player entity to show the Lovelace view on.
+      required: true
       example: "media_player.kitchen"
       selector:
         entity:
@@ -13,6 +14,7 @@ show_lovelace_view:
     dashboard_path:
       name: Dashboard path
       description: The URL path of the Lovelace dashboard to show.
+      required: true
       example: lovelace-cast
       selector:
         text:
