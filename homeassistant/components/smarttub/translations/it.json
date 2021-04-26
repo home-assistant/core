@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
             "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
@@ -9,6 +9,10 @@
             "unknown": "Errore imprevisto"
         },
         "step": {
+            "reauth_confirm": {
+                "description": "L'integrazione di SmartTub deve autenticare nuovamente il tuo account",
+                "title": "Autenticare nuovamente l'integrazione"
+            },
             "user": {
                 "data": {
                     "email": "E-mail",
