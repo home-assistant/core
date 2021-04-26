@@ -5,13 +5,13 @@ from .const import DOMAIN
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the iRobot Roomba vacuum cleaner."""
+    """Set up the Mutesync button."""
     client = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities([MuteStatus(client)], True)
 
 
 class MuteStatus(BinarySensorEntity):
-    """Class to hold Roomba Sensor basic info."""
+    """Class to hold Mutesync basic info."""
 
     def __init__(self, client):
         self.client = client
@@ -24,7 +24,7 @@ class MuteStatus(BinarySensorEntity):
 
     @property
     def available(self):
-        """Return the state of the sensor."""
+        """Return if state is available from sensor."""
         return self._is_on is not None
 
     @property
