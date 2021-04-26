@@ -7,7 +7,6 @@ from typing import Any, Callable, Mapping
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_SAFETY,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -119,7 +118,7 @@ class VerisureEthernetStatus(CoordinatorEntity, BinarySensorEntity):
             "manufacturer": "Verisure",
             "model": "VBox",
             "identifiers": {(DOMAIN, self.coordinator.entry.data[CONF_GIID])},
-            "sw_version": self.coordinator.data.get("firmware", {}).get("current"),
+            "sw_version": self.coordinator.data["firmware"]["current"],
         }
 
     @property
@@ -154,16 +153,6 @@ class VerisureFirmwareUpdate(CoordinatorEntity, BinarySensorEntity):
         return self.coordinator.data["firmware"]["upgradeable"]
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self.coordinator.data["firmware"] is not None
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_SAFETY
-
-    @property
     def device_info(self) -> dict[str, Any]:
         """Return device information about this entity."""
         return {
@@ -171,7 +160,7 @@ class VerisureFirmwareUpdate(CoordinatorEntity, BinarySensorEntity):
             "manufacturer": "Verisure",
             "model": "VBox",
             "identifiers": {(DOMAIN, self.coordinator.entry.data[CONF_GIID])},
-            "sw_version": self.coordinator.data.get("firmware", {}).get("current"),
+            "sw_version": self.coordinator.data["firmware"]["current"],
         }
 
     @property
@@ -186,3 +175,8 @@ class VerisureFirmwareUpdate(CoordinatorEntity, BinarySensorEntity):
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
         return f"{self.coordinator.entry.data[CONF_GIID]}_firmware"
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added."""
+        return False
