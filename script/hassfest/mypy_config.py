@@ -212,7 +212,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.surepetcare.*",
     "homeassistant.components.switchbot.*",
     "homeassistant.components.switcher_kis.*",
-    "homeassistant.components.synology_dsm.*",
     "homeassistant.components.synology_srm.*",
     "homeassistant.components.system_health.*",
     "homeassistant.components.system_log.*",
