@@ -1,8 +1,8 @@
 """Support for Verisure binary sensors."""
 from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import Any, Callable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import Any, Callable
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
