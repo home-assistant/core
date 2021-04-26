@@ -23,6 +23,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -38,11 +39,27 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up cover(s) for KNX platform."""
+    await _migrate_unique_id(hass)
     entities = []
     for device in hass.data[DOMAIN].xknx.devices:
         if isinstance(device, XknxCover):
             entities.append(KNXCover(device))
     async_add_entities(entities)
+
+
+async def _migrate_unique_id(hass: HomeAssistant) -> None:
+    """Change unique_ids used in 2021.4 to include target_temperature GA."""
+    entity_registry = er.async_get(hass)
+    for device in hass.data[DOMAIN].xknx.devices:
+        if isinstance(device, XknxCover):
+            old_uid = str(device.updown.group_address)
+            entity_id = entity_registry.async_get_entity_id("cover", DOMAIN, old_uid)
+            if entity_id is not None:
+                new_uid = (
+                    f"{device.updown.group_address}_"
+                    f"{device.position_target.group_address}"
+                )
+                entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
 
 
 class KNXCover(KnxEntity, CoverEntity):
@@ -52,7 +69,9 @@ class KNXCover(KnxEntity, CoverEntity):
         """Initialize the cover."""
         self._device: XknxCover
         super().__init__(device)
-        self._unique_id = f"{self._device.updown.group_address}"
+        self._unique_id = (
+            f"{device.updown.group_address}_{device.position_target.group_address}"
+        )
         self._unsubscribe_auto_updater: Callable[[], None] | None = None
 
     @callback
