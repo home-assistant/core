@@ -174,12 +174,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 for platform in PLATFORMS
             ]
         )
-        _LOGGER.debug("Adding discovery job")
-        hass.async_add_executor_job(_discovery)
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_discovery)
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, _async_signal_update_groups
+        entry.async_on_unload(
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_discovery)
         )
+        entry.async_on_unload(
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, _async_signal_update_groups
+            )
+        )
+        _LOGGER.debug("Adding discovery job")
+        await hass.async_add_executor_job(_discovery)
 
     hass.async_create_task(setup_platforms_and_discovery())
 
