@@ -10,13 +10,12 @@ from pysonos.core import SoCo
 from pysonos.events_base import Event as SonosEvent
 from pysonos.exceptions import SoCoException
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE, STATE_UNKNOWN
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import dt as dt_util
 
@@ -76,7 +75,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(hass, SONOS_DISCOVERY_UPDATE, _async_create_entities)
 
 
-class SonosBatteryEntity(SonosEntity, Entity):
+class SonosBatteryEntity(SonosEntity, SensorEntity):
     """Representation of a Sonos Battery entity."""
 
     def __init__(
