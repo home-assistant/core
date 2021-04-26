@@ -62,6 +62,16 @@ SUPPORT_SAMSUNGTV = (
 )
 
 
+async def _get_device_bridge(data):
+    """Get device bridge."""
+    return SamsungTVBridge.get_bridge(
+        data[CONF_METHOD],
+        data[CONF_HOST],
+        data[CONF_PORT],
+        data.get(CONF_TOKEN),
+    )
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Samsung TV from a config entry."""
     host = config_entry.data[CONF_HOST]
@@ -79,22 +89,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     # Initialize bridge
     data = config_entry.data.copy()
-    bridge = SamsungTVBridge.get_bridge(
-        data[CONF_METHOD],
-        data[CONF_HOST],
-        data[CONF_PORT],
-        data.get(CONF_TOKEN),
-    )
+    bridge = await _get_device_bridge(data)
     if bridge.port is None and bridge.default_port is not None:
         # For backward compat, set default port for websocket tv
         data[CONF_PORT] = bridge.default_port
         hass.config_entries.async_update_entry(config_entry, data=data)
-        bridge = SamsungTVBridge.get_bridge(
-            data[CONF_METHOD],
-            data[CONF_HOST],
-            data[CONF_PORT],
-            data.get(CONF_TOKEN),
-        )
+        bridge = await _get_device_bridge(data)
 
     async def stop_bridge(event):
         """Stop SamsungTV bridge connection."""
@@ -110,12 +110,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Unload Samsung TV config entry."""
     data = config_entry.data.copy()
-    bridge = SamsungTVBridge.get_bridge(
-        data[CONF_METHOD],
-        data[CONF_HOST],
-        data[CONF_PORT],
-        data.get(CONF_TOKEN),
-    )
+    bridge = await _get_device_bridge(data)
     bridge.stop()
 
 
