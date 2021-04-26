@@ -4,9 +4,7 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "host": "[%key:common::config_flow::data::host%]"
         }
       }
     },
