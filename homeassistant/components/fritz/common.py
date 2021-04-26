@@ -107,11 +107,6 @@ class FritzBoxTools:
         return self._unique_id
 
     @property
-    def fritzbox_model(self):
-        """Return model."""
-        return self._device_info["model"].replace("FRITZ!Box ", "")
-
-    @property
     def device_info(self):
         """Return device info."""
         return self._device_info
@@ -120,6 +115,11 @@ class FritzBoxTools:
     def devices(self) -> dict[str, Any]:
         """Return devices."""
         return self._devices
+
+    @property
+    def mac(self):
+        """Return device mac address."""
+        return self.unique_id
 
     @property
     def signal_device_new(self) -> str:

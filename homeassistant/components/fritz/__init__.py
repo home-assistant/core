@@ -13,6 +13,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry
 from homeassistant.helpers.typing import ConfigType
 
 from .common import FritzBoxTools, FritzData
@@ -53,8 +54,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_unload)
     )
+
+    await async_device_setup(hass, entry, fritz_tools)
+
     # Load the other platforms like switch
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    return True
+
+
+async def async_device_setup(
+    hass: HomeAssistant, entry: ConfigEntry, fritz_tools: FritzBoxTools
+):
+    """Set up a device that is online."""
+    dev_reg = await device_registry.async_get_registry(hass)
+    identifier = (DOMAIN, entry.unique_id)
+    device_entry = dev_reg.async_get_device(identifiers={identifier}, connections=set())
+    if device_entry and entry.entry_id not in device_entry.config_entries:
+        device_entry = None
+
+    entry = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        name=entry.title,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, fritz_tools.mac)},
+        # This is duplicate but otherwise via_device can't work
+        identifiers={(DOMAIN, fritz_tools.mac)},
+        manufacturer=fritz_tools.device_info["manufacturer"],
+        model=fritz_tools.device_info["model"],
+        sw_version=fritz_tools.device_info["sw_version"],
+    )
 
     return True
 

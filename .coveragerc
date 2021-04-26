@@ -330,6 +330,7 @@ omit =
     homeassistant/components/freebox/sensor.py
     homeassistant/components/freebox/switch.py
     homeassistant/components/fritz/__init__.py
+    homeassistant/components/fritz/binary_sensor.py
     homeassistant/components/fritz/common.py
     homeassistant/components/fritz/const.py
     homeassistant/components/fritz/device_tracker.py
