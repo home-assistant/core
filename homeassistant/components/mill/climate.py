@@ -57,7 +57,7 @@ SET_ROOM_TEMP_SCHEMA = vol.Schema(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[Sequence[Entity]], None],
+    async_add_entities: Callable[[Iterable[Entity]], None],
 ) -> None:
     """Set up the Mill climate."""
     mill_data_connection = Mill(
