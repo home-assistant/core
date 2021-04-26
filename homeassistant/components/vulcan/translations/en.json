@@ -15,7 +15,7 @@
 		 "cannot_connect": "Connection error - please check your internet connection"
       },
       "step":{
-         "user":{
+         "auth":{
             "description":"Login to your Vulcan Account using mobile app registration page.",
             "data":{
                "token":"Token",
