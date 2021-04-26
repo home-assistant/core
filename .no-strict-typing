@@ -820,7 +820,6 @@ homeassistant.components.thingspeak.*
 homeassistant.components.thinkingcleaner.*
 homeassistant.components.thomson.*
 homeassistant.components.threshold.*
-homeassistant.components.tibber.*
 homeassistant.components.tikteck.*
 homeassistant.components.tile.*
 homeassistant.components.time_date.*
