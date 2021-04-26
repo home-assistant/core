@@ -10,7 +10,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "Need to enable authentication in mütesync Preferences > Authentication",
+      "invalid_auth": "Enable authentication in mütesync Preferences > Authentication",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }
