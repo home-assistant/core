@@ -16,10 +16,6 @@ class RecorderPool(StaticPool, NullPool):
         self._tid = threading.current_thread().ident
         StaticPool.__init__(self, *args, **kw)
 
-    def status(self):
-        """Status of the pool."""
-        return "RecorderPool"
-
     @property
     def _is_recorder(self):
         return threading.current_thread().ident == self._tid
