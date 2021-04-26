@@ -561,7 +561,7 @@ oauth2client==4.0.0
 objgraph==3.4.1
 
 # homeassistant.components.omnilogic
-omnilogic==0.4.3
+omnilogic==0.4.5
 
 # homeassistant.components.ondilo_ico
 ondilo==0.2.0
