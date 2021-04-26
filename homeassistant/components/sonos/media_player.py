@@ -189,7 +189,9 @@ async def async_setup_entry(
                 hass, entities, service_call.data[ATTR_WITH_GROUP]  # type: ignore[arg-type]
             )
 
-    async_dispatcher_connect(hass, SONOS_DISCOVERY_UPDATE, async_create_entities)
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, SONOS_DISCOVERY_UPDATE, async_create_entities)
+    )
 
     hass.services.async_register(
         SONOS_DOMAIN,

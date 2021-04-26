@@ -35,7 +35,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 hass, f"{SONOS_ENTITY_CREATED}-{speaker.soco.uid}", SENSOR_DOMAIN
             )
 
-    async_dispatcher_connect(hass, SONOS_DISCOVERY_UPDATE, _async_create_entities)
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, SONOS_DISCOVERY_UPDATE, _async_create_entities)
+    )
 
 
 class SonosBatteryEntity(SonosEntity, SensorEntity):
