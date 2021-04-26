@@ -23,10 +23,10 @@ class ScriptTrace(ActionTrace):
 
 
 @contextmanager
-def trace_script(hass, item_id, config, context):
+def trace_script(hass, item_id, config, context, stored_traces):
     """Trace execution of a script."""
     trace = ScriptTrace(item_id, config, context)
-    async_store_trace(hass, trace)
+    async_store_trace(hass, trace, stored_traces)
 
     try:
         yield trace

@@ -30,18 +30,20 @@ async def async_setup(hass, config):
     return True
 
 
-def async_store_trace(hass, trace):
+def async_store_trace(hass, trace, stored_traces):
     """Store a trace if its item_id is valid."""
     key = trace.key
     if key[1]:
         traces = hass.data[DATA_TRACE]
         if key not in traces:
             traces[key] = LimitedSizeDict(size_limit=STORED_TRACES)
+        else:
+            traces[key].size_limit = stored_traces
         traces[key][trace.run_id] = trace
 
 
 class ActionTrace:
-    """Base container for an script or automation trace."""
+    """Base container for a script or automation trace."""
 
     _run_ids = count(0)
 

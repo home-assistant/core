@@ -38,10 +38,12 @@ class AutomationTrace(ActionTrace):
 
 
 @contextmanager
-def trace_automation(hass, automation_id, config, blueprint_inputs, context):
+def trace_automation(
+    hass, automation_id, config, blueprint_inputs, context, stored_traces
+):
     """Trace action execution of automation with automation_id."""
     trace = AutomationTrace(automation_id, config, blueprint_inputs, context)
-    async_store_trace(hass, trace)
+    async_store_trace(hass, trace, stored_traces)
 
     try:
         yield trace

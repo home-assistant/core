@@ -74,6 +74,7 @@ from .config import PLATFORM_SCHEMA  # noqa: F401
 from .const import (
     CONF_ACTION,
     CONF_INITIAL_STATE,
+    CONF_STORED_TRACES,
     CONF_TRIGGER,
     CONF_TRIGGER_VARIABLES,
     DEFAULT_INITIAL_STATE,
@@ -274,6 +275,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         trigger_variables,
         raw_config,
         blueprint_inputs,
+        stored_traces,
     ):
         """Initialize an automation entity."""
         self._id = automation_id
@@ -292,6 +294,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._trigger_variables: ScriptVariables = trigger_variables
         self._raw_config = raw_config
         self._blueprint_inputs = blueprint_inputs
+        self._stored_traces = stored_traces
 
     @property
     def name(self):
@@ -444,6 +447,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             self._raw_config,
             self._blueprint_inputs,
             trigger_context,
+            self._stored_traces,
         ) as automation_trace:
             if self._variables:
                 try:
@@ -684,6 +688,7 @@ async def _async_process_config(
                 config_block.get(CONF_TRIGGER_VARIABLES),
                 raw_config,
                 raw_blueprint_inputs,
+                config_block[CONF_STORED_TRACES],
             )
 
             entities.append(entity)
