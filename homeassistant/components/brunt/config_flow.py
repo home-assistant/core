@@ -6,7 +6,7 @@ from aiohttp.web import HTTPError
 from brunt import BruntClientAsync
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN
@@ -41,6 +41,13 @@ class BruntConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=DATA_SCHEMA,
                 errors={"base": "invalid_auth"},
             )
+        except Exception as exc:
+            _LOGGER.warning("Unknown error when connecting to Brunt: %s", exc)
+            return self.async_show_form(
+                step_id="user",
+                data_schema=DATA_SCHEMA,
+                errors={"base": "unknown"},
+            )
         finally:
             await bapi.async_close()
         await self.async_set_unique_id(user_input[CONF_USERNAME])
@@ -58,7 +65,3 @@ class BruntConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
         return await self.async_step_user(import_config)
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""

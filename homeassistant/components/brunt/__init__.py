@@ -46,10 +46,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise ConfigEntryAuthFailed(
             f"Brunt could not connect with username: {entry.data[CONF_USERNAME]}."
         ) from exc
-    # try:
-    #     await bapi.async_get_things(force=True)
-    # except HTTPError as exc:
-    #     raise ConfigEntryNotReady("Brunt could not load things.") from exc
     hass.data[DOMAIN][entry.entry_id] = bapi
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "cover")
