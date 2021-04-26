@@ -16,22 +16,18 @@ class RecorderPool(StaticPool, NullPool):
         self._tid = threading.current_thread().ident
         StaticPool.__init__(self, *args, **kw)
 
-    @property
-    def _is_recorder(self):
-        return threading.current_thread().ident == self._tid
-
     def _do_return_conn(self, conn):
-        if self._is_recorder:
+        if threading.current_thread().ident == self._tid:
             return super()._do_return_conn(conn)
         conn.close()
 
     def dispose(self):
         """Dispose of the connection."""
-        if self._is_recorder:
+        if threading.current_thread().ident == self._tid:
             return super().dispose()
 
     def _do_get(self):
-        if self._is_recorder:
+        if threading.current_thread().ident == self._tid:
             return super()._do_get()
         return super(  # pylint: disable=bad-super-call
             NullPool, self
