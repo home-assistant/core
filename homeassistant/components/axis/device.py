@@ -264,12 +264,9 @@ class AxisNetworkDevice:
         """Reset this device to default state."""
         self.disconnect_from_stream()
 
-        if not await self.hass.config_entries.async_unload_platforms(
+        return await self.hass.config_entries.async_unload_platforms(
             self.config_entry, PLATFORMS
-        ):
-            return False
-
-        return True
+        )
 
 
 async def get_device(hass, host, port, username, password):
