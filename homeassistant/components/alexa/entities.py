@@ -618,7 +618,9 @@ class MediaPlayerCapabilities(AlexaEntity):
             inputs = AlexaEqualizerController.get_valid_inputs(
                 self.entity.attributes.get(media_player.const.ATTR_SOUND_MODE_LIST, [])
             )
-            if len(inputs) > 0 and self.entity_conf.get(CONF_PLATFORM) not in ["denonavr"]:
+            if len(inputs) > 0 and self.entity_conf.get(CONF_PLATFORM) not in [
+                "denonavr"
+            ]:
                 yield AlexaEqualizerController(self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)
