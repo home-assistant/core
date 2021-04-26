@@ -70,7 +70,6 @@ class SonosData:
         self.topology_condition = asyncio.Condition()
         self.discovery_thread = None
         self.hosts_heartbeat = None
-        self.platforms_ready: set[str] = set()
 
 
 async def async_setup(hass, config):
