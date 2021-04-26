@@ -4,7 +4,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_DEVICE, CONF_NAME, STATE_IDLE
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_NAME,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_IDLE,
+)
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import (
@@ -43,6 +48,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 entry.entry_id,
             )
         ]
+    )
+
+    async def on_hass_stop(self, event):
+        """HA is shutting down, close modem port."""
+        if self.api:
+            self.api.close()
+            self.api = None
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
 
     platform = entity_platform.current_platform.get()
