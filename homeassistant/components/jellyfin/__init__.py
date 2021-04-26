@@ -11,7 +11,7 @@ from homeassistant.components.jellyfin.config_flow import (
 from homeassistant.components.jellyfin.const import DATA_CLIENT, DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,12 +27,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except CannotConnect as ex:
         raise ConfigEntryNotReady("Cannot connect to Jellyfin server") from ex
     except InvalidAuth as ex:
-        raise ConfigEntryAuthFailed("Failed to login to Jellyfin server") from ex
+        _LOGGER.exception("Failed to login to Jellyfin server: %s", ex)
+        return False
     except Exception as ex:  # pylint: disable=broad-except
-        _LOGGER.exception(ex)
-        raise ConfigEntryNotReady(
-            "Unexpected exception occurred while setting up Jellyfin server"
-        ) from ex
+        _LOGGER.exception(
+            "Unexpected exception occurred while setting up Jellyfin server: %s", ex
+        )
+        return False
     else:
         _LOGGER.debug("Adding API to domain data storage for entry %s", entry.entry_id)
 
