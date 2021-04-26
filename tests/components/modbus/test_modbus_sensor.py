@@ -1,4 +1,6 @@
 """The tests for the Modbus sensor component."""
+from unittest import mock
+
 import pytest
 
 from homeassistant.components.modbus.const import (
@@ -30,6 +32,7 @@ from homeassistant.const import (
     CONF_STRUCTURE,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import State
 
 from .conftest import base_config_test, base_test
 
@@ -479,3 +482,29 @@ async def test_struct_sensor(hass, cfg, regs, expected):
         scan_interval=5,
     )
     assert state == expected
+
+
+async def test_restore_state_sensor(hass):
+    """Run test for sensor restore state."""
+
+    sensor_name = "test_sensor"
+    test_value = "117"
+    config_sensor = {CONF_NAME: sensor_name, CONF_ADDRESS: 17}
+    with mock.patch(
+        "homeassistant.components.modbus.sensor.ModbusRegisterSensor.async_get_last_state"
+    ) as mock_get_last_state:
+        mock_get_last_state.return_value = State(
+            f"{SENSOR_DOMAIN}.{sensor_name}", f"{test_value}"
+        )
+
+        await base_config_test(
+            hass,
+            config_sensor,
+            sensor_name,
+            SENSOR_DOMAIN,
+            CONF_SENSORS,
+            None,
+            method_discovery=True,
+        )
+        entity_id = f"{SENSOR_DOMAIN}.{sensor_name}"
+        assert hass.states.get(entity_id).state == test_value
