@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from pytz import timezone
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.pvpc_hourly_pricing import ATTR_TARIFF, DOMAIN
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import entity_registry as er
@@ -34,7 +34,7 @@ async def test_config_flow(
 
     with patch("homeassistant.util.dt.utcnow", new=mock_now):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
@@ -50,7 +50,7 @@ async def test_config_flow(
 
         # Check abort when configuring another with same tariff
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         result = await hass.config_entries.flow.async_configure(
@@ -66,7 +66,7 @@ async def test_config_flow(
 
         # and add it again with UI
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 

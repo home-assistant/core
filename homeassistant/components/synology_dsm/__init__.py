@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 import async_timeout
 from synology_dsm import SynologyDSM
@@ -118,7 +119,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):  # noqa: C901
     """Set up Synology DSM sensors."""
 
     # Migrate old unique_id
@@ -626,12 +627,12 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
         return self._class
 
     @property
-    def extra_state_attributes(self) -> dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> dict[str, Any]:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._api.information.serial)},
@@ -701,7 +702,7 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
         return bool(self._api.storage)
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> dict[str, Any]:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._api.information.serial, self._device_id)},

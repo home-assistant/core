@@ -164,6 +164,8 @@ homeassistant/components/forked_daapd/* @uvjustin
 homeassistant/components/fortios/* @kimfrellsen
 homeassistant/components/foscam/* @skgsergio
 homeassistant/components/freebox/* @hacf-fr @Quentame
+homeassistant/components/fritz/* @mammuth @AaronDavidSchneider @chemelli74
+homeassistant/components/fritzbox/* @mib1185
 homeassistant/components/fronius/* @nielstron
 homeassistant/components/frontend/* @home-assistant/frontend
 homeassistant/components/garmin_connect/* @cyberjunky

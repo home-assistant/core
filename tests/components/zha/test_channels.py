@@ -445,19 +445,22 @@ async def test_poll_control_checkin_response(poll_control_ch):
     """Test poll control channel checkin response."""
     rsp_mock = AsyncMock()
     set_interval_mock = AsyncMock()
+    fast_poll_mock = AsyncMock()
     cluster = poll_control_ch.cluster
     patch_1 = mock.patch.object(cluster, "checkin_response", rsp_mock)
     patch_2 = mock.patch.object(cluster, "set_long_poll_interval", set_interval_mock)
+    patch_3 = mock.patch.object(cluster, "fast_poll_stop", fast_poll_mock)
 
-    with patch_1, patch_2:
+    with patch_1, patch_2, patch_3:
         await poll_control_ch.check_in_response(33)
 
     assert rsp_mock.call_count == 1
     assert set_interval_mock.call_count == 1
+    assert fast_poll_mock.call_count == 1
 
     await poll_control_ch.check_in_response(33)
-    assert cluster.endpoint.request.call_count == 2
-    assert cluster.endpoint.request.await_count == 2
+    assert cluster.endpoint.request.call_count == 3
+    assert cluster.endpoint.request.await_count == 3
     assert cluster.endpoint.request.call_args_list[0][0][1] == 33
     assert cluster.endpoint.request.call_args_list[0][0][0] == 0x0020
     assert cluster.endpoint.request.call_args_list[1][0][0] == 0x0020

@@ -184,7 +184,7 @@ arcam-fmj==0.5.3
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
-async-upnp-client==0.16.1
+async-upnp-client==0.16.2
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -1079,10 +1079,10 @@ samsungctl[websocket]==0.7.1
 samsungtvws==1.6.0
 
 # homeassistant.components.dhcp
-scapy==2.4.4
+scapy==2.4.5
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.3.0
+screenlogicpy==0.4.1
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
@@ -1247,6 +1247,7 @@ xbox-webapi==2.0.8
 xknx==0.18.1
 
 # homeassistant.components.bluesound
+# homeassistant.components.fritz
 # homeassistant.components.rest
 # homeassistant.components.startca
 # homeassistant.components.ted5000
@@ -1254,7 +1255,7 @@ xknx==0.18.1
 xmltodict==0.12.0
 
 # homeassistant.components.august
-yalexs==1.1.10
+yalexs==1.1.11
 
 # homeassistant.components.yeelight
 yeelight==0.6.1

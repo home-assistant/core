@@ -81,7 +81,7 @@ RtmAPI==0.7.2
 TravisPy==0.3.5
 
 # homeassistant.components.twitter
-TwitterAPI==2.6.8
+TwitterAPI==2.7.2
 
 # homeassistant.components.tof
 # VL53L1X2==0.1.5
@@ -292,7 +292,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
-async-upnp-client==0.16.1
+async-upnp-client==0.16.2
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -2027,13 +2027,13 @@ samsungtvws==1.6.0
 satel_integra==0.3.4
 
 # homeassistant.components.dhcp
-scapy==2.4.4
+scapy==2.4.5
 
 # homeassistant.components.deutsche_bahn
 schiene==0.23
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.3.0
+screenlogicpy==0.4.1
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
@@ -2356,6 +2356,7 @@ xboxapi==2.0.1
 xknx==0.18.1
 
 # homeassistant.components.bluesound
+# homeassistant.components.fritz
 # homeassistant.components.rest
 # homeassistant.components.startca
 # homeassistant.components.ted5000
@@ -2369,7 +2370,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.1.6
 
 # homeassistant.components.august
-yalexs==1.1.10
+yalexs==1.1.11
 
 # homeassistant.components.yeelight
 yeelight==0.6.1

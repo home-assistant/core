@@ -422,6 +422,7 @@ class PollControl(ZigbeeChannel):
         await self.checkin_response(True, self.CHECKIN_FAST_POLL_TIMEOUT, tsn=tsn)
         if self._ch_pool.manufacturer_code not in self._IGNORED_MANUFACTURER_ID:
             await self.set_long_poll_interval(self.LONG_POLL)
+        await self.fast_poll_stop()
 
     @callback
     def skip_manufacturer_id(self, manufacturer_code: int) -> None:

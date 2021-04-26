@@ -604,14 +604,12 @@ async def _async_process_config(
     blueprints_used = False
 
     for config_key in extract_domain_configs(config, DOMAIN):
-        conf: list[dict[str, Any] | blueprint.BlueprintInputs] = config[  # type: ignore
-            config_key
-        ]
+        conf: list[dict[str, Any] | blueprint.BlueprintInputs] = config[config_key]
 
         for list_no, config_block in enumerate(conf):
             raw_blueprint_inputs = None
             raw_config = None
-            if isinstance(config_block, blueprint.BlueprintInputs):  # type: ignore
+            if isinstance(config_block, blueprint.BlueprintInputs):
                 blueprints_used = True
                 blueprint_inputs = config_block
                 raw_blueprint_inputs = blueprint_inputs.config_with_inputs
