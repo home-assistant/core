@@ -1,14 +1,22 @@
 {
   "image": "homeassistant/{arch}-homeassistant",
+  "shadow_repository": "ghcr.io/home-assistant",
   "build_from": {
-    "aarch64": "homeassistant/aarch64-homeassistant-base:2021.02.0",
-    "armhf": "homeassistant/armhf-homeassistant-base:2021.02.0",
-    "armv7": "homeassistant/armv7-homeassistant-base:2021.02.0",
-    "amd64": "homeassistant/amd64-homeassistant-base:2021.02.0",
-    "i386": "homeassistant/i386-homeassistant-base:2021.02.0"
+    "aarch64": "ghcr.io/home-assistant/aarch64-homeassistant-base:2021.04.2",
+    "armhf": "ghcr.io/home-assistant/armhf-homeassistant-base:2021.04.2",
+    "armv7": "ghcr.io/home-assistant/armv7-homeassistant-base:2021.04.2",
+    "amd64": "ghcr.io/home-assistant/amd64-homeassistant-base:2021.04.2",
+    "i386": "ghcr.io/home-assistant/i386-homeassistant-base:2021.04.2"
   },
   "labels": {
-    "io.hass.type": "core"
+    "io.hass.type": "core",
+    "org.opencontainers.image.title": "Home Assistant",
+    "org.opencontainers.image.description": "Open-source home automation platform running on Python 3",
+    "org.opencontainers.image.source": "https://github.com/home-assistant/core",
+    "org.opencontainers.image.authors": "The Home Assistant Authors",
+    "org.opencontainers.image.url": "https://www.home-assistant.io/",
+    "org.opencontainers.image.documentation": "https://www.home-assistant.io/docs/",
+    "org.opencontainers.image.licenses": "Apache License 2.0"
   },
   "version_tag": true
 }
