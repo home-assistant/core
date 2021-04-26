@@ -15,7 +15,7 @@
 		 "cannot_connect": "Nie można połączyć się z internetem - sprawdź swoje połączenie"
       },
       "step":{
-         "user":{
+         "auth":{
             "description":"Zaloguj się do konta Vulcan za pomocą opcji rejestracji aplikacji mobilnej.",
             "data":{
                "token":"Token",

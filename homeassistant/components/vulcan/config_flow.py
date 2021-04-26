@@ -36,17 +36,17 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return VulcanOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None, is_new_account=False, errors=None):
+    async def async_step_user(self, user_input=None):
         """Get login credentials from the user."""
+        if self._async_current_entries():
+            return await self.async_step_add_student()
+
+        return await self.async_step_auth()
+
+    async def async_step_auth(self, user_input=None, errors=None):
+        """Authorize integration."""
         if errors is None:
             errors = {}
-        if (
-            self._async_current_entries()
-            and is_new_account is False
-            and not hasattr(self, "is_new_account")
-            and user_input is None
-        ):
-            return await self.async_step_add_student()
 
         if user_input is not None:
             try:
@@ -99,7 +99,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user",
+            step_id="auth",
             data_schema=vol.Schema(LOGIN_SCHEMA),
             errors=errors,
         )
@@ -159,13 +159,17 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 if str(err) == "The certificate is not authorized.":
                     os.remove(user_input["credentials"])
                     os.remove(user_input["credentials"].replace("account", "keystore"))
-                    return await self.async_step_user(
-                        is_new_account=True, errors={"base": "expired_credentials"}
+                    return await self.async_step_auth(
+                        errors={"base": "expired_credentials"}
                     )
                 _LOGGER.error(err)
-                return await self.async_step_user(
-                    is_new_account=True, errors={"base": "unknown"}
-                )
+                return await self.async_step_auth(errors={"base": "unknown"})
+            except ClientConnectorError as err:
+                _LOGGER.error("Connection error: %s", err)
+                return await self.async_step_auth(errors={"base": "cannot_connect"})
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                return await self.async_step_auth(errors={"base": "unknown"})
             finally:
                 await client.close()
             if len(_students) == 1:
@@ -212,7 +216,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         return self.async_abort(reason="all_student_already_configured")
                     return await self.async_step_select_student(account, _students)
                 return await self.async_step_select_saved_credentials()
-            return await self.async_step_user(is_new_account=True)
+            return await self.async_step_auth()
 
         data_schema = {
             vol.Required("use_saved_credentials", default=True): bool,
