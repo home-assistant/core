@@ -784,7 +784,7 @@ class Recorder(threading.Thread):
             kwargs["connect_args"] = {"check_same_thread": False}
             kwargs["poolclass"] = StaticPool
             kwargs["pool_reset_on_return"] = None
-        elif self.db_url.startswith("sqlite:"):
+        elif self.db_url.startswith(SQLITE_URL_PREFIX):
             kwargs["poolclass"] = RecorderPool
         else:
             kwargs["echo"] = False
