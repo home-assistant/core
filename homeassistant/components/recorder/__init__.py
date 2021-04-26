@@ -725,15 +725,11 @@ class Recorder(threading.Thread):
 
         try:
             self.event_session.rollback()
+            self.event_session.close()
         except SQLAlchemyError as err:
             _LOGGER.exception(
-                "Error while rolling back closing the event session: %s", err
+                "Error while rolling back and closing the event session: %s", err
             )
-
-        try:
-            self.event_session.rollback()
-        except SQLAlchemyError as err:
-            _LOGGER.exception("Error while closing the event session: %s", err)
 
     def _reopen_event_session(self):
         """Rollback the event session and reopen it after a failure."""
@@ -788,7 +784,7 @@ class Recorder(threading.Thread):
             kwargs["connect_args"] = {"check_same_thread": False}
             kwargs["poolclass"] = StaticPool
             kwargs["pool_reset_on_return"] = None
-        elif self.db_url.startswith("sqlite:"):
+        elif self.db_url.startswith(SQLITE_URL_PREFIX):
             kwargs["poolclass"] = RecorderPool
         else:
             kwargs["echo"] = False
