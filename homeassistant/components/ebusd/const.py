@@ -4,6 +4,7 @@ from homeassistant.const import (
     PRESSURE_BAR,
     TEMP_CELSIUS,
     TIME_SECONDS,
+    PERCENTAGE,
 )
 
 DOMAIN = "ebusd"
@@ -136,5 +137,7 @@ SENSOR_TYPES = {
         ],
         "RoomThermostat": ["DCRoomthermostat", None, "mdi:toggle-switch", 2],
         "HeatingPartLoad": ["PartloadHcKW", ENERGY_KILO_WATT_HOUR, "mdi:flash", 0],
+        "StateNumber": ["StateNumber", None, "mdi:fire", 3],
+        "ModulationPercentage": ["ModulationTempDesired", PERCENTAGE, "mdi:percent", 0],
     },
 }
