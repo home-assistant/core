@@ -1,4 +1,9 @@
 """Mutesync binary sensor entities."""
+import asyncio
+
+import aiohttp
+import async_timeout
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from .const import DOMAIN
@@ -14,6 +19,7 @@ class MuteStatus(BinarySensorEntity):
     """Class to hold Mutesync basic info."""
 
     def __init__(self, client):
+        """Initialize binary sensor."""
         self.client = client
         self._is_on = None
 
@@ -34,7 +40,13 @@ class MuteStatus(BinarySensorEntity):
 
     async def async_update(self):
         """Update state."""
-        status = await self.client.get_state()
+        try:
+            async with async_timeout.timeout(10):
+                status = await self.client.get_state()
+        except (aiohttp.ClientError, asyncio.TimeoutError):
+            self._is_on = None
+            return
+
         if not status["in_meeting"]:
             self._is_on = None
         else:

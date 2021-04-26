@@ -1,9 +1,13 @@
 """Config flow for mütesync integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
+import aiohttp
+import async_timeout
+import mutesync
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -11,7 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.exceptions import HomeAssistantError
 
-import mutesync
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +29,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """
     session = hass.helpers.aiohttp_client.async_get_clientsession()
     try:
-        token = await mutesync.authenticate(session, data["host"])
+        async with async_timeout.timeout(10):
+            token = await mutesync.authenticate(session, data["host"])
     except aiohttp.ClientResponseError as error:
         if error.status == 403:
             raise InvalidAuth
