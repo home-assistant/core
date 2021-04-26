@@ -165,7 +165,7 @@ class OmniLogicEntity(CoordinatorEntity):
 
 
 def check_guard(state_key, item, entity_setting):
-    """Validate that this entity passes guard conditions."""
+    """Validate that this entity passes the defined guard conditions defined at setup."""
 
     if state_key not in item:
         return True

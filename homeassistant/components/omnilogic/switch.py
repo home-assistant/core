@@ -1,4 +1,4 @@
-"""Platform for switch integration."""
+"""Platform for Omnilogic switch integration."""
 import time
 
 from omnilogic import OmniLogicException
@@ -11,6 +11,7 @@ from .common import OmniLogicEntity, OmniLogicUpdateCoordinator, check_guard
 from .const import COORDINATOR, DOMAIN, PUMP_TYPES
 
 SERVICE_SET_SPEED = "set_pump_speed"
+OMNILOGIC_SWITCH_OFF = 7
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -56,7 +57,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 
 class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
-    """Define an Omnilogic Switch entity."""
+    """Define an Omnilogic Base Switch entity which will be instantiated through specific switch type entities."""
 
     def __init__(
         self,
@@ -87,10 +88,10 @@ class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
         if self._last_action < (time.time() - self._state_delay):
             self._state = int(self.coordinator.data[self._item_id][self._state_key])
 
-            if self._state == 7:
+            if self._state == OMNILOGIC_SWITCH_OFF:
                 self._state = 0
 
-        return self._state
+        return self._state != 0
 
 
 class OmniLogicRelayControl(OmniLogicSwitch):

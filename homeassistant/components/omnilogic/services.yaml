@@ -7,16 +7,3 @@ set_pump_speed:
     speed:
       description: Speed for the VSP between min and max speed.
       example: 85
-
-set_v2_lights:
-  description: Set the version 2 light effect speed or brightness
-  fields:
-    entity_id:
-      description: Target light entity
-      example: switch.pool_lights
-    speed:
-      description: Speed for the light effect (0-8) (Optional).
-      example: 4
-    brightness:
-      description: Brightness for the light effect (0-4) (Optional).
-      example: 4
