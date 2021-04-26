@@ -1,5 +1,4 @@
 """Support for Broadlink devices."""
-import asyncio
 from contextlib import suppress
 from functools import partial
 import logging
@@ -112,12 +111,9 @@ class BroadlinkDevice:
         self.reset_jobs.append(config.add_update_listener(self.async_update))
 
         # Forward entry setup to related domains.
-        tasks = (
-            self.hass.config_entries.async_forward_entry_setup(config, domain)
-            for domain in get_domains(self.api.type)
+        self.hass.config_entries.async_setup_platforms(
+            config, get_domains(self.api.type)
         )
-        for entry_setup in tasks:
-            self.hass.async_create_task(entry_setup)
 
         return True
 
@@ -129,12 +125,9 @@ class BroadlinkDevice:
         while self.reset_jobs:
             self.reset_jobs.pop()()
 
-        tasks = (
-            self.hass.config_entries.async_forward_entry_unload(self.config, domain)
-            for domain in get_domains(self.api.type)
+        return await self.hass.config_entries.async_unload_platforms(
+            self.config, get_domains(self.api.type)
         )
-        results = await asyncio.gather(*tasks)
-        return all(results)
 
     async def async_auth(self):
         """Authenticate to the device."""

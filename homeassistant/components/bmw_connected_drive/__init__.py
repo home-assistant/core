@@ -1,7 +1,6 @@
 """Reads vehicle status from BMW connected drive portal."""
 from __future__ import annotations
 
-import asyncio
 import logging
 
 from bimmer_connected.account import ConnectedDriveAccount
@@ -138,11 +137,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await _async_update_all()
 
-    for platform in PLATFORMS:
-        if platform != NOTIFY_DOMAIN:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-            )
+    hass.config_entries.async_setup_platforms(
+        entry, [platform for platform in PLATFORMS if platform != NOTIFY_DOMAIN]
+    )
 
     # set up notify platform, no entry support for notify platform yet,
     # have to use discovery to load platform.
@@ -161,14 +158,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-                if platform != NOTIFY_DOMAIN
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, [platform for platform in PLATFORMS if platform != NOTIFY_DOMAIN]
     )
 
     # Only remove services if it is the last account and not read only
