@@ -169,10 +169,10 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
 
     # To register scripts as valid domain for Blueprint
-    # We do not populate Blueprints for scripts yet, until we have
-    # some good scripts to distribute.
     async_get_blueprints(hass)
-    await _async_process_config(hass, config, component)
+
+    if not await _async_process_config(hass, config, component):
+        await async_get_blueprints(hass).async_populate()
 
     async def reload_service(service):
         """Call a service to reload scripts."""
