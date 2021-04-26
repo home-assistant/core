@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/jellyfin",
   "requirements": [
-    "jellyfin-apiclient-python==1.6.1"
+    "jellyfin-apiclient-python==1.7.2"
   ],
   "iot_class": "local_polling",
   "codeowners": [
