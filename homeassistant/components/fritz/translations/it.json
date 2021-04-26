@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+        },
+        "error": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "connection_error": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "flow_title": "Strumenti FRITZ! Box: {name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "description": "FRITZ! Box rilevato: {name} \n\n Configura gli strumenti del FRITZ! Box per controllare il tuo {name}",
+                "title": "Configura gli strumenti del FRITZ! Box"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "description": "Aggiorna le credenziali di FRITZ! Box Tools per: {host} . \n\n FRITZ! Box Tools non riesce ad accedere al tuo FRITZ! Box.",
+                "title": "Aggiornamento degli strumenti del FRITZ! Box - credenziali"
+            },
+            "start_config": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Porta",
+                    "username": "Nome utente"
+                },
+                "description": "Configura gli strumenti FRITZ! Box per controllare il tuo FRITZ! Box.\n Minimo necessario: nome utente, password.",
+                "title": "Configurazione degli strumenti FRITZ! Box - obbligatorio"
+            }
+        }
+    }
+}
