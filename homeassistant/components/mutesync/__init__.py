@@ -12,19 +12,9 @@ from .const import DOMAIN
 PLATFORMS = ["binary_sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the mutesync component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up mütesync from a config entry."""
-    # TODO Store an API object for your platforms to access
-    print(entry.data["token"])
-    print(entry.data["host"])
-    print("====================================")
-    hass.data[DOMAIN][entry.entry_id] = mutesync.PyMutesync(
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = mutesync.PyMutesync(
         entry.data["token"],
         entry.data["host"],
         hass.helpers.aiohttp_client.async_get_clientsession(),
