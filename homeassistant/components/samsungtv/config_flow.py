@@ -140,10 +140,14 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not self._device_info:
                 raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
 
-        device_type = self._device_info.get("device", {}).get("type")
+        dev_info = self._device_info.get("device", {})
+        device_type = dev_info.get("type")
         if device_type and device_type != "Samsung SmartTV":
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
-        self._model = self._device_info.get("device", {}).get("modelName")
+        self._model = dev_info.get("modelName")
+        self._manufacturer = "Samsung"
+        if dev_info.get("networkType") == "wireless":
+            self._mac = dev_info.get("wifiMac")
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
