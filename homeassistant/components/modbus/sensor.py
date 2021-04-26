@@ -271,9 +271,9 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
         """Do swap as needed."""
         if self._swap in [CONF_SWAP_BYTE, CONF_SWAP_WORDBYTE]:
             # convert [12][34] --> [21][43]
-            for i, _ in enumerate(registers):
+            for i, register in enumerate(registers):
                 registers[i] = int.from_bytes(
-                    registers[i].to_bytes(2, byteorder="little"),
+                    register.to_bytes(2, byteorder="little"),
                     byteorder="big",
                     signed=False,
                 )
