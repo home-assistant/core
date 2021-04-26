@@ -40,7 +40,9 @@ _LOGGER = logging.getLogger(__name__)
 class SonosSpeaker:
     """Representation of a Sonos speaker."""
 
-    def __init__(self, hass: HomeAssistant, soco: SoCo, speaker_info: dict[str, Any]):
+    def __init__(
+        self, hass: HomeAssistant, soco: SoCo, speaker_info: dict[str, Any]
+    ) -> None:
         """Initialize a SonosSpeaker."""
         self._is_ready: bool = False
         self._subscriptions: list[SubscriptionBase] = []

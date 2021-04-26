@@ -80,7 +80,7 @@ class SonosBatteryEntity(SonosEntity, SensorEntity):
 
     def __init__(
         self, speaker: SonosSpeaker, sonos_data: SonosData, battery_info: dict[str, Any]
-    ):
+    ) -> None:
         """Initialize a SonosBatteryEntity."""
         super().__init__(speaker, sonos_data)
         self._battery_info: dict[str, Any] = battery_info
