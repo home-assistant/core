@@ -7,7 +7,7 @@ https://home-assistant.io/integrations/zha/
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine, Dict
+from collections.abc import Coroutine
 import logging
 
 from zigpy.exceptions import ZigbeeException
@@ -55,7 +55,7 @@ class IasAce(ZigbeeChannel):
     ) -> None:
         """Initialize IAS Ancillary Control Equipment channel."""
         super().__init__(cluster, ch_pool)
-        self.command_map: Dict[int, CALLABLE_T] = {
+        self.command_map: dict[int, CALLABLE_T] = {
             IAS_ACE_ARM: self.arm,
             IAS_ACE_BYPASS: self._bypass,
             IAS_ACE_EMERGENCY: self._emergency,
@@ -67,7 +67,7 @@ class IasAce(ZigbeeChannel):
             IAS_ACE_GET_BYPASSED_ZONE_LIST: self._get_bypassed_zone_list,
             IAS_ACE_GET_ZONE_STATUS: self._get_zone_status,
         }
-        self.arm_map: Dict[AceCluster.ArmMode, CALLABLE_T] = {
+        self.arm_map: dict[AceCluster.ArmMode, CALLABLE_T] = {
             AceCluster.ArmMode.Disarm: self._disarm,
             AceCluster.ArmMode.Arm_All_Zones: self._arm_away,
             AceCluster.ArmMode.Arm_Day_Home_Only: self._arm_day,
