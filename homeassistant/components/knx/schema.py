@@ -106,7 +106,7 @@ class BinarySensorSchema:
     DEFAULT_NAME = "KNX Binary Sensor"
 
     SCHEMA = vol.All(
-        # deprecated since 2020.9
+        # deprecated since September 2020
         cv.deprecated("significant_bit"),
         cv.deprecated("automation"),
         vol.Schema(
@@ -169,7 +169,7 @@ class ClimateSchema:
     DEFAULT_ON_OFF_INVERT = False
 
     SCHEMA = vol.All(
-        # deprecated since 2020.9
+        # deprecated since September 2020
         cv.deprecated("setpoint_shift_step", replacement_key=CONF_TEMPERATURE_STEP),
         vol.Schema(
             {
