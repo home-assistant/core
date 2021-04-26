@@ -17,7 +17,7 @@ from homeassistant.helpers.trace import (
 import homeassistant.util.dt as dt_util
 
 from . import websocket_api
-from .const import DATA_TRACE, STORED_TRACES
+from .const import DATA_TRACE
 from .utils import LimitedSizeDict
 
 DOMAIN = "trace"
@@ -36,7 +36,7 @@ def async_store_trace(hass, trace, stored_traces):
     if key[1]:
         traces = hass.data[DATA_TRACE]
         if key not in traces:
-            traces[key] = LimitedSizeDict(size_limit=STORED_TRACES)
+            traces[key] = LimitedSizeDict(size_limit=stored_traces)
         else:
             traces[key].size_limit = stored_traces
         traces[key][trace.run_id] = trace

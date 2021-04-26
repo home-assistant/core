@@ -422,6 +422,41 @@ async def test_trace_overflow(hass, hass_ws_client, domain, stored_traces):
     assert len(_find_traces(response["result"], domain, "sun")) == 1
 
 
+@pytest.mark.parametrize("domain", ["automation", "script"])
+async def test_trace_no_traces(hass, hass_ws_client, domain):
+    """Test the storing traces for a script or automation can be disabled."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    sun_config = {
+        "id": "sun",
+        "trigger": {"platform": "event", "event_type": "test_event"},
+        "action": {"event": "some_event"},
+    }
+    await _setup_automation_or_script(hass, domain, [sun_config], stored_traces=0)
+
+    client = await hass_ws_client()
+
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
+
+    # Trigger "sun" automation / script once
+    await _run_automation_or_script(hass, domain, sun_config, "test_event")
+    await hass.async_block_till_done()
+
+    # List traces
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
+    response = await client.receive_json()
+    assert response["success"]
+    assert len(_find_traces(response["result"], domain, "sun")) == 0
+
+
 @pytest.mark.parametrize(
     "domain, prefix, trigger, last_step, script_execution",
     [
