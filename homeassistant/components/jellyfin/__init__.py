@@ -29,6 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except InvalidAuth as ex:
         raise ConfigEntryAuthFailed("Failed to login to Jellyfin server") from ex
     except Exception as ex:  # pylint: disable=broad-except
+        _LOGGER.exception(ex)
         raise ConfigEntryNotReady(
             "Unexpected exception occurred while setting up Jellyfin server"
         ) from ex

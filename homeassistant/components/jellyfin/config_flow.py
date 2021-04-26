@@ -48,9 +48,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+            except Exception as ex:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
+                _LOGGER.exception(ex)
             else:
                 title = user_input.get(CONF_URL)
                 return self.async_create_entry(title=title, data=user_input)
