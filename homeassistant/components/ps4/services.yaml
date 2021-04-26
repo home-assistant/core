@@ -1,9 +1,30 @@
 send_command:
+  name: Send command
   description: Emulate button press for PlayStation 4.
   fields:
     entity_id:
-      description: Name(s) of entities to send command.
+      name: Entity
+      description: Name of entity to send command.
+      required: true
       example: "media_player.playstation_4"
+      selector:
+        entity:
+          integration: ps4
+          domain: media_player
     command:
+      name: Command
       description: Button to press.
+      required: true
       example: "ps"
+      selector:
+        select:
+          options:
+            - "ps"
+            - "ps_hold"
+            - "option"
+            - "enter"
+            - "back"
+            - "up"
+            - "down"
+            - "left"
+            - "right"
