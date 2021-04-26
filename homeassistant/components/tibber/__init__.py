@@ -7,11 +7,14 @@ import tibber
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import DATA_HASS_CONFIG, DOMAIN
@@ -28,7 +31,7 @@ CONFIG_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tibber component."""
 
     hass.data[DATA_HASS_CONFIG] = config
@@ -47,7 +50,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
 
     tibber_connection = tibber.Tibber(
@@ -57,7 +60,7 @@ async def async_setup_entry(hass, entry):
     )
     hass.data[DOMAIN] = tibber_connection
 
-    async def _close(event):
+    async def _close(event: Event) -> None:
         await tibber_connection.rt_disconnect()
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
@@ -88,7 +91,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
@@ -100,7 +103,7 @@ async def async_unload_entry(hass, config_entry):
     )
 
     if unload_ok:
-        tibber_connection = hass.data.get(DOMAIN)
+        tibber_connection: tibber.Tibber = hass.data.get(DOMAIN)
         await tibber_connection.rt_disconnect()
 
     return unload_ok
