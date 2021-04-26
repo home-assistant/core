@@ -2,13 +2,13 @@
 import asyncio
 import logging
 
-from aiohttp.web_exceptions import HTTPError
+from aiohttp.client_exceptions import ClientResponseError, ServerDisconnectedError
 from brunt import BruntClientAsync
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -42,10 +42,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     try:
         await bapi.async_login()
-    except HTTPError as exc:
+    except ServerDisconnectedError as exc:
+        raise ConfigEntryNotReady("Brunt not ready to connect.") from exc
+    except ClientResponseError as exc:
         raise ConfigEntryAuthFailed(
             f"Brunt could not connect with username: {entry.data[CONF_USERNAME]}."
         ) from exc
+    except Exception as exc:  # pylint: disable=broad-except
+        _LOGGER.exception(exc)
+        return False
     hass.data[DOMAIN][entry.entry_id] = bapi
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "cover")

@@ -3,6 +3,7 @@
 from datetime import timedelta
 import logging
 
+from aiohttp.client_exceptions import ClientResponseError, ServerDisconnectedError
 import async_timeout
 from brunt import BruntClientAsync, Thing
 
@@ -16,6 +17,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -47,8 +49,15 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
             async with async_timeout.timeout(10):
                 things = await bapi.async_get_things(force=True)
                 return {thing.SERIAL: thing for thing in things}
-        except (TypeError, KeyError, NameError, ValueError) as err:
+        except ServerDisconnectedError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+        except ClientResponseError as err:
+            if err.status == 403:
+                raise ConfigEntryAuthFailed() from err
+            if err.status == 401:
+                raise UpdateFailed(f"Error communicating with API: {err}") from err
+        except Exception as err:
+            raise UpdateFailed("Unknown error.") from err
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -60,7 +69,7 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
     await coordinator.async_config_entry_first_refresh()
 
     async_add_entities(
-        BruntDevice(coordinator, serial, thing, bapi)
+        BruntDevice(coordinator, serial, thing, bapi, entry.entry_id)
         for serial, thing in coordinator.data.items()
     )
     return True
@@ -79,12 +88,14 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
         serial: str,
         thing: Thing,
         bapi: BruntClientAsync,
+        entry_id: str,
     ):
         """Init the Brunt device."""
         super().__init__(coordinator)
         self._unique_id = serial
         self._bapi = bapi
         self._thing = thing
+        self._entry_id = entry_id
         self._remove_update_listener = None
 
     async def async_added_to_hass(self) -> None:
@@ -183,9 +194,13 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
 
     async def _async_update_cover(self, position):
         """Set the cover to the new position and wait for the update to be reflected."""
-        await self._bapi.async_change_request_position(
-            position, thingUri=self._thing.thingUri
-        )
+        try:
+            await self._bapi.async_change_request_position(
+                position, thingUri=self._thing.thingUri
+            )
+        except ClientResponseError:
+            _LOGGER.warning("Unable to reposition %s", self._thing.NAME)
+            return
         self.coordinator.update_interval = FAST_INTERVAL
         await self.coordinator.async_request_refresh()
 
@@ -207,7 +222,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
-            "via_device": None,
+            "via_device": (DOMAIN, self._entry_id),
             "manufacturer": "Brunt",
             "sw_version": self._thing.FW_VERSION,
             "model": self._thing.MODEL,

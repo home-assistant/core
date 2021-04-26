@@ -1,3 +1,4 @@
+"""Constants for Brunt."""
 DOMAIN = "brunt"
 ATTR_REQUEST_POSITION = "request_position"
 NOTIFICATION_ID = "brunt_notification"
