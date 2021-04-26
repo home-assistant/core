@@ -1,7 +1,8 @@
 """The Media Source implementation for the Jellyfin integration."""
+from __future__ import annotations
+
 import logging
 import mimetypes
-from typing import List, Tuple
 
 from jellyfin_apiclient_python.api import jellyfin_url
 from jellyfin_apiclient_python.client import JellyfinClient
@@ -84,7 +85,7 @@ class JellyfinSource(MediaSource):
         return PlayMedia(stream_url, mime_type)
 
     async def async_browse_media(
-        self, item: MediaSourceItem, media_types: Tuple[str] = None
+        self, item: MediaSourceItem, media_types: tuple[str] = None
     ) -> BrowseMediaSource:
         """Return a browsable Jellyfin media source."""
         if not item.identifier:
@@ -126,7 +127,7 @@ class JellyfinSource(MediaSource):
 
         return base
 
-    async def _get_libraries(self) -> List[dict]:
+    async def _get_libraries(self) -> list[dict]:
         """Return all supported libraries a user has access to."""
         response = await self.hass.async_add_executor_job(self.api.get_media_folders)
         libraries = response["Items"]
@@ -171,7 +172,7 @@ class JellyfinSource(MediaSource):
 
         return result
 
-    async def _build_artists(self, library_id: str) -> List[BrowseMediaSource]:
+    async def _build_artists(self, library_id: str) -> list[BrowseMediaSource]:
         """Return all artists in the music library."""
         artists = await self._get_children(library_id, ITEM_TYPE_ARTIST)
         artists = sorted(artists, key=lambda k: k[ITEM_KEY_NAME])
@@ -202,7 +203,7 @@ class JellyfinSource(MediaSource):
 
         return result
 
-    async def _build_albums(self, artist_id: str) -> List[BrowseMediaSource]:
+    async def _build_albums(self, artist_id: str) -> list[BrowseMediaSource]:
         """Return all albums of a single artist as browsable media sources."""
         albums = await self._get_children(artist_id, ITEM_TYPE_ALBUM)
         albums = sorted(albums, key=lambda k: k[ITEM_KEY_NAME])
@@ -233,7 +234,7 @@ class JellyfinSource(MediaSource):
 
         return result
 
-    async def _build_tracks(self, album_id: str) -> List[BrowseMediaSource]:
+    async def _build_tracks(self, album_id: str) -> list[BrowseMediaSource]:
         """Return all tracks of a single album as browsable media sources."""
         tracks = await self._get_children(album_id, ITEM_TYPE_AUDIO)
         tracks = sorted(tracks, key=lambda k: k[ITEM_KEY_INDEX_NUMBER])
@@ -259,7 +260,7 @@ class JellyfinSource(MediaSource):
 
         return result
 
-    async def _get_children(self, parent_id: str, item_type=None) -> List[dict]:
+    async def _get_children(self, parent_id: str, item_type=None) -> list[dict]:
         """Return all children for the parent_id whose item type is item_type."""
         params = {"Recursive": "true", "ParentId": parent_id}
         if item_type:
