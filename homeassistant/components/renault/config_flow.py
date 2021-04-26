@@ -1,5 +1,7 @@
 """Config flow to configure Renault component."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 from renault_api.const import AVAILABLE_LOCALES
 import voluptuous as vol
@@ -24,7 +26,7 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.renault_hub = None
 
     async def async_step_user(
-        self, user_input: Dict[str, Any] = None
+        self, user_input: dict[str, Any] = None
     ) -> FlowResultDict:
         """Handle a Renault config flow start.
 
@@ -42,7 +44,7 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_kamereon()
         return self._show_user_form()
 
-    def _show_user_form(self, errors: Dict[str, Any] = None) -> FlowResultDict:
+    def _show_user_form(self, errors: dict[str, Any] = None) -> FlowResultDict:
         """Show the API keys form."""
         return self.async_show_form(
             step_id="user",
@@ -57,7 +59,7 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_kamereon(
-        self, user_input: Dict[str, Any] = None
+        self, user_input: dict[str, Any] = None
     ) -> FlowResultDict:
         """Select Kamereon account."""
         if user_input:

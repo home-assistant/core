@@ -1,5 +1,7 @@
 """Base classes for Renault entities."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 from renault_api.kamereon.models import KamereonVehicleCockpitData
 
@@ -22,7 +24,7 @@ class RenaultDataEntity(CoordinatorEntity, Entity):
         self._entity_type = entity_type
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return a device description for device registry."""
         return self.vehicle.device_info
 

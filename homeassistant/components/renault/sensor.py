@@ -1,5 +1,5 @@
 """Support for Renault sensors."""
-from typing import List, Optional
+from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LENGTH_KILOMETERS, VOLUME_LITERS
@@ -22,7 +22,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-async def get_entities(proxy: RenaultHub) -> List[RenaultDataEntity]:
+async def get_entities(proxy: RenaultHub) -> list[RenaultDataEntity]:
     """Create Renault entities for all vehicles."""
     entities = []
     for vehicle in proxy.vehicles.values():
@@ -30,7 +30,7 @@ async def get_entities(proxy: RenaultHub) -> List[RenaultDataEntity]:
     return entities
 
 
-async def get_vehicle_entities(vehicle: RenaultVehicleProxy) -> List[RenaultDataEntity]:
+async def get_vehicle_entities(vehicle: RenaultVehicleProxy) -> list[RenaultDataEntity]:
     """Create Renault entities for single vehicle."""
     entities = []
     if "cockpit" in vehicle.coordinators.keys():
@@ -45,7 +45,7 @@ class RenaultFuelAutonomySensor(RenaultCockpitDataEntity):
     """Fuel autonomy sensor."""
 
     @property
-    def state(self) -> Optional[int]:
+    def state(self) -> int | None:
         """Return the state of this entity."""
         if self.data.fuelAutonomy is None:
             return None
@@ -66,7 +66,7 @@ class RenaultFuelQuantitySensor(RenaultCockpitDataEntity):
     """Fuel quantity sensor."""
 
     @property
-    def state(self) -> Optional[int]:
+    def state(self) -> int | None:
         """Return the state of this entity."""
         if self.data.fuelQuantity is None:
             return None
@@ -87,7 +87,7 @@ class RenaultMileageSensor(RenaultCockpitDataEntity):
     """Mileage sensor."""
 
     @property
-    def state(self) -> Optional[int]:
+    def state(self) -> int | None:
         """Return the state of this entity."""
         if self.data.totalMileage is None:
             return None

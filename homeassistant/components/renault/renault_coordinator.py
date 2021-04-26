@@ -1,5 +1,5 @@
 """Proxy to handle account communication with Renault servers."""
-from typing import Optional
+from __future__ import annotations
 
 from renault_api.kamereon.exceptions import (
     AccessDeniedException,
@@ -23,7 +23,7 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator):
         self.access_denied = False
         self.not_supported = False
 
-    async def _async_update_data(self) -> Optional[T]:
+    async def _async_update_data(self) -> T | None:
         """Fetch the latest data from the source."""
         if self.update_method is None:
             raise NotImplementedError("Update method not implemented")

@@ -1,7 +1,9 @@
 """Proxy to handle account communication with Renault servers."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from renault_api.kamereon import models
 from renault_api.renault_vehicle import RenaultVehicle
@@ -35,7 +37,7 @@ class RenaultVehicleProxy:
             "name": details.registrationNumber,
             "sw_version": details.get_model_code(),
         }
-        self.coordinators: Dict[str, RenaultDataUpdateCoordinator] = {}
+        self.coordinators: dict[str, RenaultDataUpdateCoordinator] = {}
         self.hvac_target_temperature = 21
         self._scan_interval = scan_interval
 
@@ -45,7 +47,7 @@ class RenaultVehicleProxy:
         return self._details
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return a device description for device registry."""
         return self._device_info
 

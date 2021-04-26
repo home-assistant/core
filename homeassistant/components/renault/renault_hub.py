@@ -1,7 +1,8 @@
 """Proxy to handle account communication with Renault servers."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Dict, List, Optional
 
 from renault_api.gigya.exceptions import InvalidCredentialsException
 from renault_api.renault_account import RenaultAccount
@@ -27,8 +28,8 @@ class RenaultHub:
         self._client = RenaultClient(
             websession=async_get_clientsession(self._hass), locale=locale
         )
-        self._account: Optional[RenaultAccount] = None
-        self._vehicles: Dict[str, RenaultVehicleProxy] = {}
+        self._account: RenaultAccount | None = None
+        self._vehicles: dict[str, RenaultVehicleProxy] = {}
 
     async def attempt_login(self, username: str, password: str) -> bool:
         """Attempt login to Renault servers."""
@@ -59,7 +60,7 @@ class RenaultHub:
             await vehicle.async_initialise()
             self._vehicles[vin] = vehicle
 
-    async def get_account_ids(self) -> List[str]:
+    async def get_account_ids(self) -> list[str]:
         """Get Kamereon account ids."""
         accounts = []
         for account in await self._client.get_api_accounts():
@@ -71,6 +72,6 @@ class RenaultHub:
         return accounts
 
     @property
-    def vehicles(self) -> Dict[str, RenaultVehicleProxy]:
+    def vehicles(self) -> dict[str, RenaultVehicleProxy]:
         """Get list of vehicles."""
         return self._vehicles
