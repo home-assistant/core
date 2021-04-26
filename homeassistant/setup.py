@@ -213,6 +213,9 @@ async def _async_setup_component(
         log_error("Invalid config.", integration.documentation)
         return False
 
+    # Creating data namespace for domain
+    hass.data.setdefault(domain, {})
+
     start = timer()
     _LOGGER.info("Setting up %s", domain)
     with async_start_setup(hass, [domain]):
