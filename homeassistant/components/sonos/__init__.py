@@ -64,7 +64,7 @@ CONFIG_SCHEMA = vol.Schema(
 class SonosData:
     """Storage class for platform global data."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the data."""
         self.discovered = {}
         self.media_player_entities = {}

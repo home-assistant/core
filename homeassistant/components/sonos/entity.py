@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 class SonosEntity(Entity):
     """Representation of a Sonos entity."""
 
-    def __init__(self, speaker: SonosSpeaker, sonos_data: SonosData):
+    def __init__(self, speaker: SonosSpeaker, sonos_data: SonosData) -> None:
         """Initialize a SonosEntity."""
         self.speaker = speaker
         self.data = sonos_data
