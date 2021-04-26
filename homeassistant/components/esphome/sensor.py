@@ -13,8 +13,6 @@ import homeassistant.helpers.config_validation as cv
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
-ICON_SCHEMA = vol.Schema(cv.icon)
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
@@ -60,7 +58,7 @@ class EsphomeSensor(EsphomeEntity, SensorEntity):
         """Return the icon."""
         if not self._static_info.icon or self._static_info.device_class:
             return None
-        return ICON_SCHEMA(self._static_info.icon)
+        return vol.Schema(cv.icon)(self._static_info.icon)
 
     @property
     def force_update(self) -> bool:
