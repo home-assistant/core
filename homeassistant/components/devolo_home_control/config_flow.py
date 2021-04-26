@@ -1,6 +1,4 @@
 """Config flow to configure the devolo home control integration."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -9,14 +7,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import configure_mydevolo
-from .const import (  # pylint:disable=unused-import
-    CONF_MYDEVOLO,
-    DEFAULT_MYDEVOLO,
-    DOMAIN,
-    SUPPORTED_MODEL_TYPES,
-)
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_MYDEVOLO, DEFAULT_MYDEVOLO, DOMAIN, SUPPORTED_MODEL_TYPES
+from .exceptions import CredentialsInvalid
 
 
 class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -39,8 +31,11 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_MYDEVOLO, default=DEFAULT_MYDEVOLO)
             ] = str
         if user_input is None:
-            return self._show_form(user_input)
-        return await self._connect_mydevolo(user_input)
+            return self._show_form(step_id="user")
+        try:
+            return await self._connect_mydevolo(user_input)
+        except CredentialsInvalid:
+            return self._show_form(step_id="user", errors={"base": "invalid_auth"})
 
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle zeroconf discovery."""
@@ -54,7 +49,12 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by zeroconf."""
         if user_input is None:
             return self._show_form(step_id="zeroconf_confirm")
-        return await self._connect_mydevolo(user_input)
+        try:
+            return await self._connect_mydevolo(user_input)
+        except CredentialsInvalid:
+            return self._show_form(
+                step_id="zeroconf_confirm", errors={"base": "invalid_auth"}
+            )
 
     async def _connect_mydevolo(self, user_input):
         """Connect to mydevolo."""
@@ -63,8 +63,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             mydevolo.credentials_valid
         )
         if not credentials_valid:
-            return self._show_form({"base": "invalid_auth"})
-        _LOGGER.debug("Credentials valid")
+            raise CredentialsInvalid
         uuid = await self.hass.async_add_executor_job(mydevolo.uuid)
         await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured()
@@ -79,7 +78,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _show_form(self, errors=None, step_id="user"):
+    def _show_form(self, step_id, errors=None):
         """Show the form to the user."""
         return self.async_show_form(
             step_id=step_id,

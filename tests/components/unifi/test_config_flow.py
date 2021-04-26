@@ -91,7 +91,7 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
     """Test config flow."""
     mock_discovery.return_value = "1"
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": "user"}
+        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -157,7 +157,7 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
 async def test_flow_works_negative_discovery(hass, aioclient_mock, mock_discovery):
     """Test config flow with a negative outcome of async_discovery_unifi."""
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": "user"}
+        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -174,7 +174,7 @@ async def test_flow_works_negative_discovery(hass, aioclient_mock, mock_discover
 async def test_flow_multiple_sites(hass, aioclient_mock):
     """Test config flow works when finding multiple sites."""
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": "user"}
+        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -222,7 +222,7 @@ async def test_flow_raise_already_configured(hass, aioclient_mock):
     await setup_unifi_integration(hass, aioclient_mock)
 
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": "user"}
+        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -277,7 +277,7 @@ async def test_flow_aborts_configuration_updated(hass, aioclient_mock):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": "user"}
+        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -321,7 +321,7 @@ async def test_flow_aborts_configuration_updated(hass, aioclient_mock):
 async def test_flow_fails_user_credentials_faulty(hass, aioclient_mock):
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": "user"}
+        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -348,7 +348,7 @@ async def test_flow_fails_user_credentials_faulty(hass, aioclient_mock):
 async def test_flow_fails_controller_unavailable(hass, aioclient_mock):
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": "user"}
+        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

@@ -6,12 +6,12 @@ import voluptuous as vol
 from homeassistant.components import mysensors
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
 from . import on_unload
 from ...config_entries import ConfigEntry
 from ...helpers.dispatcher import async_dispatcher_connect
-from ...helpers.typing import HomeAssistantType
 from .const import DOMAIN as MYSENSORS_DOMAIN, MYSENSORS_DISCOVERY, SERVICE_SEND_IR_CODE
 
 ATTR_IR_CODE = "V_IR_SEND"
@@ -22,7 +22,7 @@ SEND_IR_CODE_SERVICE_SCHEMA = vol.Schema(
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
 ):
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
     device_class_map = {

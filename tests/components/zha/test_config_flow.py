@@ -10,7 +10,7 @@ import zigpy.config
 from homeassistant import setup
 from homeassistant.components.zha import config_flow
 from homeassistant.components.zha.core.const import CONF_RADIO_TYPE, DOMAIN, RadioType
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_SOURCE
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
@@ -39,7 +39,7 @@ async def test_discovery(detect_mock, hass):
         "properties": {"name": "tube_123456"},
     }
     flow = await hass.config_entries.flow.async_init(
-        "zha", context={"source": "zeroconf"}, data=service_info
+        "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
     )
     result = await hass.config_entries.flow.async_configure(
         flow["flow_id"], user_input={}
@@ -71,7 +71,7 @@ async def test_discovery_already_setup(detect_mock, hass):
     MockConfigEntry(domain=DOMAIN, data={"usb_path": "/dev/ttyUSB1"}).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": "zeroconf"}, data=service_info
+        "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
     )
     await hass.async_block_till_done()
 
