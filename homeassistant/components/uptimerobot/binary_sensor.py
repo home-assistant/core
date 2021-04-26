@@ -4,12 +4,14 @@ import logging
 from pyuptimerobot import UptimeRobot
 import voluptuous as vol
 
+from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_PREFIX
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,6 +29,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     up_robot = UptimeRobot()
     api_key = config.get(CONF_API_KEY)
     monitors = up_robot.getMonitors(api_key)
+    id_prefix = config.get(CONF_PREFIX)
 
     devices = []
     if not monitors or monitors.get("stat") != "ok":
@@ -41,6 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 monitor["id"],
                 monitor["friendly_name"],
                 monitor["url"],
+                id_prefix=id_prefix
             )
         )
 
@@ -50,11 +54,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class UptimeRobotBinarySensor(BinarySensorEntity):
     """Representation of a Uptime Robot binary sensor."""
 
-    def __init__(self, api_key, up_robot, monitor_id, name, target):
+    def __init__(self, api_key, up_robot, monitor_id, name, target, id_prefix=None):
         """Initialize Uptime Robot the binary sensor."""
         self._api_key = api_key
         self._monitor_id = str(monitor_id)
         self._name = name
+        if id_prefix is None:
+            id_prefix = ""
+        self._id_prefix = id_prefix
+        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, self._id_prefix + self._name, [])
         self._target = target
         self._up_robot = up_robot
         self._state = None
