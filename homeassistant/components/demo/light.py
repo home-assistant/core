@@ -125,6 +125,8 @@ class DemoLight(LightEntity):
         self._features = 0
         self._hs_color = hs_color
         self._name = name
+        self._rgbw_color = rgbw_color
+        self._rgbww_color = rgbww_color
         self._state = state
         self._unique_id = unique_id
         self._white = white
@@ -190,6 +192,20 @@ class DemoLight(LightEntity):
         """Return the hs color value."""
         if self._color_mode == "hs":
             return self._hs_color
+        return None
+
+    @property
+    def rgbw_color(self) -> tuple:
+        """Return the rgbw color value."""
+        if self._color_mode == "rgbw":
+            return self._rgbw_color
+        return None
+
+    @property
+    def rgbww_color(self) -> tuple:
+        """Return the rgbww color value."""
+        if self._color_mode == "rgbww":
+            return self._rgbww_color
         return None
 
     @property
