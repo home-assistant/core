@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from omnilogic import OmniLogicException
+from omnilogic import OmniLogic, OmniLogicException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME
@@ -31,7 +31,7 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        api: str,
+        api: OmniLogic,
         name: str,
         config_entry: ConfigEntry,
         polling_interval: int,

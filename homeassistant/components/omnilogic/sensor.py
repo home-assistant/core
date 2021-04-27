@@ -136,6 +136,7 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
             self._unit = PERCENTAGE
             state = pump_speed
         elif pump_type == "DUAL":
+            self._unit = ""
             if pump_speed == 0:
                 state = "off"
             elif pump_speed == self.coordinator.data[self._item_id].get(
