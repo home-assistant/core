@@ -60,11 +60,12 @@ async def async_setup(hass, config):
             continue
 
         for conf in confs:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+            if "host" in conf and "port" in conf and "token" in conf:
+                hass.async_create_task(
+                    hass.config_entries.flow.async_init(
+                        DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+                    )
                 )
-            )
 
     return True
 
