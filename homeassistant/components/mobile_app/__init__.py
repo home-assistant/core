@@ -1,5 +1,4 @@
 """Integrates Native Apps to Home Assistant."""
-import asyncio
 from contextlib import suppress
 
 from homeassistant.components import cloud, notify as hass_notify
@@ -89,10 +88,7 @@ async def async_setup_entry(hass, entry):
     registration_name = f"Mobile App: {registration[ATTR_DEVICE_NAME]}"
     webhook_register(hass, DOMAIN, registration_name, webhook_id, handle_webhook)
 
-    for domain in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, domain)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     await hass_notify.async_reload(hass, DOMAIN)
 
@@ -101,14 +97,7 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a mobile app entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if not unload_ok:
         return False
 
