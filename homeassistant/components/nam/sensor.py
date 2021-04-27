@@ -6,7 +6,6 @@ from typing import Any, Callable
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NAMUpdateCoordinator
@@ -43,7 +42,7 @@ class NAMSensor(CoordinatorEntity, SensorEntity):
         return SENSORS[self.sensor_type][0]
 
     @property
-    def state(self) -> StateType:
+    def state(self) -> Any:
         """Return the state."""
         return getattr(self.coordinator.data, self.sensor_type)
 
@@ -70,12 +69,12 @@ class NAMSensor(CoordinatorEntity, SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique_id for this entity."""
-        return f"{self.coordinator.unique_id}-{self.sensor_type}".lower()
+        return f"{self.coordinator.unique_id}-{self.sensor_type}".lower()  # type: ignore[attr-defined]
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> Any:
         """Return the device info."""
-        return self.coordinator.device_info
+        return self.coordinator.device_info  # type: ignore[attr-defined]
 
     @property
     def available(self) -> bool:

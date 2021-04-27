@@ -29,18 +29,6 @@ async def async_setup_entry(
     async_add_entities(entities, False)
 
 
-def round_state(func: Callable) -> Callable:
-    """Round state."""
-
-    def _decorator(self) -> StateType:
-        res = func(self)
-        if isinstance(res, float):
-            return round(res)
-        return res
-
-    return _decorator
-
-
 class NAMAirQuality(CoordinatorEntity, AirQualityEntity):
     """Define an Nettigo Air Monitor air quality."""
 
@@ -55,32 +43,29 @@ class NAMAirQuality(CoordinatorEntity, AirQualityEntity):
         return f"{DEFAULT_NAME} {AIR_QUALITY_SENSORS[self.sensor_type]}"
 
     @property
-    @round_state
     def particulate_matter_2_5(self) -> StateType:
         """Return the particulate matter 2.5 level."""
-        return getattr(self.coordinator.data, f"{self.sensor_type}_p2")
+        return round_state(getattr(self.coordinator.data, f"{self.sensor_type}_p2"))
 
     @property
-    @round_state
     def particulate_matter_10(self) -> StateType:
         """Return the particulate matter 10 level."""
-        return getattr(self.coordinator.data, f"{self.sensor_type}_p1")
+        return round_state(getattr(self.coordinator.data, f"{self.sensor_type}_p1"))
 
     @property
-    @round_state
     def carbon_dioxide(self) -> StateType:
         """Return the particulate matter 10 level."""
-        return getattr(self.coordinator.data, "conc_co2_ppm", None)
+        return round_state(getattr(self.coordinator.data, "conc_co2_ppm", None))
 
     @property
     def unique_id(self) -> str:
         """Return a unique_id for this entity."""
-        return f"{self.coordinator.unique_id}-{self.sensor_type}".lower()
+        return f"{self.coordinator.unique_id}-{self.sensor_type}".lower()  # type: ignore[attr-defined]
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> Any:
         """Return the device info."""
-        return self.coordinator.device_info
+        return self.coordinator.device_info  # type: ignore[attr-defined]
 
     @property
     def available(self) -> bool:
@@ -93,3 +78,11 @@ class NAMAirQuality(CoordinatorEntity, AirQualityEntity):
         return available and bool(
             getattr(self.coordinator.data, f"{self.sensor_type}_p2", None)
         )
+
+
+def round_state(state: StateType) -> StateType:
+    """Round state."""
+    if isinstance(state, float):
+        return round(state)
+
+    return state
