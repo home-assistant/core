@@ -53,7 +53,10 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     """Define an Brother Printer sensor."""
 
     def __init__(
-        self, coordinator: BrotherDataUpdateCoordinator, kind: str, device_info: dict
+        self,
+        coordinator: BrotherDataUpdateCoordinator,
+        kind: str,
+        device_info: dict[str, Any],
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -61,7 +64,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         self._unique_id = f"{coordinator.data.serial.lower()}_{kind}"  # type: ignore[union-attr]
         self._device_info = device_info
         self.kind = kind
-        self._attrs: dict = {}
+        self._attrs: dict[str, Any] = {}
 
     @property
     def name(self) -> str:
@@ -83,7 +86,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         remaining_pages, drum_counter = ATTRS_MAP.get(self.kind, (None, None))
         if remaining_pages and drum_counter:

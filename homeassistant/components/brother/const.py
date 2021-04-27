@@ -1,4 +1,8 @@
 """Constants for Brother integration."""
+from __future__ import annotations
+
+from typing import Any
+
 from homeassistant.const import ATTR_ICON, PERCENTAGE
 
 ATTR_BELT_UNIT_REMAINING_LIFE = "belt_unit_remaining_life"
@@ -50,7 +54,7 @@ PRINTER_TYPES = ["laser", "ink"]
 
 SNMP = "snmp"
 
-ATTRS_MAP: dict = {
+ATTRS_MAP: dict[str, tuple[str, str]] = {
     ATTR_DRUM_REMAINING_LIFE: (ATTR_DRUM_REMAINING_PAGES, ATTR_DRUM_COUNTER),
     ATTR_BLACK_DRUM_REMAINING_LIFE: (
         ATTR_BLACK_DRUM_REMAINING_PAGES,
@@ -70,7 +74,7 @@ ATTRS_MAP: dict = {
     ),
 }
 
-SENSOR_TYPES: dict = {
+SENSOR_TYPES: dict[str, dict[str, Any]] = {
     ATTR_STATUS: {
         ATTR_ICON: "mdi:printer",
         ATTR_LABEL: ATTR_STATUS.title(),
