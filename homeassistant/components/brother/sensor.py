@@ -112,7 +112,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         return SENSOR_TYPES[self.kind][ATTR_UNIT]
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> dict[str, Any]:
         """Return the device info."""
         return self._device_info
 
