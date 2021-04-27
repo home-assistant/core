@@ -118,6 +118,6 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # when reading data from sensors. The nettigo-air-monitor library tries to get
         # the data 4 times, so we use a longer than usual timeout here.
         with async_timeout.timeout(30):
-            mac = str(await nam.async_get_mac_address())
+            mac = await nam.async_get_mac_address()
 
-        return mac
+        return mac  # type: ignore[no-any-return]
