@@ -19,15 +19,15 @@
                     "username": "Nome utente"
                 },
                 "description": "FRITZ! Box rilevato: {name} \n\n Configura gli strumenti del FRITZ! Box per controllare il tuo {name}",
-                "title": "Configura gli strumenti del FRITZ! Box"
+                "title": "Configura gli strumenti del FRITZ!Box"
             },
             "reauth_confirm": {
                 "data": {
                     "password": "Password",
                     "username": "Nome utente"
                 },
-                "description": "Aggiorna le credenziali di FRITZ! Box Tools per: {host} . \n\n FRITZ! Box Tools non riesce ad accedere al tuo FRITZ! Box.",
-                "title": "Aggiornamento degli strumenti del FRITZ! Box - credenziali"
+                "description": "Aggiorna le credenziali di FRITZ!Box Tools per: {host} . \n\n FRITZ!Box Tools non riesce ad accedere al tuo FRITZ! Box.",
+                "title": "Aggiornamento degli strumenti del FRITZ!Box - credenziali"
             },
             "start_config": {
                 "data": {
@@ -36,8 +36,8 @@
                     "port": "Porta",
                     "username": "Nome utente"
                 },
-                "description": "Configura gli strumenti FRITZ! Box per controllare il tuo FRITZ! Box.\n Minimo necessario: nome utente, password.",
-                "title": "Configurazione degli strumenti FRITZ! Box - obbligatorio"
+                "description": "Configura gli strumenti FRITZ!Box per controllare il tuo FRITZ!Box.\n Minimo necessario: nome utente, password.",
+                "title": "Configurazione degli strumenti FRITZ!Box - obbligatorio"
             }
         }
     }
