@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Dict, cast
 
 from motioneye_client.client import (
     MotionEyeClientConnectionError,
@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow
 from homeassistant.const import CONF_SOURCE, CONF_URL
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -35,12 +36,12 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: ConfigType | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle the initial step."""
 
         def _get_form(
             user_input: ConfigType, errors: dict[str, str] | None = None
-        ) -> dict[str, Any]:
+        ) -> FlowResultDict:
             """Show the form to the user."""
             return self.async_show_form(
                 step_id="user",
@@ -77,7 +78,9 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         if user_input is None:
-            return _get_form(reauth_entry.data if reauth_entry else {})
+            return _get_form(
+                cast(Dict[str, Any], reauth_entry.data) if reauth_entry else {}
+            )
 
         try:
             # Cannot use cv.url validation in the schema itself, so
@@ -131,6 +134,6 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(
         self,
         config_data: ConfigType | None = None,
-    ) -> dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle a reauthentication flow."""
         return await self.async_step_user(config_data)

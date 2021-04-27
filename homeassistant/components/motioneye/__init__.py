@@ -111,7 +111,7 @@ def _add_camera(
 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={device_identifier},
+        identifiers={device_identifier},  # type: ignore[arg-type]
         manufacturer=MOTIONEYE_MANUFACTURER,
         model=MOTIONEYE_MANUFACTURER,
         name=camera[KEY_NAME],
@@ -171,6 +171,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def _async_process_motioneye_cameras() -> None:
         """Process motionEye camera additions and removals."""
         inbound_camera: set[tuple[str, str, int]] = set()
+        assert coordinator.data
         if KEY_CAMERAS not in coordinator.data:
             return
 
