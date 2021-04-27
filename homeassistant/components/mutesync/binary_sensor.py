@@ -21,7 +21,7 @@ class MuteStatus(BinarySensorEntity):
     def __init__(self, client):
         """Initialize binary sensor."""
         self.client = client
-        self._is_on = None
+        self._status = None
 
     @property
     def name(self):
@@ -29,25 +29,40 @@ class MuteStatus(BinarySensorEntity):
         return "Mute Status"
 
     @property
+    def unique_id(self):
+        """Return the unique ID of the sensor."""
+        if self._status is None:
+            return None
+        return f"{self._status['user-id']}-mute"
+
+    @property
     def available(self):
         """Return if state is available from sensor."""
-        return self._is_on is not None
+        return self._status and self._status["in_meeting"]
 
     @property
     def is_on(self):
         """Return the state of the sensor."""
         return self._is_on
 
+    @property
+    def device_info(self):
+        """Return the device info of the sensor."""
+        if self._status is None:
+            return None
+
+        return {
+            "identifiers": {(DOMAIN, self._status["user-id"])},
+            "name": "mutesync",
+            "manufacturer": "mutesync",
+            "model": "mutesync app",
+            "entry_type": "service",
+        }
+
     async def async_update(self):
         """Update state."""
         try:
             async with async_timeout.timeout(10):
-                status = await self.client.get_state()
+                self._status = await self.client.get_state()
         except (aiohttp.ClientError, asyncio.TimeoutError):
-            self._is_on = None
-            return
-
-        if not status["in_meeting"]:
-            self._is_on = None
-        else:
-            self._is_on = status["muted"]
+            self._status = None
