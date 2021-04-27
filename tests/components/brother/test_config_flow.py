@@ -118,16 +118,6 @@ async def test_device_exists_abort(hass):
         assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_no_data(hass):
-    """Test we abort if zeroconf provides no data."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "cannot_connect"
-
-
 async def test_zeroconf_not_brother_printer_error(hass):
     """Test we abort zeroconf flow if printer isn't Brother."""
     with patch(
