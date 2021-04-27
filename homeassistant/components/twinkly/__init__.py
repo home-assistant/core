@@ -8,11 +8,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_ENTRY_HOST, CONF_ENTRY_ID, DOMAIN
 
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the twinkly integration."""
-
-    return True
+PLATFORMS = ["light"]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
@@ -27,9 +23,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         host, async_get_clientsession(hass)
     )
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "light")
-    )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+
     return True
 
 
