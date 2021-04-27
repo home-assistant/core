@@ -10,16 +10,11 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
-    ATTR_WHITE_VALUE,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
-    SUPPORT_WHITE_VALUE,
     LightEntity,
 )
 
@@ -31,10 +26,6 @@ LIGHT_EFFECT_LIST = ["rainbow", "none"]
 
 LIGHT_TEMPS = [240, 380]
 
-SUPPORT_DEMO_LEGACY = (
-    SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR | SUPPORT_WHITE_VALUE
-)
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the demo light platform."""
@@ -44,49 +35,43 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 available=True,
                 effect_list=LIGHT_EFFECT_LIST,
                 effect=LIGHT_EFFECT_LIST[0],
-                name="Bed Light Legacy",
+                name="Bed Light",
                 state=False,
+                supported_color_modes={COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP},
                 unique_id="light_1",
             ),
             DemoLight(
                 available=True,
                 ct=LIGHT_TEMPS[1],
-                name="Ceiling Lights Legacy",
+                name="Ceiling Lights",
                 state=True,
+                supported_color_modes={COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP},
                 unique_id="light_2",
             ),
             DemoLight(
                 available=True,
-                ct=LIGHT_TEMPS[0],
                 hs_color=LIGHT_COLORS[1],
-                name="Kitchen Lights Legacy",
+                name="Kitchen Lights",
                 state=True,
+                supported_color_modes={COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP},
                 unique_id="light_3",
             ),
             DemoLight(
                 available=True,
-                effect_list=LIGHT_EFFECT_LIST,
-                effect=LIGHT_EFFECT_LIST[0],
-                name="Bed Light",
-                state=False,
-                supported_color_modes={COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP},
+                ct=LIGHT_TEMPS[1],
+                name="Office RGBW Lights",
+                rgbw_color=(255, 0, 0, 255),
+                state=True,
+                supported_color_modes={COLOR_MODE_RGBW},
                 unique_id="light_4",
             ),
             DemoLight(
                 available=True,
-                name="Ceiling Lights",
-                rgbw_color=(255, 0, 0, 255),
-                state=True,
-                supported_color_modes={COLOR_MODE_RGBW},
-                unique_id="light_5",
-            ),
-            DemoLight(
-                available=True,
-                name="Kitchen Lights",
+                name="Living Room RGBWW Lights",
                 rgbww_color=(255, 0, 0, 255, 0),
                 state=True,
                 supported_color_modes={COLOR_MODE_RGBWW},
-                unique_id="light_6",
+                unique_id="light_5",
             ),
         ]
     )
@@ -114,7 +99,6 @@ class DemoLight(LightEntity):
         rgbw_color=None,
         rgbww_color=None,
         supported_color_modes=None,
-        white=200,
     ):
         """Initialize the light."""
         self._available = True
@@ -129,7 +113,6 @@ class DemoLight(LightEntity):
         self._rgbww_color = rgbww_color
         self._state = state
         self._unique_id = unique_id
-        self._white = white
         if hs_color:
             self._color_mode = COLOR_MODE_HS
         elif rgbw_color:
@@ -139,8 +122,6 @@ class DemoLight(LightEntity):
         else:
             self._color_mode = COLOR_MODE_COLOR_TEMP
         self._color_modes = supported_color_modes
-        if not supported_color_modes:
-            self._features |= SUPPORT_DEMO_LEGACY
         if self._effect_list is not None:
             self._features |= SUPPORT_EFFECT
 
@@ -190,35 +171,22 @@ class DemoLight(LightEntity):
     @property
     def hs_color(self) -> tuple:
         """Return the hs color value."""
-        if self._color_mode == "hs":
-            return self._hs_color
-        return None
+        return self._hs_color
 
     @property
     def rgbw_color(self) -> tuple:
         """Return the rgbw color value."""
-        if self._color_mode == "rgbw":
-            return self._rgbw_color
-        return None
+        return self._rgbw_color
 
     @property
     def rgbww_color(self) -> tuple:
         """Return the rgbww color value."""
-        if self._color_mode == "rgbww":
-            return self._rgbww_color
-        return None
+        return self._rgbww_color
 
     @property
     def color_temp(self) -> int:
         """Return the CT color temperature."""
-        if self._color_mode == "ct":
-            return self._ct
-        return None
-
-    @property
-    def white_value(self) -> int:
-        """Return the white value of this light between 0..255."""
-        return self._white
+        return self._ct
 
     @property
     def effect_list(self) -> list:
@@ -275,9 +243,6 @@ class DemoLight(LightEntity):
 
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-
-        if ATTR_WHITE_VALUE in kwargs:
-            self._white = kwargs[ATTR_WHITE_VALUE]
 
         if ATTR_EFFECT in kwargs:
             self._effect = kwargs[ATTR_EFFECT]
