@@ -2,11 +2,11 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Dict
 
 from flipr_api import FliprAPIRestClient
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import (
@@ -14,7 +14,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONF_FLIPR_ID, CONF_PASSWORD, CONF_USERNAME, DOMAIN
+from .const import CONF_FLIPR_ID, DOMAIN
 from .crypt_util import decrypt_data
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,17 +25,11 @@ SCAN_INTERVAL = timedelta(minutes=60)
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
-    """Set up the Flipr component."""
-    # Make sure coordinator is initialized.
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flipr from a config entry."""
     _LOGGER.debug("async_setup_entry starting")
+
+    hass.data.setdefault(DOMAIN, {})
 
     coordinator = FliprDataUpdateCoordinator(hass, entry)
 
@@ -75,7 +69,7 @@ class FliprDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass, entry):
         """Initialize."""
-        username = entry.data[CONF_USERNAME]
+        username = entry.data[CONF_EMAIL]
         crypted_password = entry.data[CONF_PASSWORD]
         self.flipr_id = entry.data[CONF_FLIPR_ID]
 

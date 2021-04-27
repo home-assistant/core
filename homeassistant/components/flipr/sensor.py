@@ -8,7 +8,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 
 from . import FliprEntity
-from .const import ATTRIBUTION, CONF_FLIPR_ID, DOMAIN
+from .const import ATTRIBUTION, CONF_FLIPR_ID, DOMAIN, MANUFACTURER, NAME
 
 SENSORS = {
     "chlorine": {
@@ -17,7 +17,7 @@ SENSORS = {
         "name": "Chlorine",
         "device_class": None,
     },
-    "ph": {"unit": "ph", "icon": "mdi:pool", "name": "PH", "device_class": None},
+    "ph": {"unit": None, "icon": "mdi:pool", "name": "pH", "device_class": None},
     "temperature": {
         "unit": TEMP_CELSIUS,
         "icon": None,
@@ -27,7 +27,7 @@ SENSORS = {
     "date_time": {
         "unit": None,
         "icon": None,
-        "name": "Date Measure",
+        "name": "Last Measured",
         "device_class": DEVICE_CLASS_TIMESTAMP,
     },
     "red_ox": {
@@ -54,6 +54,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class FliprSensor(FliprEntity, Entity):
     """Sensor representing FliprSensor data."""
+
+    @property
+    def device_info(self):
+        """Define device information global to entities."""
+        return {
+            "identifiers": {
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self.flipr_id)
+            },
+            "name": NAME,
+            "manufacturer": MANUFACTURER,
+        }
 
     @property
     def name(self):

@@ -2,14 +2,15 @@
 from datetime import datetime
 from unittest.mock import patch
 
-from homeassistant.components.flipr.const import (
-    CONF_FLIPR_ID,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    DOMAIN,
-)
+from homeassistant.components.flipr.const import CONF_FLIPR_ID, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_ICON,
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -34,7 +35,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id="test_entry_unique_id",
         data={
-            CONF_USERNAME: "toto@toto.com",
+            CONF_EMAIL: "toto@toto.com",
             CONF_PASSWORD: "myPassword",
             CONF_FLIPR_ID: "myfliprid",
         },
@@ -65,7 +66,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.flipr_myfliprid_ph")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:pool"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "ph"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "7.03"
 
     state = hass.states.get("sensor.flipr_myfliprid_water_temp")
@@ -74,7 +75,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is TEMP_CELSIUS
     assert state.state == "10.5"
 
-    state = hass.states.get("sensor.flipr_myfliprid_date_measure")
+    state = hass.states.get("sensor.flipr_myfliprid_last_measured")
     assert state
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None

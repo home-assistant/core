@@ -1,13 +1,9 @@
 """Tests for init methods."""
 from unittest.mock import patch
 
-from homeassistant.components.flipr.const import (
-    CONF_FLIPR_ID,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    DOMAIN,
-)
+from homeassistant.components.flipr.const import CONF_FLIPR_ID, DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_NOT_LOADED
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -18,7 +14,7 @@ async def test_unload_entry(hass: HomeAssistant):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_USERNAME: "dummylogin",
+            CONF_EMAIL: "dummylogin",
             CONF_PASSWORD: "ENCRYPTED_DATA_ah_ah",
             CONF_FLIPR_ID: "FLIP_Entered",
         },

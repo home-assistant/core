@@ -2,21 +2,17 @@
 from unittest.mock import patch
 
 import pytest
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, Timeout
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.flipr.const import (
-    CONF_FLIPR_ID,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    DOMAIN,
-)
+from homeassistant.components.flipr.const import CONF_FLIPR_ID, DOMAIN
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 
 @pytest.fixture(name="mock_setup")
 def mock_setups():
     """Prevent setup."""
-    with patch("homeassistant.components.flipr.async_setup", return_value=True,), patch(
+    with patch(
         "homeassistant.components.flipr.async_setup_entry",
         return_value=True,
     ):
@@ -42,7 +38,7 @@ async def test_invalid_credential(hass, mock_setup):
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={
-                CONF_USERNAME: "bad_login",
+                CONF_EMAIL: "bad_login",
                 CONF_PASSWORD: "bad_pass",
                 CONF_FLIPR_ID: "",
             },
@@ -65,7 +61,7 @@ async def test_nominal_case(hass, mock_setup):
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={
-                CONF_USERNAME: "dummylogin",
+                CONF_EMAIL: "dummylogin",
                 CONF_PASSWORD: "dummypass",
                 CONF_FLIPR_ID: "flipid",
             },
@@ -76,10 +72,10 @@ async def test_nominal_case(hass, mock_setup):
     assert len(mock_crypt_util.mock_calls) == 1
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "Flipr device - flipid"
-    assert result["result"].unique_id == "FLIPR_with_ID_" + "flipid"
+    assert result["title"] == "flipid"
+    assert result["result"].unique_id == "flipid"
     assert result["data"] == {
-        CONF_USERNAME: "dummylogin",
+        CONF_EMAIL: "dummylogin",
         CONF_PASSWORD: "ENCRYPTED_DATA_ah_ah",
         CONF_FLIPR_ID: "flipid",
     }
@@ -98,7 +94,7 @@ async def test_multiple_flip_id(hass, mock_setup):
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={
-                CONF_USERNAME: "dummylogin",
+                CONF_EMAIL: "dummylogin",
                 CONF_PASSWORD: "dummypass",
             },
         )
@@ -115,10 +111,10 @@ async def test_multiple_flip_id(hass, mock_setup):
     assert len(mock_crypt_util.mock_calls) == 1
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "Flipr device - FLIP2"
-    assert result["result"].unique_id == "FLIPR_with_ID_" + "FLIP2"
+    assert result["title"] == "FLIP2"
+    assert result["result"].unique_id == "FLIP2"
     assert result["data"] == {
-        CONF_USERNAME: "dummylogin",
+        CONF_EMAIL: "dummylogin",
         CONF_PASSWORD: "ENCRYPTED_DATA_ah_ah",
         CONF_FLIPR_ID: "FLIP2",
     }
@@ -137,7 +133,7 @@ async def test_no_flip_id(hass, mock_setup):
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={
-                CONF_USERNAME: "dummylogin",
+                CONF_EMAIL: "dummylogin",
                 CONF_PASSWORD: "dummypass",
             },
         )
@@ -154,10 +150,44 @@ async def test_no_flip_id(hass, mock_setup):
     assert len(mock_crypt_util.mock_calls) == 1
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "Flipr device - FLIP_Entered"
-    assert result["result"].unique_id == "FLIPR_with_ID_" + "FLIP_Entered"
+    assert result["title"] == "FLIP_Entered"
+    assert result["result"].unique_id == "FLIP_Entered"
     assert result["data"] == {
-        CONF_USERNAME: "dummylogin",
+        CONF_EMAIL: "dummylogin",
         CONF_PASSWORD: "ENCRYPTED_DATA_ah_ah",
         CONF_FLIPR_ID: "FLIP_Entered",
     }
+
+
+async def test_http_errors(hass, mock_setup):
+    """Test HTTP Errors."""
+    with patch("flipr_api.FliprAPIRestClient.search_flipr_ids", side_effect=Timeout()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={
+                CONF_EMAIL: "nada",
+                CONF_PASSWORD: "nada",
+                CONF_FLIPR_ID: "",
+            },
+        )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "flipr_api.FliprAPIRestClient.search_flipr_ids",
+        side_effect=Exception("Bad request Boy :) --"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={
+                CONF_EMAIL: "nada",
+                CONF_PASSWORD: "nada",
+                CONF_FLIPR_ID: "",
+            },
+        )
+
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "unknown"}

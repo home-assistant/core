@@ -1,15 +1,19 @@
 """Config flow for Flipr integration."""
+import logging
 from typing import List
 
 from flipr_api import FliprAPIRestClient
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, Timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-from .const import CONF_FLIPR_ID, CONF_PASSWORD, CONF_USERNAME
+from .const import CONF_FLIPR_ID
 from .const import DOMAIN  # pylint:disable=unused-import
 from .crypt_util import encrypt_data
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -30,7 +34,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._show_setup_form()
 
-        self._username = user_input[CONF_USERNAME]
+        self._username = user_input[CONF_EMAIL]
         self._password = user_input[CONF_PASSWORD]
 
         if not self._flipr_id:
@@ -40,6 +44,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors = {}
                 errors["base"] = "invalid_auth"
                 return self._show_setup_form(errors)
+            except (Timeout, ConnectionError):
+                errors = {}
+                errors["base"] = "cannot_connect"
+                return self._show_setup_form(errors)
+            except Exception as exception:  # pylint: disable=broad-except
+                errors = {}
+                errors["base"] = "unknown"
+                _LOGGER.exception(exception)
+                return self._show_setup_form(errors)
 
             if len(flipr_ids) == 1:
                 self._flipr_id = flipr_ids[0]
@@ -48,19 +61,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._possible_flipr_ids = flipr_ids
                 return await self.async_step_flipr_id()
 
-        # No check for data retrieval here.
-
         # Check if already configured
-        await self.async_set_unique_id("FLIPR_with_ID_" + self._flipr_id)
+        await self.async_set_unique_id(self._flipr_id)
         self._abort_if_unique_id_configured()
 
         # Encrypt password before storing it in the config json file.
         crypted_password = encrypt_data(self._password, self._flipr_id)
 
         return self.async_create_entry(
-            title="Flipr device - " + self._flipr_id,
+            title=self._flipr_id,
             data={
-                CONF_USERNAME: self._username,
+                CONF_EMAIL: self._username,
                 CONF_PASSWORD: crypted_password,
                 CONF_FLIPR_ID: self._flipr_id,
             },
@@ -71,7 +82,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+                {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
             ),
             errors=errors,
         )
@@ -117,12 +128,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user(
             {
-                CONF_USERNAME: self._username,
+                CONF_EMAIL: self._username,
                 CONF_PASSWORD: self._password,
                 CONF_FLIPR_ID: self._flipr_id,
             }
         )
-
-    async def async_step_import(self, user_input):
-        """Import a config entry."""
-        return await self.async_step_user(user_input)
