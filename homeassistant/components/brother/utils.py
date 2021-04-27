@@ -1,7 +1,6 @@
 """Brother helpers functions."""
 import logging
 
-import pysnmp.hlapi.asyncio as SnmpEngine
 import pysnmp.hlapi.asyncio as hlapi
 from pysnmp.hlapi.asyncio.cmdgen import lcd
 
@@ -15,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @singleton.singleton("snmp_engine")
-def get_snmp_engine(hass: HomeAssistant) -> SnmpEngine:
+def get_snmp_engine(hass: HomeAssistant) -> hlapi.SnmpEngine:
     """Get SNMP engine."""
     _LOGGER.debug("Creating SNMP engine")
     snmp_engine = hlapi.SnmpEngine()
