@@ -6,7 +6,10 @@ import datetime as dt
 from itertools import count
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.core import Context
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.trace import (
     TraceElement,
     script_execution_get,
@@ -17,10 +20,14 @@ from homeassistant.helpers.trace import (
 import homeassistant.util.dt as dt_util
 
 from . import websocket_api
-from .const import DATA_TRACE
+from .const import CONF_STORED_TRACES, DATA_TRACE, DEFAULT_STORED_TRACES
 from .utils import LimitedSizeDict
 
 DOMAIN = "trace"
+
+TRACE_CONFIG_SCHEMA = {
+    vol.Optional(CONF_STORED_TRACES, default=DEFAULT_STORED_TRACES): cv.positive_int
+}
 
 
 async def async_setup(hass, config):

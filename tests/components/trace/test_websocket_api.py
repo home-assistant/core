@@ -4,7 +4,7 @@ import asyncio
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.trace.const import STORED_TRACES
+from homeassistant.components.trace.const import DEFAULT_STORED_TRACES
 from homeassistant.core import Context, callback
 from homeassistant.helpers.typing import UNDEFINED
 
@@ -47,10 +47,12 @@ async def _setup_automation_or_script(
     if stored_traces is not None:
         if domain == "script":
             for config in configs.values():
-                config["stored_traces"] = stored_traces
+                config["trace"] = {}
+                config["trace"]["stored_traces"] = stored_traces
         else:
             for config in configs:
-                config["stored_traces"] = stored_traces
+                config["trace"] = {}
+                config["trace"]["stored_traces"] = stored_traces
 
     assert await async_setup_component(hass, domain, {domain: configs})
 
@@ -405,7 +407,7 @@ async def test_trace_overflow(hass, hass_ws_client, domain, stored_traces):
     assert len(_find_traces(response["result"], domain, "sun")) == 1
 
     # Trigger "moon" enough times to overflow the max number of stored traces
-    for _ in range(stored_traces or STORED_TRACES):
+    for _ in range(stored_traces or DEFAULT_STORED_TRACES):
         await _run_automation_or_script(hass, domain, moon_config, "test_event2")
         await hass.async_block_till_done()
 
@@ -413,11 +415,11 @@ async def test_trace_overflow(hass, hass_ws_client, domain, stored_traces):
     response = await client.receive_json()
     assert response["success"]
     moon_traces = _find_traces(response["result"], domain, "moon")
-    assert len(moon_traces) == stored_traces or STORED_TRACES
+    assert len(moon_traces) == stored_traces or DEFAULT_STORED_TRACES
     assert moon_traces[0]
     assert int(moon_traces[0]["run_id"]) == int(moon_run_id) + 1
     assert int(moon_traces[-1]["run_id"]) == int(moon_run_id) + (
-        stored_traces or STORED_TRACES
+        stored_traces or DEFAULT_STORED_TRACES
     )
     assert len(_find_traces(response["result"], domain, "sun")) == 1
 

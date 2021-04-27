@@ -6,7 +6,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.trace.const import STORED_TRACES
+from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -59,7 +59,7 @@ CONF_ADVANCED = "advanced"
 CONF_EXAMPLE = "example"
 CONF_FIELDS = "fields"
 CONF_REQUIRED = "required"
-CONF_STORED_TRACES = "stored_traces"
+CONF_TRACE = "trace"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -69,7 +69,7 @@ EVENT_SCRIPT_STARTED = "script_started"
 SCRIPT_ENTRY_SCHEMA = make_script_schema(
     {
         vol.Optional(CONF_ALIAS): cv.string,
-        vol.Optional(CONF_STORED_TRACES, default=STORED_TRACES): cv.positive_int,
+        vol.Optional(CONF_TRACE, default={}): TRACE_CONFIG_SCHEMA,
         vol.Optional(CONF_ICON): cv.icon,
         vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_DESCRIPTION, default=""): cv.string,
@@ -322,7 +322,7 @@ class ScriptEntity(ToggleEntity):
         )
         self._changed = asyncio.Event()
         self._raw_config = raw_config
-        self._stored_traces = cfg[CONF_STORED_TRACES]
+        self._trace_config = cfg[CONF_TRACE]
 
     @property
     def should_poll(self):
@@ -388,7 +388,7 @@ class ScriptEntity(ToggleEntity):
 
     async def _async_run(self, variables, context):
         with trace_script(
-            self.hass, self.object_id, self._raw_config, context, self._stored_traces
+            self.hass, self.object_id, self._raw_config, context, self._trace_config
         ) as script_trace:
             # Prepare tracing the execution of the script's sequence
             script_trace.set_trace(trace_get())

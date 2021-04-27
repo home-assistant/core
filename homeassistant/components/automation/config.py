@@ -8,7 +8,7 @@ from homeassistant.components import blueprint
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.components.trace.const import STORED_TRACES
+from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
 from homeassistant.config import async_log_exception, config_without_domain
 from homeassistant.const import (
     CONF_ALIAS,
@@ -27,7 +27,7 @@ from .const import (
     CONF_ACTION,
     CONF_HIDE_ENTITY,
     CONF_INITIAL_STATE,
-    CONF_STORED_TRACES,
+    CONF_TRACE,
     CONF_TRIGGER,
     CONF_TRIGGER_VARIABLES,
     DOMAIN,
@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = vol.All(
             CONF_ID: str,
             CONF_ALIAS: cv.string,
             vol.Optional(CONF_DESCRIPTION): cv.string,
-            vol.Optional(CONF_STORED_TRACES, default=STORED_TRACES): cv.positive_int,
+            vol.Optional(CONF_TRACE, default={}): TRACE_CONFIG_SCHEMA,
             vol.Optional(CONF_INITIAL_STATE): cv.boolean,
             vol.Optional(CONF_HIDE_ENTITY): cv.boolean,
             vol.Required(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
