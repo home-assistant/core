@@ -3979,19 +3979,20 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
     for key, value in automations.items():
         if value.lower().startswith("jolka"):
             # get aliases
-            commands = []
+            all_commands = []
             for auto_config in ais_global.G_AUTOMATION_CONFIG:
                 auto_name = auto_config.get("alias", "").lower().strip()
                 if "description" in auto_config and auto_name == value.lower().strip():
-                    commands = auto_config.get("description", "").split(";")
+                    all_commands = auto_config.get("description", "").split(";")
+                all_commands = [
+                    each_string.strip().lower() for each_string in all_commands
+                ]
 
-            commands.append(
+            all_commands.append(
                 value.lower().replace("jolka", "", 1).replace(":", "").strip()
             )
-            if (
-                text.lower().replace("jolka", "", 1).replace(":", "").strip()
-                in commands
-            ):
+            text_command = text.lower().replace("jolka", "", 1).replace(":", "").strip()
+            if text_command in all_commands:
                 await hass.services.async_call(
                     "automation", "trigger", {ATTR_ENTITY_ID: key}
                 )
