@@ -2,14 +2,15 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import timedelta
+import logging
 
-import aiohttp
 import async_timeout
 import mutesync
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import update_coordinator
 
 from .const import DOMAIN
 
@@ -18,16 +19,27 @@ PLATFORMS = ["binary_sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up mütesync from a config entry."""
-    client = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = mutesync.PyMutesync(
+    client = mutesync.PyMutesync(
         entry.data["token"],
         entry.data["host"],
         hass.helpers.aiohttp_client.async_get_clientsession(),
     )
-    try:
-        async with async_timeout.timeout(10):
-            await client.get_state()
-    except (aiohttp.ClientError, asyncio.TimeoutError) as error:
-        raise ConfigEntryNotReady("cannot_connect") from error
+
+    async def update_data():
+        """Update the data."""
+        async with async_timeout.timeout(5):
+            return await client.get_state()
+
+    coordinator = hass.data.setdefault(DOMAIN, {})[
+        entry.entry_id
+    ] = update_coordinator.DataUpdateCoordinator(
+        hass,
+        logging.getLogger(__name__),
+        name=DOMAIN,
+        update_interval=timedelta(seconds=10),
+        update_method=update_data,
+    )
+    await coordinator.async_config_entry_first_refresh()
 
     for platform in PLATFORMS:
         hass.async_create_task(
