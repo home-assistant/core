@@ -139,13 +139,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     session = hass.data[DOMAIN].pop(entry.entry_id)
     await session.remove_webhook()
 
-    for platform in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(entry, platform)
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
 
-    return True
+    return unload_ok
 
 
 async def handle_webhook(hass, webhook_id, request):
