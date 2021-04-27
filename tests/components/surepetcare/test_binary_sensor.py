@@ -25,5 +25,8 @@ async def test_binary_sensors(hass, surepetcare) -> None:
 
     for entity_id, unique_id in EXPECTED_ENTITY_IDS.items():
         assert entity_id in state_entity_ids
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == "on"
         entity = entity_registry.async_get(entity_id)
         assert entity.unique_id == unique_id
