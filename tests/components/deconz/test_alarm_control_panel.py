@@ -88,7 +88,7 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 2
     assert hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_DISARMED
 
     # Event signals alarm control panel armed away
@@ -306,7 +306,7 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     states = hass.states.async_all()
-    assert len(states) == 1
+    assert len(states) == 2
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 
