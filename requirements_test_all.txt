@@ -450,6 +450,9 @@ huisbaasje-client==0.1.0
 # homeassistant.components.hyperion
 hyperion-py==0.7.4
 
+# homeassistant.components.iammeter
+iammeter==0.1.7
+
 # homeassistant.components.iaqualink
 iaqualink==0.3.4
 
