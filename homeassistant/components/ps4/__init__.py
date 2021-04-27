@@ -38,6 +38,8 @@ PS4_COMMAND_SCHEMA = vol.Schema(
     }
 )
 
+PLATFORMS = ["media_player"]
+
 
 class PS4Data:
     """Init Data Class."""
@@ -59,18 +61,15 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass, entry):
     """Set up PS4 from a config entry."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "media_player")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a PS4 config entry."""
-    await hass.config_entries.async_forward_entry_unload(entry, "media_player")
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass, entry):
