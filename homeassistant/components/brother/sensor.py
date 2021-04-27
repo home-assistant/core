@@ -11,11 +11,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import BrotherDataUpdateCoordinator
 from .const import (
-    ATTR_ENABLED,
-    ATTR_ICON,
-    ATTR_LABEL,
     ATTR_MANUFACTURER,
-    ATTR_UNIT,
     ATTR_UPTIME,
     ATTRS_MAP,
     DATA_CONFIG_ENTRY,
@@ -61,7 +57,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
         assert coordinator.data is not None
-        self._name = f"{coordinator.data.model} {SENSOR_TYPES[kind][ATTR_LABEL]}"
+        self._name = f"{coordinator.data.model} {SENSOR_TYPES[kind]['label']}"
         self._unique_id = f"{coordinator.data.serial.lower()}_{kind}"
         self._device_info = device_info
         self.kind = kind
@@ -100,7 +96,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     @property
     def icon(self) -> str | None:
         """Return the icon."""
-        return SENSOR_TYPES[self.kind][ATTR_ICON]
+        return SENSOR_TYPES[self.kind]["icon"]
 
     @property
     def unique_id(self) -> str:
@@ -110,7 +106,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
-        return SENSOR_TYPES[self.kind][ATTR_UNIT]
+        return SENSOR_TYPES[self.kind]["unit"]
 
     @property
     def device_info(self) -> dict[str, Any]:
@@ -120,4 +116,4 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return SENSOR_TYPES[self.kind][ATTR_ENABLED]
+        return SENSOR_TYPES[self.kind]["enabled"]
