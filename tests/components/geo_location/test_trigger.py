@@ -2,11 +2,12 @@
 import pytest
 
 from homeassistant.components import automation, zone
+from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service, mock_component
-from tests.components.automation import common
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -67,6 +68,7 @@ async def test_if_fires_on_zone_enter(hass, calls):
                                 "from_state.state",
                                 "to_state.state",
                                 "zone.name",
+                                "id",
                             )
                         )
                     },
@@ -87,7 +89,7 @@ async def test_if_fires_on_zone_enter(hass, calls):
     assert calls[0].context.parent_id == context.id
     assert (
         calls[0].data["some"]
-        == "geo_location - geo_location.entity - hello - hello - test"
+        == "geo_location - geo_location.entity - hello - hello - test - 0"
     )
 
     # Set out of zone again so we can trigger call
@@ -98,8 +100,12 @@ async def test_if_fires_on_zone_enter(hass, calls):
     )
     await hass.async_block_till_done()
 
-    await common.async_turn_off(hass)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
+    )
 
     hass.states.async_set(
         "geo_location.entity",

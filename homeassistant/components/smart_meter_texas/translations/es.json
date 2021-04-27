@@ -13,10 +13,8 @@
                 "data": {
                     "password": "Contrase\u00f1a",
                     "username": "Usuario"
-                },
-                "description": "Proporciona tu nombre de usuario y contrase\u00f1a para Smart Meter Texas."
+                }
             }
         }
-    },
-    "title": "Smart Meter Texas"
+    }
 }

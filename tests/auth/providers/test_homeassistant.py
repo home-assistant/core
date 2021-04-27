@@ -1,5 +1,6 @@
 """Test the Home Assistant local auth provider."""
 import asyncio
+from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -10,8 +11,6 @@ from homeassistant.auth.providers import (
     auth_provider_from_config,
     homeassistant as hass_auth,
 )
-
-from tests.async_mock import Mock, patch
 
 
 @pytest.fixture
@@ -277,7 +276,7 @@ async def test_legacy_get_or_create_credentials(hass, legacy_data):
 async def test_race_condition_in_data_loading(hass):
     """Test race condition in the hass_auth.Data loading.
 
-    Ref issue: https://github.com/home-assistant/home-assistant/issues/21569
+    Ref issue: https://github.com/home-assistant/core/issues/21569
     """
     counter = 0
 

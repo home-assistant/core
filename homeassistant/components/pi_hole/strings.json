@@ -5,11 +5,17 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "name": "Name",
-          "location": "Location",
+          "name": "[%key:common::config_flow::data::name%]",
+          "location": "[%key:common::config_flow::data::location%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "ssl": "Use SSL",
-          "verify_ssl": "Verify SSL certificate"
+          "statistics_only": "Statistics Only",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      },
+      "api_key": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       }
     },

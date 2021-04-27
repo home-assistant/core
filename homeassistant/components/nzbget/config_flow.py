@@ -1,6 +1,8 @@
 """Config flow for NZBGet."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 import voluptuous as vol
 
@@ -15,8 +17,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DEFAULT_NAME,
@@ -24,22 +27,22 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
+    DOMAIN,
 )
-from .const import DOMAIN  # pylint: disable=unused-import
 from .coordinator import NZBGetAPI, NZBGetAPIException
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
+def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     nzbget_api = NZBGetAPI(
         data[CONF_HOST],
-        data[CONF_USERNAME] if data[CONF_USERNAME] != "" else None,
-        data[CONF_PASSWORD] if data[CONF_PASSWORD] != "" else None,
+        data.get(CONF_USERNAME),
+        data.get(CONF_PASSWORD),
         data[CONF_SSL],
         data[CONF_VERIFY_SSL],
         data[CONF_PORT],
@@ -63,17 +66,19 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
         return NZBGetOptionsFlowHandler(config_entry)
 
     async def async_step_import(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
+        self, user_input: ConfigType | None = None
+    ) -> FlowResultDict:
         """Handle a flow initiated by configuration file."""
         if CONF_SCAN_INTERVAL in user_input:
-            user_input[CONF_SCAN_INTERVAL] = user_input[CONF_SCAN_INTERVAL].seconds
+            user_input[CONF_SCAN_INTERVAL] = user_input[
+                CONF_SCAN_INTERVAL
+            ].total_seconds()
 
         return await self.async_step_user(user_input)
 
     async def async_step_user(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
+        self, user_input: ConfigType | None = None
+    ) -> FlowResultDict:
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -127,7 +132,7 @@ class NZBGetOptionsFlowHandler(OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: Optional[ConfigType] = None):
+    async def async_step_init(self, user_input: ConfigType | None = None):
         """Manage NZBGet options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

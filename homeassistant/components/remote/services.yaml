@@ -1,66 +1,129 @@
 # Describes the format for available remote services
 
 turn_on:
+  name: Turn On
   description: Sends the Power On Command.
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to turn on.
-      example: "remote.family_room"
     activity:
       description: Activity ID or Activity Name to start.
       example: "BedroomTV"
+      selector:
+        text:
 
 toggle:
+  name: Toggle
   description: Toggles a device.
-  fields:
-    entity_id:
-      description: Name(s) of entities to toggle.
-      example: "remote.family_room"
+  target:
 
 turn_off:
+  name: Turn Off
   description: Sends the Power Off Command.
-  fields:
-    entity_id:
-      description: Name(s) of entities to turn off.
-      example: "remote.family_room"
+  target:
 
 send_command:
+  name: Send Command
   description: Sends a command or a list of commands to a device.
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to send command from.
-      example: "remote.family_room"
     device:
+      name: Device
       description: Device ID to send command to.
       example: "32756745"
     command:
+      name: Command
       description: A single command or a list of commands to send.
+      required: true
       example: "Play"
+      selector:
+        text:
     num_repeats:
-      description: An optional value that specifies the number of times you want to repeat the command(s). If not specified, the command(s) will not be repeated.
+      name: Repeats
+      description: An optional value that specifies the number of times you want to repeat the command(s).
       example: "5"
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 255
+          step: 1
+          mode: slider
     delay_secs:
-      description: An optional value that specifies that number of seconds you want to wait in between repeated commands. If not specified, the default of 0.4 seconds will be used.
+      name: Delay Seconds
+      description: Specify the number of seconds you want to wait in between repeated commands.
       example: "0.75"
+      default: 0.4
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 0.1
+          mode: slider
     hold_secs:
-      description: An optional value that specifies that number of seconds you want to have it held before the release is send. If not specified, the release will be send immediately after the press.
+      name: Hold Seconds
+      description: An optional value that specifies the number of seconds you want to have it held before the release is send.
       example: "2.5"
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 0.1
+          mode: slider
 
 learn_command:
+  name: Learn Command
   description: Learns a command or a list of commands from a device.
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to learn command from.
-      example: "remote.bedroom"
     device:
       description: Device ID to learn command from.
       example: "television"
     command:
+      name: Command
       description: A single command or a list of commands to learn.
       example: "Turn on"
+      selector:
+        object:
+    command_type:
+      name: Command Type
+      description: The type of command to be learned.
+      example: "rf"
+      default: "ir"
+      selector:
+        select:
+          options:
+            - "ir"
+            - "rf"
     alternative:
+      name: Alternative
       description: If code must be stored as alternative (useful for discrete remotes).
       example: "True"
+      selector:
+        boolean:
     timeout:
+      name: Timeout
       description: Timeout, in seconds, for the command to be learned.
       example: "30"
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 5
+          mode: slider
+
+delete_command:
+  name: Delete Command
+  description: Deletes a command or a list of commands from the database.
+  target:
+  fields:
+    device:
+      description: Name of the device from which commands will be deleted.
+      example: "television"
+    command:
+      name: Command
+      description: A single command or a list of commands to delete.
+      required: true
+      example: "Mute"
+      selector:
+        object:

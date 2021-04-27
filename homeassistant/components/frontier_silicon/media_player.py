@@ -127,11 +127,6 @@ class AFSAPIDevice(MediaPlayerEntity):
         return AFSAPI(self._device_url, self._password)
 
     @property
-    def should_poll(self):
-        """Device should be polled."""
-        return True
-
-    @property
     def name(self):
         """Return the device name."""
         return self._name

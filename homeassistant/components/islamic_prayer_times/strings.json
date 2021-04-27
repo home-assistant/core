@@ -8,7 +8,7 @@
       }
     },
     "abort": {
-      "one_instance_allowed": "Only a single instance is necessary."
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "options": {

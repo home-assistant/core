@@ -5,10 +5,15 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_DISPLAY_OPTIONS, CONF_NAME, TEMP_CELSIUS, VOLT
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import (
+    CONF_DISPLAY_OPTIONS,
+    CONF_NAME,
+    PRESSURE_HPA,
+    TEMP_CELSIUS,
+    VOLT,
+)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,7 +35,7 @@ SENSOR_TYPES = {
     "magnetometer_y": ["magnetometer_y", " ", "mdi:magnet"],
     "magnetometer_z": ["magnetometer_z", " ", "mdi:magnet"],
     "temperature": ["temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "pressure": ["pressure", "hPa", "mdi:gauge"],
+    "pressure": ["pressure", PRESSURE_HPA, "mdi:gauge"],
     "voltage_0": ["voltage_0", VOLT, "mdi:flash"],
     "voltage_1": ["voltage_1", VOLT, "mdi:flash"],
     "voltage_2": ["voltage_2", VOLT, "mdi:flash"],
@@ -65,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class EnvirophatSensor(Entity):
+class EnvirophatSensor(SensorEntity):
     """Representation of an Enviro pHAT sensor."""
 
     def __init__(self, data, sensor_types):

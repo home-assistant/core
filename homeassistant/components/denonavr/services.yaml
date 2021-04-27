@@ -1,7 +1,7 @@
-# Describes the format for available webostv services
+# Describes the format for available denonavr services
 
 get_command:
-  description: "Send a generic http get command."
+  description: "Send a generic HTTP get command."
   fields:
     entity_id:
       description: Name(s) of the denonavr entities where to run the API method.
@@ -9,3 +9,22 @@ get_command:
     command:
       description: Endpoint of the command, including associated parameters.
       example: "/goform/formiPhoneAppDirect.xml?RCKSK0410370"
+set_dynamic_eq:
+  description: "Enable or disable DynamicEQ."
+  target:
+    entity:
+      integration: denonavr
+      domain: media_player
+  fields:
+    dynamic_eq:
+      description: "True/false for enable/disable."
+      default: true
+      example: true
+      selector:
+        boolean:
+update_audyssey:
+  description: "Update Audyssey settings."
+  target:
+    entity:
+      integration: denonavr
+      domain: media_player

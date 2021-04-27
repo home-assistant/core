@@ -1,17 +1,31 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kontoen er allerede konfigurert"
+            "already_configured": "Kontoen er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
-            "login": "P\u00e5loggingsfeil: Vennligst sjekk brukernavnet ditt og passordet ditt"
+            "invalid_auth": "Ugyldig godkjenning",
+            "usercode": "Brukerkode er ikke gyldig for denne brukeren p\u00e5 dette stedet"
         },
         "step": {
+            "locations": {
+                "data": {
+                    "location": "Plassering"
+                },
+                "description": "Angi brukerkoden for denne brukeren p\u00e5 denne plasseringen",
+                "title": "Brukerkoder for plassering"
+            },
+            "reauth_confirm": {
+                "description": "Total Connect m\u00e5 godkjenne kontoen din p\u00e5 nytt",
+                "title": "Godkjenne integrering p\u00e5 nytt"
+            },
             "user": {
                 "data": {
                     "password": "Passord",
                     "username": "Brukernavn"
-                }
+                },
+                "title": ""
             }
         }
     }

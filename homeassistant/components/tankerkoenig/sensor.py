@@ -2,7 +2,13 @@
 
 import logging
 
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CURRENCY_EURO,
+)
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -74,7 +80,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class FuelPriceSensor(CoordinatorEntity):
+class FuelPriceSensor(CoordinatorEntity, SensorEntity):
     """Contains prices for fuel in a given station."""
 
     def __init__(self, fuel_type, station, coordinator, name, show_on_map):
@@ -106,7 +112,7 @@ class FuelPriceSensor(CoordinatorEntity):
     @property
     def unit_of_measurement(self):
         """Return unit of measurement."""
-        return "€"
+        return CURRENCY_EURO
 
     @property
     def state(self):
@@ -120,7 +126,7 @@ class FuelPriceSensor(CoordinatorEntity):
         return f"{self._station_id}_{self._fuel_type}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the device."""
         data = self.coordinator.data[self._station_id]
 

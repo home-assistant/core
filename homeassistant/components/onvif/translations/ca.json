@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dispositiu ONVIF ja configurat.",
-            "already_in_progress": "El flux de dades de configuraci\u00f3 pel dispositiu ONVIF ja est\u00e0 en curs.",
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
             "no_h264": "No s'han torbat fluxos (streams) H264 disponibles. Comporva la configuraci\u00f3 de perfil en el dispositiu.",
             "no_mac": "No s'ha pogut configurar un ID \u00fanic pel dispositiu ONVIF.",
             "onvif_error": "Error durant la configuraci\u00f3 del dispositiu ONVIF. Consulta els registres per a m\u00e9s informaci\u00f3."
         },
         "error": {
-            "connection_failed": "No s'ha pogut connectar al servei ONVIF amb les credencials proporcionades."
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
             "auth": {

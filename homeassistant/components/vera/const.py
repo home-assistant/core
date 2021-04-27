@@ -2,6 +2,7 @@
 DOMAIN = "vera"
 
 CONF_CONTROLLER = "vera_controller_url"
+CONF_LEGACY_UNIQUE_ID = "legacy_unique_id"
 
 VERA_ID_FORMAT = "{}_{}"
 

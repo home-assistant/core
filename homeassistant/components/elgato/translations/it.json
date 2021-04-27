@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Questo dispositivo Elgato Key Light \u00e8 gi\u00e0 configurato.",
-            "connection_error": "Impossibile connettersi al dispositivo Elgato Key Light."
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi"
         },
         "error": {
-            "connection_error": "Impossibile connettersi al dispositivo Elgato Key Light."
+            "cannot_connect": "Impossibile connettersi"
         },
         "flow_title": "Elgato Key Light: {serial_number}",
         "step": {

@@ -5,8 +5,7 @@
             "unknown": "Unexpected error"
         },
         "error": {
-            "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication"
+            "cannot_connect": "Failed to connect"
         },
         "flow_title": "NZBGet: {name}",
         "step": {
@@ -16,9 +15,9 @@
                     "name": "Name",
                     "password": "Password",
                     "port": "Port",
-                    "ssl": "NZBGet uses a SSL certificate",
+                    "ssl": "Uses an SSL certificate",
                     "username": "Username",
-                    "verify_ssl": "NZBGet uses a proper certificate"
+                    "verify_ssl": "Verify SSL certificate"
                 },
                 "title": "Connect to NZBGet"
             }

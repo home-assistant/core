@@ -1,6 +1,5 @@
 """Sensor platform for the PoolSense sensor."""
-import logging
-
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_EMAIL,
@@ -10,12 +9,9 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import PoolSenseEntity
 from .const import ATTRIBUTION, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSORS = {
     "Chlorine": {
@@ -83,7 +79,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors_list, False)
 
 
-class PoolSenseSensor(PoolSenseEntity, Entity):
+class PoolSenseSensor(PoolSenseEntity, SensorEntity):
     """Sensor representing poolsense data."""
 
     @property
@@ -112,6 +108,6 @@ class PoolSenseSensor(PoolSenseEntity, Entity):
         return SENSORS[self.info_type]["unit"]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}

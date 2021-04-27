@@ -4,7 +4,11 @@ import logging
 from pyuptimerobot import UptimeRobot
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
@@ -68,10 +72,10 @@ class UptimeRobotBinarySensor(BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return "connectivity"
+        return DEVICE_CLASS_CONNECTIVITY
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the binary sensor."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION, ATTR_TARGET: self._target}
 

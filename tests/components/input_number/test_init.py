@@ -1,4 +1,7 @@
 """The tests for the Input number component."""
+# pylint: disable=protected-access
+from unittest.mock import patch
+
 import pytest
 import voluptuous as vol
 
@@ -18,11 +21,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, CoreState, State
 from homeassistant.exceptions import Unauthorized
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-# pylint: disable=protected-access
-from tests.async_mock import patch
 from tests.common import mock_restore_cache
 
 
@@ -115,17 +116,17 @@ async def test_set_value(hass, caplog):
     entity_id = "input_number.test_1"
 
     state = hass.states.get(entity_id)
-    assert 50 == float(state.state)
+    assert float(state.state) == 50
 
     await set_value(hass, entity_id, "30.4")
 
     state = hass.states.get(entity_id)
-    assert 30.4 == float(state.state)
+    assert float(state.state) == 30.4
 
     await set_value(hass, entity_id, "70")
 
     state = hass.states.get(entity_id)
-    assert 70 == float(state.state)
+    assert float(state.state) == 70
 
     with pytest.raises(vol.Invalid) as excinfo:
         await set_value(hass, entity_id, "110")
@@ -135,7 +136,7 @@ async def test_set_value(hass, caplog):
     )
 
     state = hass.states.get(entity_id)
-    assert 70 == float(state.state)
+    assert float(state.state) == 70
 
 
 async def test_increment(hass):
@@ -146,19 +147,39 @@ async def test_increment(hass):
     entity_id = "input_number.test_2"
 
     state = hass.states.get(entity_id)
-    assert 50 == float(state.state)
+    assert float(state.state) == 50
 
     await increment(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert 51 == float(state.state)
+    assert float(state.state) == 51
 
     await increment(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert 51 == float(state.state)
+    assert float(state.state) == 51
+
+
+async def test_rounding(hass):
+    """Test increment introducing floating point error is rounded."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {"test_2": {"initial": 2.4, "min": 0, "max": 51, "step": 1.2}}},
+    )
+    entity_id = "input_number.test_2"
+    assert 2.4 + 1.2 != 3.6
+
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 2.4
+
+    await increment(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 3.6
 
 
 async def test_decrement(hass):
@@ -169,19 +190,19 @@ async def test_decrement(hass):
     entity_id = "input_number.test_3"
 
     state = hass.states.get(entity_id)
-    assert 50 == float(state.state)
+    assert float(state.state) == 50
 
     await decrement(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert 49 == float(state.state)
+    assert float(state.state) == 49
 
     await decrement(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert 49 == float(state.state)
+    assert float(state.state) == 49
 
 
 async def test_mode(hass):
@@ -200,15 +221,15 @@ async def test_mode(hass):
 
     state = hass.states.get("input_number.test_default_slider")
     assert state
-    assert "slider" == state.attributes["mode"]
+    assert state.attributes["mode"] == "slider"
 
     state = hass.states.get("input_number.test_explicit_box")
     assert state
-    assert "box" == state.attributes["mode"]
+    assert state.attributes["mode"] == "box"
 
     state = hass.states.get("input_number.test_explicit_slider")
     assert state
-    assert "slider" == state.attributes["mode"]
+    assert state.attributes["mode"] == "slider"
 
 
 async def test_restore_state(hass):
@@ -299,7 +320,7 @@ async def test_input_number_context(hass, hass_admin_user):
 async def test_reload(hass, hass_admin_user, hass_read_only_user):
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     assert await async_setup_component(
         hass,
@@ -321,8 +342,8 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
     assert state_1 is not None
     assert state_2 is None
     assert state_3 is not None
-    assert 50 == float(state_1.state)
-    assert 10 == float(state_3.state)
+    assert float(state_1.state) == 50
+    assert float(state_3.state) == 10
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is not None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is not None
@@ -361,8 +382,8 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
     assert state_1 is not None
     assert state_2 is not None
     assert state_3 is None
-    assert 50 == float(state_1.state)
-    assert 20 == float(state_2.state)
+    assert float(state_1.state) == 50
+    assert float(state_2.state) == 20
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is not None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is None
@@ -441,7 +462,7 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
@@ -477,7 +498,7 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
@@ -517,7 +538,7 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
 
     input_id = "new_input"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is None

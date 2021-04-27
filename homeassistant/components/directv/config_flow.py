@@ -1,6 +1,8 @@
 """Config flow for DirecTV."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 from urllib.parse import urlparse
 
 from directv import DIRECTV, DIRECTVError
@@ -9,15 +11,12 @@ import voluptuous as vol
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
 from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_RECEIVER_ID
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import CONF_RECEIVER_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +24,7 @@ ERROR_CANNOT_CONNECT = "cannot_connect"
 ERROR_UNKNOWN = "unknown"
 
 
-async def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
+async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -47,15 +46,9 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
         """Set up the instance."""
         self.discovery_info = {}
 
-    async def async_step_import(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
-        """Handle a flow initiated by configuration file."""
-        return await self.async_step_user(user_input)
-
     async def async_step_user(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
+        self, user_input: ConfigType | None = None
+    ) -> FlowResultDict:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._show_setup_form()
@@ -77,7 +70,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(
         self, discovery_info: DiscoveryInfoType
-    ) -> Dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle SSDP discovery."""
         host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         receiver_id = None
@@ -85,7 +78,6 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
         if discovery_info.get(ATTR_UPNP_SERIAL):
             receiver_id = discovery_info[ATTR_UPNP_SERIAL][4:]  # strips off RID-
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {"name": host}})
 
         self.discovery_info.update(
@@ -111,7 +103,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp_confirm(
         self, user_input: ConfigType = None
-    ) -> Dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle a confirmation flow initiated by SSDP."""
         if user_input is None:
             return self.async_show_form(
@@ -125,7 +117,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
             data=self.discovery_info,
         )
 
-    def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
+    def _show_setup_form(self, errors: dict | None = None) -> FlowResultDict:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",

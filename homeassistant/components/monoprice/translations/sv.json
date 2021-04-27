@@ -9,6 +9,9 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "port": "Port"
+                },
                 "title": "Anslut till enheten"
             }
         }

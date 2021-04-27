@@ -8,16 +8,23 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
+    SensorEntity,
 )
-from homeassistant.const import CONF_DEVICES
+from homeassistant.const import (
+    CONF_DEVICES,
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_VOLTAGE,
+)
 from homeassistant.core import callback
 
 from . import (
-    CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     DATA_TYPES,
-    SIGNAL_EVENT,
     RfxtrxEntity,
+    connect_auto_add,
     get_device_id,
     get_rfx_object,
 )
@@ -30,7 +37,7 @@ def _battery_convert(value):
     """Battery is given as a value between 0 and 9."""
     if value is None:
         return None
-    return value * 10
+    return (value + 1) * 10
 
 
 def _rssi_convert(value):
@@ -41,10 +48,17 @@ def _rssi_convert(value):
 
 
 DEVICE_CLASSES = {
+    "Barometer": DEVICE_CLASS_PRESSURE,
     "Battery numeric": DEVICE_CLASS_BATTERY,
-    "Rssi numeric": DEVICE_CLASS_SIGNAL_STRENGTH,
+    "Current Ch. 1": DEVICE_CLASS_CURRENT,
+    "Current Ch. 2": DEVICE_CLASS_CURRENT,
+    "Current Ch. 3": DEVICE_CLASS_CURRENT,
+    "Energy usage": DEVICE_CLASS_POWER,
     "Humidity": DEVICE_CLASS_HUMIDITY,
+    "Rssi numeric": DEVICE_CLASS_SIGNAL_STRENGTH,
     "Temperature": DEVICE_CLASS_TEMPERATURE,
+    "Total usage": DEVICE_CLASS_ENERGY,
+    "Voltage": DEVICE_CLASS_VOLTAGE,
 }
 
 
@@ -113,18 +127,17 @@ async def async_setup_entry(
             async_add_entities([entity])
 
     # Subscribe to main RFXtrx events
-    if discovery_info[CONF_AUTOMATIC_ADD]:
-        hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, sensor_update)
+    connect_auto_add(hass, discovery_info, sensor_update)
 
 
-class RfxtrxSensor(RfxtrxEntity):
+class RfxtrxSensor(RfxtrxEntity, SensorEntity):
     """Representation of a RFXtrx sensor."""
 
     def __init__(self, device, device_id, data_type, event=None):
         """Initialize the sensor."""
         super().__init__(device, device_id, event=event)
         self.data_type = data_type
-        self._unit_of_measurement = DATA_TYPES.get(data_type, "")
+        self._unit_of_measurement = DATA_TYPES.get(data_type)
         self._name = f"{device.type_string} {device.id_string} {data_type}"
         self._unique_id = "_".join(x for x in (*self._device_id, data_type))
 

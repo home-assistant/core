@@ -5,11 +5,11 @@
             "not_supported_device": "Dette WiLight st\u00f8ttes forel\u00f8pig ikke",
             "not_wilight_device": "Denne enheten er ikke WiLight"
         },
-        "flow_title": "WiLight: {name}",
+        "flow_title": "",
         "step": {
             "confirm": {
                 "description": "Vil du konfigurere WiLight {name} ? \n\n Den st\u00f8tter: {components}",
-                "title": "WiLight"
+                "title": ""
             }
         }
     }

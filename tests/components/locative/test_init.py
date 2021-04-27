@@ -1,7 +1,9 @@
 """The tests the for Locative device tracker platform."""
+from unittest.mock import patch
+
 import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import locative
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.locative import DOMAIN, TRACKER_UPDATE
@@ -9,8 +11,6 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import HTTP_OK, HTTP_UNPROCESSABLE_ENTITY
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 # pylint: disable=redefined-outer-name
 
@@ -39,7 +39,7 @@ async def webhook_id(hass, locative_client):
         {"internal_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
-        "locative", context={"source": "user"}
+        "locative", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM, result
 

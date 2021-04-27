@@ -1,7 +1,4 @@
 """Webhooks used by rachio."""
-
-import logging
-
 from aiohttp import web
 
 from homeassistant.const import URL_API
@@ -58,6 +55,7 @@ SUBTYPE_ZONE_STOPPED = "ZONE_STOPPED"
 SUBTYPE_ZONE_COMPLETED = "ZONE_COMPLETED"
 SUBTYPE_ZONE_CYCLING = "ZONE_CYCLING"
 SUBTYPE_ZONE_CYCLING_COMPLETED = "ZONE_CYCLING_COMPLETED"
+SUBTYPE_ZONE_PAUSED = "ZONE_PAUSED"
 
 # Webhook callbacks
 LISTEN_EVENT_TYPES = [
@@ -77,9 +75,6 @@ SIGNAL_MAP = {
     TYPE_SCHEDULE_STATUS: SIGNAL_RACHIO_SCHEDULE_UPDATE,
     TYPE_ZONE_STATUS: SIGNAL_RACHIO_ZONE_UPDATE,
 }
-
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @callback

@@ -2,6 +2,7 @@
 
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -17,11 +18,10 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 
-from . import SmileGateway
 from .const import (
     COOL_ICON,
+    COORDINATOR,
     DEVICE_STATE,
     DOMAIN,
     FLAME_ICON,
@@ -31,6 +31,7 @@ from .const import (
     SENSOR_MAP_UOM,
     UNIT_LUMEN,
 )
+from .gateway import SmileGateway
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,26 +116,30 @@ ENERGY_SENSOR_MAP = {
         DEVICE_CLASS_POWER,
     ],
     "electricity_produced_off_peak_point": [
-        "Current Consumed Power (off peak)",
+        "Current Produced Power (off peak)",
         POWER_WATT,
         DEVICE_CLASS_POWER,
     ],
     "electricity_produced_peak_point": [
-        "Current Consumed Power",
+        "Current Produced Power",
         POWER_WATT,
         DEVICE_CLASS_POWER,
     ],
     "electricity_produced_off_peak_cumulative": [
-        "Cumulative Consumed Power (off peak)",
+        "Cumulative Produced Power (off peak)",
         ENERGY_KILO_WATT_HOUR,
         DEVICE_CLASS_POWER,
     ],
     "electricity_produced_peak_cumulative": [
-        "Cumulative Consumed Power",
+        "Cumulative Produced Power",
         ENERGY_KILO_WATT_HOUR,
         DEVICE_CLASS_POWER,
     ],
-    "gas_consumed_interval": ["Current Consumed Gas", VOLUME_CUBIC_METERS, None],
+    "gas_consumed_interval": [
+        "Current Consumed Gas Interval",
+        VOLUME_CUBIC_METERS,
+        None,
+    ],
     "gas_consumed_cumulative": ["Cumulative Consumed Gas", VOLUME_CUBIC_METERS, None],
     "net_electricity_point": ["Current net Power", POWER_WATT, DEVICE_CLASS_POWER],
     "net_electricity_cumulative": [
@@ -168,7 +173,7 @@ CUSTOM_ICONS = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Smile sensors from a config entry."""
     api = hass.data[DOMAIN][config_entry.entry_id]["api"]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
 
     entities = []
     all_devices = api.get_all_devices()
@@ -231,7 +236,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class SmileSensor(SmileGateway):
+class SmileSensor(SmileGateway, SensorEntity):
     """Represent Smile Sensors."""
 
     def __init__(self, api, coordinator, name, dev_id, sensor):
@@ -241,6 +246,7 @@ class SmileSensor(SmileGateway):
         self._sensor = sensor
 
         self._dev_class = None
+        self._icon = None
         self._state = None
         self._unit_of_measurement = None
 
@@ -261,8 +267,13 @@ class SmileSensor(SmileGateway):
         return self._dev_class
 
     @property
+    def icon(self):
+        """Return the icon of this entity."""
+        return self._icon
+
+    @property
     def state(self):
-        """Device class of this entity."""
+        """Return the state of this entity."""
         return self._state
 
     @property
@@ -271,8 +282,8 @@ class SmileSensor(SmileGateway):
         return self._unit_of_measurement
 
 
-class PwThermostatSensor(SmileSensor, Entity):
-    """Thermostat and climate sensor entities."""
+class PwThermostatSensor(SmileSensor):
+    """Thermostat (or generic) sensor devices."""
 
     def __init__(self, api, coordinator, name, dev_id, sensor, sensor_type):
         """Set up the Plugwise API."""
@@ -294,19 +305,14 @@ class PwThermostatSensor(SmileSensor, Entity):
             return
 
         if data.get(self._sensor) is not None:
-            measurement = data[self._sensor]
-            if self._sensor == "battery" or self._sensor == "valve_position":
-                measurement = measurement * 100
-            if self._unit_of_measurement == PERCENTAGE:
-                measurement = int(measurement)
-            self._state = measurement
+            self._state = data[self._sensor]
             self._icon = CUSTOM_ICONS.get(self._sensor, self._icon)
 
         self.async_write_ha_state()
 
 
-class PwAuxDeviceSensor(SmileSensor, Entity):
-    """Auxiliary sensor entities for the heating/cooling device."""
+class PwAuxDeviceSensor(SmileSensor):
+    """Auxiliary Device Sensors."""
 
     def __init__(self, api, coordinator, name, dev_id, sensor):
         """Set up the Plugwise API."""
@@ -314,12 +320,6 @@ class PwAuxDeviceSensor(SmileSensor, Entity):
 
         self._cooling_state = False
         self._heating_state = False
-        self._icon = None
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return self._icon
 
     @callback
     def _async_process_data(self):
@@ -348,7 +348,7 @@ class PwAuxDeviceSensor(SmileSensor, Entity):
         self.async_write_ha_state()
 
 
-class PwPowerSensor(SmileSensor, Entity):
+class PwPowerSensor(SmileSensor):
     """Power sensor entities."""
 
     def __init__(self, api, coordinator, name, dev_id, sensor, sensor_type, model):
@@ -377,10 +377,7 @@ class PwPowerSensor(SmileSensor, Entity):
             return
 
         if data.get(self._sensor) is not None:
-            measurement = data[self._sensor]
-            if self._unit_of_measurement == ENERGY_KILO_WATT_HOUR:
-                measurement = int(measurement / 1000)
-            self._state = measurement
+            self._state = data[self._sensor]
             self._icon = CUSTOM_ICONS.get(self._sensor, self._icon)
 
         self.async_write_ha_state()

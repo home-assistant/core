@@ -2,6 +2,8 @@
     "device_automation": {
         "condition_type": {
             "is_battery_level": "Current {entity_name} battery level",
+            "is_carbon_dioxide": "Current {entity_name} carbon dioxide concentration level",
+            "is_carbon_monoxide": "Current {entity_name} carbon monoxide concentration level",
             "is_current": "Current {entity_name} current",
             "is_energy": "Current {entity_name} energy",
             "is_humidity": "Current {entity_name} humidity",
@@ -17,6 +19,8 @@
         },
         "trigger_type": {
             "battery_level": "{entity_name} battery level changes",
+            "carbon_dioxide": "{entity_name} carbon dioxide concentration changes",
+            "carbon_monoxide": "{entity_name} carbon monoxide concentration changes",
             "current": "{entity_name} current changes",
             "energy": "{entity_name} energy changes",
             "humidity": "{entity_name} humidity changes",

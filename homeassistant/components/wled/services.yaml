@@ -1,18 +1,66 @@
 effect:
-  description: Controls the effect settings of WLED
+  name: Set effect
+  description: Control the effect settings of WLED.
+  target:
+    entity:
+      integration: wled
+      domain: light
   fields:
-    entity_id:
-      description: Name of the WLED light entity.
-      example: "light.wled"
     effect:
+      name: Effect
       description: Name or ID of the WLED light effect.
       example: "Rainbow"
+      selector:
+        text:
     intensity:
-      description: Intensity of the effect
+      name: Effect intensity
+      description: Intensity of the effect. Number between 0 and 255.
       example: 100
+      selector:
+        number:
+          min: 0
+          max: 255
+          step: 1
+          mode: slider
+    palette:
+      name: Color palette
+      description: Name or ID of the WLED light palette.
+      example: "Tiamat"
+      selector:
+        text:
     speed:
+      name: Effect speed
       description: Speed of the effect. Number between 0 (slow) and 255 (fast).
       example: 150
+      selector:
+        number:
+          min: 0
+          max: 255
+          step: 1
+          mode: slider
     reverse:
-      description: Reverse the effect. Either true to reverse or false otherwise.
+      name: Reverse effect
+      description:
+        Reverse the effect. Either true to reverse or false otherwise.
+      default: false
       example: false
+      selector:
+        boolean:
+
+preset:
+  name: Set preset
+  description: Set a preset for the WLED device.
+  target:
+    entity:
+      integration: wled
+      domain: light
+  fields:
+    preset:
+      name: Preset ID
+      description: ID of the WLED preset
+      example: 6
+      selector:
+        number:
+          min: -1
+          max: 65535
+          mode: box

@@ -139,7 +139,7 @@ class OpenhomeDevice(MediaPlayerEntity):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
-        if not media_type == MEDIA_TYPE_MUSIC:
+        if media_type != MEDIA_TYPE_MUSIC:
             _LOGGER.error(
                 "Invalid media type %s. Only %s is supported",
                 media_type,
@@ -186,11 +186,6 @@ class OpenhomeDevice(MediaPlayerEntity):
     def supported_features(self):
         """Flag of features commands that are supported."""
         return self._supported_features
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
 
     @property
     def unique_id(self):

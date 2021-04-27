@@ -1,9 +1,9 @@
 """Support for Modbus Coil and Discrete Input sensors."""
-import logging
-from typing import Optional
+from __future__ import annotations
 
-from pymodbus.exceptions import ConnectionException, ModbusException
-from pymodbus.pdu import ExceptionResponse
+from datetime import timedelta
+import logging
+
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -11,22 +11,34 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_SLAVE
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_BINARY_SENSORS,
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_SCAN_INTERVAL,
+    CONF_SLAVE,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
-    CONF_ADDRESS,
     CONF_COILS,
     CONF_HUB,
     CONF_INPUT_TYPE,
     CONF_INPUTS,
     DEFAULT_HUB,
+    DEFAULT_SCAN_INTERVAL,
     MODBUS_DOMAIN,
 )
+from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
+
 
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_COILS, CONF_INPUTS),
@@ -54,11 +66,34 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities,
+    discovery_info: DiscoveryInfoType | None = None,
+):
     """Set up the Modbus binary sensors."""
     sensors = []
-    for entry in config[CONF_INPUTS]:
-        hub = hass.data[MODBUS_DOMAIN][entry[CONF_HUB]]
+
+    #  check for old config:
+    if discovery_info is None:
+        _LOGGER.warning(
+            "Binary_sensor configuration is deprecated, will be removed in a future release"
+        )
+        discovery_info = {
+            CONF_NAME: "no name",
+            CONF_BINARY_SENSORS: config[CONF_INPUTS],
+        }
+        config = None
+
+    for entry in discovery_info[CONF_BINARY_SENSORS]:
+        if CONF_HUB in entry:
+            # from old config!
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][entry[CONF_HUB]]
+        else:
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+        if CONF_SCAN_INTERVAL not in entry:
+            entry[CONF_SCAN_INTERVAL] = DEFAULT_SCAN_INTERVAL
         sensors.append(
             ModbusBinarySensor(
                 hub,
@@ -67,16 +102,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 entry[CONF_ADDRESS],
                 entry.get(CONF_DEVICE_CLASS),
                 entry[CONF_INPUT_TYPE],
+                entry[CONF_SCAN_INTERVAL],
             )
         )
 
-    add_entities(sensors)
+    async_add_entities(sensors)
 
 
 class ModbusBinarySensor(BinarySensorEntity):
     """Modbus binary sensor."""
 
-    def __init__(self, hub, name, slave, address, device_class, input_type):
+    def __init__(
+        self, hub, name, slave, address, device_class, input_type, scan_interval
+    ):
         """Initialize the Modbus binary sensor."""
         self._hub = hub
         self._name = name
@@ -86,6 +124,13 @@ class ModbusBinarySensor(BinarySensorEntity):
         self._input_type = input_type
         self._value = None
         self._available = True
+        self._scan_interval = timedelta(seconds=scan_interval)
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        async_track_time_interval(
+            self.hass, lambda arg: self._update(), self._scan_interval
+        )
 
     @property
     def name(self):
@@ -98,29 +143,36 @@ class ModbusBinarySensor(BinarySensorEntity):
         return self._value
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._device_class
+
+    @property
+    def should_poll(self):
+        """Return True if entity has to be polled for state.
+
+        False if entity pushes its state to HA.
+        """
+
+        # Handle polling directly in this entity
+        return False
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
-    def update(self):
+    def _update(self):
         """Update the state of the sensor."""
-        try:
-            if self._input_type == CALL_TYPE_COIL:
-                result = self._hub.read_coils(self._slave, self._address, 1)
-            else:
-                result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
-        except ConnectionException:
+        if self._input_type == CALL_TYPE_COIL:
+            result = self._hub.read_coils(self._slave, self._address, 1)
+        else:
+            result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
+        if result is None:
             self._available = False
+            self.schedule_update_ha_state()
             return
 
-        if isinstance(result, (ModbusException, ExceptionResponse)):
-            self._available = False
-            return
-
-        self._value = result.bits[0]
+        self._value = result.bits[0] & 1
         self._available = True
+        self.schedule_update_ha_state()

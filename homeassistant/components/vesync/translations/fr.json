@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Une seule instance de Vesync est autoris\u00e9e"
+            "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
         "error": {
-            "invalid_login": "Nom d'utilisateur ou mot de passe invalide"
+            "invalid_auth": "Authentification invalide"
         },
         "step": {
             "user": {

@@ -22,10 +22,10 @@ from .const import (
     DEFAULT_SENSOR_STRING,
     DEFAULT_TLS_VERSION,
     DEFAULT_VAR_SENSOR_STRING,
+    DOMAIN,
     ISY_URL_POSTFIX,
     UDN_UUID_PREFIX,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         https = True
         port = host.port or 443
     else:
-        _LOGGER.error("isy994 host value in configuration is invalid")
+        _LOGGER.error("The isy994 host value in configuration is invalid")
         raise InvalidHost
 
     # Connect to ISY controller.
@@ -94,13 +94,12 @@ def _fetch_isy_configuration(
             password,
             use_https,
             tls_ver,
-            log=_LOGGER,
             webroot=webroot,
         )
     except ValueError as err:
         raise InvalidAuth(err.args[0]) from err
 
-    return Configuration(log=_LOGGER, xml=isy_conn.get_config())
+    return Configuration(xml=isy_conn.get_config())
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -169,7 +168,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_HOST: url,
         }
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = self.discovered_conf
         return await self.async_step_user()
 

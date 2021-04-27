@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il punto di accesso \u00e8 gi\u00e0 configurato",
-            "connection_aborted": "Impossibile connettersi al server HMIP",
-            "unknown": "Si \u00e8 verificato un errore sconosciuto."
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "connection_aborted": "Impossibile connettersi",
+            "unknown": "Errore imprevisto"
         },
         "error": {
-            "invalid_sgtin_or_pin": "PIN non valido, riprova.",
+            "invalid_sgtin_or_pin": "SGTIN o Codice PIN non valido, si prega di riprovare.",
             "press_the_button": "Si prega di premere il pulsante blu.",
             "register_failed": "Registrazione fallita, si prega di riprovare.",
             "timeout_button": "Timeout della pressione del pulsante blu, riprovare."
@@ -16,7 +16,7 @@
                 "data": {
                     "hapid": "ID del punto di accesso (SGTIN)",
                     "name": "Nome (opzionale, usato come prefisso del nome per tutti i dispositivi)",
-                    "pin": "Codice Pin (opzionale)"
+                    "pin": "Codice PIN"
                 },
                 "title": "Scegli punto di accesso HomematicIP"
             },

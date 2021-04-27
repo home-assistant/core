@@ -1,18 +1,23 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Powerwall \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "error": {
-            "cannot_connect": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4",
             "wrong_version": "\u4e0d\u652f\u63f4\u60a8\u6240\u4f7f\u7528\u7684 Powerwall \u7248\u672c\u3002\u8acb\u8003\u616e\u9032\u884c\u5347\u7d1a\u6216\u56de\u5831\u6b64\u554f\u984c\u3001\u4ee5\u671f\u554f\u984c\u53ef\u4ee5\u7372\u5f97\u89e3\u6c7a\u3002"
         },
+        "flow_title": "Tesla Powerwall ({ip_address})",
         "step": {
             "user": {
                 "data": {
-                    "ip_address": "IP \u4f4d\u5740"
+                    "ip_address": "IP \u4f4d\u5740",
+                    "password": "\u5bc6\u78bc"
                 },
+                "description": "\u5bc6\u78bc\u901a\u5e38\u70ba\u81f3\u5c11\u5099\u4efd\u9598\u9053\u5668\u5e8f\u865f\u7684\u6700\u5f8c\u4e94\u78bc\uff0c\u4e26\u4e14\u80fd\u5920\u65bc Telsa App \u4e2d\n\u627e\u5230\u3002\u6216\u8005\u70ba\u5099\u4efd\u9598\u9053\u5668 2 \u9580\u5167\u5074\u627e\u5230\u7684\u5bc6\u78bc\u6700\u5f8c\u4e94\u78bc\u3002",
                 "title": "\u9023\u7dda\u81f3 Powerwall"
             }
         }

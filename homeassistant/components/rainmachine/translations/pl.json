@@ -1,11 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ten kontroler RainMachine jest ju\u017c skonfigurowany."
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
-            "identifier_exists": "Konto jest ju\u017c zarejestrowane.",
-            "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce"
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
         "step": {
             "user": {
@@ -15,6 +14,16 @@
                     "port": "Port"
                 },
                 "title": "Wprowad\u017a dane"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Domy\u015blny czas dzia\u0142ania dla strefy (w sekundach)"
+                },
+                "title": "Konfiguracja RainMachine"
             }
         }
     }

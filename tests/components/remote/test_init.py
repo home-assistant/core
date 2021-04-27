@@ -1,9 +1,16 @@
 """The tests for the Remote component, adapted from Light Test."""
-# pylint: disable=protected-access
-
-import unittest
 
 import homeassistant.components.remote as remote
+from homeassistant.components.remote import (
+    ATTR_ALTERNATIVE,
+    ATTR_COMMAND,
+    ATTR_COMMAND_TYPE,
+    ATTR_DELAY_SECS,
+    ATTR_DEVICE,
+    ATTR_NUM_REPEATS,
+    ATTR_TIMEOUT,
+    DOMAIN,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
@@ -13,109 +20,128 @@ from homeassistant.const import (
     STATE_ON,
 )
 
-from tests.common import get_test_home_assistant, mock_service
-from tests.components.remote import common
+from tests.common import async_mock_service
 
-TEST_PLATFORM = {remote.DOMAIN: {CONF_PLATFORM: "test"}}
+TEST_PLATFORM = {DOMAIN: {CONF_PLATFORM: "test"}}
 SERVICE_SEND_COMMAND = "send_command"
 SERVICE_LEARN_COMMAND = "learn_command"
+SERVICE_DELETE_COMMAND = "delete_command"
+ENTITY_ID = "entity_id_val"
 
 
-class TestRemote(unittest.TestCase):
-    """Test the remote module."""
+async def test_is_on(hass):
+    """Test is_on."""
+    hass.states.async_set("remote.test", STATE_ON)
+    assert remote.is_on(hass, "remote.test")
 
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.addCleanup(self.hass.stop)
-
-    def test_is_on(self):
-        """Test is_on."""
-        self.hass.states.set("remote.test", STATE_ON)
-        assert remote.is_on(self.hass, "remote.test")
-
-        self.hass.states.set("remote.test", STATE_OFF)
-        assert not remote.is_on(self.hass, "remote.test")
-
-    def test_turn_on(self):
-        """Test turn_on."""
-        turn_on_calls = mock_service(self.hass, remote.DOMAIN, SERVICE_TURN_ON)
-
-        common.turn_on(self.hass, entity_id="entity_id_val")
-
-        self.hass.block_till_done()
-
-        assert len(turn_on_calls) == 1
-        call = turn_on_calls[-1]
-
-        assert remote.DOMAIN == call.domain
-
-    def test_turn_off(self):
-        """Test turn_off."""
-        turn_off_calls = mock_service(self.hass, remote.DOMAIN, SERVICE_TURN_OFF)
-
-        common.turn_off(self.hass, entity_id="entity_id_val")
-
-        self.hass.block_till_done()
-
-        assert len(turn_off_calls) == 1
-        call = turn_off_calls[-1]
-
-        assert call.domain == remote.DOMAIN
-        assert call.service == SERVICE_TURN_OFF
-        assert call.data[ATTR_ENTITY_ID] == "entity_id_val"
-
-    def test_send_command(self):
-        """Test send_command."""
-        send_command_calls = mock_service(
-            self.hass, remote.DOMAIN, SERVICE_SEND_COMMAND
-        )
-
-        common.send_command(
-            self.hass,
-            entity_id="entity_id_val",
-            device="test_device",
-            command=["test_command"],
-            num_repeats="4",
-            delay_secs="0.6",
-        )
-
-        self.hass.block_till_done()
-
-        assert len(send_command_calls) == 1
-        call = send_command_calls[-1]
-
-        assert call.domain == remote.DOMAIN
-        assert call.service == SERVICE_SEND_COMMAND
-        assert call.data[ATTR_ENTITY_ID] == "entity_id_val"
-
-    def test_learn_command(self):
-        """Test learn_command."""
-        learn_command_calls = mock_service(
-            self.hass, remote.DOMAIN, SERVICE_LEARN_COMMAND
-        )
-
-        common.learn_command(
-            self.hass,
-            entity_id="entity_id_val",
-            device="test_device",
-            command=["test_command"],
-            alternative=True,
-            timeout=20,
-        )
-
-        self.hass.block_till_done()
-
-        assert len(learn_command_calls) == 1
-        call = learn_command_calls[-1]
-
-        assert call.domain == remote.DOMAIN
-        assert call.service == SERVICE_LEARN_COMMAND
-        assert call.data[ATTR_ENTITY_ID] == "entity_id_val"
+    hass.states.async_set("remote.test", STATE_OFF)
+    assert not remote.is_on(hass, "remote.test")
 
 
-def test_deprecated_base_class(caplog):
+async def test_turn_on(hass):
+    """Test turn_on."""
+    turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID})
+
+    await hass.async_block_till_done()
+
+    assert len(turn_on_calls) == 1
+    call = turn_on_calls[-1]
+
+    assert call.domain == DOMAIN
+
+
+async def test_turn_off(hass):
+    """Test turn_off."""
+    turn_off_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}
+    )
+
+    await hass.async_block_till_done()
+
+    assert len(turn_off_calls) == 1
+    call = turn_off_calls[-1]
+
+    assert call.domain == DOMAIN
+    assert call.service == SERVICE_TURN_OFF
+    assert call.data[ATTR_ENTITY_ID] == ENTITY_ID
+
+
+async def test_send_command(hass):
+    """Test send_command."""
+    send_command_calls = async_mock_service(hass, DOMAIN, SERVICE_SEND_COMMAND)
+
+    data = {
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_DEVICE: "test_device",
+        ATTR_COMMAND: ["test_command"],
+        ATTR_NUM_REPEATS: "4",
+        ATTR_DELAY_SECS: "0.6",
+    }
+
+    await hass.services.async_call(DOMAIN, SERVICE_SEND_COMMAND, data)
+
+    await hass.async_block_till_done()
+
+    assert len(send_command_calls) == 1
+    call = send_command_calls[-1]
+
+    assert call.domain == DOMAIN
+    assert call.service == SERVICE_SEND_COMMAND
+    assert call.data[ATTR_ENTITY_ID] == ENTITY_ID
+
+
+async def test_learn_command(hass):
+    """Test learn_command."""
+    learn_command_calls = async_mock_service(hass, DOMAIN, SERVICE_LEARN_COMMAND)
+
+    data = {
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_DEVICE: "test_device",
+        ATTR_COMMAND: ["test_command"],
+        ATTR_COMMAND_TYPE: "rf",
+        ATTR_ALTERNATIVE: True,
+        ATTR_TIMEOUT: 20,
+    }
+    await hass.services.async_call(DOMAIN, SERVICE_LEARN_COMMAND, data)
+
+    await hass.async_block_till_done()
+
+    assert len(learn_command_calls) == 1
+    call = learn_command_calls[-1]
+
+    assert call.domain == DOMAIN
+    assert call.service == SERVICE_LEARN_COMMAND
+    assert call.data[ATTR_ENTITY_ID] == ENTITY_ID
+
+
+async def test_delete_command(hass):
+    """Test delete_command."""
+    delete_command_calls = async_mock_service(
+        hass, remote.DOMAIN, SERVICE_DELETE_COMMAND
+    )
+
+    data = {
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_DEVICE: "test_device",
+        ATTR_COMMAND: ["test_command"],
+    }
+
+    await hass.services.async_call(DOMAIN, SERVICE_DELETE_COMMAND, data)
+
+    await hass.async_block_till_done()
+
+    assert len(delete_command_calls) == 1
+    call = delete_command_calls[-1]
+
+    assert call.domain == remote.DOMAIN
+    assert call.service == SERVICE_DELETE_COMMAND
+    assert call.data[ATTR_ENTITY_ID] == ENTITY_ID
+
+
+async def test_deprecated_base_class(caplog):
     """Test deprecated base class."""
 
     class CustomRemote(remote.RemoteDevice):

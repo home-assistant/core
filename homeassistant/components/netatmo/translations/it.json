@@ -3,6 +3,7 @@
         "abort": {
             "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
             "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione.",
+            "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "create_entry": {
@@ -14,6 +15,28 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "Fuori casa",
+            "hg": "protezione antigelo",
+            "schedule": "programma"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} ha rilevato un allarme",
+            "animal": "{entity_name} ha rilevato un animale",
+            "cancel_set_point": "{entity_name} ha ripreso il suo programma",
+            "human": "{entity_name} ha rilevato un essere umano",
+            "movement": "{entity_name} ha rilevato un movimento",
+            "outdoor": "{entity_name} ha rilevato un evento all'esterno",
+            "person": "{entity_name} ha rilevato una persona",
+            "person_away": "{entity_name} ha rilevato che una persona \u00e8 uscita",
+            "set_point": "{entity_name} temperatura desiderata impostata manualmente",
+            "therm_mode": "{entity_name} \u00e8 passato a \"{subtype}\"",
+            "turned_off": "{entity_name} disattivato",
+            "turned_on": "{entity_name} attivato",
+            "vehicle": "{entity_name} ha rilevato un veicolo"
+        }
+    },
     "options": {
         "step": {
             "public_weather": {
@@ -21,8 +44,8 @@
                     "area_name": "Nome dell'area",
                     "lat_ne": "Latitudine angolo Nord-Est",
                     "lat_sw": "Latitudine angolo Sud-Ovest",
-                    "lon_ne": "Longitudine angolo Nord-Est",
-                    "lon_sw": "Longitudine angolo Sud-Ovest",
+                    "lon_ne": "Logitudine angolo Nord-Est",
+                    "lon_sw": "Logitudine angolo Sud-Ovest",
                     "mode": "Calcolo",
                     "show_on_map": "Mostra sulla mappa"
                 },

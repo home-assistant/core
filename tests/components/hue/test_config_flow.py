@@ -1,5 +1,6 @@
 """Tests for Philips Hue config flow."""
 import asyncio
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import client_exceptions
 import aiohue
@@ -11,7 +12,6 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.hue import config_flow, const
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 
@@ -54,7 +54,7 @@ async def test_flow_works(hass):
         return_value=[mock_bridge],
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": "user"}
+            const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
     assert result["type"] == "form"
@@ -92,12 +92,16 @@ async def test_manual_flow_works(hass, aioclient_mock):
     """Test config flow discovers only already configured bridges."""
     mock_bridge = get_mock_bridge()
 
+    MockConfigEntry(
+        domain="hue", source=config_entries.SOURCE_IGNORE, unique_id="bla"
+    ).add_to_hass(hass)
+
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",
         return_value=[mock_bridge],
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": "user"}
+            const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
     assert result["type"] == "form"
@@ -137,7 +141,7 @@ async def test_manual_flow_works(hass, aioclient_mock):
         "username": "username-abc",
     }
     entries = hass.config_entries.async_entries("hue")
-    assert len(entries) == 1
+    assert len(entries) == 2
     entry = entries[-1]
     assert entry.unique_id == "id-1234"
 
@@ -153,7 +157,7 @@ async def test_manual_flow_bridge_exist(hass, aioclient_mock):
         return_value=[],
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": "user"}
+            const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
     assert result["type"] == "form"
@@ -180,7 +184,7 @@ async def test_manual_flow_no_discovered_bridges(hass, aioclient_mock):
     aioclient_mock.get(URL_NUPNP, json=[])
 
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": "user"}
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "manual"
@@ -194,7 +198,7 @@ async def test_flow_all_discovered_bridges_exist(hass, aioclient_mock):
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": "user"}
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "form"
@@ -217,7 +221,7 @@ async def test_flow_bridges_discovered(hass, aioclient_mock):
     )
 
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": "user"}
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "init"
@@ -244,7 +248,7 @@ async def test_flow_two_bridges_discovered_one_new(hass, aioclient_mock):
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": "user"}
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "form"
@@ -262,7 +266,7 @@ async def test_flow_timeout_discovery(hass):
         side_effect=asyncio.TimeoutError,
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": "user"}
+            const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
     assert result["type"] == "abort"
@@ -279,7 +283,7 @@ async def test_flow_link_timeout(hass):
         return_value=[mock_bridge],
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": "user"}
+            const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
     result = await hass.config_entries.flow.async_configure(
@@ -304,7 +308,7 @@ async def test_flow_link_unknown_error(hass):
         return_value=[mock_bridge],
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": "user"}
+            const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
     result = await hass.config_entries.flow.async_configure(
@@ -330,7 +334,7 @@ async def test_flow_link_button_not_pressed(hass):
         return_value=[mock_bridge],
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": "user"}
+            const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
     result = await hass.config_entries.flow.async_configure(
@@ -356,7 +360,7 @@ async def test_flow_link_unknown_host(hass):
         return_value=[mock_bridge],
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": "user"}
+            const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
     result = await hass.config_entries.flow.async_configure(
@@ -371,14 +375,15 @@ async def test_flow_link_unknown_host(hass):
     assert result["reason"] == "cannot_connect"
 
 
-async def test_bridge_ssdp(hass):
+@pytest.mark.parametrize("mf_url", config_flow.HUE_MANUFACTURERURL)
+async def test_bridge_ssdp(hass, mf_url):
     """Test a bridge being discovered."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
-        context={"source": "ssdp"},
+        context={"source": config_entries.SOURCE_SSDP},
         data={
             ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: mf_url,
             ssdp.ATTR_UPNP_SERIAL: "1234",
         },
     )
@@ -391,7 +396,7 @@ async def test_bridge_ssdp_discover_other_bridge(hass):
     """Test that discovery ignores other bridges."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
-        context={"source": "ssdp"},
+        context={"source": config_entries.SOURCE_SSDP},
         data={ssdp.ATTR_UPNP_MANUFACTURER_URL: "http://www.notphilips.com"},
     )
 
@@ -403,11 +408,11 @@ async def test_bridge_ssdp_emulated_hue(hass):
     """Test if discovery info is from an emulated hue instance."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
-        context={"source": "ssdp"},
+        context={"source": config_entries.SOURCE_SSDP},
         data={
             ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
             ssdp.ATTR_UPNP_FRIENDLY_NAME: "Home Assistant Bridge",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
             ssdp.ATTR_UPNP_SERIAL: "1234",
         },
     )
@@ -420,9 +425,9 @@ async def test_bridge_ssdp_missing_location(hass):
     """Test if discovery info is missing a location attribute."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
-        context={"source": "ssdp"},
+        context={"source": config_entries.SOURCE_SSDP},
         data={
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
             ssdp.ATTR_UPNP_SERIAL: "1234",
         },
     )
@@ -435,10 +440,10 @@ async def test_bridge_ssdp_missing_serial(hass):
     """Test if discovery info is a serial attribute."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
-        context={"source": "ssdp"},
+        context={"source": config_entries.SOURCE_SSDP},
         data={
             ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
         },
     )
 
@@ -450,11 +455,11 @@ async def test_bridge_ssdp_espalexa(hass):
     """Test if discovery info is from an Espalexa based device."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
-        context={"source": "ssdp"},
+        context={"source": config_entries.SOURCE_SSDP},
         data={
             ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
             ssdp.ATTR_UPNP_FRIENDLY_NAME: "Espalexa (0.0.0.0)",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
             ssdp.ATTR_UPNP_SERIAL: "1234",
         },
     )
@@ -471,10 +476,10 @@ async def test_bridge_ssdp_already_configured(hass):
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
-        context={"source": "ssdp"},
+        context={"source": config_entries.SOURCE_SSDP},
         data={
             ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
             ssdp.ATTR_UPNP_SERIAL: "1234",
         },
     )
@@ -487,7 +492,7 @@ async def test_import_with_no_config(hass):
     """Test importing a host without an existing config file."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data={"host": "0.0.0.0"},
     )
 
@@ -526,7 +531,9 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(hass):
         return_value=bridge,
     ):
         result = await hass.config_entries.flow.async_init(
-            "hue", data={"host": "2.2.2.2"}, context={"source": "import"}
+            "hue",
+            data={"host": "2.2.2.2"},
+            context={"source": config_entries.SOURCE_IMPORT},
         )
 
     assert result["type"] == "form"
@@ -556,7 +563,7 @@ async def test_bridge_homekit(hass, aioclient_mock):
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
-        context={"source": "homekit"},
+        context={"source": config_entries.SOURCE_HOMEKIT},
         data={
             "host": "0.0.0.0",
             "serial": "1234",
@@ -566,7 +573,14 @@ async def test_bridge_homekit(hass, aioclient_mock):
     )
 
     assert result["type"] == "form"
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "link"
+
+    flow = next(
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
+    )
+    assert flow["context"]["unique_id"] == config_entries.DEFAULT_DISCOVERY_UNIQUE_ID
 
 
 async def test_bridge_import_already_configured(hass):
@@ -577,7 +591,7 @@ async def test_bridge_import_already_configured(hass):
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data={"host": "0.0.0.0", "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
     )
 
@@ -593,7 +607,7 @@ async def test_bridge_homekit_already_configured(hass):
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
-        context={"source": "homekit"},
+        context={"source": config_entries.SOURCE_HOMEKIT},
         data={"host": "0.0.0.0", "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
     )
 
@@ -610,10 +624,10 @@ async def test_ssdp_discovery_update_configuration(hass):
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
-        context={"source": "ssdp"},
+        context={"source": config_entries.SOURCE_SSDP},
         data={
             ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1/",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
             ssdp.ATTR_UPNP_SERIAL: "aabbccddeeff",
         },
     )
@@ -636,6 +650,15 @@ async def test_options_flow(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "init"
+    schema = result["data_schema"].schema
+    assert (
+        _get_schema_default(schema, const.CONF_ALLOW_HUE_GROUPS)
+        == const.DEFAULT_ALLOW_HUE_GROUPS
+    )
+    assert (
+        _get_schema_default(schema, const.CONF_ALLOW_UNREACHABLE)
+        == const.DEFAULT_ALLOW_UNREACHABLE
+    )
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -650,3 +673,11 @@ async def test_options_flow(hass):
         const.CONF_ALLOW_HUE_GROUPS: True,
         const.CONF_ALLOW_UNREACHABLE: True,
     }
+
+
+def _get_schema_default(schema, key_name):
+    """Iterate schema to find a key."""
+    for schema_key in schema:
+        if schema_key == key_name:
+            return schema_key.default()
+    raise KeyError(f"{key_name} not found in schema")

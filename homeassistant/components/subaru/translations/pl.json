@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "error": {
+            "bad_pin_format": "PIN powinien sk\u0142ada\u0107 si\u0119 z 4 cyfr",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "incorrect_pin": "Nieprawid\u0142owy PIN",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "pin": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "Wprowad\u017a sw\u00f3j PIN dla MySubaru\nUWAGA: Wszystkie pojazdy na koncie musz\u0105 mie\u0107 ten sam kod PIN",
+                "title": "Konfiguracja Subaru Starlink"
+            },
+            "user": {
+                "data": {
+                    "country": "Wybierz kraj",
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                },
+                "description": "Wprowad\u017a dane uwierzytelniaj\u0105ce MySubaru\nUWAGA: Pocz\u0105tkowa konfiguracja mo\u017ce zaj\u0105\u0107 do 30 sekund",
+                "title": "Konfiguracja Subaru Starlink"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_enabled": "W\u0142\u0105cz odpytywanie pojazdu"
+                },
+                "description": "Po w\u0142\u0105czeniu, odpytywanie pojazdu b\u0119dzie co 2 godziny wysy\u0142a\u0107 zdalne polecenie do pojazdu w celu uzyskania nowych danych z czujnika. Bez odpytywania pojazdu, nowe dane z czujnika s\u0105 odbierane tylko wtedy, gdy pojazd automatycznie przesy\u0142a dane (zwykle po wy\u0142\u0105czeniu silnika).",
+                "title": "Opcje Subaru Starlink"
+            }
+        }
+    }
+}

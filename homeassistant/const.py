@@ -1,12 +1,12 @@
 """Constants used by Home Assistant components."""
-MAJOR_VERSION = 0
-MINOR_VERSION = 115
+MAJOR_VERSION = 2021
+MINOR_VERSION = 5
 PATCH_VERSION = "0.dev0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER = (3, 7, 1)
+REQUIRED_PYTHON_VER = (3, 8, 0)
 # Truthy date string triggers showing related deprecation warning messages.
-REQUIRED_NEXT_PYTHON_VER = (3, 8, 0)
+REQUIRED_NEXT_PYTHON_VER = (3, 9, 0)
 REQUIRED_NEXT_PYTHON_DATE = ""
 
 # Format for platform files
@@ -22,6 +22,10 @@ ENTITY_MATCH_ALL = "all"
 # If no name is specified
 DEVICE_DEFAULT_NAME = "Unnamed Device"
 
+# Max characters for an event_type (changing this requires a recorder
+# database migration)
+MAX_LENGTH_EVENT_TYPE = 64
+
 # Sun events
 SUN_EVENT_SUNSET = "sunset"
 SUN_EVENT_SUNRISE = "sunrise"
@@ -34,6 +38,7 @@ CONF_AFTER = "after"
 CONF_ALIAS = "alias"
 CONF_ALLOWLIST_EXTERNAL_URLS = "allowlist_external_urls"
 CONF_API_KEY = "api_key"
+CONF_API_TOKEN = "api_token"
 CONF_API_VERSION = "api_version"
 CONF_ARMING_TIME = "arming_time"
 CONF_AT = "at"
@@ -72,6 +77,7 @@ CONF_CUSTOMIZE_GLOB = "customize_glob"
 CONF_DEFAULT = "default"
 CONF_DELAY = "delay"
 CONF_DELAY_TIME = "delay_time"
+CONF_DESCRIPTION = "description"
 CONF_DEVICE = "device"
 CONF_DEVICES = "devices"
 CONF_DEVICE_CLASS = "device_class"
@@ -112,10 +118,12 @@ CONF_INCLUDE = "include"
 CONF_INTERNAL_URL = "internal_url"
 CONF_IP_ADDRESS = "ip_address"
 CONF_LATITUDE = "latitude"
+CONF_LEGACY_TEMPLATES = "legacy_templates"
 CONF_LIGHTS = "lights"
 CONF_LONGITUDE = "longitude"
 CONF_MAC = "mac"
 CONF_MAXIMUM = "maximum"
+CONF_MEDIA_DIRS = "media_dirs"
 CONF_METHOD = "method"
 CONF_MINIMUM = "minimum"
 CONF_MODE = "mode"
@@ -125,6 +133,7 @@ CONF_NAME = "name"
 CONF_OFFSET = "offset"
 CONF_OPTIMISTIC = "optimistic"
 CONF_PACKAGES = "packages"
+CONF_PARAMS = "params"
 CONF_PASSWORD = "password"
 CONF_PATH = "path"
 CONF_PAYLOAD = "payload"
@@ -150,6 +159,7 @@ CONF_RGB = "rgb"
 CONF_ROOM = "room"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_SCENE = "scene"
+CONF_SELECTOR = "selector"
 CONF_SENDER = "sender"
 CONF_SENSORS = "sensors"
 CONF_SENSOR_TYPE = "sensor_type"
@@ -165,6 +175,7 @@ CONF_STATE = "state"
 CONF_STATE_TEMPLATE = "state_template"
 CONF_STRUCTURE = "structure"
 CONF_SWITCHES = "switches"
+CONF_TARGET = "target"
 CONF_TEMPERATURE_UNIT = "temperature_unit"
 CONF_TIMEOUT = "timeout"
 CONF_TIME_ZONE = "time_zone"
@@ -179,6 +190,7 @@ CONF_UNTIL = "until"
 CONF_URL = "url"
 CONF_USERNAME = "username"
 CONF_VALUE_TEMPLATE = "value_template"
+CONF_VARIABLES = "variables"
 CONF_VERIFY_SSL = "verify_ssl"
 CONF_WAIT_FOR_TRIGGER = "wait_for_trigger"
 CONF_WAIT_TEMPLATE = "wait_template"
@@ -202,7 +214,6 @@ EVENT_HOMEASSISTANT_STARTED = "homeassistant_started"
 EVENT_HOMEASSISTANT_STOP = "homeassistant_stop"
 EVENT_HOMEASSISTANT_FINAL_WRITE = "homeassistant_final_write"
 EVENT_LOGBOOK_ENTRY = "logbook_entry"
-EVENT_PLATFORM_DISCOVERED = "platform_discovered"
 EVENT_SERVICE_REGISTERED = "service_registered"
 EVENT_SERVICE_REMOVED = "service_removed"
 EVENT_STATE_CHANGED = "state_changed"
@@ -213,6 +224,8 @@ EVENT_TIME_CHANGED = "time_changed"
 
 # #### DEVICE CLASSES ####
 DEVICE_CLASS_BATTERY = "battery"
+DEVICE_CLASS_CO = "carbon_monoxide"
+DEVICE_CLASS_CO2 = "carbon_dioxide"
 DEVICE_CLASS_HUMIDITY = "humidity"
 DEVICE_CLASS_ILLUMINANCE = "illuminance"
 DEVICE_CLASS_SIGNAL_STRENGTH = "signal_strength"
@@ -284,6 +297,9 @@ ATTR_ENTITY_ID = "entity_id"
 # Contains one string or a list of strings, each being an area id
 ATTR_AREA_ID = "area_id"
 
+# Contains one string, the device ID
+ATTR_DEVICE_ID = "device_id"
+
 # String with a friendly name for the entity
 ATTR_FRIENDLY_NAME = "friendly_name"
 
@@ -301,9 +317,6 @@ CONF_UNIT_SYSTEM_IMPERIAL: str = "imperial"
 
 # Electrical attributes
 ATTR_VOLTAGE = "voltage"
-
-# Contains the information that is discovered
-ATTR_DISCOVERED = "discovered"
 
 # Location of the device/sensor
 ATTR_LOCATION = "location"
@@ -351,6 +364,9 @@ ATTR_STATE = "state"
 ATTR_EDITABLE = "editable"
 ATTR_OPTION = "option"
 
+# The entity has been restored with restore state
+ATTR_RESTORED = "restored"
+
 # Bitfield of supported component features for the entity
 ATTR_SUPPORTED_FEATURES = "supported_features"
 
@@ -363,26 +379,31 @@ ATTR_TEMPERATURE = "temperature"
 # #### UNITS OF MEASUREMENT ####
 # Power units
 POWER_WATT = "W"
-POWER_KILO_WATT = f"k{POWER_WATT}"
+POWER_KILO_WATT = "kW"
 
 # Voltage units
 VOLT = "V"
 
 # Energy units
-ENERGY_WATT_HOUR = f"{POWER_WATT}h"
-ENERGY_KILO_WATT_HOUR = f"k{ENERGY_WATT_HOUR}"
+ENERGY_WATT_HOUR = "Wh"
+ENERGY_KILO_WATT_HOUR = "kWh"
 
 # Electrical units
 ELECTRICAL_CURRENT_AMPERE = "A"
-ELECTRICAL_VOLT_AMPERE = f"{VOLT}{ELECTRICAL_CURRENT_AMPERE}"
+ELECTRICAL_VOLT_AMPERE = "VA"
 
 # Degree units
 DEGREE = "°"
 
+# Currency units
+CURRENCY_EURO = "€"
+CURRENCY_DOLLAR = "$"
+CURRENCY_CENT = "¢"
+
 # Temperature units
-TEMP_CELSIUS = f"{DEGREE}C"
-TEMP_FAHRENHEIT = f"{DEGREE}F"
-TEMP_KELVIN = f"{DEGREE}K"
+TEMP_CELSIUS = "°C"
+TEMP_FAHRENHEIT = "°F"
+TEMP_KELVIN = "K"
 
 # Time units
 TIME_MICROSECONDS = "μs"
@@ -396,6 +417,7 @@ TIME_MONTHS = "m"
 TIME_YEARS = "y"
 
 # Length units
+LENGTH_MILLIMETERS: str = "mm"
 LENGTH_CENTIMETERS: str = "cm"
 LENGTH_METERS: str = "m"
 LENGTH_KILOMETERS: str = "km"
@@ -407,7 +429,7 @@ LENGTH_MILES: str = "mi"
 
 # Frequency units
 FREQUENCY_HERTZ = "Hz"
-FREQUENCY_GIGAHERTZ = f"G{FREQUENCY_HERTZ}"
+FREQUENCY_GIGAHERTZ = "GHz"
 
 # Pressure units
 PRESSURE_PA: str = "Pa"
@@ -420,13 +442,18 @@ PRESSURE_PSI: str = "psi"
 # Volume units
 VOLUME_LITERS: str = "L"
 VOLUME_MILLILITERS: str = "mL"
-VOLUME_CUBIC_METERS = f"{LENGTH_METERS}³"
+VOLUME_CUBIC_METERS = "m³"
+VOLUME_CUBIC_FEET = "ft³"
 
 VOLUME_GALLONS: str = "gal"
 VOLUME_FLUID_OUNCE: str = "fl. oz."
 
+# Volume Flow Rate units
+VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR = "m³/h"
+VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE = "ft³/m"
+
 # Area units
-AREA_SQUARE_METERS = f"{LENGTH_METERS}²"
+AREA_SQUARE_METERS = "m²"
 
 # Mass units
 MASS_GRAMS: str = "g"
@@ -438,7 +465,10 @@ MASS_OUNCES: str = "oz"
 MASS_POUNDS: str = "lb"
 
 # Conductivity units
-CONDUCTIVITY: str = f"µS/{LENGTH_CENTIMETERS}"
+CONDUCTIVITY: str = "µS/cm"
+
+# Light units
+LIGHT_LUX: str = "lx"
 
 # UV Index units
 UV_INDEX: str = "UV index"
@@ -447,18 +477,29 @@ UV_INDEX: str = "UV index"
 PERCENTAGE = "%"
 
 # Irradiation units
-IRRADIATION_WATTS_PER_SQUARE_METER = f"{POWER_WATT}/{AREA_SQUARE_METERS}"
+IRRADIATION_WATTS_PER_SQUARE_METER = "W/m²"
+
+# Precipitation units
+PRECIPITATION_MILLIMETERS_PER_HOUR = "mm/h"
 
 # Concentration units
-CONCENTRATION_MICROGRAMS_PER_CUBIC_METER = f"{MASS_MICROGRAMS}/{VOLUME_CUBIC_METERS}"
-CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER = f"{MASS_MILLIGRAMS}/{VOLUME_CUBIC_METERS}"
+CONCENTRATION_MICROGRAMS_PER_CUBIC_METER = "µg/m³"
+CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER = "mg/m³"
+CONCENTRATION_PARTS_PER_CUBIC_METER = "p/m³"
 CONCENTRATION_PARTS_PER_MILLION = "ppm"
 CONCENTRATION_PARTS_PER_BILLION = "ppb"
 
 # Speed units
-SPEED_METERS_PER_SECOND = f"{LENGTH_METERS}/{TIME_SECONDS}"
-SPEED_KILOMETERS_PER_HOUR = f"{LENGTH_KILOMETERS}/{TIME_HOURS}"
+SPEED_MILLIMETERS_PER_DAY = "mm/d"
+SPEED_INCHES_PER_DAY = "in/d"
+SPEED_METERS_PER_SECOND = "m/s"
+SPEED_INCHES_PER_HOUR = "in/h"
+SPEED_KILOMETERS_PER_HOUR = "km/h"
 SPEED_MILES_PER_HOUR = "mph"
+
+# Signal_strength units
+SIGNAL_STRENGTH_DECIBELS = "dB"
+SIGNAL_STRENGTH_DECIBELS_MILLIWATT = "dBm"
 
 # Data units
 DATA_BITS = "bit"
@@ -482,17 +523,17 @@ DATA_PEBIBYTES = "PiB"
 DATA_EXBIBYTES = "EiB"
 DATA_ZEBIBYTES = "ZiB"
 DATA_YOBIBYTES = "YiB"
-DATA_RATE_BITS_PER_SECOND = f"{DATA_BITS}/{TIME_SECONDS}"
-DATA_RATE_KILOBITS_PER_SECOND = f"{DATA_KILOBITS}/{TIME_SECONDS}"
-DATA_RATE_MEGABITS_PER_SECOND = f"{DATA_MEGABITS}/{TIME_SECONDS}"
-DATA_RATE_GIGABITS_PER_SECOND = f"{DATA_GIGABITS}/{TIME_SECONDS}"
-DATA_RATE_BYTES_PER_SECOND = f"{DATA_BYTES}/{TIME_SECONDS}"
-DATA_RATE_KILOBYTES_PER_SECOND = f"{DATA_KILOBYTES}/{TIME_SECONDS}"
-DATA_RATE_MEGABYTES_PER_SECOND = f"{DATA_MEGABYTES}/{TIME_SECONDS}"
-DATA_RATE_GIGABYTES_PER_SECOND = f"{DATA_GIGABYTES}/{TIME_SECONDS}"
-DATA_RATE_KIBIBYTES_PER_SECOND = f"{DATA_KIBIBYTES}/{TIME_SECONDS}"
-DATA_RATE_MEBIBYTES_PER_SECOND = f"{DATA_MEBIBYTES}/{TIME_SECONDS}"
-DATA_RATE_GIBIBYTES_PER_SECOND = f"{DATA_GIBIBYTES}/{TIME_SECONDS}"
+DATA_RATE_BITS_PER_SECOND = "bit/s"
+DATA_RATE_KILOBITS_PER_SECOND = "kbit/s"
+DATA_RATE_MEGABITS_PER_SECOND = "Mbit/s"
+DATA_RATE_GIGABITS_PER_SECOND = "Gbit/s"
+DATA_RATE_BYTES_PER_SECOND = "B/s"
+DATA_RATE_KILOBYTES_PER_SECOND = "kB/s"
+DATA_RATE_MEGABYTES_PER_SECOND = "MB/s"
+DATA_RATE_GIGABYTES_PER_SECOND = "GB/s"
+DATA_RATE_KIBIBYTES_PER_SECOND = "KiB/s"
+DATA_RATE_MEBIBYTES_PER_SECOND = "MiB/s"
+DATA_RATE_GIBIBYTES_PER_SECOND = "GiB/s"
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = "stop"
@@ -514,6 +555,7 @@ SERVICE_MEDIA_STOP = "media_stop"
 SERVICE_MEDIA_NEXT_TRACK = "media_next_track"
 SERVICE_MEDIA_PREVIOUS_TRACK = "media_previous_track"
 SERVICE_MEDIA_SEEK = "media_seek"
+SERVICE_REPEAT_SET = "repeat_set"
 SERVICE_SHUFFLE_SET = "shuffle_set"
 
 SERVICE_ALARM_DISARM = "alarm_disarm"
@@ -563,6 +605,7 @@ URL_API_TEMPLATE = "/api/template"
 
 HTTP_OK = 200
 HTTP_CREATED = 201
+HTTP_ACCEPTED = 202
 HTTP_MOVED_PERMANENTLY = 301
 HTTP_BAD_REQUEST = 400
 HTTP_UNAUTHORIZED = 401
@@ -572,6 +615,7 @@ HTTP_METHOD_NOT_ALLOWED = 405
 HTTP_UNPROCESSABLE_ENTITY = 422
 HTTP_TOO_MANY_REQUESTS = 429
 HTTP_INTERNAL_SERVER_ERROR = 500
+HTTP_BAD_GATEWAY = 502
 HTTP_SERVICE_UNAVAILABLE = 503
 
 HTTP_BASIC_AUTHENTICATION = "basic"
@@ -606,3 +650,6 @@ PRECISION_TENTHS = 0.1
 # Static list of entities that will never be exposed to
 # cloud, alexa, or google_home components
 CLOUD_NEVER_EXPOSED_ENTITIES = ["group.all_locks"]
+
+# The ID of the Home Assistant Cast App
+CAST_APP_ID_HOMEASSISTANT = "B12CE3CA"

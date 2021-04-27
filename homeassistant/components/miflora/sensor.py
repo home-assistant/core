@@ -5,10 +5,10 @@ import logging
 
 import btlewrap
 from btlewrap import BluetoothBackendException
-from miflora import miflora_poller  # pylint: disable=import-error
+from miflora import miflora_poller
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONDUCTIVITY,
     CONF_FORCE_UPDATE,
@@ -16,14 +16,17 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_TEMPERATURE,
     EVENT_HOMEASSISTANT_START,
+    LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
@@ -50,13 +53,13 @@ SCAN_INTERVAL = timedelta(seconds=1200)
 
 ATTR_LAST_SUCCESSFUL_UPDATE = "last_successful_update"
 
-# Sensor types are defined like: Name, units, icon
+# Sensor types are defined like: Name, units, icon, device_class
 SENSOR_TYPES = {
-    "temperature": ["Temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "light": ["Light intensity", "lx", "mdi:white-balance-sunny"],
-    "moisture": ["Moisture", PERCENTAGE, "mdi:water-percent"],
-    "conductivity": ["Conductivity", CONDUCTIVITY, "mdi:flash-circle"],
-    "battery": ["Battery", PERCENTAGE, "mdi:battery-charging"],
+    "temperature": ["Temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
+    "light": ["Light intensity", LIGHT_LUX, None, DEVICE_CLASS_ILLUMINANCE],
+    "moisture": ["Moisture", PERCENTAGE, "mdi:water-percent", None],
+    "conductivity": ["Conductivity", CONDUCTIVITY, "mdi:flash-circle", None],
+    "battery": ["Battery", PERCENTAGE, None, DEVICE_CLASS_BATTERY],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -103,6 +106,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             else SENSOR_TYPES[parameter][1]
         )
         icon = SENSOR_TYPES[parameter][2]
+        device_class = SENSOR_TYPES[parameter][3]
 
         prefix = config.get(CONF_NAME)
         if prefix:
@@ -115,6 +119,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 name,
                 unit,
                 icon,
+                device_class,
                 force_update,
                 median,
                 go_unavailable_timeout,
@@ -124,7 +129,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devs)
 
 
-class MiFloraSensor(Entity):
+class MiFloraSensor(SensorEntity):
     """Implementing the MiFlora sensor."""
 
     def __init__(
@@ -134,6 +139,7 @@ class MiFloraSensor(Entity):
         name,
         unit,
         icon,
+        device_class,
         force_update,
         median,
         go_unavailable_timeout,
@@ -145,6 +151,7 @@ class MiFloraSensor(Entity):
         self._icon = icon
         self._name = name
         self._state = None
+        self._device_class = device_class
         self.data = []
         self._force_update = force_update
         self.go_unavailable_timeout = go_unavailable_timeout
@@ -181,10 +188,14 @@ class MiFloraSensor(Entity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = {ATTR_LAST_SUCCESSFUL_UPDATE: self.last_successful_update}
-        return attr
+        return {ATTR_LAST_SUCCESSFUL_UPDATE: self.last_successful_update}
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return self._device_class
 
     @property
     def unit_of_measurement(self):

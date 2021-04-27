@@ -1,14 +1,15 @@
 """Expose regular shell commands as services."""
 import asyncio
+from contextlib import suppress
 import logging
 import shlex
 
 import voluptuous as vol
 
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "shell_command"
 
@@ -21,7 +22,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the shell_command component."""
     conf = config.get(DOMAIN, {})
 
@@ -45,7 +46,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
         if args_compiled:
             try:
-                rendered_args = args_compiled.async_render(service.data)
+                rendered_args = args_compiled.async_render(
+                    variables=service.data, parse_result=False
+                )
             except TemplateError as ex:
                 _LOGGER.exception("Error rendering command template: %s", ex)
                 return
@@ -85,10 +88,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
                 "Timed out running command: `%s`, after: %ss", cmd, COMMAND_TIMEOUT
             )
             if process:
-                try:
+                with suppress(TypeError):
                     await process.kill()
-                except TypeError:
-                    pass
                 del process
 
             return
@@ -112,6 +113,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
                 "Error running command: `%s`, return code: %s", cmd, process.returncode
             )
 
-    for name in conf.keys():
+    for name in conf:
         hass.services.async_register(DOMAIN, name, async_service_handler)
     return True

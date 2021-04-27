@@ -1,6 +1,5 @@
 """Support for the ZHA platform."""
 import functools
-import logging
 import time
 
 from homeassistant.components.device_tracker import DOMAIN, SOURCE_TYPE_ROUTER
@@ -21,7 +20,6 @@ from .entity import ZhaEntity
 from .sensor import Battery
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -85,7 +83,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
     @callback
     def async_battery_percentage_remaining_updated(self, attr_id, attr_name, value):
         """Handle tracking."""
-        if not attr_name == "battery_percentage_remaining":
+        if attr_name != "battery_percentage_remaining":
             return
         self.debug("battery_percentage_remaining updated: %s", value)
         self._connected = True

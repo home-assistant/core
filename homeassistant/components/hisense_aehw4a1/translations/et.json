@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "V\u00f5rgust ei leitud seadmeid",
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+        },
+        "step": {
+            "confirm": {
+                "description": "Kas soovid seadistada Hisense AEH-W4A1?"
+            }
+        }
+    }
+}

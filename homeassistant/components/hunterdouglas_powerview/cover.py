@@ -1,5 +1,6 @@
 """Support for hunter douglas shades."""
 import asyncio
+from contextlib import suppress
 import logging
 
 from aiopvapi.helpers.constants import ATTR_POSITION1, ATTR_POSITION_DATA
@@ -65,21 +66,21 @@ async def async_setup_entry(hass, entry, async_add_entities):
         # possible
         shade = PvShade(raw_shade, pv_request)
         name_before_refresh = shade.name
-        try:
+        with suppress(asyncio.TimeoutError):
             async with async_timeout.timeout(1):
                 await shade.refresh()
-        except asyncio.TimeoutError:
-            # Forced refresh is not required for setup
-            pass
+
         if ATTR_POSITION_DATA not in shade.raw_data:
             _LOGGER.info(
                 "The %s shade was skipped because it is missing position data",
                 name_before_refresh,
             )
             continue
+        room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
+        room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
         entities.append(
             PowerViewShade(
-                shade, name_before_refresh, room_data, coordinator, device_info
+                coordinator, device_info, room_name, shade, name_before_refresh
             )
         )
     async_add_entities(entities)
@@ -98,21 +99,18 @@ def hass_position_to_hd(hass_positon):
 class PowerViewShade(ShadeEntity, CoverEntity):
     """Representation of a powerview shade."""
 
-    def __init__(self, shade, name, room_data, coordinator, device_info):
+    def __init__(self, coordinator, device_info, room_name, shade, name):
         """Initialize the shade."""
-        room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
-        super().__init__(coordinator, device_info, shade, name)
+        super().__init__(coordinator, device_info, room_name, shade, name)
         self._shade = shade
-        self._device_info = device_info
         self._is_opening = False
         self._is_closing = False
         self._last_action_timestamp = 0
         self._scheduled_transition_update = None
-        self._room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
         self._current_cover_position = MIN_POSITION
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
 
@@ -215,9 +213,9 @@ class PowerViewShade(ShadeEntity, CoverEntity):
     def _async_update_current_cover_position(self):
         """Update the current cover position from the data."""
         _LOGGER.debug("Raw data update: %s", self._shade.raw_data)
-        position_data = self._shade.raw_data[ATTR_POSITION_DATA]
+        position_data = self._shade.raw_data.get(ATTR_POSITION_DATA, {})
         if ATTR_POSITION1 in position_data:
-            self._current_cover_position = position_data[ATTR_POSITION1]
+            self._current_cover_position = int(position_data[ATTR_POSITION1])
         self._is_opening = False
         self._is_closing = False
 

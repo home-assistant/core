@@ -4,10 +4,11 @@ import logging
 
 from aiohttp import ClientConnectorError
 from pygti.exceptions import InvalidAuth
+from pytz import timezone
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ID, DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
 
@@ -17,7 +18,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 MAX_LIST = 20
 MAX_TIME_OFFSET = 360
 ICON = "mdi:bus"
-UNIT_OF_MEASUREMENT = "min"
 
 ATTR_DEPARTURE = "departure"
 ATTR_LINE = "line"
@@ -42,7 +42,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     async_add_devices([sensor], True)
 
 
-class HVVDepartureSensor(Entity):
+class HVVDepartureSensor(SensorEntity):
     """HVVDepartureSensor class."""
 
     def __init__(self, hass, config_entry, session, hub):
@@ -65,11 +65,13 @@ class HVVDepartureSensor(Entity):
             minutes=self.config_entry.options.get("offset", 0)
         )
 
+        departure_time_tz_berlin = departure_time.astimezone(timezone("Europe/Berlin"))
+
         payload = {
             "station": self.config_entry.data[CONF_STATION],
             "time": {
-                "date": departure_time.strftime("%d.%m.%Y"),
-                "time": departure_time.strftime("%H:%M"),
+                "date": departure_time_tz_berlin.strftime("%d.%m.%Y"),
+                "time": departure_time_tz_berlin.strftime("%H:%M"),
             },
             "maxList": MAX_LIST,
             "maxTimeOffset": MAX_TIME_OFFSET,
@@ -196,6 +198,6 @@ class HVVDepartureSensor(Entity):
         return DEVICE_CLASS_TIMESTAMP
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self.attr

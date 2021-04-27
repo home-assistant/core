@@ -1,7 +1,4 @@
 """Representation of Z-Wave binary_sensors."""
-
-import logging
-
 from openzwavemqtt.const import CommandClass, ValueIndex, ValueType
 
 from homeassistant.components.binary_sensor import (
@@ -24,8 +21,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DATA_UNSUBSCRIBE, DOMAIN
 from .entity import ZWaveDeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 NOTIFICATION_TYPE = "index"
 NOTIFICATION_VALUES = "values"

@@ -1,5 +1,6 @@
 """Support for INSTEON Modems (PLM and Hub)."""
 import asyncio
+from contextlib import suppress
 import logging
 
 from pyinsteon import async_close, async_connect, devices
@@ -17,7 +18,7 @@ from .const import (
     CONF_UNITCODE,
     CONF_X10,
     DOMAIN,
-    INSTEON_COMPONENTS,
+    INSTEON_PLATFORMS,
     ON_OFF_EVENTS,
 )
 from .schemas import convert_yaml_to_config_flow
@@ -37,10 +38,8 @@ async def async_get_device_config(hass, config_entry):
     # Make a copy of addresses due to edge case where the list of devices could change during status update
     # Cannot be done concurrently due to issues with the underlying protocol.
     for address in list(devices):
-        try:
+        with suppress(AttributeError):
             await devices[address].async_status()
-        except AttributeError:
-            pass
 
     await devices.async_load(id_devices=1)
     for addr in devices:
@@ -97,7 +96,9 @@ async def async_setup_entry(hass, entry):
             _LOGGER.error("Could not connect to Insteon modem")
             raise ConfigEntryNotReady from exception
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_insteon_connection)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_insteon_connection)
+    )
 
     await devices.async_load(
         workdir=hass.config.config_dir, id_devices=0, load_modem_aldb=0
@@ -138,9 +139,9 @@ async def async_setup_entry(hass, entry):
         )
         device = devices.add_x10_device(housecode, unitcode, x10_type, steps)
 
-    for component in INSTEON_COMPONENTS:
+    for platform in INSTEON_PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     for address in devices:
@@ -159,7 +160,7 @@ async def async_setup_entry(hass, entry):
         identifiers={(DOMAIN, str(devices.modem.address))},
         manufacturer="Smart Home",
         name=f"{devices.modem.description} {devices.modem.address}",
-        model=f"{devices.modem.model} (0x{devices.modem.cat:02x}, 0x{devices.modem.subcat:02x})",
+        model=f"{devices.modem.model} ({devices.modem.cat!r}, 0x{devices.modem.subcat:02x})",
         sw_version=f"{devices.modem.firmware:02x} Engine Version: {devices.modem.engine_version}",
     )
 

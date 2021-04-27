@@ -3,10 +3,7 @@
   "name": "Firmata",
   "config_flow": false,
   "documentation": "https://www.home-assistant.io/integrations/firmata",
-  "requirements": [
-    "pymata-express==1.13"
-  ],
-  "codeowners": [
-    "@DaAwesomeP"
-  ]
+  "requirements": ["pymata-express==1.19"],
+  "codeowners": ["@DaAwesomeP"],
+  "iot_class": "local_push"
 }

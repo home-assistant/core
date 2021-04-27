@@ -1,18 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "unsupported_firmware": "The device is using an unsupported firmware version."
         },
         "error": {
-            "auth_not_supported": "Shelly devices requiring authentication are not currently supported.",
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
-        "flow_title": "Shelly: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm_discovery": {
-                "description": "Do you want to set up the {model} at {host}?"
+                "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
             },
             "credentials": {
                 "data": {
@@ -23,9 +23,25 @@
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Before set up, battery-powered devices must be woken up, you can now wake the device up using a button on it."
             }
         }
     },
-    "title": "Shelly"
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Button",
+            "button1": "First button",
+            "button2": "Second button",
+            "button3": "Third button"
+        },
+        "trigger_type": {
+            "double": "{subtype} double clicked",
+            "long": " {subtype} long clicked",
+            "long_single": "{subtype} long clicked and then single clicked",
+            "single": "{subtype} single clicked",
+            "single_long": "{subtype} single clicked and then long clicked",
+            "triple": "{subtype} triple clicked"
+        }
+    }
 }

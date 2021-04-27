@@ -1,6 +1,7 @@
 """The Tag integration."""
+from __future__ import annotations
+
 import logging
-import typing
 import uuid
 
 import voluptuous as vol
@@ -41,8 +42,8 @@ class TagIDExistsError(HomeAssistantError):
     """Raised when an item is not found."""
 
     def __init__(self, item_id: str):
-        """Initialize tag id exists error."""
-        super().__init__(f"Tag with id: {item_id} already exists.")
+        """Initialize tag ID exists error."""
+        super().__init__(f"Tag with ID {item_id} already exists.")
         self.item_id = item_id
 
 
@@ -63,27 +64,27 @@ class TagStorageCollection(collection.StorageCollection):
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
     UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
 
-    async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
+    async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(data)
         if not data[TAG_ID]:
             data[TAG_ID] = str(uuid.uuid4())
         # make last_scanned JSON serializeable
         if LAST_SCANNED in data:
-            data[LAST_SCANNED] = str(data[LAST_SCANNED])
+            data[LAST_SCANNED] = data[LAST_SCANNED].isoformat()
         return data
 
     @callback
-    def _get_suggested_id(self, info: typing.Dict) -> str:
+    def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[TAG_ID]
 
-    async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
+    async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         data = {**data, **self.UPDATE_SCHEMA(update_data)}
         # make last_scanned JSON serializeable
-        if LAST_SCANNED in data:
-            data[LAST_SCANNED] = str(data[LAST_SCANNED])
+        if LAST_SCANNED in update_data:
+            data[LAST_SCANNED] = data[LAST_SCANNED].isoformat()
         return data
 
 
@@ -100,6 +101,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     collection.StorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
+
     return True
 
 

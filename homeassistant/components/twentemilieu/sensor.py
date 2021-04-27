@@ -1,6 +1,7 @@
 """Support for Twente Milieu sensors."""
-import logging
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any, Callable
 
 from twentemilieu import (
     WASTE_TYPE_NON_RECYCLABLE,
@@ -11,22 +12,23 @@ from twentemilieu import (
     TwenteMilieuConnectionError,
 )
 
-from homeassistant.components.twentemilieu.const import DATA_UPDATE, DOMAIN
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DATA_UPDATE, DOMAIN
 
 PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up Twente Milieu sensor based on a config entry."""
     twentemilieu = hass.data[DOMAIN][entry.data[CONF_ID]]
@@ -70,7 +72,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class TwenteMilieuSensor(Entity):
+class TwenteMilieuSensor(SensorEntity):
     """Defines a Twente Milieu sensor."""
 
     def __init__(
@@ -145,7 +147,7 @@ class TwenteMilieuSensor(Entity):
             self._state = next_pickup.date().isoformat()
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information about Twente Milieu."""
         return {
             "identifiers": {(DOMAIN, self._unique_id)},

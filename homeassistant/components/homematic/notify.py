@@ -1,6 +1,4 @@
 """Notification support for Homematic."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -20,8 +18,6 @@ from .const import (
     DOMAIN,
     SERVICE_SET_DEVICE_VALUE,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

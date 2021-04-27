@@ -1,6 +1,5 @@
 """Support for LG TV running on NetCast 3 or 4."""
 from datetime import datetime, timedelta
-import logging
 
 from pylgnetcast import LgNetCastClient, LgNetCastError
 from requests import RequestException
@@ -30,8 +29,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "LG TV Remote"
 
@@ -211,7 +208,7 @@ class LgTVDevice(MediaPlayerEntity):
     def turn_on(self):
         """Turn on the media player."""
         if self._on_action_script:
-            self._on_action_script.run()
+            self._on_action_script.run(context=self._context)
 
     def volume_up(self):
         """Volume up the media player."""

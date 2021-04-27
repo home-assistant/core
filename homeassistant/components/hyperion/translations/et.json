@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "auth_new_token_not_granted_error": "\u00c4sja loodud juurdep\u00e4\u00e4sut\u00f5end ei ole Hyperioni oma",
+            "auth_new_token_not_work_error": "Loodud juurdep\u00e4\u00e4sut\u00f5endiga autentimine nurjus",
+            "auth_required_error": "Autoriseerimise vajalikkuse tuvastamine nurjus",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "no_id": "Hyperion Ambilighti eksemplar ei teatanud oma ID-d",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_access_token": "Vigane juurdep\u00e4\u00e4sut\u00f5end"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "create_token": "Loo automaatselt uus juurdep\u00e4\u00e4sut\u00f5end",
+                    "token": "V\u00f5i kasuta juba olemasolevat juurdep\u00e4\u00e4sut\u00f5endit"
+                },
+                "description": "Seadista oma Hyperion Ambilighti serveri tuvastamine"
+            },
+            "confirm": {
+                "description": "Kas soovid selle Hyperion Ambilighti lisada Home Assistanti?\n\n**Host:** {host}\n**Port:** {port}\n**ID**: {id}",
+                "title": "Kinnita Hyperion Ambilight teenuse lisamine"
+            },
+            "create_token": {
+                "description": "Uue juurdep\u00e4\u00e4sut\u00f5endi taotlemiseks vali allpool ** Esita **. Taotluse kinnitamiseks suunatakse Hyperioni kasutajaliidesesse. Palun kontrolli kas kuvatud ID on \" {auth_id} \"",
+                "title": "Loo automaatselt uus juurdep\u00e4\u00e4sut\u00f5end"
+            },
+            "create_token_external": {
+                "title": "N\u00f5ustu uue juurdep\u00e4\u00e4sut\u00f5endiga Hyperion UI-s"
+            },
+            "user": {
+                "data": {
+                    "host": "",
+                    "port": ""
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "effect_show_list": "Kuvatavad Hyperioni efektid",
+                    "priority": "V\u00e4rvide ja efektide puhul on kasutatavad Hyperioni eelistused"
+                }
+            }
+        }
+    }
+}

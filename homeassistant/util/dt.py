@@ -1,7 +1,10 @@
 """Helper methods to handle the time in Home Assistant."""
+from __future__ import annotations
+
+from contextlib import suppress
 import datetime as dt
 import re
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, cast
 
 import ciso8601
 import pytz
@@ -11,6 +14,7 @@ import pytz.tzinfo as pytzinfo
 from homeassistant.const import MATCH_ALL
 
 DATE_STR_FORMAT = "%Y-%m-%d"
+NATIVE_UTC = dt.timezone.utc
 UTC = pytz.utc
 DEFAULT_TIME_ZONE: dt.tzinfo = pytz.utc
 
@@ -39,7 +43,7 @@ def set_default_time_zone(time_zone: dt.tzinfo) -> None:
     DEFAULT_TIME_ZONE = time_zone
 
 
-def get_time_zone(time_zone_str: str) -> Optional[dt.tzinfo]:
+def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
     """Get time zone from string. Return None if unable to determine.
 
     Async friendly.
@@ -52,10 +56,10 @@ def get_time_zone(time_zone_str: str) -> Optional[dt.tzinfo]:
 
 def utcnow() -> dt.datetime:
     """Get now in UTC time."""
-    return dt.datetime.utcnow().replace(tzinfo=UTC)
+    return dt.datetime.now(NATIVE_UTC)
 
 
-def now(time_zone: Optional[dt.tzinfo] = None) -> dt.datetime:
+def now(time_zone: dt.tzinfo | None = None) -> dt.datetime:
     """Get now in specified time zone."""
     return dt.datetime.now(time_zone or DEFAULT_TIME_ZONE)
 
@@ -76,7 +80,7 @@ def as_utc(dattim: dt.datetime) -> dt.datetime:
 def as_timestamp(dt_value: dt.datetime) -> float:
     """Convert a date/time into a unix time (seconds since 1970)."""
     if hasattr(dt_value, "timestamp"):
-        parsed_dt: Optional[dt.datetime] = dt_value
+        parsed_dt: dt.datetime | None = dt_value
     else:
         parsed_dt = parse_datetime(str(dt_value))
     if parsed_dt is None:
@@ -99,14 +103,15 @@ def utc_from_timestamp(timestamp: float) -> dt.datetime:
     return UTC.localize(dt.datetime.utcfromtimestamp(timestamp))
 
 
-def start_of_local_day(
-    dt_or_d: Union[dt.date, dt.datetime, None] = None
-) -> dt.datetime:
+def start_of_local_day(dt_or_d: dt.date | dt.datetime | None = None) -> dt.datetime:
     """Return local datetime object of start of day from date or datetime."""
     if dt_or_d is None:
         date: dt.date = now().date()
     elif isinstance(dt_or_d, dt.datetime):
         date = dt_or_d.date()
+    else:
+        date = dt_or_d
+
     return DEFAULT_TIME_ZONE.localize(  # type: ignore
         dt.datetime.combine(date, dt.time())
     )
@@ -115,7 +120,7 @@ def start_of_local_day(
 # Copyright (c) Django Software Foundation and individual contributors.
 # All rights reserved.
 # https://github.com/django/django/blob/master/LICENSE
-def parse_datetime(dt_str: str) -> Optional[dt.datetime]:
+def parse_datetime(dt_str: str) -> dt.datetime | None:
     """Parse a string and return a datetime.datetime.
 
     This function supports time zone offsets. When the input contains one,
@@ -123,19 +128,18 @@ def parse_datetime(dt_str: str) -> Optional[dt.datetime]:
     Raises ValueError if the input is well formatted but not a valid datetime.
     Returns None if the input isn't well formatted.
     """
-    try:
+    with suppress(ValueError, IndexError):
         return ciso8601.parse_datetime(dt_str)
-    except (ValueError, IndexError):
-        pass
+
     match = DATETIME_RE.match(dt_str)
     if not match:
         return None
-    kws: Dict[str, Any] = match.groupdict()
+    kws: dict[str, Any] = match.groupdict()
     if kws["microsecond"]:
         kws["microsecond"] = kws["microsecond"].ljust(6, "0")
     tzinfo_str = kws.pop("tzinfo")
 
-    tzinfo: Optional[dt.tzinfo] = None
+    tzinfo: dt.tzinfo | None = None
     if tzinfo_str == "Z":
         tzinfo = UTC
     elif tzinfo_str is not None:
@@ -150,7 +154,7 @@ def parse_datetime(dt_str: str) -> Optional[dt.datetime]:
     return dt.datetime(**kws)
 
 
-def parse_date(dt_str: str) -> Optional[dt.date]:
+def parse_date(dt_str: str) -> dt.date | None:
     """Convert a date string to a date object."""
     try:
         return dt.datetime.strptime(dt_str, DATE_STR_FORMAT).date()
@@ -158,7 +162,7 @@ def parse_date(dt_str: str) -> Optional[dt.date]:
         return None
 
 
-def parse_time(time_str: str) -> Optional[dt.time]:
+def parse_time(time_str: str) -> dt.time | None:
     """Parse a time string (00:20:00) into Time object.
 
     Return None if invalid.
@@ -209,17 +213,21 @@ def get_age(date: dt.datetime) -> str:
     return formatn(rounded_delta, selected_unit)
 
 
-def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> List[int]:
+def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> list[int]:
     """Parse the time expression part and return a list of times to match."""
     if parameter is None or parameter == MATCH_ALL:
         res = list(range(min_value, max_value + 1))
-    elif isinstance(parameter, str) and parameter.startswith("/"):
-        parameter = int(parameter[1:])
-        res = [x for x in range(min_value, max_value + 1) if x % parameter == 0]
+    elif isinstance(parameter, str):
+        if parameter.startswith("/"):
+            parameter = int(parameter[1:])
+            res = [x for x in range(min_value, max_value + 1) if x % parameter == 0]
+        else:
+            res = [int(parameter)]
+
     elif not hasattr(parameter, "__iter__"):
         res = [int(parameter)]
     else:
-        res = list(sorted(int(x) for x in parameter))
+        res = sorted(int(x) for x in parameter)
 
     for val in res:
         if val < min_value or val > max_value:
@@ -233,9 +241,9 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> Lis
 
 def find_next_time_expression_time(
     now: dt.datetime,  # pylint: disable=redefined-outer-name
-    seconds: List[int],
-    minutes: List[int],
-    hours: List[int],
+    seconds: list[int],
+    minutes: list[int],
+    hours: list[int],
 ) -> dt.datetime:
     """Find the next datetime from now for which the time expression matches.
 
@@ -249,7 +257,7 @@ def find_next_time_expression_time(
     if not seconds or not minutes or not hours:
         raise ValueError("Cannot find a next time: Time expression never matches!")
 
-    def _lower_bound(arr: List[int], cmp: int) -> Optional[int]:
+    def _lower_bound(arr: list[int], cmp: int) -> int | None:
         """Return the first value in arr greater or equal to cmp.
 
         Return None if no such value exists.
@@ -310,7 +318,7 @@ def find_next_time_expression_time(
     # Now we need to handle timezones. We will make this datetime object
     # "naive" first and then re-convert it to the target timezone.
     # This is so that we can call pytz's localize and handle DST changes.
-    tzinfo: pytzinfo.DstTzInfo = result.tzinfo
+    tzinfo: pytzinfo.DstTzInfo = UTC if result.tzinfo == NATIVE_UTC else result.tzinfo
     result = result.replace(tzinfo=None)
 
     try:
@@ -333,7 +341,7 @@ def find_next_time_expression_time(
         return find_next_time_expression_time(result, seconds, minutes, hours)
 
     result_dst = cast(dt.timedelta, result.dst())
-    now_dst = cast(dt.timedelta, now.dst())
+    now_dst = cast(dt.timedelta, now.dst()) or dt.timedelta(0)
     if result_dst >= now_dst:
         return result
 

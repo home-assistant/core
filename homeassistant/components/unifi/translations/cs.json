@@ -1,13 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ovlada\u010d je ji\u017e nakonfigurov\u00e1n"
+            "already_configured": "Ovlada\u010d je ji\u017e nastaven",
+            "reauth_successful": "Op\u011btovn\u00e9 ov\u011b\u0159en\u00ed bylo \u00fasp\u011b\u0161n\u00e9"
         },
         "error": {
-            "faulty_credentials": "Chybn\u00e9 p\u0159ihla\u0161ovac\u00ed \u00fadaje",
+            "faulty_credentials": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
             "service_unavailable": "Nepoda\u0159ilo se p\u0159ipojit",
             "unknown_client_mac": "Na t\u00e9to MAC adrese nen\u00ed dostupn\u00fd \u017e\u00e1dn\u00fd klient"
         },
+        "flow_title": "UniFi s\u00ed\u0165 {site} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -16,7 +18,7 @@
                     "port": "Port",
                     "site": "ID s\u00edt\u011b",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no",
-                    "verify_ssl": "Ovlada\u010d pou\u017e\u00edv\u00e1 spr\u00e1vn\u00fd certifik\u00e1t"
+                    "verify_ssl": "Ov\u011b\u0159it certifik\u00e1t SSL"
                 },
                 "title": "Nastaven\u00ed UniFi ovlada\u010de"
             }
@@ -26,12 +28,16 @@
         "step": {
             "client_control": {
                 "data": {
+                    "block_client": "Klienti s p\u0159\u00edstupem k s\u00edti",
+                    "dpi_restrictions": "Povolit kontrolu nad skupinami omezen\u00ed DPI",
                     "poe_clients": "Povolit u klient\u016f ovl\u00e1d\u00e1n\u00ed POE"
                 },
+                "description": "Nakonfigurujte ovl\u00e1dac\u00ed prvky klienta\n\nVytvo\u0159te vyp\u00edna\u010de pro s\u00e9riov\u00e1 \u010d\u00edsla, pro kter\u00e1 chcete \u0159\u00eddit p\u0159\u00edstup k s\u00edti.",
                 "title": "Mo\u017enosti UniFi 2/3"
             },
             "device_tracker": {
                 "data": {
+                    "detection_time": "Po\u010det sekund od posledn\u00edho vid\u011bn\u00ed, aby bylo za\u0159\u00edzen\u00ed ozna\u010deno, \u017ee je pry\u010d",
                     "ssid_filter": "Vyberte SSID, ve kter\u00e9m budou sledov\u00e1ni bezdr\u00e1tov\u011b p\u0159ipojen\u00ed klienti",
                     "track_clients": "Sledovat p\u0159ipojen\u00e9 klienty",
                     "track_devices": "Sledovat p\u0159ipojen\u00e1 za\u0159\u00edzen\u00ed (Ubiquiti za\u0159\u00edzen\u00ed)",
@@ -42,6 +48,7 @@
             },
             "simple_options": {
                 "data": {
+                    "block_client": "Klienti s p\u0159\u00edstupem k s\u00edti",
                     "track_clients": "Sledov\u00e1n\u00ed p\u0159ipojen\u00fdch za\u0159\u00edzen\u00ed",
                     "track_devices": "Sledov\u00e1n\u00ed s\u00ed\u0165ov\u00fdch za\u0159\u00edzen\u00ed (za\u0159\u00edzen\u00ed Ubiquiti)"
                 },
@@ -49,7 +56,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Vytvo\u0159it senzory vyu\u017eit\u00ed \u0161\u00ed\u0159ky p\u00e1sma pro p\u0159ipojen\u00e9 klienty"
+                    "allow_bandwidth_sensors": "Vytvo\u0159it senzory vyu\u017eit\u00ed \u0161\u00ed\u0159ky p\u00e1sma pro p\u0159ipojen\u00e9 klienty",
+                    "allow_uptime_sensors": "Vytvo\u0159it senzory doby provozuschopnosti pro s\u00ed\u0165ov\u00e9 klienty"
                 },
                 "description": "Konfigurovat statistick\u00e9 senzory",
                 "title": "Mo\u017enosti UniFi 3/3"

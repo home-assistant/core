@@ -1,10 +1,9 @@
 {
     "config": {
         "error": {
-            "already_configured": "Gateway bereits konfiguriert",
-            "id_exists": "Gateway-ID ist bereits vorhanden",
-            "serial_error": "Fehler beim Verbinden mit dem Ger\u00e4t",
-            "timeout": "Zeit\u00fcberschreitung beim Verbindungsversuch"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "id_exists": "Gateway-ID ist bereits vorhanden"
         },
         "step": {
             "init": {

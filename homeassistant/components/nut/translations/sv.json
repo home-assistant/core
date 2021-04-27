@@ -17,7 +17,8 @@
             "ups": {
                 "data": {
                     "alias": "Alias"
-                }
+                },
+                "title": "V\u00e4lj UPS att \u00f6vervaka"
             },
             "user": {
                 "data": {
@@ -30,6 +31,10 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Kunde inte ansluta",
+            "unknown": "Ov\u00e4ntat fel"
+        },
         "step": {
             "init": {
                 "data": {

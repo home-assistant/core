@@ -2,6 +2,22 @@
     "config": {
         "abort": {
             "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "flow_title": "Nightscout",
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API \ud0a4",
+                    "url": "URL \uc8fc\uc18c"
+                },
+                "description": "- URL: Nightscout \uc778\uc2a4\ud134\uc2a4\uc758 \uc8fc\uc18c. \uc608: https://myhomeassistant.duckdns.org:5423\n- API \ud0a4 (\uc120\ud0dd \uc0ac\ud56d): \uc778\uc2a4\ud134\uc2a4\uac00 \ubcf4\ud638\ub41c \uacbd\uc6b0\uc5d0\ub9cc \uc0ac\uc6a9\ud574\uc8fc\uc138\uc694 (auth_default_roles != readable).",
+                "title": "Nightscout \uc11c\ubc84 \uc815\ubcf4\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694."
+            }
         }
     }
 }

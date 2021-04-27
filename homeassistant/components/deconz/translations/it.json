@@ -2,10 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Il Bridge \u00e8 gi\u00e0 configurato",
-            "already_in_progress": "Il flusso di configurazione per bridge \u00e8 gi\u00e0 in corso.",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "no_bridges": "Nessun bridge deCONZ rilevato",
+            "no_hardware_available": "Nessun hardware radio collegato a deCONZ",
             "not_deconz_bridge": "Non \u00e8 un bridge deCONZ",
-            "one_instance_only": "Il componente supporto solo un'istanza di deCONZ",
             "updated_instance": "Istanza deCONZ aggiornata con nuovo indirizzo host"
         },
         "error": {
@@ -14,8 +14,8 @@
         "flow_title": "Gateway Zigbee deCONZ ({host})",
         "step": {
             "hassio_confirm": {
-                "description": "Vuoi configurare Home Assistant per connettersi al gateway deCONZ fornito dal componente aggiuntivo di Hass.io: {addon}?",
-                "title": "Gateway Pigmee deCONZ tramite il componente aggiuntivo di Hass.io"
+                "description": "Vuoi configurare Home Assistant per connettersi al gateway deCONZ fornito dal componente aggiuntivo: {addon}?",
+                "title": "Gateway deCONZ Zigbee tramite il componente aggiuntivo di Home Assistant"
             },
             "link": {
                 "description": "Sblocca il tuo gateway deCONZ per registrarti con Home Assistant.\n\n1. Vai a Impostazioni deCONZ -> Gateway -> Avanzate\n2. Premere il pulsante \"Autentica app\"",
@@ -42,6 +42,10 @@
             "button_2": "Secondo pulsante",
             "button_3": "Terzo pulsante",
             "button_4": "Quarto pulsante",
+            "button_5": "Quinto pulsante",
+            "button_6": "Sesto pulsante",
+            "button_7": "Settimo pulsante",
+            "button_8": "Ottavo pulsante",
             "close": "Chiudere",
             "dim_down": "Diminuire luminosit\u00e0",
             "dim_up": "Aumentare luminosit\u00e0",
@@ -66,6 +70,7 @@
             "remote_button_quadruple_press": "Pulsante \"{subtype}\" cliccato quattro volte",
             "remote_button_quintuple_press": "Pulsante \"{subtype}\" cliccato cinque volte",
             "remote_button_rotated": "Pulsante ruotato \"{subtype}\"",
+            "remote_button_rotated_fast": "Pulsante ruotato velocemente \"{subtype}\"",
             "remote_button_rotation_stopped": "La rotazione dei pulsanti \"{subtype}\" si \u00e8 arrestata",
             "remote_button_short_press": "Pulsante \"{subtype}\" premuto",
             "remote_button_short_release": "Pulsante \"{subtype}\" rilasciato",
@@ -93,7 +98,8 @@
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Consentire sensori CLIP deCONZ",
-                    "allow_deconz_groups": "Consentire gruppi luce deCONZ"
+                    "allow_deconz_groups": "Consentire gruppi luce deCONZ",
+                    "allow_new_devices": "Consentire l'aggiunta automatica di nuovi dispositivi"
                 },
                 "description": "Configurare la visibilit\u00e0 dei tipi di dispositivi deCONZ",
                 "title": "Opzioni deCONZ"

@@ -1,67 +1,26 @@
 """Test the Panasonic Viera config flow."""
-from panasonic_viera import TV_TYPE_ENCRYPTED, TV_TYPE_NONENCRYPTED, SOAPError
-import pytest
+from unittest.mock import patch
+
+from panasonic_viera import SOAPError
 
 from homeassistant import config_entries
 from homeassistant.components.panasonic_viera.const import (
-    CONF_APP_ID,
-    CONF_ENCRYPTION_KEY,
-    CONF_ON_ACTION,
+    ATTR_DEVICE_INFO,
     DEFAULT_NAME,
-    DEFAULT_PORT,
     DOMAIN,
     ERROR_INVALID_PIN_CODE,
-    ERROR_NOT_CONNECTED,
-    REASON_NOT_CONNECTED,
-    REASON_UNKNOWN,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
+from homeassistant.const import CONF_PIN
 
-from tests.async_mock import Mock, patch
+from .conftest import (
+    MOCK_BASIC_DATA,
+    MOCK_CONFIG_DATA,
+    MOCK_DEVICE_INFO,
+    MOCK_ENCRYPTION_DATA,
+    get_mock_remote,
+)
+
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture(name="panasonic_viera_setup", autouse=True)
-def panasonic_viera_setup_fixture():
-    """Mock panasonic_viera setup."""
-    with patch(
-        "homeassistant.components.panasonic_viera.async_setup", return_value=True
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup_entry",
-        return_value=True,
-    ):
-        yield
-
-
-def get_mock_remote(
-    host="1.2.3.4",
-    authorize_error=None,
-    encrypted=False,
-    app_id=None,
-    encryption_key=None,
-):
-    """Return a mock remote."""
-    mock_remote = Mock()
-
-    mock_remote.type = TV_TYPE_ENCRYPTED if encrypted else TV_TYPE_NONENCRYPTED
-    mock_remote.app_id = app_id
-    mock_remote.enc_key = encryption_key
-
-    def request_pin_code(name=None):
-        return
-
-    mock_remote.request_pin_code = request_pin_code
-
-    def authorize_pin_code(pincode):
-        if pincode == "1234":
-            return
-
-        if authorize_error is not None:
-            raise authorize_error
-
-    mock_remote.authorize_pin_code = authorize_pin_code
-
-    return mock_remote
 
 
 async def test_flow_non_encrypted(hass):
@@ -82,17 +41,12 @@ async def test_flow_non_encrypted(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+            MOCK_BASIC_DATA,
         )
 
     assert result["type"] == "create_entry"
     assert result["title"] == DEFAULT_NAME
-    assert result["data"] == {
-        CONF_HOST: "1.2.3.4",
-        CONF_NAME: DEFAULT_NAME,
-        CONF_PORT: DEFAULT_PORT,
-        CONF_ON_ACTION: None,
-    }
+    assert result["data"] == {**MOCK_CONFIG_DATA, ATTR_DEVICE_INFO: MOCK_DEVICE_INFO}
 
 
 async def test_flow_not_connected_error(hass):
@@ -111,12 +65,12 @@ async def test_flow_not_connected_error(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+            MOCK_BASIC_DATA,
         )
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": ERROR_NOT_CONNECTED}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_flow_unknown_abort(hass):
@@ -135,11 +89,61 @@ async def test_flow_unknown_abort(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+            MOCK_BASIC_DATA,
         )
 
     assert result["type"] == "abort"
-    assert result["reason"] == REASON_UNKNOWN
+    assert result["reason"] == "unknown"
+
+
+async def test_flow_encrypted_not_connected_pin_code_request(hass):
+    """Test flow with encryption and PIN code request connection error abortion during pairing request step."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    mock_remote = get_mock_remote(encrypted=True, request_error=TimeoutError)
+
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        return_value=mock_remote,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_BASIC_DATA,
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_flow_encrypted_unknown_pin_code_request(hass):
+    """Test flow with encryption and PIN code request unknown error abortion during pairing request step."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    mock_remote = get_mock_remote(encrypted=True, request_error=Exception)
+
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        return_value=mock_remote,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_BASIC_DATA,
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "unknown"
 
 
 async def test_flow_encrypted_valid_pin_code(hass):
@@ -154,8 +158,8 @@ async def test_flow_encrypted_valid_pin_code(hass):
 
     mock_remote = get_mock_remote(
         encrypted=True,
-        app_id="test-app-id",
-        encryption_key="test-encryption-key",
+        app_id="mock-app-id",
+        encryption_key="mock-encryption-key",
     )
 
     with patch(
@@ -164,7 +168,7 @@ async def test_flow_encrypted_valid_pin_code(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+            MOCK_BASIC_DATA,
         )
 
     assert result["type"] == "form"
@@ -178,12 +182,9 @@ async def test_flow_encrypted_valid_pin_code(hass):
     assert result["type"] == "create_entry"
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
-        CONF_HOST: "1.2.3.4",
-        CONF_NAME: DEFAULT_NAME,
-        CONF_PORT: DEFAULT_PORT,
-        CONF_ON_ACTION: None,
-        CONF_APP_ID: "test-app-id",
-        CONF_ENCRYPTION_KEY: "test-encryption-key",
+        **MOCK_CONFIG_DATA,
+        **MOCK_ENCRYPTION_DATA,
+        ATTR_DEVICE_INFO: MOCK_DEVICE_INFO,
     }
 
 
@@ -205,7 +206,7 @@ async def test_flow_encrypted_invalid_pin_code_error(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+            MOCK_BASIC_DATA,
         )
 
     assert result["type"] == "form"
@@ -243,7 +244,7 @@ async def test_flow_encrypted_not_connected_abort(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+            MOCK_BASIC_DATA,
         )
 
     assert result["type"] == "form"
@@ -255,7 +256,7 @@ async def test_flow_encrypted_not_connected_abort(hass):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == REASON_NOT_CONNECTED
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_flow_encrypted_unknown_abort(hass):
@@ -276,7 +277,7 @@ async def test_flow_encrypted_unknown_abort(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+            MOCK_BASIC_DATA,
         )
 
     assert result["type"] == "form"
@@ -288,7 +289,7 @@ async def test_flow_encrypted_unknown_abort(hass):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == REASON_UNKNOWN
+    assert result["reason"] == "unknown"
 
 
 async def test_flow_non_encrypted_already_configured_abort(hass):
@@ -296,14 +297,14 @@ async def test_flow_non_encrypted_already_configured_abort(hass):
 
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id="1.2.3.4",
-        data={CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME, CONF_PORT: DEFAULT_PORT},
+        unique_id="0.0.0.0",
+        data=MOCK_CONFIG_DATA,
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+        data=MOCK_BASIC_DATA,
     )
 
     assert result["type"] == "abort"
@@ -315,20 +316,14 @@ async def test_flow_encrypted_already_configured_abort(hass):
 
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id="1.2.3.4",
-        data={
-            CONF_HOST: "1.2.3.4",
-            CONF_NAME: DEFAULT_NAME,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_APP_ID: "test-app-id",
-            CONF_ENCRYPTION_KEY: "test-encryption-key",
-        },
+        unique_id="0.0.0.0",
+        data={**MOCK_CONFIG_DATA, **MOCK_ENCRYPTION_DATA},
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+        data=MOCK_BASIC_DATA,
     )
 
     assert result["type"] == "abort"
@@ -347,22 +342,12 @@ async def test_imported_flow_non_encrypted(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_HOST: "1.2.3.4",
-                CONF_NAME: DEFAULT_NAME,
-                CONF_PORT: DEFAULT_PORT,
-                CONF_ON_ACTION: "test-on-action",
-            },
+            data=MOCK_CONFIG_DATA,
         )
 
     assert result["type"] == "create_entry"
     assert result["title"] == DEFAULT_NAME
-    assert result["data"] == {
-        CONF_HOST: "1.2.3.4",
-        CONF_NAME: DEFAULT_NAME,
-        CONF_PORT: DEFAULT_PORT,
-        CONF_ON_ACTION: "test-on-action",
-    }
+    assert result["data"] == {**MOCK_CONFIG_DATA, ATTR_DEVICE_INFO: MOCK_DEVICE_INFO}
 
 
 async def test_imported_flow_encrypted_valid_pin_code(hass):
@@ -370,8 +355,8 @@ async def test_imported_flow_encrypted_valid_pin_code(hass):
 
     mock_remote = get_mock_remote(
         encrypted=True,
-        app_id="test-app-id",
-        encryption_key="test-encryption-key",
+        app_id="mock-app-id",
+        encryption_key="mock-encryption-key",
     )
 
     with patch(
@@ -381,12 +366,7 @@ async def test_imported_flow_encrypted_valid_pin_code(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_HOST: "1.2.3.4",
-                CONF_NAME: DEFAULT_NAME,
-                CONF_PORT: DEFAULT_PORT,
-                CONF_ON_ACTION: "test-on-action",
-            },
+            data=MOCK_CONFIG_DATA,
         )
 
     assert result["type"] == "form"
@@ -400,12 +380,9 @@ async def test_imported_flow_encrypted_valid_pin_code(hass):
     assert result["type"] == "create_entry"
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
-        CONF_HOST: "1.2.3.4",
-        CONF_NAME: DEFAULT_NAME,
-        CONF_PORT: DEFAULT_PORT,
-        CONF_ON_ACTION: "test-on-action",
-        CONF_APP_ID: "test-app-id",
-        CONF_ENCRYPTION_KEY: "test-encryption-key",
+        **MOCK_CONFIG_DATA,
+        **MOCK_ENCRYPTION_DATA,
+        ATTR_DEVICE_INFO: MOCK_DEVICE_INFO,
     }
 
 
@@ -421,12 +398,7 @@ async def test_imported_flow_encrypted_invalid_pin_code_error(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_HOST: "1.2.3.4",
-                CONF_NAME: DEFAULT_NAME,
-                CONF_PORT: DEFAULT_PORT,
-                CONF_ON_ACTION: "test-on-action",
-            },
+            data=MOCK_CONFIG_DATA,
         )
 
     assert result["type"] == "form"
@@ -458,12 +430,7 @@ async def test_imported_flow_encrypted_not_connected_abort(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_HOST: "1.2.3.4",
-                CONF_NAME: DEFAULT_NAME,
-                CONF_PORT: DEFAULT_PORT,
-                CONF_ON_ACTION: "test-on-action",
-            },
+            data=MOCK_CONFIG_DATA,
         )
 
     assert result["type"] == "form"
@@ -475,7 +442,7 @@ async def test_imported_flow_encrypted_not_connected_abort(hass):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == REASON_NOT_CONNECTED
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_imported_flow_encrypted_unknown_abort(hass):
@@ -490,12 +457,7 @@ async def test_imported_flow_encrypted_unknown_abort(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_HOST: "1.2.3.4",
-                CONF_NAME: DEFAULT_NAME,
-                CONF_PORT: DEFAULT_PORT,
-                CONF_ON_ACTION: "test-on-action",
-            },
+            data=MOCK_CONFIG_DATA,
         )
 
     assert result["type"] == "form"
@@ -507,7 +469,7 @@ async def test_imported_flow_encrypted_unknown_abort(hass):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == REASON_UNKNOWN
+    assert result["reason"] == "unknown"
 
 
 async def test_imported_flow_not_connected_error(hass):
@@ -520,17 +482,12 @@ async def test_imported_flow_not_connected_error(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_HOST: "1.2.3.4",
-                CONF_NAME: DEFAULT_NAME,
-                CONF_PORT: DEFAULT_PORT,
-                CONF_ON_ACTION: "test-on-action",
-            },
+            data=MOCK_CONFIG_DATA,
         )
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": ERROR_NOT_CONNECTED}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_imported_flow_unknown_abort(hass):
@@ -543,16 +500,11 @@ async def test_imported_flow_unknown_abort(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                CONF_HOST: "1.2.3.4",
-                CONF_NAME: DEFAULT_NAME,
-                CONF_PORT: DEFAULT_PORT,
-                CONF_ON_ACTION: "test-on-action",
-            },
+            data=MOCK_CONFIG_DATA,
         )
 
     assert result["type"] == "abort"
-    assert result["reason"] == REASON_UNKNOWN
+    assert result["reason"] == "unknown"
 
 
 async def test_imported_flow_non_encrypted_already_configured_abort(hass):
@@ -560,19 +512,14 @@ async def test_imported_flow_non_encrypted_already_configured_abort(hass):
 
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id="1.2.3.4",
-        data={
-            CONF_HOST: "1.2.3.4",
-            CONF_NAME: DEFAULT_NAME,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_ON_ACTION: "test-on-action",
-        },
+        unique_id="0.0.0.0",
+        data=MOCK_CONFIG_DATA,
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
-        data={CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+        data=MOCK_BASIC_DATA,
     )
 
     assert result["type"] == "abort"
@@ -584,21 +531,14 @@ async def test_imported_flow_encrypted_already_configured_abort(hass):
 
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id="1.2.3.4",
-        data={
-            CONF_HOST: "1.2.3.4",
-            CONF_NAME: DEFAULT_NAME,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_ON_ACTION: "test-on-action",
-            CONF_APP_ID: "test-app-id",
-            CONF_ENCRYPTION_KEY: "test-encryption-key",
-        },
+        unique_id="0.0.0.0",
+        data={**MOCK_CONFIG_DATA, **MOCK_ENCRYPTION_DATA},
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
-        data={CONF_HOST: "1.2.3.4", CONF_NAME: DEFAULT_NAME},
+        data=MOCK_BASIC_DATA,
     )
 
     assert result["type"] == "abort"

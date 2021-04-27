@@ -1,12 +1,11 @@
 """Component to integrate the Home Assistant cloud."""
-import logging
-
 from hass_nabucasa import Cloud
 import voluptuous as vol
 
 from homeassistant.components.alexa import const as alexa_const
 from homeassistant.components.google_assistant import const as ga_c
 from homeassistant.const import (
+    CONF_DESCRIPTION,
     CONF_MODE,
     CONF_NAME,
     CONF_REGION,
@@ -43,8 +42,6 @@ from .const import (
 )
 from .prefs import CloudPreferences
 
-_LOGGER = logging.getLogger(__name__)
-
 DEFAULT_MODE = MODE_PROD
 
 SERVICE_REMOTE_CONNECT = "remote_connect"
@@ -53,7 +50,7 @@ SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
 
 ALEXA_ENTITY_SCHEMA = vol.Schema(
     {
-        vol.Optional(alexa_const.CONF_DESCRIPTION): cv.string,
+        vol.Optional(CONF_DESCRIPTION): cv.string,
         vol.Optional(alexa_const.CONF_DISPLAY_CATEGORIES): cv.string,
         vol.Optional(CONF_NAME): cv.string,
     }

@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "no_server_found": "Geen LMS server gevonden."
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden",
+            "invalid_auth": "Ongeldige authenticatie",
+            "no_server_found": "Kan server niet automatisch vinden.",
+            "unknown": "Onverwachte fout"
+        },
+        "flow_title": "Logitech Squeezebox: {host}",
+        "step": {
+            "edit": {
+                "data": {
+                    "host": "Host",
+                    "password": "Wachtwoord",
+                    "port": "Poort",
+                    "username": "Gebruikersnaam"
+                },
+                "title": "Verbindingsgegevens bewerken"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

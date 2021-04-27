@@ -80,7 +80,7 @@ class VultrSwitch(SwitchEntity):
         return "mdi:server" if self.is_on else "mdi:server-off"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the Vultr subscription."""
         return {
             ATTR_ALLOWED_BANDWIDTH: self.data.get("allowed_bandwidth_gb"),

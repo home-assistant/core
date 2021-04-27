@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "pick_device": {
+                "data": {
+                    "device": "Cihaz"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Ana Bilgisayar"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "Model (Opsiyonel)",
+                    "save_on_change": "De\u011fi\u015fiklikte Durumu Kaydet",
+                    "transition": "Ge\u00e7i\u015f S\u00fcresi (ms)",
+                    "use_music_mode": "M\u00fczik Modunu Etkinle\u015ftir"
+                }
+            }
+        }
+    }
+}

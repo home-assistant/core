@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host ist bereits konfiguriert."
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindung zum Host nicht m\u00f6glich",
-            "name_exists": "Name existiert bereits",
-            "wrong_credentials": "Falscher Benutzername oder Kennwort"
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "name_exists": "Name existiert bereits"
         },
         "step": {
             "user": {
@@ -25,6 +25,7 @@
         "step": {
             "init": {
                 "data": {
+                    "limit": "Limit",
                     "order": "Reihenfolge",
                     "scan_interval": "Aktualisierungsfrequenz"
                 },

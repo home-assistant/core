@@ -1,32 +1,53 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Du kannst nur ein einziges Nest-Konto konfigurieren.",
             "authorize_url_fail": "Unbekannter Fehler beim Erstellen der Authorisierungs-URL",
-            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL",
-            "no_flows": "Du musst Nest konfigurieren, bevor du dich authentifizieren kannst. [Bitte lese die Anweisungen] (https://www.home-assistant.io/components/nest/)."
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
+            "no_url_available": "Keine URL verf\u00fcgbar. Informationen zu diesem Fehler findest du [im Hilfebereich]({docs_url}).",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich.",
+            "unknown_authorize_url_generation": "Beim Generieren einer Authentifizierungs-URL ist ein unbekannter Fehler aufgetreten"
+        },
+        "create_entry": {
+            "default": "Erfolgreich authentifiziert"
         },
         "error": {
             "internal_error": "Ein interner Fehler ist aufgetreten",
-            "invalid_code": "Ung\u00fcltiger Code",
+            "invalid_pin": "Ung\u00fcltiger PIN-Code",
             "timeout": "Ein zeit\u00fcberschreitungs Fehler ist aufgetreten",
-            "unknown": "Ein unbekannter Fehler ist aufgetreten"
+            "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "init": {
                 "data": {
                     "flow_impl": "Anbieter"
                 },
-                "description": "W\u00e4hlen, \u00fcber welchen Authentifizierungsanbieter du dich bei Nest authentifizieren m\u00f6chtest.",
+                "description": "W\u00e4hle die Authentifizierungsmethode",
                 "title": "Authentifizierungsanbieter"
             },
             "link": {
                 "data": {
-                    "code": "PIN Code"
+                    "code": "PIN-Code"
                 },
                 "description": "[Autorisiere dein Konto] ( {url} ), um deinen Nest-Account zu verkn\u00fcpfen.\n\n F\u00fcge anschlie\u00dfend den erhaltenen PIN Code hier ein.",
                 "title": "Nest-Konto verkn\u00fcpfen"
+            },
+            "pick_implementation": {
+                "title": "W\u00e4hle die Authentifizierungsmethode"
+            },
+            "reauth_confirm": {
+                "description": "Die Nest-Integration muss das Konto neu authentifizieren",
+                "title": "Integration erneut authentifizieren"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Bewegung erkannt",
+            "camera_person": "Person erkannt",
+            "camera_sound": "Ger\u00e4usch erkannt",
+            "doorbell_chime": "T\u00fcrklingel gedr\u00fcckt"
         }
     }
 }

@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Deze Samsung TV is al geconfigureerd.",
-            "already_in_progress": "Samsung TV configuratie is al in uitvoering.",
+            "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
             "auth_missing": "Home Assistant is niet geautoriseerd om verbinding te maken met deze Samsung TV.",
-            "not_successful": "Niet in staat om verbinding te maken met dit Samsung TV toestel.",
+            "cannot_connect": "Kan geen verbinding maken",
             "not_supported": "Deze Samsung TV wordt momenteel niet ondersteund."
         },
         "flow_title": "Samsung TV: {model}",
@@ -15,7 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Hostnaam of IP-adres",
+                    "host": "Host",
                     "name": "Naam"
                 },
                 "description": "Voer uw Samsung TV informatie in. Als u nooit eerder Home Assistant hebt verbonden dan zou u een popup op uw TV moeten zien waarin u om toestemming wordt vraagt."

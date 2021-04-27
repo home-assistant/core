@@ -14,6 +14,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
+DOMAIN = "daikin"
+
 ATTR_TARGET_TEMPERATURE = "target_temperature"
 ATTR_INSIDE_TEMPERATURE = "inside_temperature"
 ATTR_OUTSIDE_TEMPERATURE = "outside_temperature"
@@ -76,7 +78,6 @@ SENSOR_TYPES = {
     },
 }
 
-CONF_KEY = "key"
 CONF_UUID = "uuid"
 
 KEY_MAC = "mac"

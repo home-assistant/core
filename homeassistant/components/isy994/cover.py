@@ -12,7 +12,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .const import (
     _LOGGER,
@@ -24,11 +24,10 @@ from .const import (
 )
 from .entity import ISYNodeEntity, ISYProgramEntity
 from .helpers import migrate_old_unique_ids
-from .services import async_setup_device_services
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: Callable[[list], None],
 ) -> bool:
@@ -43,7 +42,6 @@ async def async_setup_entry(
 
     await migrate_old_unique_ids(hass, COVER, devices)
     async_add_entities(devices)
-    async_setup_device_services(hass)
 
 
 class ISYCoverEntity(ISYNodeEntity, CoverEntity):
@@ -55,7 +53,7 @@ class ISYCoverEntity(ISYNodeEntity, CoverEntity):
         if self._node.status == ISY_VALUE_UNKNOWN:
             return None
         if self._node.uom == UOM_8_BIT_RANGE:
-            return int(self._node.status * 100 / 255)
+            return round(self._node.status * 100.0 / 255.0)
         return sorted((0, self._node.status, 100))[1]
 
     @property
@@ -85,7 +83,7 @@ class ISYCoverEntity(ISYNodeEntity, CoverEntity):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         if self._node.uom == UOM_8_BIT_RANGE:
-            position = int(position * 255 / 100)
+            position = round(position * 255.0 / 100.0)
         if not self._node.turn_on(val=position):
             _LOGGER.error("Unable to set cover position")
 

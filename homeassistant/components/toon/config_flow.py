@@ -1,11 +1,14 @@
 """Config flow to configure the Toon component."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from toonapi import Agreement, Toon, ToonError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
@@ -19,15 +22,15 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     DOMAIN = DOMAIN
     VERSION = 2
 
-    agreements: Optional[List[Agreement]] = None
-    data: Optional[Dict[str, Any]] = None
+    agreements: list[Agreement] | None = None
+    data: dict[str, Any] | None = None
 
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
-    async def async_oauth_create_entry(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResultDict:
         """Test connection and load up agreements."""
         self.data = data
 
@@ -46,8 +49,8 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return await self.async_step_agreement()
 
     async def async_step_import(
-        self, config: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, config: dict[str, Any] | None = None
+    ) -> FlowResultDict:
         """Start a configuration flow based on imported data.
 
         This step is merely here to trigger "discovery" when the `toon`
@@ -56,7 +59,6 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """
 
         if config is not None and CONF_MIGRATE in config:
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             self.context.update({CONF_MIGRATE: config[CONF_MIGRATE]})
         else:
             await self._async_handle_discovery_without_unique_id()
@@ -64,8 +66,8 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return await self.async_step_user()
 
     async def async_step_agreement(
-        self, user_input: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] = None
+    ) -> FlowResultDict:
         """Select Toon agreement to add."""
         if len(self.agreements) == 1:
             return await self._create_entry(self.agreements[0])
@@ -86,11 +88,8 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         agreement_index = agreements_list.index(user_input[CONF_AGREEMENT])
         return await self._create_entry(self.agreements[agreement_index])
 
-    async def _create_entry(self, agreement: Agreement) -> Dict[str, Any]:
-        if (  # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-            CONF_MIGRATE in self.context
-        ):
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+    async def _create_entry(self, agreement: Agreement) -> FlowResultDict:
+        if CONF_MIGRATE in self.context:
             await self.hass.config_entries.async_remove(self.context[CONF_MIGRATE])
 
         await self.async_set_unique_id(agreement.agreement_id)

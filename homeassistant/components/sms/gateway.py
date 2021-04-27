@@ -1,10 +1,8 @@
 """The sms gateway to interact with a GSM modem."""
 import logging
 
-import gammu  # pylint: disable=import-error, no-member
-from gammu.asyncworker import (  # pylint: disable=import-error, no-member
-    GammuAsyncWorker,
-)
+import gammu  # pylint: disable=import-error
+from gammu.asyncworker import GammuAsyncWorker  # pylint: disable=import-error
 
 from homeassistant.core import callback
 
@@ -45,7 +43,7 @@ class Gateway:
         )
         entries = self.get_and_delete_all_sms(state_machine)
         _LOGGER.debug("SMS entries:%s", entries)
-        data = list()
+        data = []
 
         for entry in entries:
             decoded_entry = gammu.DecodeSMS(entry)
@@ -59,9 +57,11 @@ class Gateway:
                     if inner_entry["Buffer"] is not None:
                         text = text + inner_entry["Buffer"]
 
-            event_data = dict(
-                phone=message["Number"], date=str(message["DateTime"]), message=text
-            )
+            event_data = {
+                "phone": message["Number"],
+                "date": str(message["DateTime"]),
+                "message": text,
+            }
 
             _LOGGER.debug("Append event data:%s", event_data)
             data.append(event_data)
@@ -78,7 +78,7 @@ class Gateway:
         start_remaining = remaining
         # Get all sms
         start = True
-        entries = list()
+        entries = []
         all_parts = -1
         all_parts_arrived = False
         _LOGGER.debug("Start remaining:%i", start_remaining)
@@ -163,6 +163,6 @@ async def create_sms_gateway(config, hass):
         gateway = Gateway(worker, hass)
         await gateway.init_async()
         return gateway
-    except gammu.GSMError as exc:  # pylint: disable=no-member
+    except gammu.GSMError as exc:
         _LOGGER.error("Failed to initialize, error %s", exc)
         return None

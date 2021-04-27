@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+        },
+        "error": {
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "reauth_confirm": {
+                "description": "L'integrazione di SmartTub deve autenticare nuovamente il tuo account",
+                "title": "Autenticare nuovamente l'integrazione"
+            },
+            "user": {
+                "data": {
+                    "email": "E-mail",
+                    "password": "Password"
+                },
+                "description": "Inserisci il tuo indirizzo e-mail e la password SmartTub per accedere",
+                "title": "Accesso"
+            }
+        }
+    }
+}

@@ -1,15 +1,16 @@
 """Define tests for the Awair config flow."""
 
+from unittest.mock import patch
+
 from python_awair.exceptions import AuthError, AwairError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.awair.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN
 
 from .const import CONFIG, DEVICES_FIXTURE, NO_DEVICES_FIXTURE, UNIQUE_ID, USER_FIXTURE
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -31,7 +32,7 @@ async def test_invalid_access_token(hass):
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
-        assert result["errors"] == {CONF_ACCESS_TOKEN: "auth"}
+        assert result["errors"] == {CONF_ACCESS_TOKEN: "invalid_access_token"}
 
 
 async def test_unexpected_api_error(hass):
@@ -78,7 +79,7 @@ async def test_no_devices_error(hass):
         )
 
         assert result["type"] == "abort"
-        assert result["reason"] == "no_devices"
+        assert result["reason"] == "no_devices_found"
 
 
 async def test_import(hass):
@@ -155,7 +156,7 @@ async def test_reauth(hass):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reauth", "unique_id": UNIQUE_ID},
+            context={"source": SOURCE_REAUTH, "unique_id": UNIQUE_ID},
             data=CONFIG,
         )
 
@@ -165,16 +166,16 @@ async def test_reauth(hass):
     with patch("python_awair.AwairClient.query", side_effect=AuthError()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reauth", "unique_id": UNIQUE_ID},
+            context={"source": SOURCE_REAUTH, "unique_id": UNIQUE_ID},
             data=CONFIG,
         )
 
-        assert result["errors"] == {CONF_ACCESS_TOKEN: "auth"}
+        assert result["errors"] == {CONF_ACCESS_TOKEN: "invalid_access_token"}
 
     with patch("python_awair.AwairClient.query", side_effect=AwairError()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reauth", "unique_id": UNIQUE_ID},
+            context={"source": SOURCE_REAUTH, "unique_id": UNIQUE_ID},
             data=CONFIG,
         )
 

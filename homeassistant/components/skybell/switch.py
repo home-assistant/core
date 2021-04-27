@@ -1,6 +1,4 @@
 """Switch support for the Skybell HD Doorbell."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
@@ -8,8 +6,6 @@ from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
 from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 # Switch types: Name
 SWITCH_TYPES = {
@@ -62,7 +58,7 @@ class SkybellSwitch(SkybellDevice, SwitchEntity):
         setattr(self._device, self._switch_type, True)
 
     def turn_off(self, **kwargs):
-        """Turn on the switch."""
+        """Turn off the switch."""
         setattr(self._device, self._switch_type, False)
 
     @property

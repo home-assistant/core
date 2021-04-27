@@ -3,11 +3,13 @@
   "name": "Sonos",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sonos",
-  "requirements": ["pysonos==0.0.33"],
+  "requirements": ["pysonos==0.0.43"],
+  "after_dependencies": ["plex"],
   "ssdp": [
     {
       "st": "urn:schemas-upnp-org:device:ZonePlayer:1"
     }
   ],
-  "codeowners": []
+  "codeowners": ["@cgtobi"],
+  "iot_class": "local_push"
 }

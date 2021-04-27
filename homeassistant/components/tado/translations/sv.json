@@ -24,7 +24,8 @@
             "init": {
                 "data": {
                     "fallback": "Aktivera reservl\u00e4ge."
-                }
+                },
+                "title": "Justera Tado inst\u00e4llningarna."
             }
         }
     }

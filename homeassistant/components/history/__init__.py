@@ -1,14 +1,17 @@
 """Provide pre-made queries on top of the recorder component."""
+from __future__ import annotations
+
 from collections import defaultdict
-from datetime import timedelta
+from collections.abc import Iterable
+from datetime import datetime as dt, timedelta
 from itertools import groupby
 import json
 import logging
 import time
-from typing import Optional, cast
+from typing import cast
 
 from aiohttp import web
-from sqlalchemy import and_, bindparam, func
+from sqlalchemy import and_, bindparam, func, not_, or_
 from sqlalchemy.ext import baked
 import voluptuous as vol
 
@@ -27,8 +30,12 @@ from homeassistant.const import (
     CONF_INCLUDE,
     HTTP_BAD_REQUEST,
 )
-from homeassistant.core import Context, State, split_entity_id
+from homeassistant.core import Context, HomeAssistant, State, split_entity_id
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entityfilter import (
+    CONF_ENTITY_GLOBS,
+    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
+)
 import homeassistant.util.dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -41,26 +48,19 @@ CONF_ORDER = "use_include_order"
 STATE_KEY = "state"
 LAST_CHANGED_KEY = "last_changed"
 
-# Not reusing from entityfilter because history does not support glob filtering
-_FILTER_SCHEMA_INNER = vol.Schema(
-    {
-        vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-    }
-)
-_FILTER_SCHEMA = vol.Schema(
-    {
-        vol.Optional(
-            CONF_INCLUDE, default=_FILTER_SCHEMA_INNER({})
-        ): _FILTER_SCHEMA_INNER,
-        vol.Optional(
-            CONF_EXCLUDE, default=_FILTER_SCHEMA_INNER({})
-        ): _FILTER_SCHEMA_INNER,
-        vol.Optional(CONF_ORDER, default=False): cv.boolean,
-    }
-)
+GLOB_TO_SQL_CHARS = {
+    42: "%",  # *
+    46: "_",  # .
+}
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: _FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
+            {vol.Optional(CONF_ORDER, default=False): cv.boolean}
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 SIGNIFICANT_DOMAINS = (
     "climate",
@@ -73,6 +73,7 @@ IGNORE_DOMAINS = ("zone", "scene")
 NEED_ATTRIBUTE_DOMAINS = {
     "climate",
     "humidifier",
+    "input_datetime",
     "thermostat",
     "water_heater",
 }
@@ -130,8 +131,14 @@ def _get_significant_states(
     else:
         baked_query += lambda q: q.filter(States.last_updated > bindparam("start_time"))
 
-    if filters:
-        filters.bake(baked_query, entity_ids)
+    if entity_ids is not None:
+        baked_query += lambda q: q.filter(
+            States.entity_id.in_(bindparam("entity_ids", expanding=True))
+        )
+    else:
+        baked_query += lambda q: q.filter(~States.domain.in_(IGNORE_DOMAINS))
+        if filters:
+            filters.bake(baked_query)
 
     if end_time is not None:
         baked_query += lambda q: q.filter(States.last_updated < bindparam("end_time"))
@@ -299,10 +306,14 @@ def _get_states_with_session(
     query = query.join(
         most_recent_state_ids,
         States.state_id == most_recent_state_ids.c.max_state_id,
-    ).filter(~States.domain.in_(IGNORE_DOMAINS))
+    )
 
-    if filters:
-        query = filters.apply(query, entity_ids)
+    if entity_ids is not None:
+        query = query.filter(States.entity_id.in_(entity_ids))
+    else:
+        query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
+        if filters:
+            query = filters.apply(query)
 
     return [LazyState(row) for row in execute(query)]
 
@@ -453,7 +464,7 @@ class HistoryPeriodView(HomeAssistantView):
         self.use_include_order = use_include_order
 
     async def get(
-        self, request: web.Request, datetime: Optional[str] = None
+        self, request: web.Request, datetime: str | None = None
     ) -> web.Response:
         """Return history over a period of time."""
         datetime_ = None
@@ -474,18 +485,19 @@ class HistoryPeriodView(HomeAssistantView):
         if start_time > now:
             return self.json([])
 
-        end_time = request.query.get("end_time")
-        if end_time:
-            end_time = dt_util.parse_datetime(end_time)
+        end_time_str = request.query.get("end_time")
+        if end_time_str:
+            end_time = dt_util.parse_datetime(end_time_str)
             if end_time:
                 end_time = dt_util.as_utc(end_time)
             else:
                 return self.json_message("Invalid end_time", HTTP_BAD_REQUEST)
         else:
             end_time = start_time + one_day
-        entity_ids = request.query.get("filter_entity_id")
-        if entity_ids:
-            entity_ids = entity_ids.lower().split(",")
+        entity_ids_str = request.query.get("filter_entity_id")
+        entity_ids = None
+        if entity_ids_str:
+            entity_ids = entity_ids_str.lower().split(",")
         include_start_time_state = "skip_initial_state" not in request.query
         significant_changes_only = (
             request.query.get("significant_changes_only", "1") != "0"
@@ -494,6 +506,13 @@ class HistoryPeriodView(HomeAssistantView):
         minimal_response = "minimal_response" in request.query
 
         hass = request.app["hass"]
+
+        if (
+            not include_start_time_state
+            and entity_ids
+            and not _entities_may_have_state_changes_after(hass, entity_ids, start_time)
+        ):
+            return self.json([])
 
         return cast(
             web.Response,
@@ -542,7 +561,7 @@ class HistoryPeriodView(HomeAssistantView):
 
         # Optionally reorder the result to respect the ordering given
         # by any entities explicitly included in the configuration.
-        if self.use_include_order:
+        if self.filters and self.use_include_order:
             sorted_result = []
             for order_entity in self.filters.included_entities:
                 for state_list in result:
@@ -563,11 +582,14 @@ def sqlalchemy_filter_from_include_exclude_conf(conf):
     if exclude:
         filters.excluded_entities = exclude.get(CONF_ENTITIES, [])
         filters.excluded_domains = exclude.get(CONF_DOMAINS, [])
+        filters.excluded_entity_globs = exclude.get(CONF_ENTITY_GLOBS, [])
     include = conf.get(CONF_INCLUDE)
     if include:
         filters.included_entities = include.get(CONF_ENTITIES, [])
         filters.included_domains = include.get(CONF_DOMAINS, [])
-    return filters
+        filters.included_entity_globs = include.get(CONF_ENTITY_GLOBS, [])
+
+    return filters if filters.has_config else None
 
 
 class Filters:
@@ -577,94 +599,90 @@ class Filters:
         """Initialise the include and exclude filters."""
         self.excluded_entities = []
         self.excluded_domains = []
+        self.excluded_entity_globs = []
+
         self.included_entities = []
         self.included_domains = []
+        self.included_entity_globs = []
 
-    def apply(self, query, entity_ids=None):
-        """Apply the include/exclude filter on domains and entities on query.
+    def apply(self, query):
+        """Apply the entity filter."""
+        if not self.has_config:
+            return query
 
-        Following rules apply:
-        * only the include section is configured - just query the specified
-          entities or domains.
-        * only the exclude section is configured - filter the specified
-          entities and domains from all the entities in the system.
-        * if include and exclude is defined - select the entities specified in
-          the include and filter out the ones from the exclude list.
-        """
-        # specific entities requested - do not in/exclude anything
-        if entity_ids is not None:
-            return query.filter(States.entity_id.in_(entity_ids))
+        return query.filter(self.entity_filter())
 
-        query = query.filter(~States.domain.in_(IGNORE_DOMAINS))
+    @property
+    def has_config(self):
+        """Determine if there is any filter configuration."""
+        if (
+            self.excluded_entities
+            or self.excluded_domains
+            or self.excluded_entity_globs
+            or self.included_entities
+            or self.included_domains
+            or self.included_entity_globs
+        ):
+            return True
 
-        entity_filter = self.entity_filter()
-        if entity_filter is not None:
-            query = query.filter(entity_filter)
+        return False
 
-        return query
-
-    def bake(self, baked_query, entity_ids=None):
+    def bake(self, baked_query):
         """Update a baked query.
 
         Works the same as apply on a baked_query.
         """
-        if entity_ids is not None:
-            baked_query += lambda q: q.filter(
-                States.entity_id.in_(bindparam("entity_ids", expanding=True))
-            )
+        if not self.has_config:
             return
 
-        baked_query += lambda q: q.filter(~States.domain.in_(IGNORE_DOMAINS))
-
-        if (
-            self.excluded_entities
-            or self.excluded_domains
-            or self.included_entities
-            or self.included_domains
-        ):
-            baked_query += lambda q: q.filter(self.entity_filter())
+        baked_query += lambda q: q.filter(self.entity_filter())
 
     def entity_filter(self):
         """Generate the entity filter query."""
-        entity_filter = None
-        # filter if only excluded domain is configured
-        if self.excluded_domains and not self.included_domains:
-            entity_filter = ~States.domain.in_(self.excluded_domains)
-            if self.included_entities:
-                entity_filter &= States.entity_id.in_(self.included_entities)
-        # filter if only included domain is configured
-        elif not self.excluded_domains and self.included_domains:
-            entity_filter = States.domain.in_(self.included_domains)
-            if self.included_entities:
-                entity_filter |= States.entity_id.in_(self.included_entities)
-        # filter if included and excluded domain is configured
-        elif self.excluded_domains and self.included_domains:
-            entity_filter = ~States.domain.in_(self.excluded_domains)
-            if self.included_entities:
-                entity_filter &= States.domain.in_(
-                    self.included_domains
-                ) | States.entity_id.in_(self.included_entities)
-            else:
-                entity_filter &= States.domain.in_(
-                    self.included_domains
-                ) & ~States.domain.in_(self.excluded_domains)
-        # no domain filter just included entities
-        elif (
-            not self.excluded_domains
-            and not self.included_domains
-            and self.included_entities
-        ):
-            entity_filter = States.entity_id.in_(self.included_entities)
-        # finally apply excluded entities filter if configured
-        if self.excluded_entities:
-            if entity_filter is not None:
-                entity_filter = (entity_filter) & ~States.entity_id.in_(
-                    self.excluded_entities
-                )
-            else:
-                entity_filter = ~States.entity_id.in_(self.excluded_entities)
+        includes = []
+        if self.included_domains:
+            includes.append(States.domain.in_(self.included_domains))
+        if self.included_entities:
+            includes.append(States.entity_id.in_(self.included_entities))
+        for glob in self.included_entity_globs:
+            includes.append(_glob_to_like(glob))
 
-        return entity_filter
+        excludes = []
+        if self.excluded_domains:
+            excludes.append(States.domain.in_(self.excluded_domains))
+        if self.excluded_entities:
+            excludes.append(States.entity_id.in_(self.excluded_entities))
+        for glob in self.excluded_entity_globs:
+            excludes.append(_glob_to_like(glob))
+
+        if not includes and not excludes:
+            return None
+
+        if includes and not excludes:
+            return or_(*includes)
+
+        if not excludes and includes:
+            return not_(or_(*excludes))
+
+        return or_(*includes) & not_(or_(*excludes))
+
+
+def _glob_to_like(glob_str):
+    """Translate glob to sql."""
+    return States.entity_id.like(glob_str.translate(GLOB_TO_SQL_CHARS))
+
+
+def _entities_may_have_state_changes_after(
+    hass: HomeAssistant, entity_ids: Iterable, start_time: dt
+) -> bool:
+    """Check the state machine to see if entities have changed since start time."""
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+
+        if state is None or state.last_changed > start_time:
+            return True
+
+    return False
 
 
 class LazyState(State):
@@ -684,7 +702,7 @@ class LazyState(State):
         """Init the lazy state."""
         self._row = row
         self.entity_id = self._row.entity_id
-        self.state = self._row.state
+        self.state = self._row.state or ""
         self._attributes = None
         self._last_changed = None
         self._last_updated = None
@@ -698,7 +716,7 @@ class LazyState(State):
                 self._attributes = json.loads(self._row.attributes)
             except ValueError:
                 # When json.loads fails
-                _LOGGER.exception("Error converting row to state: %s", self)
+                _LOGGER.exception("Error converting row to state: %s", self._row)
                 self._attributes = {}
         return self._attributes
 

@@ -38,7 +38,7 @@ def register_flow_implementation(hass, client_id, client_secret):
     }
 
 
-@config_entries.HANDLERS.register("ambiclimate")
+@config_entries.HANDLERS.register(DOMAIN)
 class AmbiclimateFlowHandler(config_entries.ConfigFlow):
     """Handle a config flow."""
 
@@ -53,20 +53,20 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
     async def async_step_user(self, user_input=None):
         """Handle external yaml configuration."""
         if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="already_configured")
 
         config = self.hass.data.get(DATA_AMBICLIMATE_IMPL, {})
 
         if not config:
             _LOGGER.debug("No config")
-            return self.async_abort(reason="no_config")
+            return self.async_abort(reason="missing_configuration")
 
         return await self.async_step_auth()
 
     async def async_step_auth(self, user_input=None):
         """Handle a flow start."""
         if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="already_configured")
 
         errors = {}
 
@@ -88,7 +88,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow):
     async def async_step_code(self, code=None):
         """Received code for authentication."""
         if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="already_configured")
 
         token_info = await self._get_token_info(code)
 

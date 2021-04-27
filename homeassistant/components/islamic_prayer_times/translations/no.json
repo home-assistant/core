@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "Kun en enkelt forekomst er n\u00f8dvendig."
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "step": {
             "user": {

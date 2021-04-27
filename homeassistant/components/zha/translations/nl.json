@@ -1,11 +1,12 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Slechts \u00e9\u00e9n configuratie van ZHA is toegestaan."
+            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken met ZHA apparaat."
+            "cannot_connect": "Kan geen verbinding maken"
         },
+        "flow_title": "ZHA: {name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -17,6 +18,7 @@
             "port_config": {
                 "data": {
                     "baudrate": "poort snelheid",
+                    "flow_control": "gegevensstroombeheer",
                     "path": "Serieel apparaatpad"
                 },
                 "description": "Voer poortspecifieke instellingen in",
@@ -64,6 +66,7 @@
             "device_dropped": "Apparaat gevallen",
             "device_flipped": "Apparaat omgedraaid \"{subtype}\"",
             "device_knocked": "Apparaat klopte \"{subtype}\"",
+            "device_offline": "Apparaat offline",
             "device_rotated": "Apparaat gedraaid \" {subtype} \"",
             "device_shaken": "Apparaat geschud",
             "device_slid": "Apparaat geschoven \"{subtype}\"\".",
@@ -73,7 +76,7 @@
             "remote_button_alt_long_release": "\"{subtype}\" knop losgelaten (alternate mode)",
             "remote_button_alt_quadruple_press": "\" {subtype} \" knop viervoudig aangeklikt (alternate mode)",
             "remote_button_alt_quintuple_press": "\" {subtype} \" knop vijfmaal geklikt (alternate mode)",
-            "remote_button_alt_short_press": "\" {subtype} \" knop ingedrukt (alternate mode)",
+            "remote_button_alt_short_press": "\"{subtype}\" knop ingedrukt (alternate mode)",
             "remote_button_alt_short_release": "\"{subtype}\" knop losgelaten (alternate mode)",
             "remote_button_alt_triple_press": "\" {subtype} \" knop driemaal geklikt (alternate mode)",
             "remote_button_double_press": "\"{subtype}\" knop dubbel geklikt",
@@ -81,7 +84,7 @@
             "remote_button_long_release": "\"{subtype}\" knop losgelaten na lang indrukken van de knop",
             "remote_button_quadruple_press": "\" {subtype} \" knop viervoudig aangeklikt",
             "remote_button_quintuple_press": "\" {subtype} \" knop vijf keer aangeklikt",
-            "remote_button_short_press": "\" {subtype} \" knop ingedrukt",
+            "remote_button_short_press": "\"{subtype}\" knop ingedrukt",
             "remote_button_short_release": "\"{subtype}\" knop losgelaten",
             "remote_button_triple_press": "\" {subtype} \" knop driemaal geklikt"
         }

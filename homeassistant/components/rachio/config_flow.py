@@ -2,6 +2,7 @@
 import logging
 
 from rachiopy import Rachio
+from requests.exceptions import ConnectTimeout
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -11,12 +12,11 @@ from homeassistant.core import callback
 from .const import (
     CONF_MANUAL_RUN_MINS,
     DEFAULT_MANUAL_RUN_MINS,
+    DOMAIN,
     KEY_ID,
     KEY_STATUS,
     KEY_USERNAME,
-    RACHIO_API_EXCEPTIONS,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     rachio = Rachio(data[CONF_API_KEY])
     username = None
     try:
-        data = await hass.async_add_executor_job(rachio.person.getInfo)
+        data = await hass.async_add_executor_job(rachio.person.info)
         _LOGGER.debug("rachio.person.getInfo: %s", data)
         if int(data[0][KEY_STATUS]) != HTTP_OK:
             raise InvalidAuth
@@ -43,8 +43,7 @@ async def validate_input(hass: core.HomeAssistant, data):
             raise CannotConnect
 
         username = data[1][KEY_USERNAME]
-    # Yes we really do get all these exceptions (hopefully rachiopy switches to requests)
-    except RACHIO_API_EXCEPTIONS as error:
+    except ConnectTimeout as error:
         _LOGGER.error("Could not reach the Rachio API: %s", error)
         raise CannotConnect from error
 
@@ -79,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_homekit(self, homekit_info):
+    async def async_step_homekit(self, discovery_info):
         """Handle HomeKit discovery."""
         if self._async_current_entries():
             # We can see rachio on the network to tell them to configure
@@ -90,14 +89,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # add a new one via "+"
             return self.async_abort(reason="already_configured")
         properties = {
-            key.lower(): value for (key, value) in homekit_info["properties"].items()
+            key.lower(): value for (key, value) in discovery_info["properties"].items()
         }
         await self.async_set_unique_id(properties["id"])
         return await self.async_step_user()
-
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        return await self.async_step_user(user_input)
 
     @staticmethod
     @callback

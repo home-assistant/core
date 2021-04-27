@@ -1,9 +1,10 @@
 """Demo platform for the geolocation component."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 from math import cos, pi, radians, sin
 import random
-from typing import Optional
 
 from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.const import LENGTH_KILOMETERS
@@ -117,7 +118,7 @@ class DemoGeolocationEvent(GeolocationEvent):
         return SOURCE
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the event."""
         return self._name
 
@@ -127,17 +128,17 @@ class DemoGeolocationEvent(GeolocationEvent):
         return False
 
     @property
-    def distance(self) -> Optional[float]:
+    def distance(self) -> float | None:
         """Return distance value of this external event."""
         return self._distance
 
     @property
-    def latitude(self) -> Optional[float]:
+    def latitude(self) -> float | None:
         """Return latitude value of this external event."""
         return self._latitude
 
     @property
-    def longitude(self) -> Optional[float]:
+    def longitude(self) -> float | None:
         """Return longitude value of this external event."""
         return self._longitude
 

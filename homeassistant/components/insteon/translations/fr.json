@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Une connexion Insteon par modem est d\u00e9j\u00e0 configur\u00e9e",
             "cannot_connect": "\u00c9chec de connexion",
             "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
@@ -10,24 +9,6 @@
             "select_single": "S\u00e9lectionnez une option."
         },
         "step": {
-            "hub1": {
-                "data": {
-                    "host": "Adresse IP du hub",
-                    "port": "Port IP"
-                },
-                "description": "Configurer le Hub Insteon Version 1 (avant 2014).",
-                "title": "Hub Insteon Version 1"
-            },
-            "hub2": {
-                "data": {
-                    "host": "Adresse IP du hub",
-                    "password": "Mot de passe",
-                    "port": "Port IP",
-                    "username": "Nom d'utilisateur"
-                },
-                "description": "Configurez le Hub Insteon version 2.",
-                "title": "Hub Insteon Version 2"
-            },
             "hubv1": {
                 "data": {
                     "host": "Adresse IP",
@@ -46,16 +27,12 @@
                 "description": "Configurez le Hub Insteon version 2.",
                 "title": "Hub Insteon Version 2"
             },
-            "init": {
-                "data": {
-                    "hubv1": "Hub Version 1 (avant 2014)"
-                },
-                "title": "Insteon"
-            },
             "plm": {
                 "data": {
                     "device": "Chemin du p\u00e9riph\u00e9rique USB"
-                }
+                },
+                "description": "Configurez le modem Insteon PowerLink (PLM).",
+                "title": "Insteon PLM"
             },
             "user": {
                 "data": {
@@ -69,15 +46,25 @@
     "options": {
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
+            "input_error": "Entr\u00e9es non valides, veuillez v\u00e9rifier vos valeurs.",
             "select_single": "S\u00e9lectionnez une option"
         },
         "step": {
             "add_override": {
+                "data": {
+                    "address": "Adresse de l'appareil (par exemple 1a2b3c)",
+                    "cat": "Cat\u00e9gorie d'appareil (c.-\u00e0-d. 0x10)",
+                    "subcat": "Sous-cat\u00e9gorie de p\u00e9riph\u00e9rique (par exemple 0x0a)"
+                },
+                "description": "Ajoutez un remplacement de p\u00e9riph\u00e9rique.",
                 "title": "Insteon"
             },
             "add_x10": {
                 "data": {
-                    "platform": "Plate-forme"
+                    "housecode": "Code maison (a - p)",
+                    "platform": "Plate-forme",
+                    "steps": "Pas de gradateur (pour les appareils d'\u00e9clairage uniquement, par d\u00e9faut 22)",
+                    "unitcode": "Code de l'unit\u00e9 (1-16)"
                 },
                 "description": "Modifiez le mot de passe Insteon Hub.",
                 "title": "Insteon"
@@ -89,12 +76,15 @@
                     "port": "Port",
                     "username": "Nom d'utilisateur"
                 },
+                "description": "Modifiez les informations de connexion Insteon Hub. Vous devez red\u00e9marrer Home Assistant apr\u00e8s avoir effectu\u00e9 cette modification. Cela ne change pas la configuration du Hub lui-m\u00eame. Pour modifier la configuration dans le Hub, utilisez l'application Hub.",
                 "title": "Insteon"
             },
             "init": {
                 "data": {
+                    "add_override": "Ajoutez un remplacement de p\u00e9riph\u00e9rique.",
                     "add_x10": "Ajouter un appareil X10.",
                     "change_hub_config": "Modifier la configuration du Hub.",
+                    "remove_override": "Supprimer un remplacement d'appareil",
                     "remove_x10": "Retirez un p\u00e9riph\u00e9rique X10."
                 },
                 "description": "S\u00e9lectionnez une option \u00e0 configurer.",
@@ -104,6 +94,7 @@
                 "data": {
                     "address": "S\u00e9lectionner une adresse de p\u00e9riph\u00e9rique \u00e0 retirer"
                 },
+                "description": "Supprimer un remplacement d'appareil",
                 "title": "Insteon"
             },
             "remove_x10": {

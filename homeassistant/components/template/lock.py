@@ -1,6 +1,4 @@
 """Support for locks which integrates with other components."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.lock import PLATFORM_SCHEMA, LockEntity
@@ -15,13 +13,10 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
+from .const import CONF_AVAILABILITY_TEMPLATE
 from .template_entity import TemplateEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_LOCK = "lock"
 CONF_UNLOCK = "unlock"
@@ -64,8 +59,6 @@ async def _async_create_entities(hass, config):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template lock."""
-
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     async_add_entities(await _async_create_entities(hass, config))
 
 
@@ -120,11 +113,19 @@ class TemplateLock(TemplateEntity, LockEntity):
         if isinstance(result, TemplateError):
             self._state = None
             return
-        self._state = result.lower() in ("true", STATE_ON, STATE_LOCKED)
+
+        if isinstance(result, bool):
+            self._state = result
+            return
+
+        if isinstance(result, str):
+            self._state = result.lower() in ("true", STATE_ON, STATE_LOCKED)
+            return
+
+        self._state = False
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-
         self.add_template_attribute(
             "_state", self._state_template, None, self._update_state
         )

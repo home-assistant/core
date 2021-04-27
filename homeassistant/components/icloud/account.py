@@ -1,8 +1,10 @@
 """iCloud account."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import operator
-from typing import Dict
+from typing import Any
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
@@ -13,12 +15,13 @@ from pyicloud.exceptions import (
 from pyicloud.services.findmyiphone import AppleDevice
 
 from homeassistant.components.zone import async_active_zone
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.dt import utcnow
@@ -74,13 +77,14 @@ class IcloudAccount:
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         username: str,
         password: str,
         icloud_dir: Store,
         with_family: bool,
         max_interval: int,
         gps_accuracy_threshold: int,
+        config_entry: ConfigEntry,
     ):
         """Initialize an iCloud account."""
         self.hass = hass
@@ -93,11 +97,12 @@ class IcloudAccount:
 
         self._icloud_dir = icloud_dir
 
-        self.api: PyiCloudService = None
+        self.api: PyiCloudService | None = None
         self._owner_fullname = None
         self._family_members_fullname = {}
         self._devices = {}
         self._retried_fetch = False
+        self._config_entry = config_entry
 
         self.listeners = []
 
@@ -110,9 +115,24 @@ class IcloudAccount:
                 self._icloud_dir.path,
                 with_family=self._with_family,
             )
-        except PyiCloudFailedLoginException as error:
+
+            if self.api.requires_2fa:
+                # Trigger a new log in to ensure the user enters the 2FA code again.
+                raise PyiCloudFailedLoginException
+
+        except PyiCloudFailedLoginException:
             self.api = None
-            _LOGGER.error("Error logging into iCloud Service: %s", error)
+            # Login failed which means credentials need to be updated.
+            _LOGGER.error(
+                (
+                    "Your password for '%s' is no longer working; Go to the "
+                    "Integrations menu and click on Configure on the discovered Apple "
+                    "iCloud card to login again"
+                ),
+                self._config_entry.data[CONF_USERNAME],
+            )
+
+            self._require_reauth()
             return
 
         try:
@@ -141,6 +161,10 @@ class IcloudAccount:
     def update_devices(self) -> None:
         """Update iCloud devices."""
         if self.api is None:
+            return
+
+        if self.api.requires_2fa:
+            self._require_reauth()
             return
 
         api_devices = {}
@@ -204,6 +228,19 @@ class IcloudAccount:
             self.hass,
             self.keep_alive,
             utcnow() + timedelta(minutes=self._fetch_interval),
+        )
+
+    def _require_reauth(self):
+        """Require the user to log in again."""
+        self.hass.add_job(
+            self.hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_REAUTH},
+                data={
+                    **self._config_entry.data,
+                    "unique_id": self._config_entry.unique_id,
+                },
+            )
         )
 
     def _determine_interval(self) -> int:
@@ -309,7 +346,7 @@ class IcloudAccount:
         return self._owner_fullname
 
     @property
-    def family_members_fullname(self) -> Dict[str, str]:
+    def family_members_fullname(self) -> dict[str, str]:
         """Return the account family members fullname."""
         return self._family_members_fullname
 
@@ -319,7 +356,7 @@ class IcloudAccount:
         return self._fetch_interval
 
     @property
-    def devices(self) -> Dict[str, any]:
+    def devices(self) -> dict[str, Any]:
         """Return the account devices."""
         return self._devices
 
@@ -460,11 +497,11 @@ class IcloudDevice:
         return self._battery_status
 
     @property
-    def location(self) -> Dict[str, any]:
+    def location(self) -> dict[str, Any]:
         """Return the Apple device location."""
         return self._location
 
     @property
-    def state_attributes(self) -> Dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the attributes."""
         return self._attrs

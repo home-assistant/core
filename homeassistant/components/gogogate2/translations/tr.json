@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "\u0130p Adresi",
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            }
+        }
+    }
+}

@@ -1,6 +1,4 @@
 """Config flow for Dexcom integration."""
-import logging
-
 from pydexcom import AccountError, Dexcom, SessionError
 import voluptuous as vol
 
@@ -8,16 +6,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
 from homeassistant.core import callback
 
-from .const import (  # pylint:disable=unused-import
-    CONF_SERVER,
-    DOMAIN,
-    MG_DL,
-    MMOL_L,
-    SERVER_OUS,
-    SERVER_US,
-)
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_SERVER, DOMAIN, MG_DL, MMOL_L, SERVER_OUS, SERVER_US
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -46,9 +35,9 @@ class DexcomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input[CONF_SERVER] == SERVER_OUS,
                 )
             except SessionError:
-                errors["base"] = "session_error"
+                errors["base"] = "cannot_connect"
             except AccountError:
-                errors["base"] = "account_error"
+                errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
 

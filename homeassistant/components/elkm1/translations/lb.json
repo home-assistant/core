@@ -5,7 +5,7 @@
             "already_configured": "Een ElkM1 mat d\u00ebsem Prefix ass scho konfigur\u00e9iert"
         },
         "error": {
-            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "cannot_connect": "Feeler beim verbannen",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "unknown": "Onerwaarte Feeler"
         },

@@ -1,15 +1,19 @@
 """Run Home Assistant."""
+from __future__ import annotations
+
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 import dataclasses
 import logging
-import sys
 import threading
-from typing import Any, Dict, Optional
+from typing import Any
 
 from homeassistant import bootstrap
 from homeassistant.core import callback
 from homeassistant.helpers.frame import warn_use
+from homeassistant.util.executor import InterruptibleThreadPoolExecutor
+from homeassistant.util.thread import deadlock_safe_shutdown
+
+# mypy: disallow-any-generics
 
 #
 # Python 3.8 has significantly less workers by default
@@ -34,22 +38,15 @@ class RuntimeConfig:
 
     verbose: bool = False
 
-    log_rotate_days: Optional[int] = None
-    log_file: Optional[str] = None
+    log_rotate_days: int | None = None
+    log_file: str | None = None
     log_no_color: bool = False
 
     debug: bool = False
     open_ui: bool = False
 
 
-# In Python 3.8+ proactor policy is the default on Windows
-if sys.platform == "win32" and sys.version_info[:2] < (3, 8):
-    PolicyBase = asyncio.WindowsProactorEventLoopPolicy
-else:
-    PolicyBase = asyncio.DefaultEventLoopPolicy
-
-
-class HassEventLoopPolicy(PolicyBase):  # type: ignore
+class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid-type,misc]
     """Event loop policy for Home Assistant."""
 
     def __init__(self, debug: bool) -> None:
@@ -69,7 +66,7 @@ class HassEventLoopPolicy(PolicyBase):  # type: ignore
         if self.debug:
             loop.set_debug(True)
 
-        executor = ThreadPoolExecutor(
+        executor = InterruptibleThreadPoolExecutor(
             thread_name_prefix="SyncWorker", max_workers=MAX_EXECUTOR_WORKERS
         )
         loop.set_default_executor(executor)
@@ -77,35 +74,20 @@ class HassEventLoopPolicy(PolicyBase):  # type: ignore
             loop.set_default_executor, "sets default executor on the event loop"
         )
 
-        # Python 3.9+
-        if hasattr(loop, "shutdown_default_executor"):
-            return loop
+        # Shut down executor when we shut down loop
+        orig_close = loop.close
 
-        # Copied from Python 3.9 source
-        def _do_shutdown(future: asyncio.Future) -> None:
-            try:
-                executor.shutdown(wait=True)
-                loop.call_soon_threadsafe(future.set_result, None)
-            except Exception as ex:  # pylint: disable=broad-except
-                loop.call_soon_threadsafe(future.set_exception, ex)
+        def close() -> None:
+            executor.logged_shutdown()
+            orig_close()
 
-        async def shutdown_default_executor() -> None:
-            """Schedule the shutdown of the default executor."""
-            future = loop.create_future()
-            thread = threading.Thread(target=_do_shutdown, args=(future,))
-            thread.start()
-            try:
-                await future
-            finally:
-                thread.join()
-
-        setattr(loop, "shutdown_default_executor", shutdown_default_executor)
+        loop.close = close  # type: ignore
 
         return loop
 
 
 @callback
-def _async_loop_exception_handler(_: Any, context: Dict) -> None:
+def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
     """Handle all exception inside the core loop."""
     kwargs = {}
     exception = context.get("exception")
@@ -123,6 +105,9 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
 
     if hass is None:
         return 1
+
+    # threading._shutdown can deadlock forever
+    threading._shutdown = deadlock_safe_shutdown  # type: ignore[attr-defined] # pylint: disable=protected-access
 
     return await hass.async_run()
 

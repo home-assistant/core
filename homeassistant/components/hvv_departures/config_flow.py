@@ -11,12 +11,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 
-from .const import (  # pylint:disable=unused-import
-    CONF_FILTER,
-    CONF_REAL_TIME,
-    CONF_STATION,
-    DOMAIN,
-)
+from .const import CONF_FILTER, CONF_REAL_TIME, CONF_STATION, DOMAIN
 from .hub import GTIHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +29,7 @@ SCHEMA_STEP_STATION = vol.Schema({vol.Required(CONF_STATION): str})
 SCHEMA_STEP_OPTIONS = vol.Schema(
     {
         vol.Required(CONF_FILTER): vol.In([]),
-        vol.Required(CONF_OFFSET, default=0): vol.All(int, vol.Range(min=0)),
+        vol.Required(CONF_OFFSET, default=0): cv.positive_int,
         vol.Optional(CONF_REAL_TIME, default=True): bool,
     }
 )
@@ -207,7 +202,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required(
                         CONF_OFFSET,
                         default=self.config_entry.options.get(CONF_OFFSET, 0),
-                    ): vol.All(int, vol.Range(min=0)),
+                    ): cv.positive_int,
                     vol.Optional(
                         CONF_REAL_TIME,
                         default=self.config_entry.options.get(CONF_REAL_TIME, True),

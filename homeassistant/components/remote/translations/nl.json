@@ -1,4 +1,19 @@
 {
+    "device_automation": {
+        "action_type": {
+            "toggle": "Schakel {entity_name}",
+            "turn_off": "{entity_name} uitschakelen",
+            "turn_on": "{entity_name} inschakelen"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} staat uit",
+            "is_on": "{entity_name} staat aan"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} uitgeschakeld",
+            "turned_on": "{entity_name} ingeschakeld"
+        }
+    },
     "state": {
         "_": {
             "off": "Uit",

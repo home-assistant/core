@@ -1,6 +1,5 @@
 """Support for Mythic Beasts Dynamic DNS service."""
 from datetime import timedelta
-import logging
 
 import mbddns
 import voluptuous as vol
@@ -14,8 +13,6 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "mythicbeastsdns"
 

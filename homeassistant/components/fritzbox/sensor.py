@@ -1,89 +1,93 @@
 """Support for AVM Fritz!Box smarthome temperature sensor only devices."""
-import requests
+from typing import Callable
 
-from homeassistant.const import CONF_DEVICES, TEMP_CELSIUS
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    ATTR_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_BATTERY,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+)
+from homeassistant.core import HomeAssistant
 
+from . import FritzBoxEntity
 from .const import (
     ATTR_STATE_DEVICE_LOCKED,
     ATTR_STATE_LOCKED,
-    CONF_CONNECTIONS,
+    CONF_COORDINATOR,
     DOMAIN as FRITZBOX_DOMAIN,
-    LOGGER,
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Fritzbox smarthome sensor from config_entry."""
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+) -> None:
+    """Set up the Fritzbox smarthome sensor from ConfigEntry."""
     entities = []
-    devices = hass.data[FRITZBOX_DOMAIN][CONF_DEVICES]
-    fritz = hass.data[FRITZBOX_DOMAIN][CONF_CONNECTIONS][config_entry.entry_id]
+    coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
-    for device in await hass.async_add_executor_job(fritz.get_devices):
+    for ain, device in coordinator.data.items():
         if (
             device.has_temperature_sensor
             and not device.has_switch
             and not device.has_thermostat
-            and device.ain not in devices
         ):
-            entities.append(FritzBoxTempSensor(device, fritz))
-            devices.add(device.ain)
+            entities.append(
+                FritzBoxTempSensor(
+                    {
+                        ATTR_NAME: f"{device.name}",
+                        ATTR_ENTITY_ID: f"{device.ain}",
+                        ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+                        ATTR_DEVICE_CLASS: None,
+                    },
+                    coordinator,
+                    ain,
+                )
+            )
+
+        if device.battery_level is not None:
+            entities.append(
+                FritzBoxBatterySensor(
+                    {
+                        ATTR_NAME: f"{device.name} Battery",
+                        ATTR_ENTITY_ID: f"{device.ain}_battery",
+                        ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+                        ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY,
+                    },
+                    coordinator,
+                    ain,
+                )
+            )
 
     async_add_entities(entities)
 
 
-class FritzBoxTempSensor(Entity):
-    """The entity class for Fritzbox temperature sensors."""
-
-    def __init__(self, device, fritz):
-        """Initialize the switch."""
-        self._device = device
-        self._fritz = fritz
-
-    @property
-    def device_info(self):
-        """Return device specific attributes."""
-        return {
-            "name": self.name,
-            "identifiers": {(FRITZBOX_DOMAIN, self._device.ain)},
-            "manufacturer": self._device.manufacturer,
-            "model": self._device.productname,
-            "sw_version": self._device.fw_version,
-        }
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the device."""
-        return self._device.ain
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._device.name
+class FritzBoxBatterySensor(FritzBoxEntity, SensorEntity):
+    """The entity class for Fritzbox sensors."""
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._device.temperature
+        return self.device.battery_level
+
+
+class FritzBoxTempSensor(FritzBoxEntity, SensorEntity):
+    """The entity class for Fritzbox temperature sensors."""
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    def update(self):
-        """Get latest data and states from the device."""
-        try:
-            self._device.update()
-        except requests.exceptions.HTTPError as ex:
-            LOGGER.warning("Fritzhome connection error: %s", ex)
-            self._fritz.login()
+    def state(self):
+        """Return the state of the sensor."""
+        return self.device.temperature
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         attrs = {
-            ATTR_STATE_DEVICE_LOCKED: self._device.device_lock,
-            ATTR_STATE_LOCKED: self._device.lock,
+            ATTR_STATE_DEVICE_LOCKED: self.device.device_lock,
+            ATTR_STATE_LOCKED: self.device.lock,
         }
         return attrs

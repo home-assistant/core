@@ -1,22 +1,21 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u6b64\u8a2d\u5099\u5df2\u7d93\u65b0\u589e\u81f3 Home Assistant"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
-            "connection_error": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21",
-            "unauthorized": "\u914d\u5c0d\u906d\u62d2\uff0c\u8acb\u6aa2\u67e5\u8a2d\u5099\u8a8d\u8b49\u8acb\u6c42"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "unauthorized": "\u914d\u5c0d\u906d\u62d2\uff0c\u8acb\u6aa2\u67e5\u88dd\u7f6e\u8a8d\u8b49\u8acb\u6c42"
         },
         "step": {
             "user": {
                 "data": {
-                    "email": "\u90f5\u4ef6\uff08\u9078\u9805\uff09",
+                    "email": "\u96fb\u5b50\u90f5\u4ef6",
                     "host": "\u4e3b\u6a5f\u7aef",
                     "port": "\u901a\u8a0a\u57e0"
                 },
-                "title": "\u9023\u7dda\u81f3\u8a2d\u5099"
+                "title": "\u9023\u7dda\u81f3\u88dd\u7f6e"
             }
         }
-    },
-    "title": "Atag"
+    }
 }

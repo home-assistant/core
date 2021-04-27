@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
+from .const import DOMAIN, LOGGER
 
 
 class FluNearYouFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -30,10 +30,6 @@ class FluNearYouFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
-
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
         if not user_input:
@@ -53,8 +49,6 @@ class FluNearYouFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         except FluNearYouError as err:
             LOGGER.error("Error while configuring integration: %s", err)
-            return self.async_show_form(
-                step_id="user", errors={"base": "general_error"}
-            )
+            return self.async_show_form(step_id="user", errors={"base": "unknown"})
 
         return self.async_create_entry(title=unique_id, data=user_input)

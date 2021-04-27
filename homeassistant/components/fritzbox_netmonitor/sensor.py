@@ -7,16 +7,15 @@ from fritzconnection.lib.fritzstatus import FritzStatus
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEFAULT_NAME = "fritz_netmonitor"
-CONF_DEFAULT_IP = "169.254.1.1"  # This IP is valid for all FRITZ!Box routers.
+DEFAULT_NAME = "fritz_netmonitor"
+DEFAULT_HOST = "169.254.1.1"  # This IP is valid for all FRITZ!Box routers.
 
 ATTR_BYTES_RECEIVED = "bytes_received"
 ATTR_BYTES_SENT = "bytes_sent"
@@ -38,16 +37,16 @@ ICON = "mdi:web"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=CONF_DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     }
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the FRITZ!Box monitor sensors."""
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
+    name = config[CONF_NAME]
+    host = config[CONF_HOST]
 
     try:
         fstatus = FritzStatus(address=host)
@@ -62,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([FritzboxMonitorSensor(name, fstatus)], True)
 
 
-class FritzboxMonitorSensor(Entity):
+class FritzboxMonitorSensor(SensorEntity):
     """Implementation of a fritzbox monitor sensor."""
 
     def __init__(self, name, fstatus):
@@ -93,12 +92,12 @@ class FritzboxMonitorSensor(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         # Don't return attributes if FritzBox is unreachable
         if self._state == STATE_UNAVAILABLE:
             return {}
-        attr = {
+        return {
             ATTR_IS_LINKED: self._is_linked,
             ATTR_IS_CONNECTED: self._is_connected,
             ATTR_EXTERNAL_IP: self._external_ip,
@@ -110,7 +109,6 @@ class FritzboxMonitorSensor(Entity):
             ATTR_MAX_BYTE_RATE_UP: self._max_byte_rate_up,
             ATTR_MAX_BYTE_RATE_DOWN: self._max_byte_rate_down,
         }
-        return attr
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

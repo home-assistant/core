@@ -1,13 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u6b64 AVM FRITZ!Box \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "already_in_progress": "AVM FRITZ!Box \u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d\u3002",
-            "not_found": "\u5728\u7db2\u8def\u4e0a\u627e\u4e0d\u5230\u652f\u63f4\u7684 AVM FRITZ!Box\u3002",
-            "not_supported": "\u5df2\u9023\u7dda\u81f3 AVM FRITZ!Box \u4f46\u7121\u6cd5\u63a7\u5236\u667a\u80fd\u5bb6\u5ead\u8a2d\u5099\u3002"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
+            "no_devices_found": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230\u88dd\u7f6e",
+            "not_supported": "\u5df2\u9023\u7dda\u81f3 AVM FRITZ!Box \u4f46\u7121\u6cd5\u63a7\u5236\u667a\u80fd\u5bb6\u5ead\u88dd\u7f6e\u3002",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "error": {
-            "auth_failed": "\u4f7f\u7528\u8005\u53ca/\u6216\u5bc6\u78bc\u932f\u8aa4\u3002"
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
         },
         "flow_title": "AVM FRITZ!Box\uff1a{name}",
         "step": {
@@ -17,6 +18,13 @@
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 },
                 "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name}\uff1f"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u66f4\u65b0 {name} \u767b\u5165\u8cc7\u8a0a\u3002"
             },
             "user": {
                 "data": {

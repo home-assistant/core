@@ -45,25 +45,38 @@ from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
+    CURRENCY_CENT,
+    CURRENCY_DOLLAR,
     DEGREE,
     ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
     FREQUENCY_HERTZ,
+    IRRADIATION_WATTS_PER_SQUARE_METER,
     LENGTH_CENTIMETERS,
     LENGTH_FEET,
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
     LENGTH_MILES,
+    LENGTH_MILLIMETERS,
+    LIGHT_LUX,
     MASS_KILOGRAMS,
     MASS_POUNDS,
     PERCENTAGE,
+    POWER_KILO_WATT,
     POWER_WATT,
+    PRECIPITATION_MILLIMETERS_PER_HOUR,
+    PRESSURE_HPA,
     PRESSURE_INHG,
+    PRESSURE_MBAR,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
+    SPEED_INCHES_PER_DAY,
+    SPEED_INCHES_PER_HOUR,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
+    SPEED_MILLIMETERS_PER_DAY,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_LOCKED,
@@ -86,6 +99,10 @@ from homeassistant.const import (
     TIME_YEARS,
     UV_INDEX,
     VOLT,
+    VOLUME_CUBIC_FEET,
+    VOLUME_CUBIC_METERS,
+    VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
+    VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )
@@ -112,7 +129,7 @@ DEFAULT_VAR_SENSOR_STRING = "HA."
 KEY_ACTIONS = "actions"
 KEY_STATUS = "status"
 
-SUPPORTED_PLATFORMS = [BINARY_SENSOR, SENSOR, LOCK, FAN, COVER, LIGHT, SWITCH, CLIMATE]
+PLATFORMS = [BINARY_SENSOR, SENSOR, LOCK, FAN, COVER, LIGHT, SWITCH, CLIMATE]
 SUPPORTED_PROGRAM_PLATFORMS = [BINARY_SENSOR, LOCK, FAN, COVER, SWITCH]
 
 SUPPORTED_BIN_SENS_CLASSES = ["moisture", "opening", "motion", "climate"]
@@ -184,6 +201,7 @@ UOM_HVAC_MODE_INSTEON = "98"
 UOM_FAN_MODES = "99"
 UOM_INDEX = "25"
 UOM_ON_OFF = "2"
+UOM_PERCENTAGE = "51"
 
 # Do not use the Home Assistant consts for the states here - we're matching exact API
 # responses, not using them for Home Assistant states
@@ -191,7 +209,7 @@ UOM_ON_OFF = "2"
 # Z-Wave Categories: https://www.universal-devices.com/developers/wsdk/5.0.4/4_fam.xml
 NODE_FILTERS = {
     BINARY_SENSOR: {
-        FILTER_UOM: [],
+        FILTER_UOM: [UOM_ON_OFF],
         FILTER_STATES: [],
         FILTER_NODE_DEF_ID: [
             "BinaryAlarm",
@@ -273,7 +291,7 @@ NODE_FILTERS = {
         FILTER_ZWAVE_CAT: ["109", "119"],
     },
     SWITCH: {
-        FILTER_UOM: [UOM_ON_OFF, "78"],
+        FILTER_UOM: ["78"],
         FILTER_STATES: ["on", "off"],
         FILTER_NODE_DEF_ID: [
             "AlertModuleArmed",
@@ -313,12 +331,13 @@ NODE_FILTERS = {
 
 UOM_FRIENDLY_NAME = {
     "1": "A",
+    UOM_ON_OFF: "",  # Binary, no unit
     "3": f"btu/{TIME_HOURS}",
     "4": TEMP_CELSIUS,
     "5": LENGTH_CENTIMETERS,
-    "6": f"{LENGTH_FEET}³",
-    "7": f"{LENGTH_FEET}³/{TIME_MINUTES}",
-    "8": "m³",
+    "6": VOLUME_CUBIC_FEET,
+    "7": VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
+    "8": VOLUME_CUBIC_METERS,
     "9": TIME_DAYS,
     "10": TIME_DAYS,
     "12": "dB",
@@ -332,34 +351,34 @@ UOM_FRIENDLY_NAME = {
     "21": "%AH",
     "22": "%RH",
     "23": PRESSURE_INHG,
-    "24": f"{LENGTH_INCHES}/{TIME_HOURS}",
+    "24": SPEED_INCHES_PER_HOUR,
     UOM_INDEX: "index",  # Index type. Use "node.formatted" for value
     "26": TEMP_KELVIN,
     "27": "keyword",
     "28": MASS_KILOGRAMS,
     "29": "kV",
-    "30": "kW",
+    "30": POWER_KILO_WATT,
     "31": "kPa",
     "32": SPEED_KILOMETERS_PER_HOUR,
     "33": ENERGY_KILO_WATT_HOUR,
     "34": "liedu",
     "35": VOLUME_LITERS,
-    "36": "lx",
+    "36": LIGHT_LUX,
     "37": "mercalli",
     "38": LENGTH_METERS,
-    "39": f"{LENGTH_METERS}³/{TIME_HOURS}",
+    "39": VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     "40": SPEED_METERS_PER_SECOND,
     "41": "mA",
     "42": TIME_MILLISECONDS,
     "43": "mV",
     "44": TIME_MINUTES,
     "45": TIME_MINUTES,
-    "46": f"mm/{TIME_HOURS}",
+    "46": PRECIPITATION_MILLIMETERS_PER_HOUR,
     "47": TIME_MONTHS,
     "48": SPEED_MILES_PER_HOUR,
     "49": SPEED_METERS_PER_SECOND,
     "50": "Ω",
-    "51": PERCENTAGE,
+    UOM_PERCENTAGE: PERCENTAGE,
     "52": MASS_POUNDS,
     "53": "pf",
     "54": CONCENTRATION_PARTS_PER_MILLION,
@@ -377,15 +396,15 @@ UOM_FRIENDLY_NAME = {
     "71": UV_INDEX,
     "72": VOLT,
     "73": POWER_WATT,
-    "74": f"{POWER_WATT}/{LENGTH_METERS}²",
+    "74": IRRADIATION_WATTS_PER_SQUARE_METER,
     "75": "weekday",
     "76": DEGREE,
     "77": TIME_YEARS,
-    "82": "mm",
+    "82": LENGTH_MILLIMETERS,
     "83": LENGTH_KILOMETERS,
     "85": "Ω",
     "86": "kΩ",
-    "87": f"{LENGTH_METERS}³/{LENGTH_METERS}³",
+    "87": f"{VOLUME_CUBIC_METERS}/{VOLUME_CUBIC_METERS}",
     "88": "Water activity",
     "89": "RPM",
     "90": FREQUENCY_HERTZ,
@@ -394,10 +413,10 @@ UOM_FRIENDLY_NAME = {
     UOM_8_BIT_RANGE: "",  # Range 0-255, no unit.
     UOM_DOUBLE_TEMP: UOM_DOUBLE_TEMP,
     "102": "kWs",
-    "103": "$",
-    "104": "¢",
+    "103": CURRENCY_DOLLAR,
+    "104": CURRENCY_CENT,
     "105": LENGTH_INCHES,
-    "106": f"mm/{TIME_DAYS}",
+    "106": SPEED_MILLIMETERS_PER_DAY,
     "107": "",  # raw 1-byte unsigned value
     "108": "",  # raw 2-byte unsigned value
     "109": "",  # raw 3-byte unsigned value
@@ -407,10 +426,10 @@ UOM_FRIENDLY_NAME = {
     "113": "",  # raw 3-byte signed value
     "114": "",  # raw 4-byte signed value
     "116": LENGTH_MILES,
-    "117": "mbar",
-    "118": "hPa",
-    "119": f"{POWER_WATT}{TIME_HOURS}",
-    "120": f"{LENGTH_INCHES}/{TIME_DAYS}",
+    "117": PRESSURE_MBAR,
+    "118": PRESSURE_HPA,
+    "119": ENERGY_WATT_HOUR,
+    "120": SPEED_INCHES_PER_DAY,
 }
 
 UOM_TO_STATES = {

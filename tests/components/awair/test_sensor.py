@@ -1,4 +1,5 @@
 """Tests for the Awair sensor platform."""
+from unittest.mock import patch
 
 from homeassistant.components.awair.const import (
     API_CO2,
@@ -20,10 +21,12 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    LIGHT_LUX,
     PERCENTAGE,
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     AWAIR_UUID,
@@ -39,7 +42,6 @@ from .const import (
     USER_FIXTURE,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -72,7 +74,7 @@ async def test_awair_gen1_sensors(hass):
 
     fixtures = [USER_FIXTURE, DEVICES_FIXTURE, GEN1_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
@@ -168,7 +170,7 @@ async def test_awair_gen2_sensors(hass):
 
     fixtures = [USER_FIXTURE, DEVICES_FIXTURE, GEN2_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
@@ -202,7 +204,7 @@ async def test_awair_mint_sensors(hass):
 
     fixtures = [USER_FIXTURE, DEVICES_FIXTURE, MINT_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
@@ -232,7 +234,7 @@ async def test_awair_mint_sensors(hass):
         "sensor.living_room_illuminance",
         f"{AWAIR_UUID}_{SENSOR_TYPES[API_LUX][ATTR_UNIQUE_ID]}",
         "441.7",
-        {ATTR_UNIT_OF_MEASUREMENT: "lx"},
+        {ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX},
     )
 
     # The Mint does not have a CO2 sensor.
@@ -244,7 +246,7 @@ async def test_awair_glow_sensors(hass):
 
     fixtures = [USER_FIXTURE, DEVICES_FIXTURE, GLOW_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
@@ -264,7 +266,7 @@ async def test_awair_omni_sensors(hass):
 
     fixtures = [USER_FIXTURE, DEVICES_FIXTURE, OMNI_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,
@@ -290,7 +292,7 @@ async def test_awair_omni_sensors(hass):
         "sensor.living_room_illuminance",
         f"{AWAIR_UUID}_{SENSOR_TYPES[API_LUX][ATTR_UNIQUE_ID]}",
         "804.9",
-        {ATTR_UNIT_OF_MEASUREMENT: "lx"},
+        {ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX},
     )
 
 
@@ -317,7 +319,7 @@ async def test_awair_unavailable(hass):
 
     fixtures = [USER_FIXTURE, DEVICES_FIXTURE, GEN1_DATA_FIXTURE]
     await setup_awair(hass, fixtures)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert_expected_properties(
         hass,

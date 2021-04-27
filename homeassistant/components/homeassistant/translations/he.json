@@ -1,3 +1,7 @@
 {
-    "title": "Home Assistant"
+    "system_health": {
+        "info": {
+            "os_name": "\u05de\u05e9\u05e4\u05d7\u05ea \u05de\u05e2\u05e8\u05db\u05ea \u05d4\u05e4\u05e2\u05dc\u05d4"
+        }
+    }
 }

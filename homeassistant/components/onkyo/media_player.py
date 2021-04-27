@@ -1,6 +1,7 @@
 """Support for Onkyo Receivers."""
+from __future__ import annotations
+
 import logging
-from typing import List
 
 import eiscp
 from eiscp import eISCP
@@ -56,7 +57,7 @@ SUPPORT_ONKYO_WO_VOLUME = (
     | SUPPORT_PLAY_MEDIA
 )
 
-KNOWN_HOSTS: List[str] = []
+KNOWN_HOSTS: list[str] = []
 DEFAULT_SOURCES = {
     "tv": "TV",
     "bd": "Bluray",
@@ -83,7 +84,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(
             CONF_RECEIVER_MAX_VOLUME, default=DEFAULT_RECEIVER_MAX_VOLUME
-        ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        ): cv.positive_int,
         vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES): {cv.string: cv.string},
     }
 )
@@ -93,6 +94,9 @@ TIMEOUT_MESSAGE = "Timeout waiting for response."
 
 ATTR_HDMI_OUTPUT = "hdmi_output"
 ATTR_PRESET = "preset"
+ATTR_AUDIO_INFORMATION = "audio_information"
+ATTR_VIDEO_INFORMATION = "video_information"
+ATTR_VIDEO_OUT = "video_out"
 
 ACCEPTED_VALUES = [
     "no",
@@ -113,6 +117,27 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
 )
 
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
+
+
+def _parse_onkyo_payload(payload):
+    """Parse a payload returned from the eiscp library."""
+    if isinstance(payload, bool):
+        # command not supported by the device
+        return False
+
+    if len(payload) < 2:
+        # no value
+        return None
+
+    if isinstance(payload[1], str):
+        return payload[1].split(",")
+
+    return payload[1]
+
+
+def _tuple_get(tup, index, default=None):
+    """Return a tuple item at index or a default value if it doesn't exist."""
+    return (tup[index : index + 1] or [default])[0]
 
 
 def determine_zones(receiver):
@@ -229,9 +254,17 @@ class OnkyoDevice(MediaPlayerEntity):
         self._muted = False
         self._volume = 0
         self._pwstate = STATE_OFF
-        self._name = (
-            name or f"{receiver.info['model_name']}_{receiver.info['identifier']}"
-        )
+        if name:
+            # not discovered
+            self._name = name
+            self._unique_id = None
+        else:
+            # discovered
+            self._unique_id = (
+                f"{receiver.info['model_name']}_{receiver.info['identifier']}"
+            )
+            self._name = self._unique_id
+
         self._max_volume = max_volume
         self._receiver_max_volume = receiver_max_volume
         self._current_source = None
@@ -240,6 +273,8 @@ class OnkyoDevice(MediaPlayerEntity):
         self._reverse_mapping = {value: key for key, value in sources.items()}
         self._attributes = {}
         self._hdmi_out_supported = True
+        self._audio_info_supported = True
+        self._video_info_supported = True
 
     def command(self, command):
         """Run an eiscp command and catch connection errors."""
@@ -265,6 +300,10 @@ class OnkyoDevice(MediaPlayerEntity):
             self._pwstate = STATE_ON
         else:
             self._pwstate = STATE_OFF
+            self._attributes.pop(ATTR_AUDIO_INFORMATION, None)
+            self._attributes.pop(ATTR_VIDEO_INFORMATION, None)
+            self._attributes.pop(ATTR_PRESET, None)
+            self._attributes.pop(ATTR_VIDEO_OUT, None)
             return
 
         volume_raw = self.command("volume query")
@@ -278,20 +317,21 @@ class OnkyoDevice(MediaPlayerEntity):
         else:
             hdmi_out_raw = []
         preset_raw = self.command("preset query")
+        if self._audio_info_supported:
+            audio_information_raw = self.command("audio-information query")
+        if self._video_info_supported:
+            video_information_raw = self.command("video-information query")
         if not (volume_raw and mute_raw and current_source_raw):
             return
 
-        # eiscp can return string or tuple. Make everything tuples.
-        if isinstance(current_source_raw[1], str):
-            current_source_tuples = (current_source_raw[0], (current_source_raw[1],))
-        else:
-            current_source_tuples = current_source_raw
+        sources = _parse_onkyo_payload(current_source_raw)
 
-        for source in current_source_tuples[1]:
+        for source in sources:
             if source in self._source_mapping:
                 self._current_source = self._source_mapping[source]
                 break
-            self._current_source = "_".join(current_source_tuples[1])
+            self._current_source = "_".join(sources)
+
         if preset_raw and self._current_source.lower() == "radio":
             self._attributes[ATTR_PRESET] = preset_raw[1]
         elif ATTR_PRESET in self._attributes:
@@ -299,15 +339,23 @@ class OnkyoDevice(MediaPlayerEntity):
 
         self._muted = bool(mute_raw[1] == "on")
         #       AMP_VOL/MAX_RECEIVER_VOL*(MAX_VOL/100)
-        self._volume = (
-            volume_raw[1] / self._receiver_max_volume * (self._max_volume / 100)
+        self._volume = volume_raw[1] / (
+            self._receiver_max_volume * self._max_volume / 100
         )
+
+        self._parse_audio_information(audio_information_raw)
+        self._parse_video_information(video_information_raw)
 
         if not hdmi_out_raw:
             return
-        self._attributes["video_out"] = ",".join(hdmi_out_raw[1])
+        self._attributes[ATTR_VIDEO_OUT] = ",".join(hdmi_out_raw[1])
         if hdmi_out_raw[1] == "N/A":
             self._hdmi_out_supported = False
+
+    @property
+    def unique_id(self):
+        """Return unique ID for this device."""
+        return self._unique_id
 
     @property
     def name(self):
@@ -345,7 +393,7 @@ class OnkyoDevice(MediaPlayerEntity):
         return self._source_list
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return self._attributes
 
@@ -401,6 +449,45 @@ class OnkyoDevice(MediaPlayerEntity):
     def select_output(self, output):
         """Set hdmi-out."""
         self.command(f"hdmi-output-selector={output}")
+
+    def _parse_audio_information(self, audio_information_raw):
+        values = _parse_onkyo_payload(audio_information_raw)
+        if values is False:
+            self._audio_info_supported = False
+            return
+
+        if values:
+            info = {
+                "format": _tuple_get(values, 1),
+                "input_frequency": _tuple_get(values, 2),
+                "input_channels": _tuple_get(values, 3),
+                "listening_mode": _tuple_get(values, 4),
+                "output_channels": _tuple_get(values, 5),
+                "output_frequency": _tuple_get(values, 6),
+            }
+            self._attributes[ATTR_AUDIO_INFORMATION] = info
+        else:
+            self._attributes.pop(ATTR_AUDIO_INFORMATION, None)
+
+    def _parse_video_information(self, video_information_raw):
+        values = _parse_onkyo_payload(video_information_raw)
+        if values is False:
+            self._video_info_supported = False
+            return
+
+        if values:
+            info = {
+                "input_resolution": _tuple_get(values, 1),
+                "input_color_schema": _tuple_get(values, 2),
+                "input_color_depth": _tuple_get(values, 3),
+                "output_resolution": _tuple_get(values, 5),
+                "output_color_schema": _tuple_get(values, 6),
+                "output_color_depth": _tuple_get(values, 7),
+                "picture_mode": _tuple_get(values, 8),
+            }
+            self._attributes[ATTR_VIDEO_INFORMATION] = info
+        else:
+            self._attributes.pop(ATTR_VIDEO_INFORMATION, None)
 
 
 class OnkyoDeviceZone(OnkyoDevice):

@@ -1,10 +1,9 @@
 {
     "config": {
         "error": {
-            "already_configured": "Gateway gi\u00e0 configurato",
-            "id_exists": "ID del gateway esiste gi\u00e0",
-            "serial_error": "Errore durante la connessione al dispositivo",
-            "timeout": "Tentativo di connessione scaduto"
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi",
+            "id_exists": "ID del gateway esiste gi\u00e0"
         },
         "step": {
             "init": {
@@ -22,7 +21,10 @@
             "init": {
                 "data": {
                     "floor_temperature": "Temperatura del pavimento",
-                    "precision": "Precisione"
+                    "precision": "Precisione",
+                    "read_precision": "Leggi la precisione",
+                    "set_precision": "Imposta la precisione",
+                    "temporary_override_mode": "Modalit\u00e0 di esclusione temporanea del setpoint"
                 },
                 "description": "Opzioni per OpenTherm Gateway"
             }

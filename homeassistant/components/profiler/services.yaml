@@ -1,0 +1,62 @@
+start:
+  name: Start
+  description: Start the Profiler
+  fields:
+    seconds:
+      name: Seconds
+      description: The number of seconds to run the profiler.
+      example: 60.0
+      default: 60.0
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+memory:
+  name: Memory
+  description: Start the Memory Profiler
+  fields:
+    seconds:
+      name: Seconds
+      description: The number of seconds to run the memory profiler.
+      example: 60.0
+      default: 60.0
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+start_log_objects:
+  name: Start log objects
+  description: Start logging growth of objects in memory
+  fields:
+    scan_interval:
+      name: Scan interval
+      description: The number of seconds between logging objects.
+      example: 60.0
+      default: 30.0
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+stop_log_objects:
+  name: Stop log objects
+  description: Stop logging growth of objects in memory.
+dump_log_objects:
+  name: Dump log objects
+  description: Dump the repr of all matching objects to the log.
+  fields:
+    type:
+      name: Type
+      description: The type of objects to dump to the log.
+      required: true
+      example: State
+      selector:
+        text:
+log_thread_frames:
+  name: Log thread frames
+  description: Log the current frames for all threads.
+log_event_loop_scheduled:
+  name: Log event loop scheduled
+  description: Log what is scheduled in the event loop.

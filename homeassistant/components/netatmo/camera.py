@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.core import callback
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -21,6 +22,7 @@ from .const import (
     DATA_HANDLER,
     DATA_PERSONS,
     DOMAIN,
+    EVENT_TYPE_LIGHT_MODE,
     EVENT_TYPE_OFF,
     EVENT_TYPE_ON,
     MANUFACTURER,
@@ -48,15 +50,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
+    await data_handler.register_data_class(
+        CAMERA_DATA_CLASS_NAME, CAMERA_DATA_CLASS_NAME, None
+    )
+
+    if CAMERA_DATA_CLASS_NAME not in data_handler.data:
+        raise PlatformNotReady
+
     async def get_entities():
         """Retrieve Netatmo entities."""
-        await data_handler.register_data_class(
-            CAMERA_DATA_CLASS_NAME, CAMERA_DATA_CLASS_NAME, None
-        )
 
-        data = data_handler.data
-
-        if not data.get(CAMERA_DATA_CLASS_NAME):
+        if not data_handler.data.get(CAMERA_DATA_CLASS_NAME):
             return []
 
         data_class = data_handler.data[CAMERA_DATA_CLASS_NAME]
@@ -93,24 +97,25 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(await get_entities(), True)
 
+    await data_handler.unregister_data_class(CAMERA_DATA_CLASS_NAME, None)
+
     platform = entity_platform.current_platform.get()
 
-    if data_handler.data[CAMERA_DATA_CLASS_NAME] is not None:
-        platform.async_register_entity_service(
-            SERVICE_SET_PERSONS_HOME,
-            {vol.Required(ATTR_PERSONS): vol.All(cv.ensure_list, [cv.string])},
-            "_service_set_persons_home",
-        )
-        platform.async_register_entity_service(
-            SERVICE_SET_PERSON_AWAY,
-            {vol.Optional(ATTR_PERSON): cv.string},
-            "_service_set_person_away",
-        )
-        platform.async_register_entity_service(
-            SERVICE_SET_CAMERA_LIGHT,
-            {vol.Required(ATTR_CAMERA_LIGHT_MODE): vol.In(CAMERA_LIGHT_MODES)},
-            "_service_set_camera_light",
-        )
+    platform.async_register_entity_service(
+        SERVICE_SET_PERSONS_HOME,
+        {vol.Required(ATTR_PERSONS): vol.All(cv.ensure_list, [cv.string])},
+        "_service_set_persons_home",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_PERSON_AWAY,
+        {vol.Optional(ATTR_PERSON): cv.string},
+        "_service_set_person_away",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_CAMERA_LIGHT,
+        {vol.Required(ATTR_CAMERA_LIGHT_MODE): vol.In(CAMERA_LIGHT_MODES)},
+        "_service_set_camera_light",
+    )
 
 
 class NetatmoCamera(NetatmoBase, Camera):
@@ -145,12 +150,13 @@ class NetatmoCamera(NetatmoBase, Camera):
         self._sd_status = None
         self._alim_status = None
         self._is_local = None
+        self._light_state = None
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
 
-        for event_type in (EVENT_TYPE_OFF, EVENT_TYPE_ON):
+        for event_type in (EVENT_TYPE_LIGHT_MODE, EVENT_TYPE_OFF, EVENT_TYPE_ON):
             self._listeners.append(
                 async_dispatcher_connect(
                     self.hass,
@@ -176,6 +182,8 @@ class NetatmoCamera(NetatmoBase, Camera):
             elif data["push_type"] in ["NACamera-on", "NACamera-connection"]:
                 self.is_streaming = True
                 self._status = "on"
+            elif data["push_type"] == "NOC-light_mode":
+                self._light_state = data["sub_type"]
 
             self.async_write_ha_state()
             return
@@ -209,7 +217,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         return response.content
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the Netatmo-specific camera state attributes."""
         return {
             "id": self._id,
@@ -219,6 +227,7 @@ class NetatmoCamera(NetatmoBase, Camera):
             "is_local": self._is_local,
             "vpn_url": self._vpnurl,
             "local_url": self._localurl,
+            "light_state": self._light_state,
         }
 
     @property
@@ -284,9 +293,9 @@ class NetatmoCamera(NetatmoBase, Camera):
                 self._data.events.get(self._id, {})
             )
         elif self._model == "NOC":  # Smart Outdoor Camera
-            self.hass.data[DOMAIN][DATA_EVENTS][
-                self._id
-            ] = self._data.outdoor_events.get(self._id, {})
+            self.hass.data[DOMAIN][DATA_EVENTS][self._id] = self.process_events(
+                self._data.outdoor_events.get(self._id, {})
+            )
 
     def process_events(self, events):
         """Add meta data to events."""
@@ -341,7 +350,7 @@ class NetatmoCamera(NetatmoBase, Camera):
     def _service_set_camera_light(self, **kwargs):
         """Service to set light mode."""
         mode = kwargs.get(ATTR_CAMERA_LIGHT_MODE)
-        _LOGGER.debug("Turn camera '%s' %s", self._name, mode)
+        _LOGGER.debug("Turn %s camera light for '%s'", mode, self._name)
         self._data.set_state(
             home_id=self._home_id,
             camera_id=self._id,

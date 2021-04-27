@@ -1,7 +1,12 @@
 """Provide the functionality to group entities."""
+from __future__ import annotations
+
+from abc import abstractmethod
 import asyncio
+from collections.abc import Iterable
+from contextvars import ContextVar
 import logging
-from typing import Any, Iterable, List, Optional, cast
+from typing import Any, List, cast
 
 import voluptuous as vol
 
@@ -11,31 +16,25 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_NAME,
+    CONF_ENTITIES,
     CONF_ICON,
     CONF_NAME,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
     EVENT_HOMEASSISTANT_START,
     SERVICE_RELOAD,
-    STATE_CLOSED,
-    STATE_HOME,
-    STATE_LOCKED,
-    STATE_NOT_HOME,
     STATE_OFF,
-    STATE_OK,
     STATE_ON,
-    STATE_OPEN,
-    STATE_PROBLEM,
-    STATE_UNKNOWN,
-    STATE_UNLOCKED,
 )
-from homeassistant.core import CoreState, callback
+from homeassistant.core import CoreState, HomeAssistant, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platforms,
+)
 from homeassistant.helpers.reload import async_reload_integration_platforms
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
@@ -45,7 +44,6 @@ GROUP_ORDER = "group_order"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-CONF_ENTITIES = "entities"
 CONF_ALL = "all"
 
 ATTR_ADD_ENTITIES = "add_entities"
@@ -60,7 +58,11 @@ SERVICE_REMOVE = "remove"
 
 PLATFORMS = ["light", "cover", "notify"]
 
+REG_KEY = f"{DOMAIN}_registry"
+
 _LOGGER = logging.getLogger(__name__)
+
+current_domain: ContextVar[str] = ContextVar("current_domain")
 
 
 def _conf_preprocess(value):
@@ -87,46 +89,53 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# List of ON/OFF state tuples for groupable states
-_GROUP_TYPES = [
-    (STATE_ON, STATE_OFF),
-    (STATE_HOME, STATE_NOT_HOME),
-    (STATE_OPEN, STATE_CLOSED),
-    (STATE_LOCKED, STATE_UNLOCKED),
-    (STATE_PROBLEM, STATE_OK),
-]
 
+class GroupIntegrationRegistry:
+    """Class to hold a registry of integrations."""
 
-def _get_group_on_off(state):
-    """Determine the group on/off states based on a state."""
-    for states in _GROUP_TYPES:
-        if state in states:
-            return states
+    on_off_mapping: dict[str, str] = {STATE_ON: STATE_OFF}
+    off_on_mapping: dict[str, str] = {STATE_OFF: STATE_ON}
+    on_states_by_domain: dict[str, set] = {}
+    exclude_domains: set = set()
 
-    return None, None
+    def exclude_domain(self) -> None:
+        """Exclude the current domain."""
+        self.exclude_domains.add(current_domain.get())
+
+    def on_off_states(self, on_states: set, off_state: str) -> None:
+        """Register on and off states for the current domain."""
+        for on_state in on_states:
+            if on_state not in self.on_off_mapping:
+                self.on_off_mapping[on_state] = off_state
+
+        if len(on_states) == 1 and off_state not in self.off_on_mapping:
+            self.off_on_mapping[off_state] = list(on_states)[0]
+
+        self.on_states_by_domain[current_domain.get()] = set(on_states)
 
 
 @bind_hass
 def is_on(hass, entity_id):
     """Test if the group state is in its ON-state."""
+    if REG_KEY not in hass.data:
+        # Integration not setup yet, it cannot be on
+        return False
+
     state = hass.states.get(entity_id)
 
-    if state:
-        group_on, _ = _get_group_on_off(state.state)
-
-        # If we found a group_type, compare to ON-state
-        return group_on is not None and state.state == group_on
+    if state is not None:
+        return state.state in hass.data[REG_KEY].on_off_mapping
 
     return False
 
 
 @bind_hass
-def expand_entity_ids(hass: HomeAssistantType, entity_ids: Iterable[Any]) -> List[str]:
+def expand_entity_ids(hass: HomeAssistant, entity_ids: Iterable[Any]) -> list[str]:
     """Return entity_ids with group entity ids replaced by their members.
 
     Async friendly.
     """
-    found_ids: List[str] = []
+    found_ids: list[str] = []
     for entity_id in entity_ids:
         if not isinstance(entity_id, str) or entity_id in (
             ENTITY_MATCH_NONE,
@@ -164,8 +173,8 @@ def expand_entity_ids(hass: HomeAssistantType, entity_ids: Iterable[Any]) -> Lis
 
 @bind_hass
 def get_entity_ids(
-    hass: HomeAssistantType, entity_id: str, domain_filter: Optional[str] = None
-) -> List[str]:
+    hass: HomeAssistant, entity_id: str, domain_filter: str | None = None
+) -> list[str]:
     """Get members of this group.
 
     Async friendly.
@@ -185,7 +194,7 @@ def get_entity_ids(
 
 
 @bind_hass
-def groups_with_entity(hass: HomeAssistantType, entity_id: str) -> List[str]:
+def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Get all groups that contain this entity.
 
     Async friendly.
@@ -208,6 +217,10 @@ async def async_setup(hass, config):
 
     if component is None:
         component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    hass.data[REG_KEY] = GroupIntegrationRegistry()
+
+    await async_process_integration_platforms(hass, DOMAIN, _process_group_platform)
 
     await _async_process_config(hass, config, component)
 
@@ -332,6 +345,12 @@ async def async_setup(hass, config):
     return True
 
 
+async def _process_group_platform(hass, domain, platform):
+    """Process a group platform."""
+    current_domain.set(domain)
+    platform.async_describe_on_off_states(hass, hass.data[REG_KEY])
+
+
 async def _async_process_config(hass, config, component):
     """Process group configuration."""
     hass.data.setdefault(GROUP_ORDER, 0)
@@ -378,21 +397,24 @@ class GroupEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Register listeners."""
-        assert self.hass is not None
 
         async def _update_at_start(_):
-            await self.async_update_ha_state(True)
+            await self.async_update()
+            self.async_write_ha_state()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _update_at_start)
 
     async def async_defer_or_update_ha_state(self) -> None:
         """Only update once at start."""
-        assert self.hass is not None
-
         if self.hass.state != CoreState.running:
             return
 
-        await self.async_update_ha_state(True)
+        await self.async_update()
+        self.async_write_ha_state()
+
+    @abstractmethod
+    async def async_update(self) -> None:
+        """Abstract method to update the entity."""
 
 
 class Group(Entity):
@@ -414,14 +436,12 @@ class Group(Entity):
         """
         self.hass = hass
         self._name = name
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._icon = icon
-        if entity_ids:
-            self.tracking = tuple(ent_id.lower() for ent_id in entity_ids)
-        else:
-            self.tracking = ()
-        self.group_on = None
-        self.group_off = None
+        self._set_tracked(entity_ids)
+        self._on_off = None
+        self._assumed = None
+        self._on_states = None
         self.user_defined = user_defined
         self.mode = any
         if mode:
@@ -492,7 +512,7 @@ class Group(Entity):
         if component is None:
             component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
 
-        await component.async_add_entities([group], True)
+        await component.async_add_entities([group])
 
         return group
 
@@ -527,11 +547,12 @@ class Group(Entity):
         self._icon = value
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes for the group."""
         data = {ATTR_ENTITY_ID: self.tracking, ATTR_ORDER: self._order}
         if not self.user_defined:
             data[ATTR_AUTO] = True
+
         return data
 
     @property
@@ -550,25 +571,57 @@ class Group(Entity):
 
         This method must be run in the event loop.
         """
-        await self.async_stop()
-        self.tracking = tuple(ent_id.lower() for ent_id in entity_ids)
-        self.group_on, self.group_off = None, None
+        self._async_stop()
+        self._set_tracked(entity_ids)
+        self._reset_tracked_state()
+        self._async_start()
 
-        await self.async_update_ha_state(True)
-        self.async_start()
+    def _set_tracked(self, entity_ids):
+        """Tuple of entities to be tracked."""
+        # tracking are the entities we want to track
+        # trackable are the entities we actually watch
+
+        if not entity_ids:
+            self.tracking = ()
+            self.trackable = ()
+            return
+
+        excluded_domains = self.hass.data[REG_KEY].exclude_domains
+
+        tracking = []
+        trackable = []
+        for ent_id in entity_ids:
+            ent_id_lower = ent_id.lower()
+            domain = split_entity_id(ent_id_lower)[0]
+            tracking.append(ent_id_lower)
+            if domain not in excluded_domains:
+                trackable.append(ent_id_lower)
+
+        self.trackable = tuple(trackable)
+        self.tracking = tuple(tracking)
 
     @callback
-    def async_start(self):
+    def _async_start(self, *_):
+        """Start tracking members and write state."""
+        self._reset_tracked_state()
+        self._async_start_tracking()
+        self.async_write_ha_state()
+
+    @callback
+    def _async_start_tracking(self):
         """Start tracking members.
 
         This method must be run in the event loop.
         """
-        if self._async_unsub_state_changed is None:
+        if self.trackable and self._async_unsub_state_changed is None:
             self._async_unsub_state_changed = async_track_state_change_event(
-                self.hass, self.tracking, self._async_state_changed_listener
+                self.hass, self.trackable, self._async_state_changed_listener
             )
 
-    async def async_stop(self):
+        self._async_update_group_state()
+
+    @callback
+    def _async_stop(self):
         """Unregister the group from Home Assistant.
 
         This method must be run in the event loop.
@@ -579,19 +632,24 @@ class Group(Entity):
 
     async def async_update(self):
         """Query all members and determine current group state."""
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._async_update_group_state()
 
     async def async_added_to_hass(self):
         """Handle addition to Home Assistant."""
+        if self.hass.state != CoreState.running:
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, self._async_start
+            )
+            return
+
         if self.tracking:
-            self.async_start()
+            self._reset_tracked_state()
+        self._async_start_tracking()
 
     async def async_will_remove_from_hass(self):
         """Handle removal from Home Assistant."""
-        if self._async_unsub_state_changed:
-            self._async_unsub_state_changed()
-            self._async_unsub_state_changed = None
+        self._async_stop()
 
     async def _async_state_changed_listener(self, event):
         """Respond to a member state changing.
@@ -603,21 +661,47 @@ class Group(Entity):
             return
 
         self.async_set_context(event.context)
-        self._async_update_group_state(event.data.get("new_state"))
+        new_state = event.data.get("new_state")
+
+        if new_state is None:
+            # The state was removed from the state machine
+            self._reset_tracked_state()
+
+        self._async_update_group_state(new_state)
         self.async_write_ha_state()
 
-    @property
-    def _tracking_states(self):
-        """Return the states that the group is tracking."""
-        states = []
+    def _reset_tracked_state(self):
+        """Reset tracked state."""
+        self._on_off = {}
+        self._assumed = {}
+        self._on_states = set()
 
-        for entity_id in self.tracking:
+        for entity_id in self.trackable:
             state = self.hass.states.get(entity_id)
 
             if state is not None:
-                states.append(state)
+                self._see_state(state)
 
-        return states
+    def _see_state(self, new_state):
+        """Keep track of the the state."""
+        entity_id = new_state.entity_id
+        domain = new_state.domain
+        state = new_state.state
+        registry = self.hass.data[REG_KEY]
+        self._assumed[entity_id] = new_state.attributes.get(ATTR_ASSUMED_STATE)
+
+        if domain not in registry.on_states_by_domain:
+            # Handle the group of a group case
+            if state in registry.on_off_mapping:
+                self._on_states.add(state)
+            elif state in registry.off_on_mapping:
+                self._on_states.add(registry.off_on_mapping[state])
+            self._on_off[entity_id] = state in registry.on_off_mapping
+        else:
+            entity_on_state = registry.on_states_by_domain[domain]
+            if domain in self.hass.data[REG_KEY].on_states_by_domain:
+                self._on_states.update(entity_on_state)
+            self._on_off[entity_id] = state in entity_on_state
 
     @callback
     def _async_update_group_state(self, tr_state=None):
@@ -629,57 +713,39 @@ class Group(Entity):
         This method must be run in the event loop.
         """
         # To store current states of group entities. Might not be needed.
-        states = None
-        gr_state = self._state
-        gr_on = self.group_on
-        gr_off = self.group_off
+        if tr_state:
+            self._see_state(tr_state)
 
-        # We have not determined type of group yet
-        if gr_on is None:
-            if tr_state is None:
-                states = self._tracking_states
-
-                for state in states:
-                    gr_on, gr_off = _get_group_on_off(state.state)
-                    if gr_on is not None:
-                        break
-            else:
-                gr_on, gr_off = _get_group_on_off(tr_state.state)
-
-            if gr_on is not None:
-                self.group_on, self.group_off = gr_on, gr_off
-
-        # We cannot determine state of the group
-        if gr_on is None:
+        if not self._on_off:
             return
-
-        if tr_state is None or (
-            (gr_state == gr_on and tr_state.state == gr_off)
-            or (gr_state == gr_off and tr_state.state == gr_on)
-            or tr_state.state not in (gr_on, gr_off)
-        ):
-            if states is None:
-                states = self._tracking_states
-
-            if self.mode(state.state == gr_on for state in states):
-                self._state = gr_on
-            else:
-                self._state = gr_off
-
-        elif tr_state.state in (gr_on, gr_off):
-            self._state = tr_state.state
 
         if (
             tr_state is None
             or self._assumed_state
             and not tr_state.attributes.get(ATTR_ASSUMED_STATE)
         ):
-            if states is None:
-                states = self._tracking_states
-
-            self._assumed_state = self.mode(
-                state.attributes.get(ATTR_ASSUMED_STATE) for state in states
-            )
+            self._assumed_state = self.mode(self._assumed.values())
 
         elif tr_state.attributes.get(ATTR_ASSUMED_STATE):
             self._assumed_state = True
+
+        num_on_states = len(self._on_states)
+        # If all the entity domains we are tracking
+        # have the same on state we use this state
+        # and its hass.data[REG_KEY].on_off_mapping to off
+        if num_on_states == 1:
+            on_state = list(self._on_states)[0]
+        # If we do not have an on state for any domains
+        # we use None (which will be STATE_UNKNOWN)
+        elif num_on_states == 0:
+            self._state = None
+            return
+        # If the entity domains have more than one
+        # on state, we use STATE_ON/STATE_OFF
+        else:
+            on_state = STATE_ON
+        group_is_on = self.mode(self._on_off.values())
+        if group_is_on:
+            self._state = on_state
+        else:
+            self._state = self.hass.data[REG_KEY].on_off_mapping[on_state]

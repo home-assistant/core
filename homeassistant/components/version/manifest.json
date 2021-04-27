@@ -2,7 +2,8 @@
   "domain": "version",
   "name": "Version",
   "documentation": "https://www.home-assistant.io/integrations/version",
-  "requirements": ["pyhaversion==3.3.0"],
-  "codeowners": ["@fabaff"],
-  "quality_scale": "internal"
+  "requirements": ["pyhaversion==21.3.0"],
+  "codeowners": ["@fabaff", "@ludeeus"],
+  "quality_scale": "internal",
+  "iot_class": "local_push"
 }

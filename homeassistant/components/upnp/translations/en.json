@@ -1,10 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "UPnP/IGD is already configured",
+            "already_configured": "Device is already configured",
             "incomplete_discovery": "Incomplete discovery",
-            "no_devices_discovered": "No UPnP/IGDs discovered",
-            "no_devices_found": "No UPnP/IGD devices found on the network."
+            "no_devices_found": "No devices found on the network"
         },
         "flow_title": "UPnP/IGD: {name}",
         "step": {

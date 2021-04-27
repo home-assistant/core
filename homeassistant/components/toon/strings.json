@@ -14,10 +14,11 @@
     },
     "abort": {
       "already_configured": "The selected agreement is already configured.",
-      "authorize_url_fail": "Unknown error generating an authorize url.",
+      "unknown_authorize_url_generation": "[%key:common::config_flow::abort::unknown_authorize_url_generation%]",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_agreements": "This account has no Toon displays."
+      "no_agreements": "This account has no Toon displays.",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]"
     }
   }
 }

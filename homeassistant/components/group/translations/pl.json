@@ -3,14 +3,14 @@
         "_": {
             "closed": "zamkni\u0119te",
             "home": "w domu",
-            "locked": "Zablokowane",
+            "locked": "zamkni\u0119te",
             "not_home": "poza domem",
-            "off": "wy\u0142\u0105czony",
+            "off": "wy\u0142.",
             "ok": "ok",
-            "on": "w\u0142\u0105czony",
+            "on": "w\u0142.",
             "open": "otwarte",
             "problem": "problem",
-            "unlocked": "Odblokowany"
+            "unlocked": "otwarte"
         }
     },
     "title": "Grupa"

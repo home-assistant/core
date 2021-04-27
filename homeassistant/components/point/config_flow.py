@@ -40,7 +40,7 @@ def register_flow_implementation(hass, domain, client_id, client_secret):
     }
 
 
-@config_entries.HANDLERS.register("point")
+@config_entries.HANDLERS.register(DOMAIN)
 class PointFlowHandler(config_entries.ConfigFlow):
     """Handle a config flow."""
 
@@ -101,8 +101,7 @@ class PointFlowHandler(config_entries.ConfigFlow):
             return self.async_abort(reason="authorize_url_timeout")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected error generating auth url")
-            return self.async_abort(reason="authorize_url_fail")
-
+            return self.async_abort(reason="unknown_authorize_url_generation")
         return self.async_show_form(
             step_id="auth",
             description_placeholders={"authorization_url": url},
@@ -111,11 +110,14 @@ class PointFlowHandler(config_entries.ConfigFlow):
 
     async def _get_authorization_url(self):
         """Create Minut Point session and get authorization url."""
-
         flow = self.hass.data[DATA_FLOW_IMPL][self.flow_impl]
         client_id = flow[CONF_CLIENT_ID]
         client_secret = flow[CONF_CLIENT_SECRET]
-        point_session = PointSession(client_id, client_secret=client_secret)
+        point_session = PointSession(
+            self.hass.helpers.aiohttp_client.async_get_clientsession(),
+            client_id,
+            client_secret,
+        )
 
         self.hass.http.register_view(MinutAuthCallbackView())
 
@@ -143,17 +145,19 @@ class PointFlowHandler(config_entries.ConfigFlow):
         flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
         client_id = flow[CONF_CLIENT_ID]
         client_secret = flow[CONF_CLIENT_SECRET]
-        point_session = PointSession(client_id, client_secret=client_secret)
-        token = await self.hass.async_add_executor_job(
-            point_session.get_access_token, code
+        point_session = PointSession(
+            self.hass.helpers.aiohttp_client.async_get_clientsession(),
+            client_id,
+            client_secret,
         )
+        token = await point_session.get_access_token(code)
         _LOGGER.debug("Got new token")
         if not point_session.is_authorized:
             _LOGGER.error("Authentication Error")
             return self.async_abort(reason="auth_error")
 
         _LOGGER.info("Successfully authenticated Point")
-        user_email = point_session.user().get("email") or ""
+        user_email = (await point_session.user()).get("email") or ""
 
         return self.async_create_entry(
             title=user_email,

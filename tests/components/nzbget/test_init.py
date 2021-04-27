@@ -1,4 +1,6 @@
 """Test the NZBGet config flow."""
+from unittest.mock import patch
+
 from pynzbgetapi import NZBGetAPIException
 
 from homeassistant.components.nzbget.const import DOMAIN
@@ -20,7 +22,6 @@ from . import (
     init_integration,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -38,7 +39,7 @@ async def test_import_from_yaml(hass) -> None:
     assert entries[0].data[CONF_PORT] == 6789
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass, nzbget_api):
     """Test successful unload of entry."""
     entry = await init_integration(hass)
 

@@ -1,17 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne enheten er allerede lagt til i HomeAssistant"
+            "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "connection_error": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "cannot_connect": "Tilkobling mislyktes",
             "unauthorized": "Parring nektet, sjekk enheten for autorisasjonsforesp\u00f8rsel"
         },
         "step": {
             "user": {
                 "data": {
-                    "email": "E-post (valgfritt)",
-                    "host": "Vert"
+                    "email": "E-post",
+                    "host": "Vert",
+                    "port": "Port"
                 },
                 "title": "Koble til enheten"
             }

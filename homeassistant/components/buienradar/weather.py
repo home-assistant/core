@@ -14,6 +14,20 @@ from buienradar.constants import (
 import voluptuous as vol
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
+    ATTR_CONDITION_WINDY_VARIANT,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_TEMP,
@@ -40,20 +54,20 @@ CONF_FORECAST = "forecast"
 
 
 CONDITION_CLASSES = {
-    "cloudy": ["c", "p"],
-    "fog": ["d", "n"],
-    "hail": [],
-    "lightning": ["g"],
-    "lightning-rainy": ["s"],
-    "partlycloudy": ["b", "j", "o", "r"],
-    "pouring": ["l", "q"],
-    "rainy": ["f", "h", "k", "m"],
-    "snowy": ["u", "i", "v", "t"],
-    "snowy-rainy": ["w"],
-    "sunny": ["a"],
-    "windy": [],
-    "windy-variant": [],
-    "exceptional": [],
+    ATTR_CONDITION_CLOUDY: ["c", "p"],
+    ATTR_CONDITION_FOG: ["d", "n"],
+    ATTR_CONDITION_HAIL: [],
+    ATTR_CONDITION_LIGHTNING: ["g"],
+    ATTR_CONDITION_LIGHTNING_RAINY: ["s"],
+    ATTR_CONDITION_PARTLYCLOUDY: ["b", "j", "o", "r"],
+    ATTR_CONDITION_POURING: ["l", "q"],
+    ATTR_CONDITION_RAINY: ["f", "h", "k", "m"],
+    ATTR_CONDITION_SNOWY: ["u", "i", "v", "t"],
+    ATTR_CONDITION_SNOWY_RAINY: ["w"],
+    ATTR_CONDITION_SUNNY: ["a"],
+    ATTR_CONDITION_WINDY: [],
+    ATTR_CONDITION_WINDY_VARIANT: [],
+    ATTR_CONDITION_EXCEPTIONAL: [],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -187,7 +201,7 @@ class BrWeather(WeatherEntity):
             # keys understood by the weather component:
             condcode = data_in.get(CONDITION, []).get(CONDCODE)
             data_out = {
-                ATTR_FORECAST_TIME: data_in.get(DATETIME),
+                ATTR_FORECAST_TIME: data_in.get(DATETIME).isoformat(),
                 ATTR_FORECAST_CONDITION: cond[condcode],
                 ATTR_FORECAST_TEMP_LOW: data_in.get(MIN_TEMP),
                 ATTR_FORECAST_TEMP: data_in.get(MAX_TEMP),

@@ -1,10 +1,12 @@
 """Tests for Mill config flow."""
+from unittest.mock import patch
+
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components.mill.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -18,7 +20,7 @@ def mill_setup_fixture():
 async def test_show_config_form(hass):
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "form"
@@ -34,7 +36,7 @@ async def test_create_entry(hass):
 
     with patch("mill.Mill.connect", return_value=True):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=test_data
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
         )
 
     assert result["type"] == "create_entry"
@@ -59,7 +61,7 @@ async def test_flow_entry_already_exists(hass):
 
     with patch("mill.Mill.connect", return_value=True):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=test_data
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
         )
 
     assert result["type"] == "abort"
@@ -83,8 +85,8 @@ async def test_connection_error(hass):
 
     with patch("mill.Mill.connect", return_value=False):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=test_data
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
         )
 
     assert result["type"] == "form"
-    assert result["errors"]["connection_error"] == "connection_error"
+    assert result["errors"]["cannot_connect"] == "cannot_connect"

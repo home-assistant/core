@@ -2,9 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Apparat ass scho konfigur\u00e9iert",
-            "already_in_progress": "Et ass schonn ee Konfiguratioun's Oflaf fir d\u00ebsen Apparat am gaang.",
+            "already_in_progress": "Et ass schonn ee Konfiguratioun's Oflaft am gaang.",
             "cannot_connect": "Feeler beim verbannen",
             "invalid_host": "Ong\u00ebltege Numm oder IP Adresse.",
+            "not_supported": "Apparat net \u00ebnnerst\u00ebtzt.",
             "unknown": "Onerwaarte Feeler"
         },
         "error": {
@@ -24,6 +25,7 @@
                 "title": "Numm auswielen fir den Apparat"
             },
             "reset": {
+                "description": "D\u00e4in Apparat ass gespaart fir Authentifikatioun. Folleg den Instruktiounen fir en z'entsp\u00e4rren:\n1. Factory Reset vum Apparat\n2. Benotz d\u00e9i offiziell App fir den Apparat zu dengem Netzwierk dob\u00e4izesetzen.\n3. Stop. Schl\u00e9iss den Setup net of. Maach d'app zou.\n4. Klick op ofsch\u00e9cken",
                 "title": "Apparat entsp\u00e4ren"
             },
             "unlock": {

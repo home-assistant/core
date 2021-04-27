@@ -1,14 +1,14 @@
 """Support for Jewish Calendar binary sensors."""
-import logging
+import datetime as dt
 
 import hdate
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.core import callback
+from homeassistant.helpers import event
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN, SENSOR_TYPES
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -36,12 +36,18 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
         self._hebrew = data["language"] == "hebrew"
         self._candle_lighting_offset = data["candle_lighting_offset"]
         self._havdalah_offset = data["havdalah_offset"]
-        self._state = False
+        self._prefix = data["prefix"]
+        self._update_unsub = None
 
     @property
     def icon(self):
         """Return the icon of the entity."""
         return self._icon
+
+    @property
+    def unique_id(self) -> str:
+        """Generate a unique id."""
+        return f"{self._prefix}_{self._type}"
 
     @property
     def name(self):
@@ -51,11 +57,16 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
     @property
     def is_on(self):
         """Return true if sensor is on."""
-        return self._state
+        return self._get_zmanim().issur_melacha_in_effect
 
-    async def async_update(self):
-        """Update the state of the sensor."""
-        zmanim = hdate.Zmanim(
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    def _get_zmanim(self):
+        """Return the Zmanim object for now()."""
+        return hdate.Zmanim(
             date=dt_util.now(),
             location=self._location,
             candle_lighting_offset=self._candle_lighting_offset,
@@ -63,4 +74,31 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
             hebrew=self._hebrew,
         )
 
-        self._state = zmanim.issur_melacha_in_effect
+    async def async_added_to_hass(self):
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        self._schedule_update()
+
+    @callback
+    def _update(self, now=None):
+        """Update the state of the sensor."""
+        self._update_unsub = None
+        self._schedule_update()
+        self.async_write_ha_state()
+
+    def _schedule_update(self):
+        """Schedule the next update of the sensor."""
+        now = dt_util.now()
+        zmanim = self._get_zmanim()
+        update = zmanim.zmanim["sunrise"] + dt.timedelta(days=1)
+        candle_lighting = zmanim.candle_lighting
+        if candle_lighting is not None and now < candle_lighting < update:
+            update = candle_lighting
+        havdalah = zmanim.havdalah
+        if havdalah is not None and now < havdalah < update:
+            update = havdalah
+        if self._update_unsub:
+            self._update_unsub()
+        self._update_unsub = event.async_track_point_in_time(
+            self.hass, self._update, update
+        )

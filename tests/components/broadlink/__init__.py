@@ -1,7 +1,8 @@
 """Tests for the Broadlink integration."""
+from unittest.mock import MagicMock, patch
+
 from homeassistant.components.broadlink.const import DOMAIN
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 # Do not edit/remove. Adding is ok.
@@ -11,7 +12,7 @@ BROADLINK_DEVICES = {
         "34ea34befc25",
         "RM mini 3",
         "Broadlink",
-        "RM2",
+        "RMMINI",
         0x2737,
         57,
         8,
@@ -21,7 +22,7 @@ BROADLINK_DEVICES = {
         "34ea34b43b5a",
         "RM mini 3",
         "Broadlink",
-        "RM4",
+        "RMMINIB",
         0x5F36,
         44017,
         10,
@@ -31,7 +32,7 @@ BROADLINK_DEVICES = {
         "34ea34b43d22",
         "RM pro",
         "Broadlink",
-        "RM2",
+        "RMPRO",
         0x2787,
         20025,
         7,
@@ -41,7 +42,7 @@ BROADLINK_DEVICES = {
         "34ea34c43f31",
         "RM4 pro",
         "Broadlink",
-        "RM4",
+        "RM4PRO",
         0x6026,
         52,
         4,
@@ -54,6 +55,16 @@ BROADLINK_DEVICES = {
         "A1",
         0x2714,
         20025,
+        5,
+    ),
+    "Kitchen": (  # Not supported.
+        "192.168.0.64",
+        "34ea34b61d2c",
+        "LB1",
+        "Broadlink",
+        "LB1",
+        0x504E,
+        57,
         5,
     ),
 }

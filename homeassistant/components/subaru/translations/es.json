@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La cuenta ya ha sido configurada",
+            "cannot_connect": "No se pudo conectar"
+        },
+        "error": {
+            "bad_pin_format": "El PIN debe tener 4 d\u00edgitos",
+            "cannot_connect": "No se pudo conectar",
+            "incorrect_pin": "PIN incorrecto",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "pin": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "Por favor, introduzca su PIN de MySubaru\nNOTA: Todos los veh\u00edculos de la cuenta deben tener el mismo PIN",
+                "title": "Configuraci\u00f3n de Subaru Starlink"
+            },
+            "user": {
+                "data": {
+                    "country": "Seleccionar pa\u00eds",
+                    "password": "Contrase\u00f1a",
+                    "username": "Nombre de usuario"
+                },
+                "description": "Por favor, introduzca sus credenciales de MySubaru\nNOTA: La configuraci\u00f3n inicial puede tardar hasta 30 segundos",
+                "title": "Configuraci\u00f3n de Subaru Starlink"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_enabled": "Habilitar el sondeo de veh\u00edculos"
+                },
+                "description": "Cuando est\u00e1 habilitado, el sondeo de veh\u00edculos enviar\u00e1 un comando remoto a su veh\u00edculo cada 2 horas para obtener nuevos datos del sensor. Sin sondeo del veh\u00edculo, los nuevos datos del sensor solo se reciben cuando el veh\u00edculo env\u00eda datos autom\u00e1ticamente (normalmente despu\u00e9s de apagar el motor).",
+                "title": "Opciones de Subaru Starlink"
+            }
+        }
+    }
+}

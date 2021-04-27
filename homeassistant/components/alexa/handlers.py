@@ -17,6 +17,7 @@ from homeassistant.components import (
 from homeassistant.components.climate import const as climate
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     SERVICE_ALARM_ARM_AWAY,
@@ -53,7 +54,6 @@ from .const import (
     API_THERMOSTAT_MODES,
     API_THERMOSTAT_MODES_CUSTOM,
     API_THERMOSTAT_PRESETS,
-    PERCENTAGE_FAN_MAP,
     Cause,
     Inputs,
 )
@@ -359,17 +359,9 @@ async def async_api_set_percentage(hass, config, directive, context):
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_SPEED
-        speed = "off"
-
+        service = fan.SERVICE_SET_PERCENTAGE
         percentage = int(directive.payload["percentage"])
-        if percentage <= 33:
-            speed = "low"
-        elif percentage <= 66:
-            speed = "medium"
-        elif percentage <= 100:
-            speed = "high"
-        data[fan.ATTR_SPEED] = speed
+        data[fan.ATTR_PERCENTAGE] = percentage
 
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context
@@ -387,22 +379,12 @@ async def async_api_adjust_percentage(hass, config, directive, context):
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_SPEED
-        speed = entity.attributes.get(fan.ATTR_SPEED)
-        current = PERCENTAGE_FAN_MAP.get(speed, 100)
+        service = fan.SERVICE_SET_PERCENTAGE
+        current = entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
 
         # set percentage
-        percentage = max(0, percentage_delta + current)
-        speed = "off"
-
-        if percentage <= 33:
-            speed = "low"
-        elif percentage <= 66:
-            speed = "medium"
-        elif percentage <= 100:
-            speed = "high"
-
-        data[fan.ATTR_SPEED] = speed
+        percentage = min(100, max(0, percentage_delta + current))
+        data[fan.ATTR_PERCENTAGE] = percentage
 
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context
@@ -487,7 +469,7 @@ async def async_api_select_input(hass, config, directive, context):
         )
         media_input = media_input.lower().replace(" ", "")
         if (
-            formatted_source in Inputs.VALID_SOURCE_NAME_MAP.keys()
+            formatted_source in Inputs.VALID_SOURCE_NAME_MAP
             and formatted_source == media_input
         ) or (
             media_input.endswith("1") and formatted_source == media_input.rstrip("1")
@@ -671,10 +653,9 @@ def temperature_from_object(hass, temp_obj, interval=False):
 
     if temp_obj["scale"] == "FAHRENHEIT":
         from_unit = TEMP_FAHRENHEIT
-    elif temp_obj["scale"] == "KELVIN":
+    elif temp_obj["scale"] == "KELVIN" and not interval:
         # convert to Celsius if absolute temperature
-        if not interval:
-            temp -= 273.15
+        temp -= 273.15
 
     return convert_temperature(temp, from_unit, to_unit, interval)
 
@@ -853,18 +834,9 @@ async def async_api_set_power_level(hass, config, directive, context):
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_SPEED
-        speed = "off"
-
+        service = fan.SERVICE_SET_PERCENTAGE
         percentage = int(directive.payload["powerLevel"])
-        if percentage <= 33:
-            speed = "low"
-        elif percentage <= 66:
-            speed = "medium"
-        else:
-            speed = "high"
-
-        data[fan.ATTR_SPEED] = speed
+        data[fan.ATTR_PERCENTAGE] = percentage
 
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context
@@ -882,22 +854,12 @@ async def async_api_adjust_power_level(hass, config, directive, context):
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_SPEED
-        speed = entity.attributes.get(fan.ATTR_SPEED)
-        current = PERCENTAGE_FAN_MAP.get(speed, 100)
+        service = fan.SERVICE_SET_PERCENTAGE
+        current = entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
 
         # set percentage
-        percentage = max(0, percentage_delta + current)
-        speed = "off"
-
-        if percentage <= 33:
-            speed = "low"
-        elif percentage <= 66:
-            speed = "medium"
-        else:
-            speed = "high"
-
-        data[fan.ATTR_SPEED] = speed
+        percentage = min(100, max(0, percentage_delta + current))
+        data[fan.ATTR_PERCENTAGE] = percentage
 
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context
@@ -994,14 +956,14 @@ async def async_api_set_mode(hass, config, directive, context):
 
     # Fan Direction
     if instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
-        _, direction = mode.split(".")
+        direction = mode.split(".")[1]
         if direction in (fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD):
             service = fan.SERVICE_SET_DIRECTION
             data[fan.ATTR_DIRECTION] = direction
 
     # Cover Position
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
-        _, position = mode.split(".")
+        position = mode.split(".")[1]
 
         if position == cover.STATE_CLOSED:
             service = cover.SERVICE_CLOSE_COVER
@@ -1412,10 +1374,7 @@ async def async_api_seek(hass, config, directive, context):
         msg = f"{entity} did not return the current media position."
         raise AlexaVideoActionNotPermittedForContentError(msg)
 
-    seek_position = int(current_position) + int(position_delta / 1000)
-
-    if seek_position < 0:
-        seek_position = 0
+    seek_position = max(int(current_position) + int(position_delta / 1000), 0)
 
     media_duration = entity.attributes.get(media_player.ATTR_MEDIA_DURATION)
     if media_duration and 0 < int(media_duration) < seek_position:
@@ -1532,7 +1491,7 @@ async def async_api_initialize_camera_stream(hass, config, directive, context):
     """Process a InitializeCameraStreams request."""
     entity = directive.entity
     stream_source = await camera.async_request_stream(hass, entity.entity_id, fmt="hls")
-    camera_image = hass.states.get(entity.entity_id).attributes["entity_picture"]
+    camera_image = hass.states.get(entity.entity_id).attributes[ATTR_ENTITY_PICTURE]
 
     try:
         external_url = network.get_url(

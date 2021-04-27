@@ -1,13 +1,12 @@
 """ONVIF event abstraction."""
-import asyncio
-import datetime as dt
-from typing import Callable, Dict, List, Optional, Set
+from __future__ import annotations
 
-from aiohttp.client_exceptions import (
-    ClientConnectorError,
-    ClientOSError,
-    ServerDisconnectedError,
-)
+import asyncio
+from contextlib import suppress
+import datetime as dt
+from typing import Callable
+
+from httpx import RemoteProtocolError, TransportError
 from onvif import ONVIFCamera, ONVIFService
 from zeep.exceptions import Fault
 
@@ -21,11 +20,9 @@ from .parsers import PARSERS
 
 UNHANDLED_TOPICS = set()
 SUBSCRIPTION_ERRORS = (
-    ClientConnectorError,
-    ClientOSError,
     Fault,
-    ServerDisconnectedError,
     asyncio.TimeoutError,
+    TransportError,
 )
 
 
@@ -40,14 +37,14 @@ class EventManager:
         self.started: bool = False
 
         self._subscription: ONVIFService = None
-        self._events: Dict[str, Event] = {}
-        self._listeners: List[CALLBACK_TYPE] = []
-        self._unsub_refresh: Optional[CALLBACK_TYPE] = None
+        self._events: dict[str, Event] = {}
+        self._listeners: list[CALLBACK_TYPE] = []
+        self._unsub_refresh: CALLBACK_TYPE | None = None
 
         super().__init__()
 
     @property
-    def platforms(self) -> Set[str]:
+    def platforms(self) -> set[str]:
         """Return platforms to setup."""
         return {event.platform for event in self._events.values()}
 
@@ -80,21 +77,24 @@ class EventManager:
     async def async_start(self) -> bool:
         """Start polling events."""
         if await self.device.create_pullpoint_subscription():
-            # Initialize events
-            pullpoint = self.device.create_pullpoint_service()
-            await pullpoint.SetSynchronizationPoint()
-            req = pullpoint.create_type("PullMessages")
-            req.MessageLimit = 100
-            req.Timeout = dt.timedelta(seconds=5)
-            response = await pullpoint.PullMessages(req)
-
-            # Parse event initialization
-            await self.async_parse_messages(response.NotificationMessage)
-
             # Create subscription manager
             self._subscription = self.device.create_subscription_service(
                 "PullPointSubscription"
             )
+
+            # Renew immediately
+            await self.async_renew()
+
+            # Initialize events
+            pullpoint = self.device.create_pullpoint_service()
+            with suppress(*SUBSCRIPTION_ERRORS):
+                await pullpoint.SetSynchronizationPoint()
+            response = await pullpoint.PullMessages(
+                {"MessageLimit": 100, "Timeout": dt.timedelta(seconds=5)}
+            )
+
+            # Parse event initialization
+            await self.async_parse_messages(response.NotificationMessage)
 
             self.started = True
             return True
@@ -118,10 +118,9 @@ class EventManager:
             return
 
         if self._subscription:
-            try:
+            # Suppressed. The subscription may no longer exist.
+            with suppress(*SUBSCRIPTION_ERRORS):
                 await self._subscription.Unsubscribe()
-            except SUBSCRIPTION_ERRORS:
-                pass  # Ignored. The subscription may no longer exist.
             self._subscription = None
 
         try:
@@ -131,7 +130,7 @@ class EventManager:
 
         if not restarted:
             LOGGER.warning(
-                "Failed to restart ONVIF PullPoint subscription for '%s'. Retrying...",
+                "Failed to restart ONVIF PullPoint subscription for '%s'. Retrying",
                 self.unique_id,
             )
             # Try again in a minute
@@ -163,20 +162,23 @@ class EventManager:
         if self.hass.state == CoreState.running:
             try:
                 pullpoint = self.device.create_pullpoint_service()
-                req = pullpoint.create_type("PullMessages")
-                req.MessageLimit = 100
-                req.Timeout = dt.timedelta(seconds=60)
-                response = await pullpoint.PullMessages(req)
+                response = await pullpoint.PullMessages(
+                    {"MessageLimit": 100, "Timeout": dt.timedelta(seconds=60)}
+                )
 
                 # Renew subscription if less than two hours is left
                 if (
                     dt_util.as_utc(response.TerminationTime) - dt_util.utcnow()
                 ).total_seconds() < 7200:
                     await self.async_renew()
-            except SUBSCRIPTION_ERRORS:
+            except RemoteProtocolError:
+                # Likley a shutdown event, nothing to see here
+                return
+            except SUBSCRIPTION_ERRORS as err:
                 LOGGER.warning(
-                    "Failed to fetch ONVIF PullPoint subscription messages for '%s'",
+                    "Failed to fetch ONVIF PullPoint subscription messages for '%s': %s",
                     self.unique_id,
+                    err,
                 )
                 # Treat errors as if the camera restarted. Assume that the pullpoint
                 # subscription is no longer valid.
@@ -227,6 +229,6 @@ class EventManager:
         """Retrieve event for given id."""
         return self._events[uid]
 
-    def get_platform(self, platform) -> List[Event]:
+    def get_platform(self, platform) -> list[Event]:
         """Retrieve events for given platform."""
         return [event for event in self._events.values() if event.platform == platform]

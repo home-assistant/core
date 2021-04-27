@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 
 class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -28,10 +28,6 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=self.data_schema, errors=errors or {}
         )
 
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
-
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
         if not user_input:
@@ -47,6 +43,6 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD], session
             )
         except NotionError:
-            return await self._show_form({"base": "invalid_credentials"})
+            return await self._show_form({"base": "invalid_auth"})
 
         return self.async_create_entry(title=user_input[CONF_USERNAME], data=user_input)

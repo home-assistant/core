@@ -17,10 +17,8 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "G\u00ebff den Numm oder IP-Adress vun dengem Roon Server un.",
-                "title": "Roon Server ariichten"
+                "description": "G\u00ebff den Numm oder IP-Adress vun dengem Roon Server un."
             }
         }
-    },
-    "title": "Roon"
+    }
 }

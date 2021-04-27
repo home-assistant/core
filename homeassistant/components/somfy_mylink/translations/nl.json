@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "flow_title": "Somfy MyLink {mac} ({ip})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Poort",
+                    "system_id": "Systeem-ID"
+                },
+                "description": "De systeem-id kan worden verkregen in de MyLink app onder Integratie door een niet-Cloud service te selecteren."
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "step": {
+            "entity_config": {
+                "data": {
+                    "reverse": "Cover is omgekeerd"
+                },
+                "description": "Configureer opties voor `{entity_id}`",
+                "title": "Entiteit configureren"
+            },
+            "init": {
+                "data": {
+                    "default_reverse": "Standaard omkeerstatus voor niet-geconfigureerde covers",
+                    "entity_id": "Configureer een specifieke entiteit.",
+                    "target_id": "Configureer opties voor een cover."
+                },
+                "title": "Configureer MyLink-opties"
+            },
+            "target_config": {
+                "data": {
+                    "reverse": "Cover is omgekeerd"
+                },
+                "description": "Configureer opties voor ' {target_name} '",
+                "title": "Configureer MyLink Cover"
+            }
+        }
+    },
+    "title": "Somfy MyLink"
+}

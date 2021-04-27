@@ -1,6 +1,4 @@
 """Support for  HomeMatic covers."""
-import logging
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -10,8 +8,6 @@ from homeassistant.components.cover import (
 
 from .const import ATTR_DEVICE_TYPE, ATTR_DISCOVER_DEVICES
 from .entity import HMDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 HM_GARAGE = ("IPGarage",)
 

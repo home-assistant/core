@@ -11,7 +11,9 @@ import pytz
 import requests
 import voluptuous as vol
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
+    AREA_SQUARE_METERS,
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -20,12 +22,12 @@ from homeassistant.const import (
     DEGREE,
     LENGTH_METERS,
     PERCENTAGE,
+    PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     __version__,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,8 +43,8 @@ DEFAULT_NAME = "zamg"
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 SENSOR_TYPES = {
-    "pressure": ("Pressure", "hPa", "LDstat hPa", float),
-    "pressure_sealevel": ("Pressure at Sea Level", "hPa", "LDred hPa", float),
+    "pressure": ("Pressure", PRESSURE_HPA, "LDstat hPa", float),
+    "pressure_sealevel": ("Pressure at Sea Level", PRESSURE_HPA, "LDred hPa", float),
     "humidity": ("Humidity", PERCENTAGE, "RF %", int),
     "wind_speed": (
         "Wind Speed",
@@ -60,7 +62,12 @@ SENSOR_TYPES = {
     "wind_max_bearing": ("Top Wind Bearing", DEGREE, f"WSR {DEGREE}", int),
     "sun_last_hour": ("Sun Last Hour", PERCENTAGE, f"SO {PERCENTAGE}", int),
     "temperature": ("Temperature", TEMP_CELSIUS, f"T {TEMP_CELSIUS}", float),
-    "precipitation": ("Precipitation", "l/m²", "N l/m²", float),
+    "precipitation": (
+        "Precipitation",
+        f"l/{AREA_SQUARE_METERS}",
+        f"N l/{AREA_SQUARE_METERS}",
+        float,
+    ),
     "dewpoint": ("Dew Point", TEMP_CELSIUS, f"TP {TEMP_CELSIUS}", float),
     # The following probably not useful for general consumption,
     # but we need them to fill in internal attributes
@@ -125,7 +132,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ZamgSensor(Entity):
+class ZamgSensor(SensorEntity):
     """Implementation of a ZAMG sensor."""
 
     def __init__(self, probe, variable, name):
@@ -150,7 +157,7 @@ class ZamgSensor(Entity):
         return SENSOR_TYPES[self.variable][1]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

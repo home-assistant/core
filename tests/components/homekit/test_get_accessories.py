@@ -1,4 +1,6 @@
 """Package to test the get_accessory method."""
+from unittest.mock import Mock, patch
+
 import pytest
 
 import homeassistant.components.climate as climate
@@ -24,13 +26,14 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
+    LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import State
-
-from tests.async_mock import Mock, patch
 
 
 def test_not_supported(caplog):
@@ -119,6 +122,12 @@ def test_types(type_name, entity_id, state, attrs, config):
                 ATTR_SUPPORTED_FEATURES: cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE,
             },
         ),
+        (
+            "Window",
+            "cover.set_position",
+            "open",
+            {ATTR_DEVICE_CLASS: "window", ATTR_SUPPORTED_FEATURES: 4},
+        ),
         ("WindowCovering", "cover.set_position", "open", {ATTR_SUPPORTED_FEATURES: 4}),
         (
             "WindowCoveringBasic",
@@ -179,9 +188,19 @@ def test_type_media_player(type_name, entity_id, state, attrs, config):
         ("BinarySensor", "person.someone", "home", {}),
         ("AirQualitySensor", "sensor.air_quality_pm25", "40", {}),
         ("AirQualitySensor", "sensor.air_quality", "40", {ATTR_DEVICE_CLASS: "pm25"}),
-        ("CarbonMonoxideSensor", "sensor.airmeter", "2", {ATTR_DEVICE_CLASS: "co"}),
+        (
+            "CarbonMonoxideSensor",
+            "sensor.co",
+            "2",
+            {ATTR_DEVICE_CLASS: DEVICE_CLASS_CO},
+        ),
         ("CarbonDioxideSensor", "sensor.airmeter_co2", "500", {}),
-        ("CarbonDioxideSensor", "sensor.airmeter", "500", {ATTR_DEVICE_CLASS: "co2"}),
+        (
+            "CarbonDioxideSensor",
+            "sensor.co2",
+            "500",
+            {ATTR_DEVICE_CLASS: DEVICE_CLASS_CO2},
+        ),
         (
             "HumiditySensor",
             "sensor.humidity",
@@ -190,7 +209,7 @@ def test_type_media_player(type_name, entity_id, state, attrs, config):
         ),
         ("LightSensor", "sensor.light", "900", {ATTR_DEVICE_CLASS: "illuminance"}),
         ("LightSensor", "sensor.light", "900", {ATTR_UNIT_OF_MEASUREMENT: "lm"}),
-        ("LightSensor", "sensor.light", "900", {ATTR_UNIT_OF_MEASUREMENT: "lx"}),
+        ("LightSensor", "sensor.light", "900", {ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX}),
         (
             "TemperatureSensor",
             "sensor.temperature",
@@ -250,7 +269,7 @@ def test_type_switches(type_name, entity_id, state, attrs, config):
     "type_name, entity_id, state, attrs",
     [
         (
-            "DockVacuum",
+            "Vacuum",
             "vacuum.dock_vacuum",
             "docked",
             {
@@ -258,7 +277,7 @@ def test_type_switches(type_name, entity_id, state, attrs, config):
                 | vacuum.SUPPORT_RETURN_HOME
             },
         ),
-        ("Switch", "vacuum.basic_vacuum", "off", {}),
+        ("Vacuum", "vacuum.basic_vacuum", "off", {}),
     ],
 )
 def test_type_vacuum(type_name, entity_id, state, attrs):

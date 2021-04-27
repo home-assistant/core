@@ -1,7 +1,7 @@
 """Support for eQ-3 Bluetooth Smart thermostats."""
 import logging
 
-from bluepy.btle import BTLEException  # pylint: disable=import-error, no-name-in-module
+from bluepy.btle import BTLEException  # pylint: disable=import-error
 import eq3bt as eq3  # pylint: disable=import-error
 import voluptuous as vol
 
@@ -136,7 +136,7 @@ class EQ3BTSmartThermostat(ClimateEntity):
     @property
     def hvac_modes(self):
         """Return the list of available operation modes."""
-        return list(HA_TO_EQ_HVAC.keys())
+        return list(HA_TO_EQ_HVAC)
 
     def set_hvac_mode(self, hvac_mode):
         """Set operation mode."""
@@ -155,7 +155,7 @@ class EQ3BTSmartThermostat(ClimateEntity):
         return self._thermostat.max_temp
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         dev_specific = {
             ATTR_STATE_AWAY_END: self._thermostat.away_end,
@@ -181,7 +181,7 @@ class EQ3BTSmartThermostat(ClimateEntity):
 
         Requires SUPPORT_PRESET_MODE.
         """
-        return list(HA_TO_EQ_PRESET.keys())
+        return list(HA_TO_EQ_PRESET)
 
     def set_preset_mode(self, preset_mode):
         """Set new preset mode."""

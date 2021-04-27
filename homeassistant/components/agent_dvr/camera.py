@@ -102,13 +102,13 @@ class AgentCamera(MjpegCamera):
                 _LOGGER.debug("%s reacquired", self._name)
             self._removed = False
         except AgentError:
-            if self.device.client.is_available:  # server still available - camera error
-                if not self._removed:
-                    _LOGGER.error("%s lost", self._name)
-                    self._removed = True
+            # server still available - camera error
+            if self.device.client.is_available and not self._removed:
+                _LOGGER.error("%s lost", self._name)
+                self._removed = True
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the Agent DVR camera state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

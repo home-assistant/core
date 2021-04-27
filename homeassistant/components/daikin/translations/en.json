@@ -5,18 +5,18 @@
             "cannot_connect": "Failed to connect"
         },
         "error": {
-            "device_fail": "Unexpected error",
-            "device_timeout": "Failed to connect",
-            "forbidden": "Invalid authentication"
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
+                    "api_key": "API Key",
                     "host": "Host",
-                    "key": "API Key",
                     "password": "Password"
                 },
-                "description": "Enter IP address of your Daikin AC.\n\nNote that API Key and Password are used by BRP072Cxx and SKYFi devices respectively.",
+                "description": "Enter IP Address of your Daikin AC.\n\nNote that API Key and Password only are used by BRP072Cxx and SKYFi devices respectively.",
                 "title": "Configure Daikin AC"
             }
         }

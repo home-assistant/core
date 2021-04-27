@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "V\u00f5rgust ei leitud \u00fchtegi Google Casti seadet.",
+            "single_instance_allowed": "Vajalik on ainult \u00fcks Google Casti konfiguratsioon."
+        },
+        "error": {
+            "invalid_known_hosts": "Teadaolevad hostid peab olema komaeraldusega hostide loend."
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "Valikuline loend teadaolevatest hostidest kui mDNS-i tuvastamine ei t\u00f6\u00f6ta."
+                },
+                "description": "Sisesta Google Casti andmed.",
+                "title": "Google Cast"
+            },
+            "confirm": {
+                "description": "Kas soovid seadistada Google Casti?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "Teadaolevad hostid peab olema komaeraldusega hostide loend."
+        },
+        "step": {
+            "options": {
+                "data": {
+                    "ignore_cec": "Valikuline nimekiri mis edastatakse pychromecast.IGNORE_CEC-ile.",
+                    "known_hosts": "Valikuline loend teadaolevatest hostidest kui mDNS-i tuvastamine ei t\u00f6\u00f6ta.",
+                    "uuid": "Valikuline UUIDide loend. Loetlemata cast-e ei lisata."
+                },
+                "description": "Sisesta Google Casti andmed."
+            }
+        }
+    }
+}

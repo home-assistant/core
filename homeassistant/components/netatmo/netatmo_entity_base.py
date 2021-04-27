@@ -1,11 +1,12 @@
 """Base class for Netatmo entities."""
+from __future__ import annotations
+
 import logging
-from typing import Dict, List
 
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, MANUFACTURER, MODELS, SIGNAL_NAME
+from .const import DATA_DEVICE_IDS, DOMAIN, MANUFACTURER, MODELS, SIGNAL_NAME
 from .data_handler import NetatmoDataHandler
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,8 +18,8 @@ class NetatmoBase(Entity):
     def __init__(self, data_handler: NetatmoDataHandler) -> None:
         """Set up Netatmo entity base."""
         self.data_handler = data_handler
-        self._data_classes: List[Dict] = []
-        self._listeners: List[CALLBACK_TYPE] = []
+        self._data_classes: list[dict] = []
+        self._listeners: list[CALLBACK_TYPE] = []
 
         self._device_name = None
         self._id = None
@@ -45,10 +46,10 @@ class NetatmoBase(Entity):
                     data_class["name"],
                     signal_name,
                     self.async_update_callback,
-                    LAT_NE=data_class["LAT_NE"],
-                    LON_NE=data_class["LON_NE"],
-                    LAT_SW=data_class["LAT_SW"],
-                    LON_SW=data_class["LON_SW"],
+                    lat_ne=data_class["lat_ne"],
+                    lon_ne=data_class["lon_ne"],
+                    lat_sw=data_class["lat_sw"],
+                    lon_sw=data_class["lon_sw"],
                 )
 
             else:
@@ -57,6 +58,10 @@ class NetatmoBase(Entity):
                 )
 
             await self.data_handler.unregister_data_class(signal_name, None)
+
+        registry = await self.hass.helpers.device_registry.async_get_registry()
+        device = registry.async_get_device({(DOMAIN, self._id)}, set())
+        self.hass.data[DOMAIN][DATA_DEVICE_IDS][self._id] = device.id
 
         self.async_update_callback()
 
@@ -71,16 +76,6 @@ class NetatmoBase(Entity):
             await self.data_handler.unregister_data_class(
                 data_class[SIGNAL_NAME], self.async_update_callback
             )
-
-    async def async_remove(self):
-        """Clean up when removing entity."""
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
-        entity_entry = entity_registry.async_get(self.entity_id)
-        if not entity_entry:
-            await super().async_remove()
-            return
-
-        entity_registry.async_remove(self.entity_id)
 
     @callback
     def async_update_callback(self):

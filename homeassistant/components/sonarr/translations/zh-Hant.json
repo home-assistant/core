@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "error": {
@@ -10,16 +11,19 @@
         },
         "flow_title": "Sonarr\uff1a{name}",
         "step": {
+            "reauth_confirm": {
+                "description": "Sonarr \u6574\u5408\u9700\u8981\u624b\u52d5\u91cd\u65b0\u8a8d\u8b49 Sonarr API\uff1a{host}",
+                "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
+            },
             "user": {
                 "data": {
                     "api_key": "API \u5bc6\u9470",
                     "base_path": "API \u8def\u5f91",
                     "host": "\u4e3b\u6a5f\u7aef",
                     "port": "\u901a\u8a0a\u57e0",
-                    "ssl": "Sonarr \u4f7f\u7528 SSL \u8a8d\u8b49",
-                    "verify_ssl": "Sonarr \u4f7f\u7528\u5c0d\u61c9\u8a8d\u8b49"
-                },
-                "title": "\u9023\u7dda\u81f3 Sonarr"
+                    "ssl": "\u4f7f\u7528 SSL \u8a8d\u8b49",
+                    "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
+                }
             }
         }
     },
@@ -32,6 +36,5 @@
                 }
             }
         }
-    },
-    "title": "Sonarr"
+    }
 }

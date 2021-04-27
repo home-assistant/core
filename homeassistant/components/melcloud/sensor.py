@@ -1,23 +1,21 @@
 """Support for MelCloud device sensors."""
-import logging
-
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW
 from pymelcloud.atw_device import Zone
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import MelCloudDevice
 from .const import DOMAIN
 
 ATTR_MEASUREMENT_NAME = "measurement_name"
-ATTR_ICON = "icon"
 ATTR_UNIT = "unit"
-ATTR_DEVICE_CLASS = "device_class"
 ATTR_VALUE_FN = "value_fn"
 ATTR_ENABLED_FN = "enabled"
 
@@ -84,8 +82,6 @@ ATW_ZONE_SENSORS = {
     },
 }
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up MELCloud device sensors based on config_entry."""
@@ -114,7 +110,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class MelDeviceSensor(Entity):
+class MelDeviceSensor(SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(self, api: MelCloudDevice, measurement, definition):

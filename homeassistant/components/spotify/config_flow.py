@@ -1,17 +1,18 @@
 """Config flow for Spotify."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from spotipy import Spotify
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import persistent_notification
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN, SPOTIFY_SCOPES
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SpotifyFlowHandler(
@@ -26,7 +27,7 @@ class SpotifyFlowHandler(
     def __init__(self) -> None:
         """Instantiate config flow."""
         super().__init__()
-        self.entry: Optional[Dict[str, Any]] = None
+        self.entry: dict[str, Any] | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -34,11 +35,11 @@ class SpotifyFlowHandler(
         return logging.getLogger(__name__)
 
     @property
-    def extra_authorize_data(self) -> Dict[str, Any]:
+    def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": ",".join(SPOTIFY_SCOPES)}
 
-    async def async_oauth_create_entry(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResultDict:
         """Create an entry for Spotify."""
         spotify = Spotify(auth=data["token"]["access_token"])
 
@@ -60,12 +61,11 @@ class SpotifyFlowHandler(
 
         return self.async_create_entry(title=name, data=data)
 
-    async def async_step_reauth(self, entry: Dict[str, Any]) -> Dict[str, Any]:
+    async def async_step_reauth(self, entry: dict[str, Any]) -> FlowResultDict:
         """Perform reauth upon migration of old entries."""
         if entry:
             self.entry = entry
 
-        assert self.hass
         persistent_notification.async_create(
             self.hass,
             f"Spotify integration for account {entry['id']} needs to be re-authenticated. Please go to the integrations page to re-configure it.",
@@ -76,8 +76,8 @@ class SpotifyFlowHandler(
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResultDict:
         """Confirm reauth dialog."""
         if user_input is None:
             return self.async_show_form(
@@ -87,7 +87,6 @@ class SpotifyFlowHandler(
                 errors={},
             )
 
-        assert self.hass
         persistent_notification.async_dismiss(self.hass, "spotify_reauth")
 
         return await self.async_step_pick_implementation(

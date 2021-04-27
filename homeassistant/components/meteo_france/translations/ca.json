@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ciutat ja configurada",
-            "unknown": "Error desconegut: torna-ho a provar m\u00e9s tard"
+            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada",
+            "unknown": "Error inesperat"
         },
         "error": {
             "empty": "No s'ha trobat cap resultat en la cerca de la ciutat: comprova el camp ciutat"

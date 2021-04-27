@@ -1,9 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_setup": "You can only configure one Spotify account.",
-            "authorize_url_timeout": "Timeout generating authorize url.",
+            "authorize_url_timeout": "Timeout generating authorize URL.",
             "missing_configuration": "The Spotify integration is not configured. Please follow the documentation.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
             "reauth_account_mismatch": "The Spotify account authenticated with, does not match the account needed re-authentication."
         },
         "create_entry": {
@@ -15,8 +15,13 @@
             },
             "reauth_confirm": {
                 "description": "The Spotify integration needs to re-authenticate with Spotify for account: {account}",
-                "title": "Re-authenticate with Spotify"
+                "title": "Reauthenticate Integration"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Spotify API endpoint reachable"
         }
     }
 }

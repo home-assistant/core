@@ -7,13 +7,20 @@
             "cannot_connect": "Connexion impossible"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "Clef d'API"
+                }
+            },
             "user": {
                 "data": {
                     "api_key": "Cl\u00e9 d'API",
                     "host": "H\u00f4te",
+                    "location": "Emplacement",
                     "name": "Nom",
                     "port": "Port",
                     "ssl": "Utiliser SSL",
+                    "statistics_only": "Statistiques uniquement",
                     "verify_ssl": "V\u00e9rifier le certificat SSL"
                 }
             }

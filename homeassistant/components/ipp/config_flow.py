@@ -1,6 +1,8 @@
 """Config flow to configure the IPP integration."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pyipp import (
     IPP,
@@ -21,16 +23,17 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_BASE_PATH, CONF_SERIAL, CONF_UUID
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import CONF_BASE_PATH, CONF_SERIAL, CONF_UUID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
+async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -61,8 +64,8 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
         self.discovery_info = {}
 
     async def async_step_user(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
+        self, user_input: ConfigType | None = None
+    ) -> FlowResultDict:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._show_setup_form()
@@ -73,7 +76,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_setup_form({"base": "connection_upgrade"})
         except (IPPConnectionError, IPPResponseError):
             _LOGGER.debug("IPP Connection/Response Error", exc_info=True)
-            return self._show_setup_form({"base": "connection_error"})
+            return self._show_setup_form({"base": "cannot_connect"})
         except IPPParseError:
             _LOGGER.debug("IPP Parse Error", exc_info=True)
             return self.async_abort(reason="parse_error")
@@ -98,7 +101,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
-    async def async_step_zeroconf(self, discovery_info: ConfigType) -> Dict[str, Any]:
+    async def async_step_zeroconf(self, discovery_info: ConfigType) -> FlowResultDict:
         """Handle zeroconf discovery."""
         port = discovery_info[CONF_PORT]
         zctype = discovery_info["type"]
@@ -106,7 +109,6 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
         tls = zctype == "_ipps._tcp.local."
         base_path = discovery_info["properties"].get("rp", "ipp/print")
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {"name": name}})
 
         self.discovery_info.update(
@@ -127,7 +129,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="connection_upgrade")
         except (IPPConnectionError, IPPResponseError):
             _LOGGER.debug("IPP Connection/Response Error", exc_info=True)
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
         except IPPParseError:
             _LOGGER.debug("IPP Parse Error", exc_info=True)
             return self.async_abort(reason="parse_error")
@@ -167,7 +169,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(
         self, user_input: ConfigType = None
-    ) -> Dict[str, Any]:
+    ) -> FlowResultDict:
         """Handle a confirmation flow initiated by zeroconf."""
         if user_input is None:
             return self.async_show_form(
@@ -181,7 +183,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             data=self.discovery_info,
         )
 
-    def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
+    def _show_setup_form(self, errors: dict | None = None) -> FlowResultDict:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",

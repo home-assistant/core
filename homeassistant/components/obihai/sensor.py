@@ -5,7 +5,7 @@ import logging
 from pyobihai import PyObihai
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -13,7 +13,6 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +68,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class ObihaiServiceSensors(Entity):
+class ObihaiServiceSensors(SensorEntity):
     """Get the status of each Obihai Lines."""
 
     def __init__(self, pyobihai, serial, service_name):
@@ -126,6 +125,16 @@ class ObihaiServiceSensors(Entity):
             if self._state == "Off Hook":
                 return "mdi:phone-in-talk"
             return "mdi:phone-hangup"
+        if "Service Status" in self._service_name:
+            if "OBiTALK Service Status" in self._service_name:
+                return "mdi:phone-check"
+            if self._state == "0":
+                return "mdi:phone-hangup"
+            return "mdi:phone-in-talk"
+        if "Reboot Required" in self._service_name:
+            if self._state == "false":
+                return "mdi:restart-off"
+            return "mdi:restart-alert"
         return "mdi:phone"
 
     def update(self):
@@ -137,9 +146,8 @@ class ObihaiServiceSensors(Entity):
 
         services = self._pyobihai.get_line_state()
 
-        if services is not None:
-            if self._service_name in services:
-                self._state = services.get(self._service_name)
+        if services is not None and self._service_name in services:
+            self._state = services.get(self._service_name)
 
         call_direction = self._pyobihai.get_call_direction()
 

@@ -1,9 +1,12 @@
 """Tests for Samsung TV config flow."""
+from unittest.mock import DEFAULT as DEFAULT_MOCK, Mock, PropertyMock, call, patch
+
 import pytest
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
 from samsungtvws.exceptions import ConnectionFailure
 from websocket import WebSocketProtocolException
 
+from homeassistant import config_entries
 from homeassistant.components.samsungtv.const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
@@ -17,8 +20,6 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_UDN,
 )
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_METHOD, CONF_NAME, CONF_TOKEN
-
-from tests.async_mock import DEFAULT as DEFAULT_MOCK, Mock, PropertyMock, call, patch
 
 MOCK_USER_DATA = {CONF_HOST: "fake_host", CONF_NAME: "fake_name"}
 MOCK_SSDP_DATA = {
@@ -102,7 +103,7 @@ async def test_user_legacy(hass, remote):
     """Test starting a flow by user."""
     # show form
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -129,7 +130,7 @@ async def test_user_websocket(hass, remotews):
     ):
         # show form
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] == "form"
         assert result["step_id"] == "user"
@@ -157,7 +158,7 @@ async def test_user_legacy_missing_auth(hass):
     ), patch("homeassistant.components.samsungtv.config_flow.socket"):
         # legacy device missing authentication
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
         assert result["reason"] == "auth_missing"
@@ -171,7 +172,7 @@ async def test_user_legacy_not_supported(hass):
     ), patch("homeassistant.components.samsungtv.config_flow.socket"):
         # legacy device not supported
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
         assert result["reason"] == "not_supported"
@@ -190,7 +191,7 @@ async def test_user_websocket_not_supported(hass):
     ):
         # websocket device not supported
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
         assert result["reason"] == "not_supported"
@@ -208,10 +209,10 @@ async def test_user_not_successful(hass):
         "homeassistant.components.samsungtv.config_flow.socket"
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_successful"
+        assert result["reason"] == "cannot_connect"
 
 
 async def test_user_not_successful_2(hass):
@@ -226,10 +227,10 @@ async def test_user_not_successful_2(hass):
         "homeassistant.components.samsungtv.config_flow.socket"
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_successful"
+        assert result["reason"] == "cannot_connect"
 
 
 async def test_user_already_configured(hass, remote):
@@ -237,13 +238,13 @@ async def test_user_already_configured(hass, remote):
 
     # entry was added
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
     )
     assert result["type"] == "create_entry"
 
     # failed as already configured
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -254,7 +255,7 @@ async def test_ssdp(hass, remote):
 
     # confirm to add the entry
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
+        DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
     )
     assert result["type"] == "form"
     assert result["step_id"] == "confirm"
@@ -277,7 +278,9 @@ async def test_ssdp_noprefix(hass, remote):
 
     # confirm to add the entry
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA_NOPREFIX
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_SSDP_DATA_NOPREFIX,
     )
     assert result["type"] == "form"
     assert result["step_id"] == "confirm"
@@ -304,7 +307,7 @@ async def test_ssdp_legacy_missing_auth(hass):
 
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
+            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
         )
         assert result["type"] == "form"
         assert result["step_id"] == "confirm"
@@ -326,7 +329,7 @@ async def test_ssdp_legacy_not_supported(hass):
 
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
+            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
         )
         assert result["type"] == "form"
         assert result["step_id"] == "confirm"
@@ -352,7 +355,7 @@ async def test_ssdp_websocket_not_supported(hass):
     ):
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
+            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
         )
         assert result["type"] == "form"
         assert result["step_id"] == "confirm"
@@ -379,7 +382,7 @@ async def test_ssdp_not_successful(hass):
 
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
+            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
         )
         assert result["type"] == "form"
         assert result["step_id"] == "confirm"
@@ -389,7 +392,7 @@ async def test_ssdp_not_successful(hass):
             result["flow_id"], user_input="whatever"
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_successful"
+        assert result["reason"] == "cannot_connect"
 
 
 async def test_ssdp_not_successful_2(hass):
@@ -406,7 +409,7 @@ async def test_ssdp_not_successful_2(hass):
 
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
+            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
         )
         assert result["type"] == "form"
         assert result["step_id"] == "confirm"
@@ -416,7 +419,7 @@ async def test_ssdp_not_successful_2(hass):
             result["flow_id"], user_input="whatever"
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_successful"
+        assert result["reason"] == "cannot_connect"
 
 
 async def test_ssdp_already_in_progress(hass, remote):
@@ -424,14 +427,14 @@ async def test_ssdp_already_in_progress(hass, remote):
 
     # confirm to add the entry
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
+        DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
     )
     assert result["type"] == "form"
     assert result["step_id"] == "confirm"
 
     # failed as already in progress
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
+        DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_in_progress"
@@ -442,7 +445,7 @@ async def test_ssdp_already_configured(hass, remote):
 
     # entry was added
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
     )
     assert result["type"] == "create_entry"
     entry = result["result"]
@@ -452,7 +455,7 @@ async def test_ssdp_already_configured(hass, remote):
 
     # failed as already configured
     result2 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
+        DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
     )
     assert result2["type"] == "abort"
     assert result2["reason"] == "already_configured"
@@ -477,7 +480,7 @@ async def test_autodetect_websocket(hass, remote, remotews):
         remotews.return_value = remote
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
         assert result["type"] == "create_entry"
         assert result["data"][CONF_METHOD] == "websocket"
@@ -503,7 +506,7 @@ async def test_autodetect_websocket_ssl(hass, remote, remotews):
         remotews.return_value = remote
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
         assert result["type"] == "create_entry"
         assert result["data"][CONF_METHOD] == "websocket"
@@ -522,7 +525,7 @@ async def test_autodetect_auth_missing(hass, remote):
         side_effect=[AccessDenied("Boom")],
     ) as remote:
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
         assert result["reason"] == "auth_missing"
@@ -537,7 +540,7 @@ async def test_autodetect_not_supported(hass, remote):
         side_effect=[UnhandledResponse("Boom")],
     ) as remote:
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
         assert result["reason"] == "not_supported"
@@ -549,7 +552,7 @@ async def test_autodetect_legacy(hass, remote):
     """Test for send key with autodetection of protocol."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
         assert result["type"] == "create_entry"
         assert result["data"][CONF_METHOD] == "legacy"
@@ -567,10 +570,10 @@ async def test_autodetect_none(hass, remote, remotews):
         side_effect=OSError("Boom"),
     ) as remotews:
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_successful"
+        assert result["reason"] == "cannot_connect"
         assert remote.call_count == 1
         assert remote.call_args_list == [
             call(AUTODETECT_LEGACY),

@@ -1,6 +1,4 @@
 """The tests for the Template vacuum platform."""
-import logging
-
 import pytest
 
 from homeassistant import setup
@@ -16,8 +14,6 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UN
 
 from tests.common import assert_setup_component, async_mock_service
 from tests.components.vacuum import common
-
-_LOGGER = logging.getLogger(__name__)
 
 _TEST_VACUUM = "vacuum.test_vacuum"
 _STATE_INPUT_SELECT = "input_select.state"

@@ -1,7 +1,9 @@
 """Tests for OwnTracks config flow."""
+from unittest.mock import patch
+
 import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.owntracks import config_flow
 from homeassistant.components.owntracks.config_flow import CONF_CLOUDHOOK, CONF_SECRET
 from homeassistant.components.owntracks.const import DOMAIN
@@ -9,7 +11,6 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CONF_WEBHOOK_URL = "webhook_url"
@@ -111,12 +112,12 @@ async def test_abort_if_already_setup(hass):
     # Should fail, already setup (import)
     result = await flow.async_step_import({})
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "one_instance_allowed"
+    assert result["reason"] == "single_instance_allowed"
 
     # Should fail, already setup (flow)
     result = await flow.async_step_user({})
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "one_instance_allowed"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_user_not_supports_encryption(hass, not_supports_encryption):
@@ -142,7 +143,7 @@ async def test_unload(hass):
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup"
     ) as mock_forward:
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "import"}, data={}
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={}
         )
 
     assert len(mock_forward.mock_calls) == 1
@@ -153,8 +154,8 @@ async def test_unload(hass):
     assert entry.data["webhook_id"] in hass.data["webhook"]
 
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_unload",
-        return_value=None,
+        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        return_value=True,
     ) as mock_unload:
         assert await hass.config_entries.async_unload(entry.entry_id)
 
@@ -174,7 +175,7 @@ async def test_with_cloud_sub(hass):
         return_value="https://hooks.nabu.casa/ABCD",
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data={}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
         )
 
     entry = result["result"]

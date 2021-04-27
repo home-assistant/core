@@ -1,3 +1,19 @@
 {
-    "title": "Hass.io"
+    "system_health": {
+        "info": {
+            "board": "Placa",
+            "disk_total": "Disco total",
+            "disk_used": "Disco usado",
+            "docker_version": "Versi\u00f3n de Docker",
+            "healthy": "Saludable",
+            "host_os": "Sistema operativo del Host",
+            "installed_addons": "Complementos instalados",
+            "supervisor_api": "API del Supervisor",
+            "supervisor_version": "Versi\u00f3n del Supervisor",
+            "supported": "Soportado",
+            "update_channel": "Canal de actualizaci\u00f3n",
+            "version_api": "Versi\u00f3n del API"
+        }
+    },
+    "title": "Home Assistant Supervisor"
 }

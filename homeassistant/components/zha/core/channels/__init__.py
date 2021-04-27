@@ -1,14 +1,16 @@
 """Channels module for Zigbee Home Automation."""
+from __future__ import annotations
+
 import asyncio
-import logging
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict
 
 import zigpy.zcl.clusters.closures
 
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import (  # noqa: F401 # pylint: disable=unused-import
+from . import (  # noqa: F401
     base,
     closures,
     general,
@@ -30,7 +32,6 @@ from .. import (
     typing as zha_typing,
 )
 
-_LOGGER = logging.getLogger(__name__)
 ChannelsDict = Dict[str, zha_typing.ChannelType]
 
 
@@ -39,7 +40,7 @@ class Channels:
 
     def __init__(self, zha_device: zha_typing.ZhaDeviceType) -> None:
         """Initialize instance."""
-        self._pools: List[zha_typing.ChannelPoolType] = []
+        self._pools: list[zha_typing.ChannelPoolType] = []
         self._power_config = None
         self._identify = None
         self._semaphore = asyncio.Semaphore(3)
@@ -48,7 +49,7 @@ class Channels:
         self._zha_device = zha_device
 
     @property
-    def pools(self) -> List["ChannelPool"]:
+    def pools(self) -> list[ChannelPool]:
         """Return channel pools list."""
         return self._pools
 
@@ -95,7 +96,7 @@ class Channels:
         return self._unique_id
 
     @property
-    def zigbee_signature(self) -> Dict[int, Dict[str, Any]]:
+    def zigbee_signature(self) -> dict[int, dict[str, Any]]:
         """Get the zigbee signatures for the pools in channels."""
         return {
             signature[0]: signature[1]
@@ -103,7 +104,7 @@ class Channels:
         }
 
     @classmethod
-    def new(cls, zha_device: zha_typing.ZhaDeviceType) -> "Channels":
+    def new(cls, zha_device: zha_typing.ZhaDeviceType) -> Channels:
         """Create new instance."""
         channels = cls(zha_device)
         for ep_id in sorted(zha_device.device.endpoints):
@@ -129,6 +130,13 @@ class Channels:
         await self.zdo_channel.async_configure()
         self.zdo_channel.debug("'async_configure' stage succeeded")
         await asyncio.gather(*(pool.async_configure() for pool in self.pools))
+        async_dispatcher_send(
+            self.zha_device.hass,
+            const.ZHA_CHANNEL_MSG,
+            {
+                const.ATTR_TYPE: const.ZHA_CHANNEL_CFG_DONE,
+            },
+        )
 
     @callback
     def async_new_entity(
@@ -136,7 +144,7 @@ class Channels:
         component: str,
         entity_class: zha_typing.CALLABLE_T,
         unique_id: str,
-        channels: List[zha_typing.ChannelType],
+        channels: list[zha_typing.ChannelType],
     ):
         """Signal new entity addition."""
         if self.zha_device.status == zha_core_device.DeviceStatus.INITIALIZED:
@@ -152,13 +160,14 @@ class Channels:
         async_dispatcher_send(self.zha_device.hass, signal, *args)
 
     @callback
-    def zha_send_event(self, event_data: Dict[str, Union[str, int]]) -> None:
+    def zha_send_event(self, event_data: dict[str, str | int]) -> None:
         """Relay events to hass."""
         self.zha_device.hass.bus.async_fire(
             "zha_event",
             {
                 const.ATTR_DEVICE_IEEE: str(self.zha_device.ieee),
                 const.ATTR_UNIQUE_ID: self.unique_id,
+                ATTR_DEVICE_ID: self.zha_device.device_id,
                 **event_data,
             },
         )
@@ -173,7 +182,7 @@ class ChannelPool:
         self._channels: Channels = channels
         self._claimed_channels: ChannelsDict = {}
         self._id: int = ep_id
-        self._client_channels: Dict[str, zha_typing.ClientChannelType] = {}
+        self._client_channels: dict[str, zha_typing.ClientChannelType] = {}
         self._unique_id: str = f"{channels.unique_id}-{ep_id}"
 
     @property
@@ -187,7 +196,7 @@ class ChannelPool:
         return self._claimed_channels
 
     @property
-    def client_channels(self) -> Dict[str, zha_typing.ClientChannelType]:
+    def client_channels(self) -> dict[str, zha_typing.ClientChannelType]:
         """Return a dict of client channels."""
         return self._client_channels
 
@@ -212,12 +221,12 @@ class ChannelPool:
         return self._channels.zha_device.is_mains_powered
 
     @property
-    def manufacturer(self) -> Optional[str]:
+    def manufacturer(self) -> str | None:
         """Return device manufacturer."""
         return self._channels.zha_device.manufacturer
 
     @property
-    def manufacturer_code(self) -> Optional[int]:
+    def manufacturer_code(self) -> int | None:
         """Return device manufacturer."""
         return self._channels.zha_device.manufacturer_code
 
@@ -227,7 +236,7 @@ class ChannelPool:
         return self._channels.zha_device.hass
 
     @property
-    def model(self) -> Optional[str]:
+    def model(self) -> str | None:
         """Return device model."""
         return self._channels.zha_device.model
 
@@ -242,7 +251,7 @@ class ChannelPool:
         return self._unique_id
 
     @property
-    def zigbee_signature(self) -> Tuple[int, Dict[str, Any]]:
+    def zigbee_signature(self) -> tuple[int, dict[str, Any]]:
         """Get the zigbee signature for the endpoint this pool represents."""
         return (
             self.endpoint.endpoint_id,
@@ -263,7 +272,7 @@ class ChannelPool:
         )
 
     @classmethod
-    def new(cls, channels: Channels, ep_id: int) -> "ChannelPool":
+    def new(cls, channels: Channels, ep_id: int) -> ChannelPool:
         """Create new channels for an endpoint."""
         pool = cls(channels, ep_id)
         pool.add_all_channels()
@@ -340,7 +349,7 @@ class ChannelPool:
         component: str,
         entity_class: zha_typing.CALLABLE_T,
         unique_id: str,
-        channels: List[zha_typing.ChannelType],
+        channels: list[zha_typing.ChannelType],
     ):
         """Signal new entity addition."""
         self._channels.async_new_entity(component, entity_class, unique_id, channels)
@@ -351,19 +360,19 @@ class ChannelPool:
         self._channels.async_send_signal(signal, *args)
 
     @callback
-    def claim_channels(self, channels: List[zha_typing.ChannelType]) -> None:
+    def claim_channels(self, channels: list[zha_typing.ChannelType]) -> None:
         """Claim a channel."""
         self.claimed_channels.update({ch.id: ch for ch in channels})
 
     @callback
-    def unclaimed_channels(self) -> List[zha_typing.ChannelType]:
+    def unclaimed_channels(self) -> list[zha_typing.ChannelType]:
         """Return a list of available (unclaimed) channels."""
         claimed = set(self.claimed_channels)
         available = set(self.all_channels)
         return [self.all_channels[chan_id] for chan_id in (available - claimed)]
 
     @callback
-    def zha_send_event(self, event_data: Dict[str, Union[str, int]]) -> None:
+    def zha_send_event(self, event_data: dict[str, str | int]) -> None:
         """Relay events to hass."""
         self._channels.zha_send_event(
             {

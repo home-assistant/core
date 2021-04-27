@@ -2,10 +2,10 @@
     "mfa_setup": {
         "notify": {
             "abort": {
-                "no_available_service": "Ingen varslingstjenester er tilgjengelig."
+                "no_available_service": "Ingen varslingstjenester er tilgjengelig"
             },
             "error": {
-                "invalid_code": "Ugyldig kode, vennligst pr\u00f8v igjen."
+                "invalid_code": "Ugyldig kode, vennligst pr\u00f8v igjen"
             },
             "step": {
                 "init": {
@@ -25,10 +25,11 @@
             },
             "step": {
                 "init": {
-                    "description": "For \u00e5 aktivere tofaktorautentisering ved hjelp av tidsbaserte engangspassord, skann QR-koden med autentiseringsappen din. Hvis du ikke har en, kan vi anbefale enten [Google Authenticator](https://support.google.com/accounts/answer/1066447) eller [Authy](https://authy.com/).\n\n {qr_code} \n \nEtter at du har skannet koden, angir du den seks-sifrede koden fra appen din for \u00e5 kontrollere oppsettet. Dersom du har problemer med \u00e5 skanne QR-koden kan du fylle inn f\u00f8lgende kode manuelt: **`{code}`**.",
-                    "title": "Sett opp tofaktorautentisering ved hjelp av TOTP"
+                    "description": "For \u00e5 aktivere totrinnsbekreftelse ved hjelp av tidsbaserte engangspassord, skann QR-koden med godkjenningsappen din. Hvis du ikke har en, anbefaler vi enten [Google Authenticator](https://support.google.com/accounts/answer/1066447) eller [Authy](https://authy.com/).\n\n {qr_code} \n \nEtter at du har skannet koden, angir du den seks-sifrede koden fra appen din for \u00e5 kontrollere oppsettet. Dersom du har problemer med \u00e5 skanne QR-koden kan du fylle inn f\u00f8lgende kode manuelt: **`{code}`**.",
+                    "title": "Sett opp totrinnsbekreftelse ved hjelp av TOTP"
                 }
-            }
+            },
+            "title": ""
         }
     }
 }

@@ -1,5 +1,7 @@
 """Test for smart home alexa support."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.alexa import messages, smart_home
@@ -24,7 +26,7 @@ from homeassistant.components.media_player.const import (
 import homeassistant.components.vacuum as vacuum
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.core import Context, callback
+from homeassistant.core import Context
 from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
 
@@ -40,18 +42,13 @@ from . import (
     reported_properties,
 )
 
-from tests.async_mock import patch
-from tests.common import async_mock_service
+from tests.common import async_capture_events, async_mock_service
 
 
 @pytest.fixture
 def events(hass):
     """Fixture that catches alexa events."""
-    events = []
-    hass.bus.async_listen(
-        smart_home.EVENT_ALEXA_SMART_HOME, callback(lambda e: events.append(e))
-    )
-    yield events
+    return async_capture_events(hass, smart_home.EVENT_ALEXA_SMART_HOME)
 
 
 @pytest.fixture
@@ -234,7 +231,11 @@ async def test_dimmable_light(hass):
     device = (
         "light.test_2",
         "on",
-        {"brightness": 128, "friendly_name": "Test light 2", "supported_features": 1},
+        {
+            "brightness": 128,
+            "friendly_name": "Test light 2",
+            "supported_color_modes": ["brightness"],
+        },
     )
     appliance = await discovery_test(device, hass)
 
@@ -265,14 +266,18 @@ async def test_dimmable_light(hass):
     assert call.data["brightness_pct"] == 50
 
 
-async def test_color_light(hass):
+@pytest.mark.parametrize(
+    "supported_color_modes",
+    [["color_temp", "hs"], ["color_temp", "rgb"], ["color_temp", "xy"]],
+)
+async def test_color_light(hass, supported_color_modes):
     """Test color light discovery."""
     device = (
         "light.test_3",
         "on",
         {
             "friendly_name": "Test light 3",
-            "supported_features": 19,
+            "supported_color_modes": supported_color_modes,
             "min_mireds": 142,
             "color_temp": "333",
         },
@@ -382,6 +387,7 @@ async def test_variable_fan(hass):
             "supported_features": 1,
             "speed_list": ["low", "medium", "high"],
             "speed": "high",
+            "percentage": 100,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -422,82 +428,82 @@ async def test_variable_fan(hass):
         "Alexa.PercentageController",
         "SetPercentage",
         "fan#test_2",
-        "fan.set_speed",
+        "fan.set_percentage",
         hass,
         payload={"percentage": "50"},
     )
-    assert call.data["speed"] == "medium"
+    assert call.data["percentage"] == 50
 
     call, _ = await assert_request_calls_service(
         "Alexa.PercentageController",
         "SetPercentage",
         "fan#test_2",
-        "fan.set_speed",
+        "fan.set_percentage",
         hass,
         payload={"percentage": "33"},
     )
-    assert call.data["speed"] == "low"
+    assert call.data["percentage"] == 33
 
     call, _ = await assert_request_calls_service(
         "Alexa.PercentageController",
         "SetPercentage",
         "fan#test_2",
-        "fan.set_speed",
+        "fan.set_percentage",
         hass,
         payload={"percentage": "100"},
     )
-    assert call.data["speed"] == "high"
+    assert call.data["percentage"] == 100
 
     await assert_percentage_changes(
         hass,
-        [("high", "-5"), ("off", "5"), ("low", "-80"), ("medium", "-34")],
+        [(95, "-5"), (100, "5"), (20, "-80"), (66, "-34")],
         "Alexa.PercentageController",
         "AdjustPercentage",
         "fan#test_2",
         "percentageDelta",
-        "fan.set_speed",
-        "speed",
+        "fan.set_percentage",
+        "percentage",
     )
 
     call, _ = await assert_request_calls_service(
         "Alexa.PowerLevelController",
         "SetPowerLevel",
         "fan#test_2",
-        "fan.set_speed",
+        "fan.set_percentage",
         hass,
         payload={"powerLevel": "20"},
     )
-    assert call.data["speed"] == "low"
+    assert call.data["percentage"] == 20
 
     call, _ = await assert_request_calls_service(
         "Alexa.PowerLevelController",
         "SetPowerLevel",
         "fan#test_2",
-        "fan.set_speed",
+        "fan.set_percentage",
         hass,
         payload={"powerLevel": "50"},
     )
-    assert call.data["speed"] == "medium"
+    assert call.data["percentage"] == 50
 
     call, _ = await assert_request_calls_service(
         "Alexa.PowerLevelController",
         "SetPowerLevel",
         "fan#test_2",
-        "fan.set_speed",
+        "fan.set_percentage",
         hass,
         payload={"powerLevel": "99"},
     )
-    assert call.data["speed"] == "high"
+    assert call.data["percentage"] == 99
 
     await assert_percentage_changes(
         hass,
-        [("high", "-5"), ("medium", "-50"), ("low", "-80")],
+        [(95, "-5"), (50, "-50"), (20, "-80")],
         "Alexa.PowerLevelController",
         "AdjustPowerLevel",
         "fan#test_2",
         "powerLevelDelta",
-        "fan.set_speed",
-        "speed",
+        "fan.set_percentage",
+        "percentage",
     )
 
 
@@ -1490,7 +1496,7 @@ async def test_automation(hass):
     appliance = await discovery_test(device, hass)
 
     assert appliance["endpointId"] == "automation#test"
-    assert appliance["displayCategories"][0] == "OTHER"
+    assert appliance["displayCategories"][0] == "ACTIVITY_TRIGGER"
     assert appliance["friendlyName"] == "Test automation"
     assert_endpoint_capabilities(
         appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
@@ -3296,10 +3302,7 @@ async def test_media_player_sound_mode_list_unsupported(hass):
 
     # Test equalizer controller is not there
     assert_endpoint_capabilities(
-        appliance,
-        "Alexa",
-        "Alexa.PowerController",
-        "Alexa.EndpointHealth",
+        appliance, "Alexa", "Alexa.PowerController", "Alexa.EndpointHealth"
     )
 
 
@@ -3459,7 +3462,7 @@ async def test_vacuum_discovery(hass):
     appliance = await discovery_test(device, hass)
 
     assert appliance["endpointId"] == "vacuum#test_1"
-    assert appliance["displayCategories"][0] == "OTHER"
+    assert appliance["displayCategories"][0] == "VACUUM_CLEANER"
     assert appliance["friendlyName"] == "Test vacuum 1"
 
     assert_endpoint_capabilities(
@@ -3502,7 +3505,7 @@ async def test_vacuum_fan_speed(hass):
     appliance = await discovery_test(device, hass)
 
     assert appliance["endpointId"] == "vacuum#test_2"
-    assert appliance["displayCategories"][0] == "OTHER"
+    assert appliance["displayCategories"][0] == "VACUUM_CLEANER"
     assert appliance["friendlyName"] == "Test vacuum 2"
 
     capabilities = assert_endpoint_capabilities(
@@ -3834,10 +3837,7 @@ async def test_camera_hass_urls(hass, mock_stream, url, result):
         "idle",
         {"friendly_name": "Test camera", "supported_features": 3},
     )
-    await async_process_ha_core_config(
-        hass,
-        {"external_url": url},
-    )
+    await async_process_ha_core_config(hass, {"external_url": url})
 
     appliance = await discovery_test(device, hass)
     assert len(appliance["capabilities"]) == result
@@ -3850,8 +3850,7 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
     )
 
     await async_process_ha_core_config(
-        hass,
-        {"external_url": "https://mycamerastream.test"},
+        hass, {"external_url": "https://mycamerastream.test"}
     )
 
     with patch(

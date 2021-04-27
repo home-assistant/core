@@ -1,10 +1,11 @@
 """Provide the device automations for Climate."""
-from typing import Dict, List
+from __future__ import annotations
 
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -41,7 +42,7 @@ CONDITION_SCHEMA = vol.Any(HVAC_MODE_CONDITION, PRESET_MODE_CONDITION)
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> List[Dict[str, str]]:
+) -> list[dict[str, str]]:
     """List device conditions for Climate devices."""
     registry = await entity_registry.async_get_registry(hass)
     conditions = []
@@ -63,7 +64,10 @@ async def async_get_conditions(
             }
         )
 
-        if state and state.attributes["supported_features"] & const.SUPPORT_PRESET_MODE:
+        if (
+            state
+            and state.attributes[ATTR_SUPPORTED_FEATURES] & const.SUPPORT_PRESET_MODE
+        ):
             conditions.append(
                 {
                     CONF_CONDITION: "device",
@@ -115,6 +119,6 @@ async def async_get_condition_capabilities(hass, config):
         else:
             preset_modes = []
 
-        fields[vol.Required(const.ATTR_PRESET_MODES)] = vol.In(preset_modes)
+        fields[vol.Required(const.ATTR_PRESET_MODE)] = vol.In(preset_modes)
 
     return {"extra_fields": vol.Schema(fields)}

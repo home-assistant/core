@@ -3,8 +3,9 @@
   "name": "SmartThings",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smartthings",
-  "requirements": ["pysmartapp==0.3.2", "pysmartthings==0.7.3"],
+  "requirements": ["pysmartapp==0.3.3", "pysmartthings==0.7.6"],
   "dependencies": ["webhook"],
   "after_dependencies": ["cloud"],
-  "codeowners": ["@andrewsayre"]
+  "codeowners": ["@andrewsayre"],
+  "iot_class": "cloud_push"
 }

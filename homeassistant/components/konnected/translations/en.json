@@ -2,12 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "already_in_progress": "Config flow for device is already in progress.",
+            "already_in_progress": "Configuration flow is already in progress",
             "not_konn_panel": "Not a recognized Konnected.io device",
-            "unknown": "Unknown error occurred"
+            "unknown": "Unexpected error"
         },
         "error": {
-            "cannot_connect": "Unable to connect to a Konnected Panel at {host}:{port}"
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "confirm": {
@@ -32,7 +32,7 @@
             "not_konn_panel": "Not a recognized Konnected.io device"
         },
         "error": {
-            "bad_host": "Invalid Override API host url"
+            "bad_host": "Invalid Override API host URL"
         },
         "step": {
             "options_binary": {

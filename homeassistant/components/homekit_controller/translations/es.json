@@ -7,15 +7,13 @@
             "already_paired": "Este accesorio ya est\u00e1 emparejado con otro dispositivo. Por favor, reinicia el accesorio e int\u00e9ntalo de nuevo.",
             "ignored_model": "El soporte de HomeKit para este modelo est\u00e1 bloqueado ya que est\u00e1 disponible una integraci\u00f3n nativa m\u00e1s completa.",
             "invalid_config_entry": "Este dispositivo se muestra como listo para vincular, pero ya existe una entrada que causa conflicto en Home Assistant y se debe eliminar primero.",
+            "invalid_properties": "Propiedades no v\u00e1lidas anunciadas por dispositivo.",
             "no_devices": "No se encontraron dispositivos no emparejados"
         },
         "error": {
             "authentication_error": "C\u00f3digo HomeKit incorrecto. Por favor, compru\u00e9belo e int\u00e9ntelo de nuevo.",
-            "busy_error": "El dispositivo rechaz\u00f3 el emparejamiento porque ya est\u00e1 emparejado con otro controlador.",
             "max_peers_error": "El dispositivo rechaz\u00f3 el emparejamiento ya que no tiene almacenamiento de emparejamientos libres.",
-            "max_tries_error": "El dispositivo rechaz\u00f3 el emparejamiento ya que ha recibido m\u00e1s de 100 intentos de autenticaci\u00f3n fallidos.",
             "pairing_failed": "Se ha producido un error no controlado al intentar emparejarse con este dispositivo. Esto puede ser un fallo temporal o que tu dispositivo no est\u00e9 admitido en este momento.",
-            "protocol_error": "Error de comunicaci\u00f3n con el accesorio. El dispositivo puede no estar en modo de emparejamiento y puede requerir una pulsaci\u00f3n de bot\u00f3n f\u00edsica o virtual.",
             "unable_to_pair": "No se ha podido emparejar, por favor int\u00e9ntelo de nuevo.",
             "unknown_error": "El dispositivo report\u00f3 un error desconocido. La vinculaci\u00f3n ha fallado."
         },
@@ -33,24 +31,40 @@
                 "data": {
                     "pairing_code": "C\u00f3digo de vinculaci\u00f3n"
                 },
-                "description": "Introduce tu c\u00f3digo de vinculaci\u00f3n de HomeKit (en este formato XXX-XX-XXX) para usar este accesorio",
-                "title": "Vincular con accesorio HomeKit"
+                "description": "El controlador de HomeKit se comunica con {name} a trav\u00e9s de la red de \u00e1rea local usando una conexi\u00f3n encriptada segura sin un controlador HomeKit separado o iCloud. Introduce el c\u00f3digo de vinculaci\u00f3n de tu HomeKit (con el formato XXX-XX-XXX) para usar este accesorio. Este c\u00f3digo suele encontrarse en el propio dispositivo o en el embalaje.",
+                "title": "Vincular un dispositivo a trav\u00e9s del protocolo de accesorios HomeKit"
             },
             "protocol_error": {
                 "description": "Es posible que el dispositivo no est\u00e9 en modo de emparejamiento y que requiera que se presione un bot\u00f3n f\u00edsico o virtual. Aseg\u00farate de que el dispositivo est\u00e1 en modo de emparejamiento o intenta reiniciar el dispositivo, luego contin\u00faa para reanudar el emparejamiento.",
                 "title": "Error al comunicarse con el accesorio"
             },
-            "try_pair_later": {
-                "description": "Aseg\u00farate de que el dispositivo est\u00e1 en modo de emparejamiento o reinicia el dispositivo y vuelve a intentar el emparejamiento.",
-                "title": "Emparejamiento no disponible"
-            },
             "user": {
                 "data": {
                     "device": "Dispositivo"
                 },
-                "description": "Selecciona el dispositivo que quieres vincular",
-                "title": "Vincular con accesorio HomeKit"
+                "description": "El controlador de HomeKit se comunica a trav\u00e9s de la red de \u00e1rea local usando una conexi\u00f3n encriptada segura sin un controlador HomeKit separado o iCloud. Selecciona el dispositivo que quieres vincular:",
+                "title": "Selecci\u00f3n del dispositivo"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Bot\u00f3n 1",
+            "button10": "Bot\u00f3n 10",
+            "button2": "Bot\u00f3n 2",
+            "button3": "Bot\u00f3n 3",
+            "button4": "Bot\u00f3n 4",
+            "button5": "Bot\u00f3n 5",
+            "button6": "Bot\u00f3n 6",
+            "button7": "Bot\u00f3n 7",
+            "button8": "Bot\u00f3n 8",
+            "button9": "Bot\u00f3n 9",
+            "doorbell": "Timbre de la puerta"
+        },
+        "trigger_type": {
+            "double_press": "\"{subtype}\" pulsado dos veces",
+            "long_press": "\"{subtype}\" pulsado y mantenido",
+            "single_press": "\"{subtype}\" pulsado"
         }
     },
     "title": "Accesorio HomeKit"

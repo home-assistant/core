@@ -1,12 +1,18 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Conta j\u00e1 configurada"
+        },
         "error": {
-            "invalid_credentials": "Nome de utilizador ou palavra-passe incorretos"
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida"
         },
         "step": {
             "user": {
                 "data": {
-                    "password": "Palavra-passe"
+                    "home_control_url": "Home Control [VOID]",
+                    "mydevolo_url": "mydevolo [VOID]",
+                    "password": "Palavra-passe",
+                    "username": "Email / devolo ID"
                 }
             }
         }

@@ -1,11 +1,8 @@
 """The Broadlink integration."""
 from dataclasses import dataclass, field
-import logging
 
 from .const import DOMAIN
 from .device import BroadlinkDevice
-
-LOGGER = logging.getLogger(__name__)
 
 
 @dataclass

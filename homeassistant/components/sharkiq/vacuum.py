@@ -1,8 +1,8 @@
 """Shark IQ Wrapper."""
+from __future__ import annotations
 
-
+from collections.abc import Iterable
 import logging
-from typing import Dict, Iterable, Optional
 
 from sharkiqpy import OperatingModes, PowerModes, Properties, SharkIqVacuum
 
@@ -28,7 +28,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, SHARK
 from .update_coordinator import SharkIqUpdateCoordinator
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 # Supported features
 SUPPORT_SHARKIQ = (
@@ -69,9 +69,9 @@ ATTR_RSSI = "rssi"
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Shark IQ vacuum cleaner."""
     coordinator: SharkIqUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    devices: Iterable["SharkIqVacuum"] = coordinator.shark_vacs.values()
+    devices: Iterable[SharkIqVacuum] = coordinator.shark_vacs.values()
     device_names = [d.name for d in devices]
-    LOGGER.debug(
+    _LOGGER.debug(
         "Found %d Shark IQ device(s): %s",
         len(device_names),
         ", ".join([d.name for d in devices]),
@@ -118,7 +118,7 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
         return self.sharkiq.oem_model_number
 
     @property
-    def device_info(self) -> Dict:
+    def device_info(self) -> dict:
         """Device info dictionary."""
         return {
             "identifiers": {(DOMAIN, self.serial_number)},
@@ -136,30 +136,30 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
         return SUPPORT_SHARKIQ
 
     @property
-    def is_docked(self) -> Optional[bool]:
+    def is_docked(self) -> bool | None:
         """Is vacuum docked."""
         return self.sharkiq.get_property_value(Properties.DOCKED_STATUS)
 
     @property
-    def error_code(self) -> Optional[int]:
+    def error_code(self) -> int | None:
         """Return the last observed error code (or None)."""
         return self.sharkiq.error_code
 
     @property
-    def error_message(self) -> Optional[str]:
+    def error_message(self) -> str | None:
         """Return the last observed error message (or None)."""
         if not self.error_code:
             return None
         return self.sharkiq.error_text
 
     @property
-    def operating_mode(self) -> Optional[str]:
+    def operating_mode(self) -> str | None:
         """Operating mode.."""
         op_mode = self.sharkiq.get_property_value(Properties.OPERATING_MODE)
         return OPERATING_STATE_MAP.get(op_mode)
 
     @property
-    def recharging_to_resume(self) -> Optional[int]:
+    def recharging_to_resume(self) -> int | None:
         """Return True if vacuum set to recharge and resume cleaning."""
         return self.sharkiq.get_property_value(Properties.RECHARGING_TO_RESUME)
 
@@ -240,12 +240,12 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
 
     # Various attributes we want to expose
     @property
-    def recharge_resume(self) -> Optional[bool]:
+    def recharge_resume(self) -> bool | None:
         """Recharge and resume mode active."""
         return self.sharkiq.get_property_value(Properties.RECHARGE_RESUME)
 
     @property
-    def rssi(self) -> Optional[int]:
+    def rssi(self) -> int | None:
         """Get the WiFi RSSI."""
         return self.sharkiq.get_property_value(Properties.RSSI)
 
@@ -255,7 +255,7 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
         return self.sharkiq.get_property_value(Properties.LOW_LIGHT_MISSION)
 
     @property
-    def device_state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> dict:
         """Return a dictionary of device state attributes specific to sharkiq."""
         data = {
             ATTR_ERROR_CODE: self.error_code,

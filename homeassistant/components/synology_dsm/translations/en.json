@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host already configured"
+            "already_configured": "Device is already configured"
         },
         "error": {
-            "connection": "Connection error: please check your host, port & ssl",
-            "login": "Login error: please check your username & password",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
             "missing_data": "Missing data: please retry later or an other configuration",
             "otp_failed": "Two-step authentication failed, retry with a new pass code",
-            "unknown": "Unknown error: please check logs to get more details"
+            "unknown": "Unexpected error"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
@@ -22,8 +22,9 @@
                 "data": {
                     "password": "Password",
                     "port": "Port",
-                    "ssl": "Use SSL/TLS to connect to your NAS",
-                    "username": "Username"
+                    "ssl": "Uses an SSL certificate",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
                 },
                 "description": "Do you want to setup {name} ({host})?",
                 "title": "Synology DSM"
@@ -33,8 +34,9 @@
                     "host": "Host",
                     "password": "Password",
                     "port": "Port",
-                    "ssl": "Use SSL/TLS to connect to your NAS",
-                    "username": "Username"
+                    "ssl": "Uses an SSL certificate",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
                 },
                 "title": "Synology DSM"
             }
@@ -44,7 +46,8 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Minutes between scans"
+                    "scan_interval": "Minutes between scans",
+                    "timeout": "Timeout (seconds)"
                 }
             }
         }

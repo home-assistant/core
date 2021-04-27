@@ -12,7 +12,6 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Record the async_add_entities function to add them later when received from Dynalite."""
-
     async_setup_entry_base(
         hass, config_entry, async_add_entities, "light", DynaliteLight
     )

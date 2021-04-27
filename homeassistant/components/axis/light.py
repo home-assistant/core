@@ -18,7 +18,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a Axis light."""
     device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
-    if not device.api.vapix.light_control:
+    if (
+        device.api.vapix.light_control is None
+        or len(device.api.vapix.light_control) == 0
+    ):
         return
 
     @callback
@@ -27,9 +30,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         event = device.api.event[event_id]
 
         if event.CLASS == CLASS_LIGHT and event.TYPE == "Light":
-            async_add_entities([AxisLight(event, device)], True)
+            async_add_entities([AxisLight(event, device)])
 
-    device.listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(hass, device.signal_new_event, async_add_sensor)
     )
 
@@ -52,19 +55,17 @@ class AxisLight(AxisEventBase, LightEntity):
         """Subscribe lights events."""
         await super().async_added_to_hass()
 
-        def get_light_capabilities():
-            """Get light capabilities."""
-            current_intensity = (
-                self.device.api.vapix.light_control.get_current_intensity(self.light_id)
-            )
-            self.current_intensity = current_intensity["data"]["intensity"]
-
-            max_intensity = self.device.api.vapix.light_control.get_valid_intensity(
+        current_intensity = (
+            await self.device.api.vapix.light_control.get_current_intensity(
                 self.light_id
             )
-            self.max_intensity = max_intensity["data"]["ranges"][0]["high"]
+        )
+        self.current_intensity = current_intensity["data"]["intensity"]
 
-        await self.hass.async_add_executor_job(get_light_capabilities)
+        max_intensity = await self.device.api.vapix.light_control.get_valid_intensity(
+            self.light_id
+        )
+        self.max_intensity = max_intensity["data"]["ranges"][0]["high"]
 
     @property
     def supported_features(self):
@@ -87,26 +88,28 @@ class AxisLight(AxisEventBase, LightEntity):
         """Return the brightness of this light between 0..255."""
         return int((self.current_intensity / self.max_intensity) * 255)
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn on light."""
         if not self.is_on:
-            self.device.api.vapix.light_control.activate_light(self.light_id)
+            await self.device.api.vapix.light_control.activate_light(self.light_id)
 
         if ATTR_BRIGHTNESS in kwargs:
             intensity = int((kwargs[ATTR_BRIGHTNESS] / 255) * self.max_intensity)
-            self.device.api.vapix.light_control.set_manual_intensity(
+            await self.device.api.vapix.light_control.set_manual_intensity(
                 self.light_id, intensity
             )
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn off light."""
         if self.is_on:
-            self.device.api.vapix.light_control.deactivate_light(self.light_id)
+            await self.device.api.vapix.light_control.deactivate_light(self.light_id)
 
-    def update(self):
+    async def async_update(self):
         """Update brightness."""
-        current_intensity = self.device.api.vapix.light_control.get_current_intensity(
-            self.light_id
+        current_intensity = (
+            await self.device.api.vapix.light_control.get_current_intensity(
+                self.light_id
+            )
         )
         self.current_intensity = current_intensity["data"]["intensity"]
 

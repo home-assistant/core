@@ -1,14 +1,15 @@
 """Vera tests."""
-from typing import Any, Callable, Tuple
+from __future__ import annotations
+
+from typing import Any, Callable
+from unittest.mock import MagicMock
 
 import pyvera as pv
 
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, LIGHT_LUX, PERCENTAGE
 from homeassistant.core import HomeAssistant
 
 from .common import ComponentFactory, new_simple_controller_config
-
-from tests.async_mock import MagicMock
 
 
 async def run_sensor_test(
@@ -16,13 +17,15 @@ async def run_sensor_test(
     vera_component_factory: ComponentFactory,
     category: int,
     class_property: str,
-    assert_states: Tuple[Tuple[Any, Any]],
+    assert_states: tuple[tuple[Any, Any]],
     assert_unit_of_measurement: str = None,
     setup_callback: Callable[[pv.VeraController], None] = None,
 ) -> None:
     """Test generic sensor."""
-    vera_device = MagicMock(spec=pv.VeraSensor)  # type: pv.VeraSensor
+    vera_device: pv.VeraSensor = MagicMock(spec=pv.VeraSensor)
     vera_device.device_id = 1
+    vera_device.vera_device_id = vera_device.device_id
+    vera_device.comm_failure = False
     vera_device.name = "dev1"
     vera_device.category = category
     setattr(vera_device, class_property, "33")
@@ -34,7 +37,7 @@ async def run_sensor_test(
             devices=(vera_device,), setup_callback=setup_callback
         ),
     )
-    update_callback = component_data.controller_data.update_callback
+    update_callback = component_data.controller_data[0].update_callback
 
     for (initial_value, state_value) in assert_states:
         setattr(vera_device, class_property, initial_value)
@@ -43,7 +46,9 @@ async def run_sensor_test(
         state = hass.states.get(entity_id)
         assert state.state == state_value
         if assert_unit_of_measurement:
-            assert state.attributes["unit_of_measurement"] == assert_unit_of_measurement
+            assert (
+                state.attributes[ATTR_UNIT_OF_MEASUREMENT] == assert_unit_of_measurement
+            )
 
 
 async def test_temperature_sensor_f(
@@ -87,7 +92,7 @@ async def test_light_sensor(
         category=pv.CATEGORY_LIGHT_SENSOR,
         class_property="light",
         assert_states=(("12", "12"), ("13", "13")),
-        assert_unit_of_measurement="lx",
+        assert_unit_of_measurement=LIGHT_LUX,
     )
 
 
@@ -173,8 +178,10 @@ async def test_scene_controller_sensor(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device = MagicMock(spec=pv.VeraSensor)  # type: pv.VeraSensor
+    vera_device: pv.VeraSensor = MagicMock(spec=pv.VeraSensor)
     vera_device.device_id = 1
+    vera_device.vera_device_id = vera_device.device_id
+    vera_device.comm_failure = False
     vera_device.name = "dev1"
     vera_device.category = pv.CATEGORY_SCENE_CONTROLLER
     vera_device.get_last_scene_id = MagicMock(return_value="id0")
@@ -185,7 +192,7 @@ async def test_scene_controller_sensor(
         hass=hass,
         controller_config=new_simple_controller_config(devices=(vera_device,)),
     )
-    update_callback = component_data.controller_data.update_callback
+    update_callback = component_data.controller_data[0].update_callback
 
     vera_device.get_last_scene_time.return_value = "1111"
     update_callback(vera_device)

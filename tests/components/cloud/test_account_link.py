@@ -2,6 +2,7 @@
 import asyncio
 import logging
 from time import time
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -10,7 +11,6 @@ from homeassistant.components.cloud import account_link
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import async_fire_time_changed, mock_platform
 
 TEST_DOMAIN = "oauth2_test"
@@ -44,7 +44,7 @@ async def test_setup_provide_implementation(hass):
         "homeassistant.components.cloud.account_link._get_services",
         return_value=[
             {"service": "test", "min_version": "0.1.0"},
-            {"service": "too_new", "min_version": "100.0.0"},
+            {"service": "too_new", "min_version": "1000000.0.0"},
         ],
     ):
         assert (
@@ -108,7 +108,7 @@ async def test_get_services_error(hass):
         assert account_link.DATA_SERVICES not in hass.data
 
 
-async def test_implementation(hass, flow_handler):
+async def test_implementation(hass, flow_handler, current_request_with_host):
     """Test Cloud OAuth2 implementation."""
     hass.data["cloud"] = None
 

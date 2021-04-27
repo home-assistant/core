@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ta jednostka Home Control Central jest ju\u017c w u\u017cyciu."
+            "already_configured": "Konto jest ju\u017c skonfigurowane"
         },
         "error": {
-            "invalid_credentials": "Nieprawid\u0142owa nazwa u\u017cytkownika i/lub has\u0142o."
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
         "step": {
             "user": {
@@ -12,11 +12,16 @@
                     "home_control_url": "URL Home Control",
                     "mydevolo_url": "URL mydevolo",
                     "password": "Has\u0142o",
-                    "username": "Nazwa u\u017cytkownika"
-                },
-                "title": "devolo Home Control"
+                    "username": "Nazwa u\u017cytkownika/identyfikator devolo"
+                }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "mydevolo_url": "URL mydevolo",
+                    "password": "Has\u0142o",
+                    "username": "Adres e-mail/identyfikator devolo"
+                }
             }
         }
-    },
-    "title": "devolo Home Control"
+    }
 }

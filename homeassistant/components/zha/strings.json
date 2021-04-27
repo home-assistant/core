@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "ZHA: {name}",
     "step": {
       "user": {
         "title": "ZHA",
@@ -21,9 +22,11 @@
         }
       }
     },
-    "error": { "cannot_connect": "Unable to connect to ZHA device." },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "abort": {
-      "single_instance_allowed": "Only a single configuration of ZHA is allowed."
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "device_automation": {

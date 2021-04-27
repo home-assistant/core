@@ -1,11 +1,7 @@
 """Support for interacting with Smappee Comport Plugs, Switches and Output Modules."""
-import logging
-
 from homeassistant.components.switch import SwitchEntity
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SWITCH_PREFIX = "Switch"
 ICON = "mdi:toggle-switch"

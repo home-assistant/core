@@ -1,10 +1,8 @@
 """Platform for beewi_smartclim integration."""
-import logging
-
 from beewi_smartclim import BeewiSmartClimPoller  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
@@ -15,9 +13,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 # Default values
 DEFAULT_NAME = "BeeWi SmartClim"
@@ -60,7 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class BeewiSmartclimSensor(Entity):
+class BeewiSmartclimSensor(SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(self, poller, name, mac, device, unit):

@@ -1,10 +1,14 @@
 """InfluxDB component which allows you to get data from an Influx database."""
+from __future__ import annotations
+
 import logging
-from typing import Dict
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_API_VERSION,
     CONF_NAME,
@@ -15,7 +19,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady, TemplateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from . import create_influx_url, get_influx_connection, validate_version_specific_config
@@ -67,7 +70,7 @@ def _merge_connection_config_into_query(conf, query):
             query[key] = conf[key]
 
 
-def validate_query_format_for_version(conf: Dict) -> Dict:
+def validate_query_format_for_version(conf: dict) -> dict:
     """Ensure queries are provided in correct format based on API version."""
     if conf[CONF_API_VERSION] == API_VERSION_2:
         if CONF_QUERIES_FLUX not in conf:
@@ -168,7 +171,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda _: influx.close())
 
 
-class InfluxSensor(Entity):
+class InfluxSensor(SensorEntity):
     """Implementation of a Influxdb sensor."""
 
     def __init__(self, hass, influx, query):
@@ -224,11 +227,6 @@ class InfluxSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
     def update(self):
         """Get the latest data from Influxdb and updates the states."""
         self.data.update()
@@ -273,7 +271,7 @@ class InfluxFluxSensorData:
         """Get the latest data by querying influx."""
         _LOGGER.debug(RENDERING_QUERY_MESSAGE, self.query)
         try:
-            rendered_query = self.query.render()
+            rendered_query = self.query.render(parse_result=False)
         except TemplateError as ex:
             _LOGGER.error(RENDERING_QUERY_ERROR_MESSAGE, ex)
             return
@@ -317,7 +315,7 @@ class InfluxQLSensorData:
         """Get the latest data with a shell command."""
         _LOGGER.debug(RENDERING_WHERE_MESSAGE, self.where)
         try:
-            where_clause = self.where.render()
+            where_clause = self.where.render(parse_result=False)
         except TemplateError as ex:
             _LOGGER.error(RENDERING_WHERE_ERROR_MESSAGE, ex)
             return

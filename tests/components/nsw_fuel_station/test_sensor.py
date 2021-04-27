@@ -1,11 +1,10 @@
 """The tests for the NSW Fuel Station sensor platform."""
-import unittest
+from unittest.mock import patch
 
 from homeassistant.components import sensor
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
-from tests.common import assert_setup_component, get_test_home_assistant
+from tests.common import assert_setup_component
 
 VALID_CONFIG = {
     "platform": "nsw_fuel_station",
@@ -72,39 +71,33 @@ class FuelCheckClientMock:
         )
 
 
-class TestNSWFuelStation(unittest.TestCase):
-    """Test the NSW Fuel Station sensor platform."""
+@patch(
+    "homeassistant.components.nsw_fuel_station.sensor.FuelCheckClient",
+    new=FuelCheckClientMock,
+)
+async def test_setup(hass):
+    """Test the setup with custom settings."""
+    with assert_setup_component(1, sensor.DOMAIN):
+        assert await async_setup_component(
+            hass, sensor.DOMAIN, {"sensor": VALID_CONFIG}
+        )
+        await hass.async_block_till_done()
 
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.config = VALID_CONFIG
-        self.addCleanup(self.hass.stop)
+    fake_entities = ["my_fake_station_p95", "my_fake_station_e10"]
 
-    @patch(
-        "homeassistant.components.nsw_fuel_station.sensor.FuelCheckClient",
-        new=FuelCheckClientMock,
-    )
-    def test_setup(self):
-        """Test the setup with custom settings."""
-        with assert_setup_component(1, sensor.DOMAIN):
-            assert setup_component(self.hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
-            self.hass.block_till_done()
+    for entity_id in fake_entities:
+        state = hass.states.get(f"sensor.{entity_id}")
+        assert state is not None
 
-        fake_entities = ["my_fake_station_p95", "my_fake_station_e10"]
 
-        for entity_id in fake_entities:
-            state = self.hass.states.get(f"sensor.{entity_id}")
-            assert state is not None
+@patch(
+    "homeassistant.components.nsw_fuel_station.sensor.FuelCheckClient",
+    new=FuelCheckClientMock,
+)
+async def test_sensor_values(hass):
+    """Test retrieval of sensor values."""
+    assert await async_setup_component(hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
+    await hass.async_block_till_done()
 
-    @patch(
-        "homeassistant.components.nsw_fuel_station.sensor.FuelCheckClient",
-        new=FuelCheckClientMock,
-    )
-    def test_sensor_values(self):
-        """Test retrieval of sensor values."""
-        assert setup_component(self.hass, sensor.DOMAIN, {"sensor": VALID_CONFIG})
-        self.hass.block_till_done()
-
-        assert "140.0" == self.hass.states.get("sensor.my_fake_station_e10").state
-        assert "150.0" == self.hass.states.get("sensor.my_fake_station_p95").state
+    assert hass.states.get("sensor.my_fake_station_e10").state == "140.0"
+    assert hass.states.get("sensor.my_fake_station_p95").state == "150.0"

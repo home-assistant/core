@@ -1,33 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "En Insteon-modemtilkobling er allerede konfigurert",
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "select_single": "Velg ett alternativ."
         },
         "step": {
-            "hub1": {
-                "data": {
-                    "host": "Hub-IP-adresse",
-                    "port": "IP-port"
-                },
-                "description": "Konfigurer Insteon Hub versjon 1 (f\u00f8r 2014).",
-                "title": "Insteon Hub versjon 1"
-            },
-            "hub2": {
-                "data": {
-                    "host": "Hub-IP-adresse",
-                    "password": "Passord",
-                    "port": "IP-port",
-                    "username": "Brukernavn"
-                },
-                "description": "Konfigurer Insteon Hub versjon 2.",
-                "title": "Insteon Hub versjon 2"
-            },
             "hubv1": {
                 "data": {
                     "host": "IP adresse",
@@ -46,38 +27,25 @@
                 "description": "Konfigurer Insteon Hub versjon 2.",
                 "title": "Insteon Hub versjon 2"
             },
-            "init": {
-                "data": {
-                    "hubv1": "Hub versjon 1 (f\u00f8r 2014)",
-                    "hubv2": "Hub versjon 2",
-                    "plm": "PowerLink-modem (PLM)"
-                },
-                "description": "Velg Insteon modemtype.",
-                "title": "Insteon"
-            },
             "plm": {
                 "data": {
                     "device": "USB enhetsbane"
                 },
                 "description": "Konfigurer Insteon PowerLink-modem (PLM).",
-                "title": "Insteon PLM"
+                "title": ""
             },
             "user": {
                 "data": {
                     "modem_type": "Modemtype."
                 },
                 "description": "Velg Insteon modemtype.",
-                "title": "Insteon"
+                "title": ""
             }
         }
     },
     "options": {
-        "abort": {
-            "already_configured": "En Insteon-modemtilkobling er allerede konfigurert",
-            "cannot_connect": "Kan ikke koble til Insteon-modemet"
-        },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "input_error": "Ugyldige oppf\u00f8ringer, vennligst sjekk verdiene dine.",
             "select_single": "Velg ett alternativ."
         },
@@ -89,7 +57,7 @@
                     "subcat": "Underkategori for enhet (dvs. 0x0a)"
                 },
                 "description": "Legg til en enhetsoverstyring.",
-                "title": "Insteon"
+                "title": ""
             },
             "add_x10": {
                 "data": {
@@ -99,7 +67,7 @@
                     "unitcode": "Enhetskode (1 - 16)"
                 },
                 "description": "Endre insteon hub-passordet.",
-                "title": "Insteon"
+                "title": ""
             },
             "change_hub_config": {
                 "data": {
@@ -109,7 +77,7 @@
                     "username": "Brukernavn"
                 },
                 "description": "Endre Insteon Hub-tilkoblingsinformasjonen. Du m\u00e5 starte Home Assistant p\u00e5 nytt n\u00e5r du har gjort denne endringen. Dette endrer ikke konfigurasjonen av selve huben. For \u00e5 endre konfigurasjonen i huben bruker du hub-appen.",
-                "title": "Insteon"
+                "title": ""
             },
             "init": {
                 "data": {
@@ -120,21 +88,21 @@
                     "remove_x10": "Fjern en X10-enhet."
                 },
                 "description": "Velg et alternativ for \u00e5 konfigurere.",
-                "title": "Insteon"
+                "title": ""
             },
             "remove_override": {
                 "data": {
                     "address": "Velg en enhetsadresse du vil fjerne"
                 },
                 "description": "Fjerne en enhetsoverstyring",
-                "title": "Insteon"
+                "title": ""
             },
             "remove_x10": {
                 "data": {
                     "address": "Velg en enhetsadresse du vil fjerne"
                 },
                 "description": "Fjern en X10-enhet",
-                "title": "Insteon"
+                "title": ""
             }
         }
     }

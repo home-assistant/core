@@ -7,6 +7,8 @@ from arcam.fmj.state import State
 from homeassistant import config_entries
 from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_MUSIC,
     MEDIA_TYPE_MUSIC,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_PLAY_MEDIA,
@@ -20,8 +22,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
-from homeassistant.core import callback
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant, callback
 
 from .config_flow import get_entry_client
 from .const import (
@@ -36,7 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
     async_add_entities,
 ):
@@ -255,6 +256,7 @@ class ArcamFmj(MediaPlayerEntity):
         radio = [
             BrowseMedia(
                 title=preset.name,
+                media_class=MEDIA_CLASS_MUSIC,
                 media_content_id=f"preset:{preset.index}",
                 media_content_type=MEDIA_TYPE_MUSIC,
                 can_play=True,
@@ -265,6 +267,7 @@ class ArcamFmj(MediaPlayerEntity):
 
         root = BrowseMedia(
             title="Root",
+            media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="root",
             media_content_type="library",
             can_play=False,

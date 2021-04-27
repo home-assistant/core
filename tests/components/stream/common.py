@@ -1,15 +1,9 @@
 """Collection of test helpers."""
 from fractions import Fraction
 import io
-import logging
 
 import av
 import numpy as np
-
-from homeassistant.components.stream import Stream
-from homeassistant.components.stream.const import ATTR_STREAMS, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 AUDIO_SAMPLE_RATE = 8000
 
@@ -46,6 +40,7 @@ def generate_h264_video(container_format="mp4", audio_codec=None):
     stream.width = 480
     stream.height = 320
     stream.pix_fmt = "yuv420p"
+    stream.options.update({"g": str(fps), "keyint_min": str(fps)})
 
     a_packet = None
     last_a_dts = -1
@@ -96,10 +91,3 @@ def generate_h264_video(container_format="mp4", audio_codec=None):
     output.seek(0)
 
     return output
-
-
-def preload_stream(hass, stream_source):
-    """Preload a stream for use in tests."""
-    stream = Stream(hass, stream_source)
-    hass.data[DOMAIN][ATTR_STREAMS][stream_source] = stream
-    return stream

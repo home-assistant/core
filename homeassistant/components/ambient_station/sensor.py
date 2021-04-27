@@ -1,6 +1,5 @@
 """Support for Ambient Weather Station sensors."""
-import logging
-
+from homeassistant.components.sensor import DOMAIN as SENSOR, SensorEntity
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import callback
 
@@ -10,15 +9,7 @@ from . import (
     TYPE_SOLARRADIATION_LX,
     AmbientWeatherEntity,
 )
-from .const import (
-    ATTR_LAST_DATA,
-    ATTR_MONITORED_CONDITIONS,
-    DATA_CLIENT,
-    DOMAIN,
-    TYPE_SENSOR,
-)
-
-_LOGGER = logging.getLogger(__name__)
+from .const import ATTR_LAST_DATA, ATTR_MONITORED_CONDITIONS, DATA_CLIENT, DOMAIN
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -29,7 +20,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     for mac_address, station in ambient.stations.items():
         for condition in station[ATTR_MONITORED_CONDITIONS]:
             name, unit, kind, device_class = SENSOR_TYPES[condition]
-            if kind == TYPE_SENSOR:
+            if kind == SENSOR:
                 sensor_list.append(
                     AmbientWeatherSensor(
                         ambient,
@@ -45,7 +36,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(sensor_list, True)
 
 
-class AmbientWeatherSensor(AmbientWeatherEntity):
+class AmbientWeatherSensor(AmbientWeatherEntity, SensorEntity):
     """Define an Ambient sensor."""
 
     def __init__(

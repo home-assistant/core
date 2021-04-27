@@ -1,27 +1,22 @@
 """Helper methods for various modules."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Coroutine, Iterable, KeysView
 from datetime import datetime, timedelta
 import enum
-from functools import wraps
+from functools import lru_cache, wraps
 import random
 import re
 import socket
 import string
 import threading
 from types import MappingProxyType
-from typing import (
-    Any,
-    Callable,
-    Coroutine,
-    Iterable,
-    KeysView,
-    Optional,
-    TypeVar,
-    Union,
-)
+from typing import Any, Callable, TypeVar
 
 import slugify as unicode_slug
 
+from ..helpers.deprecation import deprecated_function
 from .dt import as_local, utcnow
 
 T = TypeVar("T")
@@ -32,19 +27,64 @@ RE_SANITIZE_FILENAME = re.compile(r"(~|\.\.|/|\\)")
 RE_SANITIZE_PATH = re.compile(r"(~|\.(\.)+)")
 
 
+def raise_if_invalid_filename(filename: str) -> None:
+    """
+    Check if a filename is valid.
+
+    Raises a ValueError if the filename is invalid.
+    """
+    if RE_SANITIZE_FILENAME.sub("", filename) != filename:
+        raise ValueError(f"{filename} is not a safe filename")
+
+
+def raise_if_invalid_path(path: str) -> None:
+    """
+    Check if a path is valid.
+
+    Raises a ValueError if the path is invalid.
+    """
+    if RE_SANITIZE_PATH.sub("", path) != path:
+        raise ValueError(f"{path} is not a safe path")
+
+
+@deprecated_function(replacement="raise_if_invalid_filename")
 def sanitize_filename(filename: str) -> str:
-    r"""Sanitize a filename by removing .. / and \\."""
-    return RE_SANITIZE_FILENAME.sub("", filename)
+    """Check if a filename is safe.
+
+    Only to be used to compare to original filename to check if changed.
+    If result changed, the given path is not safe and should not be used,
+    raise an error.
+
+    DEPRECATED.
+    """
+    # Backwards compatible fix for misuse of method
+    if RE_SANITIZE_FILENAME.sub("", filename) != filename:
+        return ""
+    return filename
 
 
+@deprecated_function(replacement="raise_if_invalid_path")
 def sanitize_path(path: str) -> str:
-    """Sanitize a path by removing ~ and .."""
-    return RE_SANITIZE_PATH.sub("", path)
+    """Check if a path is safe.
+
+    Only to be used to compare to original path to check if changed.
+    If result changed, the given path is not safe and should not be used,
+    raise an error.
+
+    DEPRECATED.
+    """
+    # Backwards compatible fix for misuse of method
+    if RE_SANITIZE_PATH.sub("", path) != path:
+        return ""
+    return path
 
 
 def slugify(text: str, *, separator: str = "_") -> str:
     """Slugify a given text."""
-    return unicode_slug.slugify(text, separator=separator)  # type: ignore
+    if text == "":
+        return ""
+    slug = unicode_slug.slugify(text, separator=separator)
+    return "unknown" if slug == "" else slug
 
 
 def repr_helper(inp: Any) -> str:
@@ -60,8 +100,8 @@ def repr_helper(inp: Any) -> str:
 
 
 def convert(
-    value: Optional[T], to_type: Callable[[T], U], default: Optional[U] = None
-) -> Optional[U]:
+    value: T | None, to_type: Callable[[T], U], default: U | None = None
+) -> U | None:
     """Convert value to to_type, returns default if fails."""
     try:
         return default if value is None else to_type(value)
@@ -71,7 +111,7 @@ def convert(
 
 
 def ensure_unique_string(
-    preferred_string: str, current_strings: Union[Iterable[str], KeysView[str]]
+    preferred_string: str, current_strings: Iterable[str] | KeysView[str]
 ) -> str:
     """Return a string that is not present in current_strings.
 
@@ -90,6 +130,7 @@ def ensure_unique_string(
 
 
 # Taken from: http://stackoverflow.com/a/11735897
+@lru_cache(maxsize=None)
 def get_local_ip() -> str:
     """Try to determine the local IP address of the machine."""
     try:
@@ -167,7 +208,7 @@ class Throttle:
     """
 
     def __init__(
-        self, min_time: timedelta, limit_no_throttle: Optional[timedelta] = None
+        self, min_time: timedelta, limit_no_throttle: timedelta | None = None
     ) -> None:
         """Initialize the throttle."""
         self.min_time = min_time
@@ -207,7 +248,7 @@ class Throttle:
         )
 
         @wraps(method)
-        def wrapper(*args: Any, **kwargs: Any) -> Union[Callable, Coroutine]:
+        def wrapper(*args: Any, **kwargs: Any) -> Callable | Coroutine:
             """Wrap that allows wrapped to be called only once per min_time.
 
             If we cannot acquire the lock, it is running so return None.

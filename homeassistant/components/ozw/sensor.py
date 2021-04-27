@@ -2,7 +2,7 @@
 
 import logging
 
-from openzwavemqtt.const import CommandClass
+from openzwavemqtt.const import CommandClass, ValueType
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     DOMAIN as SENSOR_DOMAIN,
+    SensorEntity,
 )
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
@@ -30,13 +31,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def async_add_sensor(value):
         """Add Z-Wave Sensor."""
         # Basic Sensor types
-        if isinstance(value.primary.value, (float, int)):
+        if value.primary.type in (
+            ValueType.BYTE,
+            ValueType.INT,
+            ValueType.SHORT,
+            ValueType.DECIMAL,
+        ):
             sensor = ZWaveNumericSensor(value)
 
-        elif isinstance(value.primary.value, dict):
+        elif value.primary.type == ValueType.LIST:
             sensor = ZWaveListSensor(value)
 
-        elif isinstance(value.primary.value, str):
+        elif value.primary.type == ValueType.STRING:
             sensor = ZWaveStringSensor(value)
 
         else:
@@ -52,7 +58,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class ZwaveSensorBase(ZWaveDeviceEntity):
+class ZwaveSensorBase(ZWaveDeviceEntity, SensorEntity):
     """Basic Representation of a Z-Wave sensor."""
 
     @property
@@ -144,9 +150,9 @@ class ZWaveListSensor(ZwaveSensorBase):
         return self.values.primary.value["Selected_id"]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
-        attributes = super().device_state_attributes
+        attributes = super().extra_state_attributes
         # add the value's label as property
         attributes["label"] = self.values.primary.value["Selected"]
         return attributes

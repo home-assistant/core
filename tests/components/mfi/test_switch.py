@@ -1,120 +1,124 @@
 """The tests for the mFi switch platform."""
-import unittest
+import unittest.mock as mock
+
+import pytest
 
 import homeassistant.components.mfi.switch as mfi
-import homeassistant.components.switch as switch
-from homeassistant.setup import setup_component
+import homeassistant.components.switch as switch_component
+from homeassistant.setup import async_setup_component
 
-import tests.async_mock as mock
-from tests.common import get_test_home_assistant
-
-
-class TestMfiSwitchSetup(unittest.TestCase):
-    """Test the mFi switch."""
-
-    PLATFORM = mfi
-    COMPONENT = switch
-    THING = "switch"
-    GOOD_CONFIG = {
-        "switch": {
-            "platform": "mfi",
-            "host": "foo",
-            "port": 6123,
-            "username": "user",
-            "password": "pass",
-            "ssl": True,
-            "verify_ssl": True,
-        }
+PLATFORM = mfi
+COMPONENT = switch_component
+THING = "switch"
+GOOD_CONFIG = {
+    "switch": {
+        "platform": "mfi",
+        "host": "foo",
+        "port": 6123,
+        "username": "user",
+        "password": "pass",
+        "ssl": True,
+        "verify_ssl": True,
     }
+}
 
-    def setup_method(self, method):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
 
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    @mock.patch("homeassistant.components.mfi.switch.MFiClient")
-    @mock.patch("homeassistant.components.mfi.switch.MfiSwitch")
-    def test_setup_adds_proper_devices(self, mock_switch, mock_client):
-        """Test if setup adds devices."""
+async def test_setup_adds_proper_devices(hass):
+    """Test if setup adds devices."""
+    with mock.patch(
+        "homeassistant.components.mfi.switch.MFiClient"
+    ) as mock_client, mock.patch(
+        "homeassistant.components.mfi.switch.MfiSwitch", side_effect=mfi.MfiSwitch
+    ) as mock_switch:
         ports = {
-            i: mock.MagicMock(model=model) for i, model in enumerate(mfi.SWITCH_MODELS)
+            i: mock.MagicMock(
+                model=model, label=f"Port {i}", output=False, data={}, ident=f"abcd-{i}"
+            )
+            for i, model in enumerate(mfi.SWITCH_MODELS)
         }
         ports["bad"] = mock.MagicMock(model="notaswitch")
         print(ports["bad"].model)
         mock_client.return_value.get_devices.return_value = [
             mock.MagicMock(ports=ports)
         ]
-        assert setup_component(self.hass, switch.DOMAIN, self.GOOD_CONFIG)
-        self.hass.block_till_done()
+        assert await async_setup_component(hass, COMPONENT.DOMAIN, GOOD_CONFIG)
+        await hass.async_block_till_done()
         for ident, port in ports.items():
             if ident != "bad":
                 mock_switch.assert_any_call(port)
-        assert mock.call(ports["bad"], self.hass) not in mock_switch.mock_calls
+        assert mock.call(ports["bad"], hass) not in mock_switch.mock_calls
 
 
-class TestMfiSwitch(unittest.TestCase):
-    """Test for mFi switch platform."""
+@pytest.fixture(name="port")
+def port_fixture():
+    """Port fixture."""
+    return mock.MagicMock()
 
-    def setup_method(self, method):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.port = mock.MagicMock()
-        self.switch = mfi.MfiSwitch(self.port)
 
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
+@pytest.fixture(name="switch")
+def switch_fixture(port):
+    """Switch fixture."""
+    return mfi.MfiSwitch(port)
 
-    def test_name(self):
-        """Test the name."""
-        assert self.port.label == self.switch.name
 
-    def test_update(self):
-        """Test update."""
-        self.switch.update()
-        assert self.port.refresh.call_count == 1
-        assert self.port.refresh.call_args == mock.call()
+async def test_name(port, switch):
+    """Test the name."""
+    assert port.label == switch.name
 
-    def test_update_with_target_state(self):
-        """Test update with target state."""
-        self.switch._target_state = True
-        self.port.data = {}
-        self.port.data["output"] = "stale"
-        self.switch.update()
-        assert 1.0 == self.port.data["output"]
-        assert self.switch._target_state is None
-        self.port.data["output"] = "untouched"
-        self.switch.update()
-        assert "untouched" == self.port.data["output"]
 
-    def test_turn_on(self):
-        """Test turn_on."""
-        self.switch.turn_on()
-        assert self.port.control.call_count == 1
-        assert self.port.control.call_args == mock.call(True)
-        assert self.switch._target_state
+async def test_update(port, switch):
+    """Test update."""
+    switch.update()
+    assert port.refresh.call_count == 1
+    assert port.refresh.call_args == mock.call()
 
-    def test_turn_off(self):
-        """Test turn_off."""
-        self.switch.turn_off()
-        assert self.port.control.call_count == 1
-        assert self.port.control.call_args == mock.call(False)
-        assert not self.switch._target_state
 
-    def test_current_power_w(self):
-        """Test current power."""
-        self.port.data = {"active_pwr": 10}
-        assert 10 == self.switch.current_power_w
+async def test_update_with_target_state(port, switch):
+    """Test update with target state."""
+    # pylint: disable=protected-access
+    switch._target_state = True
+    port.data = {}
+    port.data["output"] = "stale"
+    switch.update()
+    assert port.data["output"] == 1.0
+    # pylint: disable=protected-access
+    assert switch._target_state is None
+    port.data["output"] = "untouched"
+    switch.update()
+    assert port.data["output"] == "untouched"
 
-    def test_current_power_w_no_data(self):
-        """Test current power if there is no data."""
-        self.port.data = {"notpower": 123}
-        assert 0 == self.switch.current_power_w
 
-    def test_device_state_attributes(self):
-        """Test the state attributes."""
-        self.port.data = {"v_rms": 1.25, "i_rms": 2.75}
-        assert {"volts": 1.2, "amps": 2.8} == self.switch.device_state_attributes
+async def test_turn_on(port, switch):
+    """Test turn_on."""
+    switch.turn_on()
+    assert port.control.call_count == 1
+    assert port.control.call_args == mock.call(True)
+    # pylint: disable=protected-access
+    assert switch._target_state
+
+
+async def test_turn_off(port, switch):
+    """Test turn_off."""
+    switch.turn_off()
+    assert port.control.call_count == 1
+    assert port.control.call_args == mock.call(False)
+    # pylint: disable=protected-access
+    assert not switch._target_state
+
+
+async def test_current_power_w(port, switch):
+    """Test current power."""
+    port.data = {"active_pwr": 10}
+    assert switch.current_power_w == 10
+
+
+async def test_current_power_w_no_data(port, switch):
+    """Test current power if there is no data."""
+    port.data = {"notpower": 123}
+    assert switch.current_power_w == 0
+
+
+async def test_extra_state_attributes(port, switch):
+    """Test the state attributes."""
+    port.data = {"v_rms": 1.25, "i_rms": 2.75}
+    assert switch.extra_state_attributes == {"volts": 1.2, "amps": 2.8}

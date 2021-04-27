@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "\u50c5\u5141\u8a31\u8a2d\u5b9a\u4e00\u7d44 MQTT\u3002"
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
         },
         "error": {
-            "cannot_connect": "\u7121\u6cd5\u9023\u7dda\u81f3 Broker\u3002"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
         "step": {
             "broker": {
@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "\u958b\u555f\u641c\u5c0b"
                 },
-                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Home Assistant \u4ee5\u9023\u7dda\u81f3 Hass.io \u9644\u52a0\u6574\u5408 {addon} \u4e4b MQTT broker\uff1f",
-                "title": "\u4f7f\u7528 Hass.io \u9644\u52a0\u7d44\u4ef6 MQTT Broker"
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Home Assistant \u4ee5\u9023\u7dda\u81f3  MQTT broker\u3002\u9644\u52a0\u5143\u4ef6\u70ba\uff1a{addon} \uff1f",
+                "title": "\u4f7f\u7528 Home Assistant \u9644\u52a0\u5143\u4ef6 MQTT Broker"
             }
         }
     },
@@ -52,7 +52,7 @@
         "error": {
             "bad_birth": "Birth \u4e3b\u984c\u7121\u6548\u3002",
             "bad_will": "Will \u4e3b\u984c\u7121\u6548\u3002",
-            "cannot_connect": "\u7121\u6cd5\u9023\u7dda\u81f3 Broker\u3002"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
         "step": {
             "broker": {
@@ -72,7 +72,7 @@
                     "birth_retain": "Birth \u8a0a\u606f Retain",
                     "birth_topic": "Birth \u8a0a\u606f\u4e3b\u984c",
                     "discovery": "\u958b\u555f\u63a2\u7d22",
-                    "will_enable": "\u958b\u555f Birth \u8a0a\u606f",
+                    "will_enable": "\u958b\u555f Will \u8a0a\u606f",
                     "will_payload": "Will \u8a0a\u606f payload",
                     "will_qos": "Will \u8a0a\u606f QoS",
                     "will_retain": "Will \u8a0a\u606f Retain",

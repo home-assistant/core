@@ -8,13 +8,12 @@ from homeassistant.const import CONF_DEVICES, STATE_ON
 from homeassistant.core import callback
 
 from . import (
-    CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_SIGNAL_REPETITIONS,
     DEFAULT_SIGNAL_REPETITIONS,
     DOMAIN,
-    SIGNAL_EVENT,
     RfxtrxCommandEntity,
+    connect_auto_add,
     get_device_id,
     get_rfx_object,
 )
@@ -25,6 +24,16 @@ DATA_SWITCH = f"{DOMAIN}_switch"
 _LOGGER = logging.getLogger(__name__)
 
 
+def supported(event):
+    """Return whether an event supports switch."""
+    return (
+        isinstance(event.device, rfxtrxmod.LightingDevice)
+        and not event.device.known_to_be_dimmable
+        and not event.device.known_to_be_rollershutter
+        or isinstance(event.device, rfxtrxmod.RfyDevice)
+    )
+
+
 async def async_setup_entry(
     hass,
     config_entry,
@@ -33,14 +42,6 @@ async def async_setup_entry(
     """Set up config entry."""
     discovery_info = config_entry.data
     device_ids = set()
-
-    def supported(event):
-        return (
-            isinstance(event.device, rfxtrxmod.LightingDevice)
-            and not event.device.known_to_be_dimmable
-            and not event.device.known_to_be_rollershutter
-            or isinstance(event.device, rfxtrxmod.RfyDevice)
-        )
 
     # Add switch from config file
     entities = []
@@ -90,8 +91,7 @@ async def async_setup_entry(
         async_add_entities([entity])
 
     # Subscribe to main RFXtrx events
-    if discovery_info[CONF_AUTOMATIC_ADD]:
-        hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_EVENT, switch_update)
+    connect_auto_add(hass, discovery_info, switch_update)
 
 
 class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):

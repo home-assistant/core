@@ -20,6 +20,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.const import (
+    CONF_COVERS,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
@@ -29,22 +30,28 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OPEN,
+    STATE_OPENING,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
+from .const import CONF_AVAILABILITY_TEMPLATE
 from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
-_VALID_STATES = [STATE_OPEN, STATE_CLOSED, "true", "false"]
-
-CONF_COVERS = "covers"
+_VALID_STATES = [
+    STATE_OPEN,
+    STATE_OPENING,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    "true",
+    "false",
+]
 
 CONF_POSITION_TEMPLATE = "position_template"
 CONF_TILT_TEMPLATE = "tilt_template"
@@ -152,8 +159,6 @@ async def _async_create_entities(hass, config):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Template cover."""
-
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     async_add_entities(await _async_create_entities(hass, config))
 
 
@@ -214,12 +219,13 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         self._optimistic = optimistic or (not state_template and not position_template)
         self._tilt_optimistic = tilt_optimistic or not tilt_template
         self._position = None
+        self._is_opening = False
+        self._is_closing = False
         self._tilt_value = None
         self._unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-
         if self._template:
             self.add_template_attribute(
                 "_position", self._template, None, self._update_state
@@ -249,15 +255,20 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             self._position = None
             return
 
-        if result in _VALID_STATES:
-            if result in ("true", STATE_OPEN):
+        state = str(result).lower()
+
+        if state in _VALID_STATES:
+            if state in ("true", STATE_OPEN):
                 self._position = 100
             else:
                 self._position = 0
+
+            self._is_opening = state == STATE_OPENING
+            self._is_closing = state == STATE_CLOSING
         else:
             _LOGGER.error(
                 "Received invalid cover is_on state: %s. Expected: %s",
-                result,
+                state,
                 ", ".join(_VALID_STATES),
             )
             self._position = None
@@ -312,6 +323,16 @@ class CoverTemplate(TemplateEntity, CoverEntity):
     def is_closed(self):
         """Return if the cover is closed."""
         return self._position == 0
+
+    @property
+    def is_opening(self):
+        """Return if the cover is currently opening."""
+        return self._is_opening
+
+    @property
+    def is_closing(self):
+        """Return if the cover is currently closing."""
+        return self._is_closing
 
     @property
     def current_cover_position(self):

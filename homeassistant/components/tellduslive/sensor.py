@@ -1,23 +1,22 @@
 """Support for Tellstick Net/Telstick Live sensors."""
-import logging
-
 from homeassistant.components import sensor, tellduslive
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    LENGTH_MILLIMETERS,
+    LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
+    PRECIPITATION_MILLIMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
-    TIME_HOURS,
     UV_INDEX,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .entry import TelldusLiveEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPE_TEMPERATURE = "temp"
 SENSOR_TYPE_HUMIDITY = "humidity"
@@ -40,14 +39,19 @@ SENSOR_TYPES = {
         DEVICE_CLASS_TEMPERATURE,
     ],
     SENSOR_TYPE_HUMIDITY: ["Humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY],
-    SENSOR_TYPE_RAINRATE: ["Rain rate", f"mm/{TIME_HOURS}", "mdi:water", None],
-    SENSOR_TYPE_RAINTOTAL: ["Rain total", "mm", "mdi:water", None],
+    SENSOR_TYPE_RAINRATE: [
+        "Rain rate",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
+        "mdi:water",
+        None,
+    ],
+    SENSOR_TYPE_RAINTOTAL: ["Rain total", LENGTH_MILLIMETERS, "mdi:water", None],
     SENSOR_TYPE_WINDDIRECTION: ["Wind direction", "", "", None],
     SENSOR_TYPE_WINDAVERAGE: ["Wind average", SPEED_METERS_PER_SECOND, "", None],
     SENSOR_TYPE_WINDGUST: ["Wind gust", SPEED_METERS_PER_SECOND, "", None],
     SENSOR_TYPE_UV: ["UV", UV_INDEX, "", None],
     SENSOR_TYPE_WATT: ["Power", POWER_WATT, "", None],
-    SENSOR_TYPE_LUMINANCE: ["Luminance", "lx", None, DEVICE_CLASS_ILLUMINANCE],
+    SENSOR_TYPE_LUMINANCE: ["Luminance", LIGHT_LUX, None, DEVICE_CLASS_ILLUMINANCE],
     SENSOR_TYPE_DEW_POINT: ["Dew Point", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
     SENSOR_TYPE_BAROMETRIC_PRESSURE: ["Barometric Pressure", "kPa", "", None],
 }
@@ -68,7 +72,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class TelldusLiveSensor(TelldusLiveEntity):
+class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
     """Representation of a Telldus Live sensor."""
 
     @property

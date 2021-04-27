@@ -2,7 +2,9 @@
 import base64
 import copy
 import logging
+from unittest.mock import patch
 
+from androidtv.constants import APPS as ANDROIDTV_APPS
 from androidtv.exceptions import LockNotAcquiredException
 import pytest
 
@@ -57,7 +59,6 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.components.androidtv import patchers
 
 SHELL_RESPONSE_OFF = ""
@@ -341,12 +342,14 @@ async def _test_sources(hass, config0):
             "hdmi",
             False,
             1,
+            "HW5",
         )
     else:
         patch_update = patchers.patch_firetv_update(
             "playing",
             "com.app.test1",
             ["com.app.test1", "com.app.test2", "com.app.test3", "com.app.test4"],
+            "HW5",
         )
 
     with patch_update:
@@ -365,12 +368,14 @@ async def _test_sources(hass, config0):
             "hdmi",
             True,
             0,
+            "HW5",
         )
     else:
         patch_update = patchers.patch_firetv_update(
             "playing",
             "com.app.test2",
             ["com.app.test2", "com.app.test1", "com.app.test3", "com.app.test4"],
+            "HW5",
         )
 
     with patch_update:
@@ -428,6 +433,7 @@ async def _test_exclude_sources(hass, config0, expected_sources):
             "hdmi",
             False,
             1,
+            "HW5",
         )
     else:
         patch_update = patchers.patch_firetv_update(
@@ -440,6 +446,7 @@ async def _test_exclude_sources(hass, config0, expected_sources):
                 "com.app.test4",
                 "com.app.test5",
             ],
+            "HW5",
         )
 
     with patch_update:
@@ -470,7 +477,11 @@ async def test_firetv_exclude_sources(hass):
 async def _test_select_source(hass, config0, source, expected_arg, method_patch):
     """Test that the methods for launching and stopping apps are called correctly when selecting a source."""
     config = copy.deepcopy(config0)
-    config[DOMAIN][CONF_APPS] = {"com.app.test1": "TEST 1", "com.app.test3": None}
+    config[DOMAIN][CONF_APPS] = {
+        "com.app.test1": "TEST 1",
+        "com.app.test3": None,
+        "com.youtube.test": "YouTube",
+    }
     patch_key, entity_id = _setup(config)
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
@@ -535,6 +546,20 @@ async def test_androidtv_select_source_launch_app_hidden(hass):
         CONFIG_ANDROIDTV_ADB_SERVER,
         "com.app.test3",
         "com.app.test3",
+        patchers.PATCH_LAUNCH_APP,
+    )
+
+
+async def test_androidtv_select_source_overridden_app_name(hass):
+    """Test that when an app name is overridden via the `apps` configuration parameter, the app is launched correctly."""
+    # Evidence that the default YouTube app ID will be overridden
+    assert "YouTube" in ANDROIDTV_APPS.values()
+    assert "com.youtube.test" not in ANDROIDTV_APPS
+    assert await _test_select_source(
+        hass,
+        CONFIG_ANDROIDTV_ADB_SERVER,
+        "YouTube",
+        "com.youtube.test",
         patchers.PATCH_LAUNCH_APP,
     )
 
@@ -908,12 +933,11 @@ async def test_update_lock_not_acquired(hass):
     with patch(
         "androidtv.androidtv.androidtv_async.AndroidTVAsync.update",
         side_effect=LockNotAcquiredException,
-    ):
-        with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
-            await hass.helpers.entity_component.async_update_entity(entity_id)
-            state = hass.states.get(entity_id)
-            assert state is not None
-            assert state.state == STATE_OFF
+    ), patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_OFF
 
     with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
         await hass.helpers.entity_component.async_update_entity(entity_id)
@@ -1064,6 +1088,21 @@ async def test_get_image(hass, hass_ws_client):
     assert msg["result"]["content_type"] == "image/png"
     assert msg["result"]["content"] == base64.b64encode(b"image").decode("utf-8")
 
+    with patch(
+        "androidtv.basetv.basetv_async.BaseTVAsync.adb_screencap",
+        side_effect=RuntimeError,
+    ):
+        await client.send_json(
+            {"id": 6, "type": "media_player_thumbnail", "entity_id": entity_id}
+        )
+
+        msg = await client.receive_json()
+
+        # The device is unavailable, but getting the media image did not cause an exception
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE
+
 
 async def _test_service(
     hass,
@@ -1166,19 +1205,18 @@ async def test_connection_closed_on_ha_stop(hass):
     """Test that the ADB socket connection is closed when HA stops."""
     patch_key, entity_id = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
 
-    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[patch_key]:
-        with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
-            assert await async_setup_component(
-                hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER
-            )
-            await hass.async_block_till_done()
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
+        await hass.async_block_till_done()
 
-            with patch(
-                "androidtv.androidtv.androidtv_async.AndroidTVAsync.adb_close"
-            ) as adb_close:
-                hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-                await hass.async_block_till_done()
-                assert adb_close.called
+        with patch(
+            "androidtv.androidtv.androidtv_async.AndroidTVAsync.adb_close"
+        ) as adb_close:
+            hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+            await hass.async_block_till_done()
+            assert adb_close.called
 
 
 async def test_exception(hass):

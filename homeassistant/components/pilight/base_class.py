@@ -1,6 +1,4 @@
 """Base class for pilight."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.pilight import DOMAIN, EVENT, SERVICE_NAME
@@ -27,8 +25,6 @@ from .const import (
     CONF_UNIT,
     CONF_UNITCODE,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 COMMAND_SCHEMA = vol.Schema(
     {

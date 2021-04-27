@@ -1,17 +1,13 @@
 """Support for ThinkingCleaner sensors."""
 from datetime import timedelta
-import logging
 
 from pythinkingcleaner import Discovery, ThinkingCleaner
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_HOST, PERCENTAGE
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
@@ -76,7 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev)
 
 
-class ThinkingCleanerSensor(Entity):
+class ThinkingCleanerSensor(SensorEntity):
     """Representation of a ThinkingCleaner Sensor."""
 
     def __init__(self, tc_object, sensor_type, update_devices):
@@ -91,7 +87,7 @@ class ThinkingCleanerSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._tc_object.name, SENSOR_TYPES[self.type][0])
+        return f"{self._tc_object.name} {SENSOR_TYPES[self.type][0]}"
 
     @property
     def icon(self):

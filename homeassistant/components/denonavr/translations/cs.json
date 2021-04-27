@@ -1,7 +1,37 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nakonfigurov\u00e1no"
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
+            "cannot_connect": "P\u0159ipojen\u00ed se nezda\u0159ilo, zkuste to pros\u00edm znovu - odpojen\u00ed napajec\u00edch a ethernetov\u00fdch kabel\u016f a jejich op\u011btovn\u00e9 p\u0159ipojen\u00ed m\u016f\u017ee pomoci",
+            "not_denonavr_manufacturer": "Nejedn\u00e1 se o s\u00ed\u0165ov\u00fd p\u0159ij\u00edma\u010d Denon AVR, objeven\u00fd v\u00fdrobce se neshoduje",
+            "not_denonavr_missing": "Nejedn\u00e1 se o s\u00ed\u0165ov\u00fd p\u0159ij\u00edma\u010d Denon AVR, informace o zji\u0161\u0165ov\u00e1n\u00ed nejsou \u00fapln\u00e9"
+        },
+        "error": {
+            "discovery_error": "Nepoda\u0159ilo se naj\u00edt s\u00ed\u0165ov\u00fd p\u0159ij\u00edma\u010d Denon AVR"
+        },
+        "flow_title": "S\u00ed\u0165ov\u00fd p\u0159ij\u00edma\u010d Denon AVR: {name}",
+        "step": {
+            "confirm": {
+                "description": "Potvr\u010fte pros\u00edm p\u0159id\u00e1n\u00ed p\u0159ij\u00edma\u010de",
+                "title": "S\u00ed\u0165ov\u00e9 p\u0159ij\u00edma\u010de Denon AVR"
+            },
+            "user": {
+                "data": {
+                    "host": "IP adresa"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_all_sources": "Zobrazit v\u0161echny zdroje",
+                    "zone2": "Nastavte z\u00f3nu 2",
+                    "zone3": "Nastavte z\u00f3nu 3"
+                }
+            }
         }
     }
 }

@@ -1,6 +1,4 @@
 """Support for Nexia / Trane XL thermostats."""
-import logging
-
 from nexia.const import (
     OPERATION_MODE_AUTO,
     OPERATION_MODE_COOL,
@@ -81,8 +79,6 @@ SET_HUMIDITY_SCHEMA = vol.Schema(
     }
 )
 
-
-_LOGGER = logging.getLogger(__name__)
 
 #
 # Nexia has two bits to determine hvac mode
@@ -338,12 +334,19 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
             new_cool_temp = min_temp + deadband
 
         # Check that we're within the deadband range, fix it if we're not
-        if new_heat_temp and new_heat_temp != cur_heat_temp:
-            if new_cool_temp - new_heat_temp < deadband:
-                new_cool_temp = new_heat_temp + deadband
-        if new_cool_temp and new_cool_temp != cur_cool_temp:
-            if new_cool_temp - new_heat_temp < deadband:
-                new_heat_temp = new_cool_temp - deadband
+        if (
+            new_heat_temp
+            and new_heat_temp != cur_heat_temp
+            and new_cool_temp - new_heat_temp < deadband
+        ):
+            new_cool_temp = new_heat_temp + deadband
+
+        if (
+            new_cool_temp
+            and new_cool_temp != cur_cool_temp
+            and new_cool_temp - new_heat_temp < deadband
+        ):
+            new_heat_temp = new_cool_temp - deadband
 
         self._zone.set_heat_cool_temp(
             heat_temperature=new_heat_temp,
@@ -358,9 +361,9 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         return self._thermostat.is_emergency_heat_active()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
-        data = super().device_state_attributes
+        data = super().extra_state_attributes
 
         data[ATTR_ZONE_STATUS] = self._zone.get_status()
 

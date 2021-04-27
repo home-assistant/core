@@ -1,17 +1,17 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne WLED-enheten er allerede konfigurert.",
-            "connection_error": "Kunne ikke koble til WLED-enheten."
+            "already_configured": "Enheten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "error": {
-            "connection_error": "Kunne ikke koble til WLED-enheten."
+            "cannot_connect": "Tilkobling mislyktes"
         },
-        "flow_title": "WLED: {name}",
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {
-                    "host": "Vert "
+                    "host": "Vert"
                 },
                 "description": "Sett opp WLED til \u00e5 integreres med Home Assistant."
             },

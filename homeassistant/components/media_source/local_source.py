@@ -1,17 +1,19 @@
 """Local Media Source Implementation."""
+from __future__ import annotations
+
 import mimetypes
 from pathlib import Path
-from typing import Tuple
 
 from aiohttp import web
 
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.util import sanitize_path
+from homeassistant.util import raise_if_invalid_path
 
-from .const import DOMAIN, MEDIA_MIME_TYPES
+from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
 
 
@@ -20,26 +22,7 @@ def async_setup(hass: HomeAssistant):
     """Set up local media source."""
     source = LocalSource(hass)
     hass.data[DOMAIN][DOMAIN] = source
-    hass.http.register_view(LocalMediaView(hass))
-
-
-@callback
-def async_parse_identifier(item: MediaSourceItem) -> Tuple[str, str]:
-    """Parse identifier."""
-    if not item.identifier:
-        source_dir_id = "media"
-        location = ""
-
-    else:
-        source_dir_id, location = item.identifier.lstrip("/").split("/", 1)
-
-    if source_dir_id != "media":
-        raise Unresolvable("Unknown source directory.")
-
-    if location != sanitize_path(location):
-        raise Unresolvable("Invalid path.")
-
-    return source_dir_id, location
+    hass.http.register_view(LocalMediaView(hass, source))
 
 
 class LocalSource(MediaSource):
@@ -55,22 +38,43 @@ class LocalSource(MediaSource):
     @callback
     def async_full_path(self, source_dir_id, location) -> Path:
         """Return full path."""
-        return self.hass.config.path("media", location)
+        return Path(self.hass.config.media_dirs[source_dir_id], location)
+
+    @callback
+    def async_parse_identifier(self, item: MediaSourceItem) -> tuple[str, str]:
+        """Parse identifier."""
+        if not item.identifier:
+            # Empty source_dir_id and location
+            return "", ""
+
+        source_dir_id, location = item.identifier.split("/", 1)
+        if source_dir_id not in self.hass.config.media_dirs:
+            raise Unresolvable("Unknown source directory.")
+
+        try:
+            raise_if_invalid_path(location)
+        except ValueError as err:
+            raise Unresolvable("Invalid path.") from err
+
+        return source_dir_id, location
 
     async def async_resolve_media(self, item: MediaSourceItem) -> str:
         """Resolve media to a url."""
-        source_dir_id, location = async_parse_identifier(item)
+        source_dir_id, location = self.async_parse_identifier(item)
+        if source_dir_id == "" or source_dir_id not in self.hass.config.media_dirs:
+            raise Unresolvable("Unknown source directory.")
+
         mime_type, _ = mimetypes.guess_type(
-            self.async_full_path(source_dir_id, location)
+            str(self.async_full_path(source_dir_id, location))
         )
-        return PlayMedia(item.identifier, mime_type)
+        return PlayMedia(f"/media/{item.identifier}", mime_type)
 
     async def async_browse_media(
-        self, item: MediaSourceItem, media_types: Tuple[str] = MEDIA_MIME_TYPES
+        self, item: MediaSourceItem, media_types: tuple[str] = MEDIA_MIME_TYPES
     ) -> BrowseMediaSource:
         """Return media."""
         try:
-            source_dir_id, location = async_parse_identifier(item)
+            source_dir_id, location = self.async_parse_identifier(item)
         except Unresolvable as err:
             raise BrowseError(str(err)) from err
 
@@ -78,11 +82,41 @@ class LocalSource(MediaSource):
             self._browse_media, source_dir_id, location
         )
 
-    def _browse_media(self, source_dir_id, location):
+    def _browse_media(self, source_dir_id: str, location: Path):
         """Browse media."""
-        full_path = Path(self.hass.config.path("media", location))
+
+        # If only one media dir is configured, use that as the local media root
+        if source_dir_id == "" and len(self.hass.config.media_dirs) == 1:
+            source_dir_id = list(self.hass.config.media_dirs)[0]
+
+        # Multiple folder, root is requested
+        if source_dir_id == "":
+            if location:
+                raise BrowseError("Folder not found.")
+
+            base = BrowseMediaSource(
+                domain=DOMAIN,
+                identifier="",
+                media_class=MEDIA_CLASS_DIRECTORY,
+                media_content_type=None,
+                title=self.name,
+                can_play=False,
+                can_expand=True,
+                children_media_class=MEDIA_CLASS_DIRECTORY,
+            )
+
+            base.children = [
+                self._browse_media(source_dir_id, "")
+                for source_dir_id in self.hass.config.media_dirs
+            ]
+
+            return base
+
+        full_path = Path(self.hass.config.media_dirs[source_dir_id], location)
 
         if not full_path.exists():
+            if location == "":
+                raise BrowseError("Media directory does not exist.")
             raise BrowseError("Path does not exist.")
 
         if not full_path.is_dir():
@@ -109,10 +143,15 @@ class LocalSource(MediaSource):
         if is_dir:
             title += "/"
 
+        media_class = MEDIA_CLASS_MAP.get(
+            mime_type and mime_type.split("/")[0], MEDIA_CLASS_DIRECTORY
+        )
+
         media = BrowseMediaSource(
             domain=DOMAIN,
-            identifier=f"{source_dir_id}/{path.relative_to(self.hass.config.path('media'))}",
-            media_content_type="directory",
+            identifier=f"{source_dir_id}/{path.relative_to(self.hass.config.media_dirs[source_dir_id])}",
+            media_class=media_class,
+            media_content_type=mime_type or "",
             title=title,
             can_play=is_file,
             can_expand=is_dir,
@@ -128,6 +167,9 @@ class LocalSource(MediaSource):
             if child:
                 media.children.append(child)
 
+        # Sort children showing directories first, then by name
+        media.children.sort(key=lambda child: (child.can_play, child.title))
+
         return media
 
 
@@ -138,19 +180,27 @@ class LocalMediaView(HomeAssistantView):
     Returns media files in config/media.
     """
 
-    url = "/media/{location:.*}"
+    url = "/media/{source_dir_id}/{location:.*}"
     name = "media"
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant, source: LocalSource):
         """Initialize the media view."""
         self.hass = hass
+        self.source = source
 
-    async def get(self, request: web.Request, location: str) -> web.FileResponse:
+    async def get(
+        self, request: web.Request, source_dir_id: str, location: str
+    ) -> web.FileResponse:
         """Start a GET request."""
-        if location != sanitize_path(location):
-            return web.HTTPNotFound()
+        try:
+            raise_if_invalid_path(location)
+        except ValueError as err:
+            raise web.HTTPBadRequest() from err
 
-        media_path = Path(self.hass.config.path("media", location))
+        if source_dir_id not in self.hass.config.media_dirs:
+            raise web.HTTPNotFound()
+
+        media_path = self.source.async_full_path(source_dir_id, location)
 
         # Check that the file exists
         if not media_path.is_file():

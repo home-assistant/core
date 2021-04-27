@@ -1,22 +1,21 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Tibber \u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002"
+            "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
-            "connection_error": "\u9023\u7dda\u81f3 Tibber \u932f\u8aa4",
-            "invalid_access_token": "\u5b58\u53d6\u5bc6\u9470\u7121\u6548",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_access_token": "\u5b58\u53d6\u6b0a\u6756\u7121\u6548",
             "timeout": "\u9023\u7dda\u81f3 Tibber \u903e\u6642"
         },
         "step": {
             "user": {
                 "data": {
-                    "access_token": "\u5b58\u53d6\u5bc6\u9470"
+                    "access_token": "\u5b58\u53d6\u6b0a\u6756"
                 },
-                "description": "\u8f38\u5165\u7531 https://developer.tibber.com/settings/accesstoken \u6240\u7372\u5f97\u7684\u5b58\u53d6\u5bc6\u9470",
+                "description": "\u8f38\u5165\u7531 https://developer.tibber.com/settings/accesstoken \u6240\u7372\u5f97\u7684\u5b58\u53d6\u6b0a\u6756",
                 "title": "Tibber"
             }
         }
-    },
-    "title": "Tibber"
+    }
 }

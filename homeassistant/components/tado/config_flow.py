@@ -9,8 +9,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
-from .const import CONF_FALLBACK, UNIQUE_ID
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import CONF_FALLBACK, DOMAIN, UNIQUE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_homekit(self, homekit_info):
+    async def async_step_homekit(self, discovery_info):
         """Handle HomeKit discovery."""
         if self._async_current_entries():
             # We can see tado on the network to tell them to configure
@@ -93,16 +92,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # add a new one via "+"
             return self.async_abort(reason="already_configured")
         properties = {
-            key.lower(): value for (key, value) in homekit_info["properties"].items()
+            key.lower(): value for (key, value) in discovery_info["properties"].items()
         }
         await self.async_set_unique_id(properties["id"])
         return await self.async_step_user()
-
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        if self._username_already_configured(user_input):
-            return self.async_abort(reason="already_configured")
-        return await self.async_step_user(user_input)
 
     def _username_already_configured(self, user_input):
         """See if we already have a username matching user input configured."""

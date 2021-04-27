@@ -6,7 +6,9 @@ from datetime import timedelta
 import logging
 from types import MappingProxyType
 from unittest import mock
+from unittest.mock import patch
 
+from async_timeout import timeout
 import pytest
 import voluptuous as vol
 
@@ -14,11 +16,13 @@ import voluptuous as vol
 from homeassistant import exceptions
 import homeassistant.components.scene as scene
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
-from homeassistant.core import Context, CoreState, callback
-from homeassistant.helpers import config_validation as cv, script
+from homeassistant.core import SERVICE_CALL_LIMIT, Context, CoreState, callback
+from homeassistant.exceptions import ConditionError, ServiceNotFound
+from homeassistant.helpers import config_validation as cv, script, trace
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import (
     async_capture_events,
     async_fire_time_changed,
@@ -26,6 +30,76 @@ from tests.common import (
 )
 
 ENTITY_ID = "script.test"
+
+
+@pytest.fixture(autouse=True)
+def prepare_tracing():
+    """Prepare tracing."""
+    trace.trace_get()
+
+
+def compare_trigger_item(actual_trigger, expected_trigger):
+    """Compare trigger data description."""
+    assert actual_trigger["description"] == expected_trigger["description"]
+
+
+def compare_result_item(key, actual, expected):
+    """Compare an item in the result dict."""
+    if key == "wait" and (expected.get("trigger") is not None):
+        assert "trigger" in actual
+        expected_trigger = expected.pop("trigger")
+        actual_trigger = actual.pop("trigger")
+        compare_trigger_item(actual_trigger, expected_trigger)
+
+    assert actual == expected
+
+
+def assert_element(trace_element, expected_element, path):
+    """Assert a trace element is as expected.
+
+    Note: Unused variable 'path' is passed to get helpful errors from pytest.
+    """
+    expected_result = expected_element.get("result", {})
+
+    # Check that every item in expected_element is present and equal in trace_element
+    # The redundant set operation gives helpful errors from pytest
+    assert not set(expected_result) - set(trace_element._result or {})
+    for result_key, result in expected_result.items():
+        compare_result_item(result_key, trace_element._result[result_key], result)
+        assert trace_element._result[result_key] == result
+
+    # Check for unexpected items in trace_element
+    assert not set(trace_element._result or {}) - set(expected_result)
+
+    if "error_type" in expected_element:
+        assert isinstance(trace_element._error, expected_element["error_type"])
+    else:
+        assert trace_element._error is None
+
+    # Don't check variables when script starts
+    if trace_element.path == "0":
+        return
+
+    if "variables" in expected_element:
+        assert expected_element["variables"] == trace_element._variables
+    else:
+        assert not trace_element._variables
+
+
+def assert_action_trace(expected, expected_script_execution="finished"):
+    """Assert a trace condition sequence is as expected."""
+    action_trace = trace.trace_get(clear=False)
+    script_execution = trace.script_execution_get()
+    trace.trace_clear()
+    expected_trace_keys = list(expected.keys())
+    assert list(action_trace.keys()) == expected_trace_keys
+    for trace_key_index, key in enumerate(expected_trace_keys):
+        assert len(action_trace[key]) == len(expected[key])
+        for index, element in enumerate(expected[key]):
+            path = f"[{trace_key_index}][{index}]"
+            assert_element(action_trace[key][index], element, path)
+
+    assert script_execution == expected_script_execution
 
 
 def async_watch_for_action(script_obj, message):
@@ -38,6 +112,7 @@ def async_watch_for_action(script_obj, message):
             flag.set()
 
     script_obj.change_listener = check_action
+    assert script_obj.change_listener is check_action
     return flag
 
 
@@ -47,9 +122,17 @@ async def test_firing_event_basic(hass, caplog):
     context = Context()
     events = async_capture_events(hass, event)
 
-    sequence = cv.SCRIPT_SCHEMA({"event": event, "event_data": {"hello": "world"}})
+    alias = "event step"
+    sequence = cv.SCRIPT_SCHEMA(
+        {"alias": alias, "event": event, "event_data": {"hello": "world"}}
+    )
+
     script_obj = script.Script(
-        hass, sequence, "Test Name", "test_domain", running_description="test script"
+        hass,
+        sequence,
+        "Test Name",
+        "test_domain",
+        running_description="test script",
     )
 
     await script_obj.async_run(context=context)
@@ -60,6 +143,15 @@ async def test_firing_event_basic(hass, caplog):
     assert events[0].data.get("hello") == "world"
     assert ".test_name:" in caplog.text
     assert "Test Name: Running test script" in caplog.text
+    assert f"Executing step {alias}" in caplog.text
+
+    assert_action_trace(
+        {
+            "0": [
+                {"result": {"event": "test_event", "event_data": {"hello": "world"}}},
+            ],
+        }
+    )
 
 
 async def test_firing_event_template(hass):
@@ -103,13 +195,34 @@ async def test_firing_event_template(hass):
         "list2": ["yes", "yesyes"],
     }
 
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "result": {
+                        "event": "test_event",
+                        "event_data": {
+                            "dict": {1: "yes", 2: "yesyes", 3: "yesyesyes"},
+                            "dict2": {1: "yes", 2: "yesyes", 3: "yesyesyes"},
+                            "list": ["yes", "yesyes"],
+                            "list2": ["yes", "yesyes"],
+                        },
+                    }
+                }
+            ],
+        }
+    )
 
-async def test_calling_service_basic(hass):
+
+async def test_calling_service_basic(hass, caplog):
     """Test the calling of a service."""
     context = Context()
     calls = async_mock_service(hass, "test", "script")
 
-    sequence = cv.SCRIPT_SCHEMA({"service": "test.script", "data": {"hello": "world"}})
+    alias = "service step"
+    sequence = cv.SCRIPT_SCHEMA(
+        {"alias": alias, "service": "test.script", "data": {"hello": "world"}}
+    )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
     await script_obj.async_run(context=context)
@@ -118,6 +231,26 @@ async def test_calling_service_basic(hass):
     assert len(calls) == 1
     assert calls[0].context is context
     assert calls[0].data.get("hello") == "world"
+    assert f"Executing step {alias}" in caplog.text
+
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "result": {
+                        "limit": SERVICE_CALL_LIMIT,
+                        "params": {
+                            "domain": "test",
+                            "service": "script",
+                            "service_data": {"hello": "world"},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    }
+                }
+            ],
+        }
+    )
 
 
 async def test_calling_service_template(hass):
@@ -153,6 +286,25 @@ async def test_calling_service_template(hass):
     assert calls[0].context is context
     assert calls[0].data.get("hello") == "world"
 
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "result": {
+                        "limit": SERVICE_CALL_LIMIT,
+                        "params": {
+                            "domain": "test",
+                            "service": "script",
+                            "service_data": {"hello": "world"},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    }
+                }
+            ],
+        }
+    )
+
 
 async def test_data_template_with_templated_key(hass):
     """Test the calling of a service with a data_template with a templated key."""
@@ -171,7 +323,26 @@ async def test_data_template_with_templated_key(hass):
 
     assert len(calls) == 1
     assert calls[0].context is context
-    assert "hello" in calls[0].data
+    assert calls[0].data.get("hello") == "world"
+
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "result": {
+                        "limit": SERVICE_CALL_LIMIT,
+                        "params": {
+                            "domain": "test",
+                            "service": "script",
+                            "service_data": {"hello": "world"},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    }
+                }
+            ],
+        }
+    )
 
 
 async def test_multiple_runs_no_wait(hass):
@@ -193,8 +364,8 @@ async def test_multiple_runs_no_wait(hass):
 
         calls.append(service)
         logger.debug("simulated service (%s:%s) started", fire, listen)
-        unsub = hass.bus.async_listen(listen, service_done_cb)
-        hass.bus.async_fire(fire)
+        unsub = hass.bus.async_listen(str(listen), service_done_cb)
+        hass.bus.async_fire(str(fire))
         await service_done.wait()
         unsub()
 
@@ -247,12 +418,13 @@ async def test_multiple_runs_no_wait(hass):
     assert len(calls) == 4
 
 
-async def test_activating_scene(hass):
+async def test_activating_scene(hass, caplog):
     """Test the activation of a scene."""
     context = Context()
     calls = async_mock_service(hass, scene.DOMAIN, SERVICE_TURN_ON)
 
-    sequence = cv.SCRIPT_SCHEMA({"scene": "scene.hello"})
+    alias = "scene step"
+    sequence = cv.SCRIPT_SCHEMA({"alias": alias, "scene": "scene.hello"})
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
     await script_obj.async_run(context=context)
@@ -261,6 +433,13 @@ async def test_activating_scene(hass):
     assert len(calls) == 1
     assert calls[0].context is context
     assert calls[0].data.get(ATTR_ENTITY_ID) == "scene.hello"
+    assert f"Executing step {alias}" in caplog.text
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"scene": "scene.hello"}}],
+        }
+    )
 
 
 @pytest.mark.parametrize("count", [1, 3])
@@ -337,6 +516,12 @@ async def test_delay_basic(hass):
         assert not script_obj.is_running
         assert script_obj.last_action is None
 
+    assert_action_trace(
+        {
+            "0": [{"result": {"delay": 5.0, "done": True}}],
+        }
+    )
+
 
 async def test_multiple_runs_delay(hass):
     """Test multiple runs with delay in script."""
@@ -401,6 +586,12 @@ async def test_delay_template_ok(hass):
 
         assert not script_obj.is_running
 
+    assert_action_trace(
+        {
+            "0": [{"result": {"delay": 5.0, "done": True}}],
+        }
+    )
+
 
 async def test_delay_template_invalid(hass, caplog):
     """Test the delay as a template that fails."""
@@ -428,6 +619,14 @@ async def test_delay_template_invalid(hass, caplog):
     assert not script_obj.is_running
     assert len(events) == 1
 
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"error_type": script._StopScript}],
+        },
+        expected_script_execution="aborted",
+    )
+
 
 async def test_delay_template_complex_ok(hass):
     """Test the delay with a working complex template."""
@@ -447,6 +646,12 @@ async def test_delay_template_complex_ok(hass):
         await hass.async_block_till_done()
 
         assert not script_obj.is_running
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"delay": 5.0, "done": True}}],
+        }
+    )
 
 
 async def test_delay_template_complex_invalid(hass, caplog):
@@ -474,6 +679,14 @@ async def test_delay_template_complex_invalid(hass, caplog):
 
     assert not script_obj.is_running
     assert len(events) == 1
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"error_type": script._StopScript}],
+        },
+        expected_script_execution="aborted",
+    )
 
 
 async def test_cancel_delay(hass):
@@ -505,6 +718,13 @@ async def test_cancel_delay(hass):
 
         assert not script_obj.is_running
         assert len(events) == 0
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"delay": 5.0, "done": False}}],
+        },
+        expected_script_execution="cancelled",
+    )
 
 
 @pytest.mark.parametrize("action_type", ["template", "trigger"])
@@ -540,6 +760,119 @@ async def test_wait_basic(hass, action_type):
 
         assert not script_obj.is_running
         assert script_obj.last_action is None
+
+    if action_type == "template":
+        assert_action_trace(
+            {
+                "0": [{"result": {"wait": {"completed": True, "remaining": None}}}],
+            }
+        )
+    else:
+        assert_action_trace(
+            {
+                "0": [
+                    {
+                        "result": {
+                            "wait": {
+                                "trigger": {"description": "state of switch.test"},
+                                "remaining": None,
+                            }
+                        }
+                    }
+                ],
+            }
+        )
+
+
+async def test_wait_for_trigger_variables(hass):
+    """Test variables are passed to wait_for_trigger action."""
+    context = Context()
+    wait_alias = "wait step"
+    actions = [
+        {
+            "alias": "variables",
+            "variables": {"seconds": 5},
+        },
+        {
+            "alias": wait_alias,
+            "wait_for_trigger": {
+                "platform": "state",
+                "entity_id": "switch.test",
+                "to": "off",
+                "for": {"seconds": "{{ seconds }}"},
+            },
+        },
+    ]
+    sequence = cv.SCRIPT_SCHEMA(actions)
+    sequence = await script.async_validate_actions_config(hass, sequence)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, wait_alias)
+
+    try:
+        hass.states.async_set("switch.test", "on")
+        hass.async_create_task(script_obj.async_run(context=context))
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+        assert script_obj.is_running
+        assert script_obj.last_action == wait_alias
+        hass.states.async_set("switch.test", "off")
+        # the script task +  2 tasks created by wait_for_trigger script step
+        await hass.async_wait_for_task_count(3)
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+        await hass.async_block_till_done()
+    except (AssertionError, asyncio.TimeoutError):
+        await script_obj.async_stop()
+        raise
+    else:
+        assert not script_obj.is_running
+        assert script_obj.last_action is None
+
+
+@pytest.mark.parametrize("action_type", ["template", "trigger"])
+async def test_wait_basic_times_out(hass, action_type):
+    """Test wait actions times out when the action does not happen."""
+    wait_alias = "wait step"
+    action = {"alias": wait_alias}
+    if action_type == "template":
+        action["wait_template"] = "{{ states.switch.test.state == 'off' }}"
+    else:
+        action["wait_for_trigger"] = {
+            "platform": "state",
+            "entity_id": "switch.test",
+            "to": "off",
+        }
+    sequence = cv.SCRIPT_SCHEMA(action)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, wait_alias)
+    timed_out = False
+
+    try:
+        hass.states.async_set("switch.test", "on")
+        hass.async_create_task(script_obj.async_run(context=Context()))
+        await asyncio.wait_for(wait_started_flag.wait(), 1)
+        assert script_obj.is_running
+        assert script_obj.last_action == wait_alias
+        hass.states.async_set("switch.test", "not_on")
+
+        with timeout(0.1):
+            await hass.async_block_till_done()
+    except asyncio.TimeoutError:
+        timed_out = True
+        await script_obj.async_stop()
+
+    assert timed_out
+
+    if action_type == "template":
+        assert_action_trace(
+            {
+                "0": [{"result": {"wait": {"completed": False, "remaining": None}}}],
+            }
+        )
+    else:
+        assert_action_trace(
+            {
+                "0": [{"result": {"wait": {"trigger": None, "remaining": None}}}],
+            }
+        )
 
 
 @pytest.mark.parametrize("action_type", ["template", "trigger"])
@@ -638,6 +971,21 @@ async def test_cancel_wait(hass, action_type):
         assert not script_obj.is_running
         assert len(events) == 0
 
+    if action_type == "template":
+        assert_action_trace(
+            {
+                "0": [{"result": {"wait": {"completed": False, "remaining": None}}}],
+            },
+            expected_script_execution="cancelled",
+        )
+    else:
+        assert_action_trace(
+            {
+                "0": [{"result": {"wait": {"trigger": None, "remaining": None}}}],
+            },
+            expected_script_execution="cancelled",
+        )
+
 
 async def test_wait_template_not_schedule(hass):
     """Test the wait template with correct condition."""
@@ -658,6 +1006,19 @@ async def test_wait_template_not_schedule(hass):
 
     assert not script_obj.is_running
     assert len(events) == 2
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"result": {"wait": {"completed": True, "remaining": None}}}],
+            "2": [
+                {
+                    "result": {"event": "test_event", "event_data": {}},
+                    "variables": {"wait": {"completed": True, "remaining": None}},
+                }
+            ],
+        }
+    )
 
 
 @pytest.mark.parametrize(
@@ -708,6 +1069,21 @@ async def test_wait_timeout(hass, caplog, timeout_param, action_type):
         assert len(events) == 1
         assert "(timeout: 0:00:05)" in caplog.text
 
+    if action_type == "template":
+        variable_wait = {"wait": {"completed": False, "remaining": 0.0}}
+    else:
+        variable_wait = {"wait": {"trigger": None, "remaining": 0.0}}
+    expected_trace = {
+        "0": [{"result": variable_wait}],
+        "1": [
+            {
+                "result": {"event": "test_event", "event_data": {}},
+                "variables": variable_wait,
+            }
+        ],
+    }
+    assert_action_trace(expected_trace)
+
 
 @pytest.mark.parametrize(
     "continue_on_timeout,n_events", [(False, 0), (True, 1), (None, 1)]
@@ -753,6 +1129,27 @@ async def test_wait_continue_on_timeout(
         assert not script_obj.is_running
         assert len(events) == n_events
 
+    if action_type == "template":
+        variable_wait = {"wait": {"completed": False, "remaining": 0.0}}
+    else:
+        variable_wait = {"wait": {"trigger": None, "remaining": 0.0}}
+    expected_trace = {
+        "0": [{"result": variable_wait}],
+    }
+    if continue_on_timeout is False:
+        expected_trace["0"][0]["result"]["timeout"] = True
+        expected_trace["0"][0]["error_type"] = script._StopScript
+        expected_script_execution = "aborted"
+    else:
+        expected_trace["1"] = [
+            {
+                "result": {"event": "test_event", "event_data": {}},
+                "variables": variable_wait,
+            }
+        ]
+        expected_script_execution = "finished"
+    assert_action_trace(expected_trace, expected_script_execution)
+
 
 async def test_wait_template_variables_in(hass):
     """Test the wait template with input variables."""
@@ -776,6 +1173,79 @@ async def test_wait_template_variables_in(hass):
         await hass.async_block_till_done()
 
         assert not script_obj.is_running
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"wait": {"completed": True, "remaining": None}}}],
+        }
+    )
+
+
+async def test_wait_template_with_utcnow(hass):
+    """Test the wait template with utcnow."""
+    sequence = cv.SCRIPT_SCHEMA({"wait_template": "{{ utcnow().hour == 12 }}"})
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, "wait")
+    start_time = dt_util.utcnow().replace(minute=1) + timedelta(hours=48)
+
+    try:
+        non_maching_time = start_time.replace(hour=3)
+        with patch("homeassistant.util.dt.utcnow", return_value=non_maching_time):
+            hass.async_create_task(script_obj.async_run(context=Context()))
+            await asyncio.wait_for(wait_started_flag.wait(), 1)
+            assert script_obj.is_running
+
+        match_time = start_time.replace(hour=12)
+        with patch("homeassistant.util.dt.utcnow", return_value=match_time):
+            async_fire_time_changed(hass, match_time)
+    except (AssertionError, asyncio.TimeoutError):
+        await script_obj.async_stop()
+        raise
+    else:
+        await hass.async_block_till_done()
+        assert not script_obj.is_running
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"wait": {"completed": True, "remaining": None}}}],
+        }
+    )
+
+
+async def test_wait_template_with_utcnow_no_match(hass):
+    """Test the wait template with utcnow that does not match."""
+    sequence = cv.SCRIPT_SCHEMA({"wait_template": "{{ utcnow().hour == 12 }}"})
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    wait_started_flag = async_watch_for_action(script_obj, "wait")
+    start_time = dt_util.utcnow().replace(minute=1) + timedelta(hours=48)
+    timed_out = False
+
+    try:
+        non_maching_time = start_time.replace(hour=3)
+        with patch("homeassistant.util.dt.utcnow", return_value=non_maching_time):
+            hass.async_create_task(script_obj.async_run(context=Context()))
+            await asyncio.wait_for(wait_started_flag.wait(), 1)
+            assert script_obj.is_running
+
+        second_non_maching_time = start_time.replace(hour=4)
+        with patch(
+            "homeassistant.util.dt.utcnow", return_value=second_non_maching_time
+        ):
+            async_fire_time_changed(hass, second_non_maching_time)
+
+        with timeout(0.1):
+            await hass.async_block_till_done()
+    except asyncio.TimeoutError:
+        timed_out = True
+        await script_obj.async_stop()
+
+    assert timed_out
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"wait": {"completed": False, "remaining": None}}}],
+        }
+    )
 
 
 @pytest.mark.parametrize("mode", ["no_timeout", "timeout_finish", "timeout_not_finish"])
@@ -833,14 +1303,14 @@ async def test_wait_variables_out(hass, mode, action_type):
         assert not script_obj.is_running
         assert len(events) == 1
         if action_type == "template":
-            assert events[0].data["completed"] == str(mode != "timeout_not_finish")
+            assert events[0].data["completed"] == (mode != "timeout_not_finish")
         elif mode != "timeout_not_finish":
             assert "'to_state': <state switch.test=off" in events[0].data["trigger"]
         else:
-            assert events[0].data["trigger"] == "None"
+            assert events[0].data["trigger"] is None
         remaining = events[0].data["remaining"]
         if mode == "no_timeout":
-            assert remaining == "None"
+            assert remaining is None
         elif mode == "timeout_finish":
             assert 0.0 < float(remaining) < 5
         else:
@@ -868,17 +1338,97 @@ async def test_wait_for_trigger_bad(hass, caplog):
         hass.async_create_task(script_obj.async_run())
         await hass.async_block_till_done()
 
+    assert "Unknown error while setting up trigger" in caplog.text
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"wait": {"trigger": None, "remaining": None}}}],
+        }
+    )
+
+
+async def test_wait_for_trigger_generated_exception(hass, caplog):
+    """Test bad wait_for_trigger."""
+    script_obj = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA(
+            {"wait_for_trigger": {"platform": "state", "entity_id": "sensor.abc"}}
+        ),
+        "Test Name",
+        "test_domain",
+    )
+
+    async def async_attach_trigger_mock(*args, **kwargs):
+        raise ValueError("something bad")
+
+    with mock.patch(
+        "homeassistant.components.homeassistant.triggers.state.async_attach_trigger",
+        wraps=async_attach_trigger_mock,
+    ):
+        hass.async_create_task(script_obj.async_run())
+        await hass.async_block_till_done()
+
     assert "Error setting up trigger" in caplog.text
+    assert "ValueError" in caplog.text
+    assert "something bad" in caplog.text
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"wait": {"trigger": None, "remaining": None}}}],
+        }
+    )
 
 
-async def test_condition_basic(hass):
-    """Test if we can use conditions in a script."""
+async def test_condition_warning(hass, caplog):
+    """Test warning on condition."""
     event = "test_event"
     events = async_capture_events(hass, event)
     sequence = cv.SCRIPT_SCHEMA(
         [
             {"event": event},
             {
+                "condition": "numeric_state",
+                "entity_id": "test.entity",
+                "above": 0,
+            },
+            {"event": event},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    hass.states.async_set("test.entity", "string")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(caplog.record_tuples) == 1
+    assert caplog.record_tuples[0][1] == logging.WARNING
+
+    assert len(events) == 1
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"error_type": script._StopScript, "result": {"result": False}}],
+            "1/condition": [{"error_type": ConditionError}],
+            "1/condition/entity_id/0": [{"error_type": ConditionError}],
+        },
+        expected_script_execution="aborted",
+    )
+
+
+async def test_condition_basic(hass, caplog):
+    """Test if we can use conditions in a script."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    alias = "condition step"
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": event},
+            {
+                "alias": alias,
                 "condition": "template",
                 "value_template": "{{ states.test.entity.state == 'hello' }}",
             },
@@ -891,14 +1441,35 @@ async def test_condition_basic(hass):
     await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
 
+    assert f"Test condition {alias}: True" in caplog.text
+    caplog.clear()
     assert len(events) == 2
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"result": {"result": True}}],
+            "1/condition": [{"result": {"entities": ["test.entity"], "result": True}}],
+            "2": [{"result": {"event": "test_event", "event_data": {}}}],
+        }
+    )
 
     hass.states.async_set("test.entity", "goodbye")
 
     await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
 
+    assert f"Test condition {alias}: False" in caplog.text
     assert len(events) == 3
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"error_type": script._StopScript, "result": {"result": False}}],
+            "1/condition": [{"result": {"entities": ["test.entity"], "result": False}}],
+        },
+        expected_script_execution="aborted",
+    )
 
 
 @patch("homeassistant.helpers.script.condition.async_from_config")
@@ -948,14 +1519,16 @@ async def test_condition_all_cached(hass):
     assert len(script_obj._config_cache) == 2
 
 
-async def test_repeat_count(hass):
+@pytest.mark.parametrize("count", [3, script.ACTION_TRACE_NODE_MAX_LEN * 2])
+async def test_repeat_count(hass, caplog, count):
     """Test repeat action w/ count option."""
     event = "test_event"
     events = async_capture_events(hass, event)
-    count = 3
 
+    alias = "condition step"
     sequence = cv.SCRIPT_SCHEMA(
         {
+            "alias": alias,
             "repeat": {
                 "count": count,
                 "sequence": {
@@ -966,9 +1539,10 @@ async def test_repeat_count(hass):
                         "last": "{{ repeat.last }}",
                     },
                 },
-            }
+            },
         }
     )
+
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
     await script_obj.async_run(context=Context())
@@ -976,9 +1550,98 @@ async def test_repeat_count(hass):
 
     assert len(events) == count
     for index, event in enumerate(events):
-        assert event.data.get("first") == str(index == 0)
-        assert event.data.get("index") == str(index + 1)
-        assert event.data.get("last") == str(index == count - 1)
+        assert event.data.get("first") == (index == 0)
+        assert event.data.get("index") == index + 1
+        assert event.data.get("last") == (index == count - 1)
+    assert caplog.text.count(f"Repeating {alias}") == count
+    first_index = max(1, count - script.ACTION_TRACE_NODE_MAX_LEN + 1)
+    last_index = count + 1
+    assert_action_trace(
+        {
+            "0": [{}],
+            "0/repeat/sequence/0": [
+                {
+                    "result": {
+                        "event": "test_event",
+                        "event_data": {
+                            "first": index == 1,
+                            "index": index,
+                            "last": index == count,
+                        },
+                    },
+                    "variables": {
+                        "repeat": {
+                            "first": index == 1,
+                            "index": index,
+                            "last": index == count,
+                        }
+                    },
+                }
+                for index in range(first_index, last_index)
+            ],
+        }
+    )
+
+
+@pytest.mark.parametrize("condition", ["while", "until"])
+async def test_repeat_condition_warning(hass, caplog, condition):
+    """Test warning on repeat conditions."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    count = 0 if condition == "while" else 1
+
+    sequence = {
+        "repeat": {
+            "sequence": [
+                {
+                    "event": event,
+                },
+            ],
+        }
+    }
+    sequence["repeat"][condition] = {
+        "condition": "numeric_state",
+        "entity_id": "sensor.test",
+        "value_template": "{{ unassigned_variable }}",
+        "above": "0",
+    }
+
+    script_obj = script.Script(
+        hass, cv.SCRIPT_SCHEMA(sequence), f"Test {condition}", "test_domain"
+    )
+
+    # wait_started = async_watch_for_action(script_obj, "wait")
+    hass.states.async_set("sensor.test", "1")
+
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    hass.async_create_task(script_obj.async_run(context=Context()))
+    await asyncio.wait_for(hass.async_block_till_done(), 1)
+
+    assert f"Error in '{condition}[0]' evaluation" in caplog.text
+
+    assert len(events) == count
+
+    expected_trace = {"0": [{}]}
+    if condition == "until":
+        expected_trace["0/repeat/sequence/0"] = [
+            {
+                "result": {"event": "test_event", "event_data": {}},
+                "variables": {"repeat": {"first": True, "index": 1}},
+            }
+        ]
+    expected_trace["0/repeat"] = [
+        {
+            "result": {"result": None},
+            "variables": {"repeat": {"first": True, "index": 1}},
+        }
+    ]
+    expected_trace[f"0/repeat/{condition}/0"] = [{"error_type": ConditionError}]
+    expected_trace[f"0/repeat/{condition}/0/entity_id/0"] = [
+        {"error_type": ConditionError}
+    ]
+    assert_action_trace(expected_trace)
 
 
 @pytest.mark.parametrize("condition", ["while", "until"])
@@ -1051,8 +1714,8 @@ async def test_repeat_conditional(hass, condition, direct_template):
 
     assert len(events) == count
     for index, event in enumerate(events):
-        assert event.data.get("first") == str(index == 0)
-        assert event.data.get("index") == str(index + 1)
+        assert event.data.get("first") == (index == 0)
+        assert event.data.get("index") == index + 1
 
 
 @pytest.mark.parametrize("condition", ["while", "until"])
@@ -1063,15 +1726,14 @@ async def test_repeat_var_in_condition(hass, condition):
 
     sequence = {"repeat": {"sequence": {"event": event}}}
     if condition == "while":
-        sequence["repeat"]["while"] = {
-            "condition": "template",
-            "value_template": "{{ repeat.index <= 2 }}",
-        }
+        value_template = "{{ repeat.index <= 2 }}"
     else:
-        sequence["repeat"]["until"] = {
-            "condition": "template",
-            "value_template": "{{ repeat.index == 2 }}",
-        }
+        value_template = "{{ repeat.index == 2 }}"
+    sequence["repeat"][condition] = {
+        "condition": "template",
+        "value_template": value_template,
+    }
+
     script_obj = script.Script(
         hass, cv.SCRIPT_SCHEMA(sequence), "Test Name", "test_domain"
     )
@@ -1084,12 +1746,69 @@ async def test_repeat_var_in_condition(hass, condition):
 
     assert len(events) == 2
 
+    if condition == "while":
+        expected_trace = {
+            "0": [{}],
+            "0/repeat": [
+                {
+                    "result": {"result": True},
+                    "variables": {"repeat": {"first": True, "index": 1}},
+                },
+                {
+                    "result": {"result": True},
+                    "variables": {"repeat": {"first": False, "index": 2}},
+                },
+                {
+                    "result": {"result": False},
+                    "variables": {"repeat": {"first": False, "index": 3}},
+                },
+            ],
+            "0/repeat/while/0": [
+                {"result": {"entities": [], "result": True}},
+                {"result": {"entities": [], "result": True}},
+                {"result": {"entities": [], "result": False}},
+            ],
+            "0/repeat/sequence/0": [
+                {"result": {"event": "test_event", "event_data": {}}}
+            ]
+            * 2,
+        }
+    else:
+        expected_trace = {
+            "0": [{}],
+            "0/repeat/sequence/0": [
+                {
+                    "result": {"event": "test_event", "event_data": {}},
+                    "variables": {"repeat": {"first": True, "index": 1}},
+                },
+                {
+                    "result": {"event": "test_event", "event_data": {}},
+                    "variables": {"repeat": {"first": False, "index": 2}},
+                },
+            ],
+            "0/repeat": [
+                {
+                    "result": {"result": False},
+                    "variables": {"repeat": {"first": True, "index": 1}},
+                },
+                {
+                    "result": {"result": True},
+                    "variables": {"repeat": {"first": False, "index": 2}},
+                },
+            ],
+            "0/repeat/until/0": [
+                {"result": {"entities": [], "result": False}},
+                {"result": {"entities": [], "result": True}},
+            ],
+        }
+    assert_action_trace(expected_trace)
+
 
 @pytest.mark.parametrize(
     "variables,first_last,inside_x",
     [
-        (None, {"repeat": "None", "x": "None"}, "None"),
-        (MappingProxyType({"x": 1}), {"repeat": "None", "x": "1"}, "1"),
+        (None, {"repeat": None, "x": None}, None),
+        (MappingProxyType({"x": 1}), {"repeat": None, "x": 1}, 1),
     ],
 )
 async def test_repeat_nested(hass, variables, first_last, inside_x):
@@ -1167,14 +1886,14 @@ async def test_repeat_nested(hass, variables, first_last, inside_x):
     assert events[-1].data == first_last
     for index, result in enumerate(
         (
-            ("True", "1", "False", inside_x),
-            ("True", "1", "False", inside_x),
-            ("False", "2", "True", inside_x),
-            ("True", "1", "False", inside_x),
-            ("False", "2", "True", inside_x),
-            ("True", "1", "False", inside_x),
-            ("False", "2", "True", inside_x),
-            ("False", "2", "True", inside_x),
+            (True, 1, False, inside_x),
+            (True, 1, False, inside_x),
+            (False, 2, True, inside_x),
+            (True, 1, False, inside_x),
+            (False, 2, True, inside_x),
+            (True, 1, False, inside_x),
+            (False, 2, True, inside_x),
+            (False, 2, True, inside_x),
         ),
         1,
     ):
@@ -1185,24 +1904,74 @@ async def test_repeat_nested(hass, variables, first_last, inside_x):
             "x": result[3],
         }
 
+    event_data1 = {"repeat": None, "x": inside_x}
+    event_data2 = [
+        {"first": True, "index": 1, "last": False, "x": inside_x},
+        {"first": False, "index": 2, "last": True, "x": inside_x},
+    ]
+    variable_repeat = [
+        {"repeat": {"first": True, "index": 1, "last": False}},
+        {"repeat": {"first": False, "index": 2, "last": True}},
+    ]
+    expected_trace = {
+        "0": [{"result": {"event": "test_event", "event_data": event_data1}}],
+        "1": [{}],
+        "1/repeat/sequence/0": [
+            {
+                "result": {"event": "test_event", "event_data": event_data2[0]},
+                "variables": variable_repeat[0],
+            },
+            {
+                "result": {"event": "test_event", "event_data": event_data2[1]},
+                "variables": variable_repeat[1],
+            },
+        ],
+        "1/repeat/sequence/1": [{}, {}],
+        "1/repeat/sequence/1/repeat/sequence/0": [
+            {"result": {"event": "test_event", "event_data": event_data2[0]}},
+            {
+                "result": {"event": "test_event", "event_data": event_data2[1]},
+                "variables": variable_repeat[1],
+            },
+            {
+                "result": {"event": "test_event", "event_data": event_data2[0]},
+                "variables": variable_repeat[0],
+            },
+            {"result": {"event": "test_event", "event_data": event_data2[1]}},
+        ],
+        "1/repeat/sequence/2": [
+            {"result": {"event": "test_event", "event_data": event_data2[0]}},
+            {"result": {"event": "test_event", "event_data": event_data2[1]}},
+        ],
+        "2": [{"result": {"event": "test_event", "event_data": event_data1}}],
+    }
+    assert_action_trace(expected_trace)
 
-@pytest.mark.parametrize("var,result", [(1, "first"), (2, "second"), (3, "default")])
-async def test_choose(hass, var, result):
-    """Test choose action."""
+
+async def test_choose_warning(hass, caplog):
+    """Test warning on choose."""
     event = "test_event"
     events = async_capture_events(hass, event)
+
     sequence = cv.SCRIPT_SCHEMA(
         {
             "choose": [
                 {
                     "conditions": {
-                        "condition": "template",
-                        "value_template": "{{ var == 1 }}",
+                        "condition": "numeric_state",
+                        "entity_id": "test.entity",
+                        "value_template": "{{ undefined_a + undefined_b }}",
+                        "above": 1,
                     },
                     "sequence": {"event": event, "event_data": {"choice": "first"}},
                 },
                 {
-                    "conditions": "{{ var == 2 }}",
+                    "conditions": {
+                        "condition": "numeric_state",
+                        "entity_id": "test.entity",
+                        "value_template": "{{ 'string' }}",
+                        "above": 2,
+                    },
                     "sequence": {"event": event, "event_data": {"choice": "second"}},
                 },
             ],
@@ -1211,11 +1980,105 @@ async def test_choose(hass, var, result):
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
+    hass.states.async_set("test.entity", "9")
+    await hass.async_block_till_done()
+
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(caplog.record_tuples) == 2
+    assert caplog.record_tuples[0][1] == logging.WARNING
+    assert caplog.record_tuples[1][1] == logging.WARNING
+
+    assert len(events) == 1
+    assert events[0].data["choice"] == "default"
+
+
+@pytest.mark.parametrize("var,result", [(1, "first"), (2, "second"), (3, "default")])
+async def test_choose(hass, caplog, var, result):
+    """Test choose action."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    alias = "choose step"
+    choice = {1: "choice one", 2: "choice two", 3: None}
+    aliases = {1: "sequence one", 2: "sequence two", 3: "default sequence"}
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "alias": alias,
+            "choose": [
+                {
+                    "alias": choice[1],
+                    "conditions": {
+                        "condition": "template",
+                        "value_template": "{{ var == 1 }}",
+                    },
+                    "sequence": {
+                        "alias": aliases[1],
+                        "event": event,
+                        "event_data": {"choice": "first"},
+                    },
+                },
+                {
+                    "alias": choice[2],
+                    "conditions": "{{ var == 2 }}",
+                    "sequence": {
+                        "alias": aliases[2],
+                        "event": event,
+                        "event_data": {"choice": "second"},
+                    },
+                },
+            ],
+            "default": {
+                "alias": aliases[3],
+                "event": event,
+                "event_data": {"choice": "default"},
+            },
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
     await script_obj.async_run(MappingProxyType({"var": var}), Context())
     await hass.async_block_till_done()
 
     assert len(events) == 1
     assert events[0].data["choice"] == result
+    expected_choice = choice[var]
+    if var == 3:
+        expected_choice = "default"
+    assert f"{alias}: {expected_choice}: Executing step {aliases[var]}" in caplog.text
+
+    expected_choice = var - 1
+    if var == 3:
+        expected_choice = "default"
+
+    expected_trace = {"0": [{"result": {"choice": expected_choice}}]}
+    if var >= 1:
+        expected_trace["0/choose/0"] = [{"result": {"result": var == 1}}]
+        expected_trace["0/choose/0/conditions/0"] = [
+            {"result": {"entities": [], "result": var == 1}}
+        ]
+    if var >= 2:
+        expected_trace["0/choose/1"] = [{"result": {"result": var == 2}}]
+        expected_trace["0/choose/1/conditions/0"] = [
+            {"result": {"entities": [], "result": var == 2}}
+        ]
+    if var == 1:
+        expected_trace["0/choose/0/sequence/0"] = [
+            {"result": {"event": "test_event", "event_data": {"choice": "first"}}}
+        ]
+    if var == 2:
+        expected_trace["0/choose/1/sequence/0"] = [
+            {"result": {"event": "test_event", "event_data": {"choice": "second"}}}
+        ]
+    if var == 3:
+        expected_trace["0/default/0"] = [
+            {"result": {"event": "test_event", "event_data": {"choice": "default"}}}
+        ]
+    assert_action_trace(expected_trace)
 
 
 @pytest.mark.parametrize(
@@ -1277,6 +2140,25 @@ async def test_propagate_error_service_not_found(hass):
     assert len(events) == 0
     assert not script_obj.is_running
 
+    expected_trace = {
+        "0": [
+            {
+                "error_type": ServiceNotFound,
+                "result": {
+                    "limit": 10,
+                    "params": {
+                        "domain": "test",
+                        "service": "script",
+                        "service_data": {},
+                        "target": {},
+                    },
+                    "running_script": False,
+                },
+            }
+        ],
+    }
+    assert_action_trace(expected_trace, expected_script_execution="error")
+
 
 async def test_propagate_error_invalid_service_data(hass):
     """Test that a script aborts when we send invalid service data."""
@@ -1294,6 +2176,25 @@ async def test_propagate_error_invalid_service_data(hass):
     assert len(events) == 0
     assert len(calls) == 0
     assert not script_obj.is_running
+
+    expected_trace = {
+        "0": [
+            {
+                "error_type": vol.MultipleInvalid,
+                "result": {
+                    "limit": 10,
+                    "params": {
+                        "domain": "test",
+                        "service": "script",
+                        "service_data": {"text": 1},
+                        "target": {},
+                    },
+                    "running_script": False,
+                },
+            }
+        ],
+    }
+    assert_action_trace(expected_trace, expected_script_execution="error")
 
 
 async def test_propagate_error_service_exception(hass):
@@ -1317,6 +2218,25 @@ async def test_propagate_error_service_exception(hass):
     assert len(events) == 0
     assert not script_obj.is_running
 
+    expected_trace = {
+        "0": [
+            {
+                "error_type": ValueError,
+                "result": {
+                    "limit": 10,
+                    "params": {
+                        "domain": "test",
+                        "service": "script",
+                        "service_data": {},
+                        "target": {},
+                    },
+                    "running_script": False,
+                },
+            }
+        ],
+    }
+    assert_action_trace(expected_trace, expected_script_execution="error")
+
 
 async def test_referenced_entities(hass):
     """Test referenced entities."""
@@ -1331,6 +2251,22 @@ async def test_referenced_entities(hass):
                 {
                     "service": "test.script",
                     "data": {"entity_id": ["light.service_list"]},
+                },
+                {
+                    "service": "test.script",
+                    "data": {"entity_id": "{{ 'light.service_template' }}"},
+                },
+                {
+                    "service": "test.script",
+                    "entity_id": "light.direct_entity_referenced",
+                },
+                {
+                    "service": "test.script",
+                    "target": {"entity_id": "light.entity_in_target"},
+                },
+                {
+                    "service": "test.script",
+                    "data_template": {"entity_id": "light.entity_in_data_template"},
                 },
                 {
                     "condition": "state",
@@ -1351,6 +2287,9 @@ async def test_referenced_entities(hass):
         "light.service_list",
         "sensor.condition",
         "scene.hello",
+        "light.direct_entity_referenced",
+        "light.entity_in_target",
+        "light.entity_in_data_template",
     }
     # Test we cache results.
     assert script_obj.referenced_entities is script_obj.referenced_entities
@@ -1368,12 +2307,36 @@ async def test_referenced_devices(hass):
                     "device_id": "condition-dev-id",
                     "domain": "switch",
                 },
+                {
+                    "service": "test.script",
+                    "data": {"device_id": "data-string-id"},
+                },
+                {
+                    "service": "test.script",
+                    "data_template": {"device_id": "data-template-string-id"},
+                },
+                {
+                    "service": "test.script",
+                    "target": {"device_id": "target-string-id"},
+                },
+                {
+                    "service": "test.script",
+                    "target": {"device_id": ["target-list-id-1", "target-list-id-2"]},
+                },
             ]
         ),
         "Test Name",
         "test_domain",
     )
-    assert script_obj.referenced_devices == {"script-dev-id", "condition-dev-id"}
+    assert script_obj.referenced_devices == {
+        "script-dev-id",
+        "condition-dev-id",
+        "data-string-id",
+        "data-template-string-id",
+        "target-string-id",
+        "target-list-id-1",
+        "target-list-id-2",
+    }
     # Test we cache results.
     assert script_obj.referenced_devices is script_obj.referenced_devices
 
@@ -1717,6 +2680,11 @@ async def test_shutdown_at(hass, caplog):
         assert not script_obj.is_running
         assert "Stopping scripts running at shutdown: test script" in caplog.text
 
+    expected_trace = {
+        "0": [{"result": {"delay": 120.0, "done": False}}],
+    }
+    assert_action_trace(expected_trace)
+
 
 async def test_shutdown_after(hass, caplog):
     """Test stopping scripts at shutdown."""
@@ -1747,6 +2715,11 @@ async def test_shutdown_after(hass, caplog):
             "Stopping scripts running too long after shutdown: test script"
             in caplog.text
         )
+
+    expected_trace = {
+        "0": [{"result": {"delay": 120.0, "done": False}}],
+    }
+    assert_action_trace(expected_trace)
 
 
 async def test_update_logger(hass, caplog):
@@ -1785,3 +2758,373 @@ async def test_started_action(hass, caplog):
     await hass.async_block_till_done()
 
     assert log_message in caplog.text
+
+
+async def test_set_variable(hass, caplog):
+    """Test setting variables in scripts."""
+    alias = "variables step"
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"alias": alias, "variables": {"variable": "value"}},
+            {"service": "test.script", "data": {"value": "{{ variable }}"}},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "test script", "test_domain")
+
+    mock_calls = async_mock_service(hass, "test", "script")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert mock_calls[0].data["value"] == "value"
+    assert f"Executing step {alias}" in caplog.text
+
+    expected_trace = {
+        "0": [{}],
+        "1": [
+            {
+                "result": {
+                    "limit": SERVICE_CALL_LIMIT,
+                    "params": {
+                        "domain": "test",
+                        "service": "script",
+                        "service_data": {"value": "value"},
+                        "target": {},
+                    },
+                    "running_script": False,
+                },
+                "variables": {"variable": "value"},
+            }
+        ],
+    }
+    assert_action_trace(expected_trace)
+
+
+async def test_set_redefines_variable(hass, caplog):
+    """Test setting variables based on their current value."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"variables": {"variable": "1"}},
+            {"service": "test.script", "data": {"value": "{{ variable }}"}},
+            {"variables": {"variable": "{{ variable | int + 1 }}"}},
+            {"service": "test.script", "data": {"value": "{{ variable }}"}},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "test script", "test_domain")
+
+    mock_calls = async_mock_service(hass, "test", "script")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert mock_calls[0].data["value"] == 1
+    assert mock_calls[1].data["value"] == 2
+
+    expected_trace = {
+        "0": [{}],
+        "1": [
+            {
+                "result": {
+                    "limit": SERVICE_CALL_LIMIT,
+                    "params": {
+                        "domain": "test",
+                        "service": "script",
+                        "service_data": {"value": 1},
+                        "target": {},
+                    },
+                    "running_script": False,
+                },
+                "variables": {"variable": "1"},
+            }
+        ],
+        "2": [{}],
+        "3": [
+            {
+                "result": {
+                    "limit": SERVICE_CALL_LIMIT,
+                    "params": {
+                        "domain": "test",
+                        "service": "script",
+                        "service_data": {"value": 2},
+                        "target": {},
+                    },
+                    "running_script": False,
+                },
+                "variables": {"variable": 2},
+            }
+        ],
+    }
+    assert_action_trace(expected_trace)
+
+
+async def test_validate_action_config(hass):
+    """Validate action config."""
+    configs = {
+        cv.SCRIPT_ACTION_CALL_SERVICE: {"service": "light.turn_on"},
+        cv.SCRIPT_ACTION_DELAY: {"delay": 5},
+        cv.SCRIPT_ACTION_WAIT_TEMPLATE: {
+            "wait_template": "{{ states.light.kitchen.state == 'on' }}"
+        },
+        cv.SCRIPT_ACTION_FIRE_EVENT: {"event": "my_event"},
+        cv.SCRIPT_ACTION_CHECK_CONDITION: {
+            "condition": "{{ states.light.kitchen.state == 'on' }}"
+        },
+        cv.SCRIPT_ACTION_DEVICE_AUTOMATION: {
+            "domain": "light",
+            "entity_id": "light.kitchen",
+            "device_id": "abcd",
+            "type": "turn_on",
+        },
+        cv.SCRIPT_ACTION_ACTIVATE_SCENE: {"scene": "scene.relax"},
+        cv.SCRIPT_ACTION_REPEAT: {
+            "repeat": {"count": 3, "sequence": [{"event": "repeat_event"}]}
+        },
+        cv.SCRIPT_ACTION_CHOOSE: {
+            "choose": [
+                {
+                    "condition": "{{ states.light.kitchen.state == 'on' }}",
+                    "sequence": [{"event": "choose_event"}],
+                }
+            ],
+            "default": [{"event": "choose_default_event"}],
+        },
+        cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER: {
+            "wait_for_trigger": [
+                {"platform": "event", "event_type": "wait_for_trigger_event"}
+            ]
+        },
+        cv.SCRIPT_ACTION_VARIABLES: {"variables": {"hello": "world"}},
+    }
+
+    for key in cv.ACTION_TYPE_SCHEMAS:
+        assert key in configs, f"No validate config test found for {key}"
+
+    # Verify we raise if we don't know the action type
+    with patch(
+        "homeassistant.helpers.config_validation.determine_script_action",
+        return_value="non-existing",
+    ), pytest.raises(ValueError):
+        await script.async_validate_action_config(hass, {})
+
+    for action_type, config in configs.items():
+        assert cv.determine_script_action(config) == action_type
+        try:
+            await script.async_validate_action_config(hass, config)
+        except vol.Invalid as err:
+            assert False, f"{action_type} config invalid: {err}"
+
+
+async def test_embedded_wait_for_trigger_in_automation(hass):
+    """Test an embedded wait for trigger."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": {
+                    "repeat": {
+                        "while": [
+                            {
+                                "condition": "template",
+                                "value_template": '{{ is_state("test.value1", "trigger-while") }}',
+                            }
+                        ],
+                        "sequence": [
+                            {"event": "trigger_wait_event"},
+                            {
+                                "wait_for_trigger": [
+                                    {
+                                        "platform": "template",
+                                        "value_template": '{{ is_state("test.value2", "trigger-wait") }}',
+                                    }
+                                ]
+                            },
+                            {"service": "test.script"},
+                        ],
+                    }
+                },
+            }
+        },
+    )
+
+    hass.states.async_set("test.value1", "trigger-while")
+    hass.states.async_set("test.value2", "not-trigger-wait")
+    mock_calls = async_mock_service(hass, "test", "script")
+
+    async def trigger_wait_event(_):
+        # give script the time to attach the trigger.
+        await asyncio.sleep(0)
+        hass.states.async_set("test.value1", "not-trigger-while")
+        hass.states.async_set("test.value2", "trigger-wait")
+
+    hass.bus.async_listen("trigger_wait_event", trigger_wait_event)
+
+    # Start automation
+    hass.bus.async_fire("test_event")
+
+    await hass.async_block_till_done()
+
+    assert len(mock_calls) == 1
+
+
+async def test_breakpoints_1(hass):
+    """Test setting a breakpoint halts execution, and execution can be resumed."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": event, "event_data": {"value": 0}},  # Node "0"
+            {"event": event, "event_data": {"value": 1}},  # Node "1"
+            {"event": event, "event_data": {"value": 2}},  # Node "2"
+            {"event": event, "event_data": {"value": 3}},  # Node "3"
+            {"event": event, "event_data": {"value": 4}},  # Node "4"
+            {"event": event, "event_data": {"value": 5}},  # Node "5"
+            {"event": event, "event_data": {"value": 6}},  # Node "6"
+            {"event": event, "event_data": {"value": 7}},  # Node "7"
+        ]
+    )
+    logger = logging.getLogger("TEST")
+    script_obj = script.Script(
+        hass,
+        sequence,
+        "Test Name",
+        "test_domain",
+        script_mode="queued",
+        max_runs=2,
+        logger=logger,
+    )
+    trace.trace_id_set(("script_1", "1"))
+    script.breakpoint_set(hass, "script_1", script.RUN_ID_ANY, "1")
+    script.breakpoint_set(hass, "script_1", script.RUN_ID_ANY, "5")
+
+    breakpoint_hit_event = asyncio.Event()
+
+    @callback
+    def breakpoint_hit(*_):
+        breakpoint_hit_event.set()
+
+    async_dispatcher_connect(hass, script.SCRIPT_BREAKPOINT_HIT, breakpoint_hit)
+
+    watch_messages = []
+
+    @callback
+    def check_action():
+        for message, flag in watch_messages:
+            if script_obj.last_action and message in script_obj.last_action:
+                flag.set()
+
+    script_obj.change_listener = check_action
+
+    assert not script_obj.is_running
+    assert script_obj.runs == 0
+
+    # Start script, should stop on breakpoint at node "1"
+    hass.async_create_task(script_obj.async_run(context=Context()))
+    await breakpoint_hit_event.wait()
+    assert script_obj.is_running
+    assert script_obj.runs == 1
+    assert len(events) == 1
+    assert events[-1].data["value"] == 0
+
+    # Single step script, should stop at node "2"
+    breakpoint_hit_event.clear()
+    script.debug_step(hass, "script_1", "1")
+    await breakpoint_hit_event.wait()
+    assert script_obj.is_running
+    assert script_obj.runs == 1
+    assert len(events) == 2
+    assert events[-1].data["value"] == 1
+
+    # Single step script, should stop at node "3"
+    breakpoint_hit_event.clear()
+    script.debug_step(hass, "script_1", "1")
+    await breakpoint_hit_event.wait()
+    assert script_obj.is_running
+    assert script_obj.runs == 1
+    assert len(events) == 3
+    assert events[-1].data["value"] == 2
+
+    # Resume script, should stop on breakpoint at node "5"
+    breakpoint_hit_event.clear()
+    script.debug_continue(hass, "script_1", "1")
+    await breakpoint_hit_event.wait()
+    assert script_obj.is_running
+    assert script_obj.runs == 1
+    assert len(events) == 5
+    assert events[-1].data["value"] == 4
+
+    # Resume script, should run until completion
+    script.debug_continue(hass, "script_1", "1")
+    await hass.async_block_till_done()
+    assert not script_obj.is_running
+    assert script_obj.runs == 0
+    assert len(events) == 8
+    assert events[-1].data["value"] == 7
+
+
+async def test_breakpoints_2(hass):
+    """Test setting a breakpoint halts execution, and execution can be aborted."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": event, "event_data": {"value": 0}},  # Node "0"
+            {"event": event, "event_data": {"value": 1}},  # Node "1"
+            {"event": event, "event_data": {"value": 2}},  # Node "2"
+            {"event": event, "event_data": {"value": 3}},  # Node "3"
+            {"event": event, "event_data": {"value": 4}},  # Node "4"
+            {"event": event, "event_data": {"value": 5}},  # Node "5"
+            {"event": event, "event_data": {"value": 6}},  # Node "6"
+            {"event": event, "event_data": {"value": 7}},  # Node "7"
+        ]
+    )
+    logger = logging.getLogger("TEST")
+    script_obj = script.Script(
+        hass,
+        sequence,
+        "Test Name",
+        "test_domain",
+        script_mode="queued",
+        max_runs=2,
+        logger=logger,
+    )
+    trace.trace_id_set(("script_1", "1"))
+    script.breakpoint_set(hass, "script_1", script.RUN_ID_ANY, "1")
+    script.breakpoint_set(hass, "script_1", script.RUN_ID_ANY, "5")
+
+    breakpoint_hit_event = asyncio.Event()
+
+    @callback
+    def breakpoint_hit(*_):
+        breakpoint_hit_event.set()
+
+    async_dispatcher_connect(hass, script.SCRIPT_BREAKPOINT_HIT, breakpoint_hit)
+
+    watch_messages = []
+
+    @callback
+    def check_action():
+        for message, flag in watch_messages:
+            if script_obj.last_action and message in script_obj.last_action:
+                flag.set()
+
+    script_obj.change_listener = check_action
+
+    assert not script_obj.is_running
+    assert script_obj.runs == 0
+
+    # Start script, should stop on breakpoint at node "1"
+    hass.async_create_task(script_obj.async_run(context=Context()))
+    await breakpoint_hit_event.wait()
+    assert script_obj.is_running
+    assert script_obj.runs == 1
+    assert len(events) == 1
+    assert events[-1].data["value"] == 0
+
+    # Abort script
+    script.debug_stop(hass, "script_1", "1")
+    await hass.async_block_till_done()
+    assert not script_obj.is_running
+    assert script_obj.runs == 0
+    assert len(events) == 1

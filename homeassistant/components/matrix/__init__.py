@@ -1,12 +1,13 @@
 """The Matrix bot component."""
 from functools import partial
 import logging
+import mimetypes
 import os
 
 from matrix_client.client import MatrixClient, MatrixRequestError
 import voluptuous as vol
 
-from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TARGET
+from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -31,7 +32,11 @@ CONF_COMMANDS = "commands"
 CONF_WORD = "word"
 CONF_EXPRESSION = "expression"
 
+DEFAULT_CONTENT_TYPE = "application/octet-stream"
+
 EVENT_MATRIX_COMMAND = "matrix_command"
+
+ATTR_IMAGES = "images"  # optional images
 
 COMMAND_SCHEMA = vol.All(
     vol.Schema(
@@ -67,6 +72,9 @@ CONFIG_SCHEMA = vol.Schema(
 SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
     {
         vol.Required(ATTR_MESSAGE): cv.string,
+        vol.Optional(ATTR_DATA): {
+            vol.Optional(ATTR_IMAGES): vol.All(cv.ensure_list, [cv.string]),
+        },
         vol.Required(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
     }
 )
@@ -336,13 +344,20 @@ class MatrixBot:
 
         return _client
 
-    def _send_message(self, message, target_rooms):
-        """Send the message to the Matrix server."""
+    def _send_image(self, img, target_rooms):
+        _LOGGER.debug("Uploading file from path, %s", img)
 
+        if not self.hass.config.is_allowed_path(img):
+            _LOGGER.error("Path not allowed: %s", img)
+            return
+        with open(img, "rb") as upfile:
+            imgfile = upfile.read()
+        content_type = mimetypes.guess_type(img)[0]
+        mxc = self._client.upload(imgfile, content_type)
         for target_room in target_rooms:
             try:
                 room = self._join_or_get_room(target_room)
-                _LOGGER.debug(room.send_text(message))
+                room.send_image(mxc, img)
             except MatrixRequestError as ex:
                 _LOGGER.error(
                     "Unable to deliver message to room '%s': %d, %s",
@@ -351,6 +366,28 @@ class MatrixBot:
                     ex.content,
                 )
 
+    def _send_message(self, message, data, target_rooms):
+        """Send the message to the Matrix server."""
+        for target_room in target_rooms:
+            try:
+                room = self._join_or_get_room(target_room)
+                if message is not None:
+                    _LOGGER.debug(room.send_text(message))
+            except MatrixRequestError as ex:
+                _LOGGER.error(
+                    "Unable to deliver message to room '%s': %d, %s",
+                    target_room,
+                    ex.code,
+                    ex.content,
+                )
+        if data is not None:
+            for img in data.get(ATTR_IMAGES, []):
+                self._send_image(img, target_rooms)
+
     def handle_send_message(self, service):
         """Handle the send_message service."""
-        self._send_message(service.data[ATTR_MESSAGE], service.data[ATTR_TARGET])
+        self._send_message(
+            service.data.get(ATTR_MESSAGE),
+            service.data.get(ATTR_DATA),
+            service.data[ATTR_TARGET],
+        )

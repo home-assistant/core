@@ -3,6 +3,7 @@
   "name": "Vera",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vera",
-  "requirements": ["pyvera==0.3.9"],
-  "codeowners": ["@vangorra"]
+  "requirements": ["pyvera==0.3.13"],
+  "codeowners": ["@pavoni"],
+  "iot_class": "local_polling"
 }

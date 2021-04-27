@@ -5,8 +5,7 @@
         },
         "error": {
             "cannot_connect": "Povezava ni uspela",
-            "name_exists": "Ime obstaja",
-            "wrong_credentials": "Napa\u010dne poverilnice"
+            "name_exists": "Ime obstaja"
         },
         "step": {
             "user": {

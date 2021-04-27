@@ -1,13 +1,16 @@
 """Component to interface with various media players."""
+from __future__ import annotations
+
 import asyncio
 import base64
 import collections
+from contextlib import suppress
 from datetime import timedelta
 import functools as ft
 import hashlib
 import logging
-from random import SystemRandom
-from typing import List, Optional
+import secrets
+from typing import final
 from urllib.parse import urlparse
 
 from aiohttp import web
@@ -15,6 +18,7 @@ from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
 import async_timeout
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
@@ -27,6 +31,7 @@ from homeassistant.const import (
     HTTP_INTERNAL_SERVER_ERROR,
     HTTP_NOT_FOUND,
     HTTP_OK,
+    HTTP_UNAUTHORIZED,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -34,6 +39,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
+    SERVICE_REPEAT_SET,
     SERVICE_SHUFFLE_SET,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -60,6 +66,7 @@ from homeassistant.loader import bind_hass
 from .const import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
+    ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_ARTIST,
@@ -71,9 +78,11 @@ from .const import (
     ATTR_MEDIA_DURATION,
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_EPISODE,
+    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_PLAYLIST,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
+    ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SEASON,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SERIES_TITLE,
@@ -85,17 +94,23 @@ from .const import (
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     DOMAIN,
+    MEDIA_CLASS_DIRECTORY,
+    REPEAT_MODES,
     SERVICE_CLEAR_PLAYLIST,
+    SERVICE_JOIN,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    SERVICE_UNJOIN,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_GROUPING,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_REPEAT_SET,
     SUPPORT_SEEK,
     SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
@@ -112,7 +127,6 @@ from .errors import BrowseError
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
-_RND = SystemRandom()
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -138,6 +152,7 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
     vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
     vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
+    vol.Optional(ATTR_MEDIA_EXTRA, default={}): dict,
 }
 
 ATTR_TO_PROPERTY = [
@@ -163,6 +178,7 @@ ATTR_TO_PROPERTY = [
     ATTR_INPUT_SOURCE,
     ATTR_SOUND_MODE,
     ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_REPEAT,
 ]
 
 
@@ -282,16 +298,18 @@ async def async_setup(hass, config):
         SERVICE_MEDIA_SEEK,
         vol.All(
             cv.make_entity_service_schema(
-                {
-                    vol.Required(ATTR_MEDIA_SEEK_POSITION): vol.All(
-                        vol.Coerce(float), vol.Range(min=0)
-                    )
-                }
+                {vol.Required(ATTR_MEDIA_SEEK_POSITION): cv.positive_float}
             ),
             _rename_keys(position=ATTR_MEDIA_SEEK_POSITION),
         ),
         "async_media_seek",
         [SUPPORT_SEEK],
+    )
+    component.async_register_entity_service(
+        SERVICE_JOIN,
+        {vol.Required(ATTR_GROUP_MEMBERS): vol.All(cv.ensure_list, [cv.entity_id])},
+        "async_join_players",
+        [SUPPORT_GROUPING],
     )
     component.async_register_entity_service(
         SERVICE_SELECT_SOURCE,
@@ -324,6 +342,16 @@ async def async_setup(hass, config):
         "async_set_shuffle",
         [SUPPORT_SHUFFLE_SET],
     )
+    component.async_register_entity_service(
+        SERVICE_UNJOIN, {}, "async_unjoin_player", [SUPPORT_GROUPING]
+    )
+
+    component.async_register_entity_service(
+        SERVICE_REPEAT_SET,
+        {vol.Required(ATTR_MEDIA_REPEAT): vol.In(REPEAT_MODES)},
+        "async_set_repeat",
+        [SUPPORT_REPEAT_SET],
+    )
 
     return True
 
@@ -341,7 +369,7 @@ async def async_unload_entry(hass, entry):
 class MediaPlayerEntity(Entity):
     """ABC for media player entities."""
 
-    _access_token: Optional[str] = None
+    _access_token: str | None = None
 
     # Implement these for your media player
     @property
@@ -353,9 +381,7 @@ class MediaPlayerEntity(Entity):
     def access_token(self) -> str:
         """Access token for this media player."""
         if self._access_token is None:
-            self._access_token = hashlib.sha256(
-                _RND.getrandbits(256).to_bytes(32, "little")
-            ).hexdigest()
+            self._access_token = secrets.token_hex(32)
         return self._access_token
 
     @property
@@ -421,7 +447,20 @@ class MediaPlayerEntity(Entity):
         if url is None:
             return None, None
 
-        return await _async_fetch_image(self.hass, url)
+        return await self._async_fetch_image_from_cache(url)
+
+    async def async_get_browse_image(
+        self,
+        media_content_type: str,
+        media_content_id: str,
+        media_image_id: str | None = None,
+    ) -> tuple[str | None, str | None]:
+        """
+        Optionally fetch internally accessible image for media browser.
+
+        Must be implemented by integration.
+        """
+        return None, None
 
     @property
     def media_title(self):
@@ -509,6 +548,16 @@ class MediaPlayerEntity(Entity):
         return None
 
     @property
+    def repeat(self):
+        """Return current repeat mode."""
+        return None
+
+    @property
+    def group_members(self):
+        """List of members which are currently grouped together."""
+        return None
+
+    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         return 0
@@ -519,7 +568,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_turn_on(self):
         """Turn the media player on."""
-        await self.hass.async_add_job(self.turn_on)
+        await self.hass.async_add_executor_job(self.turn_on)
 
     def turn_off(self):
         """Turn the media player off."""
@@ -527,7 +576,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_turn_off(self):
         """Turn the media player off."""
-        await self.hass.async_add_job(self.turn_off)
+        await self.hass.async_add_executor_job(self.turn_off)
 
     def mute_volume(self, mute):
         """Mute the volume."""
@@ -535,7 +584,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_mute_volume(self, mute):
         """Mute the volume."""
-        await self.hass.async_add_job(self.mute_volume, mute)
+        await self.hass.async_add_executor_job(self.mute_volume, mute)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
@@ -543,7 +592,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        await self.hass.async_add_job(self.set_volume_level, volume)
+        await self.hass.async_add_executor_job(self.set_volume_level, volume)
 
     def media_play(self):
         """Send play command."""
@@ -551,7 +600,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_media_play(self):
         """Send play command."""
-        await self.hass.async_add_job(self.media_play)
+        await self.hass.async_add_executor_job(self.media_play)
 
     def media_pause(self):
         """Send pause command."""
@@ -559,7 +608,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_media_pause(self):
         """Send pause command."""
-        await self.hass.async_add_job(self.media_pause)
+        await self.hass.async_add_executor_job(self.media_pause)
 
     def media_stop(self):
         """Send stop command."""
@@ -567,7 +616,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_media_stop(self):
         """Send stop command."""
-        await self.hass.async_add_job(self.media_stop)
+        await self.hass.async_add_executor_job(self.media_stop)
 
     def media_previous_track(self):
         """Send previous track command."""
@@ -575,7 +624,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_media_previous_track(self):
         """Send previous track command."""
-        await self.hass.async_add_job(self.media_previous_track)
+        await self.hass.async_add_executor_job(self.media_previous_track)
 
     def media_next_track(self):
         """Send next track command."""
@@ -583,7 +632,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_media_next_track(self):
         """Send next track command."""
-        await self.hass.async_add_job(self.media_next_track)
+        await self.hass.async_add_executor_job(self.media_next_track)
 
     def media_seek(self, position):
         """Send seek command."""
@@ -591,7 +640,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_media_seek(self, position):
         """Send seek command."""
-        await self.hass.async_add_job(self.media_seek, position)
+        await self.hass.async_add_executor_job(self.media_seek, position)
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
@@ -599,7 +648,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
-        await self.hass.async_add_job(
+        await self.hass.async_add_executor_job(
             ft.partial(self.play_media, media_type, media_id, **kwargs)
         )
 
@@ -609,7 +658,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_select_source(self, source):
         """Select input source."""
-        await self.hass.async_add_job(self.select_source, source)
+        await self.hass.async_add_executor_job(self.select_source, source)
 
     def select_sound_mode(self, sound_mode):
         """Select sound mode."""
@@ -617,7 +666,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_select_sound_mode(self, sound_mode):
         """Select sound mode."""
-        await self.hass.async_add_job(self.select_sound_mode, sound_mode)
+        await self.hass.async_add_executor_job(self.select_sound_mode, sound_mode)
 
     def clear_playlist(self):
         """Clear players playlist."""
@@ -625,7 +674,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_clear_playlist(self):
         """Clear players playlist."""
-        await self.hass.async_add_job(self.clear_playlist)
+        await self.hass.async_add_executor_job(self.clear_playlist)
 
     def set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
@@ -633,7 +682,15 @@ class MediaPlayerEntity(Entity):
 
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
-        await self.hass.async_add_job(self.set_shuffle, shuffle)
+        await self.hass.async_add_executor_job(self.set_shuffle, shuffle)
+
+    def set_repeat(self, repeat):
+        """Set repeat mode."""
+        raise NotImplementedError()
+
+    async def async_set_repeat(self, repeat):
+        """Set repeat mode."""
+        await self.hass.async_add_executor_job(self.set_repeat, repeat)
 
     # No need to overwrite these.
     @property
@@ -701,11 +758,16 @@ class MediaPlayerEntity(Entity):
         """Boolean if shuffle is supported."""
         return bool(self.supported_features & SUPPORT_SHUFFLE_SET)
 
+    @property
+    def support_grouping(self):
+        """Boolean if player grouping is supported."""
+        return bool(self.supported_features & SUPPORT_GROUPING)
+
     async def async_toggle(self):
         """Toggle the power on the media player."""
         if hasattr(self, "toggle"):
             # pylint: disable=no-member
-            await self.hass.async_add_job(self.toggle)
+            await self.hass.async_add_executor_job(self.toggle)
             return
 
         if self.state in [STATE_OFF, STATE_IDLE]:
@@ -720,7 +782,7 @@ class MediaPlayerEntity(Entity):
         """
         if hasattr(self, "volume_up"):
             # pylint: disable=no-member
-            await self.hass.async_add_job(self.volume_up)
+            await self.hass.async_add_executor_job(self.volume_up)
             return
 
         if self.volume_level < 1 and self.supported_features & SUPPORT_VOLUME_SET:
@@ -733,7 +795,7 @@ class MediaPlayerEntity(Entity):
         """
         if hasattr(self, "volume_down"):
             # pylint: disable=no-member
-            await self.hass.async_add_job(self.volume_down)
+            await self.hass.async_add_executor_job(self.volume_down)
             return
 
         if self.volume_level > 0 and self.supported_features & SUPPORT_VOLUME_SET:
@@ -743,7 +805,7 @@ class MediaPlayerEntity(Entity):
         """Play or pause the media player."""
         if hasattr(self, "media_play_pause"):
             # pylint: disable=no-member
-            await self.hass.async_add_job(self.media_play_pause)
+            await self.hass.async_add_executor_job(self.media_play_pause)
             return
 
         if self.state == STATE_PLAYING:
@@ -793,6 +855,7 @@ class MediaPlayerEntity(Entity):
 
         return data
 
+    @final
     @property
     def state_attributes(self):
         """Return the state attributes."""
@@ -809,72 +872,100 @@ class MediaPlayerEntity(Entity):
         if self.media_image_remotely_accessible:
             state_attr["entity_picture_local"] = self.media_image_local
 
+        if self.support_grouping:
+            state_attr[ATTR_GROUP_MEMBERS] = self.group_members
+
         return state_attr
 
     async def async_browse_media(
         self,
-        media_content_type: Optional[str] = None,
-        media_content_id: Optional[str] = None,
-    ) -> "BrowseMedia":
-        """
-        Return a payload for the "media_player/browse_media" websocket command.
+        media_content_type: str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Return a BrowseMedia instance.
 
-        Payload should follow this format:
-            {
-                "title": str - Title of the item
-                "media_content_type": str - see below
-                "media_content_id": str - see below
-                  - Can be passed back in to browse further
-                  - Can be used as-is with media_player.play_media service
-                "can_play": bool - If item is playable
-                "can_expand": bool - If item contains other media
-                "thumbnail": str (Optional) - URL to image thumbnail for item
-                "children": list (Optional) - [{<item_with_keys_above>}, ...]
-            }
-
-        Note: Children should omit the children key.
+        The BrowseMedia instance will be used by the
+        "media_player/browse_media" websocket command.
         """
         raise NotImplementedError()
 
+    def join_players(self, group_members):
+        """Join `group_members` as a player group with the current player."""
+        raise NotImplementedError()
 
-async def _async_fetch_image(hass, url):
-    """Fetch image.
+    async def async_join_players(self, group_members):
+        """Join `group_members` as a player group with the current player."""
+        await self.hass.async_add_executor_job(self.join_players, group_members)
 
-    Images are cached in memory (the images are typically 10-100kB in size).
-    """
-    cache_images = ENTITY_IMAGE_CACHE[CACHE_IMAGES]
-    cache_maxsize = ENTITY_IMAGE_CACHE[CACHE_MAXSIZE]
+    def unjoin_player(self):
+        """Remove this player from any group."""
+        raise NotImplementedError()
 
-    if urlparse(url).hostname is None:
-        url = f"{get_url(hass)}{url}"
+    async def async_unjoin_player(self):
+        """Remove this player from any group."""
+        await self.hass.async_add_executor_job(self.unjoin_player)
 
-    if url not in cache_images:
-        cache_images[url] = {CACHE_LOCK: asyncio.Lock()}
+    async def _async_fetch_image_from_cache(self, url):
+        """Fetch image.
 
-    async with cache_images[url][CACHE_LOCK]:
-        if CACHE_CONTENT in cache_images[url]:
-            return cache_images[url][CACHE_CONTENT]
+        Images are cached in memory (the images are typically 10-100kB in size).
+        """
+        cache_images = ENTITY_IMAGE_CACHE[CACHE_IMAGES]
+        cache_maxsize = ENTITY_IMAGE_CACHE[CACHE_MAXSIZE]
 
-        content, content_type = (None, None)
-        websession = async_get_clientsession(hass)
-        try:
-            with async_timeout.timeout(10):
-                response = await websession.get(url)
+        if urlparse(url).hostname is None:
+            url = f"{get_url(self.hass)}{url}"
 
-                if response.status == HTTP_OK:
-                    content = await response.read()
-                    content_type = response.headers.get(CONTENT_TYPE)
-                    if content_type:
-                        content_type = content_type.split(";")[0]
-                    cache_images[url][CACHE_CONTENT] = content, content_type
+        if url not in cache_images:
+            cache_images[url] = {CACHE_LOCK: asyncio.Lock()}
 
-        except asyncio.TimeoutError:
-            pass
+        async with cache_images[url][CACHE_LOCK]:
+            if CACHE_CONTENT in cache_images[url]:
+                return cache_images[url][CACHE_CONTENT]
 
-        while len(cache_images) > cache_maxsize:
-            cache_images.popitem(last=False)
+        (content, content_type) = await self._async_fetch_image(url)
+
+        async with cache_images[url][CACHE_LOCK]:
+            cache_images[url][CACHE_CONTENT] = content, content_type
+            while len(cache_images) > cache_maxsize:
+                cache_images.popitem(last=False)
 
         return content, content_type
+
+    async def _async_fetch_image(self, url):
+        """Retrieve an image."""
+        content, content_type = (None, None)
+        websession = async_get_clientsession(self.hass)
+        with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
+            response = await websession.get(url)
+            if response.status == HTTP_OK:
+                content = await response.read()
+                content_type = response.headers.get(CONTENT_TYPE)
+                if content_type:
+                    content_type = content_type.split(";")[0]
+
+        if content is None:
+            _LOGGER.warning("Error retrieving proxied image from %s", url)
+
+        return content, content_type
+
+    def get_browse_image_url(
+        self,
+        media_content_type: str,
+        media_content_id: str,
+        media_image_id: str | None = None,
+    ) -> str:
+        """Generate an url for a media browser image."""
+        url_path = (
+            f"/api/media_player_proxy/{self.entity_id}/browse_media"
+            f"/{media_content_type}/{media_content_id}"
+        )
+
+        url_query = {"token": self.access_token}
+        if media_image_id:
+            url_query["media_image_id"] = media_image_id
+
+        return str(URL(url_path).with_query(url_query))
 
 
 class MediaPlayerImageView(HomeAssistantView):
@@ -883,16 +974,25 @@ class MediaPlayerImageView(HomeAssistantView):
     requires_auth = False
     url = "/api/media_player_proxy/{entity_id}"
     name = "api:media_player:image"
+    extra_urls = [
+        url + "/browse_media/{media_content_type}/{media_content_id}",
+    ]
 
     def __init__(self, component):
         """Initialize a media player view."""
         self.component = component
 
-    async def get(self, request: web.Request, entity_id: str) -> web.Response:
+    async def get(
+        self,
+        request: web.Request,
+        entity_id: str,
+        media_content_type: str | None = None,
+        media_content_id: str | None = None,
+    ) -> web.Response:
         """Start a get request."""
         player = self.component.get_entity(entity_id)
         if player is None:
-            status = HTTP_NOT_FOUND if request[KEY_AUTHENTICATED] else 401
+            status = HTTP_NOT_FOUND if request[KEY_AUTHENTICATED] else HTTP_UNAUTHORIZED
             return web.Response(status=status)
 
         authenticated = (
@@ -901,9 +1001,15 @@ class MediaPlayerImageView(HomeAssistantView):
         )
 
         if not authenticated:
-            return web.Response(status=401)
+            return web.Response(status=HTTP_UNAUTHORIZED)
 
-        data, content_type = await player.async_get_media_image()
+        if media_content_type and media_content_id:
+            media_image_id = request.query.get("media_image_id")
+            data, content_type = await player.async_get_browse_image(
+                media_content_type, media_content_id, media_image_id
+            )
+        else:
+            data, content_type = await player.async_get_media_image()
 
         if data is None:
             return web.Response(status=HTTP_INTERNAL_SERVER_ERROR)
@@ -980,7 +1086,7 @@ async def websocket_browse_media(hass, connection, msg):
     To use, media_player integrations can implement MediaPlayerEntity.async_browse_media()
     """
     component = hass.data[DOMAIN]
-    player: Optional[MediaPlayerDevice] = component.get_entity(msg["entity_id"])
+    player: MediaPlayerDevice | None = component.get_entity(msg["entity_id"])
 
     if player is None:
         connection.send_error(msg["id"], "entity_not_found", "Entity not found")
@@ -1046,31 +1152,40 @@ class BrowseMedia:
     def __init__(
         self,
         *,
+        media_class: str,
         media_content_id: str,
         media_content_type: str,
         title: str,
         can_play: bool,
         can_expand: bool,
-        children: Optional[List["BrowseMedia"]] = None,
-        thumbnail: Optional[str] = None,
+        children: list[BrowseMedia] | None = None,
+        children_media_class: str | None = None,
+        thumbnail: str | None = None,
     ):
         """Initialize browse media item."""
+        self.media_class = media_class
         self.media_content_id = media_content_id
         self.media_content_type = media_content_type
         self.title = title
         self.can_play = can_play
         self.can_expand = can_expand
         self.children = children
+        self.children_media_class = children_media_class
         self.thumbnail = thumbnail
 
     def as_dict(self, *, parent: bool = True) -> dict:
         """Convert Media class to browse media dictionary."""
+        if self.children_media_class is None:
+            self.calculate_children_class()
+
         response = {
             "title": self.title,
+            "media_class": self.media_class,
             "media_content_type": self.media_content_type,
             "media_content_id": self.media_content_id,
             "can_play": self.can_play,
             "can_expand": self.can_expand,
+            "children_media_class": self.children_media_class,
             "thumbnail": self.thumbnail,
         }
 
@@ -1085,3 +1200,14 @@ class BrowseMedia:
             response["children"] = []
 
         return response
+
+    def calculate_children_class(self) -> None:
+        """Count the children media classes and calculate the correct class."""
+        if self.children is None or len(self.children) == 0:
+            return
+
+        self.children_media_class = MEDIA_CLASS_DIRECTORY
+
+        proposed_class = self.children[0].media_class
+        if all(child.media_class == proposed_class for child in self.children):
+            self.children_media_class = proposed_class

@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 
 if TYPE_CHECKING:
-    from .connection import ActiveConnection  # noqa
+    from .connection import ActiveConnection
 
 
 WebSocketCommandHandler = Callable[[HomeAssistant, "ActiveConnection", dict], None]
@@ -29,6 +29,7 @@ ERR_UNKNOWN_COMMAND = "unknown_command"
 ERR_UNKNOWN_ERROR = "unknown_error"
 ERR_UNAUTHORIZED = "unauthorized"
 ERR_TIMEOUT = "timeout"
+ERR_TEMPLATE_ERROR = "template_error"
 
 TYPE_RESULT = "result"
 

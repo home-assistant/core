@@ -1,25 +1,26 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato",
             "existing_instance_updated": "Configurazione esistente aggiornata.",
-            "single_instance_allowed": "\u00c8 consentita solo una singola configurazione di AdGuard Home."
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
-            "connection_error": "Impossibile connettersi."
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
             "hassio_confirm": {
-                "description": "Vuoi configurare Home Assistant per connettersi alla AdGuard Home fornita dal componente aggiuntivo di Hass.io: {addon}?",
-                "title": "AdGuard Home tramite il componente aggiuntivo di Hass.io"
+                "description": "Vuoi configurare Home Assistant per connettersi ad AdGuard Home fornito dal componente aggiuntivo: {addon}?",
+                "title": "AdGuard Home tramite il componente aggiuntivo di Home Assistant"
             },
             "user": {
                 "data": {
                     "host": "Host",
                     "password": "Password",
                     "port": "Porta",
-                    "ssl": "AdGuard Home utilizza un certificato SSL",
+                    "ssl": "Utilizza un certificato SSL",
                     "username": "Nome utente",
-                    "verify_ssl": "AdGuard Home utilizza un certificato appropriato"
+                    "verify_ssl": "Verificare il certificato SSL"
                 },
                 "description": "Configura l'istanza di AdGuard Home per consentire il monitoraggio e il controllo."
             }

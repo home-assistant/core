@@ -1,26 +1,19 @@
 """The tests for the MQTT eventstream component."""
 import json
-
-import pytest
+from unittest.mock import ANY, patch
 
 import homeassistant.components.mqtt_eventstream as eventstream
-from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
 from homeassistant.core import State, callback
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import ANY, patch
 from tests.common import (
     async_fire_mqtt_message,
     async_fire_time_changed,
     mock_state_change_event,
 )
-
-
-@pytest.fixture(autouse=True)
-def mock_storage(hass_storage):
-    """Autouse hass_storage for the TestCase tests."""
 
 
 async def add_eventstream(hass, sub_topic=None, pub_topic=None, ignore_event=None):
@@ -121,6 +114,7 @@ async def test_time_event_does_not_send_message(hass, mqtt_mock):
     mqtt_mock.async_publish.reset_mock()
 
     async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
     assert not mqtt_mock.async_publish.called
 
 
@@ -145,7 +139,34 @@ async def test_receiving_remote_event_fires_hass_event(hass, mqtt_mock):
     async_fire_mqtt_message(hass, sub_topic, payload)
     await hass.async_block_till_done()
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
+
+    await hass.async_block_till_done()
+
+
+async def test_receiving_blocked_event_fires_hass_event(hass, mqtt_mock):
+    """Test the receiving of blocked event does not fire."""
+    sub_topic = "foo"
+    assert await add_eventstream(hass, sub_topic=sub_topic)
+    await hass.async_block_till_done()
+
+    calls = []
+
+    @callback
+    def listener(_):
+        calls.append(1)
+
+    hass.bus.async_listen(MATCH_ALL, listener)
+    await hass.async_block_till_done()
+
+    for event in eventstream.BLOCKED_EVENTS:
+        payload = json.dumps({"event_type": event, "event_data": {}}, cls=JSONEncoder)
+        async_fire_mqtt_message(hass, sub_topic, payload)
+        await hass.async_block_till_done()
+
+    assert len(calls) == 0
+
+    await hass.async_block_till_done()
 
 
 async def test_ignored_event_doesnt_send_over_stream(hass, mqtt_mock):
@@ -165,6 +186,7 @@ async def test_ignored_event_doesnt_send_over_stream(hass, mqtt_mock):
 
     # Set a state of an entity
     mock_state_change_event(hass, State(e_id, "on"))
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     assert not mqtt_mock.async_publish.called

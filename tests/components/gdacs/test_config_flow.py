@@ -1,9 +1,10 @@
 """Define tests for the GDACS config flow."""
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.gdacs import CONF_CATEGORIES, DOMAIN
 from homeassistant.const import (
     CONF_LATITUDE,
@@ -11,8 +12,6 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
 )
-
-from tests.async_mock import patch
 
 
 @pytest.fixture(name="gdacs_setup", autouse=True)
@@ -28,7 +27,7 @@ async def test_duplicate_error(hass, config_entry):
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}, data=conf
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
@@ -37,7 +36,7 @@ async def test_duplicate_error(hass, config_entry):
 async def test_show_form(hass):
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -54,7 +53,7 @@ async def test_step_import(hass):
     }
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "import"}, data=conf
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
@@ -74,7 +73,7 @@ async def test_step_user(hass):
     conf = {CONF_RADIUS: 25}
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}, data=conf
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"

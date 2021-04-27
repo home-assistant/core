@@ -4,7 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "cannot_connect": "Tilkobling mislyktes",
             "unknown": "Uventet feil"
         },
         "step": {
@@ -16,6 +16,7 @@
             },
             "ups": {
                 "data": {
+                    "alias": "",
                     "resources": "Ressurser"
                 },
                 "title": "Velg UPS som skal overv\u00e5kes"
@@ -24,6 +25,7 @@
                 "data": {
                     "host": "Vert",
                     "password": "Passord",
+                    "port": "Port",
                     "username": "Brukernavn"
                 },
                 "title": "Koble til NUT-serveren"
@@ -31,6 +33,10 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "unknown": "Uventet feil"
+        },
         "step": {
             "init": {
                 "data": {

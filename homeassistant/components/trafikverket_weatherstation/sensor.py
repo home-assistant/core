@@ -8,7 +8,7 @@ import aiohttp
 from pytrafikverket.trafikverket_weather import TrafikverketWeather
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -17,13 +17,13 @@ from homeassistant.const import (
     DEGREE,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    LENGTH_MILLIMETERS,
     PERCENTAGE,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,7 +97,7 @@ SENSOR_TYPES = {
     ],
     "precipitation_amount": [
         "Precipitation amount",
-        "mm",
+        LENGTH_MILLIMETERS,
         "precipitation_amount",
         "mdi:cup-water",
         None,
@@ -144,7 +144,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         async_add_entities(dev, True)
 
 
-class TrafikverketWeatherStation(Entity):
+class TrafikverketWeatherStation(SensorEntity):
     """Representation of a Trafikverket sensor."""
 
     def __init__(self, weather_api, name, sensor_type, sensor_station):
@@ -171,7 +171,7 @@ class TrafikverketWeatherStation(Entity):
         return self._icon
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of Trafikverket Weatherstation."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

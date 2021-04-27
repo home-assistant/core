@@ -114,10 +114,11 @@ async def async_setup(hass, config):
     if not result:
         return False
 
-    async def _close():
+    @callback
+    def _close(*_):
         controller.close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close())
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
 
     _LOGGER.debug("Arm home config: %s, mode: %s ", conf, conf.get(CONF_ARM_HOME_MODE))
 

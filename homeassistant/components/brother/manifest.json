@@ -3,8 +3,14 @@
   "name": "Brother Printer",
   "documentation": "https://www.home-assistant.io/integrations/brother",
   "codeowners": ["@bieniu"],
-  "requirements": ["brother==0.1.17"],
-  "zeroconf": ["_printer._tcp.local."],
+  "requirements": ["brother==1.0.0"],
+  "zeroconf": [
+    {
+      "type": "_printer._tcp.local.",
+      "name": "brother*"
+    }
+  ],
   "config_flow": true,
-  "quality_scale": "platinum"
+  "quality_scale": "platinum",
+  "iot_class": "local_polling"
 }

@@ -1,7 +1,7 @@
 """The test for the Melissa Climate component."""
-from homeassistant.components import melissa
+from unittest.mock import AsyncMock, patch
 
-from tests.async_mock import AsyncMock, patch
+from homeassistant.components import melissa
 
 VALID_CONFIG = {"melissa": {"username": "********", "password": "********"}}
 

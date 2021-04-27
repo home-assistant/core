@@ -1,9 +1,42 @@
 {
     "config": {
-        "error": {
-            "cannot_connect": "Failed to connect, please try again"
+        "abort": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "not_irobot_device": "Discovered device is not an iRobot device",
+            "short_blid": "The BLID was truncated"
         },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "iRobot {name} ({host})",
         "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Select a Roomba or Braava.",
+                "title": "Automatically connect to the device"
+            },
+            "link": {
+                "description": "Press and hold the Home button on {name} until the device generates a sound (about two seconds), then submit within 30 seconds.",
+                "title": "Retrieve Password"
+            },
+            "link_manual": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "The password could not be retrieved from the device automatically. Please follow the steps outlined in the documentation at: {auth_help_url}",
+                "title": "Enter Password"
+            },
+            "manual": {
+                "data": {
+                    "blid": "BLID",
+                    "host": "Host"
+                },
+                "description": "No Roomba or Braava have been discovered on your network. The BLID is the portion of the device hostname after `iRobot-` or `Roomba-`. Please follow the steps outlined in the documentation at: {auth_help_url}",
+                "title": "Manually connect to the device"
+            },
             "user": {
                 "data": {
                     "blid": "BLID",

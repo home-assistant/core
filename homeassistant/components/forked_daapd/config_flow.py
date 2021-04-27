@@ -1,4 +1,5 @@
 """Config flow to configure forked-daapd devices."""
+from contextlib import suppress
 import logging
 
 from pyforked_daapd import ForkedDaapdAPI
@@ -9,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (  # pylint:disable=unused-import
+from .const import (
     CONF_LIBRESPOT_JAVA_PORT,
     CONF_MAX_PLAYLISTS,
     CONF_TTS_PAUSE_TIME,
@@ -31,6 +32,7 @@ DATA_SCHEMA_DICT = {
 }
 
 TEST_CONNECTION_ERROR_DICT = {
+    "forbidden": "forbidden",
     "ok": "ok",
     "websocket_not_enabled": "websocket_not_enabled",
     "wrong_host_or_port": "wrong_host_or_port",
@@ -160,12 +162,10 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if discovery_info.get("properties") and discovery_info["properties"].get(
             "Machine Name"
         ):
-            try:
+            with suppress(ValueError):
                 version_num = int(
                     discovery_info["properties"].get("mtd-version", "0").split(".")[0]
                 )
-            except ValueError:
-                pass
         if version_num < 27:
             return self.async_abort(reason="not_forked_daapd")
         await self.async_set_unique_id(discovery_info["properties"]["Machine Name"])
@@ -187,6 +187,5 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NAME: discovery_info["properties"]["Machine Name"],
         }
         self.discovery_schema = vol.Schema(fill_in_schema_dict(zeroconf_data))
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": zeroconf_data})
         return await self.async_step_user()

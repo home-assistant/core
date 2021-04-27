@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Bridge ist bereits konfiguriert.",
-            "already_in_progress": "Der Konfigurationsablauf f\u00fcr die Bridge wird bereits ausgef\u00fchrt."
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt"
         },
         "error": {
-            "cannot_connect": "Verbindung zum Gateway nicht m\u00f6glich.",
-            "invalid_key": "Fehler beim Registrieren mit dem angegebenen Schl\u00fcssel. Wenn dies weiterhin geschieht, versuche, das Gateway neu zu starten.",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_key": "Registrierung mit angegebenem Schl\u00fcssel fehlgeschlagen. Wenn dies weiterhin geschieht, starte den Gateway neu.",
             "timeout": "Timeout bei der \u00dcberpr\u00fcfung des Codes."
         },
         "step": {

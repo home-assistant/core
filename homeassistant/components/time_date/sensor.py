@@ -4,11 +4,10 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_DISPLAY_OPTIONS
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.dt as dt_util
 
@@ -47,7 +46,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class TimeDateSensor(Entity):
+class TimeDateSensor(SensorEntity):
     """Implementation of a Time and Date sensor."""
 
     def __init__(self, hass, option_type):
@@ -80,7 +79,7 @@ class TimeDateSensor(Entity):
         return "mdi:clock"
 
     async def async_added_to_hass(self) -> None:
-        """Set up next update."""
+        """Set up first update."""
         self.unsub = async_track_point_in_utc_time(
             self.hass, self.point_in_time_listener, self.get_next_interval()
         )
@@ -91,36 +90,33 @@ class TimeDateSensor(Entity):
             self.unsub()
             self.unsub = None
 
-    def get_next_interval(self, now=None):
+    def get_next_interval(self):
         """Compute next time an update should occur."""
-        if now is None:
-            now = dt_util.utcnow()
+        now = dt_util.utcnow()
+
         if self.type == "date":
-            now = dt_util.start_of_local_day(dt_util.as_local(now))
-            return now + timedelta(seconds=86400)
+            tomorrow = dt_util.as_local(now) + timedelta(days=1)
+            return dt_util.start_of_local_day(tomorrow)
+
         if self.type == "beat":
+            # Add 1 hour because @0 beats is at 23:00:00 UTC.
+            timestamp = dt_util.as_timestamp(now + timedelta(hours=1))
             interval = 86.4
         else:
+            timestamp = dt_util.as_timestamp(now)
             interval = 60
-        timestamp = int(dt_util.as_timestamp(now))
+
         delta = interval - (timestamp % interval)
-        return now + timedelta(seconds=delta)
+        next_interval = now + timedelta(seconds=delta)
+        _LOGGER.debug("%s + %s -> %s (%s)", now, delta, next_interval, self.type)
+
+        return next_interval
 
     def _update_internal_state(self, time_date):
         time = dt_util.as_local(time_date).strftime(TIME_STR_FORMAT)
         time_utc = time_date.strftime(TIME_STR_FORMAT)
         date = dt_util.as_local(time_date).date().isoformat()
         date_utc = time_date.date().isoformat()
-
-        # Calculate Swatch Internet Time.
-        time_bmt = time_date + timedelta(hours=1)
-        delta = timedelta(
-            hours=time_bmt.hour,
-            minutes=time_bmt.minute,
-            seconds=time_bmt.second,
-            microseconds=time_bmt.microsecond,
-        )
-        beat = int((delta.seconds + delta.microseconds / 1000000.0) / 86.4)
 
         if self.type == "time":
             self._state = time
@@ -135,6 +131,19 @@ class TimeDateSensor(Entity):
         elif self.type == "time_utc":
             self._state = time_utc
         elif self.type == "beat":
+            # Calculate Swatch Internet Time.
+            time_bmt = time_date + timedelta(hours=1)
+            delta = timedelta(
+                hours=time_bmt.hour,
+                minutes=time_bmt.minute,
+                seconds=time_bmt.second,
+                microseconds=time_bmt.microsecond,
+            )
+
+            # Use integers to better handle rounding. For example,
+            # int(63763.2/86.4) = 737 but 637632//864 = 738.
+            beat = int(delta.total_seconds() * 10) // 864
+
             self._state = f"@{beat:03d}"
         elif self.type == "date_time_iso":
             self._state = dt_util.parse_datetime(f"{date} {time}").isoformat()

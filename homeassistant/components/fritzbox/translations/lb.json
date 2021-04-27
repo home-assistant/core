@@ -1,13 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "D\u00ebs AVM FRITZ!Box ass scho konfigur\u00e9iert",
-            "already_in_progress": "AVM FRITZ!Box Konfiguratioun ass schonn am gaang.",
-            "not_found": "Keng \u00ebnnerst\u00ebtzte AVM FRITZ!Box am Netzwierk fonnt.",
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "already_in_progress": "Konfiguratioun's Oflaf ass schonn am gaang.",
+            "no_devices_found": "Keng Apparater am Netzwierk fonnt",
             "not_supported": "Mat der AVM FRITZ!Box verbonnen mee sie kann keng Smart Home Apparater kontroll\u00e9ieren."
         },
         "error": {
-            "auth_failed": "Benotzernumm an/oder Passwuert inkorrekt"
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
         },
         "flow_title": "AVM FRITZ!Box: {name}",
         "step": {

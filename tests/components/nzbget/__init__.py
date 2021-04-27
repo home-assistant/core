@@ -1,5 +1,6 @@
 """Tests for the NZBGet integration."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant.components.nzbget.const import DOMAIN
 from homeassistant.const import (
@@ -13,7 +14,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 ENTRY_CONFIG = {
@@ -25,6 +25,8 @@ ENTRY_CONFIG = {
     CONF_USERNAME: "",
     CONF_VERIFY_SSL: False,
 }
+
+ENTRY_OPTIONS = {CONF_SCAN_INTERVAL: 5}
 
 USER_INPUT = {
     CONF_HOST: "10.10.10.30",
@@ -48,16 +50,16 @@ YAML_CONFIG = {
 MOCK_VERSION = "21.0"
 
 MOCK_STATUS = {
-    "ArticleCacheMB": "64",
-    "AverageDownloadRate": "512",
-    "DownloadPaused": "4",
-    "DownloadRate": "1000",
-    "DownloadedSizeMB": "256",
-    "FreeDiskSpaceMB": "1024",
-    "PostJobCount": "2",
-    "PostPaused": "4",
-    "RemainingSizeMB": "512",
-    "UpTimeSec": "600",
+    "ArticleCacheMB": 64,
+    "AverageDownloadRate": 1250000,
+    "DownloadPaused": False,
+    "DownloadRate": 2500000,
+    "DownloadedSizeMB": 256,
+    "FreeDiskSpaceMB": 1024,
+    "PostJobCount": 2,
+    "PostPaused": False,
+    "RemainingSizeMB": 512,
+    "UpTimeSec": 600,
 }
 
 MOCK_HISTORY = [
@@ -69,17 +71,15 @@ MOCK_HISTORY = [
 async def init_integration(
     hass,
     *,
-    status: dict = MOCK_STATUS,
-    history: dict = MOCK_HISTORY,
-    version: str = MOCK_VERSION,
+    data: dict = ENTRY_CONFIG,
+    options: dict = ENTRY_OPTIONS,
 ) -> MockConfigEntry:
     """Set up the NZBGet integration in Home Assistant."""
-    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
+    entry = MockConfigEntry(domain=DOMAIN, data=data, options=options)
     entry.add_to_hass(hass)
 
-    with _patch_version(version), _patch_status(status), _patch_history(history):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     return entry
 

@@ -1,11 +1,16 @@
 """Support for monitoring the Transmission BitTorrent client API."""
-import logging
+from __future__ import annotations
 
+from contextlib import suppress
+
+from transmissionrpc.torrent import Torrent
+
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME, DATA_RATE_MEGABYTES_PER_SECOND, STATE_IDLE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
+from . import TransmissionClient
 from .const import (
     CONF_LIMIT,
     CONF_ORDER,
@@ -13,8 +18,6 @@ from .const import (
     STATE_ATTR_TORRENT_INFO,
     SUPPORTED_ORDER_MODES,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -37,12 +40,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(dev, True)
 
 
-class TransmissionSensor(Entity):
+class TransmissionSensor(SensorEntity):
     """A base class for all Transmission sensors."""
 
     def __init__(self, tm_client, client_name, sensor_name, sub_type=None):
         """Initialize the sensor."""
-        self._tm_client = tm_client
+        self._tm_client: TransmissionClient = tm_client
         self._client_name = client_name
         self._name = sensor_name
         self._sub_type = sub_type
@@ -147,14 +150,12 @@ class TransmissionTorrentsSensor(TransmissionSensor):
         return "Torrents"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes, if any."""
-        limit = self._tm_client.config_entry.options[CONF_LIMIT]
-        order = self._tm_client.config_entry.options[CONF_ORDER]
-        torrents = self._tm_client.api.torrents[0:limit]
         info = _torrents_info(
-            torrents,
-            order=order,
+            torrents=self._tm_client.api.torrents,
+            order=self._tm_client.config_entry.options[CONF_ORDER],
+            limit=self._tm_client.config_entry.options[CONF_LIMIT],
             statuses=self.SUBTYPE_MODES[self._sub_type],
         )
         return {
@@ -169,7 +170,7 @@ class TransmissionTorrentsSensor(TransmissionSensor):
         self._state = len(torrents)
 
 
-def _filter_torrents(torrents, statuses=None):
+def _filter_torrents(torrents: list[Torrent], statuses=None) -> list[Torrent]:
     return [
         torrent
         for torrent in torrents
@@ -177,19 +178,17 @@ def _filter_torrents(torrents, statuses=None):
     ]
 
 
-def _torrents_info(torrents, order, statuses=None):
+def _torrents_info(torrents, order, limit, statuses=None):
     infos = {}
     torrents = _filter_torrents(torrents, statuses)
     torrents = SUPPORTED_ORDER_MODES[order](torrents)
-    for torrent in _filter_torrents(torrents, statuses):
+    for torrent in torrents[:limit]:
         info = infos[torrent.name] = {
             "added_date": torrent.addedDate,
             "percent_done": f"{torrent.percentDone * 100:.2f}",
             "status": torrent.status,
             "id": torrent.id,
         }
-        try:
+        with suppress(ValueError):
             info["eta"] = str(torrent.eta)
-        except ValueError:
-            pass
     return infos

@@ -1,15 +1,10 @@
 {
     "config": {
         "error": {
-            "general_error": "Ett ok\u00e4nt fel intr\u00e4ffade."
+            "general_error": "Ett ok\u00e4nt fel intr\u00e4ffade.",
+            "invalid_api_key": "Ogiltig API-nyckel"
         },
         "step": {
-            "geography": {
-                "data": {
-                    "latitude": "Latitud",
-                    "longitude": "Longitud"
-                }
-            },
             "node_pro": {
                 "data": {
                     "ip_address": "Enhets IP-adress / v\u00e4rdnamn",
@@ -20,7 +15,8 @@
                 "data": {
                     "cloud_api": "Geografisk Plats",
                     "type": "Integrationstyp"
-                }
+                },
+                "title": "Konfigurera AirVisual"
             }
         }
     }

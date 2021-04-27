@@ -1,7 +1,13 @@
 """Provide functionality to interact with the vlc telnet interface."""
 import logging
 
-from python_telnet_vlc import ConnectionError as ConnErr, VLCTelnet
+from python_telnet_vlc import (
+    CommandError,
+    ConnectionError as ConnErr,
+    LuaError,
+    ParseError,
+    VLCTelnet,
+)
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
@@ -30,6 +36,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,19 +44,20 @@ DOMAIN = "vlc_telnet"
 
 DEFAULT_NAME = "VLC-TELNET"
 DEFAULT_PORT = 4212
+MAX_VOLUME = 500
 
 SUPPORT_VLC = (
-    SUPPORT_PAUSE
-    | SUPPORT_SEEK
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PREVIOUS_TRACK
+    SUPPORT_CLEAR_PLAYLIST
     | SUPPORT_NEXT_TRACK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_STOP
-    | SUPPORT_CLEAR_PLAYLIST
+    | SUPPORT_PAUSE
     | SUPPORT_PLAY
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_SEEK
     | SUPPORT_SHUFFLE_SET
+    | SUPPORT_STOP
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_SET
 )
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -81,7 +89,6 @@ class VlcDevice(MediaPlayerEntity):
 
     def __init__(self, name, host, port, passwd):
         """Initialize the vlc device."""
-        self._instance = None
         self._name = name
         self._volume = None
         self._muted = None
@@ -93,7 +100,7 @@ class VlcDevice(MediaPlayerEntity):
         self._port = port
         self._password = passwd
         self._vlc = None
-        self._available = False
+        self._available = True
         self._volume_bkp = 0
         self._media_artist = ""
         self._media_title = ""
@@ -103,43 +110,65 @@ class VlcDevice(MediaPlayerEntity):
         if self._vlc is None:
             try:
                 self._vlc = VLCTelnet(self._host, self._password, self._port)
-                self._state = STATE_IDLE
-                self._available = True
-            except (ConnErr, EOFError):
-                self._available = False
+            except (ConnErr, EOFError) as err:
+                if self._available:
+                    _LOGGER.error("Connection error: %s", err)
+                    self._available = False
                 self._vlc = None
-        else:
-            try:
-                status = self._vlc.status()
-                if status:
-                    if "volume" in status:
-                        self._volume = int(status["volume"]) / 500.0
-                    else:
-                        self._volume = None
-                    if "state" in status:
-                        state = status["state"]
-                        if state == "playing":
-                            self._state = STATE_PLAYING
-                        elif state == "paused":
-                            self._state = STATE_PAUSED
-                        else:
-                            self._state = STATE_IDLE
+                return
+
+            self._state = STATE_IDLE
+            self._available = True
+
+        try:
+            status = self._vlc.status()
+            _LOGGER.debug("Status: %s", status)
+
+            if status:
+                if "volume" in status:
+                    self._volume = status["volume"] / MAX_VOLUME
+                else:
+                    self._volume = None
+                if "state" in status:
+                    state = status["state"]
+                    if state == "playing":
+                        self._state = STATE_PLAYING
+                    elif state == "paused":
+                        self._state = STATE_PAUSED
                     else:
                         self._state = STATE_IDLE
+                else:
+                    self._state = STATE_IDLE
 
+            if self._state != STATE_IDLE:
                 self._media_duration = self._vlc.get_length()
-                self._media_position = self._vlc.get_time()
+                vlc_position = self._vlc.get_time()
 
-                info = self._vlc.info()
-                if info:
-                    self._media_artist = info[0].get("artist")
-                    self._media_title = info[0].get("title")
+                # Check if current position is stale.
+                if vlc_position != self._media_position:
+                    self._media_position_updated_at = dt_util.utcnow()
+                    self._media_position = vlc_position
 
-            except (ConnErr, EOFError):
+            info = self._vlc.info()
+            _LOGGER.debug("Info: %s", info)
+
+            if info:
+                self._media_artist = info.get(0, {}).get("artist")
+                self._media_title = info.get(0, {}).get("title")
+
+                if not self._media_title:
+                    # Fall back to filename.
+                    data_info = info.get("data")
+                    if data_info:
+                        self._media_title = data_info["filename"]
+
+        except (CommandError, LuaError, ParseError) as err:
+            _LOGGER.error("Command error: %s", err)
+        except (ConnErr, EOFError) as err:
+            if self._available:
+                _LOGGER.error("Connection error: %s", err)
                 self._available = False
-                self._vlc = None
-
-        return True
+            self._vlc = None
 
     @property
     def name(self):
@@ -203,25 +232,26 @@ class VlcDevice(MediaPlayerEntity):
 
     def media_seek(self, position):
         """Seek the media to a specific location."""
-        track_length = self._vlc.get_length() / 1000
-        self._vlc.seek(position / track_length)
+        self._vlc.seek(int(position))
 
     def mute_volume(self, mute):
         """Mute the volume."""
         if mute:
             self._volume_bkp = self._volume
-            self._volume = 0
-            self._vlc.set_volume("0")
+            self.set_volume_level(0)
         else:
-            self._vlc.set_volume(str(self._volume_bkp))
-            self._volume = self._volume_bkp
+            self.set_volume_level(self._volume_bkp)
 
         self._muted = mute
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self._vlc.set_volume(str(volume * 500))
+        self._vlc.set_volume(volume * MAX_VOLUME)
         self._volume = volume
+
+        if self._muted and self._volume > 0:
+            # This can happen if we were muted and then see a volume_up.
+            self._muted = False
 
     def media_play(self):
         """Send play command."""
@@ -230,7 +260,11 @@ class VlcDevice(MediaPlayerEntity):
 
     def media_pause(self):
         """Send pause command."""
-        self._vlc.pause()
+        current_state = self._vlc.status().get("state")
+        if current_state != "paused":
+            # Make sure we're not already paused since VLCTelnet.pause() toggles
+            # pause.
+            self._vlc.pause()
         self._state = STATE_PAUSED
 
     def media_stop(self):

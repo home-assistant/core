@@ -1,4 +1,6 @@
 """Common tests for HomematicIP devices."""
+from unittest.mock import patch
+
 from homematicip.base.enums import EventType
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
@@ -13,8 +15,6 @@ from .helper import (
     get_and_check_entity_basics,
 )
 
-from tests.async_mock import patch
-
 
 async def test_hmip_load_all_supported_devices(hass, default_mock_hap_factory):
     """Ensure that all supported devices could be loaded."""
@@ -22,7 +22,7 @@ async def test_hmip_load_all_supported_devices(hass, default_mock_hap_factory):
         test_devices=None, test_groups=None
     )
 
-    assert len(mock_hap.hmip_device_by_entity_id) == 191
+    assert len(mock_hap.hmip_device_by_entity_id) == 253
 
 
 async def test_hmip_remove_device(hass, default_mock_hap_factory):
@@ -41,8 +41,8 @@ async def test_hmip_remove_device(hass, default_mock_hap_factory):
     assert ha_state.state == STATE_ON
     assert hmip_device
 
-    device_registry = await dr.async_get_registry(hass)
-    entity_registry = await er.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
 
     pre_device_count = len(device_registry.devices)
     pre_entity_count = len(entity_registry.entities)
@@ -73,8 +73,8 @@ async def test_hmip_add_device(hass, default_mock_hap_factory, hmip_config_entry
     assert ha_state.state == STATE_ON
     assert hmip_device
 
-    device_registry = await dr.async_get_registry(hass)
-    entity_registry = await er.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
 
     pre_device_count = len(device_registry.devices)
     pre_entity_count = len(entity_registry.entities)
@@ -119,8 +119,8 @@ async def test_hmip_remove_group(hass, default_mock_hap_factory):
     assert ha_state.state == STATE_ON
     assert hmip_device
 
-    device_registry = await dr.async_get_registry(hass)
-    entity_registry = await er.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
 
     pre_device_count = len(device_registry.devices)
     pre_entity_count = len(entity_registry.entities)
@@ -240,3 +240,32 @@ async def test_hmip_reset_energy_counter_services(hass, default_mock_hap_factory
     )
     assert hmip_device.mock_calls[-1][0] == "reset_energy_counter"
     assert len(hmip_device._connection.mock_calls) == 4  # pylint: disable=W0212
+
+
+async def test_hmip_multi_area_device(hass, default_mock_hap_factory):
+    """Test multi area device. Check if devices are created and referenced."""
+    entity_id = "binary_sensor.wired_eingangsmodul_32_fach_channel5"
+    entity_name = "Wired Eingangsmodul – 32-fach Channel5"
+    device_model = "HmIPW-DRI32"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Wired Eingangsmodul – 32-fach"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+    assert ha_state
+
+    # get the entity
+    entity_registry = er.async_get(hass)
+    entity = entity_registry.async_get(ha_state.entity_id)
+    assert entity
+
+    # get the device
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get(entity.device_id)
+    assert device.name == "Wired Eingangsmodul – 32-fach"
+
+    # get the hap
+    hap_device = device_registry.async_get(device.via_device_id)
+    assert hap_device.name == "Home"

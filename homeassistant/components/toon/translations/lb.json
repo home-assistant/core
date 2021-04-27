@@ -5,7 +5,9 @@
             "authorize_url_fail": "Onbekannte Feeler beim gener\u00e9ieren vun der Autorisatiouns URL.",
             "authorize_url_timeout": "Z\u00e4itiwwerschraidung beim erstellen vun der Autorisatioun's URL.",
             "missing_configuration": "Komponent ass net konfigur\u00e9iert. Folleg der Dokumentatioun.",
-            "no_agreements": "D\u00ebse Kont huet keen Toon Ecran."
+            "no_agreements": "D\u00ebse Kont huet keen Toon Ecran.",
+            "no_url_available": "Keng URL disponibel. Fir Informatiounen iwwert d\u00ebse Feeler, [kuck H\u00ebllef Sektioun]({docs_url})",
+            "unknown_authorize_url_generation": "Onbekannte Feeler beim erstellen vun der Authorisatiouns URL."
         },
         "step": {
             "agreement": {

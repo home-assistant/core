@@ -1,20 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This device has already been configured",
-            "already_in_progress": "This device is already being configured",
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
             "not_huawei_lte": "Not a Huawei LTE device"
         },
         "error": {
-            "connection_failed": "Connection failed",
             "connection_timeout": "Connection timeout",
             "incorrect_password": "Incorrect password",
             "incorrect_username": "Incorrect username",
-            "incorrect_username_or_password": "Incorrect username or password",
+            "invalid_auth": "Invalid authentication",
             "invalid_url": "Invalid URL",
             "login_attempts_exceeded": "Maximum login attempts exceeded, please try again later",
             "response_error": "Unknown error from device",
-            "unknown_connection_error": "Unknown error connecting to device"
+            "unknown": "Unexpected error"
         },
         "flow_title": "Huawei LTE: {name}",
         "step": {
@@ -35,7 +34,8 @@
                 "data": {
                     "name": "Notification service name (change requires restart)",
                     "recipient": "SMS notification recipients",
-                    "track_new_devices": "Track new devices"
+                    "track_new_devices": "Track new devices",
+                    "track_wired_clients": "Track wired network clients"
                 }
             }
         }

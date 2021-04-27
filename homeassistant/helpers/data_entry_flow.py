@@ -1,6 +1,7 @@
 """Helpers for the data entry flow."""
+from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
 from aiohttp import web
 import voluptuous as vol
@@ -8,7 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import HTTP_NOT_FOUND
+from homeassistant.const import HTTP_BAD_REQUEST, HTTP_NOT_FOUND
 import homeassistant.helpers.config_validation as cv
 
 
@@ -20,7 +21,9 @@ class _BaseFlowManagerView(HomeAssistantView):
         self._flow_mgr = flow_mgr
 
     # pylint: disable=no-self-use
-    def _prepare_result_json(self, result: Dict[str, Any]) -> Dict[str, Any]:
+    def _prepare_result_json(
+        self, result: data_entry_flow.FlowResultDict
+    ) -> data_entry_flow.FlowResultDict:
         """Convert result to JSON."""
         if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             data = result.copy()
@@ -58,7 +61,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
             extra=vol.ALLOW_EXTRA,
         )
     )
-    async def post(self, request: web.Request, data: Dict[str, Any]) -> web.Response:
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle a POST request."""
         if isinstance(data["handler"], list):
             handler = tuple(data["handler"])
@@ -76,7 +79,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
         except data_entry_flow.UnknownHandler:
             return self.json_message("Invalid handler specified", HTTP_NOT_FOUND)
         except data_entry_flow.UnknownStep:
-            return self.json_message("Handler does not support user", 400)
+            return self.json_message("Handler does not support user", HTTP_BAD_REQUEST)
 
         result = self._prepare_result_json(result)
 
@@ -99,7 +102,7 @@ class FlowManagerResourceView(_BaseFlowManagerView):
 
     @RequestDataValidator(vol.Schema(dict), allow_empty=True)
     async def post(
-        self, request: web.Request, flow_id: str, data: Dict[str, Any]
+        self, request: web.Request, flow_id: str, data: dict[str, Any]
     ) -> web.Response:
         """Handle a POST request."""
         try:
@@ -107,7 +110,7 @@ class FlowManagerResourceView(_BaseFlowManagerView):
         except data_entry_flow.UnknownFlow:
             return self.json_message("Invalid flow specified", HTTP_NOT_FOUND)
         except vol.Invalid:
-            return self.json_message("User input malformed", 400)
+            return self.json_message("User input malformed", HTTP_BAD_REQUEST)
 
         result = self._prepare_result_json(result)
 

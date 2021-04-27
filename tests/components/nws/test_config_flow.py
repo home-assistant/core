@@ -1,10 +1,10 @@
 """Test the National Weather Service (NWS) config flow."""
+from unittest.mock import patch
+
 import aiohttp
 
 from homeassistant import config_entries, setup
 from homeassistant.components.nws.const import DOMAIN
-
-from tests.async_mock import patch
 
 
 async def test_form(hass, mock_simple_nws_config):
@@ -20,14 +20,13 @@ async def test_form(hass, mock_simple_nws_config):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.nws.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.nws.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"api_key": "test"}
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "ABC"
@@ -37,8 +36,6 @@ async def test_form(hass, mock_simple_nws_config):
         "longitude": -90,
         "station": "ABC",
     }
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -85,8 +82,6 @@ async def test_form_already_configured(hass, mock_simple_nws_config):
     )
 
     with patch(
-        "homeassistant.components.nws.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.nws.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -94,10 +89,9 @@ async def test_form_already_configured(hass, mock_simple_nws_config):
             result["flow_id"],
             {"api_key": "test"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
     result = await hass.config_entries.flow.async_init(
@@ -105,8 +99,6 @@ async def test_form_already_configured(hass, mock_simple_nws_config):
     )
 
     with patch(
-        "homeassistant.components.nws.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.nws.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -117,5 +109,4 @@ async def test_form_already_configured(hass, mock_simple_nws_config):
     assert result2["type"] == "abort"
     assert result2["reason"] == "already_configured"
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0

@@ -1,11 +1,12 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Kun en konfigurasjon av ZHA er tillatt."
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
-            "cannot_connect": "Kan ikke koble til ZHA-enhet."
+            "cannot_connect": "Tilkobling mislyktes"
         },
+        "flow_title": "ZHA: {name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -27,14 +28,15 @@
                 "data": {
                     "path": "Seriell enhetsbane"
                 },
-                "description": "Velg seriell port for Zigbee radio"
+                "description": "Velg seriell port for Zigbee radio",
+                "title": ""
             }
         }
     },
     "device_automation": {
         "action_type": {
             "squawk": "Squawk",
-            "warn": "Advar"
+            "warn": "Advare"
         },
         "trigger_subtype": {
             "both_buttons": "Begge knapper",
@@ -57,7 +59,7 @@
             "left": "Venstre",
             "open": "\u00c5pen",
             "right": "H\u00f8yre",
-            "turn_off": "Skru av",
+            "turn_off": "Sl\u00e5 av",
             "turn_on": "Sl\u00e5 p\u00e5"
         },
         "trigger_type": {
@@ -66,7 +68,7 @@
             "device_knocked": "Enheten sl\u00e5tt \"{subtype}\"",
             "device_offline": "Enheten er frakoblet",
             "device_rotated": "Enheten roterte \"{subtype}\"",
-            "device_shaken": "Enhet er ristet",
+            "device_shaken": "Enhet ristet",
             "device_slid": "Enheten skled \"{subtype}\"",
             "device_tilted": "Enheten skr\u00e5stilt",
             "remote_button_alt_double_press": "\"{subtype}\"-knapp trykket p\u00e5 to ganger (vekslende modus)",

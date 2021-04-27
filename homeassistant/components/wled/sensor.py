@@ -1,30 +1,30 @@
 """Support for WLED sensors."""
-from datetime import timedelta
-import logging
-from typing import Any, Callable, Dict, List, Optional
+from __future__ import annotations
 
-from homeassistant.components.sensor import DEVICE_CLASS_CURRENT
+from datetime import timedelta
+from typing import Any, Callable
+
+from homeassistant.components.sensor import DEVICE_CLASS_CURRENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_BYTES,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TIMESTAMP,
     PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
 from . import WLEDDataUpdateCoordinator, WLEDDeviceEntity
-from .const import ATTR_LED_COUNT, ATTR_MAX_POWER, CURRENT_MA, DOMAIN, SIGNAL_DBM
-
-_LOGGER = logging.getLogger(__name__)
+from .const import ATTR_LED_COUNT, ATTR_MAX_POWER, CURRENT_MA, DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up WLED sensor based on a config entry."""
     coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -42,7 +42,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class WLEDSensor(WLEDDeviceEntity):
+class WLEDSensor(WLEDDeviceEntity, SensorEntity):
     """Defines a WLED sensor."""
 
     def __init__(
@@ -54,7 +54,7 @@ class WLEDSensor(WLEDDeviceEntity):
         icon: str,
         key: str,
         name: str,
-        unit_of_measurement: Optional[str] = None,
+        unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize WLED sensor."""
         self._unit_of_measurement = unit_of_measurement
@@ -94,7 +94,7 @@ class WLEDEstimatedCurrentSensor(WLEDSensor):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         return {
             ATTR_LED_COUNT: self.coordinator.data.info.leds.count,
@@ -107,7 +107,7 @@ class WLEDEstimatedCurrentSensor(WLEDSensor):
         return self.coordinator.data.info.leds.power
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the class of this sensor."""
         return DEVICE_CLASS_CURRENT
 
@@ -133,7 +133,7 @@ class WLEDUptimeSensor(WLEDSensor):
         return uptime.replace(microsecond=0).isoformat()
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the class of this sensor."""
         return DEVICE_CLASS_TIMESTAMP
 
@@ -192,7 +192,7 @@ class WLEDWifiRSSISensor(WLEDSensor):
             icon="mdi:wifi",
             key="wifi_rssi",
             name=f"{coordinator.data.info.name} Wi-Fi RSSI",
-            unit_of_measurement=SIGNAL_DBM,
+            unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         )
 
     @property
@@ -201,7 +201,7 @@ class WLEDWifiRSSISensor(WLEDSensor):
         return self.coordinator.data.info.wifi.rssi
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the class of this sensor."""
         return DEVICE_CLASS_SIGNAL_STRENGTH
 

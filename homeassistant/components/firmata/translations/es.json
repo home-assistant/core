@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "No se ha podido conectar a la placa Firmata durante la configuraci\u00f3n"
+            "cannot_connect": "No se pudo conectar"
         }
     }
 }

@@ -1,8 +1,5 @@
 """Constants for rachio."""
 
-import http.client
-import ssl
-
 DEFAULT_NAME = "Rachio"
 
 DOMAIN = "rachio"
@@ -50,19 +47,15 @@ KEY_CUSTOM_SHADE = "customShade"
 KEY_CUSTOM_CROP = "customCrop"
 KEY_CUSTOM_SLOPE = "customSlope"
 
-# Yes we really do get all these exceptions (hopefully rachiopy switches to requests)
-RACHIO_API_EXCEPTIONS = (
-    http.client.HTTPException,
-    ssl.SSLError,
-    OSError,
-    AssertionError,
-)
-
 STATUS_ONLINE = "ONLINE"
 
+MODEL_GENERATION_1 = "GENERATION1"
 SCHEDULE_TYPE_FIXED = "FIXED"
 SCHEDULE_TYPE_FLEX = "FLEX"
+SERVICE_PAUSE_WATERING = "pause_watering"
+SERVICE_RESUME_WATERING = "resume_watering"
 SERVICE_SET_ZONE_MOISTURE = "set_zone_moisture_percent"
+SERVICE_START_MULTIPLE_ZONES = "start_multiple_zone_schedule"
 
 SIGNAL_RACHIO_UPDATE = f"{DOMAIN}_update"
 SIGNAL_RACHIO_CONTROLLER_UPDATE = f"{SIGNAL_RACHIO_UPDATE}_controller"

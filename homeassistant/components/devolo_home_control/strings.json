@@ -1,22 +1,27 @@
 {
-  "title": "devolo Home Control",
   "config": {
     "abort": {
-      "already_configured": "This Home Control Central Unit is already in use."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
-      "invalid_credentials": "Incorrect user name and/or password."
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
       "user": {
         "data": {
-          "username": "E-Mail-Address / devolo ID",
+          "username": "[%key:common::config_flow::data::email%] / devolo ID",
           "password": "[%key:common::config_flow::data::password%]",
-          "mydevolo_url": "mydevolo URL",
-          "home_control_url": "Home Control URL"
-        },
-        "title": "devolo Home Control"
+          "mydevolo_url": "mydevolo [%key:common::config_flow::data::url%]"
+        }
+      },
+      "zeroconf_confirm": {
+        "data": {
+          "username": "[%key:common::config_flow::data::email%] / devolo ID",
+          "password": "[%key:common::config_flow::data::password%]",
+          "mydevolo_url": "mydevolo [%key:common::config_flow::data::url%]"
+        }
       }
     }
   }
 }
+

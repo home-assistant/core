@@ -13,11 +13,11 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import async_get_platforms
 import homeassistant.helpers.entity_registry as er
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     _LOGGER,
@@ -26,7 +26,7 @@ from .const import (
     ISY994_NODES,
     ISY994_PROGRAMS,
     ISY994_VARIABLES,
-    SUPPORTED_PLATFORMS,
+    PLATFORMS,
     SUPPORTED_PROGRAM_PLATFORMS,
 )
 
@@ -86,7 +86,7 @@ VALID_PROGRAM_COMMANDS = [
 def valid_isy_commands(value: Any) -> str:
     """Validate the command is valid."""
     value = str(value).upper()
-    if value in COMMAND_FRIENDLY_NAME.keys():
+    if value in COMMAND_FRIENDLY_NAME:
         return value
     raise vol.Invalid("Invalid ISY Command.")
 
@@ -157,11 +157,11 @@ SERVICE_RUN_NETWORK_RESOURCE_SCHEMA = vol.All(
 
 
 @callback
-def async_setup_services(hass: HomeAssistantType):
+def async_setup_services(hass: HomeAssistant):  # noqa: C901
     """Create and register services for the ISY integration."""
     existing_services = hass.services.async_services().get(DOMAIN)
     if existing_services and any(
-        service in INTEGRATION_SERVICES for service in existing_services.keys()
+        service in INTEGRATION_SERVICES for service in existing_services
     ):
         # Integration-level services have already been added. Return.
         return
@@ -173,7 +173,7 @@ def async_setup_services(hass: HomeAssistantType):
 
         for config_entry_id in hass.data[DOMAIN]:
             isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
-            if isy_name and not isy_name == isy.configuration["name"]:
+            if isy_name and isy_name != isy.configuration["name"]:
                 continue
             # If an address is provided, make sure we query the correct ISY.
             # Otherwise, query the whole system on all ISY's connected.
@@ -198,7 +198,7 @@ def async_setup_services(hass: HomeAssistantType):
 
         for config_entry_id in hass.data[DOMAIN]:
             isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
-            if isy_name and not isy_name == isy.configuration["name"]:
+            if isy_name and isy_name != isy.configuration["name"]:
                 continue
             if not hasattr(isy, "networking") or isy.networking is None:
                 continue
@@ -223,7 +223,7 @@ def async_setup_services(hass: HomeAssistantType):
 
         for config_entry_id in hass.data[DOMAIN]:
             isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
-            if isy_name and not isy_name == isy.configuration["name"]:
+            if isy_name and isy_name != isy.configuration["name"]:
                 continue
             program = None
             if address:
@@ -246,7 +246,7 @@ def async_setup_services(hass: HomeAssistantType):
 
         for config_entry_id in hass.data[DOMAIN]:
             isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
-            if isy_name and not isy_name == isy.configuration["name"]:
+            if isy_name and isy_name != isy.configuration["name"]:
                 continue
             variable = None
             if name:
@@ -278,7 +278,7 @@ def async_setup_services(hass: HomeAssistantType):
             hass_isy_data = hass.data[DOMAIN][config_entry_id]
             uuid = hass_isy_data[ISY994_ISY].configuration["uuid"]
 
-            for platform in SUPPORTED_PLATFORMS:
+            for platform in PLATFORMS:
                 for node in hass_isy_data[ISY994_NODES][platform]:
                     if hasattr(node, "address"):
                         current_unique_ids.append(f"{uuid}_{node.address}")
@@ -353,9 +353,33 @@ def async_setup_services(hass: HomeAssistantType):
         domain=DOMAIN, service=SERVICE_RELOAD, service_func=async_reload_config_entries
     )
 
+    async def _async_send_raw_node_command(call: ServiceCall):
+        await hass.helpers.service.entity_service_call(
+            async_get_platforms(hass, DOMAIN), SERVICE_SEND_RAW_NODE_COMMAND, call
+        )
+
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=SERVICE_SEND_RAW_NODE_COMMAND,
+        schema=cv.make_entity_service_schema(SERVICE_SEND_RAW_NODE_COMMAND_SCHEMA),
+        service_func=_async_send_raw_node_command,
+    )
+
+    async def _async_send_node_command(call: ServiceCall):
+        await hass.helpers.service.entity_service_call(
+            async_get_platforms(hass, DOMAIN), SERVICE_SEND_NODE_COMMAND, call
+        )
+
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=SERVICE_SEND_NODE_COMMAND,
+        schema=cv.make_entity_service_schema(SERVICE_SEND_NODE_COMMAND_SCHEMA),
+        service_func=_async_send_node_command,
+    )
+
 
 @callback
-def async_unload_services(hass: HomeAssistantType):
+def async_unload_services(hass: HomeAssistant):
     """Unload services for the ISY integration."""
     if hass.data[DOMAIN]:
         # There is still another config entry for this domain, don't remove services.
@@ -363,7 +387,7 @@ def async_unload_services(hass: HomeAssistantType):
 
     existing_services = hass.services.async_services().get(DOMAIN)
     if not existing_services or not any(
-        service in INTEGRATION_SERVICES for service in existing_services.keys()
+        service in INTEGRATION_SERVICES for service in existing_services
     ):
         return
 
@@ -374,27 +398,12 @@ def async_unload_services(hass: HomeAssistantType):
     hass.services.async_remove(domain=DOMAIN, service=SERVICE_SET_VARIABLE)
     hass.services.async_remove(domain=DOMAIN, service=SERVICE_CLEANUP)
     hass.services.async_remove(domain=DOMAIN, service=SERVICE_RELOAD)
+    hass.services.async_remove(domain=DOMAIN, service=SERVICE_SEND_RAW_NODE_COMMAND)
+    hass.services.async_remove(domain=DOMAIN, service=SERVICE_SEND_NODE_COMMAND)
 
 
 @callback
-def async_setup_device_services(hass: HomeAssistantType):
-    """Create device-specific services for the ISY Integration."""
-    platform = entity_platform.current_platform.get()
-
-    platform.async_register_entity_service(
-        SERVICE_SEND_RAW_NODE_COMMAND,
-        SERVICE_SEND_RAW_NODE_COMMAND_SCHEMA,
-        SERVICE_SEND_RAW_NODE_COMMAND,
-    )
-    platform.async_register_entity_service(
-        SERVICE_SEND_NODE_COMMAND,
-        SERVICE_SEND_NODE_COMMAND_SCHEMA,
-        SERVICE_SEND_NODE_COMMAND,
-    )
-
-
-@callback
-def async_setup_light_services(hass: HomeAssistantType):
+def async_setup_light_services(hass: HomeAssistant):
     """Create device-specific services for the ISY Integration."""
     platform = entity_platform.current_platform.get()
 

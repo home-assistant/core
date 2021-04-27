@@ -1,16 +1,20 @@
 """Abstraction form OWM sensors."""
-import logging
-
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import ATTRIBUTION, SENSOR_DEVICE_CLASS, SENSOR_NAME, SENSOR_UNIT
+from .const import (
+    ATTRIBUTION,
+    DEFAULT_NAME,
+    DOMAIN,
+    MANUFACTURER,
+    SENSOR_DEVICE_CLASS,
+    SENSOR_NAME,
+    SENSOR_UNIT,
+)
 
-_LOGGER = logging.getLogger(__name__)
 
-
-class AbstractOpenWeatherMapSensor(Entity):
+class AbstractOpenWeatherMapSensor(SensorEntity):
     """Abstract class for an OpenWeatherMap sensor."""
 
     def __init__(
@@ -41,6 +45,17 @@ class AbstractOpenWeatherMapSensor(Entity):
         return self._unique_id
 
     @property
+    def device_info(self):
+        """Return the device info."""
+        split_unique_id = self._unique_id.split("-")
+        return {
+            "identifiers": {(DOMAIN, f"{split_unique_id[0]}-{split_unique_id[1]}")},
+            "name": DEFAULT_NAME,
+            "manufacturer": MANUFACTURER,
+            "entry_type": "service",
+        }
+
+    @property
     def should_poll(self):
         """Return the polling requirement of the entity."""
         return False
@@ -61,7 +76,7 @@ class AbstractOpenWeatherMapSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 

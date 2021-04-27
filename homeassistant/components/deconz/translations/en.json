@@ -2,10 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Bridge is already configured",
-            "already_in_progress": "Config flow for bridge is already in progress.",
+            "already_in_progress": "Configuration flow is already in progress",
             "no_bridges": "No deCONZ bridges discovered",
+            "no_hardware_available": "No radio hardware connected to deCONZ",
             "not_deconz_bridge": "Not a deCONZ bridge",
-            "one_instance_only": "Component only supports one deCONZ instance",
             "updated_instance": "Updated deCONZ instance with new host address"
         },
         "error": {
@@ -14,8 +14,8 @@
         "flow_title": "deCONZ Zigbee gateway ({host})",
         "step": {
             "hassio_confirm": {
-                "description": "Do you want to configure Home Assistant to connect to the deCONZ gateway provided by the Hass.io add-on {addon}?",
-                "title": "deCONZ Zigbee gateway via Hass.io add-on"
+                "description": "Do you want to configure Home Assistant to connect to the deCONZ gateway provided by the add-on {addon}?",
+                "title": "deCONZ Zigbee gateway via Home Assistant add-on"
             },
             "link": {
                 "description": "Unlock your deCONZ gateway to register with Home Assistant.\n\n1. Go to deCONZ Settings -> Gateway -> Advanced\n2. Press \"Authenticate app\" button",
@@ -42,6 +42,10 @@
             "button_2": "Second button",
             "button_3": "Third button",
             "button_4": "Fourth button",
+            "button_5": "Fifth button",
+            "button_6": "Sixth button",
+            "button_7": "Seventh button",
+            "button_8": "Eighth button",
             "close": "Close",
             "dim_down": "Dim down",
             "dim_up": "Dim up",
@@ -66,6 +70,7 @@
             "remote_button_quadruple_press": "\"{subtype}\" button quadruple clicked",
             "remote_button_quintuple_press": "\"{subtype}\" button quintuple clicked",
             "remote_button_rotated": "Button rotated \"{subtype}\"",
+            "remote_button_rotated_fast": "Button rotated fast \"{subtype}\"",
             "remote_button_rotation_stopped": "Button rotation \"{subtype}\" stopped",
             "remote_button_short_press": "\"{subtype}\" button pressed",
             "remote_button_short_release": "\"{subtype}\" button released",
@@ -93,7 +98,8 @@
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Allow deCONZ CLIP sensors",
-                    "allow_deconz_groups": "Allow deCONZ light groups"
+                    "allow_deconz_groups": "Allow deCONZ light groups",
+                    "allow_new_devices": "Allow automatic addition of new devices"
                 },
                 "description": "Configure visibility of deCONZ device types",
                 "title": "deCONZ options"

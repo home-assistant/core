@@ -1,22 +1,41 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Smile \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
-            "cannot_connect": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21",
-            "invalid_auth": "\u9a57\u8b49\u7121\u6548\uff0c\u8acb\u6aa2\u67e5\u6240\u8f38\u5165\u7684  Smile ID 8 \u4f4d\u5b57\u5143",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "flow_title": "Smile : {name}",
         "step": {
             "user": {
                 "data": {
-                    "host": "Smile IP \u4f4d\u5740",
-                    "password": "Smile ID"
+                    "flow_type": "\u9023\u7dda\u985e\u578b"
                 },
-                "description": "\u8a73\u7d30\u8cc7\u8a0a",
+                "description": "\u7522\u54c1\uff1a",
+                "title": "Plugwise \u985e\u578b"
+            },
+            "user_gateway": {
+                "data": {
+                    "host": "IP \u4f4d\u5740",
+                    "password": "Smile ID",
+                    "port": "\u901a\u8a0a\u57e0",
+                    "username": "Smile \u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "description": "\u8acb\u8f38\u5165\uff1a",
                 "title": "\u9023\u7dda\u81f3 Smile"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "\u6383\u63cf\u9593\u8ddd\uff08\u79d2\uff09"
+                },
+                "description": "\u8abf\u6574 Plugwise \u9078\u9805"
             }
         }
     }

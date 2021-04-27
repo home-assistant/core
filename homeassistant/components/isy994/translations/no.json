@@ -4,7 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "invalid_host": "Vertsoppf\u00f8ringen var ikke i fullstendig URL-format, for eksempel http://192.168.10.100:80",
             "unknown": "Uventet feil"
@@ -36,6 +36,5 @@
                 "title": "ISY994 Alternativer"
             }
         }
-    },
-    "title": "Universelle enheter ISY994"
+    }
 }

@@ -1,17 +1,13 @@
 """Support for the Torque OBD application."""
-import logging
 import re
 
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_EMAIL, CONF_NAME, DEGREE
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 API_PATH = "/api/torque"
 
@@ -109,7 +105,7 @@ class TorqueReceiveDataView(HomeAssistantView):
         return "OK!"
 
 
-class TorqueSensor(Entity):
+class TorqueSensor(SensorEntity):
     """Representation of a Torque sensor."""
 
     def __init__(self, name, unit):

@@ -1,24 +1,20 @@
 """Support for Aqualink temperature sensors."""
-import logging
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_COLD,
     DOMAIN,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from . import AqualinkEntity
 from .const import DOMAIN as AQUALINK_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up discovered binary sensors."""
     devs = []

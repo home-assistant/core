@@ -2,20 +2,23 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
-            "already_in_progress": "Konfigurasjonsflyt for denne porten p\u00e5g\u00e5r allerede",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "not_xiaomi_aqara": "Ikke en Xiaomi Aqara Gateway, oppdaget enhet ikke samsvarer med kjente gatewayer"
         },
         "error": {
             "discovery_error": "Kunne ikke oppdage en Xiaomi Aqara Gateway, pr\u00f8v \u00e5 bruke IP-adressen til enheten som kj\u00f8rer HomeAssistant som grensesnitt",
-            "invalid_host": "Ugyldig IP adresse , se https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+            "invalid_host": "Ugyldig vertsnavn eller IP-adresse , se https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
             "invalid_interface": "Ugyldig nettverksgrensesnitt",
             "invalid_key": "Ugyldig gateway-n\u00f8kkel",
-            "invalid_mac": "Ugyldig Mac-adresse",
-            "not_found_error": "Zeroconf oppdaget Gateway kunne ikke v\u00e6re plassert for \u00e5 f\u00e5 den n\u00f8dvendige informasjonen, kan du pr\u00f8ve \u00e5 bruke IP-adressen til enheten som kj\u00f8rer HomeAssistant som grensesnitt"
+            "invalid_mac": "Ugyldig MAC-adresse"
         },
+        "flow_title": "",
         "step": {
             "select": {
-                "description": "Kj\u00f8r oppsettet igjen hvis du vil koble til tilleggsportaler",
+                "data": {
+                    "select_ip": "IP adresse"
+                },
+                "description": "Kj\u00f8r oppsettet p\u00e5 nytt hvis du vil koble til flere gatewayer",
                 "title": "Velg Xiaomi Aqara Gateway som du \u00f8nsker \u00e5 koble til"
             },
             "settings": {
@@ -30,9 +33,10 @@
                 "data": {
                     "host": "IP adresse (valgfritt)",
                     "interface": "Nettverksgrensesnittet som skal brukes",
-                    "mac": "Mac-adresse (valgfritt)"
+                    "mac": "MAC-adresse (valgfritt)"
                 },
-                "description": "Koble til Xiaomi Aqara Gateway, hvis IP- og mac-adressene er tomme, brukes automatisk oppdagelse"
+                "description": "Koble til Xiaomi Aqara Gateway, hvis IP- og MAC-adressene blir tomme, brukes automatisk oppdagelse",
+                "title": ""
             }
         }
     }

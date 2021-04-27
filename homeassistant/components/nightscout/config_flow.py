@@ -2,27 +2,32 @@
 from asyncio import TimeoutError as AsyncIOTimeoutError
 import logging
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientResponseError
 from py_nightscout import Api as NightscoutAPI
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_URL
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 from .utils import hash_from_url
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_URL): str})
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_URL): str, vol.Optional(CONF_API_KEY): str})
 
 
 async def _validate_input(data):
     """Validate the user input allows us to connect."""
     url = data[CONF_URL]
+    api_key = data.get(CONF_API_KEY)
     try:
-        api = NightscoutAPI(url)
+        api = NightscoutAPI(url, api_secret=api_key)
         status = await api.get_server_status()
+        if status.settings.get("authDefaultRoles") == "status-only":
+            await api.get_sgvs()
+    except ClientResponseError as error:
+        raise InputValidationError("invalid_auth") from error
     except (ClientError, AsyncIOTimeoutError, OSError) as error:
         raise InputValidationError("cannot_connect") from error
 

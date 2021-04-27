@@ -1,9 +1,8 @@
 """Support for AquaLogic sensors."""
-import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     PERCENTAGE,
@@ -13,11 +12,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN, UPDATE_TOPIC
-
-_LOGGER = logging.getLogger(__name__)
 
 TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
 PERCENT_UNITS = [PERCENTAGE, PERCENTAGE]
@@ -59,7 +55,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors)
 
 
-class AquaLogicSensor(Entity):
+class AquaLogicSensor(SensorEntity):
     """Sensor implementation for the AquaLogic component."""
 
     def __init__(self, processor, sensor_type):

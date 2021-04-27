@@ -1,8 +1,10 @@
 """Test helpers for Hue."""
 from collections import deque
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohue.groups import Groups
 from aiohue.lights import Lights
+from aiohue.scenes import Scenes
 from aiohue.sensors import Sensors
 import pytest
 
@@ -10,7 +12,8 @@ from homeassistant import config_entries
 from homeassistant.components import hue
 from homeassistant.components.hue import sensor_base as hue_sensor_base
 
-from tests.async_mock import Mock, patch
+from tests.common import MockConfigEntry
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
 @pytest.fixture(autouse=True)
@@ -66,6 +69,39 @@ def create_mock_bridge(hass):
 
 
 @pytest.fixture
+def mock_api(hass):
+    """Mock the Hue api."""
+    api = Mock(initialize=AsyncMock())
+    api.mock_requests = []
+    api.mock_light_responses = deque()
+    api.mock_group_responses = deque()
+    api.mock_sensor_responses = deque()
+    api.mock_scene_responses = deque()
+
+    async def mock_request(method, path, **kwargs):
+        kwargs["method"] = method
+        kwargs["path"] = path
+        api.mock_requests.append(kwargs)
+
+        if path == "lights":
+            return api.mock_light_responses.popleft()
+        if path == "groups":
+            return api.mock_group_responses.popleft()
+        if path == "sensors":
+            return api.mock_sensor_responses.popleft()
+        if path == "scenes":
+            return api.mock_scene_responses.popleft()
+        return None
+
+    api.config.apiversion = "9.9.9"
+    api.lights = Lights({}, mock_request)
+    api.groups = Groups({}, mock_request)
+    api.sensors = Sensors({}, mock_request)
+    api.scenes = Scenes({}, mock_request)
+    return api
+
+
+@pytest.fixture
 def mock_bridge(hass):
     """Mock a Hue bridge."""
     return create_mock_bridge(hass)
@@ -76,13 +112,11 @@ async def setup_bridge_for_sensors(hass, mock_bridge, hostname=None):
     if hostname is None:
         hostname = "mock-host"
     hass.config.components.add(hue.DOMAIN)
-    config_entry = config_entries.ConfigEntry(
-        1,
-        hue.DOMAIN,
-        "Mock Title",
-        {"host": hostname},
-        "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
+    config_entry = MockConfigEntry(
+        domain=hue.DOMAIN,
+        title="Mock Title",
+        data={"host": hostname},
+        connection_class=config_entries.CONN_CLASS_LOCAL_POLL,
         system_options={},
     )
     mock_bridge.config_entry = config_entry
@@ -90,7 +124,7 @@ async def setup_bridge_for_sensors(hass, mock_bridge, hostname=None):
     await hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
     await hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
     # simulate a full setup by manually adding the bridge config entry
-    hass.config_entries._entries.append(config_entry)
+    config_entry.add_to_hass(hass)
 
     # and make sure it completes before going further
     await hass.async_block_till_done()

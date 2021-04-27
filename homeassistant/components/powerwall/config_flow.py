@@ -1,33 +1,46 @@
 """Config flow for Tesla Powerwall integration."""
 import logging
 
-from tesla_powerwall import APIChangedError, Powerwall, PowerwallUnreachableError
+from tesla_powerwall import (
+    AccessDeniedError,
+    MissingAttributeError,
+    Powerwall,
+    PowerwallUnreachableError,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.components.dhcp import IP_ADDRESS
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
+from homeassistant.core import callback
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
+
+def _login_and_fetch_site_info(power_wall: Powerwall, password: str):
+    """Login to the powerwall and fetch the base info."""
+    if password is not None:
+        power_wall.login("", password)
+    power_wall.detect_and_pin_version()
+    return power_wall.get_site_info()
 
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
-    Data has the keys from DATA_SCHEMA with values provided by the user.
+    Data has the keys from schema with values provided by the user.
     """
 
     power_wall = Powerwall(data[CONF_IP_ADDRESS])
+    password = data[CONF_PASSWORD]
 
     try:
-        await hass.async_add_executor_job(power_wall.detect_and_pin_version)
-        site_info = await hass.async_add_executor_job(power_wall.get_site_info)
-    except PowerwallUnreachableError as err:
-        raise CannotConnect from err
-    except APIChangedError as err:
+        site_info = await hass.async_add_executor_job(
+            _login_and_fetch_site_info, power_wall, password
+        )
+    except MissingAttributeError as err:
         # Only log the exception without the traceback
         _LOGGER.error(str(err))
         raise WrongVersion from err
@@ -42,39 +55,70 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
+    def __init__(self):
+        """Initialize the powerwall flow."""
+        self.ip_address = None
+
+    async def async_step_dhcp(self, discovery_info):
+        """Handle dhcp discovery."""
+        if self._async_ip_address_already_configured(discovery_info[IP_ADDRESS]):
+            return self.async_abort(reason="already_configured")
+
+        self.ip_address = discovery_info[IP_ADDRESS]
+        self.context["title_placeholders"] = {CONF_IP_ADDRESS: self.ip_address}
+        return await self.async_step_user()
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
+            except PowerwallUnreachableError:
+                errors[CONF_IP_ADDRESS] = "cannot_connect"
             except WrongVersion:
                 errors["base"] = "wrong_version"
+            except AccessDeniedError:
+                errors[CONF_PASSWORD] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-            if "base" not in errors:
-                await self.async_set_unique_id(user_input[CONF_IP_ADDRESS])
-                self._abort_if_unique_id_configured()
+            if not errors:
+                existing_entry = await self.async_set_unique_id(
+                    user_input[CONF_IP_ADDRESS]
+                )
+                if existing_entry:
+                    self.hass.config_entries.async_update_entry(
+                        existing_entry, data=user_input
+                    )
+                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                    return self.async_abort(reason="reauth_successful")
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_IP_ADDRESS, default=self.ip_address): str,
+                    vol.Optional(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
         )
 
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        await self.async_set_unique_id(user_input[CONF_IP_ADDRESS])
-        self._abort_if_unique_id_configured()
+    async def async_step_reauth(self, data):
+        """Handle configuration by re-auth."""
+        self.ip_address = data[CONF_IP_ADDRESS]
+        return await self.async_step_user()
 
-        return await self.async_step_user(user_input)
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
+    @callback
+    def _async_ip_address_already_configured(self, ip_address):
+        """See if we already have an entry matching the ip_address."""
+        for entry in self._async_current_entries():
+            if entry.data.get(CONF_IP_ADDRESS) == ip_address:
+                return True
+        return False
 
 
 class WrongVersion(exceptions.HomeAssistantError):

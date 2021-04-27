@@ -5,7 +5,7 @@
             "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci"
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z urz\u0105dzeniem"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
             "pick_device": {
@@ -15,10 +15,9 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
-                    "ip_address": "Adres IP"
+                    "host": "Nazwa hosta lub adres IP"
                 },
-                "description": "Je\u015bli nie podasz hosta, to wykrywanie zostanie u\u017cyte do odnalezienia urz\u0105dze\u0144."
+                "description": "Je\u015bli nie podasz IP lub nazwy hosta, wykrywanie zostanie u\u017cyte do odnalezienia urz\u0105dze\u0144."
             }
         }
     },
@@ -26,15 +25,14 @@
         "step": {
             "init": {
                 "data": {
-                    "model": "Model (Opcjonalne)",
-                    "nightlight_switch": "U\u017cyj prze\u0142\u0105cznika Nocnego wiat\u0142a",
+                    "model": "Model (opcjonalne)",
+                    "nightlight_switch": "U\u017cyj prze\u0142\u0105cznika Nocnego \u015bwiat\u0142a",
                     "save_on_change": "Zachowaj status po zmianie",
                     "transition": "Czas przej\u015bcia (ms)",
-                    "use_music_mode": "Aktywuj tryb muzyczny"
+                    "use_music_mode": "W\u0142\u0105cz tryb muzyczny"
                 },
                 "description": "Je\u015bli nie podasz modelu urz\u0105dzenia, zostanie on automatycznie wykryty."
             }
         }
-    },
-    "title": "Yeelight"
+    }
 }

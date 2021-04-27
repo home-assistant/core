@@ -45,7 +45,7 @@ async def async_setup(hass, config):
             broadcast_port,
         )
 
-        await hass.async_add_job(
+        await hass.async_add_executor_job(
             partial(wakeonlan.send_magic_packet, mac_address, **service_kwargs)
         )
 

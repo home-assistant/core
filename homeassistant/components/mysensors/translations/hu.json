@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "invalid_device": "\u00c9rv\u00e9nytelen eszk\u00f6z",
+            "not_a_number": "Adj meg egy sz\u00e1mot.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "error": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "invalid_serial": "\u00c9rv\u00e9nytelen soros port",
+            "invalid_version": "\u00c9rv\u00e9nytelen MySensors verzi\u00f3",
+            "port_out_of_range": "A portsz\u00e1mnak legal\u00e1bb 1-nek \u00e9s legfeljebb 65535-nek kell lennie",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "gw_mqtt": {
+                "data": {
+                    "version": "MySensors verzi\u00f3"
+                }
+            },
+            "gw_serial": {
+                "data": {
+                    "version": "MySensors verzi\u00f3"
+                }
+            },
+            "gw_tcp": {
+                "data": {
+                    "tcp_port": "port",
+                    "version": "MySensors verzi\u00f3"
+                }
+            }
+        }
+    },
+    "title": "MySensors"
+}

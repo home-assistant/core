@@ -1,0 +1,10 @@
+{
+  "domain": "xbox",
+  "name": "Xbox",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/xbox",
+  "requirements": ["xbox-webapi==2.0.8"],
+  "dependencies": ["http"],
+  "codeowners": ["@hunterjm"],
+  "iot_class": "cloud_polling"
+}

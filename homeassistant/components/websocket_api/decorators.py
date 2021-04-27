@@ -1,8 +1,10 @@
 """Decorators for the Websocket API."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Awaitable
 from functools import wraps
-import logging
-from typing import Awaitable, Callable
+from typing import Callable
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
@@ -11,8 +13,6 @@ from . import const, messages
 from .connection import ActiveConnection
 
 # mypy: allow-untyped-calls, allow-untyped-defs
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def _handle_async_response(func, hass, connection, msg):

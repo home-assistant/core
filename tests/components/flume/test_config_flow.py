@@ -1,4 +1,6 @@
 """Test the flume config flow."""
+from unittest.mock import MagicMock, patch
+
 import requests.exceptions
 
 from homeassistant import config_entries, setup
@@ -9,8 +11,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-
-from tests.async_mock import MagicMock, patch
 
 
 def _get_mocked_flume_device_list():
@@ -37,8 +37,6 @@ async def test_form(hass):
         "homeassistant.components.flume.config_flow.FlumeDeviceList",
         return_value=mock_flume_device_list,
     ), patch(
-        "homeassistant.components.flume.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.flume.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -51,6 +49,7 @@ async def test_form(hass):
                 CONF_CLIENT_SECRET: "client_secret",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "test-username"
@@ -60,8 +59,6 @@ async def test_form(hass):
         CONF_CLIENT_ID: "client_id",
         CONF_CLIENT_SECRET: "client_secret",
     }
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -77,8 +74,6 @@ async def test_form_import(hass):
         "homeassistant.components.flume.config_flow.FlumeDeviceList",
         return_value=mock_flume_device_list,
     ), patch(
-        "homeassistant.components.flume.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.flume.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -92,6 +87,7 @@ async def test_form_import(hass):
                 CONF_CLIENT_SECRET: "client_secret",
             },
         )
+        await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
     assert result["title"] == "test-username"
@@ -101,8 +97,6 @@ async def test_form_import(hass):
         CONF_CLIENT_ID: "client_id",
         CONF_CLIENT_SECRET: "client_secret",
     }
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

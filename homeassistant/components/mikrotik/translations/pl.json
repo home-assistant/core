@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Mikronik jest ju\u017c skonfigurowany."
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
-            "cannot_connect": "Po\u0142\u0105czenie nie powiod\u0142o si\u0119",
-            "name_exists": "Nazwa ju\u017c istnieje.",
-            "wrong_credentials": "B\u0142\u0119dne dane uwierzytelniaj\u0105ce"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "name_exists": "Nazwa ju\u017c istnieje"
         },
         "step": {
             "user": {

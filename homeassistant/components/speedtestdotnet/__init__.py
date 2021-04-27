@@ -46,6 +46,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = ["sensor"]
+
 
 def server_id_valid(server_id):
     """Check if server_id is valid."""
@@ -60,7 +62,6 @@ def server_id_valid(server_id):
 
 async def async_setup(hass, config):
     """Import integration from config."""
-
     if DOMAIN in config:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -97,9 +98,7 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN] = coordinator
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-    )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
@@ -110,11 +109,12 @@ async def async_unload_entry(hass, config_entry):
 
     hass.data[DOMAIN].async_unload()
 
-    await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
-
-    hass.data.pop(DOMAIN)
-
-    return True
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
+    if unload_ok:
+        hass.data.pop(DOMAIN)
+    return unload_ok
 
 
 class SpeedTestDataCoordinator(DataUpdateCoordinator):
@@ -139,13 +139,17 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
         try:
             server_list = self.api.get_servers()
         except speedtest.ConfigRetrievalError:
+            _LOGGER.debug("Error retrieving server list")
             return
 
         self.servers[DEFAULT_SERVER] = {}
         for server in sorted(
-            server_list.values(), key=lambda server: server[0]["country"]
+            server_list.values(),
+            key=lambda server: server[0]["country"] + server[0]["sponsor"],
         ):
-            self.servers[f"{server[0]['country']} - {server[0]['sponsor']}"] = server[0]
+            self.servers[
+                f"{server[0]['country']} - {server[0]['sponsor']} - {server[0]['name']}"
+            ] = server[0]
 
     def update_data(self):
         """Get the latest data from speedtest.net."""

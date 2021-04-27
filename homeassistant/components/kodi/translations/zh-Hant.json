@@ -1,9 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "no_uuid": "Kodi \u5be6\u4f8b\u6c92\u6709\u552f\u4e00 ID\u3002\u901a\u5e38\u662f\u56e0\u70ba Kodi \u7248\u672c\u904e\u820a\uff08\u4f4e\u65bc 17.x\uff09\u3002\u53ef\u4ee5\u624b\u52d5\u8a2d\u5b9a\u6574\u5408\u6216\u66f4\u65b0\u81f3\u6700\u65b0\u7248\u672c Kodi\u3002",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "error": {
@@ -24,19 +25,11 @@
                 "description": "\u662f\u5426\u8981\u65b0\u589e Kodi (`{name}`) \u81f3 Home Assistant\uff1f",
                 "title": "\u5df2\u641c\u7d22\u5230\u7684 Kodi"
             },
-            "host": {
-                "data": {
-                    "host": "\u4e3b\u6a5f\u7aef",
-                    "port": "\u901a\u8a0a\u57e0",
-                    "ssl": "\u901a\u904e SSL \u9023\u7dda"
-                },
-                "description": "Kodi \u9023\u7dda\u8cc7\u8a0a\uff0c\u8acb\u78ba\u5b9a\u5df2\u65bc\u300c\u7cfb\u7d71/\u8a2d\u5b9a/\u7db2\u8def/\u670d\u52d9\u300d\u4e2d\u958b\u555f \"\u5141\u8a31\u900f\u904e HTTP \u63a7\u5236 Kodi\"\u3002"
-            },
             "user": {
                 "data": {
                     "host": "\u4e3b\u6a5f\u7aef",
                     "port": "\u901a\u8a0a\u57e0",
-                    "ssl": "\u901a\u904e SSL \u9023\u7dda"
+                    "ssl": "\u4f7f\u7528 SSL \u8a8d\u8b49"
                 },
                 "description": "Kodi \u9023\u7dda\u8cc7\u8a0a\uff0c\u8acb\u78ba\u5b9a\u5df2\u65bc\u300c\u7cfb\u7d71/\u8a2d\u5b9a/\u7db2\u8def/\u670d\u52d9\u300d\u4e2d\u958b\u555f \"\u5141\u8a31\u900f\u904e HTTP \u63a7\u5236 Kodi\"\u3002"
             },

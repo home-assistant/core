@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
             "unknown": "Erreur inattendue"
         },
         "error": {
@@ -9,6 +10,14 @@
         },
         "flow_title": "Roku: {name}",
         "step": {
+            "discovery_confirm": {
+                "data": {
+                    "one": "Vide",
+                    "other": "Vide"
+                },
+                "description": "Voulez-vous configurer {name} ?",
+                "title": "Roku"
+            },
             "ssdp_confirm": {
                 "data": {
                     "one": "Vide",

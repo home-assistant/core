@@ -8,12 +8,15 @@ from python_awair.devices import AwairDevice
 
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_ICON,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -32,7 +35,6 @@ API_VOC = "volatile_organic_compounds"
 
 ATTRIBUTION = "Awair air quality sensor"
 
-ATTR_ICON = "icon"
 ATTR_LABEL = "label"
 ATTR_UNIT = "unit"
 ATTR_UNIQUE_ID = "unique_id"
@@ -63,7 +65,7 @@ SENSOR_TYPES = {
     API_LUX: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_ILLUMINANCE,
         ATTR_ICON: None,
-        ATTR_UNIT: "lx",
+        ATTR_UNIT: LIGHT_LUX,
         ATTR_LABEL: "Illuminance",
         ATTR_UNIQUE_ID: "illuminance",
     },
@@ -103,7 +105,7 @@ SENSOR_TYPES = {
         ATTR_UNIQUE_ID: "PM10",  # matches legacy format
     },
     API_CO2: {
-        ATTR_DEVICE_CLASS: None,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_CO2,
         ATTR_ICON: "mdi:cloud",
         ATTR_UNIT: CONCENTRATION_PARTS_PER_MILLION,
         ATTR_LABEL: "Carbon dioxide",

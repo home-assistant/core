@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "Slechts \u00e9\u00e9n exemplaar is nodig."
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "step": {
             "user": {

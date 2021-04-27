@@ -1,22 +1,22 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "already_in_progress": "\u8a2d\u5099\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d\u3002",
-            "not_konn_panel": "\u4e26\u975e\u53ef\u8b58\u5225 Konnected.io \u8a2d\u5099",
-            "unknown": "\u767c\u751f\u672a\u77e5\u932f\u8aa4\u3002"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
+            "not_konn_panel": "\u4e26\u975e\u53ef\u8b58\u5225 Konnected.io \u88dd\u7f6e",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "error": {
-            "cannot_connect": "\u7121\u6cd5\u9023\u7dda\u81f3 Konnected \u9762\u677f\uff1a{host}:{port}"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
         "step": {
             "confirm": {
                 "description": "\u578b\u865f\uff1a{model}\nID\uff1a{id}\n\u4e3b\u6a5f\u7aef\uff1a{host}\n\u901a\u8a0a\u57e0\uff1a{port}\n\n\u53ef\u4ee5\u65bc Konncected \u8b66\u5831\u9762\u677f\u8a2d\u5b9a\u4e2d\u8a2d\u5b9a IO \u8207\u9762\u677f\u884c\u70ba\u3002",
-                "title": "Konnected \u8a2d\u5099\u5df2\u5099\u59a5"
+                "title": "Konnected \u88dd\u7f6e\u5df2\u5099\u59a5"
             },
             "import_confirm": {
                 "description": "\u65bc configuration.yaml \u4e2d\u767c\u73fe Konnected \u8b66\u5831 ID {id}\u3002\u6b64\u6d41\u7a0b\u5c07\u5141\u8a31\u532f\u5165\u81f3\u8a2d\u5b9a\u4e2d\u3002",
-                "title": "\u532f\u5165 Konnected \u8a2d\u5099"
+                "title": "\u532f\u5165 Konnected \u88dd\u7f6e"
             },
             "user": {
                 "data": {
@@ -29,7 +29,7 @@
     },
     "options": {
         "abort": {
-            "not_konn_panel": "\u4e26\u975e\u53ef\u8b58\u5225 Konnected.io \u8a2d\u5099"
+            "not_konn_panel": "\u4e26\u975e\u53ef\u8b58\u5225 Konnected.io \u88dd\u7f6e"
         },
         "error": {
             "bad_host": "\u7121\u6548\u7684\u8986\u5beb API \u4e3b\u6a5f\u7aef URL"
@@ -38,7 +38,7 @@
             "options_binary": {
                 "data": {
                     "inverse": "\u53cd\u8f49\u958b\u555f/\u95dc\u9589\u72c0\u614b",
-                    "name": "\u540d\u7a31\uff08\u9078\u9805\uff09",
+                    "name": "\u540d\u7a31 \uff08\u9078\u9805\uff09",
                     "type": "\u4e8c\u9032\u4f4d\u611f\u61c9\u5668\u985e\u578b"
                 },
                 "description": "{zone}\u9078\u9805",
@@ -46,7 +46,7 @@
             },
             "options_digital": {
                 "data": {
-                    "name": "\u540d\u7a31\uff08\u9078\u9805\uff09",
+                    "name": "\u540d\u7a31 \uff08\u9078\u9805\uff09",
                     "poll_interval": "\u66f4\u65b0\u9593\u8ddd\uff08\u5206\u9418\uff09\uff08\u9078\u9805\uff09",
                     "type": "\u611f\u61c9\u5668\u985e\u578b"
                 },
@@ -96,7 +96,7 @@
                     "activation": "\u958b\u555f\u6642\u8f38\u51fa",
                     "momentary": "\u6301\u7e8c\u6642\u9593\uff08ms\uff09\uff08\u9078\u9805\uff09",
                     "more_states": "\u8a2d\u5b9a\u6b64\u5340\u57df\u7684\u9644\u52a0\u72c0\u614b",
-                    "name": "\u540d\u7a31\uff08\u9078\u9805\uff09",
+                    "name": "\u540d\u7a31 \uff08\u9078\u9805\uff09",
                     "pause": "\u66ab\u505c\u9593\u8ddd\uff08ms\uff09\uff08\u9078\u9805\uff09",
                     "repeat": "\u91cd\u8907\u6642\u9593\uff08-1=\u7121\u9650\uff09\uff08\u9078\u9805\uff09"
                 },

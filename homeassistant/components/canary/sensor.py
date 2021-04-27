@@ -1,11 +1,27 @@
 """Support for Canary sensors."""
+from __future__ import annotations
+
+from typing import Callable
+
 from canary.api import SensorType
 
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
+    DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    TEMP_CELSIUS,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DATA_CANARY
+from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
+from .coordinator import CanaryDataUpdateCoordinator
 
 SENSOR_VALUE_PRECISION = 2
 ATTR_AIR_QUALITY = "air_quality"
@@ -18,13 +34,19 @@ CANARY_PRO = "Canary Pro"
 CANARY_FLEX = "Canary Flex"
 
 # Sensor types are defined like so:
-# sensor type name, unit_of_measurement, icon
+# sensor type name, unit_of_measurement, icon, device class, products supported
 SENSOR_TYPES = [
-    ["temperature", TEMP_CELSIUS, "mdi:thermometer", [CANARY_PRO]],
-    ["humidity", PERCENTAGE, "mdi:water-percent", [CANARY_PRO]],
-    ["air_quality", None, "mdi:weather-windy", [CANARY_PRO]],
-    ["wifi", "dBm", "mdi:wifi", [CANARY_FLEX]],
-    ["battery", PERCENTAGE, "mdi:battery-50", [CANARY_FLEX]],
+    ["temperature", TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE, [CANARY_PRO]],
+    ["humidity", PERCENTAGE, None, DEVICE_CLASS_HUMIDITY, [CANARY_PRO]],
+    ["air_quality", None, "mdi:weather-windy", None, [CANARY_PRO]],
+    [
+        "wifi",
+        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        None,
+        DEVICE_CLASS_SIGNAL_STRENGTH,
+        [CANARY_FLEX],
+    ],
+    ["battery", PERCENTAGE, None, DEVICE_CLASS_BATTERY, [CANARY_FLEX]],
 ]
 
 STATE_AIR_QUALITY_NORMAL = "normal"
@@ -32,84 +54,43 @@ STATE_AIR_QUALITY_ABNORMAL = "abnormal"
 STATE_AIR_QUALITY_VERY_ABNORMAL = "very_abnormal"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Canary sensors."""
-    data = hass.data[DATA_CANARY]
-    devices = []
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[list[Entity], bool], None],
+) -> None:
+    """Set up Canary sensors based on a config entry."""
+    coordinator: CanaryDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        DATA_COORDINATOR
+    ]
+    sensors = []
 
-    for location in data.locations:
+    for location in coordinator.data["locations"].values():
         for device in location.devices:
             if device.is_online:
                 device_type = device.device_type
                 for sensor_type in SENSOR_TYPES:
-                    if device_type.get("name") in sensor_type[3]:
-                        devices.append(
-                            CanarySensor(data, sensor_type, location, device)
+                    if device_type.get("name") in sensor_type[4]:
+                        sensors.append(
+                            CanarySensor(coordinator, sensor_type, location, device)
                         )
 
-    add_entities(devices, True)
+    async_add_entities(sensors, True)
 
 
-class CanarySensor(Entity):
+class CanarySensor(CoordinatorEntity, SensorEntity):
     """Representation of a Canary sensor."""
 
-    def __init__(self, data, sensor_type, location, device):
+    def __init__(self, coordinator, sensor_type, location, device):
         """Initialize the sensor."""
-        self._data = data
+        super().__init__(coordinator)
         self._sensor_type = sensor_type
         self._device_id = device.device_id
-        self._sensor_value = None
+        self._device_name = device.name
+        self._device_type_name = device.device_type["name"]
 
         sensor_type_name = sensor_type[0].replace("_", " ").title()
         self._name = f"{location.name} {device.name} {sensor_type_name}"
-
-    @property
-    def name(self):
-        """Return the name of the Canary sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._sensor_value
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of this sensor."""
-        return f"{self._device_id}_{self._sensor_type[0]}"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._sensor_type[1]
-
-    @property
-    def icon(self):
-        """Icon for the sensor."""
-        if self.state is not None and self._sensor_type[0] == "battery":
-            return icon_for_battery_level(battery_level=self.state)
-
-        return self._sensor_type[2]
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        if self._sensor_type[0] == "air_quality" and self._sensor_value is not None:
-            air_quality = None
-            if self._sensor_value <= 0.4:
-                air_quality = STATE_AIR_QUALITY_VERY_ABNORMAL
-            elif self._sensor_value <= 0.59:
-                air_quality = STATE_AIR_QUALITY_ABNORMAL
-            elif self._sensor_value <= 1.0:
-                air_quality = STATE_AIR_QUALITY_NORMAL
-
-            return {ATTR_AIR_QUALITY: air_quality}
-
-        return None
-
-    def update(self):
-        """Get the latest state of the sensor."""
-        self._data.update()
 
         canary_sensor_type = None
         if self._sensor_type[0] == "air_quality":
@@ -123,7 +104,81 @@ class CanarySensor(Entity):
         elif self._sensor_type[0] == "battery":
             canary_sensor_type = SensorType.BATTERY
 
-        value = self._data.get_reading(self._device_id, canary_sensor_type)
+        self._canary_type = canary_sensor_type
+
+    @property
+    def reading(self):
+        """Return the device sensor reading."""
+        readings = self.coordinator.data["readings"][self._device_id]
+
+        value = next(
+            (
+                reading.value
+                for reading in readings
+                if reading.sensor_type == self._canary_type
+            ),
+            None,
+        )
 
         if value is not None:
-            self._sensor_value = round(float(value), SENSOR_VALUE_PRECISION)
+            return round(float(value), SENSOR_VALUE_PRECISION)
+
+        return None
+
+    @property
+    def name(self):
+        """Return the name of the Canary sensor."""
+        return self._name
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self.reading
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of this sensor."""
+        return f"{self._device_id}_{self._sensor_type[0]}"
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, str(self._device_id))},
+            "name": self._device_name,
+            "model": self._device_type_name,
+            "manufacturer": MANUFACTURER,
+        }
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return self._sensor_type[1]
+
+    @property
+    def device_class(self):
+        """Device class for the sensor."""
+        return self._sensor_type[3]
+
+    @property
+    def icon(self):
+        """Icon for the sensor."""
+        return self._sensor_type[2]
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        reading = self.reading
+
+        if self._sensor_type[0] == "air_quality" and reading is not None:
+            air_quality = None
+            if reading <= 0.4:
+                air_quality = STATE_AIR_QUALITY_VERY_ABNORMAL
+            elif reading <= 0.59:
+                air_quality = STATE_AIR_QUALITY_ABNORMAL
+            elif reading <= 1.0:
+                air_quality = STATE_AIR_QUALITY_NORMAL
+
+            return {ATTR_AIR_QUALITY: air_quality}
+
+        return None

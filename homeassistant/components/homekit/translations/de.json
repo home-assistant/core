@@ -1,17 +1,34 @@
 {
     "config": {
         "abort": {
-            "port_name_in_use": "A bridge with the same name or port is already configured.\nEine HomeKit Bridge mit dem selben Namen oder Port ist bereits vorhanden"
+            "port_name_in_use": "Eine HomeKit Bridge mit demselben Namen oder Port ist bereits vorhanden."
         },
         "step": {
-            "pairing": {
-                "title": "HomeKit Bridge verbinden\n"
+            "accessory_mode": {
+                "data": {
+                    "entity_id": "Entit\u00e4t"
+                },
+                "description": "W\u00e4hle die Entit\u00e4t aus, die aufgenommen werden soll. Im Zubeh\u00f6rmodus ist nur eine einzelne Entit\u00e4t enthalten.",
+                "title": "W\u00e4hle die Entit\u00e4t aus, die aufgenommen werden soll"
             },
-            "user": {
+            "bridge_mode": {
                 "data": {
                     "include_domains": "Einzubeziehende Domains"
                 },
-                "title": "HomeKit Bridge aktivieren\n"
+                "description": "W\u00e4hle die Domains aus, die aufgenommen werden sollen. Alle unterst\u00fctzten Ger\u00e4te innerhalb der Domain werden aufgenommen.",
+                "title": "W\u00e4hle die Domains aus, die aufgenommen werden sollen"
+            },
+            "pairing": {
+                "title": "HomeKit verbinden"
+            },
+            "user": {
+                "data": {
+                    "auto_start": "Autostart (deaktivieren, wenn Z-Wave oder ein anderes verz\u00f6gertes Startsystem verwendet wird)",
+                    "include_domains": "Einzubeziehende Domains",
+                    "mode": "Modus"
+                },
+                "description": "W\u00e4hlen Sie die Domains aus, die aufgenommen werden sollen. Alle unterst\u00fctzten Entit\u00e4ten in der Domain werden aufgenommen. F\u00fcr jeden TV-Mediaplayer und jede Kamera wird eine separate HomeKit-Instanz im Zubeh\u00f6rmodus erstellt.",
+                "title": "HomeKit aktivieren"
             }
         }
     },
@@ -19,29 +36,38 @@
         "step": {
             "advanced": {
                 "data": {
+                    "auto_start": "Autostart (deaktivieren, wenn du den homekit.start-Dienst manuell aufrufst)",
                     "safe_mode": "Abgesicherter Modus (nur aktivieren, wenn das Pairing fehlschl\u00e4gt)"
                 },
+                "description": "Diese Einstellungen m\u00fcssen nur angepasst werden, wenn HomeKit nicht funktioniert.",
                 "title": "Erweiterte Konfiguration"
             },
             "cameras": {
                 "data": {
                     "camera_copy": "Kameras, die native H.264-Streams unterst\u00fctzen"
                 },
+                "description": "Pr\u00fcfe alle Kameras, die native H.264-Streams unterst\u00fctzen. Wenn die Kamera keinen H.264-Stream ausgibt, transkodiert das System das Video in H.264 f\u00fcr HomeKit. Die Transkodierung erfordert eine leistungsstarke CPU und wird wahrscheinlich nicht auf Einplatinencomputern funktionieren.",
                 "title": "W\u00e4hlen Sie den Kamera-Video-Codec."
             },
-            "exclude": {
+            "include_exclude": {
                 "data": {
-                    "exclude_entities": "Auszuschlie\u00dfende Entit\u00e4ten"
-                }
+                    "entities": "Entit\u00e4ten",
+                    "mode": "Modus"
+                },
+                "title": "W\u00e4hle die Entit\u00e4ten aus, die aufgenommen werden sollen"
             },
             "init": {
-                "title": "W\u00e4hlen Sie die zu \u00fcberbr\u00fcckenden Dom\u00e4nen aus."
+                "data": {
+                    "include_domains": "Einzubeziehende Domains",
+                    "mode": "Modus"
+                },
+                "description": "HomeKit kann so konfiguriert werden, dass eine Br\u00fccke oder ein einzelnes Zubeh\u00f6r verf\u00fcgbar gemacht wird. Im Zubeh\u00f6rmodus kann nur eine einzelne Entit\u00e4t verwendet werden. F\u00fcr Media Player mit der TV-Ger\u00e4teklasse ist ein Zubeh\u00f6rmodus erforderlich, damit sie ordnungsgem\u00e4\u00df funktionieren. Entit\u00e4ten in den \"einzuschlie\u00dfenden Dom\u00e4nen\" werden f\u00fcr HomeKit verf\u00fcgbar gemacht. Auf dem n\u00e4chsten Bildschirm k\u00f6nnen Sie ausw\u00e4hlen, welche Entit\u00e4ten in diese Liste aufgenommen oder aus dieser ausgeschlossen werden sollen.",
+                "title": "W\u00e4hle die zu \u00fcberbr\u00fcckenden Dom\u00e4nen aus."
             },
             "yaml": {
                 "description": "Dieser Eintrag wird \u00fcber YAML gesteuert",
-                "title": "Passen Sie die HomeKit Bridge-Optionen an"
+                "title": "Passe die HomeKit Bridge-Optionen an"
             }
         }
-    },
-    "title": "HomeKit Bridge"
+    }
 }

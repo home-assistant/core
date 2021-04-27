@@ -1,14 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kont ass scho konfigur\u00e9iert"
+            "already_configured": "Kont ass scho konfigur\u00e9iert",
+            "reauth_successful": "Re-authentifikatioun war erfollegr\u00e4ich"
         },
         "error": {
-            "cannot_connect": "Feeler beim verbannen, prob\u00e9iert w.e.g. nach emol.",
+            "cannot_connect": "Feeler beim verbannen",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "unknown": "Onerwaarte Feeler"
         },
         "step": {
+            "reauth_validate": {
+                "description": "G\u00ebff Passwuert an fir {username}."
+            },
             "user": {
                 "data": {
                     "login_method": "Login Method",
@@ -18,6 +22,11 @@
                 },
                 "description": "Wann d'Login Method 'E-Mail' ass, dannn ass de Benotzernumm d'E-Mail Adress. Wann d'Login-Method 'Telefon' ass, ass den Benotzernumm d'Telefonsnummer am Format '+ NNNNNNNNN'.",
                 "title": "August Kont ariichten"
+            },
+            "user_validate": {
+                "data": {
+                    "login_method": "Login Method"
+                }
             },
             "validation": {
                 "data": {

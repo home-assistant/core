@@ -3,14 +3,17 @@
         "error": {
             "cannot_connect": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen",
             "invalid_auth": "Ogiltig autentisering",
+            "invalid_thermostat": "Termostatens serienummer \u00e4r ogiltigt.",
             "unknown": "Ov\u00e4ntat fel"
         },
         "step": {
             "user": {
                 "data": {
                     "password": "L\u00f6senord",
+                    "serial_number": "Termostatens serienummer.",
                     "username": "Anv\u00e4ndarnamn"
-                }
+                },
+                "description": "F\u00e5 tillg\u00e5ng till din termostats serienummer eller ID genom att logga in p\u00e5 https://MyNuHeat.com och v\u00e4lja din termostat."
             }
         }
     }

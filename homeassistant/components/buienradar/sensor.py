@@ -20,7 +20,7 @@ from buienradar.constants import (
 )
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
@@ -30,14 +30,15 @@ from homeassistant.const import (
     DEGREE,
     IRRADIATION_WATTS_PER_SQUARE_METER,
     LENGTH_KILOMETERS,
+    LENGTH_MILLIMETERS,
     PERCENTAGE,
+    PRECIPITATION_MILLIMETERS_PER_HOUR,
+    PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
-    TIME_HOURS,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_TIMEFRAME
@@ -78,25 +79,29 @@ SENSOR_TYPES = {
     "windforce": ["Wind force", "Bft", "mdi:weather-windy"],
     "winddirection": ["Wind direction", None, "mdi:compass-outline"],
     "windazimuth": ["Wind direction azimuth", DEGREE, "mdi:compass-outline"],
-    "pressure": ["Pressure", "hPa", "mdi:gauge"],
+    "pressure": ["Pressure", PRESSURE_HPA, "mdi:gauge"],
     "visibility": ["Visibility", LENGTH_KILOMETERS, None],
     "windgust": ["Wind gust", SPEED_KILOMETERS_PER_HOUR, "mdi:weather-windy"],
-    "precipitation": ["Precipitation", f"mm/{TIME_HOURS}", "mdi:weather-pouring"],
+    "precipitation": [
+        "Precipitation",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
+        "mdi:weather-pouring",
+    ],
     "irradiance": ["Irradiance", IRRADIATION_WATTS_PER_SQUARE_METER, "mdi:sunglasses"],
     "precipitation_forecast_average": [
         "Precipitation forecast average",
-        f"mm/{TIME_HOURS}",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
         "mdi:weather-pouring",
     ],
     "precipitation_forecast_total": [
         "Precipitation forecast total",
-        "mm",
+        LENGTH_MILLIMETERS,
         "mdi:weather-pouring",
     ],
     # new in json api (>1.0.0):
-    "rainlast24hour": ["Rain last 24h", "mm", "mdi:weather-pouring"],
+    "rainlast24hour": ["Rain last 24h", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
     # new in json api (>1.0.0):
-    "rainlasthour": ["Rain last hour", "mm", "mdi:weather-pouring"],
+    "rainlasthour": ["Rain last hour", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
     "temperature_1d": ["Temperature 1d", TEMP_CELSIUS, "mdi:thermometer"],
     "temperature_2d": ["Temperature 2d", TEMP_CELSIUS, "mdi:thermometer"],
     "temperature_3d": ["Temperature 3d", TEMP_CELSIUS, "mdi:thermometer"],
@@ -107,23 +112,23 @@ SENSOR_TYPES = {
     "mintemp_3d": ["Minimum temperature 3d", TEMP_CELSIUS, "mdi:thermometer"],
     "mintemp_4d": ["Minimum temperature 4d", TEMP_CELSIUS, "mdi:thermometer"],
     "mintemp_5d": ["Minimum temperature 5d", TEMP_CELSIUS, "mdi:thermometer"],
-    "rain_1d": ["Rain 1d", "mm", "mdi:weather-pouring"],
-    "rain_2d": ["Rain 2d", "mm", "mdi:weather-pouring"],
-    "rain_3d": ["Rain 3d", "mm", "mdi:weather-pouring"],
-    "rain_4d": ["Rain 4d", "mm", "mdi:weather-pouring"],
-    "rain_5d": ["Rain 5d", "mm", "mdi:weather-pouring"],
+    "rain_1d": ["Rain 1d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
+    "rain_2d": ["Rain 2d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
+    "rain_3d": ["Rain 3d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
+    "rain_4d": ["Rain 4d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
+    "rain_5d": ["Rain 5d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
     # new in json api (>1.0.0):
-    "minrain_1d": ["Minimum rain 1d", "mm", "mdi:weather-pouring"],
-    "minrain_2d": ["Minimum rain 2d", "mm", "mdi:weather-pouring"],
-    "minrain_3d": ["Minimum rain 3d", "mm", "mdi:weather-pouring"],
-    "minrain_4d": ["Minimum rain 4d", "mm", "mdi:weather-pouring"],
-    "minrain_5d": ["Minimum rain 5d", "mm", "mdi:weather-pouring"],
+    "minrain_1d": ["Minimum rain 1d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
+    "minrain_2d": ["Minimum rain 2d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
+    "minrain_3d": ["Minimum rain 3d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
+    "minrain_4d": ["Minimum rain 4d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
+    "minrain_5d": ["Minimum rain 5d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
     # new in json api (>1.0.0):
-    "maxrain_1d": ["Maximum rain 1d", "mm", "mdi:weather-pouring"],
-    "maxrain_2d": ["Maximum rain 2d", "mm", "mdi:weather-pouring"],
-    "maxrain_3d": ["Maximum rain 3d", "mm", "mdi:weather-pouring"],
-    "maxrain_4d": ["Maximum rain 4d", "mm", "mdi:weather-pouring"],
-    "maxrain_5d": ["Maximum rain 5d", "mm", "mdi:weather-pouring"],
+    "maxrain_1d": ["Maximum rain 1d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
+    "maxrain_2d": ["Maximum rain 2d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
+    "maxrain_3d": ["Maximum rain 3d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
+    "maxrain_4d": ["Maximum rain 4d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
+    "maxrain_5d": ["Maximum rain 5d", LENGTH_MILLIMETERS, "mdi:weather-pouring"],
     "rainchance_1d": ["Rainchance 1d", PERCENTAGE, "mdi:weather-pouring"],
     "rainchance_2d": ["Rainchance 2d", PERCENTAGE, "mdi:weather-pouring"],
     "rainchance_3d": ["Rainchance 3d", PERCENTAGE, "mdi:weather-pouring"],
@@ -230,7 +235,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     await data.schedule_update(1)
 
 
-class BrSensor(Entity):
+class BrSensor(SensorEntity):
     """Representation of an Buienradar sensor."""
 
     def __init__(self, sensor_type, client_name, coordinates):
@@ -266,7 +271,7 @@ class BrSensor(Entity):
             self.async_write_ha_state()
 
     @callback
-    def _load_data(self, data):
+    def _load_data(self, data):  # noqa: C901
         """Load the sensor with relevant data."""
         # Find sensor
 
@@ -303,7 +308,7 @@ class BrSensor(Entity):
                 try:
                     condition = data.get(FORECAST)[fcday].get(CONDITION)
                 except IndexError:
-                    _LOGGER.warning("No forecast for fcday=%s...", fcday)
+                    _LOGGER.warning("No forecast for fcday=%s", fcday)
                     return False
 
                 if condition:
@@ -333,7 +338,7 @@ class BrSensor(Entity):
                         self._state = round(self._state * 3.6, 1)
                     return True
                 except IndexError:
-                    _LOGGER.warning("No forecast for fcday=%s...", fcday)
+                    _LOGGER.warning("No forecast for fcday=%s", fcday)
                     return False
 
             # update all other sensors
@@ -341,7 +346,7 @@ class BrSensor(Entity):
                 self._state = data.get(FORECAST)[fcday].get(self.type[:-3])
                 return True
             except IndexError:
-                _LOGGER.warning("No forecast for fcday=%s...", fcday)
+                _LOGGER.warning("No forecast for fcday=%s", fcday)
                 return False
 
         if self.type == SYMBOL or self.type.startswith(CONDITION):
@@ -424,7 +429,7 @@ class BrSensor(Entity):
         return self._entity_picture
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.type.startswith(PRECIPITATION_FORECAST):
             result = {ATTR_ATTRIBUTION: self._attribution}

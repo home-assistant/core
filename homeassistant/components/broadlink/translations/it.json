@@ -2,9 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
-            "already_in_progress": "\u00c8 gi\u00e0 in corso un flusso di configurazione per questo dispositivo",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "cannot_connect": "Impossibile connettersi",
             "invalid_host": "Nome host o indirizzo IP non valido",
+            "not_supported": "Dispositivo non supportato",
             "unknown": "Errore imprevisto"
         },
         "error": {
@@ -24,14 +25,14 @@
                 "title": "Scegliere un nome per il dispositivo"
             },
             "reset": {
-                "description": "Il tuo dispositivo \u00e8 bloccato per l'autenticazione. Segui le istruzioni per sbloccarlo: \n 1. Ripristinare le impostazioni di fabbrica del dispositivo. \n 2. Usa l'app ufficiale per aggiungere il dispositivo alla tua rete locale. \n 3. Fermati. Non finire la configurazione. Chiudi l'app. \n 4. Fare clic su Invia.",
+                "description": "{name} ( {model} su {host} ) \u00e8 bloccato. \u00c8 necessario sbloccare il dispositivo per autenticarsi e completare la configurazione. Istruzioni:\n 1. Apri l'app Broadlink.\n 2. Fare clic sul dispositivo.\n 3. Fare clic su \"...\" in alto a destra.\n 4. Scorri fino in fondo alla pagina.\n 5. Disabilitare il blocco.",
                 "title": "Sbloccare il dispositivo"
             },
             "unlock": {
                 "data": {
                     "unlock": "S\u00ec, fallo."
                 },
-                "description": "Il tuo dispositivo \u00e8 bloccato. Ci\u00f2 pu\u00f2 causare problemi di autenticazione in Home Assistant. Vorresti sbloccarlo?",
+                "description": "{name} ({model} su {host}) \u00e8 bloccato. Ci\u00f2 pu\u00f2 causare problemi di autenticazione in Home Assistant. Vorresti sbloccarlo?",
                 "title": "Sblocca il dispositivo (opzionale)"
             },
             "user": {

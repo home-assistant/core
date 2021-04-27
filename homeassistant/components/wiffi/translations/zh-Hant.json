@@ -7,9 +7,9 @@
         "step": {
             "user": {
                 "data": {
-                    "port": "\u4f3a\u670d\u5668\u901a\u8a0a\u57e0"
+                    "port": "\u901a\u8a0a\u57e0"
                 },
-                "title": "\u8a2d\u5b9a WIFFI \u8a2d\u5099 TCP \u4f3a\u670d\u5668"
+                "title": "\u8a2d\u5b9a WIFFI \u88dd\u7f6e TCP \u4f3a\u670d\u5668"
             }
         }
     },

@@ -1,4 +1,6 @@
 """Test hassbian config."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
@@ -6,8 +8,6 @@ from homeassistant.components import config
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import CONF_UNIT_SYSTEM, CONF_UNIT_SYSTEM_IMPERIAL
 from homeassistant.util import dt as dt_util, location
-
-from tests.async_mock import patch
 
 ORIG_TIME_ZONE = dt_util.DEFAULT_TIME_ZONE
 
@@ -61,22 +61,23 @@ async def test_websocket_core_update(hass, client):
     assert hass.config.external_url != "https://www.example.com"
     assert hass.config.internal_url != "http://example.com"
 
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "config/core/update",
-            "latitude": 60,
-            "longitude": 50,
-            "elevation": 25,
-            "location_name": "Huis",
-            CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
-            "time_zone": "America/New_York",
-            "external_url": "https://www.example.com",
-            "internal_url": "http://example.local",
-        }
-    )
+    with patch("homeassistant.util.dt.set_default_time_zone") as mock_set_tz:
+        await client.send_json(
+            {
+                "id": 5,
+                "type": "config/core/update",
+                "latitude": 60,
+                "longitude": 50,
+                "elevation": 25,
+                "location_name": "Huis",
+                CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+                "time_zone": "America/New_York",
+                "external_url": "https://www.example.com",
+                "internal_url": "http://example.local",
+            }
+        )
 
-    msg = await client.receive_json()
+        msg = await client.receive_json()
 
     assert msg["id"] == 5
     assert msg["type"] == TYPE_RESULT
@@ -86,11 +87,11 @@ async def test_websocket_core_update(hass, client):
     assert hass.config.elevation == 25
     assert hass.config.location_name == "Huis"
     assert hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL
-    assert hass.config.time_zone.zone == "America/New_York"
     assert hass.config.external_url == "https://www.example.com"
     assert hass.config.internal_url == "http://example.local"
 
-    dt_util.set_default_time_zone(ORIG_TIME_ZONE)
+    assert len(mock_set_tz.mock_calls) == 1
+    assert mock_set_tz.mock_calls[0][1][0].zone == "America/New_York"
 
 
 async def test_websocket_core_update_not_admin(hass, hass_ws_client, hass_admin_user):

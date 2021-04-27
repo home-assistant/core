@@ -80,6 +80,39 @@ async def test_api_host_info(hassio_handler, aioclient_mock):
     assert data["operating_system"] == "Debian GNU/Linux 10 (buster)"
 
 
+async def test_api_supervisor_info(hassio_handler, aioclient_mock):
+    """Test setup with API Supervisor info."""
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/info",
+        json={
+            "result": "ok",
+            "data": {"supported": True, "version": "2020.11.1", "channel": "stable"},
+        },
+    )
+
+    data = await hassio_handler.get_supervisor_info()
+    assert aioclient_mock.call_count == 1
+    assert data["supported"]
+    assert data["version"] == "2020.11.1"
+    assert data["channel"] == "stable"
+
+
+async def test_api_os_info(hassio_handler, aioclient_mock):
+    """Test setup with API OS info."""
+    aioclient_mock.get(
+        "http://127.0.0.1/os/info",
+        json={
+            "result": "ok",
+            "data": {"board": "odroid-n2", "version": "2020.11.1"},
+        },
+    )
+
+    data = await hassio_handler.get_os_info()
+    assert aioclient_mock.call_count == 1
+    assert data["board"] == "odroid-n2"
+    assert data["version"] == "2020.11.1"
+
+
 async def test_api_host_info_error(hassio_handler, aioclient_mock):
     """Test setup with API Home Assistant info error."""
     aioclient_mock.get(

@@ -1,7 +1,10 @@
 {
     "config": {
+        "abort": {
+            "no_home": "Er zijn geen thuisco\u00f6rdinaten ingesteld in de Home Assistant-configuratie"
+        },
         "error": {
-            "name_exists": "Locatie bestaat al."
+            "already_configured": "Service is al geconfigureerd"
         },
         "step": {
             "user": {

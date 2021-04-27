@@ -1,266 +1,318 @@
 """The tests for the wake on lan switch platform."""
-import unittest
+import platform
+import subprocess
+from unittest.mock import patch
+
+import pytest
 
 import homeassistant.components.switch as switch
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.setup import setup_component
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
+from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
-from tests.common import get_test_home_assistant, mock_service
-from tests.components.switch import common
-
-TEST_STATE = None
-
-
-def call(cmd, stdout, stderr):
-    """Return fake subprocess return codes."""
-    if cmd[5] == "validhostname" and TEST_STATE:
-        return 0
-    return 2
+from tests.common import async_mock_service
 
 
-def system():
-    """Fake system call to test the windows platform."""
-    return "Windows"
+@pytest.fixture(autouse=True)
+def mock_send_magic_packet():
+    """Mock magic packet."""
+    with patch("wakeonlan.send_magic_packet") as mock_send:
+        yield mock_send
 
 
-class TestWolSwitch(unittest.TestCase):
-    """Test the wol switch."""
+async def test_valid_hostname(hass):
+    """Test with valid hostname."""
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            "switch": {
+                "platform": "wake_on_lan",
+                "mac": "00-01-02-03-04-05",
+                "host": "validhostname",
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
-    send_magic_packet = Mock(return_value=None)
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_OFF
 
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.addCleanup(self.hass.stop)
+    with patch.object(subprocess, "call", return_value=0):
 
-    @patch("wakeonlan.send_magic_packet", new=send_magic_packet)
-    @patch("subprocess.call", new=call)
-    def test_valid_hostname(self):
-        """Test with valid hostname."""
-        global TEST_STATE
-        TEST_STATE = False
-        assert setup_component(
-            self.hass,
+        await hass.services.async_call(
             switch.DOMAIN,
-            {
-                "switch": {
-                    "platform": "wake_on_lan",
-                    "mac": "00-01-02-03-04-05",
-                    "host": "validhostname",
-                }
-            },
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+            blocking=True,
         )
-        self.hass.block_till_done()
 
-        state = self.hass.states.get("switch.wake_on_lan")
-        assert STATE_OFF == state.state
+        state = hass.states.get("switch.wake_on_lan")
+        assert state.state == STATE_ON
 
-        TEST_STATE = True
-
-        common.turn_on(self.hass, "switch.wake_on_lan")
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("switch.wake_on_lan")
-        assert STATE_ON == state.state
-
-        common.turn_off(self.hass, "switch.wake_on_lan")
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("switch.wake_on_lan")
-        assert STATE_ON == state.state
-
-    @patch("wakeonlan.send_magic_packet", new=send_magic_packet)
-    @patch("subprocess.call", new=call)
-    @patch("platform.system", new=system)
-    def test_valid_hostname_windows(self):
-        """Test with valid hostname on windows."""
-        global TEST_STATE
-        TEST_STATE = False
-        assert setup_component(
-            self.hass,
+        await hass.services.async_call(
             switch.DOMAIN,
-            {
-                "switch": {
-                    "platform": "wake_on_lan",
-                    "mac": "00-01-02-03-04-05",
-                    "host": "validhostname",
-                }
-            },
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+            blocking=True,
         )
-        self.hass.block_till_done()
 
-        state = self.hass.states.get("switch.wake_on_lan")
-        assert STATE_OFF == state.state
+        state = hass.states.get("switch.wake_on_lan")
+        assert state.state == STATE_ON
 
-        TEST_STATE = True
 
-        common.turn_on(self.hass, "switch.wake_on_lan")
-        self.hass.block_till_done()
+async def test_valid_hostname_windows(hass):
+    """Test with valid hostname on windows."""
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            "switch": {
+                "platform": "wake_on_lan",
+                "mac": "00-01-02-03-04-05",
+                "host": "validhostname",
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
-        state = self.hass.states.get("switch.wake_on_lan")
-        assert STATE_ON == state.state
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_OFF
 
-    @patch("wakeonlan.send_magic_packet", new=send_magic_packet)
-    @patch("subprocess.call", new=call)
-    def test_broadcast_config_ip_and_port(self):
-        """Test with broadcast address and broadcast port config."""
-
-        mac = "00-01-02-03-04-05"
-        broadcast_address = "255.255.255.255"
-        port = 999
-
-        assert setup_component(
-            self.hass,
+    with patch.object(subprocess, "call", return_value=0), patch.object(
+        platform, "system", return_value="Windows"
+    ):
+        await hass.services.async_call(
             switch.DOMAIN,
-            {
-                "switch": {
-                    "platform": "wake_on_lan",
-                    "mac": mac,
-                    "broadcast_address": broadcast_address,
-                    "broadcast_port": port,
-                }
-            },
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+            blocking=True,
         )
-        self.hass.block_till_done()
 
-        state = self.hass.states.get("switch.wake_on_lan")
-        assert STATE_OFF == state.state
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_ON
 
-        common.turn_on(self.hass, "switch.wake_on_lan")
-        self.hass.block_till_done()
 
-        self.send_magic_packet.assert_called_with(
+async def test_broadcast_config_ip_and_port(hass, mock_send_magic_packet):
+    """Test with broadcast address and broadcast port config."""
+    mac = "00-01-02-03-04-05"
+    broadcast_address = "255.255.255.255"
+    port = 999
+
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            "switch": {
+                "platform": "wake_on_lan",
+                "mac": mac,
+                "broadcast_address": broadcast_address,
+                "broadcast_port": port,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_OFF
+
+    with patch.object(subprocess, "call", return_value=0):
+
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+            blocking=True,
+        )
+
+        mock_send_magic_packet.assert_called_with(
             mac, ip_address=broadcast_address, port=port
         )
 
-    @patch("wakeonlan.send_magic_packet", new=send_magic_packet)
-    @patch("subprocess.call", new=call)
-    def test_broadcast_config_ip(self):
-        """Test with only broadcast address."""
 
-        mac = "00-01-02-03-04-05"
-        broadcast_address = "255.255.255.255"
+async def test_broadcast_config_ip(hass, mock_send_magic_packet):
+    """Test with only broadcast address."""
 
-        assert setup_component(
-            self.hass,
+    mac = "00-01-02-03-04-05"
+    broadcast_address = "255.255.255.255"
+
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            "switch": {
+                "platform": "wake_on_lan",
+                "mac": mac,
+                "broadcast_address": broadcast_address,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_OFF
+
+    with patch.object(subprocess, "call", return_value=0):
+
+        await hass.services.async_call(
             switch.DOMAIN,
-            {
-                "switch": {
-                    "platform": "wake_on_lan",
-                    "mac": mac,
-                    "broadcast_address": broadcast_address,
-                }
-            },
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+            blocking=True,
         )
-        self.hass.block_till_done()
 
-        state = self.hass.states.get("switch.wake_on_lan")
-        assert STATE_OFF == state.state
+        mock_send_magic_packet.assert_called_with(mac, ip_address=broadcast_address)
 
-        common.turn_on(self.hass, "switch.wake_on_lan")
-        self.hass.block_till_done()
 
-        self.send_magic_packet.assert_called_with(mac, ip_address=broadcast_address)
+async def test_broadcast_config_port(hass, mock_send_magic_packet):
+    """Test with only broadcast port config."""
 
-    @patch("wakeonlan.send_magic_packet", new=send_magic_packet)
-    @patch("subprocess.call", new=call)
-    def test_broadcast_config_port(self):
-        """Test with only broadcast port config."""
+    mac = "00-01-02-03-04-05"
+    port = 999
 
-        mac = "00-01-02-03-04-05"
-        port = 999
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {"switch": {"platform": "wake_on_lan", "mac": mac, "broadcast_port": port}},
+    )
+    await hass.async_block_till_done()
 
-        assert setup_component(
-            self.hass,
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_OFF
+
+    with patch.object(subprocess, "call", return_value=0):
+
+        await hass.services.async_call(
             switch.DOMAIN,
-            {
-                "switch": {
-                    "platform": "wake_on_lan",
-                    "mac": mac,
-                    "broadcast_port": port,
-                }
-            },
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+            blocking=True,
         )
-        self.hass.block_till_done()
 
-        state = self.hass.states.get("switch.wake_on_lan")
-        assert STATE_OFF == state.state
+        mock_send_magic_packet.assert_called_with(mac, port=port)
 
-        common.turn_on(self.hass, "switch.wake_on_lan")
-        self.hass.block_till_done()
 
-        self.send_magic_packet.assert_called_with(mac, port=port)
+async def test_off_script(hass):
+    """Test with turn off script."""
 
-    @patch("wakeonlan.send_magic_packet", new=send_magic_packet)
-    @patch("subprocess.call", new=call)
-    def test_off_script(self):
-        """Test with turn off script."""
-        global TEST_STATE
-        TEST_STATE = False
-        assert setup_component(
-            self.hass,
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            "switch": {
+                "platform": "wake_on_lan",
+                "mac": "00-01-02-03-04-05",
+                "host": "validhostname",
+                "turn_off": {"service": "shell_command.turn_off_target"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    calls = async_mock_service(hass, "shell_command", "turn_off_target")
+
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_OFF
+
+    with patch.object(subprocess, "call", return_value=0):
+
+        await hass.services.async_call(
             switch.DOMAIN,
-            {
-                "switch": {
-                    "platform": "wake_on_lan",
-                    "mac": "00-01-02-03-04-05",
-                    "host": "validhostname",
-                    "turn_off": {"service": "shell_command.turn_off_target"},
-                }
-            },
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+            blocking=True,
         )
-        self.hass.block_till_done()
-        calls = mock_service(self.hass, "shell_command", "turn_off_target")
 
-        state = self.hass.states.get("switch.wake_on_lan")
-        assert STATE_OFF == state.state
-
-        TEST_STATE = True
-
-        common.turn_on(self.hass, "switch.wake_on_lan")
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("switch.wake_on_lan")
-        assert STATE_ON == state.state
+        state = hass.states.get("switch.wake_on_lan")
+        assert state.state == STATE_ON
         assert len(calls) == 0
 
-        TEST_STATE = False
+    with patch.object(subprocess, "call", return_value=2):
 
-        common.turn_off(self.hass, "switch.wake_on_lan")
-        self.hass.block_till_done()
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+            blocking=True,
+        )
 
-        state = self.hass.states.get("switch.wake_on_lan")
-        assert STATE_OFF == state.state
+        state = hass.states.get("switch.wake_on_lan")
+        assert state.state == STATE_OFF
         assert len(calls) == 1
 
-    @patch("wakeonlan.send_magic_packet", new=send_magic_packet)
-    @patch("subprocess.call", new=call)
-    @patch("platform.system", new=system)
-    def test_invalid_hostname_windows(self):
-        """Test with invalid hostname on windows."""
-        global TEST_STATE
-        TEST_STATE = False
-        assert setup_component(
-            self.hass,
+
+async def test_invalid_hostname_windows(hass):
+    """Test with invalid hostname on windows."""
+
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            "switch": {
+                "platform": "wake_on_lan",
+                "mac": "00-01-02-03-04-05",
+                "host": "invalidhostname",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_OFF
+
+    with patch.object(subprocess, "call", return_value=2):
+
+        await hass.services.async_call(
             switch.DOMAIN,
-            {
-                "switch": {
-                    "platform": "wake_on_lan",
-                    "mac": "00-01-02-03-04-05",
-                    "host": "invalidhostname",
-                }
-            },
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+            blocking=True,
         )
-        self.hass.block_till_done()
 
-        state = self.hass.states.get("switch.wake_on_lan")
-        assert STATE_OFF == state.state
+        state = hass.states.get("switch.wake_on_lan")
+        assert state.state == STATE_OFF
 
-        TEST_STATE = True
 
-        common.turn_on(self.hass, "switch.wake_on_lan")
-        self.hass.block_till_done()
+async def test_no_hostname_state(hass):
+    """Test that the state updates if we do not pass in a hostname."""
 
-        state = self.hass.states.get("switch.wake_on_lan")
-        assert STATE_OFF == state.state
+    assert await async_setup_component(
+        hass,
+        switch.DOMAIN,
+        {
+            "switch": {
+                "platform": "wake_on_lan",
+                "mac": "00-01-02-03-04-05",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.wake_on_lan")
+    assert state.state == STATE_OFF
+
+    with patch.object(subprocess, "call", return_value=0):
+
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+            blocking=True,
+        )
+
+        state = hass.states.get("switch.wake_on_lan")
+        assert state.state == STATE_ON
+
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.wake_on_lan"},
+            blocking=True,
+        )
+
+        state = hass.states.get("switch.wake_on_lan")
+        assert state.state == STATE_OFF

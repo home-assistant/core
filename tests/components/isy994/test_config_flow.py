@@ -1,5 +1,7 @@
 """Test the Universal Devices ISY994 config flow."""
 
+from unittest.mock import patch
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components import ssdp
 from homeassistant.components.isy994.config_flow import CannotConnect
@@ -15,9 +17,8 @@ from homeassistant.components.isy994.const import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 MOCK_HOSTNAME = "1.1.1.1"
@@ -69,7 +70,7 @@ PATCH_ASYNC_SETUP = "homeassistant.components.isy994.async_setup"
 PATCH_ASYNC_SETUP_ENTRY = "homeassistant.components.isy994.async_setup_entry"
 
 
-async def test_form(hass: HomeAssistantType):
+async def test_form(hass: HomeAssistant):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -93,16 +94,16 @@ async def test_form(hass: HomeAssistantType):
             result["flow_id"],
             MOCK_USER_INPUT,
         )
+        await hass.async_block_till_done()
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == f"{MOCK_DEVICE_NAME} ({MOCK_HOSTNAME})"
     assert result2["result"].unique_id == MOCK_UUID
     assert result2["data"] == MOCK_USER_INPUT
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_host(hass: HomeAssistantType):
+async def test_form_invalid_host(hass: HomeAssistant):
     """Test we handle invalid host."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -122,7 +123,7 @@ async def test_form_invalid_host(hass: HomeAssistantType):
     assert result2["errors"] == {"base": "invalid_host"}
 
 
-async def test_form_invalid_auth(hass: HomeAssistantType):
+async def test_form_invalid_auth(hass: HomeAssistant):
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -140,7 +141,7 @@ async def test_form_invalid_auth(hass: HomeAssistantType):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass: HomeAssistantType):
+async def test_form_cannot_connect(hass: HomeAssistant):
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -158,7 +159,7 @@ async def test_form_cannot_connect(hass: HomeAssistantType):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_existing_config_entry(hass: HomeAssistantType):
+async def test_form_existing_config_entry(hass: HomeAssistant):
     """Test if config entry already exists."""
     MockConfigEntry(domain=DOMAIN, unique_id=MOCK_UUID).add_to_hass(hass)
     await setup.async_setup_component(hass, "persistent_notification", {})
@@ -181,7 +182,7 @@ async def test_form_existing_config_entry(hass: HomeAssistantType):
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
-async def test_import_flow_some_fields(hass: HomeAssistantType) -> None:
+async def test_import_flow_some_fields(hass: HomeAssistant) -> None:
     """Test import config flow with just the basic fields."""
     with patch(PATCH_CONFIGURATION) as mock_config_class, patch(
         PATCH_CONNECTION
@@ -204,7 +205,7 @@ async def test_import_flow_some_fields(hass: HomeAssistantType) -> None:
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
 
 
-async def test_import_flow_with_https(hass: HomeAssistantType) -> None:
+async def test_import_flow_with_https(hass: HomeAssistant) -> None:
     """Test import config with https."""
 
     with patch(PATCH_CONFIGURATION) as mock_config_class, patch(
@@ -228,7 +229,7 @@ async def test_import_flow_with_https(hass: HomeAssistantType) -> None:
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
 
 
-async def test_import_flow_all_fields(hass: HomeAssistantType) -> None:
+async def test_import_flow_all_fields(hass: HomeAssistant) -> None:
     """Test import config flow with all fields."""
     with patch(PATCH_CONFIGURATION) as mock_config_class, patch(
         PATCH_CONNECTION
@@ -256,7 +257,7 @@ async def test_import_flow_all_fields(hass: HomeAssistantType) -> None:
     assert result["data"][CONF_TLS_VER] == MOCK_TLS_VERSION
 
 
-async def test_form_ssdp_already_configured(hass: HomeAssistantType) -> None:
+async def test_form_ssdp_already_configured(hass: HomeAssistant) -> None:
     """Test ssdp abort when the serial number is already configured."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -278,7 +279,7 @@ async def test_form_ssdp_already_configured(hass: HomeAssistantType) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
-async def test_form_ssdp(hass: HomeAssistantType):
+async def test_form_ssdp(hass: HomeAssistant):
     """Test we can setup from ssdp."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -310,11 +311,11 @@ async def test_form_ssdp(hass: HomeAssistantType):
             result["flow_id"],
             MOCK_USER_INPUT,
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == f"{MOCK_DEVICE_NAME} ({MOCK_HOSTNAME})"
     assert result2["result"].unique_id == MOCK_UUID
     assert result2["data"] == MOCK_USER_INPUT
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

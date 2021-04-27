@@ -1,6 +1,7 @@
 """Support for HomeMatic sensors."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEGREE,
     DEVICE_CLASS_HUMIDITY,
@@ -9,8 +10,11 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_WATT_HOUR,
     FREQUENCY_HERTZ,
+    LENGTH_MILLIMETERS,
+    LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
+    PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
     VOLT,
@@ -48,21 +52,23 @@ HM_UNIT_HA_CAST = {
     "ENERGY_COUNTER": ENERGY_WATT_HOUR,
     "GAS_POWER": VOLUME_CUBIC_METERS,
     "GAS_ENERGY_COUNTER": VOLUME_CUBIC_METERS,
-    "LUX": "lx",
-    "ILLUMINATION": "lx",
-    "CURRENT_ILLUMINATION": "lx",
-    "AVERAGE_ILLUMINATION": "lx",
-    "LOWEST_ILLUMINATION": "lx",
-    "HIGHEST_ILLUMINATION": "lx",
-    "RAIN_COUNTER": "mm",
+    "LUX": LIGHT_LUX,
+    "ILLUMINATION": LIGHT_LUX,
+    "CURRENT_ILLUMINATION": LIGHT_LUX,
+    "AVERAGE_ILLUMINATION": LIGHT_LUX,
+    "LOWEST_ILLUMINATION": LIGHT_LUX,
+    "HIGHEST_ILLUMINATION": LIGHT_LUX,
+    "RAIN_COUNTER": LENGTH_MILLIMETERS,
     "WIND_SPEED": SPEED_KILOMETERS_PER_HOUR,
     "WIND_DIRECTION": DEGREE,
     "WIND_DIRECTION_RANGE": DEGREE,
     "SUNSHINEDURATION": "#",
-    "AIR_PRESSURE": "hPa",
+    "AIR_PRESSURE": PRESSURE_HPA,
     "FREQUENCY": FREQUENCY_HERTZ,
     "VALUE": "#",
     "VALVE_STATE": PERCENTAGE,
+    "CARRIER_SENSE_LEVEL": PERCENTAGE,
+    "DUTY_CYCLE_LEVEL": PERCENTAGE,
 }
 
 HM_DEVICE_CLASS_HA_CAST = {
@@ -94,7 +100,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class HMSensor(HMDevice):
+class HMSensor(HMDevice, SensorEntity):
     """Representation of a HomeMatic sensor."""
 
     @property

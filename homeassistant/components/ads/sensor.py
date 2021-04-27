@@ -1,16 +1,12 @@
 """Support for ADS sensors."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components import ads
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_ADS_FACTOR, CONF_ADS_TYPE, CONF_ADS_VAR, STATE_KEY_STATE, AdsEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "ADS sensor"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -47,7 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([entity])
 
 
-class AdsSensor(AdsEntity):
+class AdsSensor(AdsEntity, SensorEntity):
     """Representation of an ADS sensor entity."""
 
     def __init__(self, ads_hub, ads_var, ads_type, name, unit_of_measurement, factor):

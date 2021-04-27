@@ -1,32 +1,53 @@
 {
     "config": {
         "abort": {
-            "already_setup": "\u00c8 possibile configurare un solo account Nest.",
             "authorize_url_fail": "Errore sconosciuto nel generare l'url di autorizzazione",
-            "authorize_url_timeout": "Tempo scaduto nel generare l'url di autorizzazione",
-            "no_flows": "Devi configurare Nest prima di poter eseguire l'autenticazione. [Si prega di leggere le istruzioni](https://www.home-assistant.io/components/nest/)."
+            "authorize_url_timeout": "Tempo scaduto nel generare l'URL di autorizzazione.",
+            "missing_configuration": "Il componente non \u00e8 configurato. Si prega di seguire la documentazione.",
+            "no_url_available": "Nessun URL disponibile. Per informazioni su questo errore, [controlla la sezione della guida]({docs_url})",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione.",
+            "unknown_authorize_url_generation": "Errore sconosciuto durante la generazione di un URL di autorizzazione."
+        },
+        "create_entry": {
+            "default": "Autenticazione riuscita"
         },
         "error": {
             "internal_error": "Errore interno nella convalida del codice",
-            "invalid_code": "Codice non valido",
+            "invalid_pin": "Codice PIN non valido",
             "timeout": "Tempo scaduto per l'inserimento del codice di convalida",
-            "unknown": "Errore sconosciuto durante la convalida del codice"
+            "unknown": "Errore imprevisto"
         },
         "step": {
             "init": {
                 "data": {
                     "flow_impl": "Provider"
                 },
-                "description": "Scegli tramite quale provider di autenticazione desideri autenticarti con Nest.",
+                "description": "Scegli il metodo di autenticazione",
                 "title": "Fornitore di autenticazione"
             },
             "link": {
                 "data": {
                     "code": "Codice PIN"
                 },
-                "description": "Per collegare l'account Nido, [autorizzare l'account]({url}).\n\nDopo l'autorizzazione, copia-incolla il codice PIN fornito di seguito.",
+                "description": "Per collegare il tuo account Nest, [autorizza il tuo account] ({url}). \n\nDopo l'autorizzazione, copia e incolla il codice PIN fornito di seguito.",
                 "title": "Collega un account Nest"
+            },
+            "pick_implementation": {
+                "title": "Scegli il metodo di autenticazione"
+            },
+            "reauth_confirm": {
+                "description": "L'integrazione di Nest deve autenticare nuovamente il tuo account",
+                "title": "Autenticare nuovamente l'integrazione"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Movimento rilevato",
+            "camera_person": "Persona rilevata",
+            "camera_sound": "Suono rilevato",
+            "doorbell_chime": "Campanello premuto"
         }
     }
 }

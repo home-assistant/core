@@ -2,6 +2,7 @@
   "domain": "lacrosse",
   "name": "LaCrosse",
   "documentation": "https://www.home-assistant.io/integrations/lacrosse",
-  "requirements": ["pylacrosse==0.4.0"],
-  "codeowners": []
+  "requirements": ["pylacrosse==0.4"],
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

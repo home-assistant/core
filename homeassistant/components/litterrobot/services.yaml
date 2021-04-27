@@ -1,0 +1,48 @@
+# Describes the format for available Litter-Robot services
+
+reset_waste_drawer:
+  name: Reset waste drawer
+  description: Reset the waste drawer level.
+  target:
+
+set_sleep_mode:
+  name: Set sleep mode
+  description: Set the sleep mode and start time.
+  target:
+  fields:
+    enabled:
+      name: Enabled
+      description: Whether sleep mode should be enabled.
+      required: true
+      example: true
+      selector:
+        boolean:
+    start_time:
+      name: Start time
+      description: The start time at which the Litter-Robot will enter sleep mode and prevent an automatic clean cycle for 8 hours.
+      required: false
+      example: '"22:30:00"'
+      selector:
+        time:
+
+set_wait_time:
+  name: Set wait time
+  description: Set the wait time, in minutes, between when your cat uses the Litter-Robot and when the unit cycles automatically.
+  target:
+  fields:
+    minutes:
+      name: Minutes
+      description: Minutes to wait.
+      required: true
+      example: 7
+      values:
+        - 3
+        - 7
+        - 15
+      default: 7
+      selector:
+        select:
+          options:
+            - "3"
+            - "7"
+            - "15"

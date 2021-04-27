@@ -1,8 +1,7 @@
 """Support for the OpenWeatherMap (OWM) service."""
-import logging
-
 from homeassistant.components.weather import WeatherEntity
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import PRESSURE_HPA, PRESSURE_INHG, TEMP_CELSIUS
+from homeassistant.util.pressure import convert as pressure_convert
 
 from .const import (
     ATTR_API_CONDITION,
@@ -13,15 +12,13 @@ from .const import (
     ATTR_API_WIND_BEARING,
     ATTR_API_WIND_SPEED,
     ATTRIBUTION,
+    DEFAULT_NAME,
     DOMAIN,
-    ENTRY_FORECAST_COORDINATOR,
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
+    MANUFACTURER,
 )
-from .forecast_update_coordinator import ForecastUpdateCoordinator
 from .weather_update_coordinator import WeatherUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -29,12 +26,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     domain_data = hass.data[DOMAIN][config_entry.entry_id]
     name = domain_data[ENTRY_NAME]
     weather_coordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
-    forecast_coordinator = domain_data[ENTRY_FORECAST_COORDINATOR]
 
     unique_id = f"{config_entry.unique_id}"
-    owm_weather = OpenWeatherMapWeather(
-        name, unique_id, weather_coordinator, forecast_coordinator
-    )
+    owm_weather = OpenWeatherMapWeather(name, unique_id, weather_coordinator)
 
     async_add_entities([owm_weather], False)
 
@@ -47,13 +41,11 @@ class OpenWeatherMapWeather(WeatherEntity):
         name,
         unique_id,
         weather_coordinator: WeatherUpdateCoordinator,
-        forecast_coordinator: ForecastUpdateCoordinator,
     ):
         """Initialize the sensor."""
         self._name = name
         self._unique_id = unique_id
         self._weather_coordinator = weather_coordinator
-        self._forecast_coordinator = forecast_coordinator
 
     @property
     def name(self):
@@ -64,6 +56,16 @@ class OpenWeatherMapWeather(WeatherEntity):
     def unique_id(self):
         """Return a unique_id for this entity."""
         return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self._unique_id)},
+            "name": DEFAULT_NAME,
+            "manufacturer": MANUFACTURER,
+            "entry_type": "service",
+        }
 
     @property
     def should_poll(self):
@@ -93,7 +95,12 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the pressure."""
-        return self._weather_coordinator.data[ATTR_API_PRESSURE]
+        pressure = self._weather_coordinator.data[ATTR_API_PRESSURE]
+        # OpenWeatherMap returns pressure in hPA, so convert to
+        # inHg if we aren't using metric.
+        if not self.hass.config.units.is_metric and pressure:
+            return pressure_convert(pressure, PRESSURE_HPA, PRESSURE_INHG)
+        return pressure
 
     @property
     def humidity(self):
@@ -116,26 +123,19 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        return self._forecast_coordinator.data[ATTR_API_FORECAST]
+        return self._weather_coordinator.data[ATTR_API_FORECAST]
 
     @property
     def available(self):
         """Return True if entity is available."""
-        return (
-            self._weather_coordinator.last_update_success
-            and self._forecast_coordinator.last_update_success
-        )
+        return self._weather_coordinator.last_update_success
 
     async def async_added_to_hass(self):
         """Connect to dispatcher listening for entity data notifications."""
         self.async_on_remove(
             self._weather_coordinator.async_add_listener(self.async_write_ha_state)
         )
-        self.async_on_remove(
-            self._forecast_coordinator.async_add_listener(self.async_write_ha_state)
-        )
 
     async def async_update(self):
         """Get the latest data from OWM and updates the states."""
         await self._weather_coordinator.async_request_refresh()
-        await self._forecast_coordinator.async_request_refresh()

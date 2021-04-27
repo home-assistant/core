@@ -1,20 +1,16 @@
 """Config flow to configure the Azure DevOps integration."""
-import logging
-
 from aioazuredevops.client import DevOpsClient
 import aiohttp
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.azure_devops.const import (  # pylint:disable=unused-import
+from homeassistant.components.azure_devops.const import (
     CONF_ORG,
     CONF_PAT,
     CONF_PROJECT,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigFlow
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -64,14 +60,14 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             if self._pat is not None:
                 await client.authorize(self._pat, self._organization)
                 if not client.authorized:
-                    errors["base"] = "authorization_error"
+                    errors["base"] = "invalid_auth"
                     return errors
             project_info = await client.get_project(self._organization, self._project)
             if project_info is None:
                 errors["base"] = "project_error"
                 return errors
         except aiohttp.ClientError:
-            errors["base"] = "connection_error"
+            errors["base"] = "cannot_connect"
             return errors
         return None
 
@@ -99,7 +95,6 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             self._project = user_input[CONF_PROJECT]
         self._pat = user_input[CONF_PAT]
 
-        # pylint: disable=no-member
         self.context["title_placeholders"] = {
             "project_url": f"{self._organization}/{self._project}",
         }
@@ -110,17 +105,16 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
         if errors is not None:
             return await self._show_reauth_form(errors)
 
-        for entry in self._async_current_entries():
-            if entry.unique_id == self.unique_id:
-                self.hass.config_entries.async_update_entry(
-                    entry,
-                    data={
-                        CONF_ORG: self._organization,
-                        CONF_PROJECT: self._project,
-                        CONF_PAT: self._pat,
-                    },
-                )
-                return self.async_abort(reason="reauth_successful")
+        entry = await self.async_set_unique_id(self.unique_id)
+        self.hass.config_entries.async_update_entry(
+            entry,
+            data={
+                CONF_ORG: self._organization,
+                CONF_PROJECT: self._project,
+                CONF_PAT: self._pat,
+            },
+        )
+        return self.async_abort(reason="reauth_successful")
 
     def _async_create_entry(self):
         """Handle create entry."""

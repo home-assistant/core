@@ -1,4 +1,6 @@
 """Configure py.test."""
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from pyvizio.api.apps import AppConfig
 from pyvizio.const import DEVICE_CLASS_SPEAKER, MAX_VOLUME
@@ -21,8 +23,6 @@ from .const import (
     MockCompletePairingResponse,
     MockStartPairingResponse,
 )
-
-from tests.async_mock import patch
 
 
 class MockInput:
@@ -53,7 +53,7 @@ def vizio_get_unique_id_fixture():
     """Mock get vizio unique ID."""
     with patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.get_unique_id",
-        return_value=UNIQUE_ID,
+        AsyncMock(return_value=UNIQUE_ID),
     ):
         yield
 
@@ -83,7 +83,7 @@ def vizio_connect_fixture():
     """Mock valid vizio device and entry setup."""
     with patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.validate_ha_config",
-        return_value=True,
+        AsyncMock(return_value=True),
     ):
         yield
 
@@ -156,7 +156,10 @@ def vizio_cant_connect_fixture():
     """Mock vizio device can't connect with valid auth."""
     with patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.validate_ha_config",
-        return_value=False,
+        AsyncMock(return_value=False),
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
+        return_value=None,
     ):
         yield
 

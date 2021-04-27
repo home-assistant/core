@@ -23,3 +23,13 @@ set_water_heater_timer:
     temperature:
       description: Temperature to set heater to
       example: 25
+
+set_climate_temperature_offset:
+  description: Set the temperature offset of climate entities
+  fields:
+    entity_id:
+      description: Entity ID for the tado component to set the temperature offset
+      example: climate.heating
+    offset:
+      description: Offset you would like, can be to 2 decimal places (depending on your device) positive or negative
+      example: -1.2

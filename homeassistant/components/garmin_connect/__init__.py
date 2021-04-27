@@ -1,5 +1,4 @@
 """The Garmin Connect integration."""
-import asyncio
 from datetime import date, timedelta
 import logging
 
@@ -22,12 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
 MIN_SCAN_INTERVAL = timedelta(minutes=10)
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Garmin Connect component."""
-    hass.data[DOMAIN] = {}
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -55,29 +48,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return False
 
     garmin_data = GarminConnectData(hass, garmin_client)
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = garmin_data
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok
 
 
@@ -90,6 +73,17 @@ class GarminConnectData:
         self.client = client
         self.data = None
 
+    async def _get_combined_alarms_of_all_devices(self):
+        """Combine the list of active alarms from all garmin devices."""
+        alarms = []
+        devices = await self.hass.async_add_executor_job(self.client.get_devices)
+        for device in devices:
+            device_settings = await self.hass.async_add_executor_job(
+                self.client.get_device_settings, device["deviceId"]
+            )
+            alarms += device_settings["alarms"]
+        return alarms
+
     @Throttle(MIN_SCAN_INTERVAL)
     async def async_update(self):
         """Update data via library."""
@@ -99,6 +93,7 @@ class GarminConnectData:
             self.data = await self.hass.async_add_executor_job(
                 self.client.get_stats_and_body, today.isoformat()
             )
+            self.data["nextAlarm"] = await self._get_combined_alarms_of_all_devices()
         except (
             GarminConnectAuthenticationError,
             GarminConnectTooManyRequestsError,

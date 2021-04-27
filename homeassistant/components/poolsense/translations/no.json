@@ -12,7 +12,8 @@
                     "email": "E-post",
                     "password": "Passord"
                 },
-                "description": "[%key:common::config_flow::description%]"
+                "description": "Vil du starte oppsettet?",
+                "title": ""
             }
         }
     }

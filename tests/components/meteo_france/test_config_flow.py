@@ -1,5 +1,7 @@
 """Tests for the Meteo-France config flow."""
-from meteofrance.model import Place
+from unittest.mock import patch
+
+from meteofrance_api.model import Place
 import pytest
 
 from homeassistant import data_entry_flow
@@ -11,9 +13,8 @@ from homeassistant.components.meteo_france.const import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CITY_1_POSTAL = "74220"
@@ -213,7 +214,7 @@ async def test_abort_if_already_setup(hass, client_single):
     assert result["reason"] == "already_configured"
 
 
-async def test_options_flow(hass: HomeAssistantType):
+async def test_options_flow(hass: HomeAssistant):
     """Test config flow options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

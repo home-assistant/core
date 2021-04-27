@@ -1,16 +1,17 @@
 """Helpers for tests."""
 import json
+from unittest.mock import Mock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.ozw.const import DOMAIN
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 
 async def setup_ozw(hass, entry=None, fixture=None):
     """Set up OZW and load a dump."""
-    hass.config.components.add("mqtt")
+    mqtt_entry = MockConfigEntry(domain="mqtt", state=config_entries.ENTRY_STATE_LOADED)
+    mqtt_entry.add_to_hass(hass)
 
     if entry is None:
         entry = MockConfigEntry(

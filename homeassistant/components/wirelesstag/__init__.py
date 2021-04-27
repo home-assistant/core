@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     VOLT,
 )
 import homeassistant.helpers.config_validation as cv
@@ -149,7 +150,7 @@ class WirelessTagPlatform:
 
     def handle_update_tags_event(self, event):
         """Handle push event from wireless tag manager."""
-        _LOGGER.info("push notification for update arrived: %s", event)
+        _LOGGER.info("Push notification for update arrived: %s", event)
         try:
             tag_id = event.data.get("id")
             mac = event.data.get("mac")
@@ -227,11 +228,6 @@ class WirelessTagBaseSensor(Entity):
         self._state = None
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
@@ -276,12 +272,12 @@ class WirelessTagBaseSensor(Entity):
         self._state = self.updated_state_value()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_BATTERY_LEVEL: int(self._tag.battery_remaining * 100),
             ATTR_VOLTAGE: f"{self._tag.battery_volts:.2f}{VOLT}",
-            ATTR_TAG_SIGNAL_STRENGTH: f"{self._tag.signal_strength}dBm",
+            ATTR_TAG_SIGNAL_STRENGTH: f"{self._tag.signal_strength}{SIGNAL_STRENGTH_DECIBELS_MILLIWATT}",
             ATTR_TAG_OUT_OF_RANGE: not self._tag.is_in_range,
             ATTR_TAG_POWER_CONSUMPTION: f"{self._tag.power_consumption:.2f}{PERCENTAGE}",
         }

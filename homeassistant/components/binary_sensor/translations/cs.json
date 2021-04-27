@@ -52,7 +52,7 @@
             "hot": "{entity_name} se zah\u0159\u00e1l",
             "light": "{entity_name} za\u010dalo detekovat sv\u011btlo",
             "locked": "{entity_name} zam\u010deno",
-            "moist": "{entity_name} se navlh\u010dil",
+            "moist": "{entity_name} zvlhnul",
             "motion": "{entity_name} za\u010dalo detekovat pohyb",
             "moving": "{entity_name} se za\u010dal pohybovat",
             "no_gas": "{entity_name} p\u0159estalo detekovat plyn",
@@ -98,6 +98,10 @@
             "off": "Norm\u00e1ln\u00ed",
             "on": "N\u00edzk\u00fd stav"
         },
+        "battery_charging": {
+            "off": "Nenab\u00edj\u00ed se",
+            "on": "Nab\u00edjen\u00ed"
+        },
         "cold": {
             "off": "Norm\u00e1ln\u00ed",
             "on": "Studen\u00e9"
@@ -122,6 +126,10 @@
             "off": "Norm\u00e1ln\u00ed",
             "on": "Hork\u00e9"
         },
+        "light": {
+            "off": "\u017d\u00e1dn\u00e9 sv\u011btlo",
+            "on": "Zji\u0161t\u011bno sv\u011btlo"
+        },
         "lock": {
             "off": "Zam\u010deno",
             "on": "Odem\u010deno"
@@ -134,6 +142,10 @@
             "off": "\u017d\u00e1dn\u00fd pohyb",
             "on": "Zaznamen\u00e1n pohyb"
         },
+        "moving": {
+            "off": "Neh\u00fdbe se",
+            "on": "V pohybu"
+        },
         "occupancy": {
             "off": "Volno",
             "on": "Obsazeno"
@@ -141,6 +153,10 @@
         "opening": {
             "off": "Zav\u0159eno",
             "on": "Otev\u0159eno"
+        },
+        "plug": {
+            "off": "Odpojeno",
+            "on": "Zapojeno"
         },
         "presence": {
             "off": "Pry\u010d",

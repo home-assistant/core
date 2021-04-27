@@ -1,10 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "UPnP / IGD er allerede konfigurert",
+            "already_configured": "Enheten er allerede konfigurert",
             "incomplete_discovery": "Ufullstendig oppdagelse",
-            "no_devices_discovered": "Ingen UPnP / IGDs oppdaget",
-            "no_devices_found": "Ingen UPnP / IGD-enheter funnet p\u00e5 nettverket."
+            "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket"
         },
         "error": {
             "few": "f\u00e5",
@@ -14,7 +13,7 @@
             "two": "to",
             "zero": "ingen"
         },
-        "flow_title": "UPnP/IGD: {name}",
+        "flow_title": "",
         "step": {
             "ssdp_confirm": {
                 "description": "\u00d8nsker du \u00e5 sette opp denne UPnP/IGD-enheten?"

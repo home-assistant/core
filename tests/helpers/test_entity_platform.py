@@ -2,13 +2,18 @@
 import asyncio
 from datetime import timedelta
 import logging
+from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.const import PERCENTAGE
-from homeassistant.core import callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, PERCENTAGE
+from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.helpers import entity_platform, entity_registry
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_platform,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_component import (
     DEFAULT_SCAN_INTERVAL,
@@ -16,7 +21,6 @@ from homeassistant.helpers.entity_component import (
 )
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockEntity,
@@ -467,7 +471,7 @@ async def test_overriding_name_from_registry(hass):
     mock_registry(
         hass,
         {
-            "test_domain.world": entity_registry.RegistryEntry(
+            "test_domain.world": er.RegistryEntry(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
@@ -499,12 +503,12 @@ async def test_registry_respect_entity_disabled(hass):
     mock_registry(
         hass,
         {
-            "test_domain.world": entity_registry.RegistryEntry(
+            "test_domain.world": er.RegistryEntry(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
                 platform="test_platform",
-                disabled_by=entity_registry.DISABLED_USER,
+                disabled_by=er.DISABLED_USER,
             )
         },
     )
@@ -520,7 +524,7 @@ async def test_entity_registry_updates_name(hass):
     registry = mock_registry(
         hass,
         {
-            "test_domain.world": entity_registry.RegistryEntry(
+            "test_domain.world": er.RegistryEntry(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
@@ -588,6 +592,52 @@ async def test_setup_entry_platform_not_ready(hass, caplog):
     assert len(mock_call_later.mock_calls) == 1
 
 
+async def test_setup_entry_platform_not_ready_with_message(hass, caplog):
+    """Test when an entry is not ready yet that includes a message."""
+    async_setup_entry = Mock(side_effect=PlatformNotReady("lp0 on fire"))
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry()
+    ent_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    with patch.object(entity_platform, "async_call_later") as mock_call_later:
+        assert not await ent_platform.async_setup_entry(config_entry)
+
+    full_name = f"{ent_platform.domain}.{config_entry.domain}"
+    assert full_name not in hass.config.components
+    assert len(async_setup_entry.mock_calls) == 1
+
+    assert "Platform test not ready yet" in caplog.text
+    assert "lp0 on fire" in caplog.text
+    assert len(mock_call_later.mock_calls) == 1
+
+
+async def test_setup_entry_platform_not_ready_from_exception(hass, caplog):
+    """Test when an entry is not ready yet that includes the causing exception string."""
+    original_exception = HomeAssistantError("The device dropped the connection")
+    platform_exception = PlatformNotReady()
+    platform_exception.__cause__ = original_exception
+
+    async_setup_entry = Mock(side_effect=platform_exception)
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry()
+    ent_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    with patch.object(entity_platform, "async_call_later") as mock_call_later:
+        assert not await ent_platform.async_setup_entry(config_entry)
+
+    full_name = f"{ent_platform.domain}.{config_entry.domain}"
+    assert full_name not in hass.config.components
+    assert len(async_setup_entry.mock_calls) == 1
+
+    assert "Platform test not ready yet" in caplog.text
+    assert "The device dropped the connection" in caplog.text
+    assert len(mock_call_later.mock_calls) == 1
+
+
 async def test_reset_cancels_retry_setup(hass):
     """Test that resetting a platform will cancel scheduled a setup retry."""
     async_setup_entry = Mock(side_effect=PlatformNotReady)
@@ -610,6 +660,54 @@ async def test_reset_cancels_retry_setup(hass):
     assert ent_platform._async_cancel_retry_setup is None
 
 
+async def test_reset_cancels_retry_setup_when_not_started(hass):
+    """Test that resetting a platform will cancel scheduled a setup retry when not yet started."""
+    hass.state = CoreState.starting
+    async_setup_entry = Mock(side_effect=PlatformNotReady)
+    initial_listeners = hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED]
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry()
+    ent_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert not await ent_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+    assert (
+        hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED] == initial_listeners + 1
+    )
+    assert ent_platform._async_cancel_retry_setup is not None
+
+    await ent_platform.async_reset()
+    await hass.async_block_till_done()
+    assert hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED] == initial_listeners
+    assert ent_platform._async_cancel_retry_setup is None
+
+
+async def test_stop_shutdown_cancels_retry_setup_and_interval_listener(hass):
+    """Test that shutdown will cancel scheduled a setup retry and interval listener."""
+    async_setup_entry = Mock(side_effect=PlatformNotReady)
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry()
+    ent_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    with patch.object(entity_platform, "async_call_later") as mock_call_later:
+        assert not await ent_platform.async_setup_entry(config_entry)
+
+    assert len(mock_call_later.mock_calls) == 1
+    assert len(mock_call_later.return_value.mock_calls) == 0
+    assert ent_platform._async_cancel_retry_setup is not None
+
+    await ent_platform.async_shutdown()
+
+    assert len(mock_call_later.return_value.mock_calls) == 1
+    assert ent_platform._async_unsub_polling is None
+    assert ent_platform._async_cancel_retry_setup is None
+
+
 async def test_not_fails_with_adding_empty_entities_(hass):
     """Test for not fails on empty entities list."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -624,7 +722,7 @@ async def test_entity_registry_updates_entity_id(hass):
     registry = mock_registry(
         hass,
         {
-            "test_domain.world": entity_registry.RegistryEntry(
+            "test_domain.world": er.RegistryEntry(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
@@ -656,14 +754,14 @@ async def test_entity_registry_updates_invalid_entity_id(hass):
     registry = mock_registry(
         hass,
         {
-            "test_domain.world": entity_registry.RegistryEntry(
+            "test_domain.world": er.RegistryEntry(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
                 platform="test_platform",
                 name="Some name",
             ),
-            "test_domain.existing": entity_registry.RegistryEntry(
+            "test_domain.existing": er.RegistryEntry(
                 entity_id="test_domain.existing",
                 unique_id="5678",
                 platform="test_platform",
@@ -703,7 +801,7 @@ async def test_entity_registry_updates_invalid_entity_id(hass):
 
 async def test_device_info_called(hass):
     """Test device info is forwarded correctly."""
-    registry = await hass.helpers.device_registry.async_get_registry()
+    registry = dr.async_get(hass)
     via = registry.async_get_or_create(
         config_entry_id="123",
         connections=set(),
@@ -728,6 +826,7 @@ async def test_device_info_called(hass):
                         "model": "test-model",
                         "name": "test-name",
                         "sw_version": "test-sw",
+                        "suggested_area": "Heliport",
                         "entry_type": "service",
                         "via_device": ("hue", "via-id"),
                     },
@@ -747,7 +846,7 @@ async def test_device_info_called(hass):
 
     assert len(hass.states.async_entity_ids()) == 2
 
-    device = registry.async_get_device({("hue", "1234")}, set())
+    device = registry.async_get_device({("hue", "1234")})
     assert device is not None
     assert device.identifiers == {("hue", "1234")}
     assert device.connections == {("mac", "abcd")}
@@ -755,13 +854,14 @@ async def test_device_info_called(hass):
     assert device.model == "test-model"
     assert device.name == "test-name"
     assert device.sw_version == "test-sw"
+    assert device.suggested_area == "Heliport"
     assert device.entry_type == "service"
     assert device.via_device_id == via.id
 
 
 async def test_device_info_not_overrides(hass):
     """Test device info is forwarded correctly."""
-    registry = await hass.helpers.device_registry.async_get_registry()
+    registry = dr.async_get(hass)
     device = registry.async_get_or_create(
         config_entry_id="bla",
         connections={("mac", "abcd")},
@@ -821,12 +921,12 @@ async def test_entity_disabled_by_integration(hass):
     assert entity_disabled.hass is None
     assert entity_disabled.platform is None
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entry_default = registry.async_get_or_create(DOMAIN, DOMAIN, "default")
     assert entry_default.disabled_by is None
     entry_disabled = registry.async_get_or_create(DOMAIN, DOMAIN, "disabled")
-    assert entry_disabled.disabled_by == "integration"
+    assert entry_disabled.disabled_by == er.DISABLED_INTEGRATION
 
 
 async def test_entity_info_added_to_entity_registry(hass):
@@ -843,7 +943,7 @@ async def test_entity_info_added_to_entity_registry(hass):
 
     await component.async_add_entities([entity_default])
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entry_default = registry.async_get_or_create(DOMAIN, DOMAIN, "default")
     print(entry_default)
@@ -975,3 +1075,49 @@ async def test_setup_entry_with_entities_that_block_forever(hass, caplog):
     assert "test_domain.test1" in caplog.text
     assert "test_domain" in caplog.text
     assert "test" in caplog.text
+
+
+async def test_two_platforms_add_same_entity(hass):
+    """Test two platforms in the same domain adding an entity with the same name."""
+    entity_platform1 = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity1 = SlowEntity(name="entity_1")
+
+    entity_platform2 = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity2 = SlowEntity(name="entity_1")
+
+    await asyncio.gather(
+        entity_platform1.async_add_entities([entity1]),
+        entity_platform2.async_add_entities([entity2]),
+    )
+
+    entities = []
+
+    @callback
+    def handle_service(entity, *_):
+        entities.append(entity)
+
+    entity_platform1.async_register_entity_service("hello", {}, handle_service)
+    await hass.services.async_call(
+        "mock_platform", "hello", {"entity_id": "all"}, blocking=True
+    )
+
+    assert len(entities) == 2
+    assert {entity1.entity_id, entity2.entity_id} == {
+        "mock_integration.entity_1",
+        "mock_integration.entity_1_2",
+    }
+    assert entity1 in entities
+    assert entity2 in entities
+
+
+class SlowEntity(MockEntity):
+    """An entity that will sleep during add."""
+
+    async def async_added_to_hass(self):
+        """Make sure control is returned to the event loop on add."""
+        await asyncio.sleep(0.1)
+        await super().async_added_to_hass()

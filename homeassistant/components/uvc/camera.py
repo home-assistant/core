@@ -1,4 +1,7 @@
 """Support for Ubiquiti's UVC cameras."""
+from __future__ import annotations
+
+from datetime import datetime
 import logging
 import re
 
@@ -7,15 +10,15 @@ from uvcclient import camera as uvc_camera, nvr
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
-from homeassistant.const import CONF_PORT, CONF_SSL
+from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_SSL
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.dt import utc_from_timestamp
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_NVR = "nvr"
 CONF_KEY = "key"
-CONF_PASSWORD = "password"
 
 DEFAULT_PASSWORD = "ubnt"
 DEFAULT_PORT = 7080
@@ -110,14 +113,35 @@ class UnifiVideoCamera(Camera):
         return 0
 
     @property
+    def extra_state_attributes(self):
+        """Return the camera state attributes."""
+        attr = {}
+        if self.motion_detection_enabled:
+            attr["last_recording_start_time"] = timestamp_ms_to_date(
+                self._caminfo["lastRecordingStartTime"]
+            )
+        return attr
+
+    @property
     def is_recording(self):
         """Return true if the camera is recording."""
-        return self._caminfo["recordingSettings"]["fullTimeRecordEnabled"]
+        recording_state = "DISABLED"
+        if "recordingIndicator" in self._caminfo:
+            recording_state = self._caminfo["recordingIndicator"]
+
+        return self._caminfo["recordingSettings"][
+            "fullTimeRecordEnabled"
+        ] or recording_state in ["MOTION_INPROGRESS", "MOTION_FINISHED"]
 
     @property
     def motion_detection_enabled(self):
         """Camera Motion Detection Status."""
         return self._caminfo["recordingSettings"]["motionRecordEnabled"]
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this client."""
+        return self._uuid
 
     @property
     def brand(self):
@@ -152,7 +176,7 @@ class UnifiVideoCamera(Camera):
                 camera.login()
                 _LOGGER.debug(
                     "Logged into UVC camera %(name)s via %(addr)s",
-                    dict(name=self._name, addr=addr),
+                    {"name": self._name, "addr": addr},
                 )
                 self._connect_addr = addr
                 break
@@ -172,10 +196,8 @@ class UnifiVideoCamera(Camera):
 
     def camera_image(self):
         """Return the image of this camera."""
-
-        if not self._camera:
-            if not self._login():
-                return
+        if not self._camera and not self._login():
+            return
 
         def _get_image(retry=True):
             try:
@@ -230,3 +252,10 @@ class UnifiVideoCamera(Camera):
     def update(self):
         """Update the info."""
         self._caminfo = self._nvr.get_camera(self._uuid)
+
+
+def timestamp_ms_to_date(epoch_ms: int) -> datetime | None:
+    """Convert millisecond timestamp to datetime."""
+    if epoch_ms:
+        return utc_from_timestamp(epoch_ms / 1000)
+    return None

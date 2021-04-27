@@ -5,7 +5,7 @@
         "title": "VIZIO SmartCast Device",
         "description": "An [%key:common::config_flow::data::access_token%] is only needed for TVs. If you are configuring a TV and do not have an [%key:common::config_flow::data::access_token%] yet, leave it blank to go through a pairing process.",
         "data": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
           "device_class": "Device Type",
           "access_token": "[%key:common::config_flow::data::access_token%]"
@@ -15,7 +15,7 @@
         "title": "Complete Pairing Process",
         "description": "Your TV should be displaying a code. Enter that code into the form and then continue to the next step to complete the pairing.",
         "data": {
-          "pin": "PIN"
+          "pin": "[%key:common::config_flow::data::pin%]"
         }
       },
       "pairing_complete": {
@@ -34,6 +34,7 @@
     },
     "abort": {
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "updated_entry": "This entry has already been setup but the name, apps, and/or options defined in the configuration do not match the previously imported configuration, so the configuration entry has been updated accordingly."
     }
   },

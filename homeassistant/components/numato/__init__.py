@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_SWITCHES,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -31,7 +32,6 @@ CONF_DST_UNIT = "unit"
 DEFAULT_INVERT_LOGIC = False
 DEFAULT_SRC_RANGE = [0, 1024]
 DEFAULT_DST_RANGE = [0.0, 100.0]
-DEFAULT_UNIT = "%"
 DEFAULT_DEV = [f"/dev/ttyACM{i}" for i in range(10)]
 
 PORT_RANGE = range(1, 8)  # ports 0-7 are ADC capable
@@ -82,7 +82,7 @@ ADC_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_SRC_RANGE, default=DEFAULT_SRC_RANGE): int_range,
         vol.Optional(CONF_DST_RANGE, default=DEFAULT_DST_RANGE): float_range,
-        vol.Optional(CONF_DST_UNIT, default=DEFAULT_UNIT): cv.string,
+        vol.Optional(CONF_DST_UNIT, default=PERCENTAGE): cv.string,
     }
 )
 
@@ -171,7 +171,7 @@ class NumatoAPI:
 
     def __init__(self):
         """Initialize API state."""
-        self.ports_registered = dict()
+        self.ports_registered = {}
 
     def check_port_free(self, device_id, port, direction):
         """Check whether a port is still free set up.

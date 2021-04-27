@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "not_supported": "Cihaz desteklenmiyor",
+            "unknown": "Beklenmeyen hata"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "auth": {
+                "title": "Cihaza kimlik do\u011frulama"
+            },
+            "finish": {
+                "title": "Cihaz i\u00e7in bir isim se\u00e7in"
+            },
+            "reset": {
+                "title": "Cihaz\u0131n kilidini a\u00e7\u0131n"
+            },
+            "unlock": {
+                "data": {
+                    "unlock": "Evet, yap."
+                },
+                "title": "Cihaz\u0131n kilidini a\u00e7\u0131n (iste\u011fe ba\u011fl\u0131)"
+            },
+            "user": {
+                "data": {
+                    "host": "Ana Bilgisayar",
+                    "timeout": "Zaman a\u015f\u0131m\u0131"
+                },
+                "title": "Cihaza ba\u011flan\u0131n"
+            }
+        }
+    }
+}

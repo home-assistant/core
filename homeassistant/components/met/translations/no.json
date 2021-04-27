@@ -1,7 +1,10 @@
 {
     "config": {
+        "abort": {
+            "no_home": "Ingen hjemmekoordinater er angitt i Home Assistant-konfigurasjonen"
+        },
         "error": {
-            "name_exists": "Lokasjonen finnes allerede"
+            "already_configured": "Tjenesten er allerede konfigurert"
         },
         "step": {
             "user": {
@@ -11,7 +14,8 @@
                     "longitude": "Lengdegrad",
                     "name": "Navn"
                 },
-                "title": "Lokasjon"
+                "description": "",
+                "title": "Plassering"
             }
         }
     }

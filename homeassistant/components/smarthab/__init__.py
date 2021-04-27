@@ -1,5 +1,4 @@
 """Support for SmartHab device integration."""
-import asyncio
 import logging
 
 import pysmarthab
@@ -7,13 +6,13 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 
 DOMAIN = "smarthab"
 DATA_HUB = "hub"
-COMPONENTS = ["light", "cover"]
+PLATFORMS = ["light", "cover"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,20 +33,23 @@ async def async_setup(hass, config) -> bool:
     """Set up the SmartHab platform."""
 
     hass.data.setdefault(DOMAIN, {})
-    sh_conf = config.get(DOMAIN)
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=sh_conf,
+    if DOMAIN not in config:
+        return True
+
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=config[DOMAIN],
+            )
         )
-    )
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up config entry for SmartHab integration."""
 
     # Assign configuration variables
@@ -66,27 +68,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     # Pass hub object to child platforms
     hass.data[DOMAIN][entry.entry_id] = {DATA_HUB: hub}
 
-    for component in COMPONENTS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload config entry from SmartHab integration."""
-
-    result = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in COMPONENTS
-            ]
-        )
-    )
-
-    if result:
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-
-    return result
+    return unload_ok

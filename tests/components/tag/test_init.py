@@ -1,13 +1,12 @@
 """Tests for the tag component."""
-import logging
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.tag import DOMAIN, TAGS, async_scan_tag
 from homeassistant.helpers import collection
 from homeassistant.setup import async_setup_component
-
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.util import dt as dt_util
 
 
 @pytest.fixture
@@ -45,6 +44,30 @@ async def test_ws_list(hass, hass_ws_client, storage_setup):
     assert "test tag" in result
 
 
+async def test_ws_update(hass, hass_ws_client, storage_setup):
+    """Test listing tags via WS."""
+    assert await storage_setup()
+    await async_scan_tag(hass, "test tag", "some_scanner")
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": f"{DOMAIN}/update",
+            f"{DOMAIN}_id": "test tag",
+            "name": "New name",
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    item = resp["result"]
+
+    assert item["id"] == "test tag"
+    assert item["name"] == "New name"
+
+
 async def test_tag_scanned(hass, hass_ws_client, storage_setup):
     """Test scanning tags."""
     assert await storage_setup()
@@ -60,7 +83,10 @@ async def test_tag_scanned(hass, hass_ws_client, storage_setup):
     assert len(result) == 1
     assert "test tag" in result
 
-    await async_scan_tag(hass, "new tag", "some_scanner")
+    now = dt_util.utcnow()
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        await async_scan_tag(hass, "new tag", "some_scanner")
+
     await client.send_json({"id": 7, "type": f"{DOMAIN}/list"})
     resp = await client.receive_json()
     assert resp["success"]
@@ -70,7 +96,7 @@ async def test_tag_scanned(hass, hass_ws_client, storage_setup):
     assert len(result) == 2
     assert "test tag" in result
     assert "new tag" in result
-    assert result["new tag"]["last_scanned"] is not None
+    assert result["new tag"]["last_scanned"] == now.isoformat()
 
 
 def track_changes(coll: collection.ObservableCollection):

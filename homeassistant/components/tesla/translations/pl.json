@@ -1,10 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
         "error": {
-            "connection_error": "B\u0142\u0105d po\u0142\u0105czenia; sprawd\u017a sie\u0107 i spr\u00f3buj ponownie",
-            "identifier_exists": "Adres e-mail jest ju\u017c zarejestrowany.",
-            "invalid_credentials": "Nieprawid\u0142owe po\u015bwiadczenia",
-            "unknown_error": "Nieznany b\u0142\u0105d, prosz\u0119 zg\u0142osi\u0107 dane z loga"
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
         },
         "step": {
             "user": {
@@ -13,7 +16,7 @@
                     "username": "Adres e-mail"
                 },
                 "description": "Wprowad\u017a dane",
-                "title": "Tesla - konfiguracja"
+                "title": "Tesla \u2014 konfiguracja"
             }
         }
     },

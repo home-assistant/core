@@ -1,7 +1,8 @@
 """Switches on Zigbee Home Automation networks."""
+from __future__ import annotations
+
 import functools
-import logging
-from typing import Any, List
+from typing import Any
 
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
@@ -22,7 +23,6 @@ from .core.const import (
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity, ZhaGroupEntity
 
-_LOGGER = logging.getLogger(__name__)
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, DOMAIN)
 
@@ -115,7 +115,7 @@ class SwitchGroup(BaseSwitch, ZhaGroupEntity):
     """Representation of a switch group."""
 
     def __init__(
-        self, entity_ids: List[str], unique_id: str, group_id: int, zha_device, **kwargs
+        self, entity_ids: list[str], unique_id: str, group_id: int, zha_device, **kwargs
     ) -> None:
         """Initialize a switch group."""
         super().__init__(entity_ids, unique_id, group_id, zha_device, **kwargs)
@@ -126,7 +126,7 @@ class SwitchGroup(BaseSwitch, ZhaGroupEntity):
     async def async_update(self) -> None:
         """Query all members and determine the light group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
-        states: List[State] = list(filter(None, all_states))
+        states: list[State] = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
 
         self._state = len(on_states) > 0

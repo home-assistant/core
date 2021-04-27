@@ -1,5 +1,6 @@
 """Test the Flick Electric config flow."""
 import asyncio
+from unittest.mock import patch
 
 from pyflick.authentication import AuthException
 
@@ -7,7 +8,6 @@ from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.flick_electric.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CONF = {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
@@ -34,8 +34,6 @@ async def test_form(hass):
         "homeassistant.components.flick_electric.config_flow.SimpleFlickAuth.async_get_access_token",
         return_value="123456789abcdef",
     ), patch(
-        "homeassistant.components.flick_electric.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.flick_electric.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -43,12 +41,11 @@ async def test_form(hass):
             result["flow_id"],
             CONF,
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "Flick Electric: test-username"
     assert result2["data"] == CONF
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

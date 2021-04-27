@@ -1,18 +1,25 @@
 {
   "config": {
     "step": {
-      "pick_implementation": { "title": "Pick Authentication Method" },
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
       "reauth_confirm": {
-        "title": "Re-authenticate with Spotify",
+        "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Spotify integration needs to re-authenticate with Spotify for account: {account}"
       }
     },
     "abort": {
-      "already_setup": "You can only configure one Spotify account.",
-      "authorize_url_timeout": "Timeout generating authorize url.",
+      "authorize_url_timeout": "Timeout generating authorize URL.",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "missing_configuration": "The Spotify integration is not configured. Please follow the documentation.",
       "reauth_account_mismatch": "The Spotify account authenticated with, does not match the account needed re-authentication."
     },
     "create_entry": { "default": "Successfully authenticated with Spotify." }
+  },
+  "system_health": {
+    "info": {
+      "api_endpoint_reachable": "Spotify API endpoint reachable"
+    }
   }
 }

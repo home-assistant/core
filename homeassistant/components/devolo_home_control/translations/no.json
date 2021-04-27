@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne hjemmekontrollsentralenheten er allerede i bruk."
+            "already_configured": "Kontoen er allerede konfigurert"
         },
         "error": {
-            "invalid_credentials": "Ugyldig brukernavn og/eller passord"
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
             "user": {
@@ -12,7 +12,14 @@
                     "home_control_url": "Home Control URL",
                     "mydevolo_url": "mydevolo URL",
                     "password": "Passord",
-                    "username": "E-postadresse / devolo-ID"
+                    "username": "E-post / devolo ID"
+                }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Passord",
+                    "username": "E-post / devolo ID"
                 }
             }
         }

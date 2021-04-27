@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -13,7 +13,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
 
@@ -77,10 +76,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    async_add_entities(
-        [MinMaxSensor(hass, entity_ids, name, sensor_type, round_digits)], True
-    )
-    return True
+    async_add_entities([MinMaxSensor(entity_ids, name, sensor_type, round_digits)])
 
 
 def calc_min(sensor_values):
@@ -88,9 +84,10 @@ def calc_min(sensor_values):
     val = None
     entity_id = None
     for sensor_id, sensor_value in sensor_values:
-        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
-            if val is None or val > sensor_value:
-                entity_id, val = sensor_id, sensor_value
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE] and (
+            val is None or val > sensor_value
+        ):
+            entity_id, val = sensor_id, sensor_value
     return entity_id, val
 
 
@@ -99,30 +96,35 @@ def calc_max(sensor_values):
     val = None
     entity_id = None
     for sensor_id, sensor_value in sensor_values:
-        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
-            if val is None or val < sensor_value:
-                entity_id, val = sensor_id, sensor_value
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE] and (
+            val is None or val < sensor_value
+        ):
+            entity_id, val = sensor_id, sensor_value
     return entity_id, val
 
 
 def calc_mean(sensor_values, round_digits):
     """Calculate mean value, honoring unknown states."""
-    result = []
-    for _, sensor_value in sensor_values:
-        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
-            result.append(sensor_value)
-    if len(result) == 0:
+    result = [
+        sensor_value
+        for _, sensor_value in sensor_values
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+    ]
+
+    if not result:
         return None
     return round(sum(result) / len(result), round_digits)
 
 
 def calc_median(sensor_values, round_digits):
     """Calculate median value, honoring unknown states."""
-    result = []
-    for _, sensor_value in sensor_values:
-        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
-            result.append(sensor_value)
-    if len(result) == 0:
+    result = [
+        sensor_value
+        for _, sensor_value in sensor_values
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+    ]
+
+    if not result:
         return None
     result.sort()
     if len(result) % 2 == 0:
@@ -134,12 +136,11 @@ def calc_median(sensor_values, round_digits):
     return round(median, round_digits)
 
 
-class MinMaxSensor(Entity):
+class MinMaxSensor(SensorEntity):
     """Representation of a min/max sensor."""
 
-    def __init__(self, hass, entity_ids, name, sensor_type, round_digits):
+    def __init__(self, entity_ids, name, sensor_type, round_digits):
         """Initialize the min/max sensor."""
-        self._hass = hass
         self._entity_ids = entity_ids
         self._sensor_type = sensor_type
         self._round_digits = round_digits
@@ -155,49 +156,15 @@ class MinMaxSensor(Entity):
         self.count_sensors = len(self._entity_ids)
         self.states = {}
 
-        @callback
-        def async_min_max_sensor_state_listener(event):
-            """Handle the sensor state changes."""
-            new_state = event.data.get("new_state")
-            entity = event.data.get("entity_id")
-
-            if new_state.state is None or new_state.state in [
-                STATE_UNKNOWN,
-                STATE_UNAVAILABLE,
-            ]:
-                self.states[entity] = STATE_UNKNOWN
-                hass.async_add_job(self.async_update_ha_state, True)
-                return
-
-            if self._unit_of_measurement is None:
-                self._unit_of_measurement = new_state.attributes.get(
-                    ATTR_UNIT_OF_MEASUREMENT
-                )
-
-            if self._unit_of_measurement != new_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
-            ):
-                _LOGGER.warning(
-                    "Units of measurement do not match for entity %s", self.entity_id
-                )
-                self._unit_of_measurement_mismatch = True
-
-            try:
-                self.states[entity] = float(new_state.state)
-                self.last = float(new_state.state)
-                self.last_entity_id = entity
-            except ValueError:
-                _LOGGER.warning(
-                    "Unable to store state. Only numerical states are supported"
-                )
-
-            hass.async_add_job(self.async_update_ha_state, True)
-
+    async def async_added_to_hass(self):
+        """Handle added to Hass."""
         self.async_on_remove(
             async_track_state_change_event(
-                hass, entity_ids, async_min_max_sensor_state_listener
+                self.hass, self._entity_ids, self._async_min_max_sensor_state_listener
             )
         )
+
+        self._calc_values()
 
     @property
     def name(self):
@@ -226,22 +193,62 @@ class MinMaxSensor(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
-        state_attr = {
+        return {
             attr: getattr(self, attr)
             for attr in ATTR_TO_PROPERTY
             if getattr(self, attr) is not None
         }
-        return state_attr
 
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return ICON
 
-    async def async_update(self):
-        """Get the latest data and updates the states."""
+    @callback
+    def _async_min_max_sensor_state_listener(self, event):
+        """Handle the sensor state changes."""
+        new_state = event.data.get("new_state")
+        entity = event.data.get("entity_id")
+
+        if new_state.state is None or new_state.state in [
+            STATE_UNKNOWN,
+            STATE_UNAVAILABLE,
+        ]:
+            self.states[entity] = STATE_UNKNOWN
+            self._calc_values()
+            self.async_write_ha_state()
+            return
+
+        if self._unit_of_measurement is None:
+            self._unit_of_measurement = new_state.attributes.get(
+                ATTR_UNIT_OF_MEASUREMENT
+            )
+
+        if self._unit_of_measurement != new_state.attributes.get(
+            ATTR_UNIT_OF_MEASUREMENT
+        ):
+            _LOGGER.warning(
+                "Units of measurement do not match for entity %s", self.entity_id
+            )
+            self._unit_of_measurement_mismatch = True
+
+        try:
+            self.states[entity] = float(new_state.state)
+            self.last = float(new_state.state)
+            self.last_entity_id = entity
+        except ValueError:
+            _LOGGER.warning(
+                "Unable to store state. Only numerical states are supported"
+            )
+
+        self._calc_values()
+        self.async_write_ha_state()
+
+    @callback
+    def _calc_values(self):
+        """Calculate the values."""
         sensor_values = [
             (entity_id, self.states[entity_id])
             for entity_id in self._entity_ids

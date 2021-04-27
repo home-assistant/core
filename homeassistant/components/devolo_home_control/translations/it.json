@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Questo Home Control Central \u00e8 gi\u00e0 in uso."
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "invalid_credentials": "Nome utente e/o password non corretti."
+            "invalid_auth": "Autenticazione non valida"
         },
         "step": {
             "user": {
@@ -12,11 +12,16 @@
                     "home_control_url": "URL di Home Control",
                     "mydevolo_url": "URL di mydevolo",
                     "password": "Password",
-                    "username": "Indirizzo e-mail / devolo ID"
-                },
-                "title": "devolo Home Control"
+                    "username": "E-mail / devolo ID"
+                }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "mydevolo_url": "URL mydevolo",
+                    "password": "Password",
+                    "username": "E-mail / ID devolo"
+                }
             }
         }
-    },
-    "title": "devolo Home Control"
+    }
 }

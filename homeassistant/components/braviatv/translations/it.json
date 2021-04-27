@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Questo televisore \u00e8 gi\u00e0 configurato.",
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "no_ip_control": "Il controllo IP \u00e8 disabilitato sulla TV o la TV non \u00e8 supportata."
         },
         "error": {
-            "cannot_connect": "Connessione non riuscita, host o codice PIN non valido.",
-            "invalid_host": "Nome host o indirizzo IP non valido.",
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_host": "Nome host o indirizzo IP non valido",
             "unsupported_model": "Il tuo modello TV non \u00e8 supportato."
         },
         "step": {

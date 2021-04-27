@@ -1,22 +1,18 @@
 """Support for Soma Smartshades."""
-import logging
 
 from api.soma_api import SomaApi
-from requests import RequestException
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import API, DOMAIN, HOST, PORT
 
 DEVICES = "devices"
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -27,7 +23,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SOMA_COMPONENTS = ["cover"]
+PLATFORMS = ["cover", "sensor"]
 
 
 async def async_setup(hass, config):
@@ -46,24 +42,21 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Soma from a config entry."""
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][API] = SomaApi(entry.data[HOST], entry.data[PORT])
     devices = await hass.async_add_executor_job(hass.data[DOMAIN][API].list_devices)
     hass.data[DOMAIN][DEVICES] = devices["shades"]
 
-    for component in SOMA_COMPONENTS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class SomaEntity(Entity):
@@ -74,6 +67,7 @@ class SomaEntity(Entity):
         self.device = device
         self.api = api
         self.current_position = 50
+        self.battery_state = 0
         self.is_available = True
 
     @property
@@ -102,22 +96,3 @@ class SomaEntity(Entity):
             "name": self.name,
             "manufacturer": "Wazombi Labs",
         }
-
-    async def async_update(self):
-        """Update the device with the latest data."""
-        try:
-            response = await self.hass.async_add_executor_job(
-                self.api.get_shade_state, self.device["mac"]
-            )
-        except RequestException:
-            _LOGGER.error("Connection to SOMA Connect failed")
-            self.is_available = False
-            return
-        if response["result"] != "success":
-            _LOGGER.error(
-                "Unable to reach device %s (%s)", self.device["name"], response["msg"]
-            )
-            self.is_available = False
-            return
-        self.current_position = 100 - response["position"]
-        self.is_available = True

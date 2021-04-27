@@ -1,9 +1,10 @@
 """Minio component."""
+from __future__ import annotations
+
 import logging
 import os
 from queue import Queue
 import threading
-from typing import List
 
 import voluptuous as vol
 
@@ -124,7 +125,7 @@ def setup(hass, config):
     def _render_service_value(service, key):
         value = service.data[key]
         value.hass = hass
-        return value.async_render()
+        return value.async_render(parse_result=False)
 
     def put_file(service):
         """Upload file service."""
@@ -230,7 +231,7 @@ class MinioListener:
         bucket_name: str,
         prefix: str,
         suffix: str,
-        events: List[str],
+        events: list[str],
     ):
         """Create Listener."""
         self._queue = queue

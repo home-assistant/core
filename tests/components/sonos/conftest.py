@@ -1,11 +1,12 @@
 """Configuration for Sonos tests."""
+from unittest.mock import AsyncMock, MagicMock, Mock, patch as patch
+
 import pytest
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
 
-from tests.async_mock import Mock, patch as patch
 from tests.common import MockConfigEntry
 
 
@@ -16,19 +17,26 @@ def config_entry_fixture():
 
 
 @pytest.fixture(name="soco")
-def soco_fixture(music_library, speaker_info, dummy_soco_service):
+def soco_fixture(music_library, speaker_info, battery_info, dummy_soco_service):
     """Create a mock pysonos SoCo fixture."""
     with patch("pysonos.SoCo", autospec=True) as mock, patch(
         "socket.gethostbyname", return_value="192.168.42.2"
     ):
         mock_soco = mock.return_value
         mock_soco.uid = "RINCON_test"
+        mock_soco.play_mode = "NORMAL"
         mock_soco.music_library = music_library
         mock_soco.get_speaker_info.return_value = speaker_info
         mock_soco.avTransport = dummy_soco_service
         mock_soco.renderingControl = dummy_soco_service
         mock_soco.zoneGroupTopology = dummy_soco_service
         mock_soco.contentDirectory = dummy_soco_service
+        mock_soco.deviceProperties = dummy_soco_service
+        mock_soco.mute = False
+        mock_soco.night_mode = True
+        mock_soco.dialog_mode = True
+        mock_soco.volume = 19
+        mock_soco.get_battery_info.return_value = battery_info
 
         yield mock_soco
 
@@ -39,6 +47,7 @@ def discover_fixture(soco):
 
     def do_callback(callback, **kwargs):
         callback(soco)
+        return MagicMock()
 
     with patch("pysonos.discover_thread", side_effect=do_callback) as mock:
         yield mock
@@ -54,7 +63,7 @@ def config_fixture():
 def dummy_soco_service_fixture():
     """Create dummy_soco_service fixture."""
     service = Mock()
-    service.subscribe = Mock()
+    service.subscribe = AsyncMock()
     return service
 
 
@@ -74,4 +83,15 @@ def speaker_info_fixture():
         "model_name": "Model Name",
         "software_version": "49.2-64250",
         "mac_address": "00-11-22-33-44-55",
+    }
+
+
+@pytest.fixture(name="battery_info")
+def battery_info_fixture():
+    """Create battery_info fixture."""
+    return {
+        "Health": "GREEN",
+        "Level": 100,
+        "Temperature": "NORMAL",
+        "PowerSource": "SONOS_CHARGING_RING",
     }

@@ -69,7 +69,7 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
         sensor_id = user_input[CONF_SENSOR_ID]
 
         if sensor_id in configured_sensors(self.hass):
-            return self._show_form({CONF_SENSOR_ID: "sensor_exists"})
+            return self._show_form({CONF_SENSOR_ID: "already_configured"})
 
         session = aiohttp_client.async_get_clientsession(self.hass)
         luftdaten = Luftdaten(user_input[CONF_SENSOR_ID], self.hass.loop, session)
@@ -77,7 +77,7 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
             await luftdaten.get_data()
             valid = await luftdaten.validate_sensor()
         except LuftdatenConnectionError:
-            return self._show_form({CONF_SENSOR_ID: "communication_error"})
+            return self._show_form({CONF_SENSOR_ID: "cannot_connect"})
 
         if not valid:
             return self._show_form({CONF_SENSOR_ID: "invalid_sensor"})
@@ -92,6 +92,6 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow):
             )
 
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        user_input.update({CONF_SCAN_INTERVAL: scan_interval.seconds})
+        user_input.update({CONF_SCAN_INTERVAL: scan_interval.total_seconds()})
 
         return self.async_create_entry(title=str(sensor_id), data=user_input)

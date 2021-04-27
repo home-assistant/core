@@ -3,9 +3,6 @@
         "abort": {
             "already_in_progress": "O fluxo de configura\u00e7\u00e3o para este dispositivo Xiaomi Miio j\u00e1 est\u00e1 em andamento."
         },
-        "error": {
-            "connect_error": "Falha na conex\u00e3o"
-        },
         "step": {
             "gateway": {
                 "data": {

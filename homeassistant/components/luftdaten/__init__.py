@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_SHOW_ON_MAP,
     PERCENTAGE,
+    PRESSURE_PA,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
@@ -32,6 +33,8 @@ DATA_LUFTDATEN_CLIENT = "data_luftdaten_client"
 DATA_LUFTDATEN_LISTENER = "data_luftdaten_listener"
 DEFAULT_ATTRIBUTION = "Data provided by luftdaten.info"
 
+PLATFORMS = ["sensor"]
+
 SENSOR_HUMIDITY = "humidity"
 SENSOR_PM10 = "P1"
 SENSOR_PM2_5 = "P2"
@@ -44,8 +47,8 @@ TOPIC_UPDATE = f"{DOMAIN}_data_update"
 SENSORS = {
     SENSOR_TEMPERATURE: ["Temperature", "mdi:thermometer", TEMP_CELSIUS],
     SENSOR_HUMIDITY: ["Humidity", "mdi:water-percent", PERCENTAGE],
-    SENSOR_PRESSURE: ["Pressure", "mdi:arrow-down-bold", "Pa"],
-    SENSOR_PRESSURE_AT_SEALEVEL: ["Pressure at sealevel", "mdi:download", "Pa"],
+    SENSOR_PRESSURE: ["Pressure", "mdi:arrow-down-bold", PRESSURE_PA],
+    SENSOR_PRESSURE_AT_SEALEVEL: ["Pressure at sealevel", "mdi:download", PRESSURE_PA],
     SENSOR_PM10: [
         "PM10",
         "mdi:thought-bubble",
@@ -151,9 +154,7 @@ async def async_setup_entry(hass, config_entry):
     except LuftdatenError as err:
         raise ConfigEntryNotReady from err
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-    )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     async def refresh_sensors(event_time):
         """Refresh Luftdaten data."""
@@ -180,7 +181,7 @@ async def async_unload_entry(hass, config_entry):
 
     hass.data[DOMAIN][DATA_LUFTDATEN_CLIENT].pop(config_entry.entry_id)
 
-    return await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 class LuftDatenData:
@@ -197,8 +198,9 @@ class LuftDatenData:
         try:
             await self.client.get_data()
 
-            self.data[DATA_LUFTDATEN] = self.client.values
-            self.data[DATA_LUFTDATEN].update(self.client.meta)
+            if self.client.values:
+                self.data[DATA_LUFTDATEN] = self.client.values
+                self.data[DATA_LUFTDATEN].update(self.client.meta)
 
         except LuftdatenError:
             _LOGGER.error("Unable to retrieve data from luftdaten.info")

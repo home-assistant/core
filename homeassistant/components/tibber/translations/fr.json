@@ -4,7 +4,8 @@
             "already_configured": "Un compte Tibber est d\u00e9j\u00e0 configur\u00e9."
         },
         "error": {
-            "connection_error": "Erreur de connexion \u00e0 Tibber",
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_access_token": "Jeton d'acc\u00e8s non valide",
             "timeout": "D\u00e9lai de connexion \u00e0 Tibber"
         },
         "step": {
@@ -16,6 +17,5 @@
                 "title": "Tibber"
             }
         }
-    },
-    "title": "Tibber"
+    }
 }

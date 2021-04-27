@@ -1,10 +1,11 @@
 """Test APRS device tracker."""
+from unittest.mock import Mock, patch
+
 import aprslib
 
 import homeassistant.components.aprs.device_tracker as device_tracker
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 
-from tests.async_mock import Mock, patch
 from tests.common import get_test_home_assistant
 
 DEFAULT_PORT = 14580

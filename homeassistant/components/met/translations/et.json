@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "no_home": "Home Assistanti s\u00e4tetes pole kodu koordinaate m\u00e4\u00e4ratud"
+        },
+        "error": {
+            "already_configured": "Teenus on juba h\u00e4\u00e4lestatud"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "K\u00f5rgus merepinnast",
+                    "latitude": "Laiuskraad",
+                    "longitude": "Pikkuskraad",
+                    "name": "Nimi"
+                },
+                "description": "Norra ilmateenistus",
+                "title": "Asukoht"
+            }
+        }
+    }
+}

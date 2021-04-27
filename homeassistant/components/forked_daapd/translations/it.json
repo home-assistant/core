@@ -1,11 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato.",
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "not_forked_daapd": "Il dispositivo non \u00e8 un server forked-daapd."
         },
         "error": {
-            "unknown_error": "Errore sconosciuto.",
+            "forbidden": "Impossibile connettersi. Si prega di controllare i permessi di rete forked-daapd.",
+            "unknown_error": "Errore imprevisto",
             "websocket_not_enabled": "websocket del server forked-daapd non abilitato.",
             "wrong_host_or_port": "Impossibile connettersi. Si prega di controllare host e porta.",
             "wrong_password": "Password errata",

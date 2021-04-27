@@ -1,4 +1,19 @@
 {
+    "device_automation": {
+        "action_type": {
+            "toggle": "{entity_name}\uc744(\ub97c) \ud1a0\uae00\ud558\uae30",
+            "turn_off": "{entity_name}\uc744(\ub97c) \ub044\uae30",
+            "turn_on": "{entity_name}\uc744(\ub97c) \ucf1c\uae30"
+        },
+        "condition_type": {
+            "is_off": "{entity_name}\uc774(\uac00) \uaebc\uc838 \uc788\uc73c\uba74",
+            "is_on": "{entity_name}\uc774(\uac00) \ucf1c\uc838 \uc788\uc73c\uba74"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name}\uc774(\uac00) \uaebc\uc84c\uc744 \ub54c",
+            "turned_on": "{entity_name}\uc774(\uac00) \ucf1c\uc84c\uc744 \ub54c"
+        }
+    },
     "state": {
         "_": {
             "off": "\uaebc\uc9d0",

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr.",
+            "unknown_authorize_url_generation": "Yetkilendirme url'si olu\u015fturulurken bilinmeyen hata."
+        },
+        "error": {
+            "unknown": "Beklenmeyen hata"
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Hareket alg\u0131land\u0131",
+            "camera_person": "Ki\u015fi alg\u0131land\u0131",
+            "camera_sound": "Ses alg\u0131land\u0131",
+            "doorbell_chime": "Kap\u0131 zili bas\u0131ld\u0131"
+        }
+    }
+}

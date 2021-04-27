@@ -1,17 +1,46 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
+            "no_h264": "Nem voltak el\u00e9rhet\u0151 H264 streamek. Ellen\u0151rizd a profil konfigur\u00e1ci\u00f3j\u00e1t a k\u00e9sz\u00fcl\u00e9ken.",
+            "no_mac": "Nem siker\u00fclt konfigur\u00e1lni az egyedi azonos\u00edt\u00f3t az ONVIF eszk\u00f6zh\u00f6z.",
+            "onvif_error": "Hiba t\u00f6rt\u00e9nt az ONVIF eszk\u00f6z be\u00e1ll\u00edt\u00e1sakor. Tov\u00e1bbi inform\u00e1ci\u00f3k\u00e9rt ellen\u0151rizd a napl\u00f3kat."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
         "step": {
             "auth": {
                 "data": {
                     "password": "Jelsz\u00f3",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
-                }
+                },
+                "title": "Hiteles\u00edt\u00e9s konfigur\u00e1l\u00e1sa"
+            },
+            "configure_profile": {
+                "data": {
+                    "include": "Hozzon l\u00e9tre kamera entit\u00e1st"
+                },
+                "description": "L\u00e9trehozza a(z) {profile} f\u00e9nyk\u00e9pez\u0151g\u00e9p entit\u00e1s\u00e1t {resolution} felbont\u00e1ssal?",
+                "title": "Profilok konfigur\u00e1l\u00e1sa"
+            },
+            "device": {
+                "data": {
+                    "host": "V\u00e1laszd ki a felfedezett ONVIF eszk\u00f6zt"
+                },
+                "title": "ONVIF eszk\u00f6z kiv\u00e1laszt\u00e1sa"
             },
             "manual_input": {
                 "data": {
                     "host": "Hoszt",
+                    "name": "N\u00e9v",
                     "port": "Port"
-                }
+                },
+                "title": "ONVIF eszk\u00f6z konfigur\u00e1l\u00e1sa"
+            },
+            "user": {
+                "description": "A k\u00fcld\u00e9s gombra kattintva olyan ONVIF-eszk\u00f6z\u00f6ket keres\u00fcnk a h\u00e1l\u00f3zat\u00e1ban, amelyek t\u00e1mogatj\u00e1k az S profilt.\n\nEgyes gy\u00e1rt\u00f3k alap\u00e9rtelmez\u00e9s szerint elkezdt\u00e9k letiltani az ONVIF-et. Ellen\u0151rizze, hogy az ONVIF enged\u00e9lyezve van-e a kamera konfigur\u00e1ci\u00f3j\u00e1ban."
             }
         }
     }

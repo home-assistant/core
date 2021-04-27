@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Sentry er allerede konfigurert",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
@@ -13,7 +12,8 @@
                 "data": {
                     "dsn": "DSN"
                 },
-                "description": "Fyll inn din Sentry DNS"
+                "description": "Fyll inn din Sentry DNS",
+                "title": ""
             }
         }
     },

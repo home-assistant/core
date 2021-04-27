@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Xiaomi Aqara Gateway",
-        "description": "Connect to your Xiaomi Aqara Gateway, if the IP and mac addresses are left empty, auto-discovery is used",
+        "description": "Connect to your Xiaomi Aqara Gateway, if the IP and MAC addresses are left empty, auto-discovery is used",
         "data": {
           "interface": "The network interface to use",
           "host": "[%key:common::config_flow::data::ip%] (optional)",
@@ -21,9 +21,9 @@
       },
       "select": {
         "title": "Select the Xiaomi Aqara Gateway that you wish to connect",
-        "description": "Run the setup again if you want to connect aditional gateways",
+        "description": "Run the setup again if you want to connect additional gateways",
         "data": {
-          "select_ip": "Gateway IP"
+          "select_ip": "[%key:common::config_flow::data::ip%]"
         }
       }
     },
@@ -31,12 +31,12 @@
       "discovery_error": "Failed to discover a Xiaomi Aqara Gateway, try using the IP of the device running HomeAssistant as interface",
       "invalid_interface": "Invalid network interface",
       "invalid_key": "Invalid gateway key",
-      "invalid_host": "Invalid [%key:common::config_flow::data::ip%], see https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%], see https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
       "invalid_mac": "Invalid Mac Address"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "Config flow for this gateway is already in progress",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "not_xiaomi_aqara": "Not a Xiaomi Aqara Gateway, discovered device did not match known gateways"
     }
   }

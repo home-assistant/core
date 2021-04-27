@@ -1,5 +1,4 @@
 """The Dexcom integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -24,12 +23,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=180)
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up configured Dexcom."""
-    hass.data[DOMAIN] = {}
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -57,6 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except SessionError as error:
             raise UpdateFailed(error) from error
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: DataUpdateCoordinator(
             hass,
@@ -68,26 +62,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         UNDO_UPDATE_LISTENER: entry.add_update_listener(update_listener),
     }
 
-    await hass.data[DOMAIN][entry.entry_id][COORDINATOR].async_refresh()
+    await hass.data[DOMAIN][entry.entry_id][
+        COORDINATOR
+    ].async_config_entry_first_refresh()
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
 
     if unload_ok:

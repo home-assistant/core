@@ -2,16 +2,16 @@
     "config": {
         "abort": {
             "all_configured": "Alle Philips Hue bridges zijn al geconfigureerd",
-            "already_configured": "Bridge is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom voor het apparaat is al in volle gang.",
-            "cannot_connect": "Kan geen verbinding maken met bridge",
+            "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "cannot_connect": "Kan geen verbinding maken",
             "discover_timeout": "Hue bridges kunnen niet worden gevonden",
             "no_bridges": "Geen Philips Hue bridges ontdekt",
             "not_hue_bridge": "Dit is geen Hue bridge",
-            "unknown": "Onbekende fout opgetreden"
+            "unknown": "Onverwachte fout"
         },
         "error": {
-            "linking": "Er is een onbekende verbindingsfout opgetreden.",
+            "linking": "Onverwachte fout",
             "register_failed": "Registratie is mislukt, probeer het opnieuw"
         },
         "step": {
@@ -24,6 +24,12 @@
             "link": {
                 "description": "Druk op de knop van de bridge om Philips Hue te registreren met Home Assistant.  \n\n![Locatie van de knop op bridge](/static/images/config_philips_hue.jpg)",
                 "title": "Link Hub"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Handmatig een Hue bridge configureren"
             }
         }
     },
@@ -44,8 +50,18 @@
             "remote_button_long_release": "\"{subtype}\" knop losgelaten na lang drukken",
             "remote_button_short_press": "\"{subtype}\" knop ingedrukt",
             "remote_button_short_release": "\"{subtype}\" knop losgelaten",
-            "remote_double_button_long_press": "Beide \"{subtype}\" vrijgegeven na lang indrukken",
-            "remote_double_button_short_press": "Beide \"{subtype}\" vrijgegeven"
+            "remote_double_button_long_press": "Beide \"{subtype}\" losgelaten na lang indrukken",
+            "remote_double_button_short_press": "Beide \"{subtype}\" losgelaten"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_hue_groups": "Sta Hue-groepen toe",
+                    "allow_unreachable": "Onbereikbare lampen toestaan hun status correct te melden"
+                }
+            }
         }
     }
 }

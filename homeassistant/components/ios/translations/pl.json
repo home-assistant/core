@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Wymagana jest tylko jedna konfiguracja Home Assistant iOS."
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "step": {
             "confirm": {
-                "description": "Czy chcesz skonfigurowa\u0107 Home Assistant iOS?"
+                "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?"
             }
         }
     }

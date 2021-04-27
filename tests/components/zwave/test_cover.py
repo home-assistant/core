@@ -1,4 +1,6 @@
 """Test Z-Wave cover devices."""
+from unittest.mock import MagicMock
+
 from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN
 from homeassistant.components.zwave import (
     CONF_INVERT_OPENCLOSE_BUTTONS,
@@ -7,7 +9,6 @@ from homeassistant.components.zwave import (
     cover,
 )
 
-from tests.async_mock import MagicMock
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
 
 

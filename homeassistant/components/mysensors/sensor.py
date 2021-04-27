@@ -1,6 +1,13 @@
 """Support for MySensors sensors."""
+from typing import Callable
+
+from awesomeversion import AwesomeVersion
+
 from homeassistant.components import mysensors
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.mysensors import on_unload
+from homeassistant.components.mysensors.const import MYSENSORS_DISCOVERY
+from homeassistant.components.sensor import DOMAIN, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONDUCTIVITY,
     DEGREE,
@@ -9,13 +16,17 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
     LENGTH_METERS,
+    LIGHT_LUX,
     MASS_KILOGRAMS,
     PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     VOLT,
+    VOLUME_CUBIC_METERS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 SENSORS = {
     "V_TEMP": [None, "mdi:thermometer"],
@@ -36,11 +47,11 @@ SENSORS = {
     "V_KWH": [ENERGY_KILO_WATT_HOUR, None],
     "V_LIGHT_LEVEL": [PERCENTAGE, "mdi:white-balance-sunny"],
     "V_FLOW": [LENGTH_METERS, "mdi:gauge"],
-    "V_VOLUME": ["m³", None],
+    "V_VOLUME": [f"{VOLUME_CUBIC_METERS}", None],
     "V_LEVEL": {
         "S_SOUND": ["dB", "mdi:volume-high"],
         "S_VIBRATION": [FREQUENCY_HERTZ, None],
-        "S_LIGHT_LEVEL": ["lx", "mdi:white-balance-sunny"],
+        "S_LIGHT_LEVEL": [LIGHT_LUX, "mdi:white-balance-sunny"],
     },
     "V_VOLTAGE": [VOLT, "mdi:flash"],
     "V_CURRENT": [ELECTRICAL_CURRENT_AMPERE, "mdi:flash-auto"],
@@ -52,18 +63,33 @@ SENSORS = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the MySensors platform for sensors."""
-    mysensors.setup_mysensors_platform(
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+):
+    """Set up this platform for a specific ConfigEntry(==Gateway)."""
+
+    async def async_discover(discovery_info):
+        """Discover and add a MySensors sensor."""
+        mysensors.setup_mysensors_platform(
+            hass,
+            DOMAIN,
+            discovery_info,
+            MySensorsSensor,
+            async_add_entities=async_add_entities,
+        )
+
+    await on_unload(
         hass,
-        DOMAIN,
-        discovery_info,
-        MySensorsSensor,
-        async_add_entities=async_add_entities,
+        config_entry,
+        async_dispatcher_connect(
+            hass,
+            MYSENSORS_DISCOVERY.format(config_entry.entry_id, DOMAIN),
+            async_discover,
+        ),
     )
 
 
-class MySensorsSensor(mysensors.device.MySensorsEntity):
+class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
     """Representation of a MySensors Sensor child node."""
 
     @property
@@ -83,7 +109,7 @@ class MySensorsSensor(mysensors.device.MySensorsEntity):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        _, icon = self._get_sensor_type()
+        icon = self._get_sensor_type()[1]
         return icon
 
     @property
@@ -91,11 +117,11 @@ class MySensorsSensor(mysensors.device.MySensorsEntity):
         """Return the unit of measurement of this entity."""
         set_req = self.gateway.const.SetReq
         if (
-            float(self.gateway.protocol_version) >= 1.5
+            AwesomeVersion(self.gateway.protocol_version) >= AwesomeVersion("1.5")
             and set_req.V_UNIT_PREFIX in self._values
         ):
             return self._values[set_req.V_UNIT_PREFIX]
-        unit, _ = self._get_sensor_type()
+        unit = self._get_sensor_type()[0]
         return unit
 
     def _get_sensor_type(self):
@@ -103,7 +129,7 @@ class MySensorsSensor(mysensors.device.MySensorsEntity):
         pres = self.gateway.const.Presentation
         set_req = self.gateway.const.SetReq
         SENSORS[set_req.V_TEMP.name][0] = (
-            TEMP_CELSIUS if self.gateway.metric else TEMP_FAHRENHEIT
+            TEMP_CELSIUS if self.hass.config.units.is_metric else TEMP_FAHRENHEIT
         )
         sensor_type = SENSORS.get(set_req(self.value_type).name, [None, None])
         if isinstance(sensor_type, dict):

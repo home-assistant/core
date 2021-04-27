@@ -1,6 +1,4 @@
 """Support for XS1 climate devices."""
-import logging
-
 from xs1_api_client.api_constants import ActuatorType
 
 from homeassistant.components.climate import ClimateEntity
@@ -11,8 +9,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE
 
 from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 MIN_TEMP = 8
 MAX_TEMP = 25

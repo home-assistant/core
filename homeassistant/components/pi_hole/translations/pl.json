@@ -1,12 +1,17 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana."
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "Klucz API"
+                }
+            },
             "user": {
                 "data": {
                     "api_key": "Klucz API",
@@ -14,7 +19,8 @@
                     "location": "Lokalizacja",
                     "name": "Nazwa",
                     "port": "Port",
-                    "ssl": "U\u017cyj SSL",
+                    "ssl": "Certyfikat SSL",
+                    "statistics_only": "Tylko statystyki",
                     "verify_ssl": "Weryfikacja certyfikatu SSL"
                 }
             }

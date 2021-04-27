@@ -1,116 +1,65 @@
 """Support for RESTful binary sensors."""
-import logging
-
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES_SCHEMA,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
 from homeassistant.const import (
-    CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
-    CONF_HEADERS,
-    CONF_METHOD,
     CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PAYLOAD,
     CONF_RESOURCE,
     CONF_RESOURCE_TEMPLATE,
-    CONF_TIMEOUT,
-    CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
-    CONF_VERIFY_SSL,
-    HTTP_BASIC_AUTHENTICATION,
-    HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.reload import setup_reload_service
 
-from . import DOMAIN, PLATFORMS
-from .sensor import RestData
+from . import async_get_config_and_coordinator, create_rest_data_from_config
+from .entity import RestEntity
+from .schema import BINARY_SENSOR_SCHEMA, RESOURCE_SCHEMA
 
-_LOGGER = logging.getLogger(__name__)
-
-DEFAULT_METHOD = "GET"
-DEFAULT_NAME = "REST Binary Sensor"
-DEFAULT_VERIFY_SSL = True
-DEFAULT_FORCE_UPDATE = False
-DEFAULT_TIMEOUT = 10
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Exclusive(CONF_RESOURCE, CONF_RESOURCE): cv.url,
-        vol.Exclusive(CONF_RESOURCE_TEMPLATE, CONF_RESOURCE): cv.template,
-        vol.Optional(CONF_AUTHENTICATION): vol.In(
-            [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
-        ),
-        vol.Optional(CONF_HEADERS): {cv.string: cv.string},
-        vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(["POST", "GET"]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PAYLOAD): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-        vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    }
-)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({**RESOURCE_SCHEMA, **BINARY_SENSOR_SCHEMA})
 
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE), PLATFORM_SCHEMA
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the REST binary sensor."""
+    # Must update the sensor now (including fetching the rest resource) to
+    # ensure it's updating its state.
+    if discovery_info is not None:
+        conf, coordinator, rest = await async_get_config_and_coordinator(
+            hass, BINARY_SENSOR_DOMAIN, discovery_info
+        )
+    else:
+        conf = config
+        coordinator = None
+        rest = create_rest_data_from_config(hass, conf)
+        await rest.async_update(log_errors=False)
 
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
+    if rest.data is None:
+        if rest.last_exception:
+            raise PlatformNotReady from rest.last_exception
+        raise PlatformNotReady
 
-    name = config.get(CONF_NAME)
-    resource = config.get(CONF_RESOURCE)
-    resource_template = config.get(CONF_RESOURCE_TEMPLATE)
-    method = config.get(CONF_METHOD)
-    payload = config.get(CONF_PAYLOAD)
-    verify_ssl = config.get(CONF_VERIFY_SSL)
-    timeout = config.get(CONF_TIMEOUT)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    headers = config.get(CONF_HEADERS)
-    device_class = config.get(CONF_DEVICE_CLASS)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    force_update = config.get(CONF_FORCE_UPDATE)
-
-    if resource_template is not None:
-        resource_template.hass = hass
-        resource = resource_template.render()
+    name = conf.get(CONF_NAME)
+    device_class = conf.get(CONF_DEVICE_CLASS)
+    value_template = conf.get(CONF_VALUE_TEMPLATE)
+    force_update = conf.get(CONF_FORCE_UPDATE)
+    resource_template = conf.get(CONF_RESOURCE_TEMPLATE)
 
     if value_template is not None:
         value_template.hass = hass
 
-    if username and password:
-        if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-            auth = HTTPDigestAuth(username, password)
-        else:
-            auth = HTTPBasicAuth(username, password)
-    else:
-        auth = None
-
-    rest = RestData(method, resource, auth, headers, payload, verify_ssl, timeout)
-    rest.update()
-    if rest.data is None:
-        raise PlatformNotReady
-
-    add_entities(
+    async_add_entities(
         [
             RestBinarySensor(
-                hass,
+                coordinator,
                 rest,
                 name,
                 device_class,
@@ -118,16 +67,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 force_update,
                 resource_template,
             )
-        ]
+        ],
     )
 
 
-class RestBinarySensor(BinarySensorEntity):
+class RestBinarySensor(RestEntity, BinarySensorEntity):
     """Representation of a REST binary sensor."""
 
     def __init__(
         self,
-        hass,
+        coordinator,
         rest,
         name,
         device_class,
@@ -136,36 +85,23 @@ class RestBinarySensor(BinarySensorEntity):
         resource_template,
     ):
         """Initialize a REST binary sensor."""
-        self._hass = hass
-        self.rest = rest
-        self._name = name
-        self._device_class = device_class
+        super().__init__(
+            coordinator, rest, name, device_class, resource_template, force_update
+        )
         self._state = False
         self._previous_data = None
         self._value_template = value_template
-        self._force_update = force_update
-        self._resource_template = resource_template
-
-    @property
-    def name(self):
-        """Return the name of the binary sensor."""
-        return self._name
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return self._device_class
-
-    @property
-    def available(self):
-        """Return the availability of this sensor."""
-        return self.rest.data is not None
+        self._is_on = None
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
+        return self._is_on
+
+    def _update_from_rest_data(self):
+        """Update state from the rest data."""
         if self.rest.data is None:
-            return False
+            self._is_on = False
 
         response = self.rest.data
 
@@ -175,20 +111,8 @@ class RestBinarySensor(BinarySensorEntity):
             )
 
         try:
-            return bool(int(response))
+            self._is_on = bool(int(response))
         except ValueError:
-            return {"true": True, "on": True, "open": True, "yes": True}.get(
+            self._is_on = {"true": True, "on": True, "open": True, "yes": True}.get(
                 response.lower(), False
             )
-
-    @property
-    def force_update(self):
-        """Force update."""
-        return self._force_update
-
-    def update(self):
-        """Get the latest data from REST API and updates the state."""
-        if self._resource_template is not None:
-            self.rest.set_url(self._resource_template.render())
-
-        self.rest.update()

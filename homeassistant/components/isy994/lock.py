@@ -5,18 +5,17 @@ from pyisy.constants import ISY_VALUE_UNKNOWN
 
 from homeassistant.components.lock import DOMAIN as LOCK, LockEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .const import _LOGGER, DOMAIN as ISY994_DOMAIN, ISY994_NODES, ISY994_PROGRAMS
 from .entity import ISYNodeEntity, ISYProgramEntity
 from .helpers import migrate_old_unique_ids
-from .services import async_setup_device_services
 
 VALUE_TO_STATE = {0: False, 100: True}
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: Callable[[list], None],
 ) -> bool:
@@ -31,7 +30,6 @@ async def async_setup_entry(
 
     await migrate_old_unique_ids(hass, LOCK, devices)
     async_add_entities(devices)
-    async_setup_device_services(hass)
 
 
 class ISYLockEntity(ISYNodeEntity, LockEntity):

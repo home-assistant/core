@@ -10,6 +10,10 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 
 DOMAIN = "ozw"
 DATA_UNSUBSCRIBE = "unsubscribe"
+
+CONF_INTEGRATION_CREATED_ADDON = "integration_created_addon"
+CONF_USE_ADDON = "use_addon"
+
 PLATFORMS = [
     BINARY_SENSOR_DOMAIN,
     COVER_DOMAIN,
@@ -21,7 +25,7 @@ PLATFORMS = [
     SWITCH_DOMAIN,
 ]
 MANAGER = "manager"
-OPTIONS = "options"
+NODES_VALUES = "nodes_values"
 
 # MQTT Topics
 TOPIC_OPENZWAVE = "OpenZWave"
@@ -37,9 +41,13 @@ ATTR_SCENE_LABEL = "scene_label"
 ATTR_SCENE_VALUE_ID = "scene_value_id"
 ATTR_SCENE_VALUE_LABEL = "scene_value_label"
 
+# Config entry data and options
+MIGRATED = "migrated"
+
 # Service specific
 SERVICE_ADD_NODE = "add_node"
 SERVICE_REMOVE_NODE = "remove_node"
+SERVICE_CANCEL_COMMAND = "cancel_command"
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
 
 # Home Assistant Events

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "invalid_place_or_service_id": "Sobimatu asukoha v\u00f5i teenuse ID"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "place_id": "Asukoha ID",
+                    "service_id": "Teenuse ID"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "friendly_name": "S\u00f5bralike nimede kasutamine pr\u00fcgi t\u00fc\u00fcpide puhul (kui see on v\u00f5imalik)"
+                },
+                "title": "Seadista Recollect Waste"
+            }
+        }
+    }
+}

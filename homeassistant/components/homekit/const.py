@@ -5,11 +5,9 @@ DEBOUNCE_TIMEOUT = 0.5
 DEVICE_PRECISION_LEEWAY = 6
 DOMAIN = "homekit"
 HOMEKIT_FILE = ".homekit.state"
-AID_STORAGE = "homekit-aid-allocations"
 HOMEKIT_PAIRING_QR = "homekit-pairing-qr"
 HOMEKIT_PAIRING_QR_SECRET = "homekit-pairing-qr-secret"
 HOMEKIT = "homekit"
-UNDO_UPDATE_LISTENER = "undo_update_listener"
 SHUTDOWN_TIMEOUT = 30
 CONF_ENTRY_INDEX = "index"
 
@@ -28,8 +26,11 @@ ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL = "model"
 ATTR_SOFTWARE_VERSION = "sw_version"
 ATTR_KEY_NAME = "key_name"
+# Current attribute used by homekit_controller
+ATTR_OBSTRUCTION_DETECTED = "obstruction-detected"
 
 # #### Config ####
+CONF_HOMEKIT_MODE = "mode"
 CONF_ADVERTISE_IP = "advertise_ip"
 CONF_AUDIO_CODEC = "audio_codec"
 CONF_AUDIO_MAP = "audio_map"
@@ -39,11 +40,13 @@ CONF_ENTITY_CONFIG = "entity_config"
 CONF_FEATURE = "feature"
 CONF_FEATURE_LIST = "feature_list"
 CONF_FILTER = "filter"
+CONF_EXCLUDE_ACCESSORY_MODE = "exclude_accessory_mode"
 CONF_LINKED_BATTERY_SENSOR = "linked_battery_sensor"
 CONF_LINKED_BATTERY_CHARGING_SENSOR = "linked_battery_charging_sensor"
 CONF_LINKED_DOORBELL_SENSOR = "linked_doorbell_sensor"
 CONF_LINKED_MOTION_SENSOR = "linked_motion_sensor"
 CONF_LINKED_HUMIDITY_SENSOR = "linked_humidity_sensor"
+CONF_LINKED_OBSTRUCTION_SENSOR = "linked_obstruction_sensor"
 CONF_LOW_BATTERY_THRESHOLD = "low_battery_threshold"
 CONF_MAX_FPS = "max_fps"
 CONF_MAX_HEIGHT = "max_height"
@@ -64,12 +67,13 @@ DEFAULT_AUDIO_CODEC = AUDIO_CODEC_OPUS
 DEFAULT_AUDIO_MAP = "0:a:0"
 DEFAULT_AUDIO_PACKET_SIZE = 188
 DEFAULT_AUTO_START = True
+DEFAULT_EXCLUDE_ACCESSORY_MODE = False
 DEFAULT_LOW_BATTERY_THRESHOLD = 20
 DEFAULT_MAX_FPS = 30
 DEFAULT_MAX_HEIGHT = 1080
 DEFAULT_MAX_WIDTH = 1920
-DEFAULT_PORT = 51827
-DEFAULT_CONFIG_FLOW_PORT = 51828
+DEFAULT_PORT = 21063
+DEFAULT_CONFIG_FLOW_PORT = 21064
 DEFAULT_SAFE_MODE = False
 DEFAULT_VIDEO_CODEC = VIDEO_CODEC_LIBX264
 DEFAULT_VIDEO_MAP = "0:v:0"
@@ -86,6 +90,12 @@ FEATURE_TOGGLE_MUTE = "toggle_mute"
 EVENT_HOMEKIT_CHANGED = "homekit_state_change"
 EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED = "homekit_tv_remote_key_pressed"
 
+# #### HomeKit Modes ####
+HOMEKIT_MODE_ACCESSORY = "accessory"
+HOMEKIT_MODE_BRIDGE = "bridge"
+DEFAULT_HOMEKIT_MODE = HOMEKIT_MODE_BRIDGE
+HOMEKIT_MODES = [HOMEKIT_MODE_BRIDGE, HOMEKIT_MODE_ACCESSORY]
+
 # #### HomeKit Component Services ####
 SERVICE_HOMEKIT_START = "start"
 SERVICE_HOMEKIT_RESET_ACCESSORY = "reset_accessory"
@@ -94,6 +104,7 @@ SERVICE_HOMEKIT_RESET_ACCESSORY = "reset_accessory"
 BRIDGE_MODEL = "Bridge"
 BRIDGE_NAME = "Home Assistant Bridge"
 SHORT_BRIDGE_NAME = "HASS Bridge"
+SHORT_ACCESSORY_NAME = "HASS Accessory"
 BRIDGE_SERIAL_NUMBER = "homekit.bridge"
 MANUFACTURER = "Home Assistant"
 
@@ -136,6 +147,7 @@ SERV_TELEVISION_SPEAKER = "TelevisionSpeaker"
 SERV_TEMPERATURE_SENSOR = "TemperatureSensor"
 SERV_THERMOSTAT = "Thermostat"
 SERV_VALVE = "Valve"
+SERV_WINDOW = "Window"
 SERV_WINDOW_COVERING = "WindowCovering"
 
 # #### Characteristics ####
@@ -184,6 +196,7 @@ CHAR_MODEL = "Model"
 CHAR_MOTION_DETECTED = "MotionDetected"
 CHAR_MUTE = "Mute"
 CHAR_NAME = "Name"
+CHAR_OBSTRUCTION_DETECTED = "ObstructionDetected"
 CHAR_OCCUPANCY_DETECTED = "OccupancyDetected"
 CHAR_ON = "On"
 CHAR_OUTLET_IN_USE = "OutletInUse"
@@ -223,8 +236,6 @@ PROP_CELSIUS = {"minValue": -273, "maxValue": 999}
 PROP_VALID_VALUES = "ValidValues"
 
 # #### Device Classes ####
-DEVICE_CLASS_CO = "co"
-DEVICE_CLASS_CO2 = "co2"
 DEVICE_CLASS_DOOR = "door"
 DEVICE_CLASS_GARAGE_DOOR = "garage_door"
 DEVICE_CLASS_GAS = "gas"
@@ -282,4 +293,5 @@ CONFIG_OPTIONS = [
     CONF_AUTO_START,
     CONF_SAFE_MODE,
     CONF_ENTITY_CONFIG,
+    CONF_HOMEKIT_MODE,
 ]

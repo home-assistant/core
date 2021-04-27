@@ -3,9 +3,10 @@
         "abort": {
             "all_configured": "Alle knyttet servere som allerede er konfigurert",
             "already_configured": "Denne Plex-serveren er allerede konfigurert",
-            "already_in_progress": "Plex blir konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
             "token_request_timeout": "Tidsavbrudd ved innhenting av token",
-            "unknown": "Mislyktes av ukjent \u00e5rsak"
+            "unknown": "Uventet feil"
         },
         "error": {
             "faulty_credentials": "Autorisasjonen mislyktes, bekreft token",
@@ -14,28 +15,34 @@
             "not_found": "Plex-server ikke funnet",
             "ssl_error": "Problem med SSL-sertifikat"
         },
-        "flow_title": "{name}({host})",
+        "flow_title": "",
         "step": {
             "manual_setup": {
                 "data": {
                     "host": "Vert",
-                    "ssl": "Bruk SSL",
+                    "port": "Port",
+                    "ssl": "Bruker et SSL-sertifikat",
                     "token": "Token (valgfritt)",
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 },
                 "title": "Manuell Plex-konfigurasjon"
             },
             "select_server": {
+                "data": {
+                    "server": ""
+                },
                 "description": "Flere servere tilgjengelig, velg en:",
                 "title": "Velg Plex-server"
             },
             "user": {
-                "description": "Fortsett til [plex.tv] (https://plex.tv) for \u00e5 koble en Plex-server."
+                "description": "Fortsett til [plex.tv] (https://plex.tv) for \u00e5 koble en Plex-server.",
+                "title": ""
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "Oppsettmetode"
-                }
+                },
+                "title": ""
             }
         }
     },

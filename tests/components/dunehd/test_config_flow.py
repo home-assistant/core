@@ -1,10 +1,11 @@
 """Define tests for the Dune HD config flow."""
+from unittest.mock import patch
+
 from homeassistant import data_entry_flow
 from homeassistant.components.dunehd.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CONFIG_HOSTNAME = {CONF_HOST: "dunehd-host"}

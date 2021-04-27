@@ -12,12 +12,12 @@
     },
     "error": {
       "invalid_key": "Failed to register with provided key. If this keeps happening, try restarting the gateway.",
-      "cannot_connect": "Unable to connect to the gateway.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "timeout": "Timeout validating the code."
     },
     "abort": {
-      "already_configured": "Bridge is already configured.",
-      "already_in_progress": "Bridge configuration is already in progress."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
     }
   }
 }

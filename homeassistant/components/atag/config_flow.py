@@ -3,15 +3,13 @@ import pyatag
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EMAIL, CONF_HOST, CONF_PORT
-from homeassistant.core import callback
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import DOMAIN  # pylint: disable=unused-import
+from . import DOMAIN
 
 DATA_SCHEMA = {
     vol.Required(CONF_HOST): str,
-    vol.Optional(CONF_EMAIL): str,
     vol.Required(CONF_PORT, default=pyatag.const.DEFAULT_PORT): vol.Coerce(int),
 }
 
@@ -27,23 +25,21 @@ class AtagConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if not user_input:
             return await self._show_form()
-        session = async_get_clientsession(self.hass)
-        try:
-            atag = pyatag.AtagOne(session=session, **user_input)
-            await atag.authorize()
-            await atag.update(force=True)
 
-        except pyatag.errors.Unauthorized:
+        atag = pyatag.AtagOne(session=async_get_clientsession(self.hass), **user_input)
+        try:
+            await atag.update()
+
+        except pyatag.Unauthorized:
             return await self._show_form({"base": "unauthorized"})
-        except pyatag.errors.AtagException:
-            return await self._show_form({"base": "connection_error"})
+        except pyatag.AtagException:
+            return await self._show_form({"base": "cannot_connect"})
 
         await self.async_set_unique_id(atag.id)
         self._abort_if_unique_id_configured(updates=user_input)
 
         return self.async_create_entry(title=atag.id, data=user_input)
 
-    @callback
     async def _show_form(self, errors=None):
         """Show the form to the user."""
         return self.async_show_form(

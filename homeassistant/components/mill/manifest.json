@@ -2,7 +2,8 @@
   "domain": "mill",
   "name": "Mill",
   "documentation": "https://www.home-assistant.io/integrations/mill",
-  "requirements": ["millheater==0.3.4"],
+  "requirements": ["millheater==0.4.0"],
   "codeowners": ["@danielhiversen"],
-  "config_flow": true
+  "config_flow": true,
+  "iot_class": "cloud_polling"
 }

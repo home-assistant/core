@@ -3,9 +3,9 @@ import asyncio
 
 from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
-import requests
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+from onvif.exceptions import ONVIFError
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, DATA_FFMPEG
@@ -36,6 +36,7 @@ from .const import (
     LOGGER,
     RELATIVE_MOVE,
     SERVICE_PTZ,
+    STOP_MOVE,
     ZOOM_IN,
     ZOOM_OUT,
 )
@@ -55,7 +56,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             vol.Optional(ATTR_DISTANCE, default=0.1): cv.small_float,
             vol.Optional(ATTR_SPEED, default=0.5): cv.small_float,
             vol.Optional(ATTR_MOVE_MODE, default=RELATIVE_MOVE): vol.In(
-                [CONTINUOUS_MOVE, RELATIVE_MOVE, ABSOLUTE_MOVE, GOTOPRESET_MOVE]
+                [
+                    CONTINUOUS_MOVE,
+                    RELATIVE_MOVE,
+                    ABSOLUTE_MOVE,
+                    GOTOPRESET_MOVE,
+                    STOP_MOVE,
+                ]
             ),
             vol.Optional(ATTR_CONTINUOUS_DURATION, default=0.5): cv.small_float,
             vol.Optional(ATTR_PRESET, default="0"): cv.string,
@@ -86,7 +93,6 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
             == HTTP_BASIC_AUTHENTICATION
         )
         self._stream_uri = None
-        self._snapshot_uri = None
 
     @property
     def supported_features(self) -> int:
@@ -119,32 +125,19 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         image = None
 
         if self.device.capabilities.snapshot:
-            auth = None
-            if self.device.username and self.device.password:
-                if self._basic_auth:
-                    auth = HTTPBasicAuth(self.device.username, self.device.password)
-                else:
-                    auth = HTTPDigestAuth(self.device.username, self.device.password)
-
-            def fetch():
-                """Read image from a URL."""
-                try:
-                    response = requests.get(self._snapshot_uri, timeout=5, auth=auth)
-                    if response.status_code < 300:
-                        return response.content
-                except requests.exceptions.RequestException as error:
-                    LOGGER.error(
-                        "Fetch snapshot image failed from %s, falling back to FFmpeg; %s",
-                        self.device.name,
-                        error,
-                    )
-
-                return None
-
-            image = await self.hass.async_add_executor_job(fetch)
+            try:
+                image = await self.device.device.get_snapshot(
+                    self.profile.token, self._basic_auth
+                )
+            except ONVIFError as err:
+                LOGGER.error(
+                    "Fetch snapshot image failed from %s, falling back to FFmpeg; %s",
+                    self.device.name,
+                    err,
+                )
 
         if image is None:
-            ffmpeg = ImageFrame(self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
+            ffmpeg = ImageFrame(self.hass.data[DATA_FFMPEG].binary)
             image = await asyncio.shield(
                 ffmpeg.get_image(
                     self._stream_uri,
@@ -162,7 +155,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         LOGGER.debug("Handling mjpeg stream from camera '%s'", self.device.name)
 
         ffmpeg_manager = self.hass.data[DATA_FFMPEG]
-        stream = CameraMjpeg(ffmpeg_manager.binary, loop=self.hass.loop)
+        stream = CameraMjpeg(ffmpeg_manager.binary)
 
         await stream.open_camera(
             self._stream_uri,
@@ -183,12 +176,10 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         uri_no_auth = await self.device.async_get_stream_uri(self.profile)
-        self._stream_uri = uri_no_auth.replace(
-            "rtsp://", f"rtsp://{self.device.username}:{self.device.password}@", 1
-        )
-
-        if self.device.capabilities.snapshot:
-            self._snapshot_uri = await self.device.async_get_snapshot_uri(self.profile)
+        url = URL(uri_no_auth)
+        url = url.with_user(self.device.username)
+        url = url.with_password(self.device.password)
+        self._stream_uri = str(url)
 
     async def async_perform_ptz(
         self,

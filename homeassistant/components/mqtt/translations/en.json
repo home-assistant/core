@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Only a single configuration of MQTT is allowed."
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
-            "cannot_connect": "Unable to connect to the broker."
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "broker": {
@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Enable discovery"
                 },
-                "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the Hass.io add-on {addon}?",
-                "title": "MQTT Broker via Hass.io add-on"
+                "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the add-on {addon}?",
+                "title": "MQTT Broker via Home Assistant add-on"
             }
         }
     },
@@ -52,7 +52,7 @@
         "error": {
             "bad_birth": "Invalid birth topic.",
             "bad_will": "Invalid will topic.",
-            "cannot_connect": "Unable to connect to the broker."
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "broker": {
@@ -72,7 +72,7 @@
                     "birth_retain": "Birth message retain",
                     "birth_topic": "Birth message topic",
                     "discovery": "Enable discovery",
-                    "will_enable": "Enable birth message",
+                    "will_enable": "Enable will message",
                     "will_payload": "Will message payload",
                     "will_qos": "Will message QoS",
                     "will_retain": "Will message retain",

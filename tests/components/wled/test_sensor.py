@@ -1,5 +1,6 @@
 """Tests for the WLED sensor platform."""
 from datetime import datetime
+from unittest.mock import patch
 
 import pytest
 
@@ -12,7 +13,6 @@ from homeassistant.components.wled.const import (
     ATTR_MAX_POWER,
     CURRENT_MA,
     DOMAIN,
-    SIGNAL_DBM,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -20,11 +20,12 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     DATA_BYTES,
     PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
 from tests.components.wled import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -35,7 +36,7 @@ async def test_sensors(
     """Test the creation and values of the WLED sensors."""
 
     entry = await init_integration(hass, aioclient_mock, skip_setup=True)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     # Pre-create registry entries for disabled by default sensors
     registry.async_get_or_create(
@@ -138,7 +139,10 @@ async def test_sensors(
     state = hass.states.get("sensor.wled_rgb_light_wifi_rssi")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == SIGNAL_DBM
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    )
     assert state.state == "-62"
 
     entry = registry.async_get("sensor.wled_rgb_light_wifi_rssi")
@@ -182,8 +186,7 @@ async def test_disabled_by_default_sensors(
 ) -> None:
     """Test the disabled by default WLED sensors."""
     await init_integration(hass, aioclient_mock)
-    registry = await hass.helpers.entity_registry.async_get_registry()
-    print(registry.entities)
+    registry = er.async_get(hass)
 
     state = hass.states.get(entity_id)
     assert state is None
@@ -191,4 +194,4 @@ async def test_disabled_by_default_sensors(
     entry = registry.async_get(entity_id)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == "integration"
+    assert entry.disabled_by == er.DISABLED_INTEGRATION

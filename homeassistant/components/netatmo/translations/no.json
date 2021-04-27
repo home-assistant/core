@@ -1,12 +1,13 @@
 {
     "config": {
         "abort": {
-            "authorize_url_timeout": "Tidsavbrutt ved oppretting av godkjennings url.",
-            "missing_configuration": "Komponeneten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen.",
+            "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse",
+            "missing_configuration": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen",
+            "no_url_available": "Ingen URL tilgjengelig. For informasjon om denne feilen, [sjekk hjelpseksjonen]({docs_url})",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "create_entry": {
-            "default": "Vellykket godkjenning med Netatmo."
+            "default": "Vellykket godkjenning"
         },
         "step": {
             "pick_implementation": {
@@ -14,15 +15,37 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "borte",
+            "hg": "frostvakt",
+            "schedule": "Tidsplan"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} oppdaget en alarm",
+            "animal": "{entity_name} oppdaget et dyr",
+            "cancel_set_point": "{entity_name} har gjenopptatt tidsplanen",
+            "human": "{entity_name} oppdaget et menneske",
+            "movement": "{entity_name} oppdaget bevegelse",
+            "outdoor": "{entity_name} oppdaget en utend\u00f8rs hendelse",
+            "person": "{entity_name} oppdaget en person",
+            "person_away": "{entity_name} oppdaget at en person har forlatt",
+            "set_point": "M\u00e5ltemperatur {entity_name} angis manuelt",
+            "therm_mode": "{entity_name} byttet til \"{subtype}\"",
+            "turned_off": "{entity_name} sl\u00e5tt av",
+            "turned_on": "{entity_name} sl\u00e5tt p\u00e5",
+            "vehicle": "{entity_name} oppdaget et kj\u00f8ret\u00f8y"
+        }
+    },
     "options": {
         "step": {
             "public_weather": {
                 "data": {
                     "area_name": "Navn p\u00e5 omr\u00e5det",
-                    "lat_ne": "Breddegrad nord-\u00f8st",
-                    "lat_sw": "Breddegrad s\u00f8r-vest",
-                    "lon_ne": "Lengdegrad nord-\u00f8st",
-                    "lon_sw": "Lengdegrad s\u00f8r-vest",
+                    "lat_ne": "Breddegrad Nord-\u00d8st hj\u00f8rne",
+                    "lat_sw": "Breddegrad S\u00f8r-Vest hj\u00f8rne",
+                    "lon_ne": "Lengdegrad Nord-\u00d8st hj\u00f8rne",
+                    "lon_sw": "Lengdegrad S\u00f8r-Vest hj\u00f8rne",
                     "mode": "Beregning",
                     "show_on_map": "Vis p\u00e5 kart"
                 },

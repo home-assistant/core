@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Juurdep\u00e4\u00e4sut\u00f5end",
+                    "host": ""
+                },
+                "description": "Seadista Vilfo ruuteri sidumine. Vaja on oma Vilfo ruuteri hosti nime / IP-d ja API juurdep\u00e4\u00e4suluba. Lisateavet selle integreerimise ja selle kohta, kuidas neid \u00fcksikasju saada, leiad aadressilt https://www.home-assistant.io/integrations/vilfo",
+                "title": "\u00dchenda Vilfo ruuteriga"
+            }
+        }
+    }
+}

@@ -7,90 +7,213 @@ To update, run python3 -m script.hassfest
 
 ZEROCONF = {
     "_Volumio._tcp.local.": [
-        "volumio"
+        {
+            "domain": "volumio"
+        }
     ],
     "_api._udp.local.": [
-        "guardian"
+        {
+            "domain": "guardian"
+        }
     ],
     "_axis-video._tcp.local.": [
-        "axis",
-        "doorbird"
+        {
+            "domain": "axis",
+            "macaddress": "00408C*"
+        },
+        {
+            "domain": "axis",
+            "macaddress": "ACCC8E*"
+        },
+        {
+            "domain": "axis",
+            "macaddress": "B8A44F*"
+        },
+        {
+            "domain": "doorbird",
+            "macaddress": "1CCAE3*"
+        }
     ],
     "_bond._tcp.local.": [
-        "bond"
+        {
+            "domain": "bond"
+        }
     ],
     "_daap._tcp.local.": [
-        "forked_daapd"
+        {
+            "domain": "forked_daapd"
+        }
     ],
     "_dkapi._tcp.local.": [
-        "daikin"
+        {
+            "domain": "daikin"
+        }
+    ],
+    "_dvl-deviceapi._tcp.local.": [
+        {
+            "domain": "devolo_home_control"
+        }
     ],
     "_elg._tcp.local.": [
-        "elgato"
+        {
+            "domain": "elgato"
+        }
+    ],
+    "_enphase-envoy._tcp.local.": [
+        {
+            "domain": "enphase_envoy"
+        }
     ],
     "_esphomelib._tcp.local.": [
-        "esphome"
+        {
+            "domain": "esphome"
+        },
+        {
+            "domain": "zha",
+            "name": "tube*"
+        }
+    ],
+    "_fbx-api._tcp.local.": [
+        {
+            "domain": "freebox"
+        }
     ],
     "_googlecast._tcp.local.": [
-        "cast"
+        {
+            "domain": "cast"
+        }
     ],
     "_hap._tcp.local.": [
-        "homekit_controller"
+        {
+            "domain": "homekit_controller"
+        }
+    ],
+    "_homekit._tcp.local.": [
+        {
+            "domain": "homekit"
+        }
     ],
     "_http._tcp.local.": [
-        "shelly"
+        {
+            "domain": "shelly",
+            "name": "shelly*"
+        }
     ],
     "_ipp._tcp.local.": [
-        "ipp"
+        {
+            "domain": "ipp"
+        }
     ],
     "_ipps._tcp.local.": [
-        "ipp"
+        {
+            "domain": "ipp"
+        }
+    ],
+    "_kizbox._tcp.local.": [
+        {
+            "domain": "somfy",
+            "name": "gateway*"
+        }
+    ],
+    "_leap._tcp.local.": [
+        {
+            "domain": "lutron_caseta"
+        }
+    ],
+    "_mediaremotetv._tcp.local.": [
+        {
+            "domain": "apple_tv"
+        }
     ],
     "_miio._udp.local.": [
-        "xiaomi_aqara",
-        "xiaomi_miio"
+        {
+            "domain": "xiaomi_aqara"
+        },
+        {
+            "domain": "xiaomi_miio"
+        }
     ],
     "_nut._tcp.local.": [
-        "nut"
+        {
+            "domain": "nut"
+        }
     ],
     "_plugwise._tcp.local.": [
-        "plugwise"
+        {
+            "domain": "plugwise"
+        }
     ],
     "_printer._tcp.local.": [
-        "brother"
+        {
+            "domain": "brother",
+            "name": "brother*"
+        }
     ],
     "_spotify-connect._tcp.local.": [
-        "spotify"
+        {
+            "domain": "spotify"
+        }
     ],
     "_ssh._tcp.local.": [
-        "smappee"
+        {
+            "domain": "smappee",
+            "name": "smappee1*"
+        },
+        {
+            "domain": "smappee",
+            "name": "smappee2*"
+        },
+        {
+            "domain": "smappee",
+            "name": "smappee50*"
+        }
+    ],
+    "_touch-able._tcp.local.": [
+        {
+            "domain": "apple_tv"
+        }
     ],
     "_viziocast._tcp.local.": [
-        "vizio"
+        {
+            "domain": "vizio"
+        }
     ],
     "_wled._tcp.local.": [
-        "wled"
+        {
+            "domain": "wled"
+        }
     ],
     "_xbmc-jsonrpc-h._tcp.local.": [
-        "kodi"
+        {
+            "domain": "kodi"
+        }
     ]
 }
 
 HOMEKIT = {
+    "3810X": "roku",
+    "4660X": "roku",
+    "7820X": "roku",
     "819LMB": "myq",
     "AC02": "tado",
     "Abode": "abode",
     "BSB002": "hue",
+    "C105X": "roku",
+    "C135X": "roku",
     "Healty Home Coach": "netatmo",
     "Iota": "abode",
     "LIFX": "lifx",
+    "MYQ": "myq",
     "Netatmo Relay": "netatmo",
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",
     "Rachio": "rachio",
+    "Smart Bridge": "lutron_caseta",
     "Socket": "wemo",
     "TRADFRI": "tradfri",
     "Welcome": "netatmo",
     "Wemo": "wemo",
+    "iSmartGate": "gogogate2",
+    "iZone": "izone",
     "tado": "tado"
 }

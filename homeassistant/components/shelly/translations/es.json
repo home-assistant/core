@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositivo ya est\u00e1 configurado"
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "unsupported_firmware": "El dispositivo est\u00e1 usando una versi\u00f3n de firmware no compatible."
         },
         "error": {
-            "auth_not_supported": "Los dispositivos Shelly que requieren autenticaci\u00f3n no son compatibles actualmente.",
             "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
@@ -12,7 +12,7 @@
         "flow_title": "Shelly: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "\u00bfQuieres configurar el {model} en {host}?"
+                "description": "\u00bfQuieres configurar el {model} en {host}?\n\nAntes de configurarlo, el dispositivo que funciona con pilas debe ser despertado pulsando el bot\u00f3n situado en el dispositivo."
             },
             "credentials": {
                 "data": {
@@ -23,9 +23,25 @@
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Antes de configurarlo, el dispositivo que funciona con bater\u00eda debe despertarse presionando el bot\u00f3n del dispositivo."
             }
         }
     },
-    "title": "Shelly"
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Bot\u00f3n",
+            "button1": "Primer bot\u00f3n",
+            "button2": "Segundo bot\u00f3n",
+            "button3": "Tercer bot\u00f3n"
+        },
+        "trigger_type": {
+            "double": "Pulsaci\u00f3n doble de {subtype}",
+            "long": "Pulsaci\u00f3n larga de {subtype}",
+            "long_single": "Pulsaci\u00f3n larga de {subtype} seguida de una pulsaci\u00f3n simple",
+            "single": "Pulsaci\u00f3n simple de {subtype}",
+            "single_long": "Pulsaci\u00f3n simple de {subtype} seguida de una pulsaci\u00f3n larga",
+            "triple": "Pulsaci\u00f3n triple de {subtype}"
+        }
+    }
 }

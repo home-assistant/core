@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane."
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia.",
-            "invalid_auth": "Niepoprawne uwierzytelnienie.",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
             "no_results": "Brak wynik\u00f3w. Spr\u00f3buj z inn\u0105 stacj\u0105/adresem."
         },
         "step": {
@@ -24,8 +24,8 @@
             "user": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
-                    "password": "[%key_id:common::config_flow::data::password%]",
-                    "username": "[%key_id:common::config_flow::data::username%]"
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
                 },
                 "title": "Po\u0142\u0105czenie z API HVV"
             }
@@ -43,6 +43,5 @@
                 "title": "Opcje"
             }
         }
-    },
-    "title": "Odjazdy HVV"
+    }
 }

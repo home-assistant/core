@@ -1,6 +1,4 @@
 """Support for Agent."""
-import asyncio
-import logging
 
 from agent import AgentError
 from agent.a import Agent
@@ -14,14 +12,7 @@ from .const import CONNECTION, DOMAIN as AGENT_DOMAIN, SERVER_URL
 ATTRIBUTION = "ispyconnect.com"
 DEFAULT_BRAND = "Agent DVR by ispyconnect.com"
 
-_LOGGER = logging.getLogger(__name__)
-
 FORWARDS = ["alarm_control_panel", "camera"]
-
-
-async def async_setup(hass, config):
-    """Old way to set up integrations."""
-    return True
 
 
 async def async_setup_entry(hass, config_entry):
@@ -55,24 +46,14 @@ async def async_setup_entry(hass, config_entry):
         sw_version=agent_client.version,
     )
 
-    for forward in FORWARDS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, forward)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, FORWARDS)
 
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, forward)
-                for forward in FORWARDS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(config_entry, FORWARDS)
 
     await hass.data[AGENT_DOMAIN][config_entry.entry_id][CONNECTION].close()
 

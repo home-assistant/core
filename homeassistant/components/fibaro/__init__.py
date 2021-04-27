@@ -1,7 +1,8 @@
 """Support for the Fibaro devices."""
+from __future__ import annotations
+
 from collections import defaultdict
 import logging
-from typing import Optional
 
 from fiblary3.client.v4.client import Client as FibaroClient, StateHandler
 import voluptuous as vol
@@ -37,7 +38,7 @@ CONF_RESET_COLOR = "reset_color"
 DOMAIN = "fibaro"
 FIBARO_CONTROLLERS = "fibaro_controllers"
 FIBARO_DEVICES = "fibaro_devices"
-FIBARO_COMPONENTS = [
+PLATFORMS = [
     "binary_sensor",
     "climate",
     "cover",
@@ -164,7 +165,7 @@ class FibaroController:
         for change in state.get("changes", []):
             try:
                 dev_id = change.pop("id")
-                if dev_id not in self._device_map.keys():
+                if dev_id not in self._device_map:
                     continue
                 device = self._device_map[dev_id]
                 for property_name, value in change.items():
@@ -200,9 +201,26 @@ class FibaroController:
             if device.parentId == device_id
         ]
 
-    def get_siblings(self, device_id):
+    def get_children2(self, device_id, endpoint_id):
+        """Get a list of child devices for the same endpoint."""
+        return [
+            device
+            for device in self._device_map.values()
+            if device.parentId == device_id
+            and (
+                "endPointId" not in device.properties
+                or device.properties.endPointId == endpoint_id
+            )
+        ]
+
+    def get_siblings(self, device):
         """Get the siblings of a device."""
-        return self.get_children(self._device_map[device_id].parentId)
+        if "endPointId" in device.properties:
+            return self.get_children2(
+                self._device_map[device.id].parentId,
+                self._device_map[device.id].properties.endPointId,
+            )
+        return self.get_children(self._device_map[device.id].parentId)
 
     @staticmethod
     def _map_device_to_type(device):
@@ -262,6 +280,7 @@ class FibaroController:
         self._device_map = {}
         self.fibaro_devices = defaultdict(list)
         last_climate_parent = None
+        last_endpoint = None
         for device in devices:
             try:
                 if "name" not in device or "id" not in device:
@@ -289,23 +308,10 @@ class FibaroController:
                 else:
                     device.mapped_type = None
                 dtype = device.mapped_type
-                if dtype:
-                    device.unique_id_str = f"{self.hub_serial}.{device.id}"
-                    self._device_map[device.id] = device
-                    if dtype != "climate":
-                        self.fibaro_devices[dtype].append(device)
-                    else:
-                        # if a sibling of this has been added, skip this one
-                        # otherwise add the first visible device in the group
-                        # which is a hack, but solves a problem with FGT having
-                        # hidden compatibility devices before the real device
-                        if (
-                            last_climate_parent != device.parentId
-                            and "visible" in device
-                            and device.visible
-                        ):
-                            self.fibaro_devices[dtype].append(device)
-                            last_climate_parent = device.parentId
+                if dtype is None:
+                    continue
+                device.unique_id_str = f"{self.hub_serial}.{device.id}"
+                self._device_map[device.id] = device
                 _LOGGER.debug(
                     "%s (%s, %s) -> %s %s",
                     device.ha_id,
@@ -314,6 +320,36 @@ class FibaroController:
                     dtype,
                     str(device),
                 )
+                if dtype != "climate":
+                    self.fibaro_devices[dtype].append(device)
+                    continue
+                # We group climate devices into groups with the same
+                # endPointID belonging to the same parent device.
+                if "endPointId" in device.properties:
+                    _LOGGER.debug(
+                        "climate device: %s, endPointId: %s",
+                        device.ha_id,
+                        device.properties.endPointId,
+                    )
+                else:
+                    _LOGGER.debug("climate device: %s, no endPointId", device.ha_id)
+                # If a sibling of this device has been added, skip this one
+                # otherwise add the first visible device in the group
+                # which is a hack, but solves a problem with FGT having
+                # hidden compatibility devices before the real device
+                if last_climate_parent != device.parentId or (
+                    "endPointId" in device.properties
+                    and last_endpoint != device.properties.endPointId
+                ):
+                    _LOGGER.debug("Handle separately")
+                    self.fibaro_devices[dtype].append(device)
+                    last_climate_parent = device.parentId
+                    if "endPointId" in device.properties:
+                        last_endpoint = device.properties.endPointId
+                    else:
+                        last_endpoint = 0
+                else:
+                    _LOGGER.debug("not handling separately")
             except (KeyError, ValueError):
                 pass
 
@@ -330,21 +366,21 @@ def setup(hass, base_config):
             controller.disable_state_handler()
 
     hass.data[FIBARO_DEVICES] = {}
-    for component in FIBARO_COMPONENTS:
-        hass.data[FIBARO_DEVICES][component] = []
+    for platform in PLATFORMS:
+        hass.data[FIBARO_DEVICES][platform] = []
 
     for gateway in gateways:
         controller = FibaroController(gateway)
         if controller.connect():
             hass.data[FIBARO_CONTROLLERS][controller.hub_serial] = controller
-            for component in FIBARO_COMPONENTS:
-                hass.data[FIBARO_DEVICES][component].extend(
-                    controller.fibaro_devices[component]
+            for platform in PLATFORMS:
+                hass.data[FIBARO_DEVICES][platform].extend(
+                    controller.fibaro_devices[platform]
                 )
 
     if hass.data[FIBARO_CONTROLLERS]:
-        for component in FIBARO_COMPONENTS:
-            discovery.load_platform(hass, component, DOMAIN, {}, base_config)
+        for platform in PLATFORMS:
+            discovery.load_platform(hass, platform, DOMAIN, {}, base_config)
         for controller in hass.data[FIBARO_CONTROLLERS].values():
             controller.enable_state_handler()
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_fibaro)
@@ -461,7 +497,7 @@ class FibaroDevice(Entity):
         return self.fibaro_device.unique_id_str
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the device."""
         return self._name
 
@@ -471,9 +507,9 @@ class FibaroDevice(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = {}
+        attr = {"fibaro_id": self.fibaro_device.id}
 
         try:
             if "battery" in self.fibaro_device.interfaces:
@@ -493,5 +529,4 @@ class FibaroDevice(Entity):
         except (ValueError, KeyError):
             pass
 
-        attr["fibaro_id"] = self.fibaro_device.id
         return attr

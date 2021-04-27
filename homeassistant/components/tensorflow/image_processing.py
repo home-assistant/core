@@ -218,7 +218,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "TensorFlow {}".format(split_entity_id(camera_entity)[1])
+            self._name = f"TensorFlow {split_entity_id(camera_entity)[1]}"
         self._category_index = category_index
         self._min_confidence = config.get(CONF_CONFIDENCE)
         self._file_out = config.get(CONF_FILE_OUT)
@@ -279,7 +279,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         return self._total_matches
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
             ATTR_MATCHES: self._matches,
@@ -328,20 +328,21 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
         for path in paths:
             _LOGGER.info("Saving results image to %s", path)
+            if not os.path.exists(os.path.dirname(path)):
+                os.makedirs(os.path.dirname(path), exist_ok=True)
             img.save(path)
 
     def process_image(self, image):
         """Process the image."""
         model = self.hass.data[DOMAIN][CONF_MODEL]
         if not model:
-            _LOGGER.debug("Model not yet ready.")
+            _LOGGER.debug("Model not yet ready")
             return
 
         start = time.perf_counter()
         try:
-            import cv2  # pylint: disable=import-error, import-outside-toplevel
+            import cv2  # pylint: disable=import-outside-toplevel
 
-            # pylint: disable=no-member
             img = cv2.imdecode(np.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
             inp = img[:, :, [2, 1, 0]]  # BGR->RGB
             inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)
@@ -405,7 +406,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
                 continue
 
             # If we got here, we should include it
-            if category not in matches.keys():
+            if category not in matches:
                 matches[category] = []
             matches[category].append({"score": float(score), "box": boxes})
             total_matches += 1

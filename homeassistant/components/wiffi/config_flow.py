@@ -11,11 +11,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PORT, CONF_TIMEOUT
 from homeassistant.core import callback
 
-from .const import (  # pylint: disable=unused-import
-    DEFAULT_PORT,
-    DEFAULT_TIMEOUT,
-    DOMAIN,
-)
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
 
 
 class WiffiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

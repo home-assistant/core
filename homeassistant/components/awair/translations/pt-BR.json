@@ -1,0 +1,7 @@
+{
+    "config": {
+        "error": {
+            "invalid_access_token": "token de acesso invalido"
+        }
+    }
+}

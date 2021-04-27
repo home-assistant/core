@@ -1,31 +1,20 @@
 """Support for Z-Wave fans."""
-import logging
 import math
 
-from homeassistant.components.fan import (
-    DOMAIN,
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-)
+from homeassistant.components.fan import DOMAIN, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.percentage import (
+    int_states_in_range,
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
+)
 
 from . import ZWaveDeviceEntity
 
-_LOGGER = logging.getLogger(__name__)
-
-SPEED_LIST = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
-
 SUPPORTED_FEATURES = SUPPORT_SET_SPEED
 
-# Value will first be divided to an integer
-VALUE_TO_SPEED = {0: SPEED_OFF, 1: SPEED_LOW, 2: SPEED_MEDIUM, 3: SPEED_HIGH}
-
-SPEED_TO_VALUE = {SPEED_OFF: 0, SPEED_LOW: 1, SPEED_MEDIUM: 50, SPEED_HIGH: 99}
+SPEED_RANGE = (1, 99)  # off is not included
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -54,34 +43,36 @@ class ZwaveFan(ZWaveDeviceEntity, FanEntity):
 
     def update_properties(self):
         """Handle data changes for node values."""
-        value = math.ceil(self.values.primary.data * 3 / 100)
-        self._state = VALUE_TO_SPEED[value]
+        self._state = self.values.primary.data
 
-    def set_speed(self, speed):
-        """Set the speed of the fan."""
-        self.node.set_dimmer(self.values.primary.value_id, SPEED_TO_VALUE[speed])
-
-    def turn_on(self, speed=None, **kwargs):
-        """Turn the device on."""
-        if speed is None:
+    def set_percentage(self, percentage):
+        """Set the speed percentage of the fan."""
+        if percentage is None:
             # Value 255 tells device to return to previous value
-            self.node.set_dimmer(self.values.primary.value_id, 255)
+            zwave_speed = 255
+        elif percentage == 0:
+            zwave_speed = 0
         else:
-            self.set_speed(speed)
+            zwave_speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+        self.node.set_dimmer(self.values.primary.value_id, zwave_speed)
+
+    def turn_on(self, speed=None, percentage=None, preset_mode=None, **kwargs):
+        """Turn the device on."""
+        self.set_percentage(percentage)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         self.node.set_dimmer(self.values.primary.value_id, 0)
 
     @property
-    def speed(self):
-        """Return the current speed."""
-        return self._state
+    def percentage(self):
+        """Return the current speed percentage."""
+        return ranged_value_to_percentage(SPEED_RANGE, self._state)
 
     @property
-    def speed_list(self):
-        """Get the list of available speeds."""
-        return SPEED_LIST
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return int_states_in_range(SPEED_RANGE)
 
     @property
     def supported_features(self):

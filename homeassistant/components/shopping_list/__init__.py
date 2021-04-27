@@ -7,25 +7,28 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_NOT_FOUND
+from homeassistant.const import ATTR_NAME, HTTP_BAD_REQUEST, HTTP_NOT_FOUND
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
 from .const import DOMAIN
 
-ATTR_NAME = "name"
+ATTR_COMPLETE = "complete"
 
 _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
 EVENT = "shopping_list_updated"
-ITEM_UPDATE_SCHEMA = vol.Schema({"complete": bool, ATTR_NAME: str})
+ITEM_UPDATE_SCHEMA = vol.Schema({ATTR_COMPLETE: bool, ATTR_NAME: str})
 PERSISTENCE = ".shopping_list.json"
 
 SERVICE_ADD_ITEM = "add_item"
 SERVICE_COMPLETE_ITEM = "complete_item"
-
+SERVICE_INCOMPLETE_ITEM = "incomplete_item"
+SERVICE_COMPLETE_ALL = "complete_all"
+SERVICE_INCOMPLETE_ALL = "incomplete_all"
 SERVICE_ITEM_SCHEMA = vol.Schema({vol.Required(ATTR_NAME): vol.Any(None, cv.string)})
+SERVICE_LIST_SCHEMA = vol.Schema({})
 
 WS_TYPE_SHOPPING_LIST_ITEMS = "shopping_list/items"
 WS_TYPE_SHOPPING_LIST_ADD_ITEM = "shopping_list/items/add"
@@ -77,7 +80,7 @@ async def async_setup_entry(hass, config_entry):
         data = hass.data[DOMAIN]
         name = call.data.get(ATTR_NAME)
         if name is not None:
-            data.async_add(name)
+            await data.async_add(name)
 
     async def complete_item_service(call):
         """Mark the item provided via `name` as completed."""
@@ -90,7 +93,28 @@ async def async_setup_entry(hass, config_entry):
         except IndexError:
             _LOGGER.error("Removing of item failed: %s cannot be found", name)
         else:
-            data.async_update(item["id"], {"name": name, "complete": True})
+            await data.async_update(item["id"], {"name": name, "complete": True})
+
+    async def incomplete_item_service(call):
+        """Mark the item provided via `name` as incomplete."""
+        data = hass.data[DOMAIN]
+        name = call.data.get(ATTR_NAME)
+        if name is None:
+            return
+        try:
+            item = [item for item in data.items if item["name"] == name][0]
+        except IndexError:
+            _LOGGER.error("Restoring of item failed: %s cannot be found", name)
+        else:
+            await data.async_update(item["id"], {"name": name, "complete": False})
+
+    async def complete_all_service(call):
+        """Mark all items in the list as complete."""
+        await data.async_update_list({"complete": True})
+
+    async def incomplete_all_service(call):
+        """Mark all items in the list as incomplete."""
+        await data.async_update_list({"complete": False})
 
     data = hass.data[DOMAIN] = ShoppingData(hass)
     await data.async_load()
@@ -100,6 +124,24 @@ async def async_setup_entry(hass, config_entry):
     )
     hass.services.async_register(
         DOMAIN, SERVICE_COMPLETE_ITEM, complete_item_service, schema=SERVICE_ITEM_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_INCOMPLETE_ITEM,
+        incomplete_item_service,
+        schema=SERVICE_ITEM_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_COMPLETE_ALL,
+        complete_all_service,
+        schema=SERVICE_LIST_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_INCOMPLETE_ALL,
+        incomplete_all_service,
+        schema=SERVICE_LIST_SCHEMA,
     )
 
     hass.http.register_view(ShoppingListView)
@@ -128,6 +170,8 @@ async def async_setup_entry(hass, config_entry):
         SCHEMA_WEBSOCKET_CLEAR_ITEMS,
     )
 
+    websocket_api.async_register_command(hass, websocket_handle_reorder)
+
     return True
 
 
@@ -139,16 +183,14 @@ class ShoppingData:
         self.hass = hass
         self.items = []
 
-    @callback
-    def async_add(self, name):
+    async def async_add(self, name):
         """Add a shopping list item."""
         item = {"name": name, "id": uuid.uuid4().hex, "complete": False}
         self.items.append(item)
-        self.hass.async_add_job(self.save)
+        await self.hass.async_add_executor_job(self.save)
         return item
 
-    @callback
-    def async_update(self, item_id, info):
+    async def async_update(self, item_id, info):
         """Update a shopping list item."""
         item = next((itm for itm in self.items if itm["id"] == item_id), None)
 
@@ -157,14 +199,45 @@ class ShoppingData:
 
         info = ITEM_UPDATE_SCHEMA(info)
         item.update(info)
-        self.hass.async_add_job(self.save)
+        await self.hass.async_add_executor_job(self.save)
         return item
 
-    @callback
-    def async_clear_completed(self):
+    async def async_clear_completed(self):
         """Clear completed items."""
         self.items = [itm for itm in self.items if not itm["complete"]]
-        self.hass.async_add_job(self.save)
+        await self.hass.async_add_executor_job(self.save)
+
+    async def async_update_list(self, info):
+        """Update all items in the list."""
+        for item in self.items:
+            item.update(info)
+        await self.hass.async_add_executor_job(self.save)
+        return self.items
+
+    @callback
+    def async_reorder(self, item_ids):
+        """Reorder items."""
+        # The array for sorted items.
+        new_items = []
+        all_items_mapping = {item["id"]: item for item in self.items}
+        # Append items by the order of passed in array.
+        for item_id in item_ids:
+            if item_id not in all_items_mapping:
+                raise KeyError
+            new_items.append(all_items_mapping[item_id])
+            # Remove the item from mapping after it's appended in the result array.
+            del all_items_mapping[item_id]
+        # Append the rest of the items
+        for key in all_items_mapping:
+            # All the unchecked items must be passed in the item_ids array,
+            # so all items left in the mapping should be checked items.
+            if all_items_mapping[key]["complete"] is False:
+                raise vol.Invalid(
+                    "The item ids array doesn't contain all the unchecked shopping list items."
+                )
+            new_items.append(all_items_mapping[key])
+        self.items = new_items
+        self.hass.async_add_executor_job(self.save)
 
     async def async_load(self):
         """Load items."""
@@ -203,7 +276,7 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
         data = await request.json()
 
         try:
-            item = request.app["hass"].data[DOMAIN].async_update(item_id, data)
+            item = await request.app["hass"].data[DOMAIN].async_update(item_id, data)
             request.app["hass"].bus.async_fire(EVENT)
             return self.json(item)
         except KeyError:
@@ -221,7 +294,7 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     @RequestDataValidator(vol.Schema({vol.Required("name"): str}))
     async def post(self, request, data):
         """Create a new shopping list item."""
-        item = request.app["hass"].data[DOMAIN].async_add(data["name"])
+        item = await request.app["hass"].data[DOMAIN].async_add(data["name"])
         request.app["hass"].bus.async_fire(EVENT)
         return self.json(item)
 
@@ -232,11 +305,10 @@ class ClearCompletedItemsView(http.HomeAssistantView):
     url = "/api/shopping_list/clear_completed"
     name = "api:shopping_list:clear_completed"
 
-    @callback
-    def post(self, request):
+    async def post(self, request):
         """Retrieve if API is running."""
         hass = request.app["hass"]
-        hass.data[DOMAIN].async_clear_completed()
+        await hass.data[DOMAIN].async_clear_completed()
         hass.bus.async_fire(EVENT)
         return self.json_message("Cleared completed items.")
 
@@ -249,10 +321,10 @@ def websocket_handle_items(hass, connection, msg):
     )
 
 
-@callback
-def websocket_handle_add(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_handle_add(hass, connection, msg):
     """Handle add item to shopping_list."""
-    item = hass.data[DOMAIN].async_add(msg["name"])
+    item = await hass.data[DOMAIN].async_add(msg["name"])
     hass.bus.async_fire(EVENT, {"action": "add", "item": item})
     connection.send_message(websocket_api.result_message(msg["id"], item))
 
@@ -266,7 +338,7 @@ async def websocket_handle_update(hass, connection, msg):
     data = msg
 
     try:
-        item = hass.data[DOMAIN].async_update(item_id, data)
+        item = await hass.data[DOMAIN].async_update(item_id, data)
         hass.bus.async_fire(EVENT, {"action": "update", "item": item})
         connection.send_message(websocket_api.result_message(msg_id, item))
     except KeyError:
@@ -275,9 +347,32 @@ async def websocket_handle_update(hass, connection, msg):
         )
 
 
-@callback
-def websocket_handle_clear(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_handle_clear(hass, connection, msg):
     """Handle clearing shopping_list items."""
-    hass.data[DOMAIN].async_clear_completed()
+    await hass.data[DOMAIN].async_clear_completed()
     hass.bus.async_fire(EVENT, {"action": "clear"})
     connection.send_message(websocket_api.result_message(msg["id"]))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "shopping_list/items/reorder",
+        vol.Required("item_ids"): [str],
+    }
+)
+def websocket_handle_reorder(hass, connection, msg):
+    """Handle reordering shopping_list items."""
+    msg_id = msg.pop("id")
+    try:
+        hass.data[DOMAIN].async_reorder(msg.pop("item_ids"))
+        hass.bus.async_fire(EVENT, {"action": "reorder"})
+        connection.send_result(msg_id)
+    except KeyError:
+        connection.send_error(
+            msg_id,
+            websocket_api.const.ERR_NOT_FOUND,
+            "One or more item id(s) not found.",
+        )
+    except vol.Invalid as err:
+        connection.send_error(msg_id, websocket_api.const.ERR_INVALID_FORMAT, f"{err}")

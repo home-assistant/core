@@ -1,6 +1,4 @@
 """Support for AlarmDecoder-based alarm control panels (Honeywell/DSC)."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
@@ -12,6 +10,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
     STATE_ALARM_ARMED_AWAY,
@@ -20,66 +19,68 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 
-from . import (
+from .const import (
+    CONF_ALT_NIGHT_MODE,
     CONF_AUTO_BYPASS,
     CONF_CODE_ARM_REQUIRED,
     DATA_AD,
+    DEFAULT_ARM_OPTIONS,
     DOMAIN,
+    OPTIONS_ARM,
     SIGNAL_PANEL_MESSAGE,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 SERVICE_ALARM_TOGGLE_CHIME = "alarm_toggle_chime"
-ALARM_TOGGLE_CHIME_SCHEMA = vol.Schema({vol.Required(ATTR_CODE): cv.string})
 
 SERVICE_ALARM_KEYPRESS = "alarm_keypress"
 ATTR_KEYPRESS = "keypress"
-ALARM_KEYPRESS_SCHEMA = vol.Schema({vol.Required(ATTR_KEYPRESS): cv.string})
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
     """Set up for AlarmDecoder alarm panels."""
-    if discovery_info is None:
-        return
+    options = entry.options
+    arm_options = options.get(OPTIONS_ARM, DEFAULT_ARM_OPTIONS)
+    client = hass.data[DOMAIN][entry.entry_id][DATA_AD]
 
-    auto_bypass = discovery_info[CONF_AUTO_BYPASS]
-    code_arm_required = discovery_info[CONF_CODE_ARM_REQUIRED]
-    entity = AlarmDecoderAlarmPanel(auto_bypass, code_arm_required)
-    add_entities([entity])
+    entity = AlarmDecoderAlarmPanel(
+        client=client,
+        auto_bypass=arm_options[CONF_AUTO_BYPASS],
+        code_arm_required=arm_options[CONF_CODE_ARM_REQUIRED],
+        alt_night_mode=arm_options[CONF_ALT_NIGHT_MODE],
+    )
+    async_add_entities([entity])
 
-    def alarm_toggle_chime_handler(service):
-        """Register toggle chime handler."""
-        code = service.data.get(ATTR_CODE)
-        entity.alarm_toggle_chime(code)
+    platform = entity_platform.current_platform.get()
 
-    hass.services.register(
-        DOMAIN,
+    platform.async_register_entity_service(
         SERVICE_ALARM_TOGGLE_CHIME,
-        alarm_toggle_chime_handler,
-        schema=ALARM_TOGGLE_CHIME_SCHEMA,
+        {
+            vol.Required(ATTR_CODE): cv.string,
+        },
+        "alarm_toggle_chime",
     )
 
-    def alarm_keypress_handler(service):
-        """Register keypress handler."""
-        keypress = service.data[ATTR_KEYPRESS]
-        entity.alarm_keypress(keypress)
-
-    hass.services.register(
-        DOMAIN,
+    platform.async_register_entity_service(
         SERVICE_ALARM_KEYPRESS,
-        alarm_keypress_handler,
-        schema=ALARM_KEYPRESS_SCHEMA,
+        {
+            vol.Required(ATTR_KEYPRESS): cv.string,
+        },
+        "alarm_keypress",
     )
 
 
 class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
     """Representation of an AlarmDecoder-based alarm panel."""
 
-    def __init__(self, auto_bypass, code_arm_required):
+    def __init__(self, client, auto_bypass, code_arm_required, alt_night_mode):
         """Initialize the alarm panel."""
+        self._client = client
         self._display = ""
         self._name = "Alarm Panel"
         self._state = None
@@ -95,6 +96,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
         self._zone_bypassed = None
         self._auto_bypass = auto_bypass
         self._code_arm_required = code_arm_required
+        self._alt_night_mode = alt_night_mode
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -161,7 +163,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
         return self._code_arm_required
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             "ac_power": self._ac_power,
@@ -180,11 +182,11 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         if code:
-            self.hass.data[DATA_AD].send(f"{code!s}1")
+            self._client.send(f"{code!s}1")
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        self.hass.data[DATA_AD].arm_away(
+        self._client.arm_away(
             code=code,
             code_arm_required=self._code_arm_required,
             auto_bypass=self._auto_bypass,
@@ -192,7 +194,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self.hass.data[DATA_AD].arm_home(
+        self._client.arm_home(
             code=code,
             code_arm_required=self._code_arm_required,
             auto_bypass=self._auto_bypass,
@@ -200,18 +202,19 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-        self.hass.data[DATA_AD].arm_night(
+        self._client.arm_night(
             code=code,
             code_arm_required=self._code_arm_required,
+            alt_night_mode=self._alt_night_mode,
             auto_bypass=self._auto_bypass,
         )
 
     def alarm_toggle_chime(self, code=None):
         """Send toggle chime command."""
         if code:
-            self.hass.data[DATA_AD].send(f"{code!s}9")
+            self._client.send(f"{code!s}9")
 
     def alarm_keypress(self, keypress):
         """Send custom keypresses."""
         if keypress:
-            self.hass.data[DATA_AD].send(keypress)
+            self._client.send(keypress)

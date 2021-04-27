@@ -1,11 +1,10 @@
 """Real-time information about public transport departures in Norway."""
 from datetime import datetime, timedelta
-import logging
 
 from enturclient import EnturPublicTransportData
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
@@ -16,11 +15,8 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
-
-_LOGGER = logging.getLogger(__name__)
 
 API_CLIENT_NAME = "homeassistant-homeassistant"
 
@@ -151,7 +147,7 @@ class EnturProxy:
         return self._api.get_stop_info(stop_id)
 
 
-class EnturPublicTransportSensor(Entity):
+class EnturPublicTransportSensor(SensorEntity):
     """Implementation of a Entur public transport sensor."""
 
     def __init__(self, api: EnturProxy, name: str, stop: str, show_on_map: bool):
@@ -175,7 +171,7 @@ class EnturPublicTransportSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         self._attributes[ATTR_STOP_ID] = self._stop

@@ -95,10 +95,15 @@
             "on": "P\u00e5"
         },
         "battery": {
-            "off": "Normalt",
+            "off": "Normal",
             "on": "Lavt"
         },
+        "battery_charging": {
+            "off": "Lader ikke",
+            "on": "Lader"
+        },
         "cold": {
+            "off": "Normal",
             "on": "Kald"
         },
         "connectivity": {
@@ -114,11 +119,16 @@
             "on": "\u00c5pen"
         },
         "gas": {
-            "off": "Klar",
+            "off": "Klart",
             "on": "Oppdaget"
         },
         "heat": {
+            "off": "Normal",
             "on": "Varm"
+        },
+        "light": {
+            "off": "Ingen lys",
+            "on": "Lys oppdaget"
         },
         "lock": {
             "off": "L\u00e5st",
@@ -132,6 +142,10 @@
             "off": "Klart",
             "on": "Oppdaget"
         },
+        "moving": {
+            "off": "Beveger seg ikke",
+            "on": "Flytter"
+        },
         "occupancy": {
             "off": "Klart",
             "on": "Oppdaget"
@@ -140,9 +154,17 @@
             "off": "Lukket",
             "on": "\u00c5pen"
         },
+        "plug": {
+            "off": "Frakoblet",
+            "on": "Koblet til"
+        },
         "presence": {
             "off": "Borte",
             "on": "Hjemme"
+        },
+        "problem": {
+            "off": "",
+            "on": ""
         },
         "safety": {
             "off": "Sikker",
@@ -162,7 +184,7 @@
         },
         "window": {
             "off": "Lukket",
-            "on": "\u00c5pen"
+            "on": "\u00c5pent"
         }
     },
     "title": "Bin\u00e6r sensor"

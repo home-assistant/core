@@ -1,5 +1,5 @@
 """Provides device automations for Arcam FMJ Receiver control."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import ConfigType
 
@@ -28,7 +28,7 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Arcam FMJ Receiver control devices."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = []
@@ -56,7 +56,8 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
+    trigger_id = automation_info.get("trigger_id") if automation_info else None
+    job = HassJob(action)
 
     if config[CONF_TYPE] == "turn_on":
         entity_id = config[CONF_ENTITY_ID]
@@ -64,9 +65,15 @@ async def async_attach_trigger(
         @callback
         def _handle_event(event: Event):
             if event.data[ATTR_ENTITY_ID] == entity_id:
-                hass.async_run_job(
-                    action,
-                    {"trigger": {**config, "description": f"{DOMAIN} - {entity_id}"}},
+                hass.async_run_hass_job(
+                    job,
+                    {
+                        "trigger": {
+                            **config,
+                            "description": f"{DOMAIN} - {entity_id}",
+                            "id": trigger_id,
+                        }
+                    },
                     event.context,
                 )
 

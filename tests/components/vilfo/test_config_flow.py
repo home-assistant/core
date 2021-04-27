@@ -1,11 +1,11 @@
 """Test the Vilfo Router config flow."""
+from unittest.mock import Mock, patch
+
 import vilfo
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.vilfo.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_ID, CONF_MAC
-
-from tests.async_mock import patch
 
 
 async def test_form(hass):
@@ -21,14 +21,13 @@ async def test_form(hass):
     with patch("vilfo.Client.ping", return_value=None), patch(
         "vilfo.Client.get_board_information", return_value=None
     ), patch("vilfo.Client.resolve_mac_address", return_value=mock_mac), patch(
-        "homeassistant.components.vilfo.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.vilfo.async_setup_entry"
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "testadmin.vilfo.com", CONF_ACCESS_TOKEN: "test-token"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "testadmin.vilfo.com"
@@ -37,8 +36,6 @@ async def test_form(hass):
         "access_token": "test-token",
     }
 
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -142,7 +139,10 @@ async def test_form_unexpected_exception(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("vilfo.Client.ping", side_effect=Exception):
+    with patch(
+        "homeassistant.components.vilfo.config_flow.VilfoClient",
+    ) as mock_client:
+        mock_client.return_value.ping = Mock(side_effect=Exception)
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": "testadmin.vilfo.com", "access_token": "test-token"},

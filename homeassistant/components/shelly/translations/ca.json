@@ -1,18 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat"
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "unsupported_firmware": "El dispositiu utilitza una versi\u00f3 de programari no compatible."
         },
         "error": {
-            "auth_not_supported": "Actualment els dispositius Shelly amb autenticaci\u00f3 no son compatibles.",
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "unknown": "Error inesperat"
         },
-        "flow_title": "Shelly: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm_discovery": {
-                "description": "Voleu configurar {model} a {host}?"
+                "description": "Vols configurar el {model} a {host}? \n\nAbans de configurar-lo, els dispositius amb bateria protegits amb contrasenya s'han de desperar prement el bot\u00f3 del dispositiu.\nEls dispositius que no tinguin contrasenya s'afegiran tan bon punt es despertin. Ja pots despertar el dispositiu manualment mitjan\u00e7ant el bot\u00f3 o esperar a la seg\u00fcent transmissi\u00f3 de dades del dispositiu."
             },
             "credentials": {
                 "data": {
@@ -23,9 +23,25 @@
             "user": {
                 "data": {
                     "host": "Amfitri\u00f3"
-                }
+                },
+                "description": "Abans de configurar-lo, els dispositius amb bateria s'han de desperar, ja pots clicar el bot\u00f3 del dispositiu per a despertar-lo."
             }
         }
     },
-    "title": "Shelly"
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Bot\u00f3",
+            "button1": "Primer bot\u00f3",
+            "button2": "Segon bot\u00f3",
+            "button3": "Tercer bot\u00f3"
+        },
+        "trigger_type": {
+            "double": "{subtype} clicat dues vegades",
+            "long": "{subtype} clicat durant una estona",
+            "long_single": "{subtype} clicat durant una estona i despr\u00e9s r\u00e0pid",
+            "single": "{subtype} clicat una vegada",
+            "single_long": "{subtype} clicat r\u00e0pid i, despr\u00e9s, durant una estona",
+            "triple": "{subtype} clicat tres vegades"
+        }
+    }
 }

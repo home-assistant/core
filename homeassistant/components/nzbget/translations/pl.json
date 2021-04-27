@@ -1,13 +1,33 @@
 {
     "config": {
+        "abort": {
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja.",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
         "error": {
-            "invalid_auth": "Niepoprawne uwierzytelnienie."
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
         "flow_title": "NZBGet: {name}",
         "step": {
             "user": {
                 "data": {
-                    "name": "Nazwa"
+                    "host": "Nazwa hosta lub adres IP",
+                    "name": "Nazwa",
+                    "password": "Has\u0142o",
+                    "port": "Port",
+                    "ssl": "Certyfikat SSL",
+                    "username": "Nazwa u\u017cytkownika",
+                    "verify_ssl": "Weryfikacja certyfikatu SSL"
+                },
+                "title": "Po\u0142\u0105czenie z NZBGet"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Cz\u0119stotliwo\u015b\u0107 aktualizacji (w sekundach)"
                 }
             }
         }

@@ -1,6 +1,5 @@
 """Tests for the Bond cover device."""
 from datetime import timedelta
-import logging
 
 from bond_api import Action, DeviceType
 
@@ -12,6 +11,7 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER,
     SERVICE_STOP_COVER,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
@@ -23,8 +23,6 @@ from .common import (
 )
 
 from tests.common import async_fire_time_changed
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def shades(name: str):
@@ -42,7 +40,7 @@ async def test_entity_registry(hass: core.HomeAssistant):
         bond_device_id="test-device-id",
     )
 
-    registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    registry: EntityRegistry = er.async_get(hass)
     entity = registry.entities["cover.name_1"]
     assert entity.unique_id == "test-hub-id_test-device-id"
 

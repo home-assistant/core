@@ -8,17 +8,49 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    async_get_registry as async_get_device_registry,
+)
 
 from .connection import get_accessory_name, get_bridge_information
 from .const import DOMAIN, KNOWN_DEVICES
 
-HOMEKIT_IGNORE = ["Home Assistant Bridge"]
 HOMEKIT_DIR = ".homekit"
+HOMEKIT_BRIDGE_DOMAIN = "homekit"
+
+HOMEKIT_IGNORE = [
+    # eufy Indoor Cam 2K and 2K Pan & Tilt
+    # https://github.com/home-assistant/core/issues/42307
+    "T8400",
+    "T8410",
+    # Hive Hub - vendor does not give user a pairing code
+    "HHKBridge1,1",
+]
+
 PAIRING_FILE = "pairing.json"
+
+MDNS_SUFFIX = "._hap._tcp.local."
 
 PIN_FORMAT = re.compile(r"^(\d{3})-{0,1}(\d{2})-{0,1}(\d{3})$")
 
 _LOGGER = logging.getLogger(__name__)
+
+
+DISALLOWED_CODES = {
+    "00000000",
+    "11111111",
+    "22222222",
+    "33333333",
+    "44444444",
+    "55555555",
+    "66666666",
+    "77777777",
+    "88888888",
+    "99999999",
+    "12345678",
+    "87654321",
+}
 
 
 def normalize_hkid(hkid):
@@ -42,8 +74,11 @@ def ensure_pin_format(pin):
 
     If incorrect code is entered, an exception is raised.
     """
-    match = PIN_FORMAT.search(pin)
+    match = PIN_FORMAT.search(pin.strip())
     if not match:
+        raise aiohomekit.exceptions.MalformedPinError(f"Invalid PIN code f{pin}")
+    pin_without_dashes = "".join(match.groups())
+    if pin_without_dashes in DISALLOWED_CODES:
         raise aiohomekit.exceptions.MalformedPinError(f"Invalid PIN code f{pin}")
     return "-".join(match.groups())
 
@@ -59,6 +94,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         """Initialize the homekit_controller flow."""
         self.model = None
         self.hkid = None
+        self.name = None
         self.devices = {}
         self.controller = None
         self.finish_pairing = None
@@ -76,9 +112,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             key = user_input["device"]
             self.hkid = self.devices[key].device_id
             self.model = self.devices[key].info["md"]
+            self.name = key[: -len(MDNS_SUFFIX)] if key.endswith(MDNS_SUFFIX) else key
             await self.async_set_unique_id(
                 normalize_hkid(self.hkid), raise_on_progress=False
             )
+
             return await self.async_step_pair()
 
         if self.controller is None:
@@ -141,6 +179,23 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
         return self.async_abort(reason="no_devices")
 
+    async def _hkid_is_homekit(self, hkid):
+        """Determine if the device is a homekit bridge or accessory."""
+        dev_reg = await async_get_device_registry(self.hass)
+        device = dev_reg.async_get_device(
+            identifiers=set(), connections={(CONNECTION_NETWORK_MAC, hkid)}
+        )
+
+        if device is None:
+            return False
+
+        for entry_id in device.config_entries:
+            entry = self.hass.config_entries.async_get_entry(entry_id)
+            if entry and entry.domain == HOMEKIT_BRIDGE_DOMAIN:
+                return True
+
+        return False
+
     async def async_step_zeroconf(self, discovery_info):
         """Handle a discovered HomeKit accessory.
 
@@ -152,6 +207,15 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         properties = {
             key.lower(): value for (key, value) in discovery_info["properties"].items()
         }
+
+        if "id" not in properties:
+            # This can happen if the TXT record is received after the PTR record
+            # we will wait for the next update in this case
+            _LOGGER.debug(
+                "HomeKit device %s: id not exposed; TXT record may have not yet been received",
+                properties,
+            )
+            return self.async_abort(reason="invalid_properties")
 
         # The hkid is a unique random number that looks like a pairing code.
         # It changes if a device is factory reset.
@@ -196,9 +260,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         await self.async_set_unique_id(normalize_hkid(hkid))
         self._abort_if_unique_id_configured()
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["hkid"] = hkid
-        self.context["title_placeholders"] = {"name": name}
 
         if paired:
             # Device is paired but not to us - ignore it
@@ -211,6 +273,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         if model in HOMEKIT_IGNORE:
             return self.async_abort(reason="ignored_model")
 
+        # If this is a HomeKit bridge/accessory exported by *this* HA instance ignore it.
+        if await self._hkid_is_homekit(hkid):
+            return self.async_abort(reason="ignored_model")
+
+        self.name = name
         self.model = model
         self.hkid = hkid
 
@@ -280,9 +347,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             # Its possible that the first try may have been busy so
             # we always check to see if self.finish_paring has been
             # set.
-            discovery = await self.controller.find_ip_by_device_id(self.hkid)
-
             try:
+                discovery = await self.controller.find_ip_by_device_id(self.hkid)
                 self.finish_pairing = await discovery.start_pairing(self.hkid)
 
             except aiohomekit.BusyError:
@@ -332,9 +398,13 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
 
     @callback
     def _async_step_pair_show_form(self, errors=None):
+        placeholders = {"name": self.name}
+        self.context["title_placeholders"] = {"name": self.name}
+
         return self.async_show_form(
             step_id="pair",
             errors=errors or {},
+            description_placeholders=placeholders,
             data_schema=vol.Schema(
                 {vol.Required("pairing_code"): vol.All(str, vol.Strip)}
             ),

@@ -1,14 +1,16 @@
 """Support for Huawei LTE router notifications."""
+from __future__ import annotations
 
 import logging
 import time
-from typing import Any, List
+from typing import Any
 
 import attr
 from huawei_lte_api.exceptions import ResponseErrorException
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
 from homeassistant.const import CONF_RECIPIENT, CONF_URL
+from homeassistant.core import HomeAssistant
 
 from . import Router
 from .const import DOMAIN
@@ -16,13 +18,13 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_service(hass, config, discovery_info=None):
+async def async_get_service(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    discovery_info: dict[str, Any] | None = None,
+) -> HuaweiLteSmsNotificationService | None:
     """Get the notification service."""
     if discovery_info is None:
-        _LOGGER.warning(
-            "Loading as a platform is no longer supported, convert to use "
-            "config entries or the huawei_lte component"
-        )
         return None
 
     router = hass.data[DOMAIN].routers[discovery_info[CONF_URL]]
@@ -36,7 +38,7 @@ class HuaweiLteSmsNotificationService(BaseNotificationService):
     """Huawei LTE router SMS notification service."""
 
     router: Router = attr.ib()
-    default_targets: List[str] = attr.ib()
+    default_targets: list[str] = attr.ib()
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send message to target numbers."""

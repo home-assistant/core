@@ -3,10 +3,39 @@
         "abort": {
             "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_api_key": "Cl\u00e9 API invalide",
+            "requests_exceeded": "Le nombre autoris\u00e9 de requ\u00eates adress\u00e9es \u00e0 l'API AccuWeather a \u00e9t\u00e9 d\u00e9pass\u00e9. Vous devez attendre ou modifier la cl\u00e9 API."
+        },
         "step": {
             "user": {
-                "description": "Si vous avez besoin d'aide pour la configuration, consultez le site suivant : https://www.home-assistant.io/integrations/accuweather/\n\nCertains capteurs ne sont pas activ\u00e9s par d\u00e9faut. Vous pouvez les activer dans le registre des entit\u00e9s apr\u00e8s la configuration de l'int\u00e9gration.\nLes pr\u00e9visions m\u00e9t\u00e9orologiques ne sont pas activ\u00e9es par d\u00e9faut. Vous pouvez l'activer dans les options d'int\u00e9gration."
+                "data": {
+                    "api_key": "Cl\u00e9 d'API",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "name": "Nom de l'int\u00e9gration"
+                },
+                "description": "Si vous avez besoin d'aide pour la configuration, consultez le site suivant : https://www.home-assistant.io/integrations/accuweather/\n\nCertains capteurs ne sont pas activ\u00e9s par d\u00e9faut. Vous pouvez les activer dans le registre des entit\u00e9s apr\u00e8s la configuration de l'int\u00e9gration.\nLes pr\u00e9visions m\u00e9t\u00e9orologiques ne sont pas activ\u00e9es par d\u00e9faut. Vous pouvez l'activer dans les options d'int\u00e9gration.",
+                "title": "AccuWeather"
             }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "forecast": "Pr\u00e9visions m\u00e9t\u00e9orologiques"
+                },
+                "description": "En raison des limitations de la version gratuite de la cl\u00e9 API AccuWeather, lorsque vous activez les pr\u00e9visions m\u00e9t\u00e9orologiques, les mises \u00e0 jour des donn\u00e9es seront effectu\u00e9es toutes les 64 minutes au lieu de toutes les 32 minutes.",
+                "title": "Options AccuWeather"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Acc\u00e8s au serveur AccuWeather",
+            "remaining_requests": "Demandes restantes autoris\u00e9es"
         }
     }
 }

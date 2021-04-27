@@ -1,5 +1,4 @@
 """Support for Insteon lights via PowerLinc Modem."""
-import logging
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -7,13 +6,12 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     LightEntity,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
 from .utils import async_add_insteon_entities
-
-_LOGGER = logging.getLogger(__name__)
 
 MAX_BRIGHTNESS = 255
 
@@ -21,15 +19,16 @@ MAX_BRIGHTNESS = 255
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Insteon lights from a config entry."""
 
-    def add_entities(discovery_info=None):
+    @callback
+    def async_add_insteon_light_entities(discovery_info=None):
         """Add the Insteon entities for the platform."""
         async_add_insteon_entities(
             hass, LIGHT_DOMAIN, InsteonDimmerEntity, async_add_entities, discovery_info
         )
 
     signal = f"{SIGNAL_ADD_ENTITIES}_{LIGHT_DOMAIN}"
-    async_dispatcher_connect(hass, signal, add_entities)
-    add_entities()
+    async_dispatcher_connect(hass, signal, async_add_insteon_light_entities)
+    async_add_insteon_light_entities()
 
 
 class InsteonDimmerEntity(InsteonEntity, LightEntity):

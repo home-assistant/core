@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "En Tibber-konto er allerede konfigurert."
+            "already_configured": "Tjenesten er allerede konfigurert"
         },
         "error": {
-            "connection_error": "Feil ved tilkobling til Tibber",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_access_token": "Ugyldig tilgangstoken",
             "timeout": "Tidsavbrudd for tilkobling til Tibber"
         },
@@ -13,7 +13,8 @@
                 "data": {
                     "access_token": "Tilgangstoken"
                 },
-                "description": "Fyll inn din tilgangstoken fra [https://developer.tibber.com/settings/accesstoken](https://developer.tibber.com/settings/accesstoken)"
+                "description": "Fyll inn din tilgangstoken fra [https://developer.tibber.com/settings/accesstoken](https://developer.tibber.com/settings/accesstoken)",
+                "title": ""
             }
         }
     }

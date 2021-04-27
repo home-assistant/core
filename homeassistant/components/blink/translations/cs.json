@@ -1,18 +1,38 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nakonfigurov\u00e1no"
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno"
         },
         "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_access_token": "Neplatn\u00fd p\u0159\u00edstupov\u00fd token",
             "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "K\u00f3d dvoufaktorov\u00e9ho ov\u011b\u0159ov\u00e1n\u00ed"
+                },
+                "description": "Zadejte PIN zaslan\u00fd na v\u00e1\u0161 e-mail",
+                "title": "Dvoufaktorov\u00e9 ov\u011b\u0159ov\u00e1n\u00ed"
+            },
             "user": {
                 "data": {
                     "password": "Heslo",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
                 }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "Interval sledov\u00e1n\u00ed (v sekund\u00e1ch)"
+                },
+                "description": "Nastaven\u00ed integrace Blink",
+                "title": "Mo\u017enosti Blink"
             }
         }
     }

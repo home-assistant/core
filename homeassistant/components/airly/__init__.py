@@ -1,5 +1,4 @@
-"""The Airly component."""
-import asyncio
+"""The Airly integration."""
 from datetime import timedelta
 import logging
 from math import ceil
@@ -10,8 +9,6 @@ from airly.exceptions import AirlyError
 import async_timeout
 
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import Config, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -20,6 +17,7 @@ from .const import (
     ATTR_API_CAQI,
     ATTR_API_CAQI_DESCRIPTION,
     ATTR_API_CAQI_LEVEL,
+    CONF_USE_NEAREST,
     DOMAIN,
     MAX_REQUESTS_PER_DAY,
     NO_AIRLY_SENSORS,
@@ -43,16 +41,12 @@ def set_update_interval(hass, instances):
     return interval
 
 
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-    """Set up configured Airly."""
-    return True
-
-
 async def async_setup_entry(hass, config_entry):
     """Set up Airly as config entry."""
     api_key = config_entry.data[CONF_API_KEY]
     latitude = config_entry.data[CONF_LATITUDE]
     longitude = config_entry.data[CONF_LONGITUDE]
+    use_nearest = config_entry.data.get(CONF_USE_NEAREST, False)
 
     # For backwards compat, set unique ID
     if config_entry.unique_id is None:
@@ -67,34 +61,24 @@ async def async_setup_entry(hass, config_entry):
     )
 
     coordinator = AirlyDataUpdateCoordinator(
-        hass, websession, api_key, latitude, longitude, update_interval
+        hass, websession, api_key, latitude, longitude, update_interval, use_nearest
     )
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
+
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
@@ -107,25 +91,46 @@ async def async_unload_entry(hass, config_entry):
 class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
     """Define an object to hold Airly data."""
 
-    def __init__(self, hass, session, api_key, latitude, longitude, update_interval):
+    def __init__(
+        self,
+        hass,
+        session,
+        api_key,
+        latitude,
+        longitude,
+        update_interval,
+        use_nearest,
+    ):
         """Initialize."""
         self.latitude = latitude
         self.longitude = longitude
         self.airly = Airly(api_key, session)
+        self.use_nearest = use_nearest
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
     async def _async_update_data(self):
         """Update data via library."""
         data = {}
-        with async_timeout.timeout(20):
+        if self.use_nearest:
+            measurements = self.airly.create_measurements_session_nearest(
+                self.latitude, self.longitude, max_distance_km=5
+            )
+        else:
             measurements = self.airly.create_measurements_session_point(
                 self.latitude, self.longitude
             )
+        with async_timeout.timeout(20):
             try:
                 await measurements.update()
             except (AirlyError, ClientConnectorError) as error:
                 raise UpdateFailed(error) from error
+
+        _LOGGER.debug(
+            "Requests remaining: %s/%s",
+            self.airly.requests_remaining,
+            self.airly.requests_per_day,
+        )
 
         values = measurements.current["values"]
         index = measurements.current["indexes"][0]

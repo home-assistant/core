@@ -1,11 +1,10 @@
 """Support for LIRC devices."""
-# pylint: disable=no-member, import-error
+# pylint: disable=import-error
 import logging
 import threading
 import time
 
 import lirc
-import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 
@@ -18,8 +17,6 @@ DOMAIN = "lirc"
 EVENT_IR_COMMAND_RECEIVED = "ir_command_received"
 
 ICON = "mdi:remote"
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):

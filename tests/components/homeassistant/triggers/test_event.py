@@ -2,17 +2,23 @@
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.core import Context
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service, mock_component
-from tests.components.automation import common
 
 
 @pytest.fixture
 def calls(hass):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
+
+
+@pytest.fixture
+def context_with_user():
+    """Create a context with default user_id."""
+    return Context(user_id="test_user_id")
 
 
 @pytest.fixture(autouse=True)
@@ -31,6 +37,43 @@ async def test_if_fires_on_event(hass, calls):
         {
             automation.DOMAIN: {
                 "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"id": "{{ trigger.id}}"},
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event", context=context)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].context.parent_id == context.id
+
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["id"] == 0
+
+
+async def test_if_fires_on_templated_event(hass, calls):
+    """Test the firing of events."""
+    context = Context()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger_variables": {"event_type": "test_event"},
+                "trigger": {"platform": "event", "event_type": "{{event_type}}"},
                 "action": {"service": "test.automation"},
             }
         },
@@ -38,19 +81,50 @@ async def test_if_fires_on_event(hass, calls):
 
     hass.bus.async_fire("test_event", context=context)
     await hass.async_block_till_done()
-    assert 1 == len(calls)
+    assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
 
-    await common.async_turn_off(hass)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
+    )
 
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 1
 
 
-async def test_if_fires_on_event_extra_data(hass, calls):
-    """Test the firing of events still matches with event data."""
+async def test_if_fires_on_multiple_events(hass, calls):
+    """Test the firing of events."""
+    context = Context()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "event",
+                    "event_type": ["test_event", "test2_event"],
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event", context=context)
+    await hass.async_block_till_done()
+    hass.bus.async_fire("test2_event", context=context)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[0].context.parent_id == context.id
+    assert calls[1].context.parent_id == context.id
+
+
+async def test_if_fires_on_event_extra_data(hass, calls, context_with_user):
+    """Test the firing of events still matches with event data and context."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -61,21 +135,26 @@ async def test_if_fires_on_event_extra_data(hass, calls):
             }
         },
     )
-
-    hass.bus.async_fire("test_event", {"extra_key": "extra_data"})
+    hass.bus.async_fire(
+        "test_event", {"extra_key": "extra_data"}, context=context_with_user
+    )
     await hass.async_block_till_done()
     assert len(calls) == 1
 
-    await common.async_turn_off(hass)
-    await hass.async_block_till_done()
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_MATCH_ALL},
+        blocking=True,
+    )
 
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 1
 
 
-async def test_if_fires_on_event_with_data(hass, calls):
-    """Test the firing of events with data."""
+async def test_if_fires_on_event_with_data_and_context(hass, calls, context_with_user):
+    """Test the firing of events with data and context."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -84,20 +163,97 @@ async def test_if_fires_on_event_with_data(hass, calls):
                 "trigger": {
                     "platform": "event",
                     "event_type": "test_event",
-                    "event_data": {"some_attr": "some_value"},
+                    "event_data": {
+                        "some_attr": "some_value",
+                        "second_attr": "second_value",
+                    },
+                    "context": {"user_id": context_with_user.user_id},
                 },
                 "action": {"service": "test.automation"},
             }
         },
     )
 
-    hass.bus.async_fire("test_event", {"some_attr": "some_value", "another": "value"})
+    hass.bus.async_fire(
+        "test_event",
+        {"some_attr": "some_value", "another": "value", "second_attr": "second_value"},
+        context=context_with_user,
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    hass.bus.async_fire(
+        "test_event",
+        {"some_attr": "some_value", "another": "value"},
+        context=context_with_user,
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 1  # No new call
+
+    hass.bus.async_fire(
+        "test_event",
+        {"some_attr": "some_value", "another": "value", "second_attr": "second_value"},
+    )
     await hass.async_block_till_done()
     assert len(calls) == 1
 
 
-async def test_if_fires_on_event_with_empty_data_config(hass, calls):
-    """Test the firing of events with empty data config.
+async def test_if_fires_on_event_with_templated_data_and_context(
+    hass, calls, context_with_user
+):
+    """Test the firing of events with templated data and context."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger_variables": {
+                    "attr_1_val": "milk",
+                    "attr_2_val": "beer",
+                    "user_id": context_with_user.user_id,
+                },
+                "trigger": {
+                    "platform": "event",
+                    "event_type": "test_event",
+                    "event_data": {
+                        "attr_1": "{{attr_1_val}}",
+                        "attr_2": "{{attr_2_val}}",
+                    },
+                    "context": {"user_id": "{{user_id}}"},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.bus.async_fire(
+        "test_event",
+        {"attr_1": "milk", "another": "value", "attr_2": "beer"},
+        context=context_with_user,
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    hass.bus.async_fire(
+        "test_event",
+        {"attr_1": "milk", "another": "value"},
+        context=context_with_user,
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 1  # No new call
+
+    hass.bus.async_fire(
+        "test_event",
+        {"attr_1": "milk", "another": "value", "attr_2": "beer"},
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_if_fires_on_event_with_empty_data_and_context_config(
+    hass, calls, context_with_user
+):
+    """Test the firing of events with empty data and context config.
 
     The frontend automation editor can produce configurations with an
     empty dict for event_data instead of no key.
@@ -111,13 +267,18 @@ async def test_if_fires_on_event_with_empty_data_config(hass, calls):
                     "platform": "event",
                     "event_type": "test_event",
                     "event_data": {},
+                    "context": {},
                 },
                 "action": {"service": "test.automation"},
             }
         },
     )
 
-    hass.bus.async_fire("test_event", {"some_attr": "some_value", "another": "value"})
+    hass.bus.async_fire(
+        "test_event",
+        {"some_attr": "some_value", "another": "value"},
+        context=context_with_user,
+    )
     await hass.async_block_till_done()
     assert len(calls) == 1
 
@@ -147,7 +308,7 @@ async def test_if_fires_on_event_with_nested_data(hass, calls):
 
 
 async def test_if_not_fires_if_event_data_not_matches(hass, calls):
-    """Test firing of event if no match."""
+    """Test firing of event if no data match."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -166,3 +327,83 @@ async def test_if_not_fires_if_event_data_not_matches(hass, calls):
     hass.bus.async_fire("test_event", {"some_attr": "some_other_value"})
     await hass.async_block_till_done()
     assert len(calls) == 0
+
+
+async def test_if_not_fires_if_event_context_not_matches(
+    hass, calls, context_with_user
+):
+    """Test firing of event if no context match."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "event",
+                    "event_type": "test_event",
+                    "context": {"user_id": "some_user"},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event", {}, context=context_with_user)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
+async def test_if_fires_on_multiple_user_ids(hass, calls, context_with_user):
+    """Test the firing of event when the trigger has multiple user ids."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "event",
+                    "event_type": "test_event",
+                    "event_data": {},
+                    "context": {"user_id": [context_with_user.user_id, "another id"]},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event", {}, context=context_with_user)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_event_data_with_list(hass, calls):
+    """Test the (non)firing of event when the data schema has lists."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "event",
+                    "event_type": "test_event",
+                    "event_data": {"some_attr": [1, 2]},
+                    "context": {},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event", {"some_attr": [1, 2]})
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # don't match a single value
+    hass.bus.async_fire("test_event", {"some_attr": 1})
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # don't match a containing list
+    hass.bus.async_fire("test_event", {"some_attr": [1, 2, 3]})
+    await hass.async_block_till_done()
+    assert len(calls) == 1

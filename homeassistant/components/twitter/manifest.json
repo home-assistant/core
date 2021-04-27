@@ -2,6 +2,7 @@
   "domain": "twitter",
   "name": "Twitter",
   "documentation": "https://www.home-assistant.io/integrations/twitter",
-  "requirements": ["TwitterAPI==2.5.13"],
-  "codeowners": []
+  "requirements": ["TwitterAPI==2.7.2"],
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

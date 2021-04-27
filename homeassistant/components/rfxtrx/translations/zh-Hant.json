@@ -1,7 +1,74 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "step": {
+            "setup_network": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "port": "\u901a\u8a0a\u57e0"
+                },
+                "title": "\u9078\u64c7\u9023\u7dda\u4f4d\u5740"
+            },
+            "setup_serial": {
+                "data": {
+                    "device": "\u9078\u64c7\u88dd\u7f6e"
+                },
+                "title": "\u88dd\u7f6e"
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "USB \u88dd\u7f6e\u8def\u5f91"
+                },
+                "title": "\u8def\u5f91"
+            },
+            "user": {
+                "data": {
+                    "type": "\u9023\u7dda\u985e\u578b"
+                },
+                "title": "\u9078\u64c7\u9023\u7dda\u985e\u578b"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "already_configured_device": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "invalid_event_code": "\u4e8b\u4ef6\u4ee3\u78bc\u7121\u6548",
+            "invalid_input_2262_off": "\u547d\u4ee4\u95dc\u9589\u8f38\u5165\u7121\u6548",
+            "invalid_input_2262_on": "\u547d\u4ee4\u958b\u555f\u8f38\u5165\u7121\u6548",
+            "invalid_input_off_delay": "\u5ef6\u8aa4\u8f38\u5165\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "prompt_options": {
+                "data": {
+                    "automatic_add": "\u958b\u555f\u81ea\u52d5\u65b0\u589e",
+                    "debug": "\u958b\u555f\u9664\u932f",
+                    "device": "\u9078\u64c7\u88dd\u7f6e\u4ee5\u8a2d\u5b9a",
+                    "event_code": "\u8f38\u5165\u4e8b\u4ef6\u4ee3\u78bc\u4ee5\u65b0\u589e",
+                    "remove_device": "\u9078\u64c7\u88dd\u7f6e\u4ee5\u522a\u9664"
+                },
+                "title": "Rfxtrx \u9078\u9805"
+            },
+            "set_device_options": {
+                "data": {
+                    "command_off": "\u547d\u4ee4\u95dc\u9589\u7684\u8cc7\u6599\u4f4d\u5143\u503c",
+                    "command_on": "\u547d\u4ee4\u958b\u555f\u7684\u8cc7\u6599\u4f4d\u5143\u503c",
+                    "data_bit": "\u8cc7\u6599\u4f4d\u5143\u6578",
+                    "fire_event": "\u958b\u555f\u88dd\u7f6e\u4e8b\u4ef6",
+                    "off_delay": "\u5ef6\u9072",
+                    "off_delay_enabled": "\u958b\u555f\u5ef6\u9072",
+                    "replace_device": "\u9078\u64c7\u88dd\u7f6e\u4ee5\u53d6\u4ee3",
+                    "signal_repetitions": "\u8a0a\u865f\u91cd\u8907\u6b21\u6578",
+                    "venetian_blind_mode": "\u767e\u8449\u7a97\u6a21\u5f0f"
+                },
+                "title": "\u8a2d\u5b9a\u88dd\u7f6e\u9078\u9805"
+            }
         }
     }
 }

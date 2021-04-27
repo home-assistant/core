@@ -10,10 +10,10 @@
       }
     },
     "error": {
-      "connection_failure": "Unable to connect to the specified host."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_setup": "You can only configure a single Heos connection as it will support all devices on the network."
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   }
 }

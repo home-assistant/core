@@ -1,12 +1,37 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "No Google Cast devices found on the network.",
-            "single_instance_allowed": "Only a single configuration of Google Cast is necessary."
+            "no_devices_found": "No devices found on the network",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
+        },
+        "error": {
+            "invalid_known_hosts": "Known hosts must be a comma separated list of hosts."
         },
         "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "Optional list of known hosts if mDNS discovery is not working."
+                },
+                "description": "Please enter the Google Cast configuration.",
+                "title": "Google Cast"
+            },
             "confirm": {
-                "description": "Do you want to set up Google Cast?"
+                "description": "Do you want to start set up?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "Known hosts must be a comma separated list of hosts."
+        },
+        "step": {
+            "options": {
+                "data": {
+                    "ignore_cec": "Optional list which will be passed to pychromecast.IGNORE_CEC.",
+                    "known_hosts": "Optional list of known hosts if mDNS discovery is not working.",
+                    "uuid": "Optional list of UUIDs. Casts not listed will not be added."
+                },
+                "description": "Please enter the Google Cast configuration."
             }
         }
     }

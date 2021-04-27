@@ -1,19 +1,29 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne RainMachine-kontrolleren er allerede konfigurert."
+            "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "identifier_exists": "Konto er allerede registrert",
-            "invalid_credentials": "Ugyldig legitimasjon"
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
             "user": {
                 "data": {
                     "ip_address": "Vertsnavn eller IP-adresse",
-                    "password": "Passord"
+                    "password": "Passord",
+                    "port": "Port"
                 },
                 "title": "Fyll ut informasjonen din"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "Standard sonekj\u00f8ringstid (i sekunder)"
+                },
+                "title": "Konfigurer RainMachine"
             }
         }
     }

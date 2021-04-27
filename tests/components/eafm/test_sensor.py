@@ -5,6 +5,7 @@ import aiohttp
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -250,7 +251,7 @@ async def test_reading_is_sampled(hass, mock_get_station):
 
     state = hass.states.get("sensor.my_station_water_level_stage")
     assert state.state == "5"
-    assert state.attributes["unit_of_measurement"] == "m"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "m"
 
 
 async def test_multiple_readings_are_sampled(hass, mock_get_station):
@@ -287,11 +288,11 @@ async def test_multiple_readings_are_sampled(hass, mock_get_station):
 
     state = hass.states.get("sensor.my_station_water_level_stage")
     assert state.state == "5"
-    assert state.attributes["unit_of_measurement"] == "m"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "m"
 
     state = hass.states.get("sensor.my_station_water_level_second_stage")
     assert state.state == "4"
-    assert state.attributes["unit_of_measurement"] == "m"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "m"
 
 
 async def test_ignore_no_latest_reading(hass, mock_get_station):
@@ -327,7 +328,7 @@ async def test_ignore_no_latest_reading(hass, mock_get_station):
 
     state = hass.states.get("sensor.my_station_water_level_stage")
     assert state.state == "5"
-    assert state.attributes["unit_of_measurement"] == "m"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "m"
 
     state = hass.states.get("sensor.my_station_water_level_second_stage")
     assert state is None
@@ -357,7 +358,7 @@ async def test_mark_existing_as_unavailable_if_no_latest(hass, mock_get_station)
 
     state = hass.states.get("sensor.my_station_water_level_stage")
     assert state.state == "5"
-    assert state.attributes["unit_of_measurement"] == "m"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "m"
 
     await poll(
         {
@@ -427,5 +428,8 @@ async def test_unload_entry(hass, mock_get_station):
 
     assert await entry.async_unload(hass)
 
-    # And the entity should be gone
-    assert not hass.states.get("sensor.my_station_water_level_stage")
+    # And the entity should be unavailable
+    assert (
+        hass.states.get("sensor.my_station_water_level_stage").state
+        == STATE_UNAVAILABLE
+    )

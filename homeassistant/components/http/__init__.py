@@ -1,26 +1,23 @@
 """Support to serve the Home Assistant API as WSGI application."""
+from __future__ import annotations
+
 from contextvars import ContextVar
 from ipaddress import ip_network
 import logging
 import os
 import ssl
-from traceback import extract_stack
-from typing import Dict, Optional, cast
+from typing import Any, Optional, cast
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPMovedPermanently
 import voluptuous as vol
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-    SERVER_PORT,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, SERVER_PORT
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
-from homeassistant.setup import ATTR_COMPONENT, EVENT_COMPONENT_LOADED
+from homeassistant.setup import async_start_setup, async_when_setup_or_start
 import homeassistant.util as hass_util
 from homeassistant.util import ssl as ssl_util
 
@@ -30,6 +27,7 @@ from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER  # noqa: F401
 from .cors import setup_cors
 from .forwarded import async_setup_forwarded
 from .request_context import setup_request_context
+from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
 from .view import HomeAssistantView  # noqa: F401
 from .web_runner import HomeAssistantTCPSite
@@ -57,8 +55,9 @@ SSL_INTERMEDIATE = "intermediate"
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_DEVELOPMENT = "0"
-# To be able to load custom cards.
-DEFAULT_CORS = "https://cast.home-assistant.io"
+# Cast to be able to load custom cards.
+# My to be able to check url and version info.
+DEFAULT_CORS = ["https://cast.home-assistant.io"]
 NO_LOGIN_ATTEMPT_THRESHOLD = -1
 
 MAX_CLIENT_SIZE: int = 1024 ** 2 * 16
@@ -79,7 +78,7 @@ HTTP_SCHEMA = vol.All(
             vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
             vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
             vol.Optional(CONF_SSL_KEY): cv.isfile,
-            vol.Optional(CONF_CORS_ORIGINS, default=[DEFAULT_CORS]): vol.All(
+            vol.Optional(CONF_CORS_ORIGINS, default=DEFAULT_CORS): vol.All(
                 cv.ensure_list, [cv.string]
             ),
             vol.Inclusive(CONF_USE_X_FORWARDED_FOR, "proxy"): cv.boolean,
@@ -101,7 +100,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: HTTP_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 
 @bind_hass
-async def async_get_last_config(hass: HomeAssistant) -> Optional[dict]:
+async def async_get_last_config(hass: HomeAssistant) -> dict | None:
     """Return the last known working config."""
     store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
     return cast(Optional[dict], await store.async_load())
@@ -114,7 +113,7 @@ class ApiConfig:
         self,
         local_ip: str,
         host: str,
-        port: Optional[int] = SERVER_PORT,
+        port: int | None = SERVER_PORT,
         use_ssl: bool = False,
     ) -> None:
         """Initialize a new API config object."""
@@ -122,69 +121,6 @@ class ApiConfig:
         self.host = host
         self.port = port
         self.use_ssl = use_ssl
-
-        host = host.rstrip("/")
-        if host.startswith(("http://", "https://")):
-            self.deprecated_base_url = host
-        elif use_ssl:
-            self.deprecated_base_url = f"https://{host}"
-        else:
-            self.deprecated_base_url = f"http://{host}"
-
-        if port is not None:
-            self.deprecated_base_url += f":{port}"
-
-    @property
-    def base_url(self) -> str:
-        """Proxy property to find caller of this deprecated property."""
-        found_frame = None
-        for frame in reversed(extract_stack()[:-1]):
-            for path in ("custom_components/", "homeassistant/components/"):
-                try:
-                    index = frame.filename.index(path)
-
-                    # Skip webhook from the stack
-                    if frame.filename[index:].startswith(
-                        "homeassistant/components/webhook/"
-                    ):
-                        continue
-
-                    found_frame = frame
-                    break
-                except ValueError:
-                    continue
-
-            if found_frame is not None:
-                break
-
-        # Did not source from an integration? Hard error.
-        if found_frame is None:
-            raise RuntimeError(
-                "Detected use of deprecated `base_url` property in the Home Assistant core. Please report this issue."
-            )
-
-        # If a frame was found, it originated from an integration
-        if found_frame:
-            start = index + len(path)
-            end = found_frame.filename.index("/", start)
-
-            integration = found_frame.filename[start:end]
-
-            if path == "custom_components/":
-                extra = " to the custom component author"
-            else:
-                extra = ""
-
-            _LOGGER.warning(
-                "Detected use of deprecated `base_url` property, use `homeassistant.helpers.network.get_url` method instead. Please report issue%s for %s using this method at %s, line %s: %s",
-                extra,
-                integration,
-                found_frame.filename[index:],
-                found_frame.lineno,
-                found_frame.line.strip(),
-            )
-
-        return self.deprecated_base_url
 
 
 async def async_setup(hass, config):
@@ -221,53 +157,30 @@ async def async_setup(hass, config):
         ssl_profile=ssl_profile,
     )
 
-    startup_listeners = []
-
     async def stop_server(event: Event) -> None:
         """Stop the server."""
         await server.stop()
 
-    async def start_server(event: Event) -> None:
+    async def start_server(*_: Any) -> None:
         """Start the server."""
+        with async_start_setup(hass, ["http"]):
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
+            await start_http_server_and_save_config(hass, dict(conf), server)
 
-        for listener in startup_listeners:
-            listener()
-
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
-
-        await start_http_server_and_save_config(hass, dict(conf), server)
-
-    async def async_wait_frontend_load(event: Event) -> None:
-        """Wait for the frontend to load."""
-
-        if event.data[ATTR_COMPONENT] != "frontend":
-            return
-
-        await start_server(event)
-
-    startup_listeners.append(
-        hass.bus.async_listen(EVENT_COMPONENT_LOADED, async_wait_frontend_load)
-    )
-    startup_listeners.append(
-        hass.bus.async_listen(EVENT_HOMEASSISTANT_START, start_server)
-    )
+    async_when_setup_or_start(hass, "frontend", start_server)
 
     hass.http = server
 
-    host = conf.get(CONF_BASE_URL)
     local_ip = await hass.async_add_executor_job(hass_util.get_local_ip)
 
-    if host:
-        port = None
-    elif server_host is not None:
+    host = local_ip
+    if server_host is not None:
         # Assume the first server host name provided as API host
         host = server_host[0]
-        port = server_port
-    else:
-        host = local_ip
-        port = server_port
 
-    hass.config.api = ApiConfig(local_ip, host, port, ssl_certificate is not None)
+    hass.config.api = ApiConfig(
+        local_ip, host, server_port, ssl_certificate is not None
+    )
 
     return True
 
@@ -296,7 +209,10 @@ class HomeAssistantHTTP:
         )
         app[KEY_HASS] = hass
 
-        # Order matters, forwarded middleware needs to go first.
+        # Order matters, security filters middle ware needs to go first,
+        # forwarded middleware needs to go second.
+        setup_security_filter(app)
+
         # Only register middleware if `use_x_forwarded_for` is enabled
         # and trusted proxies are provided
         if use_x_forwarded_for and trusted_proxies:
@@ -433,6 +349,8 @@ class HomeAssistantHTTP:
                 "Failed to create HTTP server at port %d: %s", self.server_port, error
             )
 
+        _LOGGER.info("Now listening on port %d", self.server_port)
+
     async def stop(self):
         """Stop the aiohttp server."""
         await self.site.stop()
@@ -440,7 +358,7 @@ class HomeAssistantHTTP:
 
 
 async def start_http_server_and_save_config(
-    hass: HomeAssistant, conf: Dict, server: HomeAssistantHTTP
+    hass: HomeAssistant, conf: dict, server: HomeAssistantHTTP
 ) -> None:
     """Startup the http server and save the config."""
     await server.start()  # type: ignore
@@ -456,6 +374,6 @@ async def start_http_server_and_save_config(
     await store.async_save(conf)
 
 
-current_request: ContextVar[Optional[web.Request]] = ContextVar(
+current_request: ContextVar[web.Request | None] = ContextVar(
     "current_request", default=None
 )

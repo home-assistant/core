@@ -1,6 +1,4 @@
 """Support for interface with an Harman/Kardon or JBL AVR."""
-import logging
-
 import hkavr
 import voluptuous as vol
 
@@ -14,8 +12,6 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Harman Kardon AVR"
 DEFAULT_PORT = 10025

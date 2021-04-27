@@ -1,4 +1,6 @@
 """The config flow tests for the forked_daapd media player platform."""
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
 from homeassistant import data_entry_flow
@@ -16,7 +18,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 SAMPLE_CONFIG = {
@@ -69,7 +70,8 @@ async def test_show_form(hass):
 async def test_config_flow(hass, config_entry):
     """Test that the user step works."""
     with patch(
-        "homeassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection"
+        "homeassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection",
+        new=AsyncMock(),
     ) as mock_test_connection, patch(
         "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI.get_request",
         autospec=True,
@@ -119,7 +121,8 @@ async def test_zeroconf_updates_title(hass, config_entry):
 async def test_config_flow_no_websocket(hass, config_entry):
     """Test config flow setup without websocket enabled on server."""
     with patch(
-        "homeassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection"
+        "homeassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection",
+        new=AsyncMock(),
     ) as mock_test_connection:
         # test invalid config data
         mock_test_connection.return_value = ["websocket_not_enabled"]

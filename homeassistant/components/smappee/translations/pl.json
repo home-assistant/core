@@ -1,12 +1,34 @@
 {
     "config": {
         "abort": {
-            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji.",
-            "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105."
+            "already_configured_device": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_configured_local_device": "Urz\u0105dzenie(-a) lokalne jest ju\u017c skonfigurowane. Usu\u0144 je najpierw przed skonfigurowaniem urz\u0105dzenia w chmurze.",
+            "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_mdns": "Nieobs\u0142ugiwane urz\u0105dzenie dla integracji Smappee",
+            "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",
+            "no_url_available": "Brak dost\u0119pnego adresu URL. Aby uzyska\u0107 informacje na temat tego b\u0142\u0119du, [sprawd\u017a sekcj\u0119 pomocy] ({docs_url})"
         },
+        "flow_title": "Smappee: {name}",
         "step": {
+            "environment": {
+                "data": {
+                    "environment": "\u015arodowisko"
+                },
+                "description": "Skonfiguruj Smappee, aby zintegrowa\u0107 go z Home Assistantem."
+            },
+            "local": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP"
+                },
+                "description": "Wprowad\u017a nazw\u0119 hosta, aby zainicjowa\u0107 lokaln\u0105 integracj\u0119 Smappee"
+            },
             "pick_implementation": {
                 "title": "Wybierz metod\u0119 uwierzytelniania"
+            },
+            "zeroconf_confirm": {
+                "description": "Czy chcesz doda\u0107 do Home Assistanta urz\u0105dzenie Smappee o numerze seryjnym `{serialnumber}`?",
+                "title": "Wykryto urz\u0105dzenie Smappee"
             }
         }
     }

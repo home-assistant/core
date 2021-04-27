@@ -5,8 +5,9 @@
             "unknown": "Uventet feil"
         },
         "error": {
-            "cannot_connect": "Tilkobling feilet"
+            "cannot_connect": "Tilkobling mislyktes"
         },
+        "flow_title": "",
         "step": {
             "ssdp_confirm": {
                 "description": "Vil du sette opp {name} ?"

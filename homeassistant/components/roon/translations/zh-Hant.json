@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
             "duplicate_entry": "\u8a72\u4e3b\u6a5f\u7aef\u5df2\u7d93\u8a2d\u5b9a\u3002",
@@ -17,10 +17,8 @@
                 "data": {
                     "host": "\u4e3b\u6a5f\u7aef"
                 },
-                "description": "\u8acb\u8f38\u5165 Roon \u4f3a\u670d\u5668\u4e3b\u6a5f\u540d\u7a31\u6216 IP\u3002",
-                "title": "\u8a2d\u5b9a Roon \u4f3a\u670d\u5668"
+                "description": "\u627e\u4e0d\u5230 Roon \u4f3a\u670d\u5668\uff0c\u8acb\u8f38\u5165\u4e3b\u6a5f\u540d\u7a31\u6216 IP\u3002"
             }
         }
-    },
-    "title": "Roon"
+    }
 }

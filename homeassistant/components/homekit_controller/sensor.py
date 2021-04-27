@@ -1,28 +1,46 @@
 """Support for Homekit sensors."""
 from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
 
-from . import KNOWN_DEVICES, HomeKitEntity
+from . import KNOWN_DEVICES, CharacteristicEntity, HomeKitEntity
 
 HUMIDITY_ICON = "mdi:water-percent"
 TEMP_C_ICON = "mdi:thermometer"
 BRIGHTNESS_ICON = "mdi:brightness-6"
 CO2_ICON = "mdi:molecule-co2"
 
-UNIT_LUX = "lux"
+
+SIMPLE_SENSOR = {
+    CharacteristicsTypes.Vendor.EVE_ENERGY_WATT: {
+        "name": "Real Time Energy",
+        "device_class": DEVICE_CLASS_POWER,
+        "unit": "watts",
+        "icon": "mdi:chart-line",
+    },
+    CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY: {
+        "name": "Real Time Energy",
+        "device_class": DEVICE_CLASS_POWER,
+        "unit": "watts",
+        "icon": "mdi:chart-line",
+    },
+}
 
 
-class HomeKitHumiditySensor(HomeKitEntity):
+class HomeKitHumiditySensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit humidity sensor."""
 
     def get_characteristic_types(self):
@@ -55,7 +73,7 @@ class HomeKitHumiditySensor(HomeKitEntity):
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
 
 
-class HomeKitTemperatureSensor(HomeKitEntity):
+class HomeKitTemperatureSensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit temperature sensor."""
 
     def get_characteristic_types(self):
@@ -88,7 +106,7 @@ class HomeKitTemperatureSensor(HomeKitEntity):
         return self.service.value(CharacteristicsTypes.TEMPERATURE_CURRENT)
 
 
-class HomeKitLightSensor(HomeKitEntity):
+class HomeKitLightSensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit light level sensor."""
 
     def get_characteristic_types(self):
@@ -113,7 +131,7 @@ class HomeKitLightSensor(HomeKitEntity):
     @property
     def unit_of_measurement(self):
         """Return units for the sensor."""
-        return UNIT_LUX
+        return LIGHT_LUX
 
     @property
     def state(self):
@@ -121,7 +139,7 @@ class HomeKitLightSensor(HomeKitEntity):
         return self.service.value(CharacteristicsTypes.LIGHT_LEVEL_CURRENT)
 
 
-class HomeKitCarbonDioxideSensor(HomeKitEntity):
+class HomeKitCarbonDioxideSensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit Carbon Dioxide sensor."""
 
     def get_characteristic_types(self):
@@ -149,7 +167,7 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity):
         return self.service.value(CharacteristicsTypes.CARBON_DIOXIDE_LEVEL)
 
 
-class HomeKitBatterySensor(HomeKitEntity):
+class HomeKitBatterySensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit battery sensor."""
 
     def get_characteristic_types(self):
@@ -216,12 +234,72 @@ class HomeKitBatterySensor(HomeKitEntity):
         return self.service.value(CharacteristicsTypes.BATTERY_LEVEL)
 
 
+class SimpleSensor(CharacteristicEntity, SensorEntity):
+    """
+    A simple sensor for a single characteristic.
+
+    This may be an additional secondary entity that is part of another service. An
+    example is a switch that has an energy sensor.
+
+    These *have* to have a different unique_id to the normal sensors as there could
+    be multiple entities per HomeKit service (this was not previously the case).
+    """
+
+    def __init__(
+        self,
+        conn,
+        info,
+        char,
+        device_class=None,
+        unit=None,
+        icon=None,
+        name=None,
+    ):
+        """Initialise a secondary HomeKit characteristic sensor."""
+        self._device_class = device_class
+        self._unit = unit
+        self._icon = icon
+        self._name = name
+        self._char = char
+
+        super().__init__(conn, info)
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity is tracking."""
+        return [self._char.type]
+
+    @property
+    def device_class(self):
+        """Return units for the sensor."""
+        return self._device_class
+
+    @property
+    def unit_of_measurement(self):
+        """Return units for the sensor."""
+        return self._unit
+
+    @property
+    def icon(self):
+        """Return the sensor icon."""
+        return self._icon
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        return f"{super().name} - {self._name}"
+
+    @property
+    def state(self):
+        """Return the current sensor value."""
+        return self._char.value
+
+
 ENTITY_TYPES = {
-    "humidity": HomeKitHumiditySensor,
-    "temperature": HomeKitTemperatureSensor,
-    "light": HomeKitLightSensor,
-    "carbon-dioxide": HomeKitCarbonDioxideSensor,
-    "battery": HomeKitBatterySensor,
+    ServicesTypes.HUMIDITY_SENSOR: HomeKitHumiditySensor,
+    ServicesTypes.TEMPERATURE_SENSOR: HomeKitTemperatureSensor,
+    ServicesTypes.LIGHT_SENSOR: HomeKitLightSensor,
+    ServicesTypes.CARBON_DIOXIDE_SENSOR: HomeKitCarbonDioxideSensor,
+    ServicesTypes.BATTERY_SERVICE: HomeKitBatterySensor,
 }
 
 
@@ -231,12 +309,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
-    def async_add_service(aid, service):
-        entity_class = ENTITY_TYPES.get(service["stype"])
+    def async_add_service(service):
+        entity_class = ENTITY_TYPES.get(service.short_type)
         if not entity_class:
             return False
-        info = {"aid": aid, "iid": service["iid"]}
+        info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([entity_class(conn, info)], True)
         return True
 
     conn.add_listener(async_add_service)
+
+    @callback
+    def async_add_characteristic(char):
+        kwargs = SIMPLE_SENSOR.get(char.type)
+        if not kwargs:
+            return False
+        info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
+        async_add_entities([SimpleSensor(conn, info, char, **kwargs)], True)
+
+        return True
+
+    conn.add_char_factory(async_add_characteristic)

@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Esta cuenta SimpliSafe ya est\u00e1 en uso.",
-            "reauth_successful": "SimpliSafe se volvi\u00f3 a autenticar con \u00e9xito."
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
         },
         "error": {
             "identifier_exists": "Cuenta ya registrada",
-            "invalid_credentials": "Credenciales no v\u00e1lidas",
+            "invalid_auth": "Autenticaci\u00f3n inv\u00e1lida",
             "still_awaiting_mfa": "Esperando todav\u00eda el clic en el correo electr\u00f3nico de MFA",
             "unknown": "Error inesperado"
         },

@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Raadius"
+                },
+                "title": "Sisesta filtri \u00fcksikasjad."
+            }
+        }
+    }
+}

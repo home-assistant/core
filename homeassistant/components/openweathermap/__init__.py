@@ -1,10 +1,10 @@
 """The openweathermap component."""
-import asyncio
 import logging
 
 from pyowm import OWM
+from pyowm.utils.config import get_default_config
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -13,32 +13,21 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
-    COMPONENTS,
     CONF_LANGUAGE,
+    CONFIG_FLOW_VERSION,
     DOMAIN,
-    ENTRY_FORECAST_COORDINATOR,
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
+    FORECAST_MODE_FREE_DAILY,
+    FORECAST_MODE_ONECALL_DAILY,
+    PLATFORMS,
     UPDATE_LISTENER,
 )
-from .forecast_update_coordinator import ForecastUpdateCoordinator
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the OpenWeatherMap component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    weather_configs = _filter_domain_configs(config.get("weather", []), DOMAIN)
-    sensor_configs = _filter_domain_configs(config.get("sensor", []), DOMAIN)
-
-    _import_configs(hass, weather_configs + sensor_configs)
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
@@ -50,35 +39,47 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     forecast_mode = _get_config_value(config_entry, CONF_MODE)
     language = _get_config_value(config_entry, CONF_LANGUAGE)
 
-    owm = OWM(API_key=api_key, language=language)
-    weather_coordinator = WeatherUpdateCoordinator(owm, latitude, longitude, hass)
-    forecast_coordinator = ForecastUpdateCoordinator(
+    config_dict = _get_owm_config(language)
+
+    owm = OWM(api_key, config_dict).weather_manager()
+    weather_coordinator = WeatherUpdateCoordinator(
         owm, latitude, longitude, forecast_mode, hass
     )
 
-    await weather_coordinator.async_refresh()
-    await forecast_coordinator.async_refresh()
-
-    if (
-        not weather_coordinator.last_update_success
-        and not forecast_coordinator.last_update_success
-    ):
-        raise ConfigEntryNotReady
+    await weather_coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {
         ENTRY_NAME: name,
         ENTRY_WEATHER_COORDINATOR: weather_coordinator,
-        ENTRY_FORECAST_COORDINATOR: forecast_coordinator,
     }
 
-    for component in COMPONENTS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     update_listener = config_entry.add_update_listener(async_update_options)
     hass.data[DOMAIN][config_entry.entry_id][UPDATE_LISTENER] = update_listener
+
+    return True
+
+
+async def async_migrate_entry(hass, entry):
+    """Migrate old entry."""
+    config_entries = hass.config_entries
+    data = entry.data
+    version = entry.version
+
+    _LOGGER.debug("Migrating OpenWeatherMap entry from version %s", version)
+
+    if version == 1:
+        mode = data[CONF_MODE]
+        if mode == FORECAST_MODE_FREE_DAILY:
+            mode = FORECAST_MODE_ONECALL_DAILY
+
+        new_data = {**data, CONF_MODE: mode}
+        version = entry.version = CONFIG_FLOW_VERSION
+        config_entries.async_update_entry(entry, data=new_data)
+
+    _LOGGER.info("Migration to version %s successful", version)
 
     return True
 
@@ -90,13 +91,8 @@ async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in COMPONENTS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
     if unload_ok:
         update_listener = hass.data[DOMAIN][config_entry.entry_id][UPDATE_LISTENER]
@@ -104,18 +100,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
-
-
-def _import_configs(hass, configs):
-    for config in configs:
-        _LOGGER.debug("Importing OpenWeatherMap %s", config)
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config,
-            )
-        )
 
 
 def _filter_domain_configs(elements, domain):
@@ -126,3 +110,10 @@ def _get_config_value(config_entry, key):
     if config_entry.options:
         return config_entry.options[key]
     return config_entry.data[key]
+
+
+def _get_owm_config(language):
+    """Get OpenWeatherMap configuration and add language to it."""
+    config_dict = get_default_config()
+    config_dict["language"] = language
+    return config_dict

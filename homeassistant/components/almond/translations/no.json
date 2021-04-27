@@ -1,13 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Du kan bare konfigurere en Almond konto.",
-            "cannot_connect": "Kan ikke koble til Almond-serveren.",
-            "missing_configuration": "Vennligst sjekk dokumentasjonen om hvordan du setter opp Almond."
+            "cannot_connect": "Tilkobling mislyktes",
+            "missing_configuration": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen",
+            "no_url_available": "Ingen URL tilgjengelig. For informasjon om denne feilen, [sjekk hjelpseksjonen]({docs_url})",
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "step": {
             "hassio_confirm": {
-                "description": "Vil du konfigurere Home Assistant til \u00e5 koble til Almond levert av Hass.io add-on: {addon}?"
+                "description": "Vil du konfigurere Home Assistant for \u00e5 koble til Almond levert av tillegget: {addon} ?",
+                "title": "Almond via Home Assistant-tillegg"
             },
             "pick_implementation": {
                 "title": "Velg godkjenningsmetode"

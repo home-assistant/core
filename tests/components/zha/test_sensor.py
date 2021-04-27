@@ -2,6 +2,7 @@
 from unittest import mock
 
 import pytest
+import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.homeautomation as homeautomation
 import zigpy.zcl.clusters.measurement as measurement
@@ -14,8 +15,10 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
+    LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
+    PRESSURE_HPA,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
@@ -48,16 +51,16 @@ async def async_test_temperature(hass, cluster, entity_id):
 async def async_test_pressure(hass, cluster, entity_id):
     """Test pressure sensor."""
     await send_attributes_report(hass, cluster, {1: 1, 0: 1000, 2: 10000})
-    assert_state(hass, entity_id, "1000", "hPa")
+    assert_state(hass, entity_id, "1000", PRESSURE_HPA)
 
     await send_attributes_report(hass, cluster, {0: 1000, 20: -1, 16: 10000})
-    assert_state(hass, entity_id, "1000", "hPa")
+    assert_state(hass, entity_id, "1000", PRESSURE_HPA)
 
 
 async def async_test_illuminance(hass, cluster, entity_id):
     """Test illuminance sensor."""
     await send_attributes_report(hass, cluster, {1: 1, 0: 10, 2: 20})
-    assert_state(hass, entity_id, "1.0", "lx")
+    assert_state(hass, entity_id, "1.0", LIGHT_LUX)
 
 
 async def async_test_metering(hass, cluster, entity_id):
@@ -90,18 +93,59 @@ async def async_test_electrical_measurement(hass, cluster, entity_id):
         assert_state(hass, entity_id, "9.9", POWER_WATT)
 
 
+async def async_test_powerconfiguration(hass, cluster, entity_id):
+    """Test powerconfiguration/battery sensor."""
+    await send_attributes_report(hass, cluster, {33: 98})
+    assert_state(hass, entity_id, "49", "%")
+    assert hass.states.get(entity_id).attributes["battery_voltage"] == 2.9
+    assert hass.states.get(entity_id).attributes["battery_quantity"] == 3
+    assert hass.states.get(entity_id).attributes["battery_size"] == "AAA"
+    await send_attributes_report(hass, cluster, {32: 20})
+    assert hass.states.get(entity_id).attributes["battery_voltage"] == 2.0
+
+
 @pytest.mark.parametrize(
-    "cluster_id, test_func, report_count",
+    "cluster_id, test_func, report_count, read_plug",
     (
-        (measurement.RelativeHumidity.cluster_id, async_test_humidity, 1),
-        (measurement.TemperatureMeasurement.cluster_id, async_test_temperature, 1),
-        (measurement.PressureMeasurement.cluster_id, async_test_pressure, 1),
-        (measurement.IlluminanceMeasurement.cluster_id, async_test_illuminance, 1),
-        (smartenergy.Metering.cluster_id, async_test_metering, 1),
+        (measurement.RelativeHumidity.cluster_id, async_test_humidity, 1, None),
+        (
+            measurement.TemperatureMeasurement.cluster_id,
+            async_test_temperature,
+            1,
+            None,
+        ),
+        (measurement.PressureMeasurement.cluster_id, async_test_pressure, 1, None),
+        (
+            measurement.IlluminanceMeasurement.cluster_id,
+            async_test_illuminance,
+            1,
+            None,
+        ),
+        (
+            smartenergy.Metering.cluster_id,
+            async_test_metering,
+            1,
+            {
+                "demand_formatting": 0xF9,
+                "divisor": 1,
+                "multiplier": 1,
+            },
+        ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
             async_test_electrical_measurement,
             1,
+            None,
+        ),
+        (
+            general.PowerConfiguration.cluster_id,
+            async_test_powerconfiguration,
+            2,
+            {
+                "battery_size": 4,  # AAA
+                "battery_voltage": 29,
+                "battery_quantity": 3,
+            },
         ),
     ),
 )
@@ -112,6 +156,7 @@ async def test_sensor(
     cluster_id,
     test_func,
     report_count,
+    read_plug,
 ):
     """Test zha sensor platform."""
 
@@ -120,11 +165,15 @@ async def test_sensor(
             1: {
                 "in_clusters": [cluster_id, general.Basic.cluster_id],
                 "out_cluster": [],
-                "device_type": 0x0000,
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
     )
     cluster = zigpy_device.endpoints[1].in_clusters[cluster_id]
+    if cluster_id == smartenergy.Metering.cluster_id:
+        # this one is mains powered
+        zigpy_device.node_desc.mac_capability_flags |= 0b_0000_0100
+    cluster.PLUGGED_ATTR_READS = read_plug
     zha_device = await zha_device_joined_restored(zigpy_device)
     entity_id = await find_entity_id(DOMAIN, zha_device, hass)
 
@@ -240,7 +289,7 @@ async def test_temp_uom(
                     general.Basic.cluster_id,
                 ],
                 "out_cluster": [],
-                "device_type": 0x0000,
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
     )
@@ -280,7 +329,7 @@ async def test_electrical_measurement_init(
             1: {
                 "in_clusters": [cluster_id, general.Basic.cluster_id],
                 "out_cluster": [],
-                "device_type": 0x0000,
+                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
     )

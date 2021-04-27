@@ -1,12 +1,11 @@
 """Tests for Tradfri setup."""
+from unittest.mock import patch
+
+from homeassistant import config_entries
 from homeassistant.components import tradfri
-from homeassistant.helpers.device_registry import (
-    async_entries_for_config_entry,
-    async_get_registry as async_get_device_registry,
-)
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -36,7 +35,7 @@ async def test_config_yaml_host_imported(hass):
     progress = hass.config_entries.flow.async_progress()
     assert len(progress) == 1
     assert progress[0]["handler"] == "tradfri"
-    assert progress[0]["context"] == {"source": "import"}
+    assert progress[0]["context"] == {"source": config_entries.SOURCE_IMPORT}
 
 
 async def test_config_json_host_not_imported(hass):
@@ -73,7 +72,7 @@ async def test_config_json_host_imported(
 
     config_entry = mock_entry_setup.mock_calls[0][1][1]
     assert config_entry.domain == "tradfri"
-    assert config_entry.source == "import"
+    assert config_entry.source == config_entries.SOURCE_IMPORT
     assert config_entry.title == "mock-host"
 
 
@@ -98,8 +97,8 @@ async def test_entry_setup_unload(hass, api_factory, gateway_id):
         await hass.async_block_till_done()
         assert setup.call_count == len(tradfri.PLATFORMS)
 
-    dev_reg = await async_get_device_registry(hass)
-    dev_entries = async_entries_for_config_entry(dev_reg, entry.entry_id)
+    dev_reg = dr.async_get(hass)
+    dev_entries = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
 
     assert dev_entries
     dev_entry = dev_entries[0]

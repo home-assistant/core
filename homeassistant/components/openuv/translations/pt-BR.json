@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Coordenadas j\u00e1 cadastradas",
             "invalid_api_key": "Chave de API inv\u00e1lida"
         },
         "step": {

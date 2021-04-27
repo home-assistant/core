@@ -5,10 +5,9 @@
             "unknown": "Uventet feil"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
-            "invalid_auth": "Ugyldig godkjenning"
+            "cannot_connect": "Tilkobling mislyktes"
         },
-        "flow_title": "NZBGet: {name}",
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {
@@ -16,9 +15,9 @@
                     "name": "Navn",
                     "password": "Passord",
                     "port": "Port",
-                    "ssl": "NZBGet bruker et SSL-sertifikat",
+                    "ssl": "Bruker et SSL-sertifikat",
                     "username": "Brukernavn",
-                    "verify_ssl": "NZBGet bruker et riktig sertifikat"
+                    "verify_ssl": "Verifisere SSL-sertifikat"
                 },
                 "title": "Koble til NZBGet"
             }

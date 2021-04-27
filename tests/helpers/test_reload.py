@@ -1,21 +1,22 @@
 """Tests for the reload helper."""
 import logging
 from os import path
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
 from homeassistant import config
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.reload import (
-    async_get_platform,
+    async_get_platform_without_config_entry,
     async_integration_yaml_config,
     async_reload_integration_platforms,
     async_setup_reload_service,
 )
 from homeassistant.loader import async_get_integration
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import (
     MockModule,
     MockPlatform,
@@ -52,7 +53,7 @@ async def test_reload_platform(hass):
     assert f"{DOMAIN}.{PLATFORM}" in hass.config.components
     assert len(setup_called) == 1
 
-    platform = async_get_platform(hass, PLATFORM, DOMAIN)
+    platform = async_get_platform_without_config_entry(hass, PLATFORM, DOMAIN)
     assert platform.platform_name == PLATFORM
     assert platform.domain == DOMAIN
 
@@ -65,6 +66,11 @@ async def test_reload_platform(hass):
         await async_reload_integration_platforms(hass, PLATFORM, [DOMAIN])
 
     assert len(setup_called) == 2
+
+    existing_platforms = async_get_platforms(hass, PLATFORM)
+    for existing_platform in existing_platforms:
+        existing_platform.config_entry = "abc"
+    assert not async_get_platform_without_config_entry(hass, PLATFORM, DOMAIN)
 
 
 async def test_setup_reload_service(hass):

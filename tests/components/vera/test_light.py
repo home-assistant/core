@@ -1,4 +1,6 @@
 """Vera tests."""
+from unittest.mock import MagicMock
+
 import pyvera as pv
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_HS_COLOR
@@ -6,15 +8,15 @@ from homeassistant.core import HomeAssistant
 
 from .common import ComponentFactory, new_simple_controller_config
 
-from tests.async_mock import MagicMock
-
 
 async def test_light(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device = MagicMock(spec=pv.VeraDimmer)  # type: pv.VeraDimmer
+    vera_device: pv.VeraDimmer = MagicMock(spec=pv.VeraDimmer)
     vera_device.device_id = 1
+    vera_device.vera_device_id = vera_device.device_id
+    vera_device.comm_failure = False
     vera_device.name = "dev1"
     vera_device.category = pv.CATEGORY_DIMMER
     vera_device.is_switched_on = MagicMock(return_value=False)
@@ -27,7 +29,7 @@ async def test_light(
         hass=hass,
         controller_config=new_simple_controller_config(devices=(vera_device,)),
     )
-    update_callback = component_data.controller_data.update_callback
+    update_callback = component_data.controller_data[0].update_callback
 
     assert hass.states.get(entity_id).state == "off"
 

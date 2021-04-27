@@ -1,9 +1,10 @@
 """Test component/platform setup."""
 # pylint: disable=protected-access
 import asyncio
-import logging
+import datetime
 import os
 import threading
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -19,7 +20,6 @@ from homeassistant.helpers.config_validation import (
 )
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockModule,
@@ -33,8 +33,6 @@ from tests.common import (
 
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
@@ -444,10 +442,14 @@ class TestSetup:
         """Test all init work done till start."""
         call_order = []
 
-        def component1_setup(hass, config):
+        async def component1_setup(hass, config):
             """Set up mock component."""
-            discovery.discover(hass, "test_component2", {}, "test_component2", {})
-            discovery.discover(hass, "test_component3", {}, "test_component3", {})
+            await discovery.async_discover(
+                hass, "test_component2", {}, "test_component2", {}
+            )
+            await discovery.async_discover(
+                hass, "test_component3", {}, "test_component3", {}
+            )
             return True
 
         def component_track_setup(hass, config):
@@ -456,7 +458,7 @@ class TestSetup:
             return True
 
         mock_integration(
-            self.hass, MockModule("test_component1", setup=component1_setup)
+            self.hass, MockModule("test_component1", async_setup=component1_setup)
         )
 
         mock_integration(
@@ -554,6 +556,41 @@ async def test_when_setup_already_loaded(hass):
     assert calls == ["test", "test"]
 
 
+async def test_async_when_setup_or_start_already_loaded(hass):
+    """Test when setup or start."""
+    calls = []
+
+    async def mock_callback(hass, component):
+        """Mock callback."""
+        calls.append(component)
+
+    setup.async_when_setup_or_start(hass, "test", mock_callback)
+    await hass.async_block_till_done()
+    assert calls == []
+
+    hass.config.components.add("test")
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "test"})
+    await hass.async_block_till_done()
+    assert calls == ["test"]
+
+    # Event listener should be gone
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "test"})
+    await hass.async_block_till_done()
+    assert calls == ["test"]
+
+    # Should be called right away
+    setup.async_when_setup_or_start(hass, "test", mock_callback)
+    await hass.async_block_till_done()
+    assert calls == ["test", "test"]
+
+    setup.async_when_setup_or_start(hass, "not_loaded", mock_callback)
+    await hass.async_block_till_done()
+    assert calls == ["test", "test"]
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    assert calls == ["test", "test", "not_loaded"]
+
+
 async def test_setup_import_blows_up(hass):
     """Test that we handle it correctly when importing integration blows up."""
     with patch(
@@ -599,3 +636,75 @@ async def test_integration_disabled(hass, caplog):
     result = await setup.async_setup_component(hass, "test_component1", {})
     assert not result
     assert disabled_reason in caplog.text
+
+
+async def test_async_get_loaded_integrations(hass):
+    """Test we can enumerate loaded integations."""
+    hass.config.components.add("notbase")
+    hass.config.components.add("switch")
+    hass.config.components.add("notbase.switch")
+    hass.config.components.add("myintegration")
+    hass.config.components.add("device_tracker")
+    hass.config.components.add("device_tracker.other")
+    hass.config.components.add("myintegration.light")
+    assert setup.async_get_loaded_integrations(hass) == {
+        "other",
+        "switch",
+        "notbase",
+        "myintegration",
+        "device_tracker",
+    }
+
+
+async def test_integration_no_setup(hass, caplog):
+    """Test we fail integration setup without setup functions."""
+    mock_integration(
+        hass,
+        MockModule("test_integration_without_setup", setup=False),
+    )
+    result = await setup.async_setup_component(
+        hass, "test_integration_without_setup", {}
+    )
+    assert not result
+    assert "No setup or config entry setup function defined" in caplog.text
+
+
+async def test_integration_only_setup_entry(hass):
+    """Test we have an integration with only a setup entry method."""
+    mock_integration(
+        hass,
+        MockModule(
+            "test_integration_only_entry",
+            setup=False,
+            async_setup_entry=AsyncMock(return_value=True),
+        ),
+    )
+    assert await setup.async_setup_component(hass, "test_integration_only_entry", {})
+
+
+async def test_async_start_setup(hass):
+    """Test setup started context manager keeps track of setup times."""
+    with setup.async_start_setup(hass, ["august"]):
+        assert isinstance(
+            hass.data[setup.DATA_SETUP_STARTED]["august"], datetime.datetime
+        )
+        with setup.async_start_setup(hass, ["august"]):
+            assert isinstance(
+                hass.data[setup.DATA_SETUP_STARTED]["august_2"], datetime.datetime
+            )
+
+    assert "august" not in hass.data[setup.DATA_SETUP_STARTED]
+    assert isinstance(hass.data[setup.DATA_SETUP_TIME]["august"], datetime.timedelta)
+    assert "august_2" not in hass.data[setup.DATA_SETUP_TIME]
+
+
+async def test_async_start_setup_platforms(hass):
+    """Test setup started context manager keeps track of setup times for platforms."""
+    with setup.async_start_setup(hass, ["sensor.august"]):
+        assert isinstance(
+            hass.data[setup.DATA_SETUP_STARTED]["sensor.august"], datetime.datetime
+        )
+
+    assert "august" not in hass.data[setup.DATA_SETUP_STARTED]
+    assert isinstance(hass.data[setup.DATA_SETUP_TIME]["august"], datetime.timedelta)
+    assert "sensor" not in hass.data[setup.DATA_SETUP_TIME]

@@ -5,6 +5,8 @@ import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TIME,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
@@ -19,8 +21,10 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
+    LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
+    LENGTH_MILLIMETERS,
     PRESSURE_HPA,
     PRESSURE_INHG,
     TEMP_CELSIUS,
@@ -30,7 +34,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 
-from .const import ATTR_MAP, CONDITIONS_MAP, CONF_TRACK_HOME, DOMAIN, FORECAST_MAP
+from .const import (
+    ATTR_FORECAST_PRECIPITATION,
+    ATTR_MAP,
+    CONDITIONS_MAP,
+    CONF_TRACK_HOME,
+    DOMAIN,
+    FORECAST_MAP,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,7 +115,6 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
         self._config = config
         self._is_metric = is_metric
         self._hourly = hourly
-        self._name_appendix = "-hourly" if hourly else ""
 
     @property
     def track_home(self):
@@ -114,23 +124,34 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
     @property
     def unique_id(self):
         """Return unique ID."""
+        name_appendix = ""
+        if self._hourly:
+            name_appendix = "-hourly"
         if self.track_home:
-            return f"home{self._name_appendix}"
+            return f"home{name_appendix}"
 
-        return f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}{self._name_appendix}"
+        return f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}{name_appendix}"
 
     @property
     def name(self):
         """Return the name of the sensor."""
         name = self._config.get(CONF_NAME)
+        name_appendix = ""
+        if self._hourly:
+            name_appendix = " Hourly"
 
         if name is not None:
-            return f"{name}{self._name_appendix}"
+            return f"{name}{name_appendix}"
 
         if self.track_home:
-            return f"{self.hass.config.location_name}{self._name_appendix}"
+            return f"{self.hass.config.location_name}{name_appendix}"
 
-        return f"{DEFAULT_NAME}{self._name_appendix}"
+        return f"{DEFAULT_NAME}{name_appendix}"
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return not self._hourly
 
     @property
     def condition(self):
@@ -199,13 +220,37 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
             met_forecast = self.coordinator.data.hourly_forecast
         else:
             met_forecast = self.coordinator.data.daily_forecast
+        required_keys = {ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME}
         ha_forecast = []
         for met_item in met_forecast:
+            if not set(met_item).issuperset(required_keys):
+                continue
             ha_item = {
-                k: met_item[v] for k, v in FORECAST_MAP.items() if met_item.get(v)
+                k: met_item[v]
+                for k, v in FORECAST_MAP.items()
+                if met_item.get(v) is not None
             }
-            ha_item[ATTR_FORECAST_CONDITION] = format_condition(
-                ha_item[ATTR_FORECAST_CONDITION]
-            )
+            if not self._is_metric and ATTR_FORECAST_PRECIPITATION in ha_item:
+                precip_inches = convert_distance(
+                    ha_item[ATTR_FORECAST_PRECIPITATION],
+                    LENGTH_MILLIMETERS,
+                    LENGTH_INCHES,
+                )
+                ha_item[ATTR_FORECAST_PRECIPITATION] = round(precip_inches, 2)
+            if ha_item.get(ATTR_FORECAST_CONDITION):
+                ha_item[ATTR_FORECAST_CONDITION] = format_condition(
+                    ha_item[ATTR_FORECAST_CONDITION]
+                )
             ha_forecast.append(ha_item)
         return ha_forecast
+
+    @property
+    def device_info(self):
+        """Device info."""
+        return {
+            "identifiers": {(DOMAIN,)},
+            "manufacturer": "Met.no",
+            "model": "Forecast",
+            "default_name": "Forecast",
+            "entry_type": "service",
+        }

@@ -3,10 +3,8 @@
         "abort": {
             "authorize_url_fail": "Neznana napaka pri generiranju potrditvenega URL-ja.",
             "authorize_url_timeout": "\u010casovna omejitev za generiranje URL-ja je potekla.",
-            "unknown": "Pri\u0161lo je do neznane napake"
-        },
-        "error": {
-            "auth_error": "Napaka pri preverjanju pristnosti, poskusite znova"
+            "unknown": "Pri\u0161lo je do neznane napake",
+            "unknown_authorize_url_generation": "Neznana napaka pri ustvarjanju overitvenega url."
         },
         "step": {
             "auth": {

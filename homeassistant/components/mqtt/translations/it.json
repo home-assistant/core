@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "\u00c8 consentita solo una singola configurazione di MQTT."
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi al broker."
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
             "broker": {
@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Attiva l'individuazione"
                 },
-                "description": "Vuoi configurare Home Assistant per connettersi al broker MQTT fornito dal componente aggiuntivo di Hass.io: {addon}?",
-                "title": "Broker MQTT tramite il componente aggiuntivo di Hass.io"
+                "description": "Vuoi configurare Home Assistant per connettersi al broker MQTT fornito dal componente aggiuntivo: {addon}?",
+                "title": "Broker MQTT tramite il componente aggiuntivo di Home Assistant"
             }
         }
     },
@@ -52,7 +52,7 @@
         "error": {
             "bad_birth": "Argomento birth non valido.",
             "bad_will": "Argomento will non valido.",
-            "cannot_connect": "Impossibile connettersi al broker."
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
             "broker": {
@@ -72,7 +72,7 @@
                     "birth_retain": "Persistenza del messaggio birth",
                     "birth_topic": "Argomento del messaggio birth",
                     "discovery": "Attiva l'individuazione",
-                    "will_enable": "Abilita messaggio di nascita",
+                    "will_enable": "Abilita messaggio di ultima volont\u00e0 e testamento",
                     "will_payload": "Payload del messaggio will",
                     "will_qos": "QoS del messaggio will",
                     "will_retain": "Persistenza del messaggio will",

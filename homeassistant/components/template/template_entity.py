@@ -1,10 +1,12 @@
 """TemplateEntity utility class."""
+from __future__ import annotations
 
 import logging
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable
 
 import voluptuous as vol
 
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import EVENT_HOMEASSISTANT_START, CoreState, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
@@ -29,8 +31,8 @@ class _TemplateAttribute:
         attribute: str,
         template: Template,
         validator: Callable[[Any], Any] = None,
-        on_update: Optional[Callable[[Any], None]] = None,
-        none_on_template_error: Optional[bool] = False,
+        on_update: Callable[[Any], None] | None = None,
+        none_on_template_error: bool | None = False,
     ):
         """Template attribute."""
         self._entity = entity
@@ -60,10 +62,10 @@ class _TemplateAttribute:
     @callback
     def handle_result(
         self,
-        event: Optional[Event],
+        event: Event | None,
         template: Template,
-        last_result: Union[str, None, TemplateError],
-        result: Union[str, TemplateError],
+        last_result: str | None | TemplateError,
+        result: str | TemplateError,
     ) -> None:
         """Handle a template result event callback."""
         if isinstance(result, TemplateError):
@@ -129,6 +131,7 @@ class TemplateEntity(Entity):
         self._entity_picture_template = entity_picture_template
         self._icon = None
         self._entity_picture = None
+        self._self_ref_update_count = 0
 
     @property
     def should_poll(self):
@@ -166,7 +169,7 @@ class TemplateEntity(Entity):
         return self._entity_picture
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 
@@ -187,7 +190,7 @@ class TemplateEntity(Entity):
         attribute: str,
         template: Template,
         validator: Callable[[Any], Any] = None,
-        on_update: Optional[Callable[[Any], None]] = None,
+        on_update: Callable[[Any], None] | None = None,
         none_on_template_error: bool = False,
     ) -> None:
         """
@@ -208,22 +211,39 @@ class TemplateEntity(Entity):
             if the template or validator resulted in an error.
 
         """
+        assert self.hass is not None, "hass cannot be None"
+        template.hass = self.hass
         attribute = _TemplateAttribute(
             self, attribute, template, validator, on_update, none_on_template_error
         )
-        attribute.async_setup()
         self._template_attrs.setdefault(template, [])
         self._template_attrs[template].append(attribute)
 
     @callback
     def _handle_results(
         self,
-        event: Optional[Event],
-        updates: List[TrackTemplateResult],
+        event: Event | None,
+        updates: list[TrackTemplateResult],
     ) -> None:
         """Call back the results to the attributes."""
         if event:
             self.async_set_context(event.context)
+
+        entity_id = event and event.data.get(ATTR_ENTITY_ID)
+
+        if entity_id and entity_id == self.entity_id:
+            self._self_ref_update_count += 1
+        else:
+            self._self_ref_update_count = 0
+
+        if self._self_ref_update_count > len(self._template_attrs):
+            for update in updates:
+                _LOGGER.warning(
+                    "Template loop detected while processing event: %s, skipping template render for Template[%s]",
+                    event,
+                    update.template.template,
+                )
+            return
 
         for update in updates:
             for attr in self._template_attrs[update.template]:
@@ -231,22 +251,21 @@ class TemplateEntity(Entity):
                     event, update.template, update.last_result, update.result
                 )
 
-        if self._async_update:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     async def _async_template_startup(self, *_) -> None:
-        # _handle_results will not write state until "_async_update" is set
-        template_var_tups = [
-            TrackTemplate(template, None) for template in self._template_attrs
-        ]
+        template_var_tups = []
+        for template, attributes in self._template_attrs.items():
+            template_var_tups.append(TrackTemplate(template, None))
+            for attribute in attributes:
+                attribute.async_setup()
 
         result_info = async_track_template_result(
             self.hass, template_var_tups, self._handle_results
         )
         self.async_on_remove(result_info.async_remove)
-        result_info.async_refresh()
-        self.async_write_ha_state()
         self._async_update = result_info.async_refresh
+        result_info.async_refresh()
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
