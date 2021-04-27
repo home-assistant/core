@@ -54,7 +54,7 @@ def get_motioneye_device_identifier(
     config_entry_id: str, camera_id: int
 ) -> tuple[str, str]:
     """Get the identifiers for a motionEye device."""
-    return (DOMAIN, "_".join((config_entry_id, str(camera_id))))
+    return (DOMAIN, f"{config_entry_id}_{camera_id}")
 
 
 def get_motioneye_entity_unique_id(
