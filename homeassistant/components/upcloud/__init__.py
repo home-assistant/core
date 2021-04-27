@@ -223,22 +223,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     upcloud_data.coordinators[config_entry.data[CONF_USERNAME]] = coordinator
 
     # Forward entry setup
-    for domain in CONFIG_ENTRY_DOMAINS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, domain)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, CONFIG_ENTRY_DOMAINS)
 
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload the config entry."""
-    for domain in CONFIG_ENTRY_DOMAINS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, domain)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, CONFIG_ENTRY_DOMAINS
+    )
 
     hass.data[DATA_UPCLOUD].coordinators.pop(config_entry.data[CONF_USERNAME])
 
-    return True
+    return unload_ok
 
 
 class UpCloudServerEntity(CoordinatorEntity):

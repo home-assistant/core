@@ -119,15 +119,13 @@ async def async_unload_entry(hass, config_entry):
         hass.data[NEW_CLIENT_TASK].cancel()
     interval_tracker = hass.data.pop(INTERVAL_TRACKER)
     interval_tracker()
-    await asyncio.wait(
-        [
-            hass.config_entries.async_forward_entry_unload(config_entry, platform)
-            for platform in hass.data.pop(CONFIG_ENTRY_IS_SETUP)
-        ]
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, CONFIG_ENTRY_IS_SETUP
     )
     del hass.data[DOMAIN]
     del hass.data[DATA_CONFIG_ENTRY_LOCK]
-    return True
+    del hass.data[CONFIG_ENTRY_IS_SETUP]
+    return unload_ok
 
 
 class TelldusLiveClient:

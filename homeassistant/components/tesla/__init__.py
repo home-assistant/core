@@ -1,5 +1,4 @@
 """Support for Tesla cars."""
-import asyncio
 from collections import defaultdict
 from datetime import timedelta
 import logging
@@ -188,23 +187,15 @@ async def async_setup_entry(hass, config_entry):
     for device in all_devices:
         entry_data["devices"][device.hass_type].append(device)
 
-    for platform in PLATFORMS:
-        _LOGGER.debug("Loading %s", platform)
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+
     return True
 
 
 async def async_unload_entry(hass, config_entry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
     for listener in hass.data[DOMAIN][config_entry.entry_id][DATA_LISTENER]:
         listener()
