@@ -284,6 +284,12 @@ def session_transient_fixture():
     return load_fixture("plex/session_transient.xml")
 
 
+@pytest.fixture(name="session_unknown", scope="session")
+def session_unknown_fixture():
+    """Load a hypothetical unknown session payload and return it."""
+    return load_fixture("plex/session_unknown.xml")
+
+
 @pytest.fixture(name="session_live_tv", scope="session")
 def session_live_tv_fixture():
     """Load a Live TV session payload and return it."""
@@ -421,6 +427,7 @@ def setup_plex_server(
     session_photo,
     session_plexweb,
     session_transient,
+    session_unknown,
 ):
     """Set up and return a mocked Plex server instance."""
 
@@ -442,6 +449,8 @@ def setup_plex_server(
             requests_mock.get(f"{url}/livetv/sessions/live_tv_1", text=livetv_sessions)
         elif session_type == "transient":
             session = session_transient
+        elif session_type == "unknown":
+            session = session_unknown
         else:
             session = session_default
 

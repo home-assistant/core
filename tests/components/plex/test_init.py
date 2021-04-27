@@ -8,7 +8,11 @@ import plexapi
 import requests
 
 import homeassistant.components.plex.const as const
-from homeassistant.components.plex.models import LIVE_TV_SECTION, TRANSIENT_SECTION
+from homeassistant.components.plex.models import (
+    LIVE_TV_SECTION,
+    TRANSIENT_SECTION,
+    UNKNOWN_SECTION,
+)
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
@@ -148,6 +152,26 @@ async def test_setup_with_transient_session(hass, entry, setup_plex_server):
     )
     assert media_player.state == STATE_PLAYING
     assert media_player.attributes["media_library_title"] == TRANSIENT_SECTION
+
+    await wait_for_debouncer(hass)
+
+    sensor = hass.states.get("sensor.plex_plex_server_1")
+    assert sensor.state == "1"
+
+
+async def test_setup_with_unknown_session(hass, entry, setup_plex_server):
+    """Test setup component with an unknown session."""
+    await setup_plex_server(session_type="unknown")
+
+    assert len(hass.config_entries.async_entries(const.DOMAIN)) == 1
+    assert entry.state == ENTRY_STATE_LOADED
+    await hass.async_block_till_done()
+
+    media_player = hass.states.get(
+        "media_player.plex_plex_for_android_tv_shield_android_tv"
+    )
+    assert media_player.state == STATE_PLAYING
+    assert media_player.attributes["media_library_title"] == UNKNOWN_SECTION
 
     await wait_for_debouncer(hass)
 
