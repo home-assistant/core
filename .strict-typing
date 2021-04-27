@@ -66,6 +66,7 @@ homeassistant.components.image_processing.*
 homeassistant.components.input_select.*
 homeassistant.components.integration.*
 homeassistant.components.iqvia.*
+homeassistant.components.jellyfin.*
 homeassistant.components.jewish_calendar.*
 homeassistant.components.knx.*
 homeassistant.components.kraken.*
