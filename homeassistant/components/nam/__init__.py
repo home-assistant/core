@@ -8,7 +8,12 @@ from typing import Any
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 import async_timeout
-from nettigo_air_monitor import ApiError, InvalidSensorData, NettigoAirMonitor
+from nettigo_air_monitor import (
+    ApiError,
+    DictToObj,
+    InvalidSensorData,
+    NettigoAirMonitor,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -65,8 +70,12 @@ class NAMUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Nettigo Air Monitor data."""
 
     def __init__(
-        self, hass: HomeAssistant, session: ClientSession, host: str, unique_id: str
-    ):
+        self,
+        hass: HomeAssistant,
+        session: ClientSession,
+        host: str,
+        unique_id: str | None,
+    ) -> None:
         """Initialize."""
         self.host = host
         self.nam = NettigoAirMonitor(session, host)
@@ -76,7 +85,7 @@ class NAMUpdateCoordinator(DataUpdateCoordinator):
             hass, _LOGGER, name=DOMAIN, update_interval=DEFAULT_UPDATE_INTERVAL
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> DictToObj:
         """Update data via library."""
         try:
             # Device firmware uses synchronous code and doesn't respond to http queries
@@ -92,7 +101,7 @@ class NAMUpdateCoordinator(DataUpdateCoordinator):
         return data
 
     @property
-    def unique_id(self) -> str:
+    def unique_id(self) -> str | None:
         """Return a unique_id."""
         return self._unique_id
 

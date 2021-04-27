@@ -1,23 +1,22 @@
 """Support for the Nettigo Air Monitor air_quality service."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Callable
 
 from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import NAMUpdateCoordinator
 from .const import AIR_QUALITY_SENSORS, DEFAULT_NAME, DOMAIN
 
 PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Add a Nettigo Air Monitor entities from a config_entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -30,10 +29,10 @@ async def async_setup_entry(
     async_add_entities(entities, False)
 
 
-def round_state(func):
+def round_state(func: Callable) -> Callable:
     """Round state."""
 
-    def _decorator(self):
+    def _decorator(self) -> StateType:
         res = func(self)
         if isinstance(res, float):
             return round(res)
@@ -45,7 +44,7 @@ def round_state(func):
 class NAMAirQuality(CoordinatorEntity, AirQualityEntity):
     """Define an Nettigo Air Monitor air quality."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, sensor_type: str):
+    def __init__(self, coordinator: NAMUpdateCoordinator, sensor_type: str) -> None:
         """Initialize."""
         super().__init__(coordinator)
         self.sensor_type = sensor_type
@@ -57,19 +56,19 @@ class NAMAirQuality(CoordinatorEntity, AirQualityEntity):
 
     @property
     @round_state
-    def particulate_matter_2_5(self) -> str | None:
+    def particulate_matter_2_5(self) -> StateType:
         """Return the particulate matter 2.5 level."""
         return getattr(self.coordinator.data, f"{self.sensor_type}_p2")
 
     @property
     @round_state
-    def particulate_matter_10(self) -> str | None:
+    def particulate_matter_10(self) -> StateType:
         """Return the particulate matter 10 level."""
         return getattr(self.coordinator.data, f"{self.sensor_type}_p1")
 
     @property
     @round_state
-    def carbon_dioxide(self) -> str | None:
+    def carbon_dioxide(self) -> StateType:
         """Return the particulate matter 10 level."""
         return getattr(self.coordinator.data, "conc_co2_ppm", None)
 

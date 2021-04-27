@@ -16,7 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,10 +27,6 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def __init__(self):
-        """Initialize flow."""
-        self._host: str | None = None
-
     async def async_step_user(
         self, user_input: ConfigType | None = None
     ) -> FlowResultDict:
@@ -38,9 +34,9 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            self._host = user_input[CONF_HOST]
+            host = user_input[CONF_HOST]
             try:
-                mac = await self._async_get_mac(self._host)
+                mac = await self._async_get_mac(host)
             except (ApiError, ClientConnectorError, asyncio.TimeoutError):
                 errors["base"] = "cannot_connect"
             except CannotGetMac:
@@ -51,10 +47,10 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
 
                 await self.async_set_unique_id(format_mac(mac))
-                self._abort_if_unique_id_configured({CONF_HOST: self._host})
+                self._abort_if_unique_id_configured({CONF_HOST: host})
 
                 return self.async_create_entry(
-                    title=self._host,
+                    title=host,
                     data=user_input,
                 )
 
@@ -72,17 +68,18 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResultDict:
         """Handle zeroconf discovery."""
-        self._host = discovery_info[CONF_HOST]
+        host = discovery_info[CONF_HOST]
 
         try:
-            mac = await self._async_get_mac(self._host)
+            mac = await self._async_get_mac(host)
         except (ApiError, ClientConnectorError, asyncio.TimeoutError):
             return self.async_abort(reason="cannot_connect")
         except CannotGetMac:
             return self.async_abort(reason="device_unsupported")
 
         await self.async_set_unique_id(format_mac(mac))
-        self._abort_if_unique_id_configured({CONF_HOST: self._host})
+        self._abort_if_unique_id_configured({CONF_HOST: host})
+        self.host = host
 
         self.context["title_placeholders"] = {
             ATTR_NAME: discovery_info[ATTR_NAME].split(".")[0]
@@ -94,19 +91,19 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: ConfigType | None = None
     ) -> FlowResultDict:
         """Handle discovery confirm."""
-        errors = {}
+        errors: dict = {}
 
         if user_input is not None:
             return self.async_create_entry(
-                title=self._host,
-                data={CONF_HOST: self._host},
+                title=self.host,
+                data={CONF_HOST: self.host},
             )
 
         self._set_confirm_only()
 
         return self.async_show_form(
             step_id="confirm_discovery",
-            description_placeholders={CONF_HOST: self._host},
+            description_placeholders={CONF_HOST: self.host},
             errors=errors,
         )
 
@@ -118,4 +115,6 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # when reading data from sensors. The nettigo-air-monitor library tries to get
         # the data 4 times, so we use a longer than usual timeout here.
         with async_timeout.timeout(30):
-            return await nam.async_get_mac_address()
+            mac = str(await nam.async_get_mac_address())
+
+        return mac
