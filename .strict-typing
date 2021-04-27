@@ -2,6 +2,7 @@
 # If component is fully covered with type annotations, please add it here
 # to enable strict mypy checks.
 
+homeassistant.components
 homeassistant.components.automation.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bond.*

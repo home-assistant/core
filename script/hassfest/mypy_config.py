@@ -311,7 +311,10 @@ def generate_and_validate(config: Config) -> str:
 
     ignored_modules_set: set[str] = set(IGNORED_MODULES)
     for module in strict_modules:
-        if not module.startswith("homeassistant.components."):
+        if (
+            not module.startswith("homeassistant.components.")
+            and module != "homeassistant.components"
+        ):
             config.add_error(
                 "mypy_config", f"Only components should be added: {module}"
             )
