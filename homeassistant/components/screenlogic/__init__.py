@@ -142,10 +142,16 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
 class ScreenlogicEntity(CoordinatorEntity):
     """Base class for all ScreenLogic entities."""
 
-    def __init__(self, coordinator, data_key):
+    def __init__(self, coordinator, data_key, enabled=True):
         """Initialize of the entity."""
         super().__init__(coordinator)
         self._data_key = data_key
+        self._enabled_default = enabled
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Entity enabled by default."""
+        return self._enabled_default
 
     @property
     def mac(self):

@@ -1,7 +1,7 @@
 """Support for a ScreenLogic 'circuit' switch."""
 import logging
 
-from screenlogicpy.const import DATA as SL_DATA, ON_OFF
+from screenlogicpy.const import DATA as SL_DATA, GENERIC_CIRCUIT_NAMES, ON_OFF
 
 from homeassistant.components.switch import SwitchEntity
 
@@ -16,8 +16,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
 
-    for circuit in coordinator.data[SL_DATA.KEY_CIRCUITS]:
-        entities.append(ScreenLogicSwitch(coordinator, circuit))
+    for circuit_num, circuit in coordinator.data[SL_DATA.KEY_CIRCUITS].items():
+        enabled = False if circuit["name"] in GENERIC_CIRCUIT_NAMES else True
+        entities.append(ScreenLogicSwitch(coordinator, circuit_num, enabled))
 
     async_add_entities(entities)
 

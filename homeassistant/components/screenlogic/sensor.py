@@ -33,6 +33,7 @@ SUPPORTED_CHEM_SENSORS = (
     "ph_last_dose_volume",
     "ph_probe_water_temp",
     "ph_setpoint",
+    "salt_tds_ppm",
     "total_alkalinity",
 )
 
@@ -55,44 +56,38 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up entry."""
     entities = []
     coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+    equipment_flags = coordinator.data[SL_DATA.KEY_CONFIG]["equipment_flags"]
 
     # Generic sensors
-    for sensor in coordinator.data[SL_DATA.KEY_SENSORS]:
-        if sensor == "chem_alarm":
+    for sensor_name, sensor_data in coordinator.data[SL_DATA.KEY_SENSORS].items():
+        if sensor_name == "chem_alarm" or sensor_name == "salt_ppm":
             continue
-        if coordinator.data[SL_DATA.KEY_SENSORS][sensor]["value"] != 0:
-            entities.append(ScreenLogicSensor(coordinator, sensor))
+        if sensor_data["value"] != 0:
+            entities.append(ScreenLogicSensor(coordinator, sensor_name))
 
     # Pump sensors
-    for pump in coordinator.data[SL_DATA.KEY_PUMPS]:
-        if (
-            coordinator.data[SL_DATA.KEY_PUMPS][pump]["data"] != 0
-            and "currentWatts" in coordinator.data[SL_DATA.KEY_PUMPS][pump]
-        ):
+    for pump_num, pump_data in coordinator.data[SL_DATA.KEY_PUMPS].items():
+        if pump_data["data"] != 0 and "currentWatts" in pump_data:
             entities.extend(
-                ScreenLogicPumpSensor(coordinator, pump, pump_key)
-                for pump_key in coordinator.data[SL_DATA.KEY_PUMPS][pump]
+                ScreenLogicPumpSensor(coordinator, pump_num, pump_key)
+                for pump_key in pump_data
                 if pump_key in SUPPORTED_PUMP_SENSORS
             )
 
     # IntelliChem sensors
-    if (
-        coordinator.data[SL_DATA.KEY_CONFIG]["equipment_flags"]
-        & EQUIPMENT.FLAG_INTELLICHEM
-    ):
-        entities.extend(
-            [
-                ScreenLogicChemistrySensor(coordinator, chem_sensor)
-                for chem_sensor in coordinator.data[SL_DATA.KEY_CHEMISTRY]
-                if chem_sensor in SUPPORTED_CHEM_SENSORS
-            ]
-        )
+    if equipment_flags & EQUIPMENT.FLAG_INTELLICHEM:
+        for chem_sensor_name in coordinator.data[SL_DATA.KEY_CHEMISTRY]:
+            enabled = True
+            if equipment_flags & EQUIPMENT.FLAG_CHLORINATOR:
+                if chem_sensor_name in ("salt_tds_ppm"):
+                    enabled = False
+            if chem_sensor_name in SUPPORTED_CHEM_SENSORS:
+                entities.append(
+                    ScreenLogicChemistrySensor(coordinator, chem_sensor_name, enabled)
+                )
 
     # SCG sensors
-    if (
-        coordinator.data[SL_DATA.KEY_CONFIG]["equipment_flags"]
-        & EQUIPMENT.FLAG_CHLORINATOR
-    ):
+    if equipment_flags & EQUIPMENT.FLAG_CHLORINATOR:
         entities.extend(
             [
                 ScreenLogicSCGSensor(coordinator, scg_sensor)
@@ -138,9 +133,9 @@ class ScreenLogicSensor(ScreenlogicEntity, SensorEntity):
 class ScreenLogicPumpSensor(ScreenLogicSensor):
     """Representation of a ScreenLogic pump sensor entity."""
 
-    def __init__(self, coordinator, pump, key):
+    def __init__(self, coordinator, pump, key, enabled=True):
         """Initialize of the pump sensor."""
-        super().__init__(coordinator, f"{key}_{pump}")
+        super().__init__(coordinator, f"{key}_{pump}", enabled)
         self._pump_id = pump
         self._key = key
 
@@ -153,20 +148,18 @@ class ScreenLogicPumpSensor(ScreenLogicSensor):
 class ScreenLogicChemistrySensor(ScreenLogicSensor):
     """Representation of a ScreenLogic IntelliChem sensor entity."""
 
-    def __init__(self, coordinator, key):
+    def __init__(self, coordinator, key, enabled=True):
         """Initialize of the pump sensor."""
-        super().__init__(coordinator, f"chem_{key}")
+        super().__init__(coordinator, f"chem_{key}", enabled)
         self._key = key
 
     @property
     def state(self):
         """State of the sensor."""
         value = self.sensor["value"]
-        return (
-            CHEM_DOSING_STATE.NAME_FOR_NUM[value]
-            if "dosing_state" in self._key
-            else value
-        )
+        if "dosing_state" in self._key:
+            return CHEM_DOSING_STATE.NAME_FOR_NUM[value]
+        return value
 
     @property
     def sensor(self):
