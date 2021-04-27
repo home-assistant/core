@@ -1,7 +1,7 @@
 """Support for a ScreenLogic Binary Sensor."""
 import logging
 
-from screenlogicpy.const import DEVICE_TYPE, ON_OFF
+from screenlogicpy.const import DATA as SL_DATA, DEVICE_TYPE, ON_OFF
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
@@ -19,16 +19,16 @@ SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS = {DEVICE_TYPE.ALARM: DEVICE_CLASS_PROBLEM}
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up entry."""
     entities = []
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = data["coordinator"]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
 
-    for binary_sensor in data["devices"]["binary_sensor"]:
-        entities.append(ScreenLogicBinarySensor(coordinator, binary_sensor))
+    # Generic binary sensor
+    entities.append(ScreenLogicBinarySensor(coordinator, "chem_alarm"))
+
     async_add_entities(entities)
 
 
 class ScreenLogicBinarySensor(ScreenlogicEntity, BinarySensorEntity):
-    """Representation of a ScreenLogic binary sensor entity."""
+    """Representation of the basic ScreenLogic binary sensor entity."""
 
     @property
     def name(self):
@@ -49,4 +49,4 @@ class ScreenLogicBinarySensor(ScreenlogicEntity, BinarySensorEntity):
     @property
     def sensor(self):
         """Shortcut to access the sensor data."""
-        return self.coordinator.data["sensors"][self._data_key]
+        return self.coordinator.data[SL_DATA.KEY_SENSORS][self._data_key]

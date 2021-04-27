@@ -15,6 +15,7 @@ from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from . import const as zha_const, registries as zha_regs, typing as zha_typing
 from .. import (  # noqa: F401 pylint: disable=unused-import,
+    alarm_control_panel,
     binary_sensor,
     climate,
     cover,

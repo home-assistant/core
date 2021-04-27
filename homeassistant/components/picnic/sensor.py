@@ -66,7 +66,11 @@ class PicnicSensor(CoordinatorEntity):
     @property
     def state(self) -> StateType:
         """Return the state of the entity."""
-        data_set = self.coordinator.data.get(self.properties["data_type"], {})
+        data_set = (
+            self.coordinator.data.get(self.properties["data_type"], {})
+            if self.coordinator.data is not None
+            else {}
+        )
         return self.properties["state"](data_set)
 
     @property

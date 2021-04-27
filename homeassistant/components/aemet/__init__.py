@@ -1,5 +1,4 @@
 """The AEMET OpenData component."""
-import asyncio
 import logging
 
 from aemet_opendata.interface import AEMET
@@ -32,24 +31,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         ENTRY_WEATHER_COORDINATOR: weather_coordinator,
     }
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
+
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
