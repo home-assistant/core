@@ -4,6 +4,8 @@ from __future__ import annotations
 from collections import namedtuple
 from collections.abc import Sequence
 
+from pysmartthings import Attribute, Capability
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     AREA_SQUARE_METERS,
@@ -23,7 +25,6 @@ from homeassistant.const import (
     VOLT,
     VOLUME_CUBIC_METERS,
 )
-from pysmartthings import Attribute, Capability
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN

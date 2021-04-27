@@ -4,6 +4,8 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Sequence
 
+from pysmartthings import Capability
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -16,7 +18,6 @@ from homeassistant.components.light import (
     LightEntity,
 )
 import homeassistant.util.color as color_util
-from pysmartthings import Capability
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
