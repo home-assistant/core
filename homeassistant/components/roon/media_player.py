@@ -486,7 +486,7 @@ class RoonDevice(MediaPlayerEntity):
                     path_list,
                 )
 
-    async def async_join_players(self, group_members):
+    def join_players(self, group_members):
         """Join `group_members` as a player group with the current player."""
 
         zone_data = self._server.roonapi.zone_by_output_id(self._output_id)
@@ -526,7 +526,7 @@ class RoonDevice(MediaPlayerEntity):
             [self._output_id] + [sync_available[name] for name in names]
         )
 
-    async def async_unjoin_player(self):
+    def unjoin_player(self):
         """Remove this player from any group."""
 
         if not self._server.roonapi.is_grouped(self._output_id):
