@@ -9,6 +9,10 @@
             "unknown": "Onverwachte fout"
         },
         "step": {
+            "reauth_confirm": {
+                "description": "De SmartTub-integratie moet uw account opnieuw verifi\u00ebren",
+                "title": "Verifieer de integratie opnieuw"
+            },
             "user": {
                 "data": {
                     "email": "E-mail",
