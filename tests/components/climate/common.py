@@ -11,6 +11,7 @@ from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
+    ATTR_SWINGH_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN,
@@ -20,6 +21,7 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
+    SERVICE_SET_SWINGH_MODE,
     SERVICE_SET_TEMPERATURE,
 )
 from homeassistant.const import (
@@ -207,6 +209,27 @@ def set_swing_mode(hass, swing_mode, entity_id=ENTITY_MATCH_ALL):
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_SET_SWING_MODE, data)
+
+
+async def async_set_swingh_mode(hass, swingh_mode, entity_id=ENTITY_MATCH_ALL):
+    """Set new target horizontal swing mode."""
+    data = {ATTR_SWINGH_MODE: swingh_mode}
+
+    if entity_id is not None:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    await hass.services.async_call(DOMAIN, SERVICE_SET_SWINGH_MODE, data, blocking=True)
+
+
+@bind_hass
+def set_swingh_mode(hass, swingh_mode, entity_id=ENTITY_MATCH_ALL):
+    """Set new target horizontal swing mode."""
+    data = {ATTR_SWINGH_MODE: swingh_mode}
+
+    if entity_id is not None:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_SET_SWINGH_MODE, data)
 
 
 async def async_turn_on(hass, entity_id=ENTITY_MATCH_ALL):
