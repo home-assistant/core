@@ -1,22 +1,16 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Device is already configured"
-        },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
+            "invalid_auth": "Enable authentication in m\u00fctesync Preferences > Authentication",
             "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
-                    "password": "Password",
-                    "username": "Username"
+                    "host": "Host"
                 }
             }
         }
-    },
-    "title": "m\u00fctesync"
+    }
 }
