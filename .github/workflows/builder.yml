@@ -171,7 +171,6 @@ jobs:
         with:
           args: |
             $BUILD_ARGS \
-            --${{ matrix.arch }} \
             --target /data/machine \
             --with-codenotary "${{ secrets.VCN_USER }}" "${{ secrets.VCN_PASSWORD }}" "${{ secrets.VCN_ORG }}" \
             --validate-from "${{ secrets.VCN_ORG }}" \
