@@ -13,6 +13,12 @@ from ..const import (
     INSTEON_DEVICE_NOT_FOUND,
     TYPE,
 )
+from ..const import DOMAIN
+
+DEVICE_ADDRESS = "device_address"
+ALDB_RECORD = "record"
+PROPERTY_NAME = "name"
+PROPERTY_VALUE = "value"
 
 
 def compute_device_name(ha_device):
