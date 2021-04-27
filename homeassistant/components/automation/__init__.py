@@ -8,6 +8,7 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.components import blueprint
+from homeassistant.components.ais_dom import ais_global
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -609,6 +610,8 @@ async def _async_process_config(
         conf: list[dict[str, Any] | blueprint.BlueprintInputs] = config[  # type: ignore
             config_key
         ]
+        # ais cache the automation config
+        ais_global.G_AUTOMATION_CONFIG = conf
 
         for list_no, config_block in enumerate(conf):
             raw_blueprint_inputs = None

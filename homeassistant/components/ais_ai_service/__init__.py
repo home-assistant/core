@@ -26,7 +26,6 @@ import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
@@ -3969,26 +3968,36 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
             return response
 
     # 2. check the user automatons intents
-    automations = {
-        state.entity_id: state.name
-        for state in hass.states.async_all()
-        if state.entity_id.startswith("automation")
-        and not state.entity_id.startswith("automation.ais_")
-    }
-    # auto = hass.data.get("automation", {})
-    # _LOGGER.error("test: " + auto)
+    if ais_global.G_AUTOMATION_CONFIG is not None:
+        automations = {
+            state.entity_id: state.name
+            for state in hass.states.async_all()
+            if state.entity_id.startswith("automation")
+            and not state.entity_id.startswith("automation.ais_")
+        }
+
     for key, value in automations.items():
         if value.lower().startswith("jolka"):
-            if (
+            # get aliases
+            commands = []
+            for auto_config in ais_global.G_AUTOMATION_CONFIG:
+                auto_name = auto_config.get("alias", "").lower().strip()
+                if "description" in auto_config and auto_name == value.lower().strip():
+                    commands = auto_config.get("description", "").split(";")
+
+            commands.append(
                 value.lower().replace("jolka", "", 1).replace(":", "").strip()
-                == text.lower().replace("jolka", "", 1).replace(":", "").strip()
+            )
+            if (
+                text.lower().replace("jolka", "", 1).replace(":", "").strip()
+                in commands
             ):
                 await hass.services.async_call(
                     "automation", "trigger", {ATTR_ENTITY_ID: key}
                 )
                 s = True
                 found_intent = "AUTO"
-                m = "DO_NOT_SAY OK, uruchamiam " + value.replace("jolka:", "", 1)
+                m = "DO_NOT_SAY OK"
                 break
 
     # 3. check the AIS dom intents

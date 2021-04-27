@@ -121,6 +121,8 @@ G_AIS_IMG_PATH = "/data/data/pl.sviete.dom/files/home/AIS/www/img/"
 G_LOG_SETTINGS_INFO_FILE = "/.dom/.ais_log_settings_info"
 G_DB_SETTINGS_INFO_FILE = "/.dom/.ais_db_settings_info"
 
+G_AUTOMATION_CONFIG = None
+
 
 def set_ais_android_id_dom_file_path(path):
     global G_AIS_SECURE_ANDROID_ID_DOM_FILE
