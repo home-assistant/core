@@ -86,11 +86,8 @@ class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
     def is_on(self):
         """Return the on/off state of the switch."""
         state_int = 0
-        """
-        The Omnilogic API has a significant delay in state reporting after calling for a
-        change. This state delay will ensure that HA keeps an optimistic value of state
-        during this period to improve the user experience and avoid confusion.
-        """
+
+        """Omnilogic API has long delay to reflect state. Hold optimistic state after state change."""
         if self._last_action < (time.time() - self._state_delay):
             state_int = int(self.coordinator.data[self._item_id][self._state_key])
 
