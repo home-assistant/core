@@ -87,7 +87,7 @@ class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
         """Return the on/off state of the switch."""
         state_int = 0
 
-        """Omnilogic API has long delay to reflect state. Hold optimistic state after state change."""
+        # Omnilogic API has long delay to reflect state. Hold optimistic state after state change.
         if self._last_action < (time.time() - self._state_delay):
             state_int = int(self.coordinator.data[self._item_id][self._state_key])
 
