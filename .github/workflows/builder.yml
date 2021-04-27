@@ -126,7 +126,7 @@ jobs:
             --generic ${{ needs.init.outputs.version }}
 
   build_machine:
-    name: Build ${{ matrix.arch }} machine core image
+    name: Build ${{ matrix.machine }} machine core image
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     strategy:
