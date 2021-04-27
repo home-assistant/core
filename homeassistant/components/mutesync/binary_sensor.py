@@ -1,4 +1,4 @@
-"""Mutesync binary sensor entities."""
+"""mütesync binary sensor entities."""
 import asyncio
 
 import aiohttp
@@ -10,13 +10,13 @@ from .const import DOMAIN
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Mutesync button."""
+    """Set up the mütesync button."""
     client = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities([MuteStatus(client)], True)
 
 
 class MuteStatus(BinarySensorEntity):
-    """Class to hold Mutesync basic info."""
+    """Class to hold mütesync basic info."""
 
     def __init__(self, client):
         """Initialize binary sensor."""
@@ -54,7 +54,7 @@ class MuteStatus(BinarySensorEntity):
         return {
             "identifiers": {(DOMAIN, self._status["user-id"])},
             "name": "mutesync",
-            "manufacturer": "mutesync",
+            "manufacturer": "mütesync",
             "model": "mutesync app",
             "entry_type": "service",
         }
