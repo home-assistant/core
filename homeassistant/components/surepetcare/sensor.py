@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from surepy.entities import SurepyEntity
-from surepy.enums import EntityType, LockState
+from surepy.enums import EntityType
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_VOLTAGE, DEVICE_CLASS_BATTERY, PERCENTAGE
@@ -44,7 +44,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         ]:
             entities.append(SureBattery(surepy_entity.id, spc))
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class SurePetcareSensor(SensorEntity):
@@ -63,18 +63,6 @@ class SurePetcareSensor(SensorEntity):
             f"{self._surepy_entity.name.capitalize()}"
         )
 
-        self._async_unsub_dispatcher_connect = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return an unique ID."""
-        return f"{self._surepy_entity.household_id}-{self._surepy_entity.id}"
-
     @property
     def available(self) -> bool:
         """Return true if entity is available."""
@@ -85,7 +73,8 @@ class SurePetcareSensor(SensorEntity):
         """Return true."""
         return False
 
-    async def async_update(self) -> None:
+    @callback
+    def _async_update(self) -> None:
         """Get the latest data and update the state."""
         self._surepy_entity = self._spc.states[self._id]
         self._state = self._surepy_entity.raw_data()["status"]
@@ -93,38 +82,10 @@ class SurePetcareSensor(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-
-        @callback
-        def update() -> None:
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, TOPIC_UPDATE, self._async_update)
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
-
-
-class Flap(SurePetcareSensor):
-    """Sure Petcare Flap."""
-
-    @property
-    def state(self) -> int | None:
-        """Return battery level in percent."""
-        return LockState(self._state["locking"]["mode"]).name.capitalize()
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the device."""
-        attributes = None
-        if self._state:
-            attributes = {"learn_mode": bool(self._state["learn_mode"])}
-
-        return attributes
+        self._async_update()
 
 
 class SureBattery(SurePetcareSensor):
