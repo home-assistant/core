@@ -12,6 +12,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DATA_ELGATO_CLIENT, DOMAIN
 
+PLATFORMS = [LIGHT_DOMAIN]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elgato Key Light from a config entry."""
@@ -31,10 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {DATA_ELGATO_CLIENT: elgato}
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, LIGHT_DOMAIN)
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -42,11 +41,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Elgato Key Light config entry."""
     # Unload entities for this entry/device.
-    await hass.config_entries.async_forward_entry_unload(entry, LIGHT_DOMAIN)
-
-    # Cleanup
-    del hass.data[DOMAIN][entry.entry_id]
-    if not hass.data[DOMAIN]:
-        del hass.data[DOMAIN]
-
-    return True
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        # Cleanup
+        del hass.data[DOMAIN][entry.entry_id]
+        if not hass.data[DOMAIN]:
+            del hass.data[DOMAIN]
+    return unload_ok

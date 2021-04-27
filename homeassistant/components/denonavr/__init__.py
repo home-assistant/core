@@ -23,6 +23,7 @@ from .receiver import ConnectDenonAVR
 
 CONF_RECEIVER = "receiver"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
+PLATFORMS = ["media_player"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,9 +57,7 @@ async def async_setup_entry(
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "media_player")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -67,8 +66,8 @@ async def async_unload_entry(
     hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
 ):
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_forward_entry_unload(
-        config_entry, "media_player"
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
 
     hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
