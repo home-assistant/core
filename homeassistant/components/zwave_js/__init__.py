@@ -308,29 +308,31 @@ async def async_setup_entry(  # noqa: C901
         except StopIteration:
             return
 
+        device = dev_reg.async_get_device({get_device_id(client, value.node)})
+        event_data = {
+            ATTR_DOMAIN: DOMAIN,
+            ATTR_NODE_ID: value.node.node_id,
+            ATTR_HOME_ID: client.driver.controller.home_id,
+            ATTR_DEVICE_ID: device.id,  # type: ignore
+            ATTR_COMMAND_CLASS: value.command_class,
+            ATTR_COMMAND_CLASS_NAME: value.command_class_name,
+            ATTR_ENDPOINT: value.endpoint,
+            ATTR_PROPERTY: value.property_,
+            ATTR_PROPERTY_NAME: value.property_name,
+            ATTR_PROPERTY_KEY: value.property_key,
+            ATTR_PROPERTY_KEY_NAME: value.property_key_name,
+            ATTR_VALUE: value.value,
+        }
+
         unique_id = get_unique_id(
             client.driver.controller.home_id, disc_info.primary_value.value_id
         )
-        entity_id = ent_reg.async_get_entity_id(DOMAIN, disc_info.platform, unique_id)
-        device = dev_reg.async_get_device({get_device_id(client, value.node)})
-        hass.bus.async_fire(
-            ZWAVE_JS_VALUE_UPDATED_EVENT,
-            {
-                ATTR_DOMAIN: DOMAIN,
-                ATTR_NODE_ID: value.node.node_id,
-                ATTR_HOME_ID: client.driver.controller.home_id,
-                ATTR_DEVICE_ID: device.id,  # type: ignore
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_COMMAND_CLASS: value.command_class,
-                ATTR_COMMAND_CLASS_NAME: value.command_class_name,
-                ATTR_ENDPOINT: value.endpoint,
-                ATTR_PROPERTY: value.property_,
-                ATTR_PROPERTY_NAME: value.property_name,
-                ATTR_PROPERTY_KEY: value.property_key,
-                ATTR_PROPERTY_KEY_NAME: value.property_key_name,
-                ATTR_VALUE: value.value,
-            },
-        )
+        if entity_id := ent_reg.async_get_entity_id(
+            disc_info.platform, DOMAIN, unique_id
+        ):
+            event_data[ATTR_ENTITY_ID] = entity_id
+
+        hass.bus.async_fire(ZWAVE_JS_VALUE_UPDATED_EVENT, event_data)
 
     # connect and throw error if connection failed
     try:
