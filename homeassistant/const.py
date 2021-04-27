@@ -2,7 +2,7 @@
 
 MAJOR_VERSION = 2021
 MINOR_VERSION = 4
-PATCH_VERSION = "6b2"
+PATCH_VERSION = "6b3"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER = (3, 8, 0)
