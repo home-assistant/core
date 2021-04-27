@@ -30,5 +30,5 @@ def test_recorder_pool():
     new_thread = threading.Thread(target=_get_connection_twice)
     new_thread.start()
     new_thread.join()
-    
+
     assert connections[2] != connections[3]
