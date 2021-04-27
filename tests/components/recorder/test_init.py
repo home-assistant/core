@@ -1,9 +1,10 @@
 """The tests for the Recorder component."""
 # pylint: disable=protected-access
 from datetime import datetime, timedelta
+import sqlite3
 from unittest.mock import patch
 
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import (
@@ -885,6 +886,9 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
 
     hass.states.async_set("test.lost", "on", {})
 
+    sqlite3_exception = DatabaseError("statement", {}, [])
+    sqlite3_exception.__cause__ = sqlite3.DatabaseError()
+
     with patch.object(
         hass.data[DATA_INSTANCE].event_session,
         "close",
@@ -894,11 +898,16 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
         await hass.async_add_executor_job(corrupt_db_file, test_db_file)
         await async_wait_recording_done_without_instance(hass)
 
-        # This state will not be recorded because
-        # the database corruption will be discovered
-        # and we will have to rollback to recover
-        hass.states.async_set("test.one", "off", {})
-        await async_wait_recording_done_without_instance(hass)
+        with patch.object(
+            hass.data[DATA_INSTANCE].event_session,
+            "commit",
+            side_effect=[sqlite3_exception, None],
+        ):
+            # This state will not be recorded because
+            # the database corruption will be discovered
+            # and we will have to rollback to recover
+            hass.states.async_set("test.one", "off", {})
+            await async_wait_recording_done_without_instance(hass)
 
     assert "Unrecoverable sqlite3 database corruption detected" in caplog.text
     assert "The system will rename the corrupt database file" in caplog.text
