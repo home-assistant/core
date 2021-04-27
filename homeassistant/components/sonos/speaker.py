@@ -281,7 +281,7 @@ class SonosSpeaker:
 
         Observed to be either BATTERY or SONOS_CHARGING_RING or USB_POWER.
         """
-        return self.battery_info.get("PowerSource")
+        return self.battery_info["PowerSource"]
 
     @property
     def charging(self) -> bool:
