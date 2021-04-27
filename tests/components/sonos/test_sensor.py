@@ -24,6 +24,7 @@ async def test_entity_registry_unsupported(hass, config_entry, config, soco):
 
     assert "media_player.zone_a" in entity_registry.entities
     assert "sensor.zone_a_battery" not in entity_registry.entities
+    assert "binary_sensor.zone_a_power" not in entity_registry.entities
 
 
 async def test_entity_registry_supported(hass, config_entry, config, soco):
@@ -34,17 +35,7 @@ async def test_entity_registry_supported(hass, config_entry, config, soco):
 
     assert "media_player.zone_a" in entity_registry.entities
     assert "sensor.zone_a_battery" in entity_registry.entities
-
-
-async def test_battery_missing_attributes(hass, config_entry, config, soco):
-    """Test sonos device with unknown battery state."""
-    soco.get_battery_info.return_value = {}
-
-    await setup_platform(hass, config_entry, config)
-
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-
-    assert entity_registry.entities.get("sensor.zone_a_battery") is None
+    assert "binary_sensor.zone_a_power" in entity_registry.entities
 
 
 async def test_battery_attributes(hass, config_entry, config, soco):
