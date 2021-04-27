@@ -49,10 +49,10 @@ async def test_form(hass: HomeAssistant) -> None:
         (asyncio.TimeoutError, "cannot_connect"),
     ],
 )
-async def test_form_unknown_error(
+async def test_form_error(
     side_effect: Exception, error: str, hass: HomeAssistant
 ) -> None:
-    """Test we handle an unexpected/unknown error."""
+    """Test we handle error situations."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
