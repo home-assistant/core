@@ -8,7 +8,7 @@ from vulcan import Account, Keystore, Vulcan
 from vulcan._utils import VulcanAPIException
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_PIN, CONF_REGION, CONF_SCAN_INTERVAL, CONF_TOKEN
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -19,9 +19,9 @@ from .register import register
 _LOGGER = logging.getLogger(__name__)
 
 LOGIN_SCHEMA = {
-    vol.Required("token"): str,
-    vol.Required("symbol"): str,
-    vol.Required("pin"): str,
+    vol.Required(CONF_TOKEN): str,
+    vol.Required(CONF_REGION): str,
+    vol.Required(CONF_PIN): str,
 }
 
 
@@ -37,7 +37,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return VulcanOptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input=None):
-        """Get login credentials from the user."""
+        """Handle config flow."""
         if self._async_current_entries():
             return await self.async_step_add_student()
 
@@ -52,9 +52,9 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 credentials = await register(
                     self.hass,
-                    user_input["token"],
-                    user_input["symbol"],
-                    user_input["pin"],
+                    user_input[CONF_TOKEN],
+                    user_input[CONF_REGION],
+                    user_input[CONF_PIN],
                 )
             except VulcanAPIException as err:
                 if str(err) == "Invalid token!" or str(err) == "Invalid token.":
@@ -234,9 +234,9 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 credentials = await register(
                     self.hass,
-                    user_input["token"],
-                    user_input["symbol"],
-                    user_input["pin"],
+                    user_input[CONF_TOKEN],
+                    user_input[CONF_REGION],
+                    user_input[CONF_PIN],
                 )
             except VulcanAPIException as err:
                 if str(err) == "Invalid token!" or str(err) == "Invalid token.":
