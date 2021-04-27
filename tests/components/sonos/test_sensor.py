@@ -2,6 +2,8 @@
 from pysonos.exceptions import NotSupportedException
 
 from homeassistant.components.sonos import DOMAIN
+from homeassistant.components.sonos.binary_sensor import ATTR_BATTERY_POWER_SOURCE
+from homeassistant.const import STATE_ON
 from homeassistant.setup import async_setup_component
 
 
@@ -22,6 +24,7 @@ async def test_entity_registry_unsupported(hass, config_entry, config, soco):
 
     assert "media_player.zone_a" in entity_registry.entities
     assert "sensor.zone_a_battery" not in entity_registry.entities
+    assert "binary_sensor.zone_a_power" not in entity_registry.entities
 
 
 async def test_entity_registry_supported(hass, config_entry, config, soco):
@@ -32,17 +35,7 @@ async def test_entity_registry_supported(hass, config_entry, config, soco):
 
     assert "media_player.zone_a" in entity_registry.entities
     assert "sensor.zone_a_battery" in entity_registry.entities
-
-
-async def test_battery_missing_attributes(hass, config_entry, config, soco):
-    """Test sonos device with unknown battery state."""
-    soco.get_battery_info.return_value = {}
-
-    await setup_platform(hass, config_entry, config)
-
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-
-    assert entity_registry.entities.get("sensor.zone_a_battery") is None
+    assert "binary_sensor.zone_a_power" in entity_registry.entities
 
 
 async def test_battery_attributes(hass, config_entry, config, soco):
@@ -53,9 +46,12 @@ async def test_battery_attributes(hass, config_entry, config, soco):
 
     battery = entity_registry.entities["sensor.zone_a_battery"]
     battery_state = hass.states.get(battery.entity_id)
-
-    # confirm initial state from conftest
     assert battery_state.state == "100"
     assert battery_state.attributes.get("unit_of_measurement") == "%"
-    assert battery_state.attributes.get("charging")
-    assert battery_state.attributes.get("power_source") == "SONOS_CHARGING_RING"
+
+    power = entity_registry.entities["binary_sensor.zone_a_power"]
+    power_state = hass.states.get(power.entity_id)
+    assert power_state.state == STATE_ON
+    assert (
+        power_state.attributes.get(ATTR_BATTERY_POWER_SOURCE) == "SONOS_CHARGING_RING"
+    )
