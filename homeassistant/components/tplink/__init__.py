@@ -25,6 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "tplink"
 
+PLATFORMS = [CONF_LIGHT, CONF_SWITCH]
+
 TPLINK_HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
 
 
@@ -109,17 +111,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigType):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    forward_unload = hass.config_entries.async_forward_entry_unload
-    remove_lights = remove_switches = False
-    if hass.data[DOMAIN][CONF_LIGHT]:
-        remove_lights = await forward_unload(entry, "light")
-    if hass.data[DOMAIN][CONF_SWITCH]:
-        remove_switches = await forward_unload(entry, "switch")
-
-    if remove_lights or remove_switches:
+    platforms = [platform for platform in PLATFORMS if platform in hass.data[DOMAIN]]
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
+    if unload_ok:
         hass.data[DOMAIN].clear()
-        return True
 
-    # We were not able to unload the platforms, either because there
-    # were none or one of the forward_unloads failed.
-    return False
+    return unload_ok
