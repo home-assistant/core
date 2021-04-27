@@ -4,14 +4,13 @@ from __future__ import annotations
 from collections.abc import Sequence
 import math
 
-from pysmartthings import Capability
-
 from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
 from homeassistant.util.percentage import (
     int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+from pysmartthings import Capability
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
