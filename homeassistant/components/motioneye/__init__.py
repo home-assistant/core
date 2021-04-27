@@ -171,7 +171,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def _async_process_motioneye_cameras() -> None:
         """Process motionEye camera additions and removals."""
         inbound_camera: set[tuple[str, str, int]] = set()
-        assert coordinator.data
+        assert coordinator.data is not None
         if KEY_CAMERAS not in coordinator.data:
             return
 
