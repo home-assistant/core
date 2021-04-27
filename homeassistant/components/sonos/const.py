@@ -1,6 +1,7 @@
 """Const for Sonos."""
 import datetime
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
@@ -22,7 +23,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 
 DOMAIN = "sonos"
 DATA_SONOS = "sonos_media_player"
-PLATFORMS = {MP_DOMAIN, SENSOR_DOMAIN}
+PLATFORMS = {BINARY_SENSOR_DOMAIN, MP_DOMAIN, SENSOR_DOMAIN}
 
 SONOS_ARTIST = "artists"
 SONOS_ALBUM = "albums"
@@ -128,12 +129,12 @@ PLAYABLE_MEDIA_TYPES = [
 ]
 
 SONOS_CONTENT_UPDATE = "sonos_content_update"
-SONOS_DISCOVERY_UPDATE = "sonos_discovery_update"
+SONOS_CREATE_BATTERY = "sonos_create_battery"
+SONOS_CREATE_MEDIA_PLAYER = "sonos_create_media_player"
 SONOS_ENTITY_CREATED = "sonos_entity_created"
 SONOS_ENTITY_UPDATE = "sonos_entity_update"
 SONOS_GROUP_UPDATE = "sonos_group_update"
 SONOS_MEDIA_UPDATE = "sonos_media_update"
-SONOS_PROPERTIES_UPDATE = "sonos_properties_update"
 SONOS_PLAYER_RECONNECTED = "sonos_player_reconnected"
 SONOS_STATE_UPDATED = "sonos_state_updated"
 SONOS_VOLUME_UPDATE = "sonos_properties_update"
