@@ -11,9 +11,9 @@ from typing import Any, Callable
 import aiohttp
 from tibber import Tibber, TibberHome
 
-from homeassistant.components.sensor import DEVICE_CLASS_POWER, SensorEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import POWER_WATT
+from homeassistant.const import DEVICE_CLASS_POWER, POWER_WATT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
@@ -243,6 +243,6 @@ class TibberSensorRT(TibberSensor):
         return f"{self.device_id}_rt_consumption"
 
     @property
-    def device_class(self) -> Any:
+    def device_class(self) -> str:
         """Return the device class of the sensor."""
         return DEVICE_CLASS_POWER
