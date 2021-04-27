@@ -4,7 +4,7 @@ import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
-from aiohttp import web  # type: ignore
+from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadGateway
 from motioneye_client.client import (
     MotionEyeClientError,
@@ -114,7 +114,7 @@ async def test_setup_camera_new_data_same(hass: HomeAssistant) -> None:
     """Test a data refresh with the same data."""
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
-    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)  # type: ignore[no-untyped-call]
     await hass.async_block_till_done()
     assert hass.states.get(TEST_CAMERA_ENTITY_ID)
 
@@ -143,13 +143,13 @@ async def test_setup_camera_new_data_camera_removed(hass: HomeAssistant) -> None
 
     await hass.async_block_till_done()
     assert hass.states.get(TEST_CAMERA_ENTITY_ID)
-    assert device_registry.async_get_device({TEST_CAMERA_DEVICE_IDENTIFIER})
+    assert device_registry.async_get_device({TEST_CAMERA_DEVICE_IDENTIFIER})  # type: ignore[arg-type]
 
     client.async_get_cameras = AsyncMock(return_value={KEY_CAMERAS: []})
-    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)  # type: ignore[no-untyped-call]
     await hass.async_block_till_done()
     assert not hass.states.get(TEST_CAMERA_ENTITY_ID)
-    assert not device_registry.async_get_device({TEST_CAMERA_DEVICE_IDENTIFIER})
+    assert not device_registry.async_get_device({TEST_CAMERA_DEVICE_IDENTIFIER})  # type: ignore[arg-type]
     assert not device_registry.async_get_device({(DOMAIN, old_device_id)})
     assert not entity_registry.async_get_entity_id(
         DOMAIN, "camera", old_entity_unique_id
@@ -162,9 +162,10 @@ async def test_setup_camera_new_data_error(hass: HomeAssistant) -> None:
     await setup_mock_motioneye_config_entry(hass, client=client)
     assert hass.states.get(TEST_CAMERA_ENTITY_ID)
     client.async_get_cameras = AsyncMock(side_effect=MotionEyeClientError)
-    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)  # type: ignore[no-untyped-call]
     await hass.async_block_till_done()
     entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
+    assert entity_state
     assert entity_state.state == "unavailable"
 
 
@@ -173,14 +174,16 @@ async def test_setup_camera_new_data_without_streaming(hass: HomeAssistant) -> N
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
     entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
+    assert entity_state
     assert entity_state.state == "idle"
 
     cameras = copy.deepcopy(TEST_CAMERAS)
     cameras[KEY_CAMERAS][0][KEY_VIDEO_STREAMING] = False
     client.async_get_cameras = AsyncMock(return_value=cameras)
-    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)  # type: ignore[no-untyped-call]
     await hass.async_block_till_done()
     entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
+    assert entity_state
     assert entity_state.state == "unavailable"
 
 
@@ -283,7 +286,7 @@ async def test_state_attributes(hass: HomeAssistant) -> None:
     cameras = copy.deepcopy(TEST_CAMERAS)
     cameras[KEY_CAMERAS][0][KEY_MOTION_DETECTION] = False
     client.async_get_cameras = AsyncMock(return_value=cameras)
-    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)  # type: ignore[no-untyped-call]
     await hass.async_block_till_done()
 
     entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
@@ -299,10 +302,10 @@ async def test_device_info(hass: HomeAssistant) -> None:
     device_identifier = get_motioneye_device_identifier(entry.entry_id, TEST_CAMERA_ID)
     device_registry = dr.async_get(hass)
 
-    device = device_registry.async_get_device({device_identifier})
+    device = device_registry.async_get_device({device_identifier})  # type: ignore[arg-type]
     assert device
     assert device.config_entries == {TEST_CONFIG_ENTRY_ID}
-    assert device.identifiers == {device_identifier}
+    assert device.identifiers == {device_identifier}  # type: ignore[comparison-overlap]
     assert device.manufacturer == MOTIONEYE_MANUFACTURER
     assert device.model == MOTIONEYE_MANUFACTURER
     assert device.name == TEST_CAMERA_NAME
