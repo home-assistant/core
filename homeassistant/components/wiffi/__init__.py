@@ -1,5 +1,4 @@
 """Component for wiffi support."""
-import asyncio
 from datetime import timedelta
 import errno
 import logging
@@ -54,10 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         _LOGGER.error("Port %s already in use", config_entry.data[CONF_PORT])
         raise ConfigEntryNotReady from exc
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
@@ -72,13 +68,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     api: WiffiIntegrationApi = hass.data[DOMAIN][config_entry.entry_id]
     await api.server.close_server()
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
     if unload_ok:
         api = hass.data[DOMAIN].pop(config_entry.entry_id)
