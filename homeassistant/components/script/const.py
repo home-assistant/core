@@ -11,6 +11,7 @@ CONF_ADVANCED = "advanced"
 CONF_EXAMPLE = "example"
 CONF_FIELDS = "fields"
 CONF_REQUIRED = "required"
+CONF_TRACE = "trace"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 

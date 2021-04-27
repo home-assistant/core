@@ -8,6 +8,7 @@ from homeassistant.components.blueprint import (
     BlueprintInputs,
     is_blueprint_instance_config,
 )
+from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
 from homeassistant.config import async_log_exception, config_without_domain
 from homeassistant.const import (
     CONF_ALIAS,
@@ -28,12 +29,20 @@ from homeassistant.helpers.script import (
 )
 from homeassistant.helpers.selector import validate_selector
 
-from .const import CONF_ADVANCED, CONF_EXAMPLE, CONF_FIELDS, CONF_REQUIRED, DOMAIN
+from .const import (
+    CONF_ADVANCED,
+    CONF_EXAMPLE,
+    CONF_FIELDS,
+    CONF_REQUIRED,
+    CONF_TRACE,
+    DOMAIN,
+)
 from .helpers import async_get_blueprints
 
 SCRIPT_ENTITY_SCHEMA = make_script_schema(
     {
         vol.Optional(CONF_ALIAS): cv.string,
+        vol.Optional(CONF_TRACE, default={}): TRACE_CONFIG_SCHEMA,
         vol.Optional(CONF_ICON): cv.icon,
         vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_DESCRIPTION, default=""): cv.string,

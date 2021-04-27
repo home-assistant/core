@@ -8,7 +8,6 @@ from typing import Any, Dict, cast
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
 from homeassistant.components.blueprint import BlueprintInputs
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -50,6 +49,7 @@ from .const import (
     ATTR_LAST_TRIGGERED,
     ATTR_VARIABLES,
     CONF_FIELDS,
+    CONF_TRACE,
     DOMAIN,
     ENTITY_ID_FORMAT,
     EVENT_SCRIPT_STARTED,
