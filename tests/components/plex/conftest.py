@@ -278,6 +278,12 @@ def session_plexweb_fixture():
     return load_fixture("plex/session_plexweb.xml")
 
 
+@pytest.fixture(name="session_transient", scope="session")
+def session_transient_fixture():
+    """Load a transient session payload and return it."""
+    return load_fixture("plex/session_transient.xml")
+
+
 @pytest.fixture(name="security_token", scope="session")
 def security_token_fixture():
     """Load a security token payload and return it."""
@@ -400,6 +406,7 @@ def setup_plex_server(
     session_default,
     session_photo,
     session_plexweb,
+    session_transient,
 ):
     """Set up and return a mocked Plex server instance."""
 
@@ -415,6 +422,8 @@ def setup_plex_server(
             session = session_plexweb
         elif session_type == "photo":
             session = session_photo
+        elif session_type == "transient":
+            session = session_transient
         else:
             session = session_default
 

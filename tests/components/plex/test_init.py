@@ -8,13 +8,20 @@ import plexapi
 import requests
 
 import homeassistant.components.plex.const as const
+from homeassistant.components.plex.models import TRANSIENT_SECTION
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
 )
-from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL, STATE_IDLE
+from homeassistant.const import (
+    CONF_TOKEN,
+    CONF_URL,
+    CONF_VERIFY_SSL,
+    STATE_IDLE,
+    STATE_PLAYING,
+)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -106,6 +113,26 @@ async def test_setup_with_photo_session(hass, entry, setup_plex_server):
 
     sensor = hass.states.get("sensor.plex_plex_server_1")
     assert sensor.state == "0"
+
+
+async def test_setup_with_transient_session(hass, entry, setup_plex_server):
+    """Test setup component with a transient session."""
+    await setup_plex_server(session_type="transient")
+
+    assert len(hass.config_entries.async_entries(const.DOMAIN)) == 1
+    assert entry.state == ENTRY_STATE_LOADED
+    await hass.async_block_till_done()
+
+    media_player = hass.states.get(
+        "media_player.plex_plex_for_android_tv_shield_android_tv"
+    )
+    assert media_player.state == STATE_PLAYING
+    assert media_player.attributes["media_library_title"] == TRANSIENT_SECTION
+
+    await wait_for_debouncer(hass)
+
+    sensor = hass.states.get("sensor.plex_plex_server_1")
+    assert sensor.state == "1"
 
 
 async def test_setup_when_certificate_changed(
