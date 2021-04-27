@@ -14,7 +14,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DATA_COORDINATOR, DOMAIN, IALARM_TO_HASS
 
-PLATFORM = "alarm_control_panel"
+PLATFORMS = ["alarm_control_panel"]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -39,20 +39,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         DATA_COORDINATOR: coordinator,
     }
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, PLATFORM)
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload iAlarm config."""
-    unload_ok = await hass.config_entries.async_forward_entry_unload(entry, PLATFORM)
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok
 
 
