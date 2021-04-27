@@ -2,6 +2,7 @@ name: Build images
 
 # yamllint disable-line rule:truthy
 on:
+  workflow_dispatch:
   release:
     types: ["published"]
   schedule:
@@ -27,7 +28,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.2.1
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -50,13 +51,13 @@ jobs:
     name: Build PyPi package
     needs: init
     runs-on: ubuntu-latest
-    if: needs.init.outputs.publish == "true"
+    if: needs.init.outputs.publish == 'true'
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v2
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.2.1
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -86,13 +87,13 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        if: needs.init.outputs.channel == "dev"
-        uses: actions/setup-python@v2.2.1
+        if: needs.init.outputs.channel == 'dev'
+        uses: actions/setup-python@v2.2.2
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
       - name: Adjust nightly version
-        if: needs.init.outputs.channel == "dev"
+        if: needs.init.outputs.channel == 'dev'
         shell: bash
         run: |
           python3 -m pip install packaging
@@ -125,7 +126,7 @@ jobs:
             --generic ${{ needs.init.outputs.version }}
 
   build_machine:
-    name: Build ${{ matrix.arch }} machine core image
+    name: Build ${{ matrix.machine }} machine core image
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     strategy:
@@ -133,6 +134,7 @@ jobs:
         machine:
           - generic-x86-64
           - intel-nuc
+          - odroid-c2
           - odroid-c4
           - odroid-n2
           - odroid-xu
@@ -169,11 +171,10 @@ jobs:
         with:
           args: |
             $BUILD_ARGS \
-            --${{ matrix.arch }} \
             --target /data/machine \
             --with-codenotary "${{ secrets.VCN_USER }}" "${{ secrets.VCN_PASSWORD }}" "${{ secrets.VCN_ORG }}" \
             --validate-from "${{ secrets.VCN_ORG }}" \
-            --machine "${{ needs.init.outputs.version }}=${{ matrix.machine }}""
+            --machine "${{ needs.init.outputs.version }}=${{ matrix.machine }}"
 
   publish_ha:
     name: Publish version files
@@ -199,7 +200,7 @@ jobs:
           channel: ${{ needs.init.outputs.channel }}
 
       - name: Update version file (stable -> beta)
-        if: needs.init.outputs.channel == "stable"
+        if: needs.init.outputs.channel == 'stable'
         uses: home-assistant/actions/helpers/version-push@master
         with:
           key: "homeassistant[]"
@@ -236,7 +237,7 @@ jobs:
           export DOCKER_CLI_EXPERIMENTAL=enabled
 
           function create_manifest() {
-            local docker_reg={1}
+            local docker_reg=${1}
             local tag_l=${2}
             local tag_r=${3}
 
@@ -271,7 +272,7 @@ jobs:
           }
 
           function validate_image() {
-            local image={1}
+            local image=${1}
             state="$(vcn authenticate --org home-assistant.io --output json docker://${image} | jq '.verification.status // 2')"
             if [[ "${state}" != "0" ]]; then
               echo "Invalid signature!"
