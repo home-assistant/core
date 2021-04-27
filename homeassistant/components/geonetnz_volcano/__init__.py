@@ -131,12 +131,6 @@ class GeonetnzVolcanoFeedEntityManager:
 
         self._hass.config_entries.async_setup_platforms(self._config_entry, PLATFORMS)
 
-        self._hass.async_create_task(
-            self._hass.config_entries.async_forward_entry_setup(
-                self._config_entry, "sensor"
-            )
-        )
-
         async def update(event_time):
             """Update."""
             await self.async_update()
