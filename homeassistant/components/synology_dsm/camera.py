@@ -13,6 +13,7 @@ from synology_dsm.exceptions import (
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -43,12 +44,17 @@ async def async_setup_entry(
         return
 
     # initial data fetch
-    coordinator: DataUpdateCoordinator = data[COORDINATOR_CAMERAS]
+    coordinator: DataUpdateCoordinator[dict[str, dict[str, SynoCamera]]] = data[
+        COORDINATOR_CAMERAS
+    ]
     await coordinator.async_refresh()
+
+    if coordinator.data is None:
+        raise ConfigEntryNotReady
 
     async_add_entities(
         SynoDSMCamera(api, coordinator, camera_id)
-        for camera_id in coordinator.data["cameras"]  # type: ignore[index]
+        for camera_id in coordinator.data["cameras"]
     )
 
 
@@ -56,15 +62,19 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
     """Representation a Synology camera."""
 
     def __init__(
-        self, api: SynoApi, coordinator: DataUpdateCoordinator, camera_id: int
+        self,
+        api: SynoApi,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, SynoCamera]]],
+        camera_id: str,
     ) -> None:
         """Initialize a Synology camera."""
+        assert coordinator.data is not None
         super().__init__(
             api,
             f"{SynoSurveillanceStation.CAMERA_API_KEY}:{camera_id}",
             {
-                ENTITY_NAME: coordinator.data["cameras"][camera_id].name,  # type: ignore[index]
-                ENTITY_ENABLE: coordinator.data["cameras"][camera_id].is_enabled,  # type: ignore[index]
+                ENTITY_NAME: coordinator.data["cameras"][camera_id].name,
+                ENTITY_ENABLE: coordinator.data["cameras"][camera_id].is_enabled,
                 ENTITY_CLASS: None,
                 ENTITY_ICON: None,
                 ENTITY_UNIT: None,
@@ -78,7 +88,8 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
     @property
     def camera_data(self) -> SynoCamera:
         """Camera data."""
-        return self.coordinator.data["cameras"][self._camera_id]  # type: ignore[index]
+        assert self.coordinator.data is not None
+        return self.coordinator.data["cameras"][self._camera_id]
 
     @property
     def device_info(self) -> DeviceInfo:

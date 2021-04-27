@@ -13,7 +13,13 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SynoApi, SynologyDSMBaseEntity
-from .const import COORDINATOR_SWITCHES, DOMAIN, SURVEILLANCE_SWITCH, SYNO_API
+from .const import (
+    COORDINATOR_SWITCHES,
+    DOMAIN,
+    SURVEILLANCE_SWITCH,
+    SYNO_API,
+    EntityInfo,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +58,7 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
         self,
         api: SynoApi,
         entity_type: str,
-        entity_info: dict[str, Any],
+        entity_info: EntityInfo,
         version: str,
         coordinator: DataUpdateCoordinator,
     ) -> None:
@@ -68,7 +74,8 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        return self.coordinator.data["switches"][self.entity_type]  # type: ignore[index]
+        assert self.coordinator.data is not None
+        return self.coordinator.data["switches"][self.entity_type]
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on Home mode."""

@@ -31,6 +31,7 @@ from .const import (
     SYNO_API,
     TEMP_SENSORS_KEYS,
     UTILISATION_SENSORS,
+    EntityInfo,
 )
 
 
@@ -159,7 +160,7 @@ class SynoDSMInfoSensor(SynoDSMSensor, SensorEntity):
         self,
         api: SynoApi,
         entity_type: str,
-        entity_info: dict[str, Any],
+        entity_info: EntityInfo,
         coordinator: DataUpdateCoordinator,
     ) -> None:
         """Initialize the Synology SynoDSMInfoSensor entity."""

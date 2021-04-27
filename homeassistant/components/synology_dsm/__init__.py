@@ -15,6 +15,7 @@ from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.dsm.network import SynoDSMNetwork
 from synology_dsm.api.storage.storage import SynoStorage
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
+from synology_dsm.api.surveillance_station.camera import SynoCamera
 from synology_dsm.exceptions import (
     SynologyDSMAPIErrorException,
     SynologyDSMLoginFailedException,
@@ -75,6 +76,7 @@ from .const import (
     SYSTEM_LOADED,
     UNDO_UPDATE_LISTENER,
     UTILISATION_SENSORS,
+    EntityInfo,
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -154,7 +156,7 @@ async def async_setup_entry(  # noqa: C901
         ):
             return None
 
-        entity_type = ""
+        entity_type: str | None = None
         for entity_key, entity_attrs in entries.items():
             if (
                 device_id
@@ -171,6 +173,9 @@ async def async_setup_entry(  # noqa: C901
 
             if entity_attrs[ENTITY_NAME] == label:
                 entity_type = entity_key
+
+        if entity_type is None:
+            return None
 
         new_unique_id = "_".join([serial, entity_type])
         if device_id:
@@ -219,7 +224,7 @@ async def async_setup_entry(  # noqa: C901
         )
 
     async def async_coordinator_update_data_cameras() -> dict[
-        str, dict[str, Any]
+        str, dict[str, SynoCamera]
     ] | None:
         """Fetch all camera data from api."""
         if not hass.data[DOMAIN][entry.unique_id][SYSTEM_LOADED]:
@@ -588,8 +593,8 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
         self,
         api: SynoApi,
         entity_type: str,
-        entity_info: dict[str, Any],
-        coordinator: DataUpdateCoordinator,
+        entity_info: EntityInfo,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
     ) -> None:
         """Initialize the Synology DSM entity."""
         super().__init__(coordinator)
@@ -658,8 +663,8 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
         self,
         api: SynoApi,
         entity_type: str,
-        entity_info: dict[str, Any],
-        coordinator: DataUpdateCoordinator,
+        entity_info: EntityInfo,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
         device_id: str = None,
     ) -> None:
         """Initialize the Synology DSM disk or volume entity."""
