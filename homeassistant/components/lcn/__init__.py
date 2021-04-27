@@ -1,5 +1,4 @@
 """Support for LCN devices."""
-import asyncio
 import logging
 
 import pypck
@@ -95,10 +94,7 @@ async def async_setup_entry(hass, config_entry):
         entity_registry.async_clear_config_entry(config_entry.entry_id)
 
     # forward config_entry to components
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     # register service calls
     for service_name, service in SERVICES:
@@ -113,13 +109,8 @@ async def async_setup_entry(hass, config_entry):
 async def async_unload_entry(hass, config_entry):
     """Close connection to PCHK host represented by config_entry."""
     # forward unloading to platforms
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
 
     if unload_ok and config_entry.entry_id in hass.data[DOMAIN]:

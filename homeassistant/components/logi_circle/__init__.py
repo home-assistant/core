@@ -179,10 +179,7 @@ async def async_setup_entry(hass, entry):
 
     hass.data[DATA_LOGI] = logi_circle
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def service_handler(service):
         """Dispatch service calls to target entities."""
@@ -229,8 +226,7 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    for platform in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(entry, platform)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     logi_circle = hass.data.pop(DATA_LOGI)
 
@@ -238,4 +234,4 @@ async def async_unload_entry(hass, entry):
     # and clear all locally cached tokens
     await logi_circle.auth_provider.clear_authorization()
 
-    return True
+    return unload_ok

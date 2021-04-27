@@ -23,8 +23,6 @@ async def test_form_user(hass):
         "homeassistant.components.myq.config_flow.pymyq.login",
         return_value=True,
     ), patch(
-        "homeassistant.components.myq.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.myq.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -40,7 +38,6 @@ async def test_form_user(hass):
         "username": "test-username",
         "password": "test-password",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
