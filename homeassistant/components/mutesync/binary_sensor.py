@@ -43,7 +43,9 @@ class MuteStatus(BinarySensorEntity):
     @property
     def is_on(self):
         """Return the state of the sensor."""
-        return self._is_on
+        if not status["in_meeting"]:
+        	return None
+        return status["muted"]
 
     @property
     def device_info(self):
