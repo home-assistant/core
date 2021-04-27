@@ -47,7 +47,7 @@ from .const import (
     CONF_SWAP_BYTE,
     CONF_SWAP_NONE,
     CONF_SWAP_WORD,
-    CONF_SWAP_WORDBYTE,
+    CONF_SWAP_WORD_BYTE,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
@@ -160,7 +160,7 @@ async def async_setup_platform(
         if entry.get(CONF_SWAP) != CONF_SWAP_NONE:
             if entry[CONF_SWAP] == CONF_SWAP_BYTE:
                 regs_needed = 1
-            else:  # CONF_SWAP_WORDBYTE, CONF_SWAP_WORD
+            else:  # CONF_SWAP_WORD_BYTE, CONF_SWAP_WORD
                 regs_needed = 2
             if (
                 entry[CONF_COUNT] < regs_needed
@@ -269,7 +269,7 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
 
     def _swap_registers(self, registers):
         """Do swap as needed."""
-        if self._swap in [CONF_SWAP_BYTE, CONF_SWAP_WORDBYTE]:
+        if self._swap in [CONF_SWAP_BYTE, CONF_SWAP_WORD_BYTE]:
             # convert [12][34] --> [21][43]
             for i, register in enumerate(registers):
                 registers[i] = int.from_bytes(
@@ -277,7 +277,7 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
                     byteorder="big",
                     signed=False,
                 )
-        if self._swap in [CONF_SWAP_WORD, CONF_SWAP_WORDBYTE]:
+        if self._swap in [CONF_SWAP_WORD, CONF_SWAP_WORD_BYTE]:
             # convert [12][34] ==> [34][12]
             registers.reverse()
         return registers

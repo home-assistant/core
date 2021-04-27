@@ -19,7 +19,7 @@ from homeassistant.components.modbus.const import (
     CONF_SWAP_BYTE,
     CONF_SWAP_NONE,
     CONF_SWAP_WORD,
-    CONF_SWAP_WORDBYTE,
+    CONF_SWAP_WORD_BYTE,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
@@ -147,7 +147,7 @@ from .conftest import base_config_test, base_test
             {
                 CONF_ADDRESS: 51,
                 CONF_COUNT: 2,
-                CONF_SWAP: CONF_SWAP_WORDBYTE,
+                CONF_SWAP: CONF_SWAP_WORD_BYTE,
             },
         ),
     ],
@@ -486,7 +486,7 @@ async def test_config_wrong_struct_sensor(hass, do_config):
             {
                 CONF_COUNT: 2,
                 CONF_DATA_TYPE: DATA_TYPE_INT,
-                CONF_SWAP: CONF_SWAP_WORDBYTE,
+                CONF_SWAP: CONF_SWAP_WORD_BYTE,
             },
             [0x0102, 0x0304],
             str(int(0x04030201)),
@@ -595,7 +595,7 @@ async def test_restore_state_sensor(hass):
 
 @pytest.mark.parametrize(
     "swap_type",
-    [CONF_SWAP_WORD, CONF_SWAP_WORDBYTE],
+    [CONF_SWAP_WORD, CONF_SWAP_WORD_BYTE],
 )
 async def test_swap_sensor_wrong_config(hass, caplog, swap_type):
     """Run test for sensor swap."""

@@ -82,7 +82,7 @@ from .const import (
     CONF_SWAP_BYTE,
     CONF_SWAP_NONE,
     CONF_SWAP_WORD,
-    CONF_SWAP_WORDBYTE,
+    CONF_SWAP_WORD_BYTE,
     CONF_TARGET_TEMP,
     CONF_VERIFY_REGISTER,
     CONF_VERIFY_STATE,
@@ -211,7 +211,7 @@ SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         ),
         vol.Optional(CONF_REVERSE_ORDER): cv.boolean,
         vol.Optional(CONF_SWAP, default=CONF_SWAP_NONE): vol.In(
-            [CONF_SWAP_NONE, CONF_SWAP_BYTE, CONF_SWAP_WORD, CONF_SWAP_WORDBYTE]
+            [CONF_SWAP_NONE, CONF_SWAP_BYTE, CONF_SWAP_WORD, CONF_SWAP_WORD_BYTE]
         ),
         vol.Optional(CONF_SCALE, default=1): number,
         vol.Optional(CONF_STRUCTURE): cv.string,
