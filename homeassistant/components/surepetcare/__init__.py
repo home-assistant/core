@@ -63,7 +63,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the openSenseMap air quality platform."""
+    """Set up the Sure Petcare integration."""
     conf = config[DOMAIN]
     hass.data.setdefault(DOMAIN, {})
 
@@ -144,7 +144,7 @@ class SurePetcareAPI:
         self.states = {}
 
     async def async_update(self, _: Any = None) -> None:
-        """Get the latest data from the Pi-hole."""
+        """Get the latest data from Sure Petcare."""
 
         try:
             self.states = await self.surepy.get_entities()
