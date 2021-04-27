@@ -155,6 +155,7 @@ FLOWS = [
     "motioneye",
     "mqtt",
     "mullvad",
+    "mutesync",
     "myq",
     "mysensors",
     "neato",

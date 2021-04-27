@@ -301,6 +301,7 @@ homeassistant/components/mpd/* @fabaff
 homeassistant/components/mqtt/* @emontnemery
 homeassistant/components/msteams/* @peroyvind
 homeassistant/components/mullvad/* @meichthys
+homeassistant/components/mutesync/* @currentoor
 homeassistant/components/my/* @home-assistant/core
 homeassistant/components/myq/* @bdraco
 homeassistant/components/mysensors/* @MartinHjelmare @functionpointer
