@@ -53,7 +53,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 import homeassistant.util.dt as dt_util
@@ -463,8 +463,7 @@ class CastDevice(MediaPlayerEntity):
         # Create a signed path.
         if media_id[0] == "/":
             # Sign URL with Home Assistant Cast User
-            entity_registry = er.async_get(self.hass)
-            config_entry_id = entity_registry.async_get(self.entity_id).config_entry_id
+            config_entry_id = self.registry_entry.config_entry_id
             config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
             user_id = config_entry.data["user_id"]
             user = await self.hass.auth.async_get_user(user_id)
