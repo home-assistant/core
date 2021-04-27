@@ -1,4 +1,5 @@
 """The tests for Netatmo component."""
+import asyncio
 from time import time
 from unittest.mock import AsyncMock, patch
 
@@ -309,6 +310,44 @@ async def test_setup_component_api_error(hass):
     ):
         mock_auth.return_value.async_post_request.side_effect = (
             pyatmo.exceptions.ApiError()
+        )
+
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        assert await async_setup_component(hass, "netatmo", {})
+
+    await hass.async_block_till_done()
+
+    mock_auth.assert_called_once()
+    mock_impl.assert_called_once()
+
+
+async def test_setup_component_api_timeout(hass):
+    """Test timeout on setup of the netatmo component."""
+    config_entry = MockConfigEntry(
+        domain="netatmo",
+        data={
+            "auth_implementation": "cloud",
+            "token": {
+                "refresh_token": "mock-refresh-token",
+                "access_token": "mock-access-token",
+                "type": "Bearer",
+                "expires_in": 60,
+                "expires_at": time() + 1000,
+                "scope": "read_station",
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
+    ) as mock_auth, patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+    ) as mock_impl, patch(
+        "homeassistant.components.webhook.async_generate_url"
+    ):
+        mock_auth.return_value.async_post_request.side_effect = (
+            asyncio.exceptions.TimeoutError()
         )
 
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
