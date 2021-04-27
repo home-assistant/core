@@ -4,7 +4,7 @@ import asyncio
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.trace.const import STORED_TRACES
+from homeassistant.components.trace.const import DEFAULT_STORED_TRACES
 from homeassistant.core import Context, callback
 from homeassistant.helpers.typing import UNDEFINED
 
@@ -12,7 +12,7 @@ from tests.common import assert_lists_same
 
 
 def _find_run_id(traces, trace_type, item_id):
-    """Find newest run_id for an script or automation."""
+    """Find newest run_id for a script or automation."""
     for trace in reversed(traces):
         if trace["domain"] == trace_type and trace["item_id"] == item_id:
             return trace["run_id"]
@@ -21,7 +21,7 @@ def _find_run_id(traces, trace_type, item_id):
 
 
 def _find_traces(traces, trace_type, item_id):
-    """Find traces for an script or automation."""
+    """Find traces for a script or automation."""
     return [
         trace
         for trace in traces
@@ -29,7 +29,9 @@ def _find_traces(traces, trace_type, item_id):
     ]
 
 
-async def _setup_automation_or_script(hass, domain, configs, script_config=None):
+async def _setup_automation_or_script(
+    hass, domain, configs, script_config=None, stored_traces=None
+):
     """Set up automations or scripts from automation config."""
     if domain == "script":
         configs = {config["id"]: {"sequence": config["action"]} for config in configs}
@@ -41,6 +43,16 @@ async def _setup_automation_or_script(hass, domain, configs, script_config=None)
             )
         else:
             configs = {**configs, **script_config}
+
+    if stored_traces is not None:
+        if domain == "script":
+            for config in configs.values():
+                config["trace"] = {}
+                config["trace"]["stored_traces"] = stored_traces
+        else:
+            for config in configs:
+                config["trace"] = {}
+                config["trace"]["stored_traces"] = stored_traces
 
     assert await async_setup_component(hass, domain, {domain: configs})
 
@@ -97,7 +109,7 @@ async def test_get_trace(
     context_key,
     condition_results,
 ):
-    """Test tracing an script or automation."""
+    """Test tracing a script or automation."""
     id = 1
 
     def next_id():
@@ -347,8 +359,11 @@ async def test_get_invalid_trace(hass, hass_ws_client, domain):
     assert response["error"]["code"] == "not_found"
 
 
-@pytest.mark.parametrize("domain", ["automation", "script"])
-async def test_trace_overflow(hass, hass_ws_client, domain):
+@pytest.mark.parametrize(
+    "domain,stored_traces",
+    [("automation", None), ("automation", 10), ("script", None), ("script", 10)],
+)
+async def test_trace_overflow(hass, hass_ws_client, domain, stored_traces):
     """Test the number of stored traces per script or automation is limited."""
     id = 1
 
@@ -367,7 +382,9 @@ async def test_trace_overflow(hass, hass_ws_client, domain):
         "trigger": {"platform": "event", "event_type": "test_event2"},
         "action": {"event": "another_event"},
     }
-    await _setup_automation_or_script(hass, domain, [sun_config, moon_config])
+    await _setup_automation_or_script(
+        hass, domain, [sun_config, moon_config], stored_traces=stored_traces
+    )
 
     client = await hass_ws_client()
 
@@ -390,7 +407,7 @@ async def test_trace_overflow(hass, hass_ws_client, domain):
     assert len(_find_traces(response["result"], domain, "sun")) == 1
 
     # Trigger "moon" enough times to overflow the max number of stored traces
-    for _ in range(STORED_TRACES):
+    for _ in range(stored_traces or DEFAULT_STORED_TRACES):
         await _run_automation_or_script(hass, domain, moon_config, "test_event2")
         await hass.async_block_till_done()
 
@@ -398,11 +415,48 @@ async def test_trace_overflow(hass, hass_ws_client, domain):
     response = await client.receive_json()
     assert response["success"]
     moon_traces = _find_traces(response["result"], domain, "moon")
-    assert len(moon_traces) == STORED_TRACES
+    assert len(moon_traces) == stored_traces or DEFAULT_STORED_TRACES
     assert moon_traces[0]
     assert int(moon_traces[0]["run_id"]) == int(moon_run_id) + 1
-    assert int(moon_traces[-1]["run_id"]) == int(moon_run_id) + STORED_TRACES
+    assert int(moon_traces[-1]["run_id"]) == int(moon_run_id) + (
+        stored_traces or DEFAULT_STORED_TRACES
+    )
     assert len(_find_traces(response["result"], domain, "sun")) == 1
+
+
+@pytest.mark.parametrize("domain", ["automation", "script"])
+async def test_trace_no_traces(hass, hass_ws_client, domain):
+    """Test the storing traces for a script or automation can be disabled."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    sun_config = {
+        "id": "sun",
+        "trigger": {"platform": "event", "event_type": "test_event"},
+        "action": {"event": "some_event"},
+    }
+    await _setup_automation_or_script(hass, domain, [sun_config], stored_traces=0)
+
+    client = await hass_ws_client()
+
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
+
+    # Trigger "sun" automation / script once
+    await _run_automation_or_script(hass, domain, sun_config, "test_event")
+    await hass.async_block_till_done()
+
+    # List traces
+    await client.send_json({"id": next_id(), "type": "trace/list", "domain": domain})
+    response = await client.receive_json()
+    assert response["success"]
+    assert len(_find_traces(response["result"], domain, "sun")) == 0
 
 
 @pytest.mark.parametrize(

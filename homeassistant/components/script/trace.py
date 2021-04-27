@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from typing import Any
 
 from homeassistant.components.trace import ActionTrace, async_store_trace
+from homeassistant.components.trace.const import CONF_STORED_TRACES
 from homeassistant.core import Context
 
 
@@ -23,10 +24,10 @@ class ScriptTrace(ActionTrace):
 
 
 @contextmanager
-def trace_script(hass, item_id, config, context):
+def trace_script(hass, item_id, config, context, trace_config):
     """Trace execution of a script."""
     trace = ScriptTrace(item_id, config, context)
-    async_store_trace(hass, trace)
+    async_store_trace(hass, trace, trace_config[CONF_STORED_TRACES])
 
     try:
         yield trace
