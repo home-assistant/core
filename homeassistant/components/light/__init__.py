@@ -71,7 +71,7 @@ VALID_COLOR_MODES = {
     COLOR_MODE_RGBWW,
 }
 COLOR_MODES_BRIGHTNESS = VALID_COLOR_MODES - {COLOR_MODE_ONOFF}
-COLOR_MODES_COLOR = {COLOR_MODE_HS, COLOR_MODE_RGB, COLOR_MODE_XY}
+COLOR_MODES_COLOR = {COLOR_MODE_HS, COLOR_MODE_RGB, COLOR_MODE_RGBW, COLOR_MODE_XY}
 
 
 def valid_supported_color_modes(color_modes):
@@ -318,7 +318,8 @@ async def async_setup(hass, config):
             if COLOR_MODE_RGB in supported_color_modes:
                 params[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
             elif COLOR_MODE_RGBW in supported_color_modes:
-                params[ATTR_RGBW_COLOR] = (*color_util.color_hs_to_RGB(*hs_color), 0)
+                rgb_color = color_util.color_hs_to_RGB(*hs_color)
+                params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif COLOR_MODE_RGBWW in supported_color_modes:
                 params[ATTR_RGBWW_COLOR] = (
                     *color_util.color_hs_to_RGB(*hs_color),
@@ -685,6 +686,13 @@ class LightEntity(ToggleEntity):
             data[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
             data[ATTR_RGB_COLOR] = tuple(int(x) for x in rgb_color[0:3])
             data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+        elif color_mode == COLOR_MODE_RGBW and self._light_internal_rgbw_color:
+            rgbw_color = self._light_internal_rgbw_color
+            rgb_color = color_util.color_rgbw_to_rgb(*rgbw_color)
+            data[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
+            data[ATTR_RGB_COLOR] = tuple(int(x) for x in rgb_color[0:3])
+            data[ATTR_RGBW_COLOR] = tuple(int(x) for x in rgbw_color[0:4])
+            data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
         return data
 
     @final
@@ -721,9 +729,6 @@ class LightEntity(ToggleEntity):
 
         if color_mode in COLOR_MODES_COLOR:
             data.update(self._light_internal_convert_color(color_mode))
-
-        if color_mode == COLOR_MODE_RGBW:
-            data[ATTR_RGBW_COLOR] = self._light_internal_rgbw_color
 
         if color_mode == COLOR_MODE_RGBWW:
             data[ATTR_RGBWW_COLOR] = self.rgbww_color
