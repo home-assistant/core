@@ -1,5 +1,4 @@
 """Support for Ambient Weather Station Service."""
-import asyncio
 
 from aioambient import Client
 from aioambient.errors import WebsocketError
@@ -369,14 +368,7 @@ async def async_unload_entry(hass, config_entry):
     ambient = hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
     hass.async_create_task(ambient.ws_disconnect())
 
-    tasks = [
-        hass.config_entries.async_forward_entry_unload(config_entry, platform)
-        for platform in PLATFORMS
-    ]
-
-    await asyncio.gather(*tasks)
-
-    return True
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass, config_entry):
@@ -475,12 +467,9 @@ class AmbientStation:
             # attempt forward setup of the config entry (because it will have
             # already been done):
             if not self._entry_setup_complete:
-                for platform in PLATFORMS:
-                    self._hass.async_create_task(
-                        self._hass.config_entries.async_forward_entry_setup(
-                            self._config_entry, platform
-                        )
-                    )
+                self._hass.config_entries.async_setup_platforms(
+                    self._config_entry, PLATFORMS
+                )
                 self._entry_setup_complete = True
             self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
 
