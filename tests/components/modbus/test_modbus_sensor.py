@@ -1,6 +1,6 @@
 """The tests for the Modbus sensor component."""
-from unittest import mock
 import logging
+from unittest import mock
 
 import pytest
 
@@ -591,6 +591,7 @@ async def test_restore_state_sensor(hass):
         )
         entity_id = f"{SENSOR_DOMAIN}.{sensor_name}"
         assert hass.states.get(entity_id).state == test_value
+
 
 @pytest.mark.parametrize(
     "swap_type",
