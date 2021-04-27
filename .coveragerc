@@ -978,6 +978,7 @@ omit =
     homeassistant/components/tankerkoenig/*
     homeassistant/components/tapsaff/binary_sensor.py
     homeassistant/components/tautulli/sensor.py
+    homeassistant/components/technicolor/*
     homeassistant/components/ted5000/sensor.py
     homeassistant/components/telegram/notify.py
     homeassistant/components/telegram_bot/*
