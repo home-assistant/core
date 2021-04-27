@@ -31,6 +31,8 @@ from .device import Device
 NOTIFICATION_ID = "upnp_notification"
 NOTIFICATION_TITLE = "UPnP/IGD Setup"
 
+PLATFORMS = ["sensor"]
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -144,9 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # Create sensors.
     _LOGGER.debug("Enabling sensors")
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-    )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     # Start device updater.
     await device.async_start()
@@ -166,4 +166,4 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         del hass.data[DOMAIN][DOMAIN_DEVICES][udn]
 
     _LOGGER.debug("Deleting sensors")
-    return await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
