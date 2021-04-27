@@ -54,6 +54,7 @@ from .core.const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
+    ZHA_OPTIONS,
 )
 from .core.helpers import LogMixin, async_get_zha_config_value
 from .core.registries import ZHA_ENTITIES
@@ -394,7 +395,10 @@ class Light(BaseLight, ZhaEntity):
             self._effect_list = effect_list
 
         self._default_transition = async_get_zha_config_value(
-            zha_device.gateway.config_entry, CONF_DEFAULT_LIGHT_TRANSITION, 0
+            zha_device.gateway.config_entry,
+            ZHA_OPTIONS,
+            CONF_DEFAULT_LIGHT_TRANSITION,
+            0,
         )
 
     @callback
@@ -553,7 +557,10 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         self._identify_channel = group.endpoint[Identify.cluster_id]
         self._debounced_member_refresh = None
         self._default_transition = async_get_zha_config_value(
-            zha_device.gateway.config_entry, CONF_DEFAULT_LIGHT_TRANSITION, 0
+            zha_device.gateway.config_entry,
+            ZHA_OPTIONS,
+            CONF_DEFAULT_LIGHT_TRANSITION,
+            0,
         )
 
     async def async_added_to_hass(self):
