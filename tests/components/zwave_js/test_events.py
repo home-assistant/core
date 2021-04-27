@@ -232,6 +232,7 @@ async def test_value_updated(hass, vision_security_zl7432, integration, client):
     assert events[0].data["property_name"] == "currentValue"
     assert events[0].data["property"] == "currentValue"
     assert events[0].data["value"] == 1
+    assert events[0].data["value_raw"] == 1
 
     # Try a value updated event on a value we aren't watching to make sure
     # no event fires
