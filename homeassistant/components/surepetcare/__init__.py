@@ -23,7 +23,6 @@ from .const import (
     CONF_FEEDERS,
     CONF_FLAPS,
     CONF_PETS,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     SERVICE_SET_LOCK_STATE,
     SPC,
@@ -43,16 +42,14 @@ CONFIG_SCHEMA = vol.Schema(
                 {
                     vol.Required(CONF_USERNAME): cv.string,
                     vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Optional(CONF_FEEDERS, default=[]): vol.All(
+                    vol.Optional(CONF_FEEDERS): vol.All(
                         cv.ensure_list, [cv.positive_int]
                     ),
-                    vol.Optional(CONF_FLAPS, default=[]): vol.All(
+                    vol.Optional(CONF_FLAPS): vol.All(
                         cv.ensure_list, [cv.positive_int]
                     ),
                     vol.Optional(CONF_PETS): vol.All(cv.ensure_list, [cv.positive_int]),
-                    vol.Optional(
-                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                    ): cv.time_period,
+                    vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
                 },
                 cv.deprecated(CONF_FEEDERS),
                 cv.deprecated(CONF_FLAPS),

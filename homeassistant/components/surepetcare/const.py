@@ -1,8 +1,5 @@
 """Constants for the Sure Petcare component."""
-from datetime import timedelta
-
 DOMAIN = "surepetcare"
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=3)
 
 SPC = "spc"
 
