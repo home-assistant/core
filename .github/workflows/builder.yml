@@ -174,7 +174,7 @@ jobs:
             --target /data/machine \
             --with-codenotary "${{ secrets.VCN_USER }}" "${{ secrets.VCN_PASSWORD }}" "${{ secrets.VCN_ORG }}" \
             --validate-from "${{ secrets.VCN_ORG }}" \
-            --machine "${{ needs.init.outputs.version }}=${{ matrix.machine }}""
+            --machine "${{ needs.init.outputs.version }}=${{ matrix.machine }}"
 
   publish_ha:
     name: Publish version files
