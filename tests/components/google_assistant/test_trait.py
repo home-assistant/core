@@ -2667,38 +2667,10 @@ async def test_channel(hass):
     )
     assert trait.ChannelTrait.supported(media_player.DOMAIN, 0, None, None) is False
 
-    config = MockConfig(
-        entity_config={
-            "media_player.demo": {
-                const.CONF_CHANNEL_LIST: [
-                    {
-                        const.CONF_CHANNEL_NAME: "Channel 1",
-                        const.CONF_CHANNEL_NUMBER: "1",
-                    },
-                    {
-                        const.CONF_CHANNEL_NAME: "Channel 2",
-                        const.CONF_CHANNEL_NUMBER: "2",
-                    },
-                ],
-            }
-        },
-    )
-
-    trt = trait.ChannelTrait(hass, State("media_player.demo", STATE_ON), config)
+    trt = trait.ChannelTrait(hass, State("media_player.demo", STATE_ON), BASIC_CONFIG)
 
     assert trt.sync_attributes() == {
-        "availableChannels": [
-            {
-                "key": "Channel 1",
-                "names": ["Channel 1"],
-                "number": "1",
-            },
-            {
-                "key": "Channel 2",
-                "names": ["Channel 2"],
-                "number": "2",
-            },
-        ],
+        "availableChannels": [],
         "commandOnlyChannels": True,
     }
     assert trt.query_attributes() == {}
@@ -2716,22 +2688,12 @@ async def test_channel(hass):
         media_player.ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
     }
 
-    await trt.execute(
-        trait.COMMAND_SELECT_CHANNEL, BASIC_DATA, {"channelCode": "Channel 2"}, {}
-    )
-    assert len(media_player_calls) == 2
-    assert media_player_calls[1].data == {
-        ATTR_ENTITY_ID: "media_player.demo",
-        media_player.ATTR_MEDIA_CONTENT_ID: "2",
-        media_player.ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_CHANNEL,
-    }
-
     with pytest.raises(SmartHomeError, match="Channel is not available"):
         await trt.execute(
             trait.COMMAND_SELECT_CHANNEL, BASIC_DATA, {"channelCode": "Channel 3"}, {}
         )
-    assert len(media_player_calls) == 2
+    assert len(media_player_calls) == 1
 
     with pytest.raises(SmartHomeError, match="Unsupported command"):
         await trt.execute("Unknown command", BASIC_DATA, {"channelNumber": "1"}, {})
-    assert len(media_player_calls) == 2
+    assert len(media_player_calls) == 1

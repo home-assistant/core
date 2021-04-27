@@ -36,9 +36,6 @@ CONF_REPORT_STATE = "report_state"
 CONF_SERVICE_ACCOUNT = "service_account"
 CONF_CLIENT_EMAIL = "client_email"
 CONF_PRIVATE_KEY = "private_key"
-CONF_CHANNEL_LIST = "channel_list"
-CONF_CHANNEL_NAME = "channel_name"
-CONF_CHANNEL_NUMBER = "channel_number"
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [

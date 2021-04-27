@@ -68,9 +68,6 @@ from .const import (
     CHALLENGE_ACK_NEEDED,
     CHALLENGE_FAILED_PIN_NEEDED,
     CHALLENGE_PIN_NEEDED,
-    CONF_CHANNEL_LIST,
-    CONF_CHANNEL_NAME,
-    CONF_CHANNEL_NUMBER,
     ERR_ALREADY_ARMED,
     ERR_ALREADY_DISARMED,
     ERR_ALREADY_STOPPED,
@@ -2100,40 +2097,16 @@ class ChannelTrait(_Trait):
 
     def sync_attributes(self):
         """Return attributes for a sync request."""
-        entity_config = self.config.entity_config.get(self.state.entity_id, {})
-        channels_list = entity_config.get(CONF_CHANNEL_LIST) or []
-        channels = [
-            {
-                "key": channel.get(CONF_CHANNEL_NAME),
-                "names": [channel.get(CONF_CHANNEL_NAME)],
-                "number": channel.get(CONF_CHANNEL_NUMBER),
-            }
-            for channel in channels_list
-        ]
-
-        payload = {"availableChannels": channels, "commandOnlyChannels": True}
-
-        return payload
+        return {"availableChannels": [], "commandOnlyChannels": True}
 
     def query_attributes(self):
-        """Return scene query attributes."""
+        """Return channel query attributes."""
         return {}
 
     async def execute(self, command, data, params, challenge):
         """Execute an setChannel command."""
-        entity_config = self.config.entity_config.get(self.state.entity_id, {})
-        channels_list = entity_config.get(CONF_CHANNEL_LIST) or []
-
         if command == COMMAND_SELECT_CHANNEL:
             channel_number = params.get("channelNumber")
-            if not channel_number:
-                entity_config = self.config.entity_config.get(self.state.entity_id, {})
-                channels_list = entity_config.get(CONF_CHANNEL_LIST) or []
-                channel_code = params.get("channelCode")
-                for channel in channels_list:
-                    if channel.get(CONF_CHANNEL_NAME) == channel_code:
-                        channel_number = channel.get(CONF_CHANNEL_NUMBER)
-                        break
         else:
             raise SmartHomeError(ERR_NOT_SUPPORTED, "Unsupported command")
 

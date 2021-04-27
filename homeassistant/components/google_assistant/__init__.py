@@ -13,9 +13,6 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_ALIASES,
-    CONF_CHANNEL_LIST,
-    CONF_CHANNEL_NAME,
-    CONF_CHANNEL_NUMBER,
     CONF_CLIENT_EMAIL,
     CONF_ENTITY_CONFIG,
     CONF_EXPOSE,
@@ -41,20 +38,12 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ALLOW_UNLOCK = "allow_unlock"
 
-CHANNEL_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_CHANNEL_NAME): cv.string,
-        vol.Required(CONF_CHANNEL_NUMBER): cv.string,
-    }
-)
-
 ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_EXPOSE, default=True): cv.boolean,
         vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_ROOM_HINT): cv.string,
-        vol.Optional(CONF_CHANNEL_LIST): vol.All(cv.ensure_list, [CHANNEL_SCHEMA]),
     }
 )
 
