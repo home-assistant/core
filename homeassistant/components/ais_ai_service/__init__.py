@@ -2369,14 +2369,15 @@ async def async_setup(hass, config):
         _say_it(hass, text)
 
         # immersive full mode for all apps
-        hass.services.call(
-            "ais_shell_command",
-            "execute_command",
-            {
-                "command": "su -c 'settings put global policy_control "
-                "immersive.full=*'"
-            },
-        )
+        if ais_global.has_root():
+            hass.services.call(
+                "ais_shell_command",
+                "execute_command",
+                {
+                    "command": "su -c 'settings put global policy_control "
+                    "immersive.full=*'"
+                },
+            )
 
         # set the flag to info that the AIS start part is done - this is needed to don't say some info before this flag
         ais_global.G_AIS_START_IS_DONE = True
@@ -3967,136 +3968,138 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
             )
             return response
 
-    # 2. check the AIS dom intents
-    intents = hass.data.get(DOMAIN, {})
-    try:
-        for intent_type, matchers in intents.items():
-            if found_intent is not None:
+    # 2. check the user automatons intents
+    automations = {
+        state.entity_id: state.name
+        for state in hass.states.async_all()
+        if state.entity_id.startswith("automation")
+        and not state.entity_id.startswith("automation.ais_")
+    }
+    # auto = hass.data.get("automation", {})
+    # _LOGGER.error("test: " + auto)
+    for key, value in automations.items():
+        if value.lower().startswith("jolka"):
+            if (
+                value.lower().replace("jolka", "", 1).replace(":", "").strip()
+                == text.lower().replace("jolka", "", 1).replace(":", "").strip()
+            ):
+                await hass.services.async_call(
+                    "automation", "trigger", {ATTR_ENTITY_ID: key}
+                )
+                s = True
+                found_intent = "AUTO"
+                m = "DO_NOT_SAY OK, uruchamiam " + value.replace("jolka:", "", 1)
                 break
-            for matcher in matchers:
-                match = matcher.match(text)
-                if match:
-                    # we have a match
-                    found_intent = intent_type
+
+    # 3. check the AIS dom intents
+    if s is False:
+        intents = hass.data.get(DOMAIN, {})
+        try:
+            for intent_type, matchers in intents.items():
+                if found_intent is not None:
+                    break
+                for matcher in matchers:
+                    match = matcher.match(text)
+                    if match:
+                        # we have a match
+                        found_intent = intent_type
+                        m, s = await hass.helpers.intent.async_handle(
+                            DOMAIN,
+                            intent_type,
+                            {
+                                key: {"value": value}
+                                for key, value in match.groupdict().items()
+                            },
+                            text,
+                        )
+                        break
+            # the item was match as INTENT_TURN_ON but we don't have such device - maybe it is radio or podcast???
+            if s is False and found_intent == INTENT_TURN_ON:
+                m_org = m
+                m, s = await hass.helpers.intent.async_handle(
+                    DOMAIN,
+                    INTENT_PLAY_RADIO,
+                    {key: {"value": value} for key, value in match.groupdict().items()},
+                    text.replace("włącz", "włącz radio"),
+                )
+                if s is False:
                     m, s = await hass.helpers.intent.async_handle(
                         DOMAIN,
-                        intent_type,
+                        INTENT_PLAY_PODCAST,
                         {
                             key: {"value": value}
                             for key, value in match.groupdict().items()
                         },
-                        text,
+                        text.replace("włącz", "włącz podcast"),
                     )
-                    break
-        # the item was match as INTENT_TURN_ON but we don't have such device - maybe it is radio or podcast???
-        if s is False and found_intent == INTENT_TURN_ON:
-            m_org = m
-            m, s = await hass.helpers.intent.async_handle(
-                DOMAIN,
-                INTENT_PLAY_RADIO,
-                {key: {"value": value} for key, value in match.groupdict().items()},
-                text.replace("włącz", "włącz radio"),
-            )
-            if s is False:
+                if s is False:
+                    m = m_org
+            # the item was match as INTENT_TURN_ON but we don't have such device - maybe it is climate???
+            if s is False and found_intent == INTENT_TURN_ON and "ogrzewanie" in text:
+                m_org = m
                 m, s = await hass.helpers.intent.async_handle(
                     DOMAIN,
-                    INTENT_PLAY_PODCAST,
+                    INTENT_CLIMATE_SET_ALL_ON,
                     {key: {"value": value} for key, value in match.groupdict().items()},
-                    text.replace("włącz", "włącz podcast"),
+                    text,
                 )
-            if s is False:
-                m = m_org
-        # the item was match as INTENT_TURN_ON but we don't have such device - maybe it is climate???
-        if s is False and found_intent == INTENT_TURN_ON and "ogrzewanie" in text:
-            m_org = m
-            m, s = await hass.helpers.intent.async_handle(
-                DOMAIN,
-                INTENT_CLIMATE_SET_ALL_ON,
-                {key: {"value": value} for key, value in match.groupdict().items()},
-                text,
-            )
-            if s is False:
-                m = m_org
-        # the item was match as INTENT_TURN_OFF but we don't have such device - maybe it is climate???
-        if s is False and found_intent == INTENT_TURN_OFF and "ogrzewanie" in text:
-            m_org = m
-            m, s = await hass.helpers.intent.async_handle(
-                DOMAIN,
-                INTENT_CLIMATE_SET_ALL_OFF,
-                {key: {"value": value} for key, value in match.groupdict().items()},
-                text,
-            )
-            if s is False:
-                m = m_org
+                if s is False:
+                    m = m_org
+            # the item was match as INTENT_TURN_OFF but we don't have such device - maybe it is climate???
+            if s is False and found_intent == INTENT_TURN_OFF and "ogrzewanie" in text:
+                m_org = m
+                m, s = await hass.helpers.intent.async_handle(
+                    DOMAIN,
+                    INTENT_CLIMATE_SET_ALL_OFF,
+                    {key: {"value": value} for key, value in match.groupdict().items()},
+                    text,
+                )
+                if s is False:
+                    m = m_org
 
-        # 3. search in automations
-        if s is False or found_intent is None:
-            # no success - try to run automation
-            automations = {
-                state.entity_id: state.name
-                for state in hass.states.async_all()
-                if state.entity_id.startswith("automation")
-                and not state.entity_id.startswith("automation.ais_")
-            }
-            for key, value in automations.items():
-                if value.lower().startswith("jolka"):
-                    if (
-                        value.lower().replace("jolka", "", 1).replace(":", "").strip()
-                        == text.lower().replace("jolka", "", 1).replace(":", "").strip()
-                    ):
-                        await hass.services.async_call(
-                            "automation", "trigger", {ATTR_ENTITY_ID: key}
-                        )
-                        s = True
-                        found_intent = "AUTO"
-                        m = "DO_NOT_SAY OK, uruchamiam " + value.replace(
-                            "jolka:", "", 1
-                        )
-                        break
-
-        # 4. the was no match - try again but with current context
-        # only if hot word is disabled
-        if found_intent is None and hot_word_on is False:
-            suffix = get_context_suffix(hass)
-            if suffix is not None:
-                for intent_type, matchers in intents.items():
-                    if found_intent is not None:
-                        break
-                    for matcher in matchers:
-                        match = matcher.match(suffix + " " + text)
-                        if match:
-                            # we have a match
-                            found_intent = intent_type
-                            m, s = await hass.helpers.intent.async_handle(
-                                DOMAIN,
-                                intent_type,
-                                {
-                                    key: {"value": value}
-                                    for key, value in match.groupdict().items()
-                                },
-                                suffix + " " + text,
-                            )
-                            # reset the curr button code
-                            # TODO the mic should send a button code too
-                            # in this case we will know if the call source
-                            CURR_BUTTON_CODE = 0
+            # 4. the was no match - try again but with current context
+            # only if hot word is disabled
+            if found_intent is None and hot_word_on is False:
+                suffix = get_context_suffix(hass)
+                if suffix is not None:
+                    for intent_type, matchers in intents.items():
+                        if found_intent is not None:
                             break
-        # 5. ask cloud
-        if s is False or found_intent is None:
-            # no success - try to ask the cloud
-            if m is None:
-                # no message / no match
-                m = "Nie rozumiem " + text
-            # asking without the suffix
-            if text != "":
-                ws_resp = aisCloudWS.ask(text, m)
-                m = ws_resp.text.split("---")[0]
-            else:
-                m = "Co proszę? Nic nie słyszę!"
+                        for matcher in matchers:
+                            match = matcher.match(suffix + " " + text)
+                            if match:
+                                # we have a match
+                                found_intent = intent_type
+                                m, s = await hass.helpers.intent.async_handle(
+                                    DOMAIN,
+                                    intent_type,
+                                    {
+                                        key: {"value": value}
+                                        for key, value in match.groupdict().items()
+                                    },
+                                    suffix + " " + text,
+                                )
+                                # reset the curr button code
+                                # TODO the mic should send a button code too
+                                # in this case we will know if the call source
+                                CURR_BUTTON_CODE = 0
+                                break
+            # 5. ask cloud
+            if s is False or found_intent is None:
+                # no success - try to ask the cloud
+                if m is None:
+                    # no message / no match
+                    m = "Nie rozumiem " + text
+                # asking without the suffix
+                if text != "":
+                    ws_resp = aisCloudWS.ask(text, m)
+                    m = ws_resp.text.split("---")[0]
+                else:
+                    m = "Co proszę? Nic nie słyszę!"
 
-    except Exception as e:
-        _LOGGER.info("_process: " + str(e))
-        m = "Przepraszam, ale mam problem ze zrozumieniem: " + text
+        except Exception as e:
+            _LOGGER.info("_process: " + str(e))
+            m = "Przepraszam, ale mam problem ze zrozumieniem: " + text
     # return response to the ais dom
     if m.startswith("DO_NOT_SAY"):
         m = m.replace("DO_NOT_SAY", "")
