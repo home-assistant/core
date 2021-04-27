@@ -161,7 +161,7 @@ class SynoDSMInfoSensor(SynoDSMSensor, SensorEntity):
         api: SynoApi,
         entity_type: str,
         entity_info: EntityInfo,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
     ) -> None:
         """Initialize the Synology SynoDSMInfoSensor entity."""
         super().__init__(api, entity_type, entity_info, coordinator)

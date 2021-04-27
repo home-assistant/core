@@ -60,7 +60,7 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
         entity_type: str,
         entity_info: EntityInfo,
         version: str,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, bool]]],
     ) -> None:
         """Initialize a Synology Surveillance Station Home Mode."""
         super().__init__(
@@ -75,9 +75,9 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
     def is_on(self) -> bool:
         """Return the state."""
         assert self.coordinator.data is not None
-        return self.coordinator.data["switches"][self.entity_type]
+        return self.coordinator.data["switches"][self.entity_type]  # type: ignore[no-any-return]
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on Home mode."""
         _LOGGER.debug(
             "SynoDSMSurveillanceHomeModeToggle.turn_on(%s)",
@@ -88,7 +88,7 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
         )
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off Home mode."""
         _LOGGER.debug(
             "SynoDSMSurveillanceHomeModeToggle.turn_off(%s)",

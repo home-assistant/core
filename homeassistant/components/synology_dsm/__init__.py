@@ -565,7 +565,7 @@ class SynoApi:
                 "Logout from '%s' not possible:%s", self._entry.unique_id, err
             )
 
-    async def async_update(self, now=None) -> None:
+    async def async_update(self, now: timedelta | None = None) -> None:
         """Update function for updating API information."""
         _LOGGER.debug("Start data update for '%s'", self._entry.unique_id)
         self._async_setup_api_requests()
@@ -665,7 +665,7 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
         entity_type: str,
         entity_info: EntityInfo,
         coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
-        device_id: str = None,
+        device_id: str | None = None,
     ) -> None:
         """Initialize the Synology DSM disk or volume entity."""
         super().__init__(api, entity_type, entity_info, coordinator)

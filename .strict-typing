@@ -38,6 +38,7 @@ homeassistant.components.slack.*
 homeassistant.components.sonos.media_player
 homeassistant.components.sun.*
 homeassistant.components.switch.*
+homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
 homeassistant.components.tts.*
 homeassistant.components.vacuum.*

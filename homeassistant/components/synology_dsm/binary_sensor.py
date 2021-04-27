@@ -69,7 +69,7 @@ class SynoDSMSecurityBinarySensor(SynologyDSMBaseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        return getattr(self._api.security, self.entity_type) != "safe"
+        return bool(getattr(self._api.security, self.entity_type) != "safe")
 
     @property
     def available(self) -> bool:
@@ -79,7 +79,7 @@ class SynoDSMSecurityBinarySensor(SynologyDSMBaseEntity, BinarySensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return security checks details."""
-        return self._api.security.status_by_check
+        return self._api.security.status_by_check  # type: ignore[no-any-return]
 
 
 class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, BinarySensorEntity):
@@ -88,7 +88,7 @@ class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        return getattr(self._api.storage, self.entity_type)(self._device_id)
+        return getattr(self._api.storage, self.entity_type)(self._device_id) and True
 
 
 class SynoDSMUpgradeBinarySensor(SynologyDSMBaseEntity, BinarySensorEntity):
@@ -97,7 +97,7 @@ class SynoDSMUpgradeBinarySensor(SynologyDSMBaseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        return getattr(self._api.upgrade, self.entity_type)
+        return getattr(self._api.upgrade, self.entity_type) and True
 
     @property
     def available(self) -> bool:

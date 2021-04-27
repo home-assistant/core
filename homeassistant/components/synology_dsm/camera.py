@@ -81,7 +81,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
             },
             coordinator,
         )
-        Camera.__init__(self)
+        Camera.__init__(self)  # type: ignore[no-untyped-call]
 
         self._camera_id = camera_id
 
@@ -124,12 +124,12 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
     @property
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
-        return self.camera_data.is_recording
+        return self.camera_data.is_recording  # type: ignore[no-any-return]
 
     @property
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
-        return self.camera_data.is_motion_detection_enabled
+        return self.camera_data.is_motion_detection_enabled  # type: ignore[no-any-return]
 
     def camera_image(self) -> bytes | None:
         """Return bytes of camera image."""
@@ -140,7 +140,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         if not self.available:
             return None
         try:
-            return self._api.surveillance_station.get_camera_image(self._camera_id)
+            return self._api.surveillance_station.get_camera_image(self._camera_id)  # type: ignore[no-any-return]
         except (
             SynologyDSMAPIErrorException,
             SynologyDSMRequestException,
@@ -161,7 +161,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         )
         if not self.available:
             return None
-        return self.camera_data.live_view.rtsp
+        return self.camera_data.live_view.rtsp  # type: ignore[no-any-return]
 
     def enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
