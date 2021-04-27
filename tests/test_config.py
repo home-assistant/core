@@ -780,7 +780,6 @@ async def test_merge_id_schema(hass):
     types = {
         "panel_custom": "list",
         "group": "dict",
-        "script": "dict",
         "input_boolean": "dict",
         "shell_command": "dict",
         "qwikswitch": "dict",
