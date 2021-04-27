@@ -297,29 +297,29 @@ STRICT_SETTINGS: Final[list[str]] = [
 def generate_and_validate(config: Config) -> str:
     """Validate and generate mypy config."""
 
-    strict_disabled_path = config.root / ".no-strict-typing"
+    config_path = config.root / ".strict-typing"
 
-    with strict_disabled_path.open() as fp:
+    with config_path.open() as fp:
         lines = fp.readlines()
 
     # Filter empty and commented lines.
-    not_strict_modules: list[str] = [
+    strict_modules: list[str] = [
         line.strip()
         for line in lines
         if line.strip() != "" and not line.startswith("#")
     ]
-    for module in not_strict_modules:
-        if not module.startswith("homeassistant.components."):
+
+    ignored_modules_set: set[str] = set(IGNORED_MODULES)
+    for module in strict_modules:
+        if (
+            not module.startswith("homeassistant.components.")
+            and module != "homeassistant.components"
+        ):
             config.add_error(
                 "mypy_config", f"Only components should be added: {module}"
             )
-    not_strict_modules_set: set[str] = set(not_strict_modules)
-    for module in IGNORED_MODULES:
-        if module not in not_strict_modules_set:
-            config.add_error(
-                "mypy_config",
-                f"Ignored module '{module} must be excluded from strict typing",
-            )
+        if module in ignored_modules_set:
+            config.add_error("mypy_config", f"Module '{module}' is in ignored list")
 
     mypy_config = configparser.ConfigParser()
 
@@ -330,10 +330,16 @@ def generate_and_validate(config: Config) -> str:
     for key in STRICT_SETTINGS:
         mypy_config.set(general_section, key, "true")
 
-    strict_disabled_section = "mypy-" + ",".join(not_strict_modules)
-    mypy_config.add_section(strict_disabled_section)
+    # By default strict checks are disabled for components.
+    components_section = "mypy-homeassistant.components.*"
+    mypy_config.add_section(components_section)
     for key in STRICT_SETTINGS:
-        mypy_config.set(strict_disabled_section, key, "false")
+        mypy_config.set(components_section, key, "false")
+
+    strict_section = "mypy-" + ",".join(strict_modules)
+    mypy_config.add_section(strict_section)
+    for key in STRICT_SETTINGS:
+        mypy_config.set(strict_section, key, "true")
 
     ignored_section = "mypy-" + ",".join(IGNORED_MODULES)
     mypy_config.add_section(ignored_section)
