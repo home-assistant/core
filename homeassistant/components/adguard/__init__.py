@@ -68,10 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except AdGuardHomeConnectionError as exception:
         raise ConfigEntryNotReady from exception
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def add_url(call) -> None:
         """Service call to add a new filter subscription to AdGuard Home."""
@@ -126,12 +123,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.services.async_remove(DOMAIN, SERVICE_DISABLE_URL)
     hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
 
-    for component in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(entry, component)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        del hass.data[DOMAIN]
 
-    del hass.data[DOMAIN]
-
-    return True
+    return unload_ok
 
 
 class AdGuardHomeEntity(Entity):
