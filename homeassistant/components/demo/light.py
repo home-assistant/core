@@ -26,6 +26,8 @@ LIGHT_EFFECT_LIST = ["rainbow", "none"]
 
 LIGHT_TEMPS = [240, 380]
 
+SUPPORT_DEMO = {COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP}
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the demo light platform."""
@@ -37,7 +39,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 effect=LIGHT_EFFECT_LIST[0],
                 name="Bed Light",
                 state=False,
-                supported_color_modes={COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP},
                 unique_id="light_1",
             ),
             DemoLight(
@@ -45,7 +46,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 ct=LIGHT_TEMPS[1],
                 name="Ceiling Lights",
                 state=True,
-                supported_color_modes={COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP},
                 unique_id="light_2",
             ),
             DemoLight(
@@ -53,7 +53,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 hs_color=LIGHT_COLORS[1],
                 name="Kitchen Lights",
                 state=True,
-                supported_color_modes={COLOR_MODE_HS, COLOR_MODE_COLOR_TEMP},
                 unique_id="light_3",
             ),
             DemoLight(
@@ -121,6 +120,8 @@ class DemoLight(LightEntity):
             self._color_mode = COLOR_MODE_RGBWW
         else:
             self._color_mode = COLOR_MODE_COLOR_TEMP
+        if not supported_color_modes:
+            supported_color_modes = SUPPORT_DEMO
         self._color_modes = supported_color_modes
         if self._effect_list is not None:
             self._features |= SUPPORT_EFFECT
