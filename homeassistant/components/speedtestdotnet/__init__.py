@@ -46,6 +46,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = ["sensor"]
+
 
 def server_id_valid(server_id):
     """Check if server_id is valid."""
@@ -96,9 +98,7 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN] = coordinator
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-    )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
@@ -109,11 +109,12 @@ async def async_unload_entry(hass, config_entry):
 
     hass.data[DOMAIN].async_unload()
 
-    await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
-
-    hass.data.pop(DOMAIN)
-
-    return True
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
+    if unload_ok:
+        hass.data.pop(DOMAIN)
+    return unload_ok
 
 
 class SpeedTestDataCoordinator(DataUpdateCoordinator):

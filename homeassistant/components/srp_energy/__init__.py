@@ -30,9 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.error("Unable to connect to Srp Energy: %s", str(ex))
         raise ConfigEntryNotReady from ex
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -42,6 +40,4 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     # unload srp client
     hass.data[SRP_ENERGY_DOMAIN] = None
     # Remove config entry
-    await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
-
-    return True
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
