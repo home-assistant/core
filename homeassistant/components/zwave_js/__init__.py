@@ -310,7 +310,6 @@ async def async_setup_entry(  # noqa: C901
 
         device = dev_reg.async_get_device({get_device_id(client, value.node)})
         event_data = {
-            ATTR_DOMAIN: DOMAIN,
             ATTR_NODE_ID: value.node.node_id,
             ATTR_HOME_ID: client.driver.controller.home_id,
             ATTR_DEVICE_ID: device.id,  # type: ignore
