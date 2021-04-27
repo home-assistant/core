@@ -6,14 +6,14 @@
         "data": {
           "email": "[%key:common::config_flow::data::email%]"
         },
-        "description": "To recieve an authentication code, enter the email address of your vorwerk account.\n\nSee [Vorwerk documentation]({docs_url})."
+        "description": "To recieve an authentication code, enter the email address of your vorwerk account."
       },
       "code": {
         "title": "Vorwerk Account Info",
         "data": {
           "code": "Code"
         },
-        "description": "Enter the code you received by email.\n\nSee [Vorwerk documentation]({docs_url})."
+        "description": "Enter the code you received by email."
       }
     },
     "error": {

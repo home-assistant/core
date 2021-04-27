@@ -1,8 +1,11 @@
 """Constants for Vorwerk integration."""
+from datetime import timedelta
 
 VORWERK_DOMAIN = "vorwerk"
 
 VORWERK_ROBOTS = "robots"
+VORWERK_ROBOT_API = "robot_api"
+VORWERK_ROBOT_COORDINATOR = "robot_coordinator"
 
 VORWERK_ROBOT_NAME = "name"
 VORWERK_ROBOT_SERIAL = "serial"
@@ -12,28 +15,68 @@ VORWERK_ROBOT_ENDPOINT = "endpoint"
 
 VORWERK_PLATFORMS = ["vacuum"]
 
-SCAN_INTERVAL_MINUTES = 1
+# The client_id is the same for all users.
+VORWERK_CLIENT_ID = "KY4YbVAvtgB7lp8vIbWQ7zLk3hssZlhR"
 
-MODE = {1: "Eco", 2: "Turbo"}
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
+
+ATTR_NAVIGATION = "navigation"
+ATTR_CATEGORY = "category"
+ATTR_ZONE = "zone"
+
+ROBOT_STATE_INVALID = 0
+ROBOT_STATE_IDLE = 1
+ROBOT_STATE_BUSY = 2
+ROBOT_STATE_PAUSE = 3
+ROBOT_STATE_ERROR = 4
+
+ROBOT_ACTION_INVALID = 0
+ROBOT_ACTION_HOUSE_CLEANING = 1
+ROBOT_ACTION_SPOT_CLEANING = 2
+ROBOT_ACTION_MANUAL_CLEANING = 3
+ROBOT_ACTION_DOCKING = 4
+ROBOT_ACTION_USER_MENU = 5
+ROBOT_ACTION_SUSPENDED_CLEANING = 6
+ROBOT_ACTION_UPDATING = 7
+ROBOT_ACTION_COPY_LOGS = 8
+ROBOT_ACTION_RECOVERING_LOCATION = 9
+ROBOT_ACTION_IEC_TEST = 10
+ROBOT_ACTION_MAP_CLEANING = 11
+ROBOT_ACTION_EXPLORING_MAP = 12
+ROBOT_ACTION_ACQUIRING_MAP_IDS = 13
+ROBOT_ACTION_UPLOADING_MAP = 14
+ROBOT_ACTION_SUSPENDED_EXPLORATION = 15
+
+ROBOT_CLEANING_ACTIONS = [
+    ROBOT_ACTION_HOUSE_CLEANING,
+    ROBOT_ACTION_SPOT_CLEANING,
+    ROBOT_ACTION_MANUAL_CLEANING,
+    ROBOT_ACTION_SUSPENDED_CLEANING,
+    ROBOT_ACTION_MAP_CLEANING,
+    ROBOT_ACTION_EXPLORING_MAP,
+    ROBOT_ACTION_SUSPENDED_EXPLORATION,
+]
 
 ACTION = {
-    0: "Invalid",
-    1: "House Cleaning",
-    2: "Spot Cleaning",
-    3: "Manual Cleaning",
-    4: "Docking",
-    5: "User Menu Active",
-    6: "Suspended Cleaning",
-    7: "Updating",
-    8: "Copying logs",
-    9: "Recovering Location",
-    10: "IEC test",
-    11: "Map cleaning",
-    12: "Exploring map (creating a persistent map)",
-    13: "Acquiring Persistent Map IDs",
-    14: "Creating & Uploading Map",
-    15: "Suspended Exploration",
+    ROBOT_ACTION_INVALID: "Invalid",
+    ROBOT_ACTION_HOUSE_CLEANING: "House Cleaning",
+    ROBOT_ACTION_SPOT_CLEANING: "Spot Cleaning",
+    ROBOT_ACTION_MANUAL_CLEANING: "Manual Cleaning",
+    ROBOT_ACTION_DOCKING: "Docking",
+    ROBOT_ACTION_USER_MENU: "User Menu Active",
+    ROBOT_ACTION_SUSPENDED_CLEANING: "Suspended Cleaning",
+    ROBOT_ACTION_UPDATING: "Updating",
+    ROBOT_ACTION_COPY_LOGS: "Copying logs",
+    ROBOT_ACTION_RECOVERING_LOCATION: "Recovering Location",
+    ROBOT_ACTION_IEC_TEST: "IEC test",
+    ROBOT_ACTION_MAP_CLEANING: "Map cleaning",
+    ROBOT_ACTION_EXPLORING_MAP: "Exploring map (creating a persistent map)",
+    ROBOT_ACTION_ACQUIRING_MAP_IDS: "Acquiring Persistent Map IDs",
+    ROBOT_ACTION_UPLOADING_MAP: "Creating & Uploading Map",
+    ROBOT_ACTION_SUSPENDED_EXPLORATION: "Suspended Exploration",
 }
+
+MODE = {1: "Eco", 2: "Turbo"}
 
 ERRORS = {
     "ui_error_battery_battundervoltlithiumsafety": "Replace battery",
@@ -151,14 +194,3 @@ ALERTS = {
     "clean_incomplete_to_start": "Cleaning incomplete",
     "log_upload_failed": "Logs failed to upload",
 }
-
-ATTR_NAVIGATION = "navigation"
-ATTR_CATEGORY = "category"
-ATTR_ZONE = "zone"
-
-
-ROBOT_STATE_INVALID = 0
-ROBOT_STATE_IDLE = 1
-ROBOT_STATE_BUSY = 2
-ROBOT_STATE_PAUSE = 3
-ROBOT_STATE_ERROR = 4

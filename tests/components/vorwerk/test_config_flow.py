@@ -26,7 +26,7 @@ def _create_mocked_vorwerk_session():
 
 def _patch_config_flow_vorwerksession(mocked_vorwerk_session):
     return patch(
-        "homeassistant.components.vorwerk.authsession.VorwerkSession",
+        "homeassistant.components.vorwerk.config_flow.VorwerkSession",
         return_value=mocked_vorwerk_session,
     )
 

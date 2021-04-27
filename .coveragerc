@@ -1251,7 +1251,6 @@ omit =
     homeassistant/components/volumio/media_player.py
     homeassistant/components/volvooncall/*
     homeassistant/components/vorwerk/__init__.py
-    homeassistant/components/vorwerk/authsession.py
     homeassistant/components/vorwerk/vacuum.py
     homeassistant/components/w800rf32/*
     homeassistant/components/waqi/sensor.py
