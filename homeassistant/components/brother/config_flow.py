@@ -83,9 +83,6 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResultDict:
         """Handle zeroconf discovery."""
-        if discovery_info is None:
-            return self.async_abort(reason="cannot_connect")
-
         if not discovery_info.get("name") or not discovery_info["name"].startswith(
             "Brother"
         ):
