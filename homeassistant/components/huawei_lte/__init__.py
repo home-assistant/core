@@ -39,7 +39,6 @@ from homeassistant.const import (
     CONF_RECIPIENT,
     CONF_URL,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -446,11 +445,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # Set up periodic update
     router.unload_handlers.append(
         async_track_time_interval(hass, _update_router, SCAN_INTERVAL)
-    )
-
-    # Clean up at end
-    config_entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, router.cleanup)
     )
 
     return True
