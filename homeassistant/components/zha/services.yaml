@@ -14,8 +14,8 @@ permit:
           min: 0
           max: 254
           unit_of_measurement: seconds
-    ieee_address:
-      name: IEEE Address
+    ieee:
+      name: IEEE
       description: IEEE address of the node permitting new joins
       example: "00:0d:6f:00:05:7d:2d:34"
       selector:
@@ -43,8 +43,8 @@ remove:
   name: Remove
   description: Remove a node from the Zigbee network.
   fields:
-    ieee_address:
-      name: IEEE Address
+    ieee:
+      name: IEEE
       description: IEEE address of the node to remove
       required: true
       example: "00:0d:6f:00:05:7d:2d:34"
@@ -59,8 +59,8 @@ reconfigure_device:
     please ensure it is awake and accepting commands when you use this
     service.
   fields:
-    ieee_address:
-      name: IEEE Address
+    ieee:
+      name: IEEE
       description: IEEE address of the device to reconfigure
       required: true
       example: "00:0d:6f:00:05:7d:2d:34"
