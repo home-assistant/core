@@ -1,8 +1,6 @@
 """The Jellyfin integration."""
 import logging
 
-import voluptuous as vol
-
 from homeassistant.components.jellyfin.config_flow import (
     CannotConnect,
     InvalidAuth,
@@ -14,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -23,7 +23,7 @@ from homeassistant.components.media_source.models import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import (  # pylint:disable=unused-import
+from .const import (
     COLLECTION_TYPE_MUSIC,
     DATA_CLIENT,
     DOMAIN,
