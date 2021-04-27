@@ -1,8 +1,4 @@
 """Test discovery of entities for device-specific schemas for the Z-Wave JS integration."""
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_config_entry,
-    async_get as async_get_ent_reg,
-)
 
 
 async def test_iblinds_v2(hass, client, iblinds_v2, integration):
@@ -45,12 +41,10 @@ async def test_vision_security_zl7432(
     hass, client, vision_security_zl7432, integration
 ):
     """Test Vision Security ZL7432 is caught by the device specific discovery."""
-    entities = async_entries_for_config_entry(
-        async_get_ent_reg(hass), integration.entry_id
-    )
-    for entity in entities:
-        if entity.platform != "switch":
-            continue
-        state = hass.states.get(entity.entity_id)
+    for entity_id in (
+        "switch.in_wall_dual_relay_switch",
+        "switch.in_wall_dual_relay_switch_2",
+    ):
+        state = hass.states.get(entity_id)
         assert state
         assert state.attributes["assumed_state"]
