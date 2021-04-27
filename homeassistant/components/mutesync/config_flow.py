@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from typing import Any
 
 import aiohttp
@@ -16,8 +15,6 @@ from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema({"host": str})
 
