@@ -1117,6 +1117,11 @@ omit =
     homeassistant/components/volumio/browse_media.py
     homeassistant/components/volumio/media_player.py
     homeassistant/components/volvooncall/*
+    homeassistant/components/vulcan/__init__.py
+    homeassistant/components/vulcan/calendar.py
+    homeassistant/components/vulcan/const.py
+    homeassistant/components/vulcan/fetch_data.py
+    homeassistant/components/vulcan/register.py
     homeassistant/components/w800rf32/*
     homeassistant/components/waqi/sensor.py
     homeassistant/components/waterfurnace/*
