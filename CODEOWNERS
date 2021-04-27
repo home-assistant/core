@@ -485,6 +485,7 @@ homeassistant/components/tankerkoenig/* @guillempages
 homeassistant/components/tapsaff/* @bazwilliams
 homeassistant/components/tasmota/* @emontnemery
 homeassistant/components/tautulli/* @ludeeus
+homeassistant/components/technicolor/* @shaiu
 homeassistant/components/tellduslive/* @fredrike
 homeassistant/components/template/* @PhracturedBlue @tetienne
 homeassistant/components/tesla/* @zabuldon @alandtse

@@ -1761,6 +1761,9 @@ pytankerkoenig==0.0.6
 # homeassistant.components.tautulli
 pytautulli==0.5.0
 
+# homeassistant.components.technicolor
+pytechnicolor==1.0.2
+
 # homeassistant.components.tfiac
 pytfiac==0.4
 
