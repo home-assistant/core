@@ -4,10 +4,8 @@ from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.netatmo import DOMAIN
-from homeassistant.components.webhook import async_handle_webhook
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
-from homeassistant.util.aiohttp import MockRequest
 
 from .common import (
     FAKE_WEBHOOK_ACTIVATION,
@@ -147,44 +145,30 @@ async def test_setup_component_with_webhook(hass, config_entry):
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
-async def test_setup_without_https(hass, config_entry):
+async def test_setup_without_https(hass, config_entry, caplog):
     """Test if set up with cloud link and without https."""
     hass.config.components.add("cloud")
     with patch(
         "homeassistant.helpers.network.get_url",
-        return_value="https://example.nabu.casa",
+        return_value="http://example.nabu.casa",
     ), patch(
         "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
     ) as mock_auth, patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
         "homeassistant.components.webhook.async_generate_url"
-    ) as mock_webhook:
+    ) as mock_async_generate_url:
         mock_auth.return_value.async_post_request.side_effect = fake_post_request
-        mock_webhook.return_value = "https://example.com"
+        mock_async_generate_url.return_value = "http://example.com"
         assert await async_setup_component(
             hass, "netatmo", {"netatmo": {"client_id": "123", "client_secret": "abc"}}
         )
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        mock_auth.assert_called_once()
+        mock_async_generate_url.assert_called_once()
 
-    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK_ACTIVATION)
-
-    # Assert webhook is established successfully
-    climate_entity_livingroom = "climate.netatmo_livingroom"
-    assert hass.states.get(climate_entity_livingroom).state == "auto"
-    await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK)
-    await hass.async_block_till_done()
-    assert hass.states.get(climate_entity_livingroom).state == "heat"
-
-    # Assert handling of erroneous webhook data
-    request = MockRequest(
-        content=bytes("", "utf-8"),
-        mock_source="test",
-    )
-    await async_handle_webhook(hass, webhook_id, request)
-    await hass.async_block_till_done()
+    assert "https and port 443 is required to register the webhook" in caplog.text
 
 
 async def test_setup_with_cloud(hass, config_entry):
