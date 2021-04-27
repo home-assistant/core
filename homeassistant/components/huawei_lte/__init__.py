@@ -142,7 +142,6 @@ class Router:
         factory=lambda: defaultdict(set, ((x, {"initial_scan"}) for x in ALL_KEYS)),
     )
     inflight_gets: set[str] = attr.ib(init=False, factory=set)
-    unload_handlers: list[CALLBACK_TYPE] = attr.ib(init=False, factory=list)
     client: Client
     suspended = attr.ib(init=False, default=False)
     notify_last_attempt: float = attr.ib(init=False, default=-1)
@@ -290,10 +289,6 @@ class Router:
         """Clean up resources."""
 
         self.subscriptions.clear()
-
-        for handler in self.unload_handlers:
-            handler()
-        self.unload_handlers.clear()
 
         self.logout()
 
@@ -443,7 +438,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         router.update()
 
     # Set up periodic update
-    router.unload_handlers.append(
+    config_entry.async_on_unload(
         async_track_time_interval(hass, _update_router, SCAN_INTERVAL)
     )
 
