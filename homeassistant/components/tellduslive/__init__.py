@@ -7,13 +7,12 @@ from tellduslive import DIM, TURNON, UP, Session
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
-    CONF_HOST,
     DOMAIN,
     KEY_SCAN_INTERVAL,
     KEY_SESSION,
@@ -52,7 +51,6 @@ INTERVAL_TRACKER = f"{DOMAIN}_INTERVAL"
 
 async def async_setup_entry(hass, entry):
     """Create a tellduslive session."""
-
     conf = entry.data[KEY_SESSION]
 
     if CONF_HOST in conf:
