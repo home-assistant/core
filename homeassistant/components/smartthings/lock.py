@@ -3,8 +3,9 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from homeassistant.components.lock import LockEntity
 from pysmartthings import Attribute, Capability
+
+from homeassistant.components.lock import LockEntity
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
