@@ -47,7 +47,7 @@ def run_callback_threadsafe(
     Return a concurrent.futures.Future to access the result.
     """
 
-    _LOGGER.warning("run_callback_threadsafe: %s(%s)", callback, args)
+    _LOGGER.debug("run_callback_threadsafe: %s(%s)", callback, args)
     ident = loop.__dict__.get("_thread_ident")
     if ident is not None and ident == threading.get_ident():
         raise RuntimeError("Cannot be called from within the event loop")
