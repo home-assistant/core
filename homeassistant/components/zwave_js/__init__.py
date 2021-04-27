@@ -298,7 +298,8 @@ async def async_setup_entry(  # noqa: C901
         value_updates_disc_info: list[ZwaveDiscoveryInfo], value: Value
     ) -> None:
         """Fire value updated event."""
-        # Get the discovery info for the value that was updated.
+        # Get the discovery info for the value that was updated. If we can't
+        # find the discovery info, we don't need to fire an event
         try:
             disc_info = next(
                 disc_info
