@@ -64,8 +64,7 @@ COVER_TYPES = DAMPERS + WINDOW_COVERS
 FANS = ["Fan"]
 
 # Locks
-LOCKS = ["Door Lock", "ZHADoorLock"]
-LOCK_TYPES = LOCKS
+LOCK_TYPES = ["Door Lock", "ZHADoorLock"]
 
 # Switches
 POWER_PLUGS = ["On/Off light", "On/Off plug-in unit", "Smart plug"]
@@ -74,4 +73,3 @@ SWITCH_TYPES = POWER_PLUGS + SIRENS
 
 CONF_ANGLE = "angle"
 CONF_GESTURE = "gesture"
-CONF_XY = "xy"
