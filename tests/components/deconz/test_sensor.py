@@ -97,7 +97,7 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
     assert light_level_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ILLUMINANCE
     assert light_level_sensor.attributes[ATTR_DAYLIGHT] == 6955
 
-    light_level_temp = hass.states.get("sensor.light_level_sensor_temperature_sensor")
+    light_level_temp = hass.states.get("sensor.light_level_sensor_temperature")
     assert light_level_temp.state == "0.1"
     assert light_level_temp.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
 
@@ -146,9 +146,7 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
     }
     await mock_deconz_websocket(data=event_changed_sensor)
 
-    assert (
-        hass.states.get("sensor.light_level_sensor_temperature_sensor").state == "1.0"
-    )
+    assert hass.states.get("sensor.light_level_sensor_temperature").state == "1.0"
 
     # Event signals new battery level
 

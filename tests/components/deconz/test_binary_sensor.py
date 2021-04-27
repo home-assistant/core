@@ -82,7 +82,7 @@ async def test_binary_sensors(hass, aioclient_mock, mock_deconz_websocket):
     presence_sensor = hass.states.get("binary_sensor.presence_sensor")
     assert presence_sensor.state == STATE_OFF
     assert presence_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_MOTION
-    presence_temp = hass.states.get("sensor.presence_sensor_temperature_sensor")
+    presence_temp = hass.states.get("sensor.presence_sensor_temperature")
     assert presence_temp.state == "0.1"
     assert presence_temp.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
     assert hass.states.get("binary_sensor.temperature_sensor") is None
@@ -90,7 +90,7 @@ async def test_binary_sensors(hass, aioclient_mock, mock_deconz_websocket):
     vibration_sensor = hass.states.get("binary_sensor.vibration_sensor")
     assert vibration_sensor.state == STATE_ON
     assert vibration_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_VIBRATION
-    vibration_temp = hass.states.get("sensor.vibration_sensor_temperature_sensor")
+    vibration_temp = hass.states.get("sensor.vibration_sensor_temperature")
     assert vibration_temp.state == "0.1"
     assert vibration_temp.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
 

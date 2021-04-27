@@ -209,7 +209,7 @@ class DeconzTemperature(DeconzDevice, SensorEntity):
     @property
     def unique_id(self):
         """Return a unique identifier for this device."""
-        return f"{super().serial}-temperature"
+        return f"{self.serial}-temperature"
 
     @callback
     def async_update_callback(self, force_update=False):
@@ -226,7 +226,7 @@ class DeconzTemperature(DeconzDevice, SensorEntity):
     @property
     def name(self):
         """Return the name of the temperature sensor."""
-        return f"{self._device.name} Temperature Sensor"
+        return f"{self._device.name} Temperature"
 
     @property
     def device_class(self):
