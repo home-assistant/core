@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from pysmartthings import Attribute, Capability
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
@@ -15,6 +13,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SOUND,
     BinarySensorEntity,
 )
+from pysmartthings import Attribute, Capability
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN

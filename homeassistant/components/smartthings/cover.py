@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from pysmartthings import Attribute, Capability
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DEVICE_CLASS_DOOR,
@@ -21,6 +19,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.const import ATTR_BATTERY_LEVEL
+from pysmartthings import Attribute, Capability
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN

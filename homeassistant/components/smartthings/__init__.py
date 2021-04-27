@@ -8,7 +8,6 @@ import logging
 
 from aiohttp.client_exceptions import ClientConnectionError, ClientResponseError
 from pysmartapp.event import EVENT_TYPE_DEVICE
-from pysmartthings import Attribute, Capability, SmartThings
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -28,6 +27,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
+from pysmartthings import Attribute, Capability, SmartThings
 
 from .config_flow import SmartThingsFlowHandler  # noqa: F401
 from .const import (
@@ -189,10 +189,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             )
         return False
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
@@ -217,11 +214,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if broker:
         broker.disconnect()
 
-    tasks = [
-        hass.config_entries.async_forward_entry_unload(entry, platform)
-        for platform in PLATFORMS
-    ]
-    return all(await asyncio.gather(*tasks))
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

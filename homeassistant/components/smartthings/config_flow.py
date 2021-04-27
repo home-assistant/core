@@ -2,8 +2,6 @@
 import logging
 
 from aiohttp import ClientResponseError
-from pysmartthings import APIResponseError, AppOAuth, SmartThings
-from pysmartthings.installedapp import format_install_url
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,6 +13,8 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from pysmartthings import APIResponseError, AppOAuth, SmartThings
+from pysmartthings.installedapp import format_install_url
 
 from .const import (
     APP_OAUTH_CLIENT_NAME,
