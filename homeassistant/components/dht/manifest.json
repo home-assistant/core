@@ -2,7 +2,7 @@
   "domain": "dht",
   "name": "DHT Sensor",
   "documentation": "https://www.home-assistant.io/integrations/dht",
-  "requirements": ["adafruit-circuitpython-dht==3.5.8"],
+  "requirements": ["adafruit-circuitpython-dht==3.6.0"],
   "codeowners": [],
   "iot_class": "local_polling"
 }
