@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from surepy import Surepy
-from surepy.enums import EntityType, LockState
+from surepy.enums import LockState
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 import voluptuous as vol
 
@@ -21,7 +21,6 @@ from .const import (
     ATTR_FLAP_ID,
     ATTR_LOCK_STATE,
     CONF_FEEDERS,
-    CONF_FELAQUAS,
     CONF_FLAPS,
     CONF_PETS,
     DEFAULT_SCAN_INTERVAL,
@@ -29,7 +28,6 @@ from .const import (
     SERVICE_SET_LOCK_STATE,
     SPC,
     SURE_API_TIMEOUT,
-    SURE_IDS,
     TOPIC_UPDATE,
 )
 
@@ -41,23 +39,26 @@ SCAN_INTERVAL = timedelta(minutes=3)
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_FEEDERS, default=[]): vol.All(
-                    cv.ensure_list, [cv.positive_int]
-                ),
-                vol.Optional(CONF_FLAPS, default=[]): vol.All(
-                    cv.ensure_list, [cv.positive_int]
-                ),
-                vol.Optional(CONF_FELAQUAS, default=[]): vol.All(
-                    cv.ensure_list, [cv.positive_int]
-                ),
-                vol.Optional(CONF_PETS): vol.All(cv.ensure_list, [cv.positive_int]),
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.time_period,
-            }
+            vol.All(
+                {
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Optional(CONF_FEEDERS, default=[]): vol.All(
+                        cv.ensure_list, [cv.positive_int]
+                    ),
+                    vol.Optional(CONF_FLAPS, default=[]): vol.All(
+                        cv.ensure_list, [cv.positive_int]
+                    ),
+                    vol.Optional(CONF_PETS): vol.All(cv.ensure_list, [cv.positive_int]),
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                    ): cv.time_period,
+                },
+                cv.deprecated(CONF_FEEDERS),
+                cv.deprecated(CONF_FLAPS),
+                cv.deprecated(CONF_PETS),
+                cv.deprecated(CONF_SCAN_INTERVAL),
+            )
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -66,20 +67,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the openSenseMap air quality platform."""
-
     conf = config[DOMAIN]
-
-    # https://github.com/PyCQA/pylint/issues/2062
-    # pylint: disable=no-member
-    ids: dict[str, list[int]] = {
-        EntityType.PET.name: conf[CONF_PETS],
-        EntityType.PET_FLAP.name: conf[CONF_FLAPS],
-        EntityType.FEEDER.name: conf[CONF_FEEDERS],
-        EntityType.FELAQUA.name: conf[CONF_FELAQUAS],
-    }
-
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][SURE_IDS] = ids
 
     try:
         surepy = Surepy(
@@ -89,7 +78,6 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
             api_timeout=SURE_API_TIMEOUT,
             session=async_get_clientsession(hass),
         )
-
     except SurePetcareAuthenticationError:
         _LOGGER.error("Unable to connect to surepetcare.io: Wrong credentials!")
         return False
@@ -97,7 +85,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         _LOGGER.error("Unable to connect to surepetcare.io: Wrong %s!", error)
         return False
 
-    spc = SurePetcareAPI(hass, surepy, ids)
+    spc = SurePetcareAPI(hass, surepy)
     hass.data[DOMAIN][SPC] = spc
 
     await spc.async_update()
@@ -127,6 +115,8 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
                 vol.Lower,
                 vol.In(
                     [
+                        # https://github.com/PyCQA/pylint/issues/2062
+                        # pylint: disable=no-member
                         LockState.UNLOCKED.name.lower(),
                         LockState.LOCKED_IN.name.lower(),
                         LockState.LOCKED_OUT.name.lower(),
@@ -150,13 +140,10 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 class SurePetcareAPI:
     """Define a generic Sure Petcare object."""
 
-    def __init__(
-        self, hass: HomeAssistant, surepy: Surepy, ids: list[dict[str, Any]]
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, surepy: Surepy) -> None:
         """Initialize the Sure Petcare object."""
         self.hass = hass
         self.surepy = surepy
-        self.ids = ids
         self.states = {}
 
     async def async_update(self, _: Any = None) -> None:

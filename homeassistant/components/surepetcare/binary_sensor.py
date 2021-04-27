@@ -32,7 +32,6 @@ async def async_setup_platform(
 
     spc: SurePetcareAPI = hass.data[DOMAIN][SPC]
 
-    # for thing in spc.ids:
     for surepy_entity in spc.states.values():
 
         # connectivity
