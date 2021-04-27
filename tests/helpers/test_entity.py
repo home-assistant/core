@@ -774,3 +774,17 @@ async def test_get_supported_features_raises_on_unknown(hass):
     """Test get_supported_features raises on unknown entity_id."""
     with pytest.raises(HomeAssistantError):
         entity.get_supported_features(hass, "hello.world")
+
+
+async def test_float_conversion(hass):
+    """Test conversion of float state to string rounds."""
+    assert 2.4 + 1.2 != 3.6
+    with patch.object(entity.Entity, "state", PropertyMock(return_value=2.4 + 1.2)):
+        ent = entity.Entity()
+        ent.hass = hass
+        ent.entity_id = "hello.world"
+        ent.async_write_ha_state()
+
+    state = hass.states.get("hello.world")
+    assert state is not None
+    assert state.state == "3.6"
