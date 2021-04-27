@@ -57,7 +57,8 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
         assert coordinator.data is not None
-        self._name = f"{coordinator.data.model} {SENSOR_TYPES[kind]['label']}"
+        self._description = SENSOR_TYPES[kind]
+        self._name = f"{coordinator.data.model} {self._description['label']}"
         self._unique_id = f"{coordinator.data.serial.lower()}_{kind}"
         self._device_info = device_info
         self.kind = kind
