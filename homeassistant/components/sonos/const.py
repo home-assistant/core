@@ -129,7 +129,8 @@ PLAYABLE_MEDIA_TYPES = [
 ]
 
 SONOS_CONTENT_UPDATE = "sonos_content_update"
-SONOS_DISCOVERY_UPDATE = "sonos_discovery_update"
+SONOS_CREATE_BATTERY = "sonos_create_battery"
+SONOS_CREATE_MEDIA_PLAYER = "sonos_create_media_player"
 SONOS_ENTITY_CREATED = "sonos_entity_created"
 SONOS_ENTITY_UPDATE = "sonos_entity_update"
 SONOS_GROUP_UPDATE = "sonos_group_update"

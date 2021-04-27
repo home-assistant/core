@@ -11,6 +11,8 @@ from pysonos.core import SoCo
 from pysonos.events_base import Event as SonosEvent, SubscriptionBase
 from pysonos.exceptions import SoCoException
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
@@ -26,7 +28,8 @@ from .const import (
     SCAN_INTERVAL,
     SEEN_EXPIRE_TIME,
     SONOS_CONTENT_UPDATE,
-    SONOS_DISCOVERY_UPDATE,
+    SONOS_CREATE_BATTERY,
+    SONOS_CREATE_MEDIA_PLAYER,
     SONOS_ENTITY_CREATED,
     SONOS_ENTITY_UPDATE,
     SONOS_GROUP_UPDATE,
@@ -84,13 +87,6 @@ class SonosSpeaker:
 
     def setup(self) -> None:
         """Run initial setup of the speaker."""
-        if (battery_info := fetch_battery_info_or_none(self.soco)) is not None:
-            # Battery events can be infrequent, polling is still necessary
-            self.battery_info = battery_info
-            self._battery_poll_timer = self.hass.helpers.event.track_time_interval(
-                self.async_poll_battery, BATTERY_SCAN_INTERVAL
-            )
-
         self._entity_creation_dispatcher = dispatcher_connect(
             self.hass,
             f"{SONOS_ENTITY_CREATED}-{self.soco.uid}",
@@ -99,7 +95,18 @@ class SonosSpeaker:
         self._seen_dispatcher = dispatcher_connect(
             self.hass, f"{SONOS_SEEN}-{self.soco.uid}", self.async_seen
         )
-        dispatcher_send(self.hass, SONOS_DISCOVERY_UPDATE, self)
+
+        if (battery_info := fetch_battery_info_or_none(self.soco)) is not None:
+            # Battery events can be infrequent, polling is still necessary
+            self.battery_info = battery_info
+            self._battery_poll_timer = self.hass.helpers.event.track_time_interval(
+                self.async_poll_battery, BATTERY_SCAN_INTERVAL
+            )
+            dispatcher_send(self.hass, SONOS_CREATE_BATTERY, self)
+        else:
+            self._platforms_ready.update({BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN})
+
+        dispatcher_send(self.hass, SONOS_CREATE_MEDIA_PLAYER, self)
 
     async def async_handle_new_entity(self, entity_type: str) -> None:
         """Listen to new entities to trigger first subscription."""

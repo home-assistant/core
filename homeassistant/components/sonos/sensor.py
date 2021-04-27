@@ -4,14 +4,11 @@ from __future__ import annotations
 import datetime
 import logging
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DATA_SONOS, SONOS_DISCOVERY_UPDATE, SONOS_ENTITY_CREATED
+from .const import DATA_SONOS, SONOS_CREATE_BATTERY
 from .entity import SonosSensorEntity
 from .speaker import SonosSpeaker
 
@@ -21,21 +18,12 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
 
-    async def _async_create_entity(speaker: SonosSpeaker) -> SonosBatteryEntity | None:
-        if speaker.battery_info:
-            return SonosBatteryEntity(speaker, hass.data[DATA_SONOS])
-        return None
-
-    async def _async_create_entities(speaker: SonosSpeaker):
-        if entity := await _async_create_entity(speaker):
-            async_add_entities([entity])
-        else:
-            async_dispatcher_send(
-                hass, f"{SONOS_ENTITY_CREATED}-{speaker.soco.uid}", SENSOR_DOMAIN
-            )
+    async def _async_create_entity(speaker: SonosSpeaker) -> None:
+        entity = SonosBatteryEntity(speaker, hass.data[DATA_SONOS])
+        async_add_entities([entity])
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, SONOS_DISCOVERY_UPDATE, _async_create_entities)
+        async_dispatcher_connect(hass, SONOS_CREATE_BATTERY, _async_create_entity)
     )
 
 
