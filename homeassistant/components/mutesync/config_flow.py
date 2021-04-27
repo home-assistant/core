@@ -35,8 +35,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         if error.status == 403:
             raise InvalidAuth from error
         raise CannotConnect
-    except (aiohttp.ClientError, asyncio.TimeoutError):
-        raise CannotConnect
+    except (aiohttp.ClientError, asyncio.TimeoutError) as error:
+        raise CannotConnect from error
 
     return token
 
