@@ -13,7 +13,12 @@ from homeassistant.components.netatmo.const import (
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.util import dt
 
-from .common import fake_post_request, selected_platforms, simulate_webhook
+from .common import (
+    fake_post_request,
+    fake_post_request_no_data,
+    selected_platforms,
+    simulate_webhook,
+)
 
 from tests.common import async_capture_events, async_fire_time_changed
 
@@ -349,3 +354,22 @@ async def test_webhook_person_event(hass, config_entry):
     await simulate_webhook(hass, webhook_id, fake_webhook_event)
 
     assert test_netatmo_event
+
+
+async def test_setup_component_no_devices(hass, config_entry):
+    """Test setup with webhook."""
+    with patch(
+        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth.async_post_request"
+    ) as mock_post, patch(
+        "homeassistant.components.netatmo.PLATFORMS", ["camera"]
+    ), patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+    ), patch(
+        "homeassistant.components.webhook.async_generate_url"
+    ):
+        mock_post.side_effect = fake_post_request_no_data
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        mock_post.assert_called()

@@ -40,12 +40,12 @@ FAKE_WEBHOOK_ACTIVATION = {
 DEFAULT_PLATFORMS = ["camera", "climate", "light", "sensor"]
 
 
-async def fake_post_request(**args):
+async def fake_post_request(*args, **kwargs):
     """Return fake data."""
-    if "url" not in args:
+    if "url" not in kwargs:
         return "{}"
 
-    endpoint = args["url"].split("/")[-1]
+    endpoint = kwargs["url"].split("/")[-1]
 
     if endpoint in "snapshot_720.jpg":
         return b"test stream image bytes"
@@ -63,7 +63,7 @@ async def fake_post_request(**args):
     return json.loads(load_fixture(f"netatmo/{endpoint}.json"))
 
 
-async def fake_post_request_no_data(**args):
+async def fake_post_request_no_data(*args, **kwargs):
     """Fake error during requesting backend data."""
     return "{}"
 
