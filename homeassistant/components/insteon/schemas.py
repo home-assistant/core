@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from binascii import Error as HexError, unhexlify
+import re
 
 from pyinsteon.address import Address
 from pyinsteon.constants import HC_LOOKUP
@@ -62,6 +63,14 @@ def set_default_port(schema: dict) -> dict:
         # Found hub_version but not ip_port
         schema[CONF_IP_PORT] = PORT_HUB_V1 if hub_version == 1 else PORT_HUB_V2
     return schema
+
+
+def insteon_address(value: str) -> str:
+    """Validate an Insteon address."""
+    regex = re.compile(r"([A-Fa-f0-9]{2}\.?[A-Fa-f0-9]{2}\.?[A-Fa-f0-9]{2})$")
+    if not regex.match(value):
+        raise vol.Invalid("Invalid Insteon Address")
+    return str(value).replace(".", "").lower()
 
 
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
