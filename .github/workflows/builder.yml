@@ -2,6 +2,7 @@ name: Build images
 
 # yamllint disable-line rule:truthy
 on:
+  workflow_dispatch:
   release:
     types: ["published"]
   schedule:
@@ -133,6 +134,7 @@ jobs:
         machine:
           - generic-x86-64
           - intel-nuc
+          - odroid-c2
           - odroid-c4
           - odroid-n2
           - odroid-xu
