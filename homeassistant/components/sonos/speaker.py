@@ -13,7 +13,6 @@ from pysonos.exceptions import SoCoException
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
@@ -282,12 +281,12 @@ class SonosSpeaker:
 
         Observed to be either BATTERY or SONOS_CHARGING_RING or USB_POWER.
         """
-        return self.battery_info.get("PowerSource", STATE_UNKNOWN)
+        return self.battery_info.get("PowerSource")
 
     @property
     def charging(self) -> bool:
         """Return the charging status of the speaker."""
-        return self.power_source not in ("BATTERY", STATE_UNKNOWN)
+        return self.power_source != "BATTERY"
 
     async def async_poll_battery(self, now: datetime.datetime | None = None) -> None:
         """Poll the device for the current battery state."""
