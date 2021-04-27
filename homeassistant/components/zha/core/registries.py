@@ -9,6 +9,7 @@ import zigpy.profiles.zha
 import zigpy.profiles.zll
 import zigpy.zcl as zcl
 
+from homeassistant.components.alarm_control_panel import DOMAIN as ALARM
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.climate import DOMAIN as CLIMATE
 from homeassistant.components.cover import DOMAIN as COVER
@@ -104,6 +105,7 @@ DEVICE_CLASS = {
         zigpy.profiles.zha.DeviceType.ON_OFF_PLUG_IN_UNIT: SWITCH,
         zigpy.profiles.zha.DeviceType.SHADE: COVER,
         zigpy.profiles.zha.DeviceType.SMART_PLUG: SWITCH,
+        zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL: ALARM,
     },
     zigpy.profiles.zll.PROFILE_ID: {
         zigpy.profiles.zll.DeviceType.COLOR_LIGHT: LIGHT,
