@@ -60,7 +60,7 @@ class SonosPowerEntity(SonosSensorEntity, BinarySensorEntity):
         return self.speaker.charging
 
     @property
-    def device_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
         return {
             ATTR_BATTERY_POWER_SOURCE: self.speaker.power_source,
