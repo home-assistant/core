@@ -2,13 +2,15 @@
 
 from unittest.mock import MagicMock
 
+from devolo_home_control_api.publisher.publisher import Publisher
 from devolo_home_control_api.publisher.updater import Updater
 
 
 class BinarySensorPropertyMock:
     """devolo Home Control binary sensor mock."""
 
-    key_count = 2
+    element_uid = "Test"
+    key_count = 1
     sensor_type = "door"
     sub_type = ""
     state = False
@@ -25,7 +27,7 @@ class DeviceMock:
     """devolo Home Control device mock."""
 
     brand = "devolo"
-    name = "Test"
+    name = "Test Device"
     uid = "Test"
     settings_property = {"general_device_settings": SettingsMock()}
 
@@ -56,6 +58,9 @@ class HomeControlMock:
     """devolo Home Control gateway mock."""
 
     binary_sensor_devices = []
+    binary_switch_devices = []
+    multi_level_sensor_devices = []
+    multi_level_switch_devices = []
     devices = {}
     publisher = MagicMock()
 
@@ -69,13 +74,15 @@ class HomeControlMockBinarySensor(HomeControlMock):
 
     binary_sensor_devices = [BinarySensorMock()]
     devices = {"Test": BinarySensorMock()}
-    updater = Updater(devices=devices, gateway=None, publisher=MagicMock())
+    publisher = Publisher(devices.keys())
+    updater = Updater(devices=devices, gateway=None, publisher=publisher)
 
 
 class HomeControlMockRemoteControl(HomeControlMock):
     """devolo Home Control gateway mock with remote control device."""
 
     devices = {"Test": RemoteControlMock()}
+    publisher = Publisher(devices.keys())
 
 
 class HomeControlMockDisabledBinarySensor(HomeControlMock):
