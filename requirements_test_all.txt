@@ -1168,7 +1168,7 @@ subarulink==0.3.12
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.4.0
+surepy==0.6.0
 
 # homeassistant.components.synology_dsm
 synologydsm-api==1.0.2

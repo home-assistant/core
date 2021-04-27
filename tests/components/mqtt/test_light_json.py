@@ -870,11 +870,11 @@ async def test_sending_mqtt_commands_and_optimistic2(hass, mqtt_mock):
     assert state.attributes["brightness"] == 75
     assert state.attributes["color_mode"] == "rgbw"
     assert state.attributes["rgbw_color"] == (255, 128, 0, 123)
-    assert "hs_color" not in state.attributes
-    assert "rgb_color" not in state.attributes
+    assert state.attributes["hs_color"] == (30.0, 67.451)
+    assert state.attributes["rgb_color"] == (255, 169, 83)
     assert "rgbww_color" not in state.attributes
     assert "white_value" not in state.attributes
-    assert "xy_color" not in state.attributes
+    assert state.attributes["xy_color"] == (0.526, 0.393)
     mqtt_mock.async_publish.assert_called_once_with(
         "test_light_rgb/set",
         JsonValidator(

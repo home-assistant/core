@@ -1,17 +1,14 @@
-"""The tests for the Sure Petcare binary sensor platform."""
-
+"""Test the surepetcare sensor platform."""
 from homeassistant.components.surepetcare.const import DOMAIN
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import HOUSEHOLD_ID, HUB_ID, MOCK_CONFIG
+from . import HOUSEHOLD_ID, MOCK_CONFIG
 
 EXPECTED_ENTITY_IDS = {
-    "binary_sensor.pet_flap_pet_flap_connectivity": f"{HOUSEHOLD_ID}-13576-connectivity",
-    "binary_sensor.cat_flap_cat_flap_connectivity": f"{HOUSEHOLD_ID}-13579-connectivity",
-    "binary_sensor.feeder_feeder_connectivity": f"{HOUSEHOLD_ID}-12345-connectivity",
-    "binary_sensor.pet_pet": f"{HOUSEHOLD_ID}-24680",
-    "binary_sensor.hub_hub": f"{HOUSEHOLD_ID}-{HUB_ID}",
+    "sensor.pet_flap_pet_flap_battery_level": f"{HOUSEHOLD_ID}-13576-battery",
+    "sensor.cat_flap_cat_flap_battery_level": f"{HOUSEHOLD_ID}-13579-battery",
+    "sensor.feeder_feeder_battery_level": f"{HOUSEHOLD_ID}-12345-battery",
 }
 
 
@@ -27,6 +24,6 @@ async def test_binary_sensors(hass, surepetcare) -> None:
         assert entity_id in state_entity_ids
         state = hass.states.get(entity_id)
         assert state
-        assert state.state == "on"
+        assert state.state == "100"
         entity = entity_registry.async_get(entity_id)
         assert entity.unique_id == unique_id
