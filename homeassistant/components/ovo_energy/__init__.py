@@ -25,6 +25,8 @@ from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS = ["sensor"]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OVO Energy from a config entry."""
@@ -75,9 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     # Setup components
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -85,11 +85,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigType) -> bool:
     """Unload OVO Energy config entry."""
     # Unload sensors
-    await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     del hass.data[DOMAIN][entry.entry_id]
 
-    return True
+    return unload_ok
 
 
 class OVOEnergyEntity(CoordinatorEntity):
