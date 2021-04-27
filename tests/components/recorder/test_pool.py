@@ -13,7 +13,7 @@ def test_recorder_pool():
     engine = create_engine("sqlite://", poolclass=RecorderPool)
     get_session = sessionmaker(bind=engine)
 
-    def _get_conection_twice():
+    def _get_connection_twice():
         session = get_session()
         original_connection = session.connection().connection.connection
         session.close()
@@ -24,11 +24,11 @@ def test_recorder_pool():
 
         return original_connection, second_connection
 
-    connections = _get_conection_twice()
+    connections = _get_connection_twice()
     assert connections[0] == connections[1]
 
     def _test_in_new_thread():
-        connections = _get_conection_twice()
+        connections = _get_connection_twice()
         assert connections[0] != connections[1]
 
     new_thread = threading.Thread(target=_test_in_new_thread)
