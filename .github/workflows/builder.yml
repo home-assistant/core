@@ -237,7 +237,7 @@ jobs:
           export DOCKER_CLI_EXPERIMENTAL=enabled
 
           function create_manifest() {
-            local docker_reg={1}
+            local docker_reg=${1}
             local tag_l=${2}
             local tag_r=${3}
 
@@ -272,7 +272,7 @@ jobs:
           }
 
           function validate_image() {
-            local image={1}
+            local image=${1}
             state="$(vcn authenticate --org home-assistant.io --output json docker://${image} | jq '.verification.status // 2')"
             if [[ "${state}" != "0" ]]; then
               echo "Invalid signature!"
