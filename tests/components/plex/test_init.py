@@ -8,7 +8,7 @@ import plexapi
 import requests
 
 import homeassistant.components.plex.const as const
-from homeassistant.components.plex.models import TRANSIENT_SECTION
+from homeassistant.components.plex.models import LIVE_TV_SECTION, TRANSIENT_SECTION
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
@@ -113,6 +113,26 @@ async def test_setup_with_photo_session(hass, entry, setup_plex_server):
 
     sensor = hass.states.get("sensor.plex_plex_server_1")
     assert sensor.state == "0"
+
+
+async def test_setup_with_live_tv_session(hass, entry, setup_plex_server):
+    """Test setup component with a Live TV session."""
+    await setup_plex_server(session_type="live_tv")
+
+    assert len(hass.config_entries.async_entries(const.DOMAIN)) == 1
+    assert entry.state == ENTRY_STATE_LOADED
+    await hass.async_block_till_done()
+
+    media_player = hass.states.get(
+        "media_player.plex_plex_for_android_tv_shield_android_tv"
+    )
+    assert media_player.state == STATE_PLAYING
+    assert media_player.attributes["media_library_title"] == LIVE_TV_SECTION
+
+    await wait_for_debouncer(hass)
+
+    sensor = hass.states.get("sensor.plex_plex_server_1")
+    assert sensor.state == "1"
 
 
 async def test_setup_with_transient_session(hass, entry, setup_plex_server):
