@@ -79,7 +79,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknow_error(hass: HomeAssistant) -> None:
+async def test_form_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle an unexpected/unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
