@@ -632,7 +632,6 @@ omit =
     homeassistant/components/mullvad/__init__.py
     homeassistant/components/mullvad/binary_sensor.py
     homeassistant/components/mutesync/__init__.py
-    homeassistant/components/mutesync/config_flow.py
     homeassistant/components/mutesync/binary_sensor.py
     homeassistant/components/nest/const.py
     homeassistant/components/mvglive/sensor.py
