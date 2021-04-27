@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_ID,
     CONF_UNIQUE_ID,
+    CONF_XY,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
@@ -25,7 +26,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
 
-from .const import CONF_ANGLE, CONF_GESTURE, CONF_XY, LOGGER, NEW_SENSOR
+from .const import CONF_ANGLE, CONF_GESTURE, LOGGER, NEW_SENSOR
 from .deconz_device import DeconzBase
 
 CONF_DECONZ_EVENT = "deconz_event"
