@@ -13,12 +13,13 @@ from zwave_js_server.model.notification import (
     EntryControlNotification,
     NotificationNotification,
 )
-from zwave_js_server.model.value import ValueNotification
+from zwave_js_server.model.value import Value, ValueNotification
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
+    ATTR_ENTITY_ID,
     CONF_URL,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -63,9 +64,10 @@ from .const import (
     LOGGER,
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
+    ZWAVE_JS_VALUE_UPDATED_EVENT,
 )
-from .discovery import async_discover_values
-from .helpers import async_enable_statistics, get_device_id
+from .discovery import ZwaveDiscoveryInfo, async_discover_values
+from .helpers import async_enable_statistics, get_device_id, get_unique_id
 from .migrate import async_migrate_discovered_value
 from .services import ZWaveServices
 
@@ -140,6 +142,8 @@ async def async_setup_entry(  # noqa: C901
         if device.id not in registered_unique_ids:
             registered_unique_ids[device.id] = defaultdict(set)
 
+        value_updates_disc_info = []
+
         # run discovery on all node values and create/update entities
         for disc_info in async_discover_values(node):
             platform = disc_info.platform
@@ -166,6 +170,21 @@ async def async_setup_entry(  # noqa: C901
             LOGGER.debug("Discovered entity: %s", disc_info)
             async_dispatcher_send(
                 hass, f"{DOMAIN}_{entry.entry_id}_add_{platform}", disc_info
+            )
+
+            # Capture discovery info for values we want to watch for updates
+            if disc_info.assumed_state:
+                value_updates_disc_info.append(disc_info)
+
+        # add listener for value updated events if necessary
+        if value_updates_disc_info:
+            unsubscribe_callbacks.append(
+                node.on(
+                    "value updated",
+                    lambda event: async_on_value_updated(
+                        value_updates_disc_info, event["value"]
+                    ),
+                )
             )
 
         # add listener for stateless node value notification events
@@ -273,6 +292,45 @@ async def async_setup_entry(  # noqa: C901
             )
 
         hass.bus.async_fire(ZWAVE_JS_NOTIFICATION_EVENT, event_data)
+
+    @callback
+    def async_on_value_updated(
+        value_updates_disc_info: list[ZwaveDiscoveryInfo], value: Value
+    ) -> None:
+        """Fire value updated event."""
+        # Get the discovery info for the value that was updated.
+        try:
+            disc_info = next(
+                disc_info
+                for disc_info in value_updates_disc_info
+                if disc_info.primary_value.value_id == value.value_id
+            )
+        except StopIteration:
+            return
+
+        unique_id = get_unique_id(
+            client.driver.controller.home_id, disc_info.primary_value.value_id
+        )
+        entity_id = ent_reg.async_get_entity_id(DOMAIN, disc_info.platform, unique_id)
+        device = dev_reg.async_get_device({get_device_id(client, value.node)})
+        hass.bus.async_fire(
+            ZWAVE_JS_VALUE_UPDATED_EVENT,
+            {
+                ATTR_DOMAIN: DOMAIN,
+                ATTR_NODE_ID: value.node.node_id,
+                ATTR_HOME_ID: client.driver.controller.home_id,
+                ATTR_DEVICE_ID: device.id,  # type: ignore
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_COMMAND_CLASS: value.command_class,
+                ATTR_COMMAND_CLASS_NAME: value.command_class_name,
+                ATTR_ENDPOINT: value.endpoint,
+                ATTR_PROPERTY: value.property_,
+                ATTR_PROPERTY_NAME: value.property_name,
+                ATTR_PROPERTY_KEY: value.property_key,
+                ATTR_PROPERTY_KEY_NAME: value.property_key_name,
+                ATTR_VALUE: value.value,
+            },
+        )
 
     # connect and throw error if connection failed
     try:

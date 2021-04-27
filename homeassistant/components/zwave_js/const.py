@@ -21,7 +21,7 @@ LOGGER = logging.getLogger(__package__)
 # constants for events
 ZWAVE_JS_VALUE_NOTIFICATION_EVENT = f"{DOMAIN}_value_notification"
 ZWAVE_JS_NOTIFICATION_EVENT = f"{DOMAIN}_notification"
-ZWAVE_JS_VALUE_UPDATE_EVENT = f"{DOMAIN}_value_update"
+ZWAVE_JS_VALUE_UPDATED_EVENT = f"{DOMAIN}_value_updated"
 ATTR_NODE_ID = "node_id"
 ATTR_HOME_ID = "home_id"
 ATTR_ENDPOINT = "endpoint"
