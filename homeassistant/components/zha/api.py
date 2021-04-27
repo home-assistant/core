@@ -9,6 +9,7 @@ from typing import Any
 import voluptuous as vol
 from zigpy.config.validators import cv_boolean
 from zigpy.types.named import EUI64
+from zigpy.zcl.clusters.security import IasAce
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.components import websocket_api
@@ -54,11 +55,13 @@ from .core.const import (
     WARNING_DEVICE_SQUAWK_MODE_ARMED,
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
+    ZHA_ALARM_OPTIONS,
     ZHA_CHANNEL_MSG,
     ZHA_CONFIG_SCHEMAS,
 )
 from .core.group import GroupMember
 from .core.helpers import (
+    async_input_cluster_exists,
     async_is_bindable_target,
     convert_install_code,
     get_matched_clusters,
@@ -894,6 +897,10 @@ async def websocket_get_configuration(hass, connection, msg):
 
     data = {"schemas": {}, "data": {}}
     for section, schema in ZHA_CONFIG_SCHEMAS.items():
+        if section == ZHA_ALARM_OPTIONS and not async_input_cluster_exists(
+            hass, IasAce.cluster_id
+        ):
+            continue
         data["schemas"][section] = voluptuous_serialize.convert(
             schema, custom_serializer=custom_serializer
         )
