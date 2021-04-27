@@ -46,6 +46,14 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_CONFIG = "config"
 PARALLEL_UPDATES = 0
 
+PLATFORMS = [
+    BINARY_SENSOR_DOMAIN,
+    CLIMATE_DOMAIN,
+    LIGHT_DOMAIN,
+    SENSOR_DOMAIN,
+    SWITCH_DOMAIN,
+]
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -160,24 +168,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    forward_unload = hass.config_entries.async_forward_entry_unload
-
-    tasks = []
-
-    if hass.data[DOMAIN][BINARY_SENSOR_DOMAIN]:
-        tasks += [forward_unload(entry, BINARY_SENSOR_DOMAIN)]
-    if hass.data[DOMAIN][CLIMATE_DOMAIN]:
-        tasks += [forward_unload(entry, CLIMATE_DOMAIN)]
-    if hass.data[DOMAIN][LIGHT_DOMAIN]:
-        tasks += [forward_unload(entry, LIGHT_DOMAIN)]
-    if hass.data[DOMAIN][SENSOR_DOMAIN]:
-        tasks += [forward_unload(entry, SENSOR_DOMAIN)]
-    if hass.data[DOMAIN][SWITCH_DOMAIN]:
-        tasks += [forward_unload(entry, SWITCH_DOMAIN)]
+    platforms_to_unload = [
+        platform for platform in PLATFORMS if platform in hass.data[DOMAIN]
+    ]
 
     hass.data[DOMAIN].clear()
 
-    return all(await asyncio.gather(*tasks))
+    return await hass.config_entries.async_unload_platforms(entry, platforms_to_unload)
 
 
 def refresh_system(func):

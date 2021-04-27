@@ -36,6 +36,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS = ["sensor"]
+
 GLANCES_SCHEMA = vol.All(
     vol.Schema(
         {
@@ -79,11 +81,12 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
-    hass.data[DOMAIN].pop(config_entry.entry_id)
-    return True
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok
 
 
 class GlancesData:
@@ -127,13 +130,12 @@ class GlancesData:
 
         self.add_options()
         self.set_scan_interval(self.config_entry.options[CONF_SCAN_INTERVAL])
-        self.config_entry.add_update_listener(self.async_options_updated)
-
-        self.hass.async_create_task(
-            self.hass.config_entries.async_forward_entry_setup(
-                self.config_entry, "sensor"
-            )
+        self.config_entry.async_on_unload(
+            self.config_entry.add_update_listener(self.async_options_updated)
         )
+
+        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
+
         return True
 
     def add_options(self):

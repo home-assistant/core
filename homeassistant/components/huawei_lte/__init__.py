@@ -420,10 +420,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     # Forward config entry setup to platforms
-    for domain in CONFIG_ENTRY_PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, domain)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, CONFIG_ENTRY_PLATFORMS)
+
     # Notify doesn't support config entry setup yet, load with discovery for now
     await discovery.async_load_platform(
         hass,
@@ -462,8 +460,9 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload config entry."""
 
     # Forward config entry unload to platforms
-    for domain in CONFIG_ENTRY_PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, domain)
+    await hass.config_entries.async_unload_platforms(
+        config_entry, CONFIG_ENTRY_PLATFORMS
+    )
 
     # Forget about the router and invoke its cleanup
     router = hass.data[DOMAIN].routers.pop(config_entry.data[CONF_URL])

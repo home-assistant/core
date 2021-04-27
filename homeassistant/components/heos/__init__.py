@@ -28,6 +28,8 @@ from .const import (
     SIGNAL_HEOS_UPDATED,
 )
 
+PLATFORMS = [MEDIA_PLAYER_DOMAIN]
+
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_HOST): cv.string})}, extra=vol.ALLOW_EXTRA
 )
@@ -119,9 +121,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     services.register(hass, controller)
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, MEDIA_PLAYER_DOMAIN)
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
     return True
 
 
@@ -133,9 +134,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     services.remove(hass)
 
-    return await hass.config_entries.async_forward_entry_unload(
-        entry, MEDIA_PLAYER_DOMAIN
-    )
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class ControllerManager:

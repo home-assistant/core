@@ -10,6 +10,8 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DATA_CONFIG, IZONE
 from .discovery import async_start_discovery_service, async_stop_discovery_service
 
+PLATFORMS = ["climate"]
+
 CONFIG_SCHEMA = vol.Schema(
     {
         IZONE: vol.Schema(
@@ -45,15 +47,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
 async def async_setup_entry(hass, entry):
     """Set up from a config entry."""
     await async_start_discovery_service(hass)
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "climate")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload the config entry and stop discovery process."""
     await async_stop_discovery_service(hass)
-    await hass.config_entries.async_forward_entry_unload(entry, "climate")
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

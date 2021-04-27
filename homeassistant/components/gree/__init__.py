@@ -1,5 +1,4 @@
 """The Gree Climate integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -21,26 +20,17 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Gree Climate component."""
-    hass.data[DOMAIN] = {}
-    return True
+PLATFORMS = [CLIMATE_DOMAIN, SWITCH_DOMAIN]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Gree Climate from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
     gree_discovery = DiscoveryService(hass)
     hass.data[DATA_DISCOVERY_SERVICE] = gree_discovery
 
     hass.data[DOMAIN].setdefault(DISPATCHERS, [])
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, CLIMATE_DOMAIN)
-    )
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, SWITCH_DOMAIN)
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def _async_scan_update(_=None):
         await gree_discovery.discovery.scan()
@@ -67,12 +57,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if hass.data.get(DATA_DISCOVERY_SERVICE) is not None:
         hass.data.pop(DATA_DISCOVERY_SERVICE)
 
-    results = asyncio.gather(
-        hass.config_entries.async_forward_entry_unload(entry, CLIMATE_DOMAIN),
-        hass.config_entries.async_forward_entry_unload(entry, SWITCH_DOMAIN),
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    unload_ok = all(await results)
     if unload_ok:
         hass.data[DOMAIN].pop(COORDINATORS, None)
         hass.data[DOMAIN].pop(DISPATCHERS, None)
