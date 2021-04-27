@@ -88,7 +88,7 @@ class SynoDSMStorageBinarySensor(SynologyDSMDeviceEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        return getattr(self._api.storage, self.entity_type)(self._device_id) and True
+        return bool(getattr(self._api.storage, self.entity_type)(self._device_id))
 
 
 class SynoDSMUpgradeBinarySensor(SynologyDSMBaseEntity, BinarySensorEntity):
@@ -97,7 +97,7 @@ class SynoDSMUpgradeBinarySensor(SynologyDSMBaseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        return getattr(self._api.upgrade, self.entity_type) and True
+        return bool(getattr(self._api.upgrade, self.entity_type))
 
     @property
     def available(self) -> bool:
