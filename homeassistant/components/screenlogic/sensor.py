@@ -60,7 +60,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     # Generic sensors
     for sensor_name, sensor_data in coordinator.data[SL_DATA.KEY_SENSORS].items():
-        if sensor_name == "chem_alarm" or sensor_name == "salt_ppm":
+        if sensor_name in ("chem_alarm", "salt_ppm"):
             continue
         if sensor_data["value"] != 0:
             entities.append(ScreenLogicSensor(coordinator, sensor_name))
