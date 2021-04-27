@@ -50,7 +50,7 @@ PRINTER_TYPES = ["laser", "ink"]
 
 SNMP = "snmp"
 
-ATTRS_MAP = {
+ATTRS_MAP: dict = {
     ATTR_DRUM_REMAINING_LIFE: (ATTR_DRUM_REMAINING_PAGES, ATTR_DRUM_COUNTER),
     ATTR_BLACK_DRUM_REMAINING_LIFE: (
         ATTR_BLACK_DRUM_REMAINING_PAGES,
@@ -70,7 +70,7 @@ ATTRS_MAP = {
     ),
 }
 
-SENSOR_TYPES = {
+SENSOR_TYPES: dict = {
     ATTR_STATUS: {
         ATTR_ICON: "mdi:printer",
         ATTR_LABEL: ATTR_STATUS.title(),

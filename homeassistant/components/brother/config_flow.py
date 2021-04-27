@@ -1,4 +1,6 @@
 """Adds config flow for Brother Printer."""
+from __future__ import annotations
+
 import ipaddress
 import re
 
@@ -7,6 +9,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_TYPE
+from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN, PRINTER_TYPES
 from .utils import get_snmp_engine
@@ -19,7 +23,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-def host_valid(host):
+def host_valid(host: str):
     """Return True if hostname or IP address is valid."""
     try:
         if ipaddress.ip_address(host).version == (4 or 6):
@@ -35,12 +39,14 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize."""
-        self.brother = None
+        self.brother: Brother = None
         self.host = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: ConfigType | None = None
+    ) -> FlowResultDict:
         """Handle the initial step."""
         errors = {}
 
@@ -72,7 +78,9 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResultDict:
         """Handle zeroconf discovery."""
         if discovery_info is None:
             return self.async_abort(reason="cannot_connect")
@@ -107,7 +115,9 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_zeroconf_confirm()
 
-    async def async_step_zeroconf_confirm(self, user_input=None):
+    async def async_step_zeroconf_confirm(
+        self, user_input: ConfigType | None = None
+    ) -> FlowResultDict:
         """Handle a flow initiated by zeroconf."""
         if user_input is not None:
             title = f"{self.brother.model} {self.brother.serial}"
