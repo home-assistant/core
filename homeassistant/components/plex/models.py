@@ -10,7 +10,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.util import dt as dt_util
 
 LIVE_TV_SECTION = "Live TV"
-TRANSIENT_SECTION = "Transient"
+TRANSIENT_SECTION = "Preroll"
 UNKNOWN_SECTION = "Unknown"
 SPECIAL_SECTIONS = {
     -2: TRANSIENT_SECTION,
