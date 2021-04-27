@@ -23,7 +23,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-def host_valid(host: str) -> bool:  # type: ignore[return]
+def host_valid(host: str) -> bool:
     """Return True if hostname or IP address is valid."""
     try:
         if ipaddress.ip_address(host).version == (4 or 6):
@@ -31,6 +31,7 @@ def host_valid(host: str) -> bool:  # type: ignore[return]
     except ValueError:
         disallowed = re.compile(r"[^a-zA-Z\d\-]")
         return all(x and not disallowed.search(x) for x in host.split("."))
+    return False
 
 
 class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
