@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_unload)
     )
 
-    await async_device_setup(hass, entry, fritz_tools)
+    async_device_setup(hass, entry, fritz_tools)
 
     # Load the other platforms like switch
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -63,11 +63,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_device_setup(
+@callback
+def async_device_setup(
     hass: HomeAssistant, entry: ConfigEntry, fritz_tools: FritzBoxTools
 ):
     """Set up a device that is online."""
-    dev_reg = await device_registry.async_get_registry(hass)
+    dev_reg = device_registry.async_get(hass)
     dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
         name=entry.title,

@@ -1,6 +1,7 @@
 """AVM FRITZ!Box connectivitiy sensor."""
-import datetime
 import logging
+
+from fritzconnection.core.exceptions import FritzConnectionException
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
@@ -36,7 +37,7 @@ class FritzBoxConnectivitySensor(BinarySensorEntity):
     def __init__(self, fritzbox_tools, device_friendlyname: str):
         """Init FRITZ!Box connectivity class."""
         self._fritzbox_tools = fritzbox_tools
-        self._unique_id = f"{self._fritzbox_tools.unique_id}-{self.entity_id}"
+        self._unique_id = f"{self._fritzbox_tools.unique_id}-connectivity"
         self._name = f"{device_friendlyname} Connectivity"
         self._is_on = True
         self._is_available = True
@@ -78,48 +79,22 @@ class FritzBoxConnectivitySensor(BinarySensorEntity):
         """Return device attributes."""
         return self._attributes
 
-    async def _async_fetch_update(self):
-        """Fetch updates."""
+    def update(self) -> None:
+        """Update data."""
+        _LOGGER.debug("Updating FRITZ!Box binary sensors")
         self._is_on = True
         try:
             if "WANCommonInterfaceConfig1" in self._fritzbox_tools.connection.services:
-                connection = self._connection_call_action()
-                link_props = await self.hass.async_add_executor_job(self._fritzbox_tools.connection.call_action, "WANCommonInterfaceConfig1", "GetCommonLinkProperties")
+                link_props = self._fritzbox_tools.connection.call_action(
+                    "WANCommonInterfaceConfig1", "GetCommonLinkProperties"
+                )
                 is_up = link_props["NewPhysicalLinkStatus"]
                 self._is_on = is_up == "Up"
             else:
-                self._is_on = self.hass.async_add_executor_job(
-                    self._fritzbox_tools.fritzstatus.is_connected
-                )
+                self._fritzbox_tools.fritzstatus.is_connected
 
             self._is_available = True
 
-            status = self._fritzbox_tools.fritzstatus
-            uptime_seconds = await self.hass.async_add_executor_job(
-                lambda: getattr(status, "uptime")
-            )
-            last_reconnect = datetime.datetime.now() - datetime.timedelta(
-                seconds=uptime_seconds
-            )
-            self._attributes["last_reconnect"] = last_reconnect.replace(
-                microsecond=0
-            ).isoformat()
-
-            if ipv4_address := await self.hass.async_add_executor_job(
-                lambda: getattr(status, "external_ip")
-            ):
-                self._attributes["external_ip"] = ipv4_address
-
-            if ipv6_address := await self.hass.async_add_executor_job(
-                lambda: getattr(status, "external_ipv6")
-            ):
-                self._attributes["external_ip"] = ipv6_address
-
-        except Exception:  # pylint: disable=broad-except
+        except FritzConnectionException:
             _LOGGER.error("Error getting the state from the FRITZ!Box", exc_info=True)
             self._is_available = False
-
-    async def async_update(self) -> None:
-        """Update data."""
-        _LOGGER.debug("Updating FRITZ!Box binary sensors")
-        await self._async_fetch_update()
