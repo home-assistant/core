@@ -15,7 +15,6 @@ CONF_CLOUD_COUNTRY = "cloud_country"
 CONF_CLOUD_SUBDEVICES = "cloud_subdevices"
 
 KEY_COORDINATOR = "coordinator"
-UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 ATTR_AVAILABLE = "available"
 
