@@ -21,7 +21,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
 
 from .common import FritzBoxTools
-from .const import DEFAULT_DEVICE_NAME, DOMAIN
+from .const import DATA_FRITZ, DEFAULT_DEVICE_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,18 +63,30 @@ async def async_get_scanner(hass: HomeAssistant, config: ConfigType):
     return None
 
 
+class FritzData:
+    """Storage class for platform global data."""
+
+    def __init__(self) -> None:
+        """Initialize the data."""
+        self.tracked = set()
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up device tracker for FRITZ!Box component."""
     _LOGGER.debug("Starting FRITZ!Box device tracker")
     router = hass.data[DOMAIN][entry.entry_id]
-    tracked = set()
+
+    if DATA_FRITZ not in hass.data:
+        hass.data[DATA_FRITZ] = FritzData()
+
+    data_fritz = hass.data[DATA_FRITZ]
 
     @callback
     def update_router():
         """Update the values of the router."""
-        _async_add_entities(router, async_add_entities, tracked)
+        _async_add_entities(router, async_add_entities, data_fritz)
 
     async_dispatcher_connect(hass, router.signal_device_new, update_router)
 
@@ -82,16 +94,16 @@ async def async_setup_entry(
 
 
 @callback
-def _async_add_entities(router, async_add_entities, tracked):
+def _async_add_entities(router, async_add_entities, data_fritz):
     """Add new tracker entities from the router."""
     new_tracked = []
 
     for mac, device in router.devices.items():
-        if mac in tracked:
+        if mac in data_fritz.tracked or device.ip_address == "":
             continue
 
         new_tracked.append(FritzBoxTracker(router, device))
-        tracked.add(mac)
+        data_fritz.tracked.add(mac)
 
     if new_tracked:
         async_add_entities(new_tracked)
