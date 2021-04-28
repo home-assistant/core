@@ -95,7 +95,7 @@ async def async_setup_gateway_entry(
     if entry.unique_id.endswith("-gateway"):
         hass.config_entries.async_update_entry(entry, unique_id=entry.data["mac"])
 
-    undo_listener = entry.add_update_listener(update_listener)
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     # Connect to gateway
     gateway = ConnectXiaomiGateway(hass, entry)
