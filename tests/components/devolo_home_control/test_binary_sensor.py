@@ -6,7 +6,6 @@ from homeassistant.components.devolo_home_control import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from . import configure_integration
 from .mocks import (
     HomeControlMock,
     HomeControlMockBinarySensor,
@@ -15,9 +14,8 @@ from .mocks import (
 )
 
 
-async def test_binary_sensor(hass: HomeAssistant, mock_zeroconf):
+async def test_binary_sensor(hass: HomeAssistant, mock_zeroconf, entry):
     """Test setup and state change of a binary sensor device."""
-    entry = configure_integration(hass)
     with patch(
         "homeassistant.components.devolo_home_control.HomeControl",
         side_effect=[HomeControlMockBinarySensor, HomeControlMock],
@@ -40,12 +38,9 @@ async def test_binary_sensor(hass: HomeAssistant, mock_zeroconf):
     state = hass.states.get(f"{COMPONENTS_DOMAIN}.test")
     assert state.state == STATE_ON
 
-    await hass.config_entries.async_unload(entry.entry_id)
 
-
-async def test_remote_control(hass: HomeAssistant, mock_zeroconf):
+async def test_remote_control(hass: HomeAssistant, mock_zeroconf, entry):
     """Test setup and state change of a remote control device."""
-    entry = configure_integration(hass)
     with patch(
         "homeassistant.components.devolo_home_control.HomeControl",
         side_effect=[HomeControlMockRemoteControl, HomeControlMock],
@@ -79,12 +74,9 @@ async def test_remote_control(hass: HomeAssistant, mock_zeroconf):
     state = hass.states.get(f"{COMPONENTS_DOMAIN}.test")
     assert state.state == STATE_OFF
 
-    await hass.config_entries.async_unload(entry.entry_id)
 
-
-async def test_disabled(hass: HomeAssistant, mock_zeroconf):
+async def test_disabled(hass: HomeAssistant, mock_zeroconf, entry):
     """Test setup of a disabled device."""
-    entry = configure_integration(hass)
     with patch(
         "homeassistant.components.devolo_home_control.HomeControl",
         side_effect=[HomeControlMockDisabledBinarySensor, HomeControlMock],
@@ -93,12 +85,10 @@ async def test_disabled(hass: HomeAssistant, mock_zeroconf):
         await hass.async_block_till_done()
 
     assert hass.states.get(f"{COMPONENTS_DOMAIN}.devolo.WarningBinaryFI:Test") is None
-    await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_binary_sensor_device_status(hass: HomeAssistant, mock_zeroconf):
+async def test_binary_sensor_device_status(hass: HomeAssistant, mock_zeroconf, entry):
     """Test change of device status."""
-    entry = configure_integration(hass)
     with patch(
         "homeassistant.components.devolo_home_control.HomeControl",
         side_effect=[HomeControlMockBinarySensor, HomeControlMock],
@@ -121,12 +111,9 @@ async def test_binary_sensor_device_status(hass: HomeAssistant, mock_zeroconf):
     state = hass.states.get(f"{COMPONENTS_DOMAIN}.test")
     assert state.state == STATE_UNAVAILABLE
 
-    await hass.config_entries.async_unload(entry.entry_id)
 
-
-async def test_remote_control_device_status(hass: HomeAssistant, mock_zeroconf):
+async def test_remote_control_device_status(hass: HomeAssistant, mock_zeroconf, entry):
     """Test change of device status."""
-    entry = configure_integration(hass)
     with patch(
         "homeassistant.components.devolo_home_control.HomeControl",
         side_effect=[HomeControlMockRemoteControl, HomeControlMock],
@@ -148,5 +135,3 @@ async def test_remote_control_device_status(hass: HomeAssistant, mock_zeroconf):
 
     state = hass.states.get(f"{COMPONENTS_DOMAIN}.test")
     assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_unload(entry.entry_id)
