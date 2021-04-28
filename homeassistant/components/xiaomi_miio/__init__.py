@@ -169,10 +169,7 @@ async def async_setup_device_entry(
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    for platform in platforms:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, platforms)
 
     return True
 
