@@ -337,6 +337,12 @@ def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_stat
     )
 
 
+@pytest.fixture(name="vision_security_zl7432_state", scope="session")
+def vision_security_zl7432_state_fixture():
+    """Load the vision security zl7432 switch node state fixture data."""
+    return json.loads(load_fixture("zwave_js/vision_security_zl7432_state.json"))
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state):
     """Mock a client."""
@@ -635,5 +641,13 @@ def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_fixt
             climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state
         ),
     )
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="vision_security_zl7432")
+def vision_security_zl7432_fixture(client, vision_security_zl7432_state):
+    """Mock a vision security zl7432 node."""
+    node = Node(client, copy.deepcopy(vision_security_zl7432_state))
     client.driver.controller.nodes[node.node_id] = node
     return node

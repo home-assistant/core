@@ -94,7 +94,7 @@ class FritzBoxTools:
         )
 
     @callback
-    async def async_unload(self):
+    def async_unload(self):
         """Unload FritzboxTools class."""
         _LOGGER.debug("Unloading FRITZ!Box router integration")
         if self._cancel_scan is not None:
@@ -135,7 +135,7 @@ class FritzBoxTools:
         """Retrieve latest information from the FRITZ!Box."""
         return self.fritzhosts.get_hosts_info()
 
-    def scan_devices(self, now: datetime | None) -> None:
+    def scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new devices and return a list of found device ids."""
         _LOGGER.debug("Checking devices for FRITZ!Box router %s", self.host)
 

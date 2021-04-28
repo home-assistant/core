@@ -184,7 +184,7 @@ arcam-fmj==0.5.3
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
-async-upnp-client==0.16.1
+async-upnp-client==0.16.2
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -405,7 +405,7 @@ hangups==0.4.11
 hass-nabucasa==0.43.0
 
 # homeassistant.components.tasmota
-hatasmota==0.2.10
+hatasmota==0.2.11
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.2
@@ -423,7 +423,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210423.0
+home-assistant-frontend==20210427.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -522,6 +522,9 @@ mullvad-api==1.0.0
 # homeassistant.components.tts
 mutagen==1.45.1
 
+# homeassistant.components.mutesync
+mutesync==0.0.1
+
 # homeassistant.components.keenetic_ndms2
 ndms2_client==0.1.1
 
@@ -561,7 +564,7 @@ oauth2client==4.0.0
 objgraph==3.4.1
 
 # homeassistant.components.omnilogic
-omnilogic==0.4.3
+omnilogic==0.4.5
 
 # homeassistant.components.ondilo_ico
 ondilo==0.2.0
@@ -992,7 +995,7 @@ python-openzwave-mqtt[mqtt-client]==1.4.0
 python-picnic-api==1.1.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.23
+python-smarttub==0.0.24
 
 # homeassistant.components.songpal
 python-songpal==0.12
@@ -1064,7 +1067,7 @@ rokuecp==0.8.1
 roombapy==1.6.3
 
 # homeassistant.components.roon
-roonapi==0.0.32
+roonapi==0.0.36
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
@@ -1165,7 +1168,7 @@ subarulink==0.3.12
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.4.0
+surepy==0.6.0
 
 # homeassistant.components.synology_dsm
 synologydsm-api==1.0.2
@@ -1267,7 +1270,7 @@ zeep[async]==4.0.0
 zeroconf==0.29.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.56
+zha-quirks==0.0.57
 
 # homeassistant.components.zha
 zigpy-cc==0.5.2

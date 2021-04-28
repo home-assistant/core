@@ -52,9 +52,9 @@ def create_motioneye_client(
 
 def get_motioneye_device_identifier(
     config_entry_id: str, camera_id: int
-) -> tuple[str, str, int]:
+) -> tuple[str, str]:
     """Get the identifiers for a motionEye device."""
-    return (DOMAIN, config_entry_id, camera_id)
+    return (DOMAIN, f"{config_entry_id}_{camera_id}")
 
 
 def get_motioneye_entity_unique_id(
@@ -225,14 +225,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         config_data = hass.data[DOMAIN].pop(entry.entry_id)
         await config_data[CONF_CLIENT].async_client_close()

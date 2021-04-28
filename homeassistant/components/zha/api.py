@@ -9,6 +9,7 @@ from typing import Any
 import voluptuous as vol
 from zigpy.config.validators import cv_boolean
 from zigpy.types.named import EUI64
+from zigpy.zcl.clusters.security import IasAce
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.components import websocket_api
@@ -54,10 +55,13 @@ from .core.const import (
     WARNING_DEVICE_SQUAWK_MODE_ARMED,
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
+    ZHA_ALARM_OPTIONS,
+    ZHA_CHANNEL_MSG,
     ZHA_CONFIG_SCHEMAS,
 )
 from .core.group import GroupMember
 from .core.helpers import (
+    async_input_cluster_exists,
     async_is_bindable_target,
     convert_install_code,
     get_matched_clusters,
@@ -468,34 +472,21 @@ async def websocket_reconfigure_node(hass, connection, msg):
     zha_gateway: ZhaGatewayType = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ieee = msg[ATTR_IEEE]
     device: ZhaDeviceType = zha_gateway.get_device(ieee)
-    ieee_str = str(device.ieee)
-    nwk_str = device.nwk.__repr__()
-
-    class DeviceLogFilterer(logging.Filter):
-        """Log filterer that limits messages to the specified device."""
-
-        def filter(self, record):
-            message = record.getMessage()
-            return nwk_str in message or ieee_str in message
-
-    filterer = DeviceLogFilterer()
 
     async def forward_messages(data):
         """Forward events to websocket."""
         connection.send_message(websocket_api.event_message(msg["id"], data))
 
     remove_dispatcher_function = async_dispatcher_connect(
-        hass, "zha_gateway_message", forward_messages
+        hass, ZHA_CHANNEL_MSG, forward_messages
     )
 
     @callback
     def async_cleanup() -> None:
-        """Remove signal listener and turn off debug mode."""
-        zha_gateway.async_disable_debug_mode(filterer=filterer)
+        """Remove signal listener."""
         remove_dispatcher_function()
 
     connection.subscriptions[msg["id"]] = async_cleanup
-    zha_gateway.async_enable_debug_mode(filterer=filterer)
 
     _LOGGER.debug("Reconfiguring node with ieee_address: %s", ieee)
     hass.async_create_task(device.async_configure())
@@ -906,6 +897,10 @@ async def websocket_get_configuration(hass, connection, msg):
 
     data = {"schemas": {}, "data": {}}
     for section, schema in ZHA_CONFIG_SCHEMAS.items():
+        if section == ZHA_ALARM_OPTIONS and not async_input_cluster_exists(
+            hass, IasAce.cluster_id
+        ):
+            continue
         data["schemas"][section] = voluptuous_serialize.convert(
             schema, custom_serializer=custom_serializer
         )

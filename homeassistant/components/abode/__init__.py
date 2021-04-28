@@ -1,5 +1,4 @@
 """Support for the Abode Security System."""
-from asyncio import gather
 from copy import deepcopy
 from functools import partial
 
@@ -131,10 +130,7 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN] = AbodeSystem(abode, polling)
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     await setup_hass_events(hass)
     await hass.async_add_executor_job(setup_hass_services, hass)
@@ -149,14 +145,9 @@ async def async_unload_entry(hass, config_entry):
     hass.services.async_remove(DOMAIN, SERVICE_CAPTURE_IMAGE)
     hass.services.async_remove(DOMAIN, SERVICE_TRIGGER_AUTOMATION)
 
-    tasks = []
-
-    for platform in PLATFORMS:
-        tasks.append(
-            hass.config_entries.async_forward_entry_unload(config_entry, platform)
-        )
-
-    await gather(*tasks)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
 
     await hass.async_add_executor_job(hass.data[DOMAIN].abode.events.stop)
     await hass.async_add_executor_job(hass.data[DOMAIN].abode.logout)
@@ -164,7 +155,7 @@ async def async_unload_entry(hass, config_entry):
     hass.data[DOMAIN].logout_listener()
     hass.data.pop(DOMAIN)
 
-    return True
+    return unload_ok
 
 
 def setup_hass_services(hass):

@@ -1,4 +1,6 @@
 """Tests for the AVM Fritz!Box integration."""
+from __future__ import annotations
+
 from unittest.mock import Mock, call, patch
 
 from pyfritzhome import LoginError
@@ -19,19 +21,18 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
-from . import MOCK_CONFIG, FritzDeviceSwitchMock
+from . import MOCK_CONFIG, FritzDeviceSwitchMock, setup_config_entry
 
 from tests.common import MockConfigEntry
 
 
 async def test_setup(hass: HomeAssistant, fritz: Mock):
     """Test setup of integration."""
-    assert await async_setup_component(hass, FB_DOMAIN, MOCK_CONFIG)
-    await hass.async_block_till_done()
+    assert await setup_config_entry(hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0])
     entries = hass.config_entries.async_entries()
     assert entries
+    assert len(entries) == 1
     assert entries[0].data[CONF_HOST] == "fake_host"
     assert entries[0].data[CONF_PASSWORD] == "fake_pass"
     assert entries[0].data[CONF_USERNAME] == "fake_user"
@@ -39,23 +40,6 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
     assert fritz.call_args_list == [
         call(host="fake_host", password="fake_pass", user="fake_user")
     ]
-
-
-async def test_setup_duplicate_config(hass: HomeAssistant, fritz: Mock, caplog):
-    """Test duplicate config of integration."""
-    DUPLICATE = {
-        FB_DOMAIN: {
-            CONF_DEVICES: [
-                MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
-                MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
-            ]
-        }
-    }
-    assert not await async_setup_component(hass, FB_DOMAIN, DUPLICATE)
-    await hass.async_block_till_done()
-    assert not hass.states.async_entity_ids()
-    assert not hass.states.async_all()
-    assert "duplicate host entries found" in caplog.text
 
 
 async def test_coordinator_update_after_reboot(hass: HomeAssistant, fritz: Mock):
@@ -107,7 +91,7 @@ async def test_unload_remove(hass: HomeAssistant, fritz: Mock):
     assert len(config_entries) == 1
     assert entry is config_entries[0]
 
-    assert await async_setup_component(hass, FB_DOMAIN, {}) is True
+    assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state == ENTRY_STATE_LOADED
@@ -130,7 +114,7 @@ async def test_unload_remove(hass: HomeAssistant, fritz: Mock):
     assert state is None
 
 
-async def test_raise_config_entry_not_ready_when_offline(hass):
+async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant):
     """Config entry state is ENTRY_STATE_SETUP_RETRY when fritzbox is offline."""
     entry = MockConfigEntry(
         domain=FB_DOMAIN,

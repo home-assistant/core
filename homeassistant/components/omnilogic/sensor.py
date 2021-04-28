@@ -136,7 +136,11 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
     def state(self):
         """Return the state for the pump speed sensor."""
 
-        pump_type = PUMP_TYPES[self.coordinator.data[self._item_id]["Filter-Type"]]
+        pump_type = PUMP_TYPES[
+            self.coordinator.data[self._item_id].get(
+                "Filter-Type", self.coordinator.data[self._item_id].get("Type", {})
+            )
+        ]
         pump_speed = self.coordinator.data[self._item_id][self._state_key]
 
         if pump_type == "VARIABLE":
