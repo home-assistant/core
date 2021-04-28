@@ -1,5 +1,9 @@
 custom_cleaning:
   description: Zone Cleaning service call specific to Neato Botvacs.
+  target:
+    entity:
+      integration: neato
+      domain: vacuum
   fields:
     entity_id:
       description: Name of the vacuum entity. [Required]
