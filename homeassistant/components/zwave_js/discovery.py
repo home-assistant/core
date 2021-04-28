@@ -214,6 +214,19 @@ DISCOVERY_SCHEMAS = [
         primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
         assumed_state=True,
     ),
+    # Heatit Z-TRM3
+    ZWaveDiscoverySchema(
+        platform="climate",
+        hint="ztrm3",
+        manufacturer_id={0x019B},
+        product_id={0x0203},
+        product_type={0x0003},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.THERMOSTAT_MODE},
+            property={"mode"},
+            type={"number"},
+        ),
+    ),
     # ====== START OF CONFIG PARAMETER SPECIFIC MAPPING SCHEMAS =======
     # Door lock mode config parameter. Functionality equivalent to Notification CC
     # list sensors.

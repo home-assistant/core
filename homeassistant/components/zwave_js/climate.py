@@ -107,7 +107,10 @@ async def async_setup_entry(
     def async_add_climate(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Climate."""
         entities: list[ZWaveBaseEntity] = []
-        entities.append(ZWaveClimate(config_entry, client, info))
+        if info.platform_hint == "ztrm3":
+            entities.append(HeatitZTRM3Climate(config_entry, client, info))
+        else:
+            entities.append(ZWaveClimate(config_entry, client, info))
 
         async_add_entities(entities)
 
@@ -126,7 +129,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
     ) -> None:
-        """Initialize lock."""
+        """Initialize thermostat."""
         super().__init__(config_entry, client, info)
         self._hvac_modes: dict[str, int | None] = {}
         self._hvac_presets: dict[str, int | None] = {}
@@ -282,12 +285,12 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def current_humidity(self) -> int | None:
         """Return the current humidity level."""
-        return self._current_humidity.value if self._current_humidity else None
+        return self.get_value_of_zwave_value(self._current_humidity)
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self._current_temp.value if self._current_temp else None
+        return self.get_value_of_zwave_value(self._current_temp)
 
     @property
     def target_temperature(self) -> float | None:
@@ -299,7 +302,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             temp = self._setpoint_value(self._current_mode_setpoint_enums[0])
         except (IndexError, ValueError):
             return None
-        return temp.value if temp else None
+        return self.get_value_of_zwave_value(temp)
 
     @property
     def target_temperature_high(self) -> float | None:
@@ -311,7 +314,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             temp = self._setpoint_value(self._current_mode_setpoint_enums[1])
         except (IndexError, ValueError):
             return None
-        return temp.value if temp else None
+        return self.get_value_of_zwave_value(temp)
 
     @property
     def target_temperature_low(self) -> float | None:
@@ -479,3 +482,64 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if preset_mode_value is None:
             raise ValueError(f"Received an invalid preset mode: {preset_mode}")
         await self.info.node.async_set_value(self._current_mode, preset_mode_value)
+
+
+class HeatitZTRM3Climate(ZWaveClimate):
+    """Representation of a Heatit Z-TRM3 thermostat."""
+
+    def __init__(
+        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize thermostat."""
+        super().__init__(config_entry, client, info)
+        # internal sensor
+        self._current_temp_a = self.get_zwave_value(
+            THERMOSTAT_CURRENT_TEMP_PROPERTY,
+            command_class=CommandClass.SENSOR_MULTILEVEL,
+            endpoint=2,
+            add_to_watched_value_ids=True,
+        )
+        # external sensor
+        self._current_temp_a2 = self.get_zwave_value(
+            THERMOSTAT_CURRENT_TEMP_PROPERTY,
+            command_class=CommandClass.SENSOR_MULTILEVEL,
+            endpoint=3,
+            add_to_watched_value_ids=True,
+        )
+        # floor sensor
+        self._current_temp_f = self.get_zwave_value(
+            THERMOSTAT_CURRENT_TEMP_PROPERTY,
+            command_class=CommandClass.SENSOR_MULTILEVEL,
+            endpoint=4,
+            add_to_watched_value_ids=True,
+        )
+        # Config parameter that indicates which sensor is being used for current temp
+        self._current_temp_sensor = self.get_zwave_value(
+            2,
+            command_class=CommandClass.CONFIGURATION,
+            endpoint=0,
+            add_to_watched_value_ids=True,
+        )
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        if self._current_temp_sensor:
+            # This should get us F, A, AF, A2, or A2F
+            temp_sensor_state = self._current_temp_sensor.metadata.states[
+                str(self._current_temp_sensor.value)
+            ]
+
+            temp_sensor = temp_sensor_state.split("-")[0]
+            # internal sensor
+            if temp_sensor in ("A", "AF"):
+                return self.get_value_of_zwave_value(self._current_temp_a)
+            # external sensor
+            if temp_sensor in ("A2", "A2F"):
+                return self.get_value_of_zwave_value(self._current_temp_a2)
+            # floor sensor
+            if temp_sensor in ("F"):
+                return self.get_value_of_zwave_value(self._current_temp_f)
+
+        # Fallback
+        return super().current_temperature
