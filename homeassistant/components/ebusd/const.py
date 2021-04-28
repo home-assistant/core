@@ -1,10 +1,10 @@
 """Constants for ebus component."""
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
+    PERCENTAGE,
     PRESSURE_BAR,
     TEMP_CELSIUS,
-    TIME_SECONDS,
-    PERCENTAGE,
+    TIME_SECONDS,    
 )
 
 DOMAIN = "ebusd"
