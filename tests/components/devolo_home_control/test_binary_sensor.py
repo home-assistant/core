@@ -9,6 +9,7 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .mocks import (
+    DeviceMock,
     HomeControlMock,
     HomeControlMockBinarySensor,
     HomeControlMockDisabledBinarySensor,
@@ -98,6 +99,7 @@ async def test_binary_sensor_device_status(hass: HomeAssistant, entry: MockConfi
     assert state.state == STATE_OFF
 
     # Emulate websocket message
+    DeviceMock.available = False
     hass.data[DOMAIN][entry.entry_id]["gateways"][0].publisher.dispatch(
         "Test", ("Status", False, "status")
     )
@@ -123,6 +125,7 @@ async def test_remote_control_device_status(
     assert state.state == STATE_OFF
 
     # Emulate websocket message
+    DeviceMock.available = False
     hass.data[DOMAIN][entry.entry_id]["gateways"][0].publisher.dispatch(
         "Test", ("Status", False, "status")
     )

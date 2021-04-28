@@ -26,6 +26,7 @@ class SettingsMock:
 class DeviceMock:
     """devolo Home Control device mock."""
 
+    available = True
     brand = "devolo"
     name = "Test Device"
     uid = "Test"
@@ -33,7 +34,7 @@ class DeviceMock:
 
     def is_online(self):
         """Mock online state of the device."""
-        return True
+        return DeviceMock.available
 
 
 class BinarySensorMock(DeviceMock):
