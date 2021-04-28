@@ -115,6 +115,19 @@ async def test_ensure_config_exists_uses_existing_config(hass):
     assert content == ""
 
 
+async def test_ensure_existing_files_is_not_overwritten(hass):
+    """Test that calling async_create_default_config does not overwrite existing files."""
+    create_file(SECRET_PATH)
+
+    await config_util.async_create_default_config(hass)
+
+    with open(SECRET_PATH) as fp:
+        content = fp.read()
+
+    # File created with create_file are empty
+    assert content == ""
+
+
 def test_load_yaml_config_converts_empty_files_to_dict():
     """Test that loading an empty file returns an empty dict."""
     create_file(YAML_PATH)
