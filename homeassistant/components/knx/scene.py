@@ -52,6 +52,9 @@ class KNXScene(KnxEntity, Scene):
                 scene_number=config[SceneSchema.CONF_SCENE_NUMBER],
             )
         )
+        self._unique_id = (
+            f"{self._device.scene_value.group_address}_{self._device.scene_number}"
+        )
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""

@@ -60,6 +60,7 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity):
                 reset_after=config.get(BinarySensorSchema.CONF_RESET_AFTER),
             )
         )
+        self._unique_id = f"{self._device.remote_value.group_address_state}"
 
     @property
     def device_class(self) -> str | None:

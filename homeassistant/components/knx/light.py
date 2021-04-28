@@ -60,7 +60,7 @@ class KNXLight(KnxEntity, LightEntity):
         """Initialize of KNX light."""
         self._device: XknxLight
         super().__init__(self._create_light(xknx, config))
-
+        self._unique_id = self._device_unique_id()
         self._min_kelvin: int = config[LightSchema.CONF_MIN_KELVIN]
         self._max_kelvin: int = config[LightSchema.CONF_MAX_KELVIN]
         self._min_mireds = color_util.color_temperature_kelvin_to_mired(
@@ -68,6 +68,17 @@ class KNXLight(KnxEntity, LightEntity):
         )
         self._max_mireds = color_util.color_temperature_kelvin_to_mired(
             self._min_kelvin
+        )
+
+    def _device_unique_id(self) -> str:
+        """Return unique id for this device."""
+        if self._device.switch.group_address is not None:
+            return f"{self._device.switch.group_address}"
+        return (
+            f"{self._device.red.switch.group_address}_"
+            f"{self._device.green.switch.group_address}_"
+            f"{self._device.blue.switch.group_address}_"
+            f"{self._device.white.switch.group_address}"
         )
 
     @staticmethod

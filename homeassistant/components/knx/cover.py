@@ -7,6 +7,7 @@ from typing import Any, Callable
 
 from xknx import XKNX
 from xknx.devices import Cover as XknxCover, Device as XknxDevice
+from xknx.telegram.address import parse_device_group_address
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -25,6 +26,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -45,6 +47,7 @@ async def async_setup_platform(
         return
 
     platform_config = discovery_info["platform_config"]
+    _async_migrate_unique_id(hass, platform_config)
     xknx: XKNX = hass.data[DOMAIN].xknx
 
     entities = []
@@ -54,6 +57,33 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
+@callback
+def _async_migrate_unique_id(
+    hass: HomeAssistant, platform_config: list[ConfigType]
+) -> None:
+    """Change unique_ids used in 2021.4 to include position_target GA."""
+    entity_registry = er.async_get(hass)
+    for entity_config in platform_config:
+        # normalize group address strings - ga_updown was the old uid but is optional
+        updown_addresses = entity_config.get(CoverSchema.CONF_MOVE_LONG_ADDRESS)
+        if updown_addresses is None:
+            continue
+        ga_updown = parse_device_group_address(updown_addresses[0])
+        old_uid = str(ga_updown)
+
+        entity_id = entity_registry.async_get_entity_id("cover", DOMAIN, old_uid)
+        if entity_id is None:
+            continue
+        position_target_addresses = entity_config.get(CoverSchema.CONF_POSITION_ADDRESS)
+        ga_position_target = (
+            parse_device_group_address(position_target_addresses[0])
+            if position_target_addresses is not None
+            else None
+        )
+        new_uid = f"{ga_updown}_{ga_position_target}"
+        entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
+
+
 class KNXCover(KnxEntity, CoverEntity):
     """Representation of a KNX cover."""
 
@@ -61,7 +91,6 @@ class KNXCover(KnxEntity, CoverEntity):
         """Initialize the cover."""
         self._device: XknxCover
         self._unsubscribe_auto_updater: Callable[[], None] | None = None
-        self._device_class: str | None = config.get(CONF_DEVICE_CLASS)
         super().__init__(
             device=XknxCover(
                 xknx,
@@ -83,6 +112,8 @@ class KNXCover(KnxEntity, CoverEntity):
                 invert_angle=config[CoverSchema.CONF_INVERT_ANGLE],
             )
         )
+        self._device_class: str | None = config.get(CONF_DEVICE_CLASS)
+        self._unique_id = f"{self._device.updown.group_address}_{self._device.position_target.group_address}"
 
     @callback
     async def after_update_callback(self, device: XknxDevice) -> None:
