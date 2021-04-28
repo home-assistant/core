@@ -5,7 +5,7 @@ repos:
       - id: pyupgrade
         args: [--py38-plus]
   - repo: https://github.com/psf/black
-    rev: 20.8b1
+    rev: 21.4b0
     hooks:
       - id: black
         args:
@@ -33,6 +33,7 @@ repos:
           - pydocstyle==6.0.0
           - flake8-comprehensions==3.4.0
           - flake8-noqa==1.1.0
+          - mccabe==0.6.1
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.0

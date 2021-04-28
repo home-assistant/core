@@ -179,19 +179,6 @@ async def test_reauth_not_successful(hass: HomeAssistant, fritz: Mock):
     assert result["reason"] == "no_devices_found"
 
 
-async def test_import(hass: HomeAssistant, fritz: Mock):
-    """Test starting a flow by import."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "import"}, data=MOCK_USER_DATA
-    )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "fake_host"
-    assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_PASSWORD] == "fake_pass"
-    assert result["data"][CONF_USERNAME] == "fake_user"
-    assert not result["result"].unique_id
-
-
 async def test_ssdp(hass: HomeAssistant, fritz: Mock):
     """Test starting a flow from discovery."""
     result = await hass.config_entries.flow.async_init(

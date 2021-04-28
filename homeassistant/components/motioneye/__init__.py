@@ -13,10 +13,10 @@ from motioneye_client.client import (
 from motioneye_client.const import KEY_CAMERAS, KEY_ID, KEY_NAME
 
 from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_SOURCE, CONF_URL
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -28,7 +28,6 @@ from .const import (
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
     CONF_CLIENT,
-    CONF_CONFIG_ENTRY,
     CONF_COORDINATOR,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
@@ -53,9 +52,9 @@ def create_motioneye_client(
 
 def get_motioneye_device_identifier(
     config_entry_id: str, camera_id: int
-) -> tuple[str, str, int]:
+) -> tuple[str, str]:
     """Get the identifiers for a motionEye device."""
-    return (DOMAIN, config_entry_id, camera_id)
+    return (DOMAIN, f"{config_entry_id}_{camera_id}")
 
 
 def get_motioneye_entity_unique_id(
@@ -94,22 +93,6 @@ def listen_for_new_cameras(
             hass,
             SIGNAL_CAMERA_ADD.format(entry.entry_id),
             add_func,
-        )
-    )
-
-
-async def _create_reauth_flow(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-) -> None:
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                CONF_SOURCE: SOURCE_REAUTH,
-                CONF_CONFIG_ENTRY: config_entry,
-            },
-            data=config_entry.data,
         )
     )
 
@@ -155,10 +138,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await client.async_client_login()
-    except MotionEyeClientInvalidAuthError:
+    except MotionEyeClientInvalidAuthError as exc:
         await client.async_client_close()
-        await _create_reauth_flow(hass, entry)
-        return False
+        raise ConfigEntryAuthFailed from exc
     except MotionEyeClientError as exc:
         await client.async_client_close()
         raise ConfigEntryNotReady from exc
@@ -243,14 +225,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         config_data = hass.data[DOMAIN].pop(entry.entry_id)
         await config_data[CONF_CLIENT].async_client_close()

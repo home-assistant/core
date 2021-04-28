@@ -45,6 +45,7 @@ class KNXWeather(KnxEntity, WeatherEntity):
         """Initialize of a KNX sensor."""
         self._device: XknxWeather
         super().__init__(self._create_weather(xknx, config))
+        self._unique_id = f"{self._device._temperature.group_address_state}"
 
     @staticmethod
     def _create_weather(xknx: XKNX, config: ConfigType) -> XknxWeather:

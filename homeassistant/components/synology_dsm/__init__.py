@@ -1,9 +1,9 @@
 """The Synology DSM component."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 import async_timeout
 from synology_dsm import SynologyDSM
@@ -285,25 +285,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_interval=timedelta(seconds=30),
     )
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload Synology DSM sensors."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         entry_data = hass.data[DOMAIN][entry.unique_id]
         entry_data[UNDO_UPDATE_LISTENER]()
@@ -626,12 +615,12 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
         return self._class
 
     @property
-    def extra_state_attributes(self) -> dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> dict[str, Any]:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._api.information.serial)},
@@ -701,7 +690,7 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
         return bool(self._api.storage)
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> dict[str, Any]:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._api.information.serial, self._device_id)},
