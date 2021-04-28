@@ -358,6 +358,7 @@ omit =
     homeassistant/components/goalfeed/*
     homeassistant/components/goalzero/__init__.py
     homeassistant/components/goalzero/binary_sensor.py
+    homeassistant/components/goalzero/switch.py
     homeassistant/components/google/*
     homeassistant/components/google_cloud/tts.py
     homeassistant/components/google_maps/device_tracker.py
