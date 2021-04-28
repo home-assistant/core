@@ -480,12 +480,12 @@ async def test_controlling_state_via_topic2(hass, mqtt_mock, caplog):
     assert state.attributes.get("color_mode") == "rgbww"
     assert state.attributes.get("color_temp") is None
     assert state.attributes.get("effect") == "colorloop"
-    assert state.attributes.get("hs_color") is None
-    assert state.attributes.get("rgb_color") is None
+    assert state.attributes.get("hs_color") == (20.552, 70.98)
+    assert state.attributes.get("rgb_color") == (255, 136, 74)
     assert state.attributes.get("rgbw_color") is None
     assert state.attributes.get("rgbww_color") == (255, 128, 64, 32, 16)
     assert state.attributes.get("white_value") is None
-    assert state.attributes.get("xy_color") is None
+    assert state.attributes.get("xy_color") == (0.571, 0.361)
 
     # Light turned off
     async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"OFF"}')
@@ -892,11 +892,11 @@ async def test_sending_mqtt_commands_and_optimistic2(hass, mqtt_mock):
     assert state.attributes["brightness"] == 75
     assert state.attributes["color_mode"] == "rgbww"
     assert state.attributes["rgbww_color"] == (255, 128, 0, 45, 32)
-    assert "hs_color" not in state.attributes
-    assert "rgb_color" not in state.attributes
+    assert state.attributes["hs_color"] == (29.872, 92.157)
+    assert state.attributes["rgb_color"] == (255, 137, 20)
     assert "rgbw_color" not in state.attributes
     assert "white_value" not in state.attributes
-    assert "xy_color" not in state.attributes
+    assert state.attributes["xy_color"] == (0.596, 0.382)
     mqtt_mock.async_publish.assert_called_once_with(
         "test_light_rgb/set",
         JsonValidator(
