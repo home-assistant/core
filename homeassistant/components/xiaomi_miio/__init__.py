@@ -184,8 +184,6 @@ async def async_unload_entry(
         config_entry, platforms
     )
 
-    hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
-
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
