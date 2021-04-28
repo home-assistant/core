@@ -374,10 +374,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_set_addon_config(self, config: dict) -> None:
         """Set Z-Wave JS add-on config."""
-        options = {"options": config}
         addon_manager: AddonManager = get_addon_manager(self.hass)
         try:
-            await addon_manager.async_set_addon_options(options)
+            await addon_manager.async_set_addon_options(config)
         except AddonError as err:
             _LOGGER.error("Failed to set Z-Wave JS add-on config: %s", err)
             raise AbortFlow("addon_set_config_failed") from err
