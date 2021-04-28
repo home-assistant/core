@@ -224,3 +224,8 @@ class ZWaveBaseEntity(Entity):
     def should_poll(self) -> bool:
         """No polling needed."""
         return False
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return True if unable to access real state of the entity."""
+        return self.info.assumed_state
