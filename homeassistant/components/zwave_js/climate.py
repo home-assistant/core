@@ -107,8 +107,8 @@ async def async_setup_entry(
     def async_add_climate(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Climate."""
         entities: list[ZWaveBaseEntity] = []
-        if info.platform_hint == "ztrm3":
-            entities.append(HeatitZTRM3Climate(config_entry, client, info))
+        if info.platform_hint == "dynamic_current_temp":
+            entities.append(DynamicCurrentTempClimate(config_entry, client, info))
         else:
             entities.append(ZWaveClimate(config_entry, client, info))
 
@@ -484,70 +484,40 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         await self.info.node.async_set_value(self._current_mode, preset_mode_value)
 
 
-class HeatitZTRM3Climate(ZWaveClimate):
-    """Representation of a Heatit Z-TRM3 thermostat."""
+class DynamicCurrentTempClimate(ZWaveClimate):
+    """Representation of a thermostat that can dynamically use a different Zwave Value for current temp."""
 
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize thermostat."""
         super().__init__(config_entry, client, info)
-        # internal sensor
-        self._current_temp_a = self.get_zwave_value(
-            THERMOSTAT_CURRENT_TEMP_PROPERTY,
-            command_class=CommandClass.SENSOR_MULTILEVEL,
-            endpoint=2,
+        self._current_temp_dependent_value = None
+        if not self.info.platform_helpers:
+            return
+
+        # Lookup map to map the transformed value of a dependent Value to a current
+        # temperature Value
+        self._lookup = {}
+        lookup = self.info.platform_helpers["lookup"]
+        for key in lookup:
+            val = self.get_zwave_value(**lookup[key], add_to_watched_value_ids=True)
+            for sub_key in key:
+                self._lookup[sub_key] = val
+        # Value that indicates which sensor is being used for current temp
+        self._current_temp_dependent_value = self.get_zwave_value(
+            **self.info.platform_helpers["dependent_value"],
             add_to_watched_value_ids=True,
         )
-        # external sensor
-        self._current_temp_a2 = self.get_zwave_value(
-            THERMOSTAT_CURRENT_TEMP_PROPERTY,
-            command_class=CommandClass.SENSOR_MULTILEVEL,
-            endpoint=3,
-            add_to_watched_value_ids=True,
-        )
-        # floor sensor
-        self._current_temp_f = self.get_zwave_value(
-            THERMOSTAT_CURRENT_TEMP_PROPERTY,
-            command_class=CommandClass.SENSOR_MULTILEVEL,
-            endpoint=4,
-            add_to_watched_value_ids=True,
-        )
-        # Config parameter that indicates which sensor is being used for current temp
-        self._current_temp_config_param = self.get_zwave_value(
-            2,
-            command_class=CommandClass.CONFIGURATION,
-            endpoint=0,
-            add_to_watched_value_ids=True,
-        )
+        # Transform function that converts the dependent Value into a key for lookup
+        self._transform_function = self.info.platform_helpers["transform_function"]
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self._current_temp_config_param:
-            # This should get us F, A, AF, A2, or A2F
-            temp_sensor_state = self._current_temp_config_param.metadata.states[
-                str(self._current_temp_config_param.value)
-            ]
-
-            # Possible states are:
-            # "F-mode, floor sensor mode"
-            # "A-mode, internal room sensor mode"
-            # "AF-mode, internal sensor and floor sensor mode"
-            # "A2-mode, external room sensor mode"
-            # "A2F-mode, external sensor with floor limitation"
-            #
-            # We can use the characters before the dash to choose a sensor
-            temp_sensor = temp_sensor_state.split("-")[0]
-            # internal sensor
-            if temp_sensor in ("A", "AF"):
-                return self.get_value_of_zwave_value(self._current_temp_a)
-            # external sensor
-            if temp_sensor in ("A2", "A2F"):
-                return self.get_value_of_zwave_value(self._current_temp_a2)
-            # floor sensor
-            if temp_sensor in ("F"):
-                return self.get_value_of_zwave_value(self._current_temp_f)
+        if self._current_temp_dependent_value:
+            lookup_key = self._transform_function(self._current_temp_dependent_value)
+            return self.get_value_of_zwave_value(self._lookup.get(lookup_key))
 
         # Fallback
         return super().current_temperature

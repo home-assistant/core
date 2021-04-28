@@ -5,7 +5,7 @@ from collections.abc import Generator
 from dataclasses import dataclass
 from typing import Any
 
-from zwave_js_server.const import CommandClass
+from zwave_js_server.const import THERMOSTAT_CURRENT_TEMP_PROPERTY, CommandClass
 from zwave_js_server.model.device_class import DeviceClassItem
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue
@@ -27,6 +27,8 @@ class ZwaveDiscoveryInfo:
     platform: str
     # hint for the platform about this discovered entity
     platform_hint: str | None = ""
+    # helper data and functions to use in platform setup
+    platform_helpers: dict[str, Any] | None = None
 
 
 @dataclass
@@ -69,6 +71,8 @@ class ZWaveDiscoverySchema:
     primary_value: ZWaveValueDiscoverySchema
     # [optional] hint for platform
     hint: str | None = None
+    # [optional] helper data and functions to use in platform setup
+    helpers: dict[str, Any] | None = None
     # [optional] the node's manufacturer_id must match ANY of these values
     manufacturer_id: set[int] | None = None
     # [optional] the node's product_id must match ANY of these values
@@ -217,7 +221,7 @@ DISCOVERY_SCHEMAS = [
     # Heatit Z-TRM3
     ZWaveDiscoverySchema(
         platform="climate",
-        hint="ztrm3",
+        hint="dynamic_current_temp",
         manufacturer_id={0x019B},
         product_id={0x0203},
         product_type={0x0003},
@@ -226,6 +230,37 @@ DISCOVERY_SCHEMAS = [
             property={"mode"},
             type={"number"},
         ),
+        helpers={
+            "lookup": {
+                # Internal sensor
+                ("A", "AF"): {
+                    "value_property": THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    "command_class": CommandClass.SENSOR_MULTILEVEL,
+                    "endpoint": 2,
+                },
+                # External sensor
+                ("A2", "A2F"): {
+                    "value_property": THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    "command_class": CommandClass.SENSOR_MULTILEVEL,
+                    "endpoint": 3,
+                },
+                # Floor sensor
+                ("F"): {
+                    "value_property": THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    "command_class": CommandClass.SENSOR_MULTILEVEL,
+                    "endpoint": 4,
+                },
+            },
+            # Sensor mode config parameter
+            "dependent_value": {
+                "value_property": 2,
+                "command_class": CommandClass.CONFIGURATION,
+                "endpoint": 0,
+            },
+            "transform_function": (
+                lambda value: value.metadata.states[str(value.value)].split("-")[0]
+            ),
+        },
     ),
     # ====== START OF CONFIG PARAMETER SPECIFIC MAPPING SCHEMAS =======
     # Door lock mode config parameter. Functionality equivalent to Notification CC
@@ -544,6 +579,7 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
                 assumed_state=schema.assumed_state,
                 platform=schema.platform,
                 platform_hint=schema.hint,
+                platform_helpers=schema.helpers,
             )
 
             if not schema.allow_multi:
