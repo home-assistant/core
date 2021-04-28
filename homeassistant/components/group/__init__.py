@@ -376,6 +376,7 @@ async def _async_process_config(hass, config, component):
                 object_id=object_id,
                 mode=mode,
                 order=hass.data[GROUP_ORDER],
+                add_entities=False,
             )
         )
 
@@ -384,7 +385,7 @@ async def _async_process_config(hass, config, component):
         # we setup a new group
         hass.data[GROUP_ORDER] += 1
 
-    await asyncio.gather(*tasks)
+    await component.async_add_entities(await asyncio.gather(*tasks))
 
 
 class GroupEntity(Entity):
@@ -479,6 +480,7 @@ class Group(Entity):
         object_id=None,
         mode=None,
         order=None,
+        add_entities=True,
     ):
         """Initialize a group.
 
@@ -512,7 +514,8 @@ class Group(Entity):
         if component is None:
             component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
 
-        await component.async_add_entities([group])
+        if add_entities:
+            await component.async_add_entities([group])
 
         return group
 
