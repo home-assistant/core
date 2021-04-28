@@ -138,6 +138,7 @@ class BasicChannel(ZigbeeChannel):
 
     UNKNOWN = 0
     BATTERY = 3
+    BIND: bool = False
 
     POWER_SOURCES = {
         UNKNOWN: "Unknown",
@@ -185,15 +186,21 @@ class DeviceTemperature(ZigbeeChannel):
 class GreenPowerProxy(ZigbeeChannel):
     """Green Power Proxy channel."""
 
+    BIND: bool = False
+
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Groups.cluster_id)
 class Groups(ZigbeeChannel):
     """Groups channel."""
 
+    BIND: bool = False
+
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Identify.cluster_id)
 class Identify(ZigbeeChannel):
     """Identify channel."""
+
+    BIND: bool = False
 
     @callback
     def cluster_command(self, tsn, command_id, args):
@@ -367,6 +374,8 @@ class OnOffConfiguration(ZigbeeChannel):
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Ota.cluster_id)
 class Ota(ZigbeeChannel):
     """OTA Channel."""
+
+    BIND: bool = False
 
     @callback
     def cluster_command(
