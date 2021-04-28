@@ -495,8 +495,8 @@ async def test_options_flow_incomplete(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            const.CONF_CLOUD_USERNAME: None,
-            const.CONF_CLOUD_PASSWORD: None,
+            const.CONF_CLOUD_USERNAME: "",
+            const.CONF_CLOUD_PASSWORD: "",
             const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
             const.CONF_CLOUD_SUBDEVICES: True,
         },
@@ -540,7 +540,7 @@ async def test_options_flow_login_error(hass):
     assert result["step_id"] == "init"
     with patch(
         "homeassistant.components.xiaomi_miio.config_flow.MiCloud.login",
-        return_value=True,
+        return_value=False,
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],

@@ -58,9 +58,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             if use_cloud:
                 if (
-                    cloud_username is None
-                    or cloud_password is None
-                    or cloud_country is None
+                    not cloud_username
+                    or not cloud_password
+                    or not cloud_country
                 ):
                     errors["base"] = "cloud_credentials_incomplete"
                 else:
