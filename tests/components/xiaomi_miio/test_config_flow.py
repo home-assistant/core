@@ -439,7 +439,8 @@ async def test_options_flow(hass):
     assert result["step_id"] == "init"
 
     with patch(
-        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.login", return_value=True
+        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.login",
+        return_value=True,
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -536,7 +537,8 @@ async def test_options_flow_login_error(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
     with patch(
-        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.login", return_value=False
+        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.login",
+        return_value=True,
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
