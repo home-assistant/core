@@ -142,10 +142,9 @@ def gen_strings_schema(config: Config, integration: Integration):
             vol.Optional("system_health"): {
                 vol.Optional("info"): {str: cv.string_with_no_html}
             },
-            vol.Optional("config_panel"): cv.schema_with_slug_keys(
-                cv.schema_with_slug_keys(str, slug_validator=lowercase_validator),
-                slug_validator=vol.Any("_", cv.slug),
-            ),
+            vol.Optional("config_panel"): {
+                vol.Optional("info"): {str: cv.string_with_no_html}
+            },
         }
     )
 
