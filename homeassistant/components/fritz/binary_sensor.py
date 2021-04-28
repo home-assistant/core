@@ -78,11 +78,6 @@ class FritzBoxConnectivitySensor(BinarySensorEntity):
         """Return device attributes."""
         return self._attributes
 
-    def _connection_call_action(self):
-        return lambda: self._fritzbox_tools.connection.call_action(
-            "WANCommonInterfaceConfig1", "GetCommonLinkProperties"
-        )["NewPhysicalLinkStatus"]
-
     async def _async_fetch_update(self):
         """Fetch updates."""
         self._is_on = True
