@@ -34,6 +34,11 @@ EVENT_ROLLERTROL_1 = EventTestData(
     "09190000009ba8010100", DEVICE_ROLLERTROL_1, "command", "Down"
 )
 
+DEVICE_FIREALARM_1 = {("rfxtrx", "20", "3", "a10900:32")}
+EVENT_FIREALARM_1 = EventTestData(
+    "08200300a109000670", DEVICE_FIREALARM_1, "status", "Panic"
+)
+
 
 @pytest.fixture(name="device_reg")
 def device_reg_fixture(hass):
@@ -95,6 +100,7 @@ async def test_get_triggers(hass, device_reg, event: EventTestData, expected):
     [
         EVENT_LIGHTING_1,
         EVENT_ROLLERTROL_1,
+        EVENT_FIREALARM_1,
     ],
 )
 async def test_firing_event(hass, device_reg, rfxtrx, event):
