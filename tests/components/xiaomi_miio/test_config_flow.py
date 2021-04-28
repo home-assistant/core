@@ -441,15 +441,15 @@ async def test_options_flow(hass):
     with patch(
         "homeassistant.components.xiaomi_miio.config_flow.MiCloud.login", return_value=True
     ):
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            const.CONF_CLOUD_USERNAME: TEST_CLOUD_USER,
-            const.CONF_CLOUD_PASSWORD: TEST_CLOUD_PASS,
-            const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
-            const.CONF_CLOUD_SUBDEVICES: True,
-        },
-    )
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                const.CONF_CLOUD_USERNAME: TEST_CLOUD_USER,
+                const.CONF_CLOUD_PASSWORD: TEST_CLOUD_PASS,
+                const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
+                const.CONF_CLOUD_SUBDEVICES: True,
+            },
+        )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options == {
@@ -538,15 +538,15 @@ async def test_options_flow_login_error(hass):
     with patch(
         "homeassistant.components.xiaomi_miio.config_flow.MiCloud.login", return_value=False
     ):
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            const.CONF_CLOUD_USERNAME: TEST_CLOUD_USER,
-            const.CONF_CLOUD_PASSWORD: TEST_CLOUD_PASS,
-            const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
-            const.CONF_CLOUD_SUBDEVICES: True,
-        },
-    )
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                const.CONF_CLOUD_USERNAME: TEST_CLOUD_USER,
+                const.CONF_CLOUD_PASSWORD: TEST_CLOUD_PASS,
+                const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
+                const.CONF_CLOUD_SUBDEVICES: True,
+            },
+        )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
