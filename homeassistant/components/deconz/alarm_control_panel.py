@@ -32,9 +32,6 @@ from .const import NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
-PANEL_ARMING_AWAY = "arming_away"
-PANEL_ARMING_HOME = "arming_home"
-PANEL_ARMING_NIGHT = "arming_night"
 PANEL_ENTRY_DELAY = "entry_delay"
 PANEL_EXIT_DELAY = "exit_delay"
 PANEL_NOT_READY_TO_ARM = "not_ready_to_arm"
@@ -44,9 +41,6 @@ CONF_ALARM_PANEL_STATE = "panel_state"
 SERVICE_ALARM_PANEL_STATE_SCHEMA = {
     vol.Required(CONF_ALARM_PANEL_STATE): vol.In(
         [
-            PANEL_ARMING_AWAY,
-            PANEL_ARMING_HOME,
-            PANEL_ARMING_NIGHT,
             PANEL_ENTRY_DELAY,
             PANEL_EXIT_DELAY,
             PANEL_NOT_READY_TO_ARM,
@@ -118,9 +112,6 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
         self._features |= SUPPORT_ALARM_ARM_NIGHT
 
         self._service_to_device_panel_command = {
-            PANEL_ARMING_AWAY: self._device.arming_away,
-            PANEL_ARMING_HOME: self._device.arming_stay,
-            PANEL_ARMING_NIGHT: self._device.arming_night,
             PANEL_ENTRY_DELAY: self._device.entry_delay,
             PANEL_EXIT_DELAY: self._device.exit_delay,
             PANEL_NOT_READY_TO_ARM: self._device.not_ready_to_arm,
