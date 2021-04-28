@@ -6,4 +6,7 @@ CONF_SHC_KEY = "bosch_shc-key.pem"
 CONF_SSL_CERTIFICATE = "ssl_certificate"
 CONF_SSL_KEY = "ssl_key"
 
+DATA_SESSION = "session"
+DATA_STOP_POLLING = "stop_polling"
+
 DOMAIN = "bosch_shc"

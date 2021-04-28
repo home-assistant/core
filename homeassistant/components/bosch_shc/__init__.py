@@ -12,7 +12,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_SSL_CERTIFICATE, CONF_SSL_KEY, DOMAIN
+from .const import (
+    CONF_SSL_CERTIFICATE,
+    CONF_SSL_KEY,
+    DATA_SESSION,
+    DATA_STOP_POLLING,
+    DOMAIN,
+)
 
 PLATFORMS = [
     "binary_sensor",
@@ -53,7 +59,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.warning("Please check for software updates in the Bosch Smart Home App")
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = session
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_SESSION: session,
+    }
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -76,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await hass.async_add_executor_job(session.stop_polling)
 
     await hass.async_add_executor_job(session.start_polling)
-    session.reset_connection_listener = hass.bus.async_listen_once(
+    hass.data[DOMAIN][entry.entry_id][DATA_STOP_POLLING] = hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, stop_polling
     )
 
@@ -85,11 +93,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    session: SHCSession = hass.data[DOMAIN][entry.entry_id]
+    session: SHCSession = hass.data[DOMAIN][entry.entry_id][DATA_SESSION]
 
-    if session.reset_connection_listener is not None:
-        session.reset_connection_listener()
-        session.reset_connection_listener = None
+    if hass.data[DOMAIN][entry.entry_id][DATA_STOP_POLLING]:
+        hass.data[DOMAIN][entry.entry_id][DATA_STOP_POLLING]()
+        hass.data[DOMAIN][entry.entry_id].pop(DATA_STOP_POLLING)
         await hass.async_add_executor_job(session.stop_polling)
 
     unload_ok = all(

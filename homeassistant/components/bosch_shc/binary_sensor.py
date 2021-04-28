@@ -7,14 +7,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 
-from .const import DOMAIN
+from .const import DATA_SESSION, DOMAIN
 from .entity import SHCEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the SHC binary sensor platform."""
     entities = []
-    session: SHCSession = hass.data[DOMAIN][config_entry.entry_id]
+    session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
 
     for binary_sensor in session.device_helper.shutter_contacts:
         entities.append(
