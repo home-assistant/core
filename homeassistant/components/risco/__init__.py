@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     coordinator = RiscoDataUpdateCoordinator(hass, risco, scan_interval)
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
     events_coordinator = RiscoEventsDataUpdateCoordinator(
         hass, risco, entry.entry_id, 60
     )
@@ -63,8 +63,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def start_platforms():
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_setup(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+                for platform in PLATFORMS
             ]
         )
         await events_coordinator.async_refresh()
@@ -79,8 +79,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

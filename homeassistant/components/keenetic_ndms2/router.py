@@ -1,7 +1,9 @@
 """The Keenetic Client class."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Callable, Dict, Optional
+from typing import Callable
 
 from ndms2_client import Client, ConnectionException, Device, TelnetConnection
 from ndms2_client.client import RouterInfo
@@ -39,11 +41,11 @@ class KeeneticRouter:
         """Initialize the Client."""
         self.hass = hass
         self.config_entry = config_entry
-        self._last_devices: Dict[str, Device] = {}
-        self._router_info: Optional[RouterInfo] = None
-        self._connection: Optional[TelnetConnection] = None
-        self._client: Optional[Client] = None
-        self._cancel_periodic_update: Optional[Callable] = None
+        self._last_devices: dict[str, Device] = {}
+        self._router_info: RouterInfo | None = None
+        self._connection: TelnetConnection | None = None
+        self._client: Client | None = None
+        self._cancel_periodic_update: Callable | None = None
         self._available = False
         self._progress = None
 
@@ -165,7 +167,7 @@ class KeeneticRouter:
 
     def _update_devices(self):
         """Get ARP from keenetic router."""
-        _LOGGER.debug("Fetching devices from router...")
+        _LOGGER.debug("Fetching devices from router")
 
         try:
             _response = self._client.get_devices(

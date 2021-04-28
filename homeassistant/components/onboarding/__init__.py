@@ -6,6 +6,7 @@ from homeassistant.loader import bind_hass
 from . import views
 from .const import (
     DOMAIN,
+    STEP_ANALYTICS,
     STEP_CORE_CONFIG,
     STEP_INTEGRATION,
     STEP_MOB_INTEGRATION,
@@ -29,6 +30,7 @@ class OnboadingStorage(Store):
             old_data["done"].append(STEP_CORE_CONFIG)
         if old_version < 4:
             old_data["done"].append(STEP_MOB_INTEGRATION)
+            old_data["done"].append(STEP_ANALYTICS)
         return old_data
 
 
@@ -58,6 +60,9 @@ async def async_setup(hass, config):
     # ais remove old onboarding step
     if "ais_restore_backup" in data["done"]:
         data["done"].remove("ais_restore_backup")
+    # ais no auto done analytics step
+    if STEP_ANALYTICS not in data["done"]:
+        data["done"].append(STEP_ANALYTICS)
 
     if STEP_USER not in data["done"]:
         # Users can already have created an owner account via the command line

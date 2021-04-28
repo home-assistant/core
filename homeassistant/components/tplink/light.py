@@ -1,9 +1,12 @@
 """Support for TPLink lights."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
+import re
 import time
-from typing import Any, Dict, NamedTuple, Tuple, cast
+from typing import Any, NamedTuple, cast
 
 from pyHS100 import SmartBulb, SmartDeviceException
 
@@ -58,6 +61,21 @@ LIGHT_SYSINFO_IS_COLOR = "is_color"
 MAX_ATTEMPTS = 300
 SLEEP_TIME = 2
 
+TPLINK_KELVIN = {
+    "LB130": (2500, 9000),
+    "LB120": (2700, 6500),
+    "LB230": (2500, 9000),
+    "KB130": (2500, 9000),
+    "KL130": (2500, 9000),
+    "KL125": (2500, 6500),
+    r"KL120\(EU\)": (2700, 6500),
+    r"KL120\(US\)": (2700, 5000),
+    r"KL430\(US\)": (2500, 9000),
+}
+
+FALLBACK_MIN_COLOR = 2700
+FALLBACK_MAX_COLOR = 5000
+
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
     """Set up lights."""
@@ -88,7 +106,7 @@ class LightState(NamedTuple):
     state: bool
     brightness: int
     color_temp: float
-    hs: Tuple[int, int]
+    hs: tuple[int, int]
 
     def to_param(self):
         """Return a version that we can send to the bulb."""
@@ -109,7 +127,7 @@ class LightState(NamedTuple):
 class LightFeatures(NamedTuple):
     """Light features."""
 
-    sysinfo: Dict[str, Any]
+    sysinfo: dict[str, Any]
     mac: str
     alias: str
     model: str
@@ -163,7 +181,7 @@ class TPLinkSmartBulb(LightEntity):
         return self._is_available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._emeter_params
 
@@ -263,6 +281,19 @@ class TPLinkSmartBulb(LightEntity):
         """Flag supported features."""
         return self._light_features.supported_features
 
+    def _get_valid_temperature_range(self):
+        """Return the device-specific white temperature range (in Kelvin).
+
+        :return: White temperature range in Kelvin (minimum, maximum)
+        """
+        model = self.smartbulb.sys_info[LIGHT_SYSINFO_MODEL]
+        for obj, temp_range in TPLINK_KELVIN.items():
+            if re.match(obj, model):
+                return temp_range
+        # pyHS100 is abandoned, but some bulb definitions aren't present
+        # use "safe" values for something that advertises color temperature
+        return FALLBACK_MIN_COLOR, FALLBACK_MAX_COLOR
+
     def _get_light_features(self):
         """Determine all supported features in one go."""
         sysinfo = self.smartbulb.sys_info
@@ -279,9 +310,7 @@ class TPLinkSmartBulb(LightEntity):
             supported_features += SUPPORT_BRIGHTNESS
         if sysinfo.get(LIGHT_SYSINFO_IS_VARIABLE_COLOR_TEMP):
             supported_features += SUPPORT_COLOR_TEMP
-            # Have to make another api request here in
-            # order to not re-implement pyHS100 here
-            max_range, min_range = self.smartbulb.valid_temperature_range
+            max_range, min_range = self._get_valid_temperature_range()
             min_mireds = kelvin_to_mired(min_range)
             max_mireds = kelvin_to_mired(max_range)
         if sysinfo.get(LIGHT_SYSINFO_IS_COLOR):
@@ -314,12 +343,12 @@ class TPLinkSmartBulb(LightEntity):
                 light_state_params[LIGHT_STATE_BRIGHTNESS]
             )
 
-        if light_features.supported_features & SUPPORT_COLOR_TEMP:
-            if (
-                light_state_params.get(LIGHT_STATE_COLOR_TEMP) is not None
-                and light_state_params[LIGHT_STATE_COLOR_TEMP] != 0
-            ):
-                color_temp = kelvin_to_mired(light_state_params[LIGHT_STATE_COLOR_TEMP])
+        if (
+            light_features.supported_features & SUPPORT_COLOR_TEMP
+            and light_state_params.get(LIGHT_STATE_COLOR_TEMP) is not None
+            and light_state_params[LIGHT_STATE_COLOR_TEMP] != 0
+        ):
+            color_temp = kelvin_to_mired(light_state_params[LIGHT_STATE_COLOR_TEMP])
 
         if light_features.supported_features & SUPPORT_COLOR:
             hue_saturation = (

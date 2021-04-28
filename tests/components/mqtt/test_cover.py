@@ -333,7 +333,7 @@ async def test_optimistic_state_change(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "CLOSE", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
-    assert STATE_CLOSED == state.state
+    assert state.state == STATE_CLOSED
 
     await hass.services.async_call(
         cover.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
@@ -342,7 +342,7 @@ async def test_optimistic_state_change(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
-    assert STATE_OPEN == state.state
+    assert state.state == STATE_OPEN
 
     await hass.services.async_call(
         cover.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
@@ -393,7 +393,7 @@ async def test_optimistic_state_change_with_position(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "CLOSE", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
-    assert STATE_CLOSED == state.state
+    assert state.state == STATE_CLOSED
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 0
 
     await hass.services.async_call(
@@ -403,7 +403,7 @@ async def test_optimistic_state_change_with_position(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
-    assert STATE_OPEN == state.state
+    assert state.state == STATE_OPEN
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 100
 
     await hass.services.async_call(
@@ -525,9 +525,9 @@ async def test_current_cover_position(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state_attributes_dict = hass.states.get("cover.test").attributes
-    assert not (ATTR_CURRENT_POSITION in state_attributes_dict)
-    assert not (ATTR_CURRENT_TILT_POSITION in state_attributes_dict)
-    assert not (4 & hass.states.get("cover.test").attributes["supported_features"] == 4)
+    assert ATTR_CURRENT_POSITION not in state_attributes_dict
+    assert ATTR_CURRENT_TILT_POSITION not in state_attributes_dict
+    assert 4 & hass.states.get("cover.test").attributes["supported_features"] != 4
 
     async_fire_mqtt_message(hass, "get-position-topic", "0")
     current_cover_position = hass.states.get("cover.test").attributes[
@@ -576,9 +576,9 @@ async def test_current_cover_position_inverted(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state_attributes_dict = hass.states.get("cover.test").attributes
-    assert not (ATTR_CURRENT_POSITION in state_attributes_dict)
-    assert not (ATTR_CURRENT_TILT_POSITION in state_attributes_dict)
-    assert not (4 & hass.states.get("cover.test").attributes["supported_features"] == 4)
+    assert ATTR_CURRENT_POSITION not in state_attributes_dict
+    assert ATTR_CURRENT_TILT_POSITION not in state_attributes_dict
+    assert 4 & hass.states.get("cover.test").attributes["supported_features"] != 4
 
     async_fire_mqtt_message(hass, "get-position-topic", "100")
     current_percentage_cover_position = hass.states.get("cover.test").attributes[
@@ -659,14 +659,14 @@ async def test_position_update(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state_attributes_dict = hass.states.get("cover.test").attributes
-    assert not (ATTR_CURRENT_POSITION in state_attributes_dict)
-    assert not (ATTR_CURRENT_TILT_POSITION in state_attributes_dict)
+    assert ATTR_CURRENT_POSITION not in state_attributes_dict
+    assert ATTR_CURRENT_TILT_POSITION not in state_attributes_dict
     assert 4 & hass.states.get("cover.test").attributes["supported_features"] == 4
 
     async_fire_mqtt_message(hass, "get-position-topic", "22")
     state_attributes_dict = hass.states.get("cover.test").attributes
     assert ATTR_CURRENT_POSITION in state_attributes_dict
-    assert not (ATTR_CURRENT_TILT_POSITION in state_attributes_dict)
+    assert ATTR_CURRENT_TILT_POSITION not in state_attributes_dict
     current_cover_position = hass.states.get("cover.test").attributes[
         ATTR_CURRENT_POSITION
     ]
@@ -2159,7 +2159,7 @@ async def test_deprecated_value_template_for_position_topic_warning(
     await hass.async_block_till_done()
 
     assert (
-        "using 'value_template' for 'position_topic' is deprecated "
+        "Using 'value_template' for 'position_topic' is deprecated "
         "and will be removed from Home Assistant in version 2021.6, "
         "please replace it with 'position_template'"
     ) in caplog.text

@@ -1,6 +1,7 @@
 """Base class for Netatmo entities."""
+from __future__ import annotations
+
 import logging
-from typing import Dict, List
 
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.entity import Entity
@@ -17,8 +18,8 @@ class NetatmoBase(Entity):
     def __init__(self, data_handler: NetatmoDataHandler) -> None:
         """Set up Netatmo entity base."""
         self.data_handler = data_handler
-        self._data_classes: List[Dict] = []
-        self._listeners: List[CALLBACK_TYPE] = []
+        self._data_classes: list[dict] = []
+        self._listeners: list[CALLBACK_TYPE] = []
 
         self._device_name = None
         self._id = None

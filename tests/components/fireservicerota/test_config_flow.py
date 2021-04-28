@@ -78,8 +78,6 @@ async def test_step_user(hass):
     with patch(
         "homeassistant.components.fireservicerota.config_flow.FireServiceRota"
     ) as mock_fsr, patch(
-        "homeassistant.components.fireservicerota.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.fireservicerota.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -108,5 +106,4 @@ async def test_step_user(hass):
             },
         }
 
-        assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1

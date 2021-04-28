@@ -95,7 +95,7 @@ class Dyson360EyeDevice(DysonEntity, VacuumEntity):
         return ["Quiet", "Max"]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the specific state attributes of this vacuum cleaner."""
         return {ATTR_POSITION: str(self._device.state.position)}
 

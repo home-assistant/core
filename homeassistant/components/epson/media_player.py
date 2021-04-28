@@ -215,7 +215,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
         await self._projector.send_command(BACK)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         if self._cmode is None:
             return {}

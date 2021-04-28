@@ -1,8 +1,11 @@
 """Helper for aiohttp webclient stuff."""
+from __future__ import annotations
+
 import asyncio
+from contextlib import suppress
 from ssl import SSLContext
 import sys
-from typing import Any, Awaitable, Optional, Union, cast
+from typing import Any, Awaitable, cast
 
 import aiohttp
 from aiohttp import web
@@ -11,9 +14,8 @@ from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
 import async_timeout
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
-from homeassistant.core import Event, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.frame import warn_use
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
 
@@ -21,7 +23,7 @@ DATA_CONNECTOR = "aiohttp_connector"
 DATA_CONNECTOR_NOTVERIFY = "aiohttp_connector_notverify"
 DATA_CLIENTSESSION = "aiohttp_clientsession"
 DATA_CLIENTSESSION_NOTVERIFY = "aiohttp_clientsession_notverify"
-SERVER_SOFTWARE = "HomeAssistant/{0} aiohttp/{1} Python/{2[0]}.{2[1]}".format(
+SERVER_SOFTWARE = "AIS/{0} aiohttp/{1} Python/{2[0]}.{2[1]}".format(
     __version__, aiohttp.__version__, sys.version_info
 )
 
@@ -29,16 +31,15 @@ SERVER_SOFTWARE = "HomeAssistant/{0} aiohttp/{1} Python/{2[0]}.{2[1]}".format(
 @callback
 @bind_hass
 def async_get_clientsession(
-    hass: HomeAssistantType, verify_ssl: bool = False
+    hass: HomeAssistant, verify_ssl: bool = False
 ) -> aiohttp.ClientSession:
     """Return default aiohttp ClientSession.
 
     This method must be run in the event loop.
     """
+    key = DATA_CLIENTSESSION_NOTVERIFY
     if verify_ssl:
         key = DATA_CLIENTSESSION
-    else:
-        key = DATA_CLIENTSESSION_NOTVERIFY
 
     if key not in hass.data:
         hass.data[key] = async_create_clientsession(hass, verify_ssl)
@@ -49,7 +50,7 @@ def async_get_clientsession(
 @callback
 @bind_hass
 def async_create_clientsession(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     verify_ssl: bool = True,
     auto_cleanup: bool = True,
     **kwargs: Any,
@@ -82,12 +83,12 @@ def async_create_clientsession(
 
 @bind_hass
 async def async_aiohttp_proxy_web(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     request: web.BaseRequest,
     web_coro: Awaitable[aiohttp.ClientResponse],
     buffer_size: int = 102400,
     timeout: int = 10,
-) -> Optional[web.StreamResponse]:
+) -> web.StreamResponse | None:
     """Stream websession request to aiohttp web response."""
     try:
         with async_timeout.timeout(timeout):
@@ -115,10 +116,10 @@ async def async_aiohttp_proxy_web(
 
 @bind_hass
 async def async_aiohttp_proxy_stream(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     request: web.BaseRequest,
     stream: aiohttp.StreamReader,
-    content_type: Optional[str],
+    content_type: str | None,
     buffer_size: int = 102400,
     timeout: int = 10,
 ) -> web.StreamResponse:
@@ -128,7 +129,8 @@ async def async_aiohttp_proxy_stream(
         response.content_type = content_type
     await response.prepare(request)
 
-    try:
+    # Suppressing something went wrong fetching data, closed connection
+    with suppress(asyncio.TimeoutError, aiohttp.ClientError):
         while hass.is_running:
             with async_timeout.timeout(timeout):
                 data = await stream.read(buffer_size)
@@ -137,16 +139,12 @@ async def async_aiohttp_proxy_stream(
                 break
             await response.write(data)
 
-    except (asyncio.TimeoutError, aiohttp.ClientError):
-        # Something went wrong fetching data, closed connection
-        pass
-
     return response
 
 
 @callback
 def _async_register_clientsession_shutdown(
-    hass: HomeAssistantType, clientsession: aiohttp.ClientSession
+    hass: HomeAssistant, clientsession: aiohttp.ClientSession
 ) -> None:
     """Register ClientSession close on Home Assistant shutdown.
 
@@ -163,7 +161,7 @@ def _async_register_clientsession_shutdown(
 
 @callback
 def _async_get_connector(
-    hass: HomeAssistantType, verify_ssl: bool = True
+    hass: HomeAssistant, verify_ssl: bool = True
 ) -> aiohttp.BaseConnector:
     """Return the connector pool for aiohttp.
 
@@ -175,7 +173,7 @@ def _async_get_connector(
         return cast(aiohttp.BaseConnector, hass.data[key])
 
     if verify_ssl:
-        ssl_context: Union[bool, SSLContext] = ssl_util.client_context()
+        ssl_context: bool | SSLContext = ssl_util.client_context()
     else:
         ssl_context = False
 

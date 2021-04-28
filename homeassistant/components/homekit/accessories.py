@@ -12,6 +12,7 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_WINDOW,
 )
 from homeassistant.components.media_player import DEVICE_CLASS_TV
+from homeassistant.components.remote import SUPPORT_ACTIVITY
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
@@ -22,6 +23,8 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
@@ -54,8 +57,6 @@ from .const import (
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     DEFAULT_LOW_BATTERY_THRESHOLD,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
     DEVICE_CLASS_PM25,
     EVENT_HOMEKIT_CHANGED,
     HK_CHARGING,
@@ -103,6 +104,7 @@ def get_accessory(hass, driver, state, aid, config):
 
     a_type = None
     name = config.get(CONF_NAME, state.name)
+    features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     if state.domain == "alarm_control_panel":
         a_type = "SecuritySystem"
@@ -115,7 +117,6 @@ def get_accessory(hass, driver, state, aid, config):
 
     elif state.domain == "cover":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if device_class in (DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE) and features & (
             cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE
@@ -167,7 +168,7 @@ def get_accessory(hass, driver, state, aid, config):
             a_type = "AirQualitySensor"
         elif device_class == DEVICE_CLASS_CO:
             a_type = "CarbonMonoxideSensor"
-        elif device_class == DEVICE_CLASS_CO2 or DEVICE_CLASS_CO2 in state.entity_id:
+        elif device_class == DEVICE_CLASS_CO2 or "co2" in state.entity_id:
             a_type = "CarbonDioxideSensor"
         elif device_class == DEVICE_CLASS_ILLUMINANCE or unit in ("lm", LIGHT_LUX):
             a_type = "LightSensor"
@@ -178,6 +179,9 @@ def get_accessory(hass, driver, state, aid, config):
 
     elif state.domain == "vacuum":
         a_type = "Vacuum"
+
+    elif state.domain == "remote" and features & SUPPORT_ACTIVITY:
+        a_type = "ActivityRemote"
 
     elif state.domain in ("automation", "input_boolean", "remote", "scene", "script"):
         a_type = "Switch"

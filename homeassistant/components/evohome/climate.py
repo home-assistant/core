@@ -1,7 +1,8 @@
 """Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
+from __future__ import annotations
+
 from datetime import datetime as dt
 import logging
-from typing import List, Optional
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -129,12 +130,12 @@ class EvoClimateEntity(EvoDevice, ClimateEntity):
         self._preset_modes = None
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return a list of available hvac operation modes."""
         return list(HA_HVAC_TO_TCS)
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
+    def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         return self._preset_modes
 
@@ -203,7 +204,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
         return self._evo_device.setpointStatus["targetHeatTemperature"]
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if self._evo_tcs.systemModeStatus["mode"] in [EVO_AWAY, EVO_HEATOFF]:
             return TCS_PRESET_TO_HA.get(self._evo_tcs.systemModeStatus["mode"])
@@ -268,7 +269,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
                 self._evo_device.cancel_temp_override()
             )
 
-    async def async_set_preset_mode(self, preset_mode: Optional[str]) -> None:
+    async def async_set_preset_mode(self, preset_mode: str | None) -> None:
         """Set the preset mode; if None, then revert to following the schedule."""
         evo_preset_mode = HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW)
 
@@ -347,7 +348,7 @@ class EvoController(EvoClimateEntity):
 
         await self._set_tcs_mode(mode, until=until)
 
-    async def _set_tcs_mode(self, mode: str, until: Optional[dt] = None) -> None:
+    async def _set_tcs_mode(self, mode: str, until: dt | None = None) -> None:
         """Set a Controller to any of its native EVO_* operating modes."""
         until = dt_util.as_utc(until) if until else None
         await self._evo_broker.call_client_api(
@@ -361,7 +362,7 @@ class EvoController(EvoClimateEntity):
         return HVAC_MODE_OFF if tcs_mode == EVO_HEATOFF else HVAC_MODE_HEAT
 
     @property
-    def current_temperature(self) -> Optional[float]:
+    def current_temperature(self) -> float | None:
         """Return the average current temperature of the heating Zones.
 
         Controllers do not have a current temp, but one is expected by HA.
@@ -374,7 +375,7 @@ class EvoController(EvoClimateEntity):
         return round(sum(temps) / len(temps), 1) if temps else None
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         return TCS_PRESET_TO_HA.get(self._evo_tcs.systemModeStatus["mode"])
 
@@ -396,7 +397,7 @@ class EvoController(EvoClimateEntity):
         """Set an operating mode for a Controller."""
         await self._set_tcs_mode(HA_HVAC_TO_TCS.get(hvac_mode))
 
-    async def async_set_preset_mode(self, preset_mode: Optional[str]) -> None:
+    async def async_set_preset_mode(self, preset_mode: str | None) -> None:
         """Set the preset mode; if None, then revert to 'Auto' mode."""
         await self._set_tcs_mode(HA_PRESET_TO_TCS.get(preset_mode, EVO_AUTO))
 

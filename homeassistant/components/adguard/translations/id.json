@@ -1,10 +1,27 @@
 {
     "config": {
+        "abort": {
+            "existing_instance_updated": "Memperbarui konfigurasi yang ada.",
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
         "step": {
+            "hassio_confirm": {
+                "description": "Ingin mengonfigurasi Home Assistant untuk terhubung ke AdGuard Home yang disediakan oleh add-on Supervisor {addon}?",
+                "title": "AdGuard Home melalui add-on Home Assistant"
+            },
             "user": {
                 "data": {
-                    "password": "Kata sandi"
-                }
+                    "host": "Host",
+                    "password": "Kata Sandi",
+                    "port": "Port",
+                    "ssl": "Menggunakan sertifikat SSL",
+                    "username": "Nama Pengguna",
+                    "verify_ssl": "Verifikasi sertifikat SSL"
+                },
+                "description": "Siapkan instans AdGuard Home Anda untuk pemantauan dan kontrol."
             }
         }
     }

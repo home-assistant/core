@@ -320,7 +320,17 @@ async def test_create_account(hass, client):
         "title": "Test Entry",
         "type": "create_entry",
         "version": 1,
-        "result": entries[0].entry_id,
+        "result": {
+            "connection_class": "unknown",
+            "disabled_by": None,
+            "domain": "test",
+            "entry_id": entries[0].entry_id,
+            "source": "user",
+            "state": "loaded",
+            "supports_options": False,
+            "supports_unload": False,
+            "title": "Test Entry",
+        },
         "description": None,
         "description_placeholders": None,
     }
@@ -379,7 +389,17 @@ async def test_two_step_flow(hass, client):
             "type": "create_entry",
             "title": "user-title",
             "version": 1,
-            "result": entries[0].entry_id,
+            "result": {
+                "connection_class": "unknown",
+                "disabled_by": None,
+                "domain": "test",
+                "entry_id": entries[0].entry_id,
+                "source": "user",
+                "state": "loaded",
+                "supports_options": False,
+                "supports_unload": False,
+                "title": "user-title",
+            },
             "description": None,
             "description_placeholders": None,
         }
@@ -569,7 +589,7 @@ async def test_options_flow(hass, client):
         source="bla",
         connection_class=core_ce.CONN_CLASS_LOCAL_POLL,
     ).add_to_hass(hass)
-    entry = hass.config_entries._entries[0]
+    entry = hass.config_entries.async_entries()[0]
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         url = "/api/config/config_entries/options/flow"
@@ -618,7 +638,7 @@ async def test_two_step_options_flow(hass, client):
         source="bla",
         connection_class=core_ce.CONN_CLASS_LOCAL_POLL,
     ).add_to_hass(hass)
-    entry = hass.config_entries._entries[0]
+    entry = hass.config_entries.async_entries()[0]
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         url = "/api/config/config_entries/options/flow"

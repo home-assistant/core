@@ -1,5 +1,7 @@
 """Base Sensor for the Xbox Integration."""
-from typing import Optional
+from __future__ import annotations
+
+from yarl import URL
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -22,7 +24,7 @@ class XboxBaseSensorEntity(CoordinatorEntity):
         return f"{self.xuid}_{self.attribute}"
 
     @property
-    def data(self) -> Optional[PresenceData]:
+    def data(self) -> PresenceData | None:
         """Return coordinator data for this console."""
         return self.coordinator.data.presence.get(self.xuid)
 
@@ -44,7 +46,17 @@ class XboxBaseSensorEntity(CoordinatorEntity):
         if not self.data:
             return None
 
-        return self.data.display_pic.replace("&mode=Padding", "")
+        # Xbox sometimes returns a domain that uses a wrong certificate which creates issues
+        # with loading the image.
+        # The correct domain is images-eds-ssl which can just be replaced
+        # to point to the correct image, with the correct domain and certificate.
+        # We need to also remove the 'mode=Padding' query because with it, it results in an error 400.
+        url = URL(self.data.display_pic)
+        if url.host == "images-eds.xboxlive.com":
+            url = url.with_host("images-eds-ssl.xboxlive.com")
+        query = dict(url.query)
+        query.pop("mode", None)
+        return str(url.with_query(query))
 
     @property
     def entity_registry_enabled_default(self) -> bool:

@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .const import (  # pylint:disable=unused-import
+from .const import (
     ATTR_CID,
     ATTR_MAC,
     ATTR_MODEL,

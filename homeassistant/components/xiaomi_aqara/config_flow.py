@@ -10,7 +10,6 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 
-# pylint: disable=unused-import
 from .const import (
     CONF_INTERFACE,
     CONF_KEY,

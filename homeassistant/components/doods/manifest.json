@@ -2,6 +2,6 @@
   "domain": "doods",
   "name": "DOODS - Dedicated Open Object Detection Service",
   "documentation": "https://www.home-assistant.io/integrations/doods",
-  "requirements": ["pydoods==1.0.2", "pillow==8.1.1"],
+  "requirements": ["pydoods==1.0.2", "pillow==8.1.2"],
   "codeowners": []
 }

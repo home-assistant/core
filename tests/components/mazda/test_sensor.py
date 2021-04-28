@@ -10,6 +10,7 @@ from homeassistant.const import (
     PERCENTAGE,
     PRESSURE_PSI,
 )
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from tests.components.mazda import init_integration
@@ -19,7 +20,7 @@ async def test_device_nickname(hass):
     """Test creation of the device when vehicle has a nickname."""
     await init_integration(hass, use_nickname=True)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     reg_device = device_registry.async_get_device(
         identifiers={(DOMAIN, "JM000000000000000")},
     )
@@ -33,7 +34,7 @@ async def test_device_no_nickname(hass):
     """Test creation of the device when vehicle has no nickname."""
     await init_integration(hass, use_nickname=False)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     reg_device = device_registry.async_get_device(
         identifiers={(DOMAIN, "JM000000000000000")},
     )
@@ -47,7 +48,7 @@ async def test_sensors(hass):
     """Test creation of the sensors."""
     await init_integration(hass)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     # Fuel Remaining Percentage
     state = hass.states.get("sensor.my_mazda3_fuel_remaining_percentage")

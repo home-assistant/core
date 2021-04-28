@@ -15,11 +15,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import CONF_MYDEVOLO, DOMAIN, GATEWAY_SERIAL_PATTERN, PLATFORMS
 
 
-async def async_setup(hass, config):
-    """Get all devices and add them to hass."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up the devolo account from a config entry."""
     hass.data.setdefault(DOMAIN, {})
@@ -54,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
                     )
                 )
             )
-    except (ConnectionError, GatewayOfflineError) as err:
+    except GatewayOfflineError as err:
         raise ConfigEntryNotReady from err
 
     for platform in PLATFORMS:

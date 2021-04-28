@@ -1,6 +1,8 @@
 """Support for Z-Wave lights."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Callable
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import ColorComponent, CommandClass
@@ -85,9 +87,9 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         self._supports_color = False
         self._supports_white_value = False
         self._supports_color_temp = False
-        self._hs_color: Optional[Tuple[float, float]] = None
-        self._white_value: Optional[int] = None
-        self._color_temp: Optional[int] = None
+        self._hs_color: tuple[float, float] | None = None
+        self._white_value: int | None = None
+        self._color_temp: int | None = None
         self._min_mireds = 153  # 6500K as a safe default
         self._max_mireds = 370  # 2700K as a safe default
         self._supported_features = SUPPORT_BRIGHTNESS
@@ -126,17 +128,17 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         return self.brightness > 0
 
     @property
-    def hs_color(self) -> Optional[Tuple[float, float]]:
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the hs color."""
         return self._hs_color
 
     @property
-    def white_value(self) -> Optional[int]:
+    def white_value(self) -> int | None:
         """Return the white value of this light between 0..255."""
         return self._white_value
 
     @property
-    def color_temp(self) -> Optional[int]:
+    def color_temp(self) -> int | None:
         """Return the color temperature."""
         return self._color_temp
 
@@ -151,7 +153,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         return self._max_mireds
 
     @property
-    def supported_features(self) -> Optional[int]:
+    def supported_features(self) -> int:
         """Flag supported features."""
         return self._supported_features
 
@@ -220,7 +222,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         """Turn the light off."""
         await self._async_set_brightness(0, kwargs.get(ATTR_TRANSITION))
 
-    async def _async_set_colors(self, colors: Dict[ColorComponent, int]) -> None:
+    async def _async_set_colors(self, colors: dict[ColorComponent, int]) -> None:
         """Set (multiple) defined colors to given value(s)."""
         # prefer the (new) combined color property
         # https://github.com/zwave-js/node-zwave-js/pull/1782
@@ -245,12 +247,11 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
     async def _async_set_color(self, color: ColorComponent, new_value: int) -> None:
         """Set defined color to given value."""
-        property_key = color.value
         # actually set the new color value
         target_zwave_value = self.get_zwave_value(
             "targetColor",
             CommandClass.SWITCH_COLOR,
-            value_property_key=property_key.key,
+            value_property_key=color.value,
         )
         if target_zwave_value is None:
             # guard for unsupported color
@@ -258,7 +259,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         await self.info.node.async_set_value(target_zwave_value, new_value)
 
     async def _async_set_brightness(
-        self, brightness: Optional[int], transition: Optional[int] = None
+        self, brightness: int | None, transition: int | None = None
     ) -> None:
         """Set new brightness to light."""
         if brightness is None:
@@ -273,9 +274,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         # setting a value requires setting targetValue
         await self.info.node.async_set_value(self._target_value, zwave_brightness)
 
-    async def _async_set_transition_duration(
-        self, duration: Optional[int] = None
-    ) -> None:
+    async def _async_set_transition_duration(self, duration: int | None = None) -> None:
         """Set the transition time for the brightness value."""
         if self._dimming_duration is None:
             return
@@ -315,27 +314,27 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         red_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
-            value_property_key=ColorComponent.RED.value.key,
+            value_property_key=ColorComponent.RED.value,
         )
         green_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
-            value_property_key=ColorComponent.GREEN.value.key,
+            value_property_key=ColorComponent.GREEN.value,
         )
         blue_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
-            value_property_key=ColorComponent.BLUE.value.key,
+            value_property_key=ColorComponent.BLUE.value,
         )
         ww_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
-            value_property_key=ColorComponent.WARM_WHITE.value.key,
+            value_property_key=ColorComponent.WARM_WHITE.value,
         )
         cw_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
-            value_property_key=ColorComponent.COLD_WHITE.value.key,
+            value_property_key=ColorComponent.COLD_WHITE.value,
         )
         # prefer the (new) combined color property
         # https://github.com/zwave-js/node-zwave-js/pull/1782

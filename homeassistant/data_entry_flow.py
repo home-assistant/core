@@ -4,7 +4,7 @@ from __future__ import annotations
 import abc
 import asyncio
 from types import MappingProxyType
-from typing import Any, Dict, List, Optional
+from typing import Any
 import uuid
 
 import voluptuous as vol
@@ -43,7 +43,7 @@ class UnknownStep(FlowError):
 class AbortFlow(FlowError):
     """Exception to indicate a flow needs to be aborted."""
 
-    def __init__(self, reason: str, description_placeholders: Optional[Dict] = None):
+    def __init__(self, reason: str, description_placeholders: dict | None = None):
         """Initialize an abort flow exception."""
         super().__init__(f"Flow aborted: {reason}")
         self.reason = reason
@@ -59,8 +59,8 @@ class FlowManager(abc.ABC):
     ) -> None:
         """Initialize the flow manager."""
         self.hass = hass
-        self._initializing: Dict[str, List[asyncio.Future]] = {}
-        self._progress: Dict[str, Any] = {}
+        self._initializing: dict[str, list[asyncio.Future]] = {}
+        self._progress: dict[str, Any] = {}
 
     async def async_wait_init_flow_finish(self, handler: str) -> None:
         """Wait till all flows in progress are initialized."""
@@ -76,8 +76,8 @@ class FlowManager(abc.ABC):
         self,
         handler_key: Any,
         *,
-        context: Optional[Dict[str, Any]] = None,
-        data: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
     ) -> FlowHandler:
         """Create a flow for specified handler.
 
@@ -86,31 +86,29 @@ class FlowManager(abc.ABC):
 
     @abc.abstractmethod
     async def async_finish_flow(
-        self, flow: "FlowHandler", result: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, flow: FlowHandler, result: dict[str, Any]
+    ) -> dict[str, Any]:
         """Finish a config flow and add an entry."""
 
-    async def async_post_init(
-        self, flow: "FlowHandler", result: Dict[str, Any]
-    ) -> None:
+    async def async_post_init(self, flow: FlowHandler, result: dict[str, Any]) -> None:
         """Entry has finished executing its first step asynchronously."""
 
     @callback
-    def async_progress(self) -> List[Dict]:
+    def async_progress(self, include_uninitialized: bool = False) -> list[dict]:
         """Return the flows in progress."""
         return [
             {
                 "flow_id": flow.flow_id,
                 "handler": flow.handler,
                 "context": flow.context,
-                "step_id": flow.cur_step["step_id"],
+                "step_id": flow.cur_step["step_id"] if flow.cur_step else None,
             }
             for flow in self._progress.values()
-            if flow.cur_step is not None
+            if include_uninitialized or flow.cur_step is not None
         ]
 
     async def async_init(
-        self, handler: str, *, context: Optional[Dict] = None, data: Any = None
+        self, handler: str, *, context: dict | None = None, data: Any = None
     ) -> Any:
         """Start a configuration flow."""
         if context is None:
@@ -142,7 +140,7 @@ class FlowManager(abc.ABC):
         return result
 
     async def async_configure(
-        self, flow_id: str, user_input: Optional[Dict] = None
+        self, flow_id: str, user_input: dict | None = None
     ) -> Any:
         """Continue a configuration flow."""
         flow = self._progress.get(flow_id)
@@ -198,9 +196,9 @@ class FlowManager(abc.ABC):
         self,
         flow: Any,
         step_id: str,
-        user_input: Optional[Dict],
-        step_done: Optional[asyncio.Future] = None,
-    ) -> Dict:
+        user_input: dict | None,
+        step_done: asyncio.Future | None = None,
+    ) -> dict:
         """Handle a step of a flow."""
         method = f"async_step_{step_id}"
 
@@ -213,7 +211,7 @@ class FlowManager(abc.ABC):
             )
 
         try:
-            result: Dict = await getattr(flow, method)(user_input)
+            result: dict = await getattr(flow, method)(user_input)
         except AbortFlow as err:
             result = _create_abort_data(
                 flow.flow_id, flow.handler, err.reason, err.description_placeholders
@@ -265,14 +263,13 @@ class FlowHandler:
     """Handle the configuration flow of a component."""
 
     # Set by flow manager
-    cur_step: Optional[Dict[str, str]] = None
-    # Ignore types, pylint workaround: https://github.com/PyCQA/pylint/issues/3167
+    cur_step: dict[str, str] | None = None
+    # Ignore types: https://github.com/PyCQA/pylint/issues/3167
     flow_id: str = None  # type: ignore
     hass: HomeAssistant = None  # type: ignore
     handler: str = None  # type: ignore
-    # Pylint workaround: https://github.com/PyCQA/pylint/issues/3167
     # Ensure the attribute has a subscriptable, but immutable, default value.
-    context: Dict = MappingProxyType({})  # type: ignore
+    context: dict = MappingProxyType({})  # type: ignore
 
     # Set by _async_create_flow callback
     init_step = "init"
@@ -281,7 +278,7 @@ class FlowHandler:
     VERSION = 1
 
     @property
-    def source(self) -> Optional[str]:
+    def source(self) -> str | None:
         """Source that initialized the flow."""
         if not hasattr(self, "context"):
             return None
@@ -302,9 +299,9 @@ class FlowHandler:
         *,
         step_id: str,
         data_schema: vol.Schema = None,
-        errors: Optional[Dict] = None,
-        description_placeholders: Optional[Dict] = None,
-    ) -> Dict[str, Any]:
+        errors: dict | None = None,
+        description_placeholders: dict | None = None,
+    ) -> dict[str, Any]:
         """Return the definition of a form to gather user input."""
         return {
             "type": RESULT_TYPE_FORM,
@@ -321,10 +318,10 @@ class FlowHandler:
         self,
         *,
         title: str,
-        data: Dict,
-        description: Optional[str] = None,
-        description_placeholders: Optional[Dict] = None,
-    ) -> Dict[str, Any]:
+        data: dict,
+        description: str | None = None,
+        description_placeholders: dict | None = None,
+    ) -> dict[str, Any]:
         """Finish config flow and create a config entry."""
         return {
             "version": self.VERSION,
@@ -339,8 +336,8 @@ class FlowHandler:
 
     @callback
     def async_abort(
-        self, *, reason: str, description_placeholders: Optional[Dict] = None
-    ) -> Dict[str, Any]:
+        self, *, reason: str, description_placeholders: dict | None = None
+    ) -> dict[str, Any]:
         """Abort the config flow."""
         return _create_abort_data(
             self.flow_id, self.handler, reason, description_placeholders
@@ -348,8 +345,8 @@ class FlowHandler:
 
     @callback
     def async_external_step(
-        self, *, step_id: str, url: str, description_placeholders: Optional[Dict] = None
-    ) -> Dict[str, Any]:
+        self, *, step_id: str, url: str, description_placeholders: dict | None = None
+    ) -> dict[str, Any]:
         """Return the definition of an external step for the user to take."""
         return {
             "type": RESULT_TYPE_EXTERNAL_STEP,
@@ -361,7 +358,7 @@ class FlowHandler:
         }
 
     @callback
-    def async_external_step_done(self, *, next_step_id: str) -> Dict[str, Any]:
+    def async_external_step_done(self, *, next_step_id: str) -> dict[str, Any]:
         """Return the definition of an external step for the user to take."""
         return {
             "type": RESULT_TYPE_EXTERNAL_STEP_DONE,
@@ -376,8 +373,8 @@ class FlowHandler:
         *,
         step_id: str,
         progress_action: str,
-        description_placeholders: Optional[Dict] = None,
-    ) -> Dict[str, Any]:
+        description_placeholders: dict | None = None,
+    ) -> dict[str, Any]:
         """Show a progress message to the user, without user input allowed."""
         return {
             "type": RESULT_TYPE_SHOW_PROGRESS,
@@ -389,7 +386,7 @@ class FlowHandler:
         }
 
     @callback
-    def async_show_progress_done(self, *, next_step_id: str) -> Dict[str, Any]:
+    def async_show_progress_done(self, *, next_step_id: str) -> dict[str, Any]:
         """Mark the progress done."""
         return {
             "type": RESULT_TYPE_SHOW_PROGRESS_DONE,
@@ -404,8 +401,8 @@ def _create_abort_data(
     flow_id: str,
     handler: str,
     reason: str,
-    description_placeholders: Optional[Dict] = None,
-) -> Dict[str, Any]:
+    description_placeholders: dict | None = None,
+) -> dict[str, Any]:
     """Return the definition of an external step for the user to take."""
     return {
         "type": RESULT_TYPE_ABORT,

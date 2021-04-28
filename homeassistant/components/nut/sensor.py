@@ -1,6 +1,7 @@
 """Provides a sensor to track various status aspects of a UPS."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_STATE, CONF_RESOURCES, STATE_UNKNOWN
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -76,7 +77,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class NUTSensor(CoordinatorEntity):
+class NUTSensor(CoordinatorEntity, SensorEntity):
     """Representation of a sensor entity for NUT status values."""
 
     def __init__(
@@ -160,7 +161,7 @@ class NUTSensor(CoordinatorEntity):
         return self._unit
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the sensor attributes."""
         return {ATTR_STATE: _format_display_state(self._data.status)}
 

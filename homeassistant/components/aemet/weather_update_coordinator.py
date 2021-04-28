@@ -82,6 +82,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+STATION_MAX_DELTA = timedelta(hours=2)
 WEATHER_UPDATE_INTERVAL = timedelta(minutes=10)
 
 
@@ -90,7 +91,7 @@ def format_condition(condition: str) -> str:
     for key, value in CONDITIONS_MAP.items():
         if condition in value:
             return key
-    _LOGGER.error('condition "%s" not found in CONDITIONS_MAP', condition)
+    _LOGGER.error('Condition "%s" not found in CONDITIONS_MAP', condition)
     return condition
 
 
@@ -98,7 +99,7 @@ def format_float(value) -> float:
     """Try converting string to float."""
     try:
         return float(value)
-    except ValueError:
+    except (TypeError, ValueError):
         return None
 
 
@@ -106,7 +107,7 @@ def format_int(value) -> int:
     """Try converting string to int."""
     try:
         return int(value)
-    except ValueError:
+    except (TypeError, ValueError):
         return None
 
 
@@ -175,14 +176,14 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             )
             if self._town:
                 _LOGGER.debug(
-                    "town found for coordinates [%s, %s]: %s",
+                    "Town found for coordinates [%s, %s]: %s",
                     self._latitude,
                     self._longitude,
                     self._town,
                 )
         if not self._town:
             _LOGGER.error(
-                "town not found for coordinates [%s, %s]",
+                "Town not found for coordinates [%s, %s]",
                 self._latitude,
                 self._longitude,
             )
@@ -197,7 +198,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         daily = self._aemet.get_specific_forecast_town_daily(self._town[AEMET_ATTR_ID])
         if not daily:
             _LOGGER.error(
-                'error fetching daily data for town "%s"', self._town[AEMET_ATTR_ID]
+                'Error fetching daily data for town "%s"', self._town[AEMET_ATTR_ID]
             )
 
         hourly = self._aemet.get_specific_forecast_town_hourly(
@@ -205,7 +206,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         )
         if not hourly:
             _LOGGER.error(
-                'error fetching hourly data for town "%s"', self._town[AEMET_ATTR_ID]
+                'Error fetching hourly data for town "%s"', self._town[AEMET_ATTR_ID]
             )
 
         station = None
@@ -215,7 +216,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             )
             if not station:
                 _LOGGER.error(
-                    'error fetching data for station "%s"',
+                    'Error fetching data for station "%s"',
                     self._station[AEMET_ATTR_IDEMA],
                 )
 
@@ -241,6 +242,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             weather_response.hourly[ATTR_DATA][0][AEMET_ATTR_ELABORATED]
         )
         now = dt_util.now()
+        now_utc = dt_util.utcnow()
         hour = now.hour
 
         # Get current day
@@ -253,10 +255,18 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 day = cur_day
                 break
 
-        # Get station data
+        # Get latest station data
         station_data = None
+        station_dt = None
         if weather_response.station:
-            station_data = weather_response.station[ATTR_DATA][-1]
+            for _station_data in weather_response.station[ATTR_DATA]:
+                if AEMET_ATTR_STATION_DATE in _station_data:
+                    _station_dt = dt_util.parse_datetime(
+                        _station_data[AEMET_ATTR_STATION_DATE] + "Z"
+                    )
+                    if not station_dt or _station_dt > station_dt:
+                        station_data = _station_data
+                        station_dt = _station_dt
 
         condition = None
         humidity = None
@@ -273,7 +283,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         temperature_feeling = None
         town_id = None
         town_name = None
-        town_timestamp = dt_util.as_utc(elaborated)
+        town_timestamp = dt_util.as_utc(elaborated).isoformat()
         wind_bearing = None
         wind_max_speed = None
         wind_speed = None
@@ -299,17 +309,20 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
         # Overwrite weather values with closest station data (if present)
         if station_data:
-            if AEMET_ATTR_STATION_DATE in station_data:
-                station_dt = dt_util.parse_datetime(
-                    station_data[AEMET_ATTR_STATION_DATE] + "Z"
-                )
-                station_timestamp = dt_util.as_utc(station_dt).isoformat()
-            if AEMET_ATTR_STATION_HUMIDITY in station_data:
-                humidity = format_float(station_data[AEMET_ATTR_STATION_HUMIDITY])
-            if AEMET_ATTR_STATION_PRESSURE_SEA in station_data:
-                pressure = format_float(station_data[AEMET_ATTR_STATION_PRESSURE_SEA])
-            if AEMET_ATTR_STATION_TEMPERATURE in station_data:
-                temperature = format_float(station_data[AEMET_ATTR_STATION_TEMPERATURE])
+            station_timestamp = dt_util.as_utc(station_dt).isoformat()
+            if (now_utc - station_dt) <= STATION_MAX_DELTA:
+                if AEMET_ATTR_STATION_HUMIDITY in station_data:
+                    humidity = format_float(station_data[AEMET_ATTR_STATION_HUMIDITY])
+                if AEMET_ATTR_STATION_PRESSURE_SEA in station_data:
+                    pressure = format_float(
+                        station_data[AEMET_ATTR_STATION_PRESSURE_SEA]
+                    )
+                if AEMET_ATTR_STATION_TEMPERATURE in station_data:
+                    temperature = format_float(
+                        station_data[AEMET_ATTR_STATION_TEMPERATURE]
+                    )
+            else:
+                _LOGGER.warning("Station data is outdated")
 
         # Get forecast from weather data
         forecast_daily = self._get_daily_forecast_from_weather_response(
@@ -535,9 +548,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     def _get_temperature(day_data, hour):
         """Get temperature (hour) from weather data."""
         val = get_forecast_hour_value(day_data[AEMET_ATTR_TEMPERATURE], hour)
-        if val:
-            return format_int(val)
-        return None
+        return format_int(val)
 
     @staticmethod
     def _get_temperature_day(day_data):
@@ -545,9 +556,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         val = get_forecast_day_value(
             day_data[AEMET_ATTR_TEMPERATURE], key=AEMET_ATTR_MAX
         )
-        if val:
-            return format_int(val)
-        return None
+        return format_int(val)
 
     @staticmethod
     def _get_temperature_low_day(day_data):
@@ -555,17 +564,13 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         val = get_forecast_day_value(
             day_data[AEMET_ATTR_TEMPERATURE], key=AEMET_ATTR_MIN
         )
-        if val:
-            return format_int(val)
-        return None
+        return format_int(val)
 
     @staticmethod
     def _get_temperature_feeling(day_data, hour):
         """Get temperature from weather data."""
         val = get_forecast_hour_value(day_data[AEMET_ATTR_TEMPERATURE_FEELING], hour)
-        if val:
-            return format_int(val)
-        return None
+        return format_int(val)
 
     def _get_town_id(self):
         """Get town ID from weather data."""

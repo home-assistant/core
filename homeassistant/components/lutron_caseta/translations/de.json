@@ -2,17 +2,35 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "cannot_connect": "Verbindung fehlgeschlagen"
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "not_lutron_device": "Erkanntes Ger\u00e4t ist kein Lutron-Ger\u00e4t"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
+        "flow_title": "Lutron Cas\u00e9ta {name} ({host})",
         "step": {
+            "link": {
+                "title": "Mit der Bridge verbinden"
+            },
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Gib die IP-Adresse des Ger\u00e4ts ein.",
+                "title": "Automatisch mit der Bridge verbinden"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Erste Taste",
+            "button_2": "Zweite Taste",
+            "button_3": "Dritte Taste",
+            "button_4": "Vierte Taste",
+            "off": "Aus",
+            "on": "An",
+            "stop_all": "Alle anhalten"
         }
     }
 }

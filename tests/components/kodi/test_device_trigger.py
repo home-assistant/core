@@ -15,7 +15,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -95,7 +95,9 @@ async def test_if_fires_on_state_change(hass, calls, kodi_media_player):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": ("turn_on - {{ trigger.entity_id }}")
+                            "some": (
+                                "turn_on - {{ trigger.entity_id }} - {{ trigger.id}}"
+                            )
                         },
                     },
                 },
@@ -110,7 +112,9 @@ async def test_if_fires_on_state_change(hass, calls, kodi_media_player):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": ("turn_off - {{ trigger.entity_id }}")
+                            "some": (
+                                "turn_off - {{ trigger.entity_id }} - {{ trigger.id}}"
+                            )
                         },
                     },
                 },
@@ -128,7 +132,7 @@ async def test_if_fires_on_state_change(hass, calls, kodi_media_player):
 
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["some"] == f"turn_on - {kodi_media_player}"
+    assert calls[0].data["some"] == f"turn_on - {kodi_media_player} - 0"
 
     await hass.services.async_call(
         MP_DOMAIN,
@@ -139,4 +143,4 @@ async def test_if_fires_on_state_change(hass, calls, kodi_media_player):
 
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[1].data["some"] == f"turn_off - {kodi_media_player}"
+    assert calls[1].data["some"] == f"turn_off - {kodi_media_player} - 0"

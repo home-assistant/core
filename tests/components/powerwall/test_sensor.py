@@ -1,9 +1,9 @@
 """The sensor tests for the powerwall platform."""
-
 from unittest.mock import patch
 
 from homeassistant.components.powerwall.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, PERCENTAGE
+from homeassistant.helpers import device_registry as dr
 
 from .mocks import _mock_powerwall_with_fixtures
 
@@ -26,7 +26,7 @@ async def test_sensors(hass):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     reg_device = device_registry.async_get_device(
         identifiers={("powerwall", "TG0123456789AB_TG9876543210BA")},
     )

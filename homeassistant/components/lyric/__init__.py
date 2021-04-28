@@ -1,8 +1,10 @@
 """The Honeywell Lyric integration."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from aiolyric import Lyric
 from aiolyric.objects.device import LyricDevice
@@ -13,7 +15,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
@@ -109,13 +110,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -126,8 +125,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -147,7 +146,7 @@ class LyricEntity(CoordinatorEntity):
         device: LyricDevice,
         key: str,
         name: str,
-        icon: Optional[str],
+        icon: str | None,
     ) -> None:
         """Initialize the Honeywell Lyric entity."""
         super().__init__(coordinator)
@@ -190,7 +189,7 @@ class LyricDeviceEntity(LyricEntity):
     """Defines a Honeywell Lyric device entity."""
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information about this Honeywell Lyric instance."""
         return {
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac_id)},

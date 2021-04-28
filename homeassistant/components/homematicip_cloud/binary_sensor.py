@@ -1,5 +1,7 @@
 """Support for HomematicIP Cloud binary sensor."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 from homematicip.aio.device import (
     AsyncAccelerationSensor,
@@ -166,7 +168,7 @@ class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEnt
         return name if not self._home.name else f"{self._home.name} {name}"
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device specific attributes."""
         # Adds a sensor to the existing HAP device
         return {
@@ -210,9 +212,9 @@ class HomematicipBaseActionSensor(HomematicipGenericEntity, BinarySensorEntity):
         return self._device.accelerationSensorTriggered
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the acceleration sensor."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         for attr, attr_key in SAM_DEVICE_ATTRIBUTES.items():
             attr_value = getattr(self._device, attr, None)
@@ -285,9 +287,9 @@ class HomematicipShutterContact(HomematicipMultiContactInterface, BinarySensorEn
         return DEVICE_CLASS_DOOR
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the Shutter Contact."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         if self.has_additional_state:
             window_state = getattr(self._device, "windowState", None)
@@ -412,9 +414,9 @@ class HomematicipSunshineSensor(HomematicipGenericEntity, BinarySensorEntity):
         return self._device.sunshine
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the illuminance sensor."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         today_sunshine_duration = getattr(self._device, "todaySunshineDuration", None)
         if today_sunshine_duration:
@@ -482,9 +484,9 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericEntity, BinarySensorE
         return True
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the security zone group."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         for attr, attr_key in GROUP_ATTRIBUTES.items():
             attr_value = getattr(self._device, attr, None)
@@ -526,9 +528,9 @@ class HomematicipSecuritySensorGroup(
         super().__init__(hap, device, post="Sensors")
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the security group."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         smoke_detector_at = getattr(self._device, "smokeDetectorAlarmType", None)
         if smoke_detector_at:

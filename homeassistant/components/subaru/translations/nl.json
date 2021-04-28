@@ -16,6 +16,7 @@
                 "data": {
                     "pin": "PIN"
                 },
+                "description": "Voer uw MySubaru-pincode in\n OPMERKING: Alle voertuigen in een account moeten dezelfde pincode hebben",
                 "title": "Subaru Starlink Configuratie"
             },
             "user": {
@@ -24,6 +25,7 @@
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
                 },
+                "description": "Voer uw MySubaru inloggegevens in\nOPMERKING: De eerste installatie kan tot 30 seconden duren",
                 "title": "Subaru Starlink-configuratie"
             }
         }
@@ -31,6 +33,10 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "update_enabled": "Voertuigpeiling inschakelen"
+                },
+                "description": "Wanneer deze optie is ingeschakeld, zal voertuigpeiling om de 2 uur een opdracht op afstand naar uw voertuig sturen om nieuwe sensorgegevens te verkrijgen. Zonder voertuigpeiling worden nieuwe sensorgegevens alleen ontvangen wanneer het voertuig automatisch gegevens doorstuurt (normaal gesproken na het uitschakelen van de motor).",
                 "title": "Subaru Starlink-opties"
             }
         }

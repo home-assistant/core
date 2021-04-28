@@ -1,6 +1,7 @@
 """Geolocation support for GDACS Feed."""
+from __future__ import annotations
+
 import logging
-from typing import Optional
 
 from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.const import (
@@ -169,7 +170,7 @@ class GdacsEvent(GeolocationEvent):
         self._version = feed_entry.version
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID containing latitude/longitude and external id."""
         return f"{self._integration_id}_{self._external_id}"
 
@@ -186,22 +187,22 @@ class GdacsEvent(GeolocationEvent):
         return SOURCE
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the entity."""
         return self._title
 
     @property
-    def distance(self) -> Optional[float]:
+    def distance(self) -> float | None:
         """Return distance value of this external event."""
         return self._distance
 
     @property
-    def latitude(self) -> Optional[float]:
+    def latitude(self) -> float | None:
         """Return latitude value of this external event."""
         return self._latitude
 
     @property
-    def longitude(self) -> Optional[float]:
+    def longitude(self) -> float | None:
         """Return longitude value of this external event."""
         return self._longitude
 
@@ -213,7 +214,7 @@ class GdacsEvent(GeolocationEvent):
         return LENGTH_KILOMETERS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         attributes = {}
         for key, value in (

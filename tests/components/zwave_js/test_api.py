@@ -6,6 +6,7 @@ from zwave_js_server.const import LogLevel
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import InvalidNewValue, NotFoundError, SetValueFailed
 
+from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
     CONFIG,
     ENABLED,
@@ -22,7 +23,7 @@ from homeassistant.components.zwave_js.api import (
     VALUE,
 )
 from homeassistant.components.zwave_js.const import DOMAIN
-from homeassistant.helpers.device_registry import async_get_registry
+from homeassistant.helpers import device_registry as dr
 
 
 async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
@@ -72,9 +73,39 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
     assert len(result) == 61
     key = "52-112-0-2"
     assert result[key]["property"] == 2
+    assert result[key]["property_key"] is None
     assert result[key]["metadata"]["type"] == "number"
     assert result[key]["configuration_value_type"] == "enumerated"
     assert result[key]["metadata"]["states"]
+
+    key = "52-112-0-201-255"
+    assert result[key]["property_key"] == 255
+
+    # Test getting non-existent node fails
+    await ws_client.send_json(
+        {
+            ID: 5,
+            TYPE: "zwave_js/node_status",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 99999,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test getting non-existent node config params fails
+    await ws_client.send_json(
+        {
+            ID: 6,
+            TYPE: "zwave_js/get_config_parameters",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 99999,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
 
 
 async def test_add_node(
@@ -170,7 +201,7 @@ async def test_remove_node(
     # Add mock node to controller
     client.driver.controller.nodes[67] = nortek_thermostat
 
-    dev_reg = await async_get_registry(hass)
+    dev_reg = dr.async_get(hass)
 
     # Create device registry entry for mock node
     device = dev_reg.async_get_or_create(
@@ -198,7 +229,7 @@ async def test_set_config_parameter(
     entry = integration
     ws_client = await hass_ws_client(hass)
 
-    client.async_send_command.return_value = {"success": True}
+    client.async_send_command_no_wait.return_value = None
 
     await ws_client.send_json(
         {
@@ -213,10 +244,10 @@ async def test_set_config_parameter(
     )
 
     msg = await ws_client.receive_json()
-    assert msg["result"]
+    assert msg["success"]
 
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args[0][0]
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 52
     assert args["valueId"] == {
@@ -244,7 +275,7 @@ async def test_set_config_parameter(
     }
     assert args["value"] == 1
 
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
     with patch(
         "homeassistant.components.zwave_js.api.async_set_config_parameter",
@@ -264,7 +295,7 @@ async def test_set_config_parameter(
 
         msg = await ws_client.receive_json()
 
-        assert len(client.async_send_command.call_args_list) == 0
+        assert len(client.async_send_command_no_wait.call_args_list) == 0
         assert not msg["success"]
         assert msg["error"]["code"] == "not_supported"
         assert msg["error"]["message"] == "test"
@@ -284,7 +315,7 @@ async def test_set_config_parameter(
 
         msg = await ws_client.receive_json()
 
-        assert len(client.async_send_command.call_args_list) == 0
+        assert len(client.async_send_command_no_wait.call_args_list) == 0
         assert not msg["success"]
         assert msg["error"]["code"] == "not_found"
         assert msg["error"]["message"] == "test"
@@ -304,7 +335,7 @@ async def test_set_config_parameter(
 
         msg = await ws_client.receive_json()
 
-        assert len(client.async_send_command.call_args_list) == 0
+        assert len(client.async_send_command_no_wait.call_args_list) == 0
         assert not msg["success"]
         assert msg["error"]["code"] == "unknown_error"
         assert msg["error"]["message"] == "test"
@@ -350,7 +381,7 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "update_log_config"
-    assert args["config"] == {"level": 0}
+    assert args["config"] == {"level": "error"}
 
     client.async_send_command.reset_mock()
 
@@ -397,7 +428,7 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "update_log_config"
     assert args["config"] == {
-        "level": 0,
+        "level": "error",
         "logToFile": True,
         "filename": "/test",
         "forceConsole": True,
@@ -459,7 +490,7 @@ async def test_get_log_config(hass, client, integration, hass_ws_client):
         "success": True,
         "config": {
             "enabled": True,
-            "level": 0,
+            "level": "error",
             "logToFile": False,
             "filename": "/test.txt",
             "forceConsole": False,

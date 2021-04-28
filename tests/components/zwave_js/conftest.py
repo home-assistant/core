@@ -228,6 +228,12 @@ def climate_danfoss_lc_13_state_fixture():
     return json.loads(load_fixture("zwave_js/climate_danfoss_lc_13_state.json"))
 
 
+@pytest.fixture(name="climate_eurotronic_spirit_z_state", scope="session")
+def climate_eurotronic_spirit_z_state_fixture():
+    """Load the climate Eurotronic Spirit Z thermostat node state fixture data."""
+    return json.loads(load_fixture("zwave_js/climate_eurotronic_spirit_z_state.json"))
+
+
 @pytest.fixture(name="climate_heatit_z_trm3_state", scope="session")
 def climate_heatit_z_trm3_state_fixture():
     """Load the climate HEATIT Z-TRM3 thermostat node state fixture data."""
@@ -298,6 +304,37 @@ def inovelli_lzw36_state_fixture():
 def null_name_check_state_fixture():
     """Load the null name check node state fixture data."""
     return json.loads(load_fixture("zwave_js/null_name_check_state.json"))
+
+
+@pytest.fixture(name="lock_id_lock_as_id150_state", scope="session")
+def lock_id_lock_as_id150_state_fixture():
+    """Load the id lock id-150 lock node state fixture data."""
+    return json.loads(load_fixture("zwave_js/lock_id_lock_as_id150_state.json"))
+
+
+@pytest.fixture(
+    name="climate_radio_thermostat_ct101_multiple_temp_units_state", scope="session"
+)
+def climate_radio_thermostat_ct101_multiple_temp_units_state_fixture():
+    """Load the climate multiple temp units node state fixture data."""
+    return json.loads(
+        load_fixture(
+            "zwave_js/climate_radio_thermostat_ct101_multiple_temp_units_state.json"
+        )
+    )
+
+
+@pytest.fixture(
+    name="climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state",
+    scope="session",
+)
+def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state_fixture():
+    """Load the climate device with mode and setpoint on different endpoints node state fixture data."""
+    return json.loads(
+        load_fixture(
+            "zwave_js/climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state.json"
+        )
+    )
 
 
 @pytest.fixture(name="client")
@@ -415,6 +452,14 @@ def climate_radio_thermostat_ct100_plus_different_endpoints_fixture(
 def climate_danfoss_lc_13_fixture(client, climate_danfoss_lc_13_state):
     """Mock a climate radio danfoss LC-13 node."""
     node = Node(client, copy.deepcopy(climate_danfoss_lc_13_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_eurotronic_spirit_z")
+def climate_eurotronic_spirit_z_fixture(client, climate_eurotronic_spirit_z_state):
+    """Mock a climate radio danfoss LC-13 node."""
+    node = Node(client, climate_eurotronic_spirit_z_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -544,5 +589,51 @@ def aeon_smart_switch_6_fixture(client, aeon_smart_switch_6_state):
 def ge_12730_fixture(client, ge_12730_state):
     """Mock a GE 12730 fan controller node."""
     node = Node(client, copy.deepcopy(ge_12730_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="inovelli_lzw36")
+def inovelli_lzw36_fixture(client, inovelli_lzw36_state):
+    """Mock a Inovelli LZW36 fan controller node."""
+    node = Node(client, copy.deepcopy(inovelli_lzw36_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="lock_id_lock_as_id150")
+def lock_id_lock_as_id150(client, lock_id_lock_as_id150_state):
+    """Mock an id lock id-150 lock node."""
+    node = Node(client, copy.deepcopy(lock_id_lock_as_id150_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_radio_thermostat_ct101_multiple_temp_units")
+def climate_radio_thermostat_ct101_multiple_temp_units_fixture(
+    client, climate_radio_thermostat_ct101_multiple_temp_units_state
+):
+    """Mock a climate device with multiple temp units node."""
+    node = Node(
+        client, copy.deepcopy(climate_radio_thermostat_ct101_multiple_temp_units_state)
+    )
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(
+    name="climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints"
+)
+def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_fixture(
+    client,
+    climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state,
+):
+    """Mock a climate device with mode and setpoint on differenet endpoints node."""
+    node = Node(
+        client,
+        copy.deepcopy(
+            climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state
+        ),
+    )
     client.driver.controller.nodes[node.node_id] = node
     return node

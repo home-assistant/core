@@ -6,6 +6,7 @@
             "addon_install_failed": "Kan de Z-Wave JS add-on niet installeren.",
             "addon_missing_discovery_info": "De Z-Wave JS addon mist ontdekkings informatie",
             "addon_set_config_failed": "Instellen van de Z-Wave JS configuratie is mislukt.",
+            "addon_start_failed": "Kan de Z-Wave JS add-on niet starten.",
             "already_configured": "Apparaat is al geconfigureerd",
             "already_in_progress": "De configuratiestroom is al aan de gang",
             "cannot_connect": "Kan geen verbinding maken"
@@ -17,7 +18,8 @@
             "unknown": "Onverwachte fout"
         },
         "progress": {
-            "install_addon": "Een ogenblik geduld terwijl de installatie van de Z-Wave JS add-on is voltooid. Dit kan enkele minuten duren."
+            "install_addon": "Een ogenblik geduld terwijl de installatie van de Z-Wave JS add-on is voltooid. Dit kan enkele minuten duren.",
+            "start_addon": "Wacht alstublieft terwijl de Z-Wave JS add-on start voltooid is. Dit kan enkele seconden duren."
         },
         "step": {
             "configure_addon": {
@@ -44,6 +46,9 @@
                 },
                 "description": "Wilt u de Z-Wave JS Supervisor add-on gebruiken?",
                 "title": "Selecteer verbindingsmethode"
+            },
+            "start_addon": {
+                "title": "De add-on Z-Wave JS wordt gestart."
             },
             "user": {
                 "data": {

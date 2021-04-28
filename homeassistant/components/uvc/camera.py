@@ -1,8 +1,9 @@
 """Support for Ubiquiti's UVC cameras."""
+from __future__ import annotations
+
 from datetime import datetime
 import logging
 import re
-from typing import Optional
 
 import requests
 from uvcclient import camera as uvc_camera, nvr
@@ -12,6 +13,7 @@ from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Cam
 from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_SSL
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.dt import utc_from_timestamp
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,7 +113,7 @@ class UnifiVideoCamera(Camera):
         return 0
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the camera state attributes."""
         attr = {}
         if self.motion_detection_enabled:
@@ -127,11 +129,9 @@ class UnifiVideoCamera(Camera):
         if "recordingIndicator" in self._caminfo:
             recording_state = self._caminfo["recordingIndicator"]
 
-        return (
-            self._caminfo["recordingSettings"]["fullTimeRecordEnabled"]
-            or recording_state == "MOTION_INPROGRESS"
-            or recording_state == "MOTION_FINISHED"
-        )
+        return self._caminfo["recordingSettings"][
+            "fullTimeRecordEnabled"
+        ] or recording_state in ["MOTION_INPROGRESS", "MOTION_FINISHED"]
 
     @property
     def motion_detection_enabled(self):
@@ -196,9 +196,8 @@ class UnifiVideoCamera(Camera):
 
     def camera_image(self):
         """Return the image of this camera."""
-        if not self._camera:
-            if not self._login():
-                return
+        if not self._camera and not self._login():
+            return
 
         def _get_image(retry=True):
             try:
@@ -255,8 +254,8 @@ class UnifiVideoCamera(Camera):
         self._caminfo = self._nvr.get_camera(self._uuid)
 
 
-def timestamp_ms_to_date(epoch_ms: int) -> Optional[datetime]:
+def timestamp_ms_to_date(epoch_ms: int) -> datetime | None:
     """Convert millisecond timestamp to datetime."""
     if epoch_ms:
-        return datetime.fromtimestamp(epoch_ms / 1000)
+        return utc_from_timestamp(epoch_ms / 1000)
     return None

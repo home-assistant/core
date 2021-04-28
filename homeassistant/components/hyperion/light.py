@@ -4,7 +4,7 @@ from __future__ import annotations
 import functools
 import logging
 from types import MappingProxyType
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Mapping, Sequence
 
 from hyperion import client, const
 
@@ -28,6 +28,7 @@ import homeassistant.util.color as color_util
 
 from . import get_hyperion_unique_id, listen_for_instance_updates
 from .const import (
+    CONF_EFFECT_HIDE_LIST,
     CONF_INSTANCE_CLIENTS,
     CONF_PRIORITY,
     DEFAULT_ORIGIN,
@@ -63,7 +64,7 @@ DEFAULT_EFFECT = KEY_EFFECT_SOLID
 DEFAULT_NAME = "Hyperion"
 DEFAULT_PORT = const.DEFAULT_PORT_JSON
 DEFAULT_HDMI_PRIORITY = 880
-DEFAULT_EFFECT_LIST: List[str] = []
+DEFAULT_EFFECT_LIST: list[str] = []
 
 SUPPORT_HYPERION = SUPPORT_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT
 
@@ -142,12 +143,12 @@ class HyperionBaseLight(LightEntity):
         self._rgb_color: Sequence[int] = DEFAULT_COLOR
         self._effect: str = KEY_EFFECT_SOLID
 
-        self._static_effect_list: List[str] = [KEY_EFFECT_SOLID]
+        self._static_effect_list: list[str] = [KEY_EFFECT_SOLID]
         if self._support_external_effects:
             self._static_effect_list += list(const.KEY_COMPONENTID_EXTERNAL_SOURCES)
-        self._effect_list: List[str] = self._static_effect_list[:]
+        self._effect_list: list[str] = self._static_effect_list[:]
 
-        self._client_callbacks = {
+        self._client_callbacks: Mapping[str, Callable[[dict[str, Any]], None]] = {
             f"{const.KEY_ADJUSTMENT}-{const.KEY_UPDATE}": self._update_adjustment,
             f"{const.KEY_COMPONENTS}-{const.KEY_UPDATE}": self._update_components,
             f"{const.KEY_EFFECTS}-{const.KEY_UPDATE}": self._update_effect_list,
@@ -176,7 +177,7 @@ class HyperionBaseLight(LightEntity):
         return self._brightness
 
     @property
-    def hs_color(self) -> Tuple[float, float]:
+    def hs_color(self) -> tuple[float, float]:
         """Return last color value set."""
         return color_util.color_RGB_to_hs(*self._rgb_color)
 
@@ -196,7 +197,7 @@ class HyperionBaseLight(LightEntity):
         return self._effect
 
     @property
-    def effect_list(self) -> List[str]:
+    def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         return self._effect_list
 
@@ -217,7 +218,10 @@ class HyperionBaseLight(LightEntity):
 
     def _get_option(self, key: str) -> Any:
         """Get a value from the provided options."""
-        defaults = {CONF_PRIORITY: DEFAULT_PRIORITY}
+        defaults = {
+            CONF_PRIORITY: DEFAULT_PRIORITY,
+            CONF_EFFECT_HIDE_LIST: [],
+        }
         return self._options.get(key, defaults[key])
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -236,9 +240,10 @@ class HyperionBaseLight(LightEntity):
         # == Set brightness ==
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
-            for item in self._client.adjustment:
-                if const.KEY_ID in item:
-                    if not await self._client.async_send_set_adjustment(
+            for item in self._client.adjustment or []:
+                if (
+                    const.KEY_ID in item
+                    and not await self._client.async_send_set_adjustment(
                         **{
                             const.KEY_ADJUSTMENT: {
                                 const.KEY_BRIGHTNESS: int(
@@ -247,8 +252,9 @@ class HyperionBaseLight(LightEntity):
                                 const.KEY_ID: item[const.KEY_ID],
                             }
                         }
-                    ):
-                        return
+                    )
+                ):
+                    return
 
         # == Set an external source
         if (
@@ -305,9 +311,9 @@ class HyperionBaseLight(LightEntity):
 
     def _set_internal_state(
         self,
-        brightness: Optional[int] = None,
-        rgb_color: Optional[Sequence[int]] = None,
-        effect: Optional[str] = None,
+        brightness: int | None = None,
+        rgb_color: Sequence[int] | None = None,
+        effect: str | None = None,
     ) -> None:
         """Set the internal state."""
         if brightness is not None:
@@ -318,12 +324,12 @@ class HyperionBaseLight(LightEntity):
             self._effect = effect
 
     @callback
-    def _update_components(self, _: Optional[Dict[str, Any]] = None) -> None:
+    def _update_components(self, _: dict[str, Any] | None = None) -> None:
         """Update Hyperion components."""
         self.async_write_ha_state()
 
     @callback
-    def _update_adjustment(self, _: Optional[Dict[str, Any]] = None) -> None:
+    def _update_adjustment(self, _: dict[str, Any] | None = None) -> None:
         """Update Hyperion adjustments."""
         if self._client.adjustment:
             brightness_pct = self._client.adjustment[0].get(
@@ -337,7 +343,7 @@ class HyperionBaseLight(LightEntity):
             self.async_write_ha_state()
 
     @callback
-    def _update_priorities(self, _: Optional[Dict[str, Any]] = None) -> None:
+    def _update_priorities(self, _: dict[str, Any] | None = None) -> None:
         """Update Hyperion priorities."""
         priority = self._get_priority_entry_that_dictates_state()
         if priority and self._allow_priority_update(priority):
@@ -361,17 +367,23 @@ class HyperionBaseLight(LightEntity):
         self.async_write_ha_state()
 
     @callback
-    def _update_effect_list(self, _: Optional[Dict[str, Any]] = None) -> None:
+    def _update_effect_list(self, _: dict[str, Any] | None = None) -> None:
         """Update Hyperion effects."""
         if not self._client.effects:
             return
-        effect_list: List[str] = []
+        effect_list: list[str] = []
+        hide_effects = self._get_option(CONF_EFFECT_HIDE_LIST)
+
         for effect in self._client.effects or []:
             if const.KEY_NAME in effect:
-                effect_list.append(effect[const.KEY_NAME])
-        if effect_list:
-            self._effect_list = self._static_effect_list + effect_list
-            self.async_write_ha_state()
+                effect_name = effect[const.KEY_NAME]
+                if effect_name not in hide_effects:
+                    effect_list.append(effect_name)
+
+        self._effect_list = [
+            effect for effect in self._static_effect_list if effect not in hide_effects
+        ] + effect_list
+        self.async_write_ha_state()
 
     @callback
     def _update_full_state(self) -> None:
@@ -391,13 +403,12 @@ class HyperionBaseLight(LightEntity):
         )
 
     @callback
-    def _update_client(self, _: Optional[Dict[str, Any]] = None) -> None:
+    def _update_client(self, _: dict[str, Any] | None = None) -> None:
         """Update client connection state."""
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity added to hass."""
-        assert self.hass
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -420,13 +431,18 @@ class HyperionBaseLight(LightEntity):
         """Whether or not to support setting external effects from the light entity."""
         return True
 
-    def _get_priority_entry_that_dictates_state(self) -> Optional[Dict[str, Any]]:
+    def _get_priority_entry_that_dictates_state(self) -> dict[str, Any] | None:
         """Get the relevant Hyperion priority entry to consider."""
         # Return the visible priority (whether or not it is the HA priority).
-        return self._client.visible_priority  # type: ignore[no-any-return]
+
+        # Explicit type specifier to ensure this works when the underlying (typed)
+        # library is installed along with the tests. Casts would trigger a
+        # redundant-cast warning in this case.
+        priority: dict[str, Any] | None = self._client.visible_priority
+        return priority
 
     # pylint: disable=no-self-use
-    def _allow_priority_update(self, priority: Optional[Dict[str, Any]] = None) -> bool:
+    def _allow_priority_update(self, priority: dict[str, Any] | None = None) -> bool:
         """Determine whether to allow a priority to update internal state."""
         return True
 
@@ -521,7 +537,7 @@ class HyperionPriorityLight(HyperionBaseLight):
         """Whether or not to support setting external effects from the light entity."""
         return False
 
-    def _get_priority_entry_that_dictates_state(self) -> Optional[Dict[str, Any]]:
+    def _get_priority_entry_that_dictates_state(self) -> dict[str, Any] | None:
         """Get the relevant Hyperion priority entry to consider."""
         # Return the active priority (if any) at the configured HA priority.
         for candidate in self._client.priorities or []:
@@ -530,11 +546,15 @@ class HyperionPriorityLight(HyperionBaseLight):
             if candidate[const.KEY_PRIORITY] == self._get_option(
                 CONF_PRIORITY
             ) and candidate.get(const.KEY_ACTIVE, False):
-                return candidate  # type: ignore[no-any-return]
+                # Explicit type specifier to ensure this works when the underlying
+                # (typed) library is installed along with the tests. Casts would trigger
+                # a redundant-cast warning in this case.
+                output: dict[str, Any] = candidate
+                return output
         return None
 
     @classmethod
-    def _is_priority_entry_black(cls, priority: Optional[Dict[str, Any]]) -> bool:
+    def _is_priority_entry_black(cls, priority: dict[str, Any] | None) -> bool:
         """Determine if a given priority entry is the color black."""
         if not priority:
             return False
@@ -544,8 +564,7 @@ class HyperionPriorityLight(HyperionBaseLight):
                 return True
         return False
 
-    # pylint: disable=no-self-use
-    def _allow_priority_update(self, priority: Optional[Dict[str, Any]] = None) -> bool:
+    def _allow_priority_update(self, priority: dict[str, Any] | None = None) -> bool:
         """Determine whether to allow a Hyperion priority to update entity attributes."""
         # Black is treated as 'off' (and Home Assistant does not support selecting black
         # from the color selector). Do not set our internal attributes if the priority is

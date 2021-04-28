@@ -8,6 +8,7 @@ import hashlib
 import logging
 import os
 from random import SystemRandom
+from typing import final
 
 from aiohttp import web
 import async_timeout
@@ -441,6 +442,7 @@ class Camera(Entity):
         """Call the job and disable motion detection."""
         await self.hass.async_add_executor_job(self.disable_motion_detection)
 
+    @final
     @property
     def state_attributes(self):
         """Return the camera state attributes."""

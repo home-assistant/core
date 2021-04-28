@@ -1,5 +1,5 @@
 """Support for Arris TG2492LG router."""
-from typing import List
+from __future__ import annotations
 
 from arris_tg2492lg import ConnectBox, Device
 import voluptuous as vol
@@ -36,7 +36,7 @@ class ArrisDeviceScanner(DeviceScanner):
     def __init__(self, connect_box: ConnectBox):
         """Initialize the scanner."""
         self.connect_box = connect_box
-        self.last_results: List[Device] = []
+        self.last_results: list[Device] = []
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from ipaddress import IPv4Address
-from typing import List, Mapping
+from typing import Mapping
 from urllib.parse import urlparse
 
 from async_upnp_client import UpnpFactory
@@ -42,7 +42,7 @@ class Device:
         self._igd_device: IgdDevice = igd_device
 
     @classmethod
-    async def async_discover(cls, hass: HomeAssistantType) -> List[Mapping]:
+    async def async_discover(cls, hass: HomeAssistantType) -> list[Mapping]:
         """Discover UPnP/IGD devices."""
         _LOGGER.debug("Discovering UPnP/IGD devices")
         local_ip = None

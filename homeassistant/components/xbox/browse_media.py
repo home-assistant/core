@@ -1,5 +1,5 @@
 """Support for media browsing."""
-from typing import Dict, List, Optional
+from __future__ import annotations
 
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.catalog.const import HOME_APP_IDS, SYSTEM_PFN_ID_MAP
@@ -41,7 +41,7 @@ async def build_item_response(
     tv_configured: bool,
     media_content_type: str,
     media_content_id: str,
-) -> Optional[BrowseMedia]:
+) -> BrowseMedia | None:
     """Create response payload for the provided media query."""
     apps: InstalledPackagesList = await client.smartglass.get_installed_apps(device_id)
 
@@ -149,7 +149,7 @@ async def build_item_response(
     )
 
 
-def item_payload(item: InstalledPackage, images: Dict[str, List[Image]]):
+def item_payload(item: InstalledPackage, images: dict[str, list[Image]]):
     """Create response payload for a single media item."""
     thumbnail = None
     image = _find_media_image(images.get(item.one_store_product_id, []))
@@ -169,7 +169,7 @@ def item_payload(item: InstalledPackage, images: Dict[str, List[Image]]):
     )
 
 
-def _find_media_image(images=List[Image]) -> Optional[Image]:
+def _find_media_image(images: list[Image]) -> Image | None:
     purpose_order = ["Poster", "Tile", "Logo", "BoxArt"]
     for purpose in purpose_order:
         for image in images:

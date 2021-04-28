@@ -29,6 +29,10 @@
     "options": {
         "step": {
             "simple_options": {
+                "data": {
+                    "scan_interval": "Scaninterval (seconden)"
+                },
+                "description": "Configureer Blink-integratie",
                 "title": "Blink opties"
             }
         }

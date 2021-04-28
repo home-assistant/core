@@ -6,7 +6,7 @@ from smarttub import SpaPump
 
 from homeassistant.components.switch import SwitchEntity
 
-from .const import API_TIMEOUT, DOMAIN, SMARTTUB_CONTROLLER
+from .const import API_TIMEOUT, ATTR_PUMPS, DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubEntity
 from .helpers import get_spa_name
 
@@ -21,7 +21,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = [
         SmartTubPump(controller.coordinator, pump)
         for spa in controller.spas
-        for pump in await spa.get_pumps()
+        for pump in controller.coordinator.data[spa.id][ATTR_PUMPS].values()
     ]
 
     async_add_entities(entities)

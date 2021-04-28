@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Dict, List, Optional, Set, cast
+from typing import Any, cast
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
@@ -45,12 +45,12 @@ class StoredState:
         self.state = state
         self.last_seen = last_seen
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the stored state."""
         return {"state": self.state.as_dict(), "last_seen": self.last_seen}
 
     @classmethod
-    def from_dict(cls, json_dict: Dict) -> StoredState:
+    def from_dict(cls, json_dict: dict) -> StoredState:
         """Initialize a stored state from a dict."""
         last_seen = json_dict["last_seen"]
 
@@ -106,11 +106,11 @@ class RestoreStateData:
         self.store: Store = Store(
             hass, STORAGE_VERSION, STORAGE_KEY, encoder=JSONEncoder
         )
-        self.last_states: Dict[str, StoredState] = {}
-        self.entity_ids: Set[str] = set()
+        self.last_states: dict[str, StoredState] = {}
+        self.entity_ids: set[str] = set()
 
     @callback
-    def async_get_stored_states(self) -> List[StoredState]:
+    def async_get_stored_states(self) -> list[StoredState]:
         """Get the set of states which should be stored.
 
         This includes the states of all registered entities, as well as the
@@ -235,7 +235,6 @@ class RestoreEntity(Entity):
 
     async def async_internal_added_to_hass(self) -> None:
         """Register this entity as a restorable entity."""
-        assert self.hass is not None
         _, data = await asyncio.gather(
             super().async_internal_added_to_hass(),
             RestoreStateData.async_get_instance(self.hass),
@@ -244,18 +243,17 @@ class RestoreEntity(Entity):
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
-        assert self.hass is not None
         _, data = await asyncio.gather(
             super().async_internal_will_remove_from_hass(),
             RestoreStateData.async_get_instance(self.hass),
         )
         data.async_restore_entity_removed(self.entity_id)
 
-    async def async_get_last_state(self) -> Optional[State]:
+    async def async_get_last_state(self) -> State | None:
         """Get the entity state from the previous run."""
         if self.hass is None or self.entity_id is None:
             # Return None if this entity isn't added to hass yet
-            _LOGGER.warning("Cannot get last state. Entity not added to hass")
+            _LOGGER.warning("Cannot get last state. Entity not added to hass")  # type: ignore[unreachable]
             return None
         data = await RestoreStateData.async_get_instance(self.hass)
         if self.entity_id not in data.last_states:

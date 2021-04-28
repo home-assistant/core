@@ -1,5 +1,6 @@
 """Configure pytest for Litter-Robot tests."""
-from typing import Optional
+from __future__ import annotations
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pylitterbot
@@ -13,7 +14,7 @@ from .common import CONFIG, ROBOT_DATA
 from tests.common import MockConfigEntry
 
 
-def create_mock_robot(unit_status_code: Optional[str] = None):
+def create_mock_robot(unit_status_code: str | None = None):
     """Create a mock Litter-Robot device."""
     if not (
         unit_status_code
@@ -32,7 +33,7 @@ def create_mock_robot(unit_status_code: Optional[str] = None):
         return robot
 
 
-def create_mock_account(unit_status_code: Optional[str] = None):
+def create_mock_account(unit_status_code: str | None = None):
     """Create a mock Litter-Robot account."""
     account = MagicMock(spec=pylitterbot.Account)
     account.connect = AsyncMock()

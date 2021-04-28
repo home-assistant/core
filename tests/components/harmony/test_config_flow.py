@@ -74,6 +74,10 @@ async def test_form_ssdp(hass):
         "host": "Harmony Hub",
         "name": "192.168.1.12",
     }
+    progress = hass.config_entries.flow.async_progress()
+    assert len(progress) == 1
+    assert progress[0]["flow_id"] == result["flow_id"]
+    assert progress[0]["context"]["confirm_only"] is True
 
     with patch(
         "homeassistant.components.harmony.util.HarmonyAPI",

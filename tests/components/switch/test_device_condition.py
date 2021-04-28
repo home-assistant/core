@@ -19,7 +19,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture

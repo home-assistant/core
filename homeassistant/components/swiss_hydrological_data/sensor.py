@@ -5,10 +5,9 @@ import logging
 from swisshydrodata import SwissHydroData
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,7 +82,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities, True)
 
 
-class SwissHydrologicalDataSensor(Entity):
+class SwissHydrologicalDataSensor(SensorEntity):
     """Implementation of a Swiss hydrological sensor."""
 
     def __init__(self, hydro_data, station, condition):
@@ -119,7 +118,7 @@ class SwissHydrologicalDataSensor(Entity):
         return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         attrs = {}
 

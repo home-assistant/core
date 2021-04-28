@@ -1,8 +1,10 @@
 """Support for Roku."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from rokuecp import Roku, RokuConnectionError, RokuError
 from rokuecp.models import Device
@@ -11,7 +13,6 @@ from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, CONF_HOST
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
@@ -38,7 +39,7 @@ SCAN_INTERVAL = timedelta(seconds=15)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
+async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
     """Set up the Roku integration."""
     hass.data.setdefault(DOMAIN, {})
     return True
@@ -46,17 +47,16 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up Roku from a config entry."""
-    coordinator = RokuDataUpdateCoordinator(hass, host=entry.data[CONF_HOST])
-    await coordinator.async_refresh()
+    coordinator = hass.data[DOMAIN].get(entry.entry_id)
+    if not coordinator:
+        coordinator = RokuDataUpdateCoordinator(hass, host=entry.data[CONF_HOST])
+        hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
-
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -67,8 +67,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -151,7 +151,7 @@ class RokuEntity(CoordinatorEntity):
         return self._name
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information about this Roku device."""
         if self._device_id is None:
             return None

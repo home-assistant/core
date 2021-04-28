@@ -1,6 +1,7 @@
 """Support for recording details."""
+from __future__ import annotations
+
 import asyncio
-from collections import namedtuple
 import concurrent.futures
 from datetime import datetime
 import logging
@@ -8,7 +9,7 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, NamedTuple
 
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -53,11 +54,13 @@ SERVICE_DISABLE = "disable"
 
 ATTR_KEEP_DAYS = "keep_days"
 ATTR_REPACK = "repack"
+ATTR_APPLY_FILTER = "apply_filter"
 
 SERVICE_PURGE_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_KEEP_DAYS): cv.positive_int,
         vol.Optional(ATTR_REPACK, default=False): cv.boolean,
+        vol.Optional(ATTR_APPLY_FILTER, default=False): cv.boolean,
     }
 )
 SERVICE_ENABLE_SCHEMA = vol.Schema({})
@@ -124,7 +127,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def run_information(hass, point_in_time: Optional[datetime] = None):
+def run_information(hass, point_in_time: datetime | None = None):
     """Return information about current run.
 
     There is also the run that covers point_in_time.
@@ -137,7 +140,7 @@ def run_information(hass, point_in_time: Optional[datetime] = None):
         return run_information_with_session(session, point_in_time)
 
 
-def run_information_from_instance(hass, point_in_time: Optional[datetime] = None):
+def run_information_from_instance(hass, point_in_time: datetime | None = None):
     """Return information about current run from the existing instance.
 
     Does not query the database for older runs.
@@ -148,7 +151,7 @@ def run_information_from_instance(hass, point_in_time: Optional[datetime] = None
         return ins.run_info
 
 
-def run_information_with_session(session, point_in_time: Optional[datetime] = None):
+def run_information_with_session(session, point_in_time: datetime | None = None):
     """Return information about current run from the database."""
     recorder_runs = RecorderRuns
 
@@ -212,10 +215,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     if "dbKeepDays" in ais_global.G_DB_SETTINGS_INFO:
                         keep_days = int(ais_global.G_DB_SETTINGS_INFO["dbKeepDays"])
     except Exception as e:
-        _LOGGER.error(
-            "Get recorder config from file error, enable recorder in memory: " + str(e)
-        )
         # enable recorder in memory
+        _LOGGER.error(
+            "Get recorder config from file error, enable recorder in memory " + str(e)
+        )
         db_url = "sqlite:///:memory:"
         keep_days = 1
 
@@ -264,7 +267,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return await instance.async_db_ready
 
 
-PurgeTask = namedtuple("PurgeTask", ["keep_days", "repack"])
+class PurgeTask(NamedTuple):
+    """Object to store information about purge task."""
+
+    keep_days: int
+    repack: bool
+    apply_filter: bool
 
 
 class WaitTask:
@@ -284,7 +292,7 @@ class Recorder(threading.Thread):
         db_max_retries: int,
         db_retry_wait: int,
         entity_filter: Callable[[str], bool],
-        exclude_t: List[str],
+        exclude_t: list[str],
         db_integrity_check: bool,
     ) -> None:
         """Initialize the recorder."""
@@ -337,18 +345,15 @@ class Recorder(threading.Thread):
             return False
 
         entity_id = event.data.get(ATTR_ENTITY_ID)
-        if entity_id is not None:
-            if not self.entity_filter(entity_id):
-                return False
-
-        return True
+        return bool(entity_id is None or self.entity_filter(entity_id))
 
     def do_adhoc_purge(self, **kwargs):
         """Trigger an adhoc purge retaining keep_days worth of data."""
         keep_days = kwargs.get(ATTR_KEEP_DAYS, self.keep_days)
         repack = kwargs.get(ATTR_REPACK)
+        apply_filter = kwargs.get(ATTR_APPLY_FILTER)
 
-        self.queue.put(PurgeTask(keep_days, repack))
+        self.queue.put(PurgeTask(keep_days, repack, apply_filter))
 
     def run(self):
         """Start processing events to save."""
@@ -404,7 +409,9 @@ class Recorder(threading.Thread):
             @callback
             def async_purge(now):
                 """Trigger the purge."""
-                self.queue.put(PurgeTask(self.keep_days, repack=False))
+                self.queue.put(
+                    PurgeTask(self.keep_days, repack=False, apply_filter=False)
+                )
 
             # Purge every night at 4:12am
             self.hass.helpers.event.track_time_change(
@@ -434,7 +441,7 @@ class Recorder(threading.Thread):
                 migration.migrate_schema(self)
                 self._setup_run()
             except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.error(
+                _LOGGER.exception(
                     "Error during connection setup to %s: %s (retrying in %s seconds)",
                     self.db_url,
                     err,
@@ -465,8 +472,12 @@ class Recorder(threading.Thread):
         """Process one event."""
         if isinstance(event, PurgeTask):
             # Schedule a new purge task if this one didn't finish
-            if not purge.purge_old_data(self, event.keep_days, event.repack):
-                self.queue.put(PurgeTask(event.keep_days, event.repack))
+            if not purge.purge_old_data(
+                self, event.keep_days, event.repack, event.apply_filter
+            ):
+                self.queue.put(
+                    PurgeTask(event.keep_days, event.repack, event.apply_filter)
+                )
             return
         if isinstance(event, WaitTask):
             self._queue_watch.set()
@@ -521,8 +532,7 @@ class Recorder(threading.Thread):
                     self._pending_expunge.append(dbstate)
             except (TypeError, ValueError):
                 _LOGGER.warning(
-                    "State is not JSON serializable: %s",
-                    event.data.get("new_state"),
+                    "State is not JSON serializable: %s", event.data.get("new_state")
                 )
             except Exception as err:  # pylint: disable=broad-except
                 # Must catch the exception to prevent the loop from collapsing
@@ -631,10 +641,7 @@ class Recorder(threading.Thread):
             self.event_session.connection().scalar(select([1]))
             return
         except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.error(
-                "Error in database connectivity during keepalive: %s",
-                err,
-            )
+            _LOGGER.error("Error in database connectivity during keepalive: %s", err)
             self._reopen_event_session()
 
     @callback

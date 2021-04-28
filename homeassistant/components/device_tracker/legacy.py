@@ -1,9 +1,11 @@
 """Legacy device tracker classes."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import hashlib
 from types import ModuleType
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Any, Callable, Sequence, final
 
 import attr
 import voluptuous as vol
@@ -25,7 +27,7 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
@@ -35,7 +37,7 @@ from homeassistant.helpers.event import (
     async_track_utc_time_change,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, GPSType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType, GPSType
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import dump
@@ -117,7 +119,7 @@ EVENT_NEW_DEVICE = "device_tracker_new_device"
 
 
 def see(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     mac: str = None,
     dev_id: str = None,
     host_name: str = None,
@@ -146,7 +148,7 @@ def see(
     hass.services.call(DOMAIN, SERVICE_SEE, data)
 
 
-async def async_setup_integration(hass: HomeAssistantType, config: ConfigType) -> None:
+async def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> None:
     """Set up the legacy integration."""
     tracker = await get_tracker(hass, config)
 
@@ -205,7 +207,7 @@ class DeviceTrackerPlatform:
 
     name: str = attr.ib()
     platform: ModuleType = attr.ib()
-    config: Dict = attr.ib()
+    config: dict = attr.ib()
 
     @property
     def type(self):
@@ -219,7 +221,7 @@ class DeviceTrackerPlatform:
 
     async def async_setup_legacy(self, hass, tracker, discovery_info=None):
         """Set up a legacy platform."""
-        LOGGER.info("Setting up %s.%s", DOMAIN, self.type)
+        LOGGER.info("Setting up %s.%s", DOMAIN, self.name)
         try:
             scanner = None
             setup = None
@@ -246,6 +248,9 @@ class DeviceTrackerPlatform:
             else:
                 raise HomeAssistantError("Invalid legacy device_tracker platform.")
 
+            if setup:
+                hass.config.components.add(f"{DOMAIN}.{self.name}")
+
             if scanner:
                 async_setup_scanner_platform(
                     hass, self.config, scanner, tracker.async_see, self.type
@@ -253,11 +258,11 @@ class DeviceTrackerPlatform:
                 return
 
             if not setup:
-                LOGGER.error("Error setting up platform %s", self.type)
+                LOGGER.error("Error setting up platform %s %s", self.type, self.name)
                 return
 
         except Exception:  # pylint: disable=broad-except
-            LOGGER.exception("Error setting up platform %s", self.type)
+            LOGGER.exception("Error setting up platform %s %s", self.type, self.name)
 
 
 async def async_extract_config(hass, config):
@@ -285,7 +290,7 @@ async def async_extract_config(hass, config):
 
 async def async_create_platform_type(
     hass, config, p_type, p_config
-) -> Optional[DeviceTrackerPlatform]:
+) -> DeviceTrackerPlatform | None:
     """Determine type of platform."""
     platform = await async_prepare_setup_platform(hass, config, DOMAIN, p_type)
 
@@ -297,7 +302,7 @@ async def async_create_platform_type(
 
 @callback
 def async_setup_scanner_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     scanner: Any,
     async_see_device: Callable,
@@ -387,7 +392,7 @@ class DeviceTracker:
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         consider_home: timedelta,
         track_new: bool,
         defaults: dict,
@@ -586,7 +591,7 @@ class DeviceTracker:
 
 
 class Device(RestoreEntity):
-    """Represent a tracked device."""
+    """Base class for a tracked device."""
 
     host_name: str = None
     location_name: str = None
@@ -604,7 +609,7 @@ class Device(RestoreEntity):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         consider_home: timedelta,
         track: bool,
         dev_id: str,
@@ -659,6 +664,7 @@ class Device(RestoreEntity):
         """Return the picture of the device."""
         return self.config_picture
 
+    @final
     @property
     def state_attributes(self):
         """Return the device state attributes."""
@@ -675,7 +681,7 @@ class Device(RestoreEntity):
         return attributes
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device state attributes."""
         return self._attributes
 
@@ -784,9 +790,9 @@ class Device(RestoreEntity):
 class DeviceScanner:
     """Device scanner object."""
 
-    hass: HomeAssistantType = None
+    hass: HomeAssistant = None
 
-    def scan_devices(self) -> List[str]:
+    def scan_devices(self) -> list[str]:
         """Scan for devices."""
         raise NotImplementedError()
 
@@ -811,9 +817,7 @@ class DeviceScanner:
         return await self.hass.async_add_executor_job(self.get_extra_attributes, device)
 
 
-async def async_load_config(
-    path: str, hass: HomeAssistantType, consider_home: timedelta
-):
+async def async_load_config(path: str, hass: HomeAssistant, consider_home: timedelta):
     """Load devices from YAML configuration file.
 
     This method is a coroutine.

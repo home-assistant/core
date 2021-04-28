@@ -82,6 +82,11 @@ async def test_full_zeroconf_flow_implementation(
     assert result["step_id"] == "zeroconf_confirm"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
+    progress = hass.config_entries.flow.async_progress()
+    assert len(progress) == 1
+    assert progress[0]["flow_id"] == result["flow_id"]
+    assert progress[0]["context"]["confirm_only"] is True
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )

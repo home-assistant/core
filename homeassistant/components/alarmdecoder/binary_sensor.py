@@ -118,7 +118,7 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attr = {CONF_ZONE_NUMBER: self._zone_number}
         if self._rfid and self._rfstate is not None:

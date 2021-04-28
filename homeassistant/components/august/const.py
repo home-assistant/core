@@ -43,4 +43,4 @@ ACTIVITY_UPDATE_INTERVAL = timedelta(seconds=10)
 
 LOGIN_METHODS = ["phone", "email"]
 
-AUGUST_COMPONENTS = ["camera", "binary_sensor", "lock", "sensor"]
+PLATFORMS = ["camera", "binary_sensor", "lock", "sensor"]

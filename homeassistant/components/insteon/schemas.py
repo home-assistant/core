@@ -1,6 +1,7 @@
 """Schemas used by insteon component."""
+from __future__ import annotations
+
 from binascii import Error as HexError, unhexlify
-from typing import Dict
 
 from pyinsteon.address import Address
 from pyinsteon.constants import HC_LOOKUP
@@ -51,7 +52,7 @@ from .const import (
 )
 
 
-def set_default_port(schema: Dict) -> Dict:
+def set_default_port(schema: dict) -> dict:
     """Set the default port based on the Hub version."""
     # If the ip_port is found do nothing
     # If it is not found the set the default

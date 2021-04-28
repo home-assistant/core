@@ -39,6 +39,8 @@ _LOGGER = logging.getLogger(__name__)
 DATA_CONFIG_ENTRY_LOCK = "point_config_entry_lock"
 CONFIG_ENTRY_IS_SETUP = "point_config_entry_is_setup"
 
+PLATFORMS = ["binary_sensor", "sensor"]
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -137,8 +139,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     session = hass.data[DOMAIN].pop(entry.entry_id)
     await session.remove_webhook()
 
-    for component in ("binary_sensor", "sensor"):
-        await hass.config_entries.async_forward_entry_unload(entry, component)
+    for platform in PLATFORMS:
+        await hass.config_entries.async_forward_entry_unload(entry, platform)
 
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
@@ -186,18 +188,18 @@ class MinutPointClient:
             async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
             return
 
-        async def new_device(device_id, component):
+        async def new_device(device_id, platform):
             """Load new device."""
-            config_entries_key = f"{component}.{DOMAIN}"
+            config_entries_key = f"{platform}.{DOMAIN}"
             async with self._hass.data[DATA_CONFIG_ENTRY_LOCK]:
                 if config_entries_key not in self._hass.data[CONFIG_ENTRY_IS_SETUP]:
                     await self._hass.config_entries.async_forward_entry_setup(
-                        self._config_entry, component
+                        self._config_entry, platform
                     )
                     self._hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
 
             async_dispatcher_send(
-                self._hass, POINT_DISCOVERY_NEW.format(component, DOMAIN), device_id
+                self._hass, POINT_DISCOVERY_NEW.format(platform, DOMAIN), device_id
             )
 
         self._is_available = True
@@ -207,8 +209,8 @@ class MinutPointClient:
                 self._known_homes.add(home_id)
         for device in self._client.devices:
             if device.device_id not in self._known_devices:
-                for component in ("sensor", "binary_sensor"):
-                    await new_device(device.device_id, component)
+                for platform in PLATFORMS:
+                    await new_device(device.device_id, platform)
                 self._known_devices.add(device.device_id)
         async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
 
@@ -294,7 +296,7 @@ class MinutPointEntity(Entity):
         return self._id
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return status of device."""
         attrs = self.device.device_status
         attrs["last_heard_from"] = as_local(self.last_update).strftime(

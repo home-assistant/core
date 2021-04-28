@@ -16,7 +16,7 @@
                     "host": "Host",
                     "password": "Wachtwoord"
                 },
-                "description": "Voer het IP-adres van uw Daikin AC in.",
+                "description": "Voer IP-adres van uw Daikin AC in.\n\nLet op dat API-sleutel en Wachtwoord alleen worden gebruikt door respectievelijk BRP072Cxx en SKYFi apparaten.",
                 "title": "Daikin AC instellen"
             }
         }

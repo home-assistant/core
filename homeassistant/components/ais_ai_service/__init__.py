@@ -26,7 +26,6 @@ import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
@@ -2368,6 +2367,17 @@ async def async_setup(hass, config):
             )
         _say_it(hass, text)
 
+        # immersive full mode for all apps
+        if ais_global.has_root():
+            hass.services.call(
+                "ais_shell_command",
+                "execute_command",
+                {
+                    "command": "su -c 'settings put global policy_control "
+                    "immersive.full=*'"
+                },
+            )
+
         # set the flag to info that the AIS start part is done - this is needed to don't say some info before this flag
         ais_global.G_AIS_START_IS_DONE = True
 
@@ -2438,6 +2448,24 @@ async def async_setup(hass, config):
             hass.states.async_set("sensor.radiolist", -1, {})
             atrr = hass.states.get("input_select.radio_type").attributes
             hass.states.async_set("input_select.radio_type", "-", atrr)
+        elif context == "podcast_public":
+            hass.states.async_set("sensor.ais_player_mode", "podcast_player")
+            hass.states.async_set("sensor.ais_podcast_origin", "public")
+            hass.states.async_set("sensor.podcastlist", -1, {})
+            atrr = hass.states.get("input_select.podcast_type").attributes
+            hass.states.async_set("input_select.podcast_type", "-", atrr)
+        elif context == "podcast_private":
+            hass.states.async_set("sensor.ais_player_mode", "podcast_player")
+            hass.states.async_set("sensor.ais_podcast_origin", "private")
+            hass.states.async_set("sensor.podcastlist", -1, {})
+            atrr = hass.states.get("input_select.podcast_type").attributes
+            hass.states.async_set("input_select.podcast_type", "-", atrr)
+        elif context == "podcast_shared":
+            hass.states.async_set("sensor.ais_player_mode", "podcast_player")
+            hass.states.async_set("sensor.ais_podcast_origin", "shared")
+            hass.states.async_set("sensor.podcastlist", -1, {})
+            atrr = hass.states.get("input_select.podcast_type").attributes
+            hass.states.async_set("input_select.podcast_type", "-", atrr)
         elif context == "YouTube":
             hass.states.async_set("sensor.ais_player_mode", "music_player")
             await hass.services.async_call(
@@ -3123,9 +3151,22 @@ async def async_setup(hass, config):
             "ais_ai_service", "check_night_mode", {"timer": True}
         )
 
+    async def ais_run_each_minute2(now):
+        await hass.services.async_call(
+            "ais_ai_service", "check_night_mode", {"timer": True}
+        )
+        time_now = datetime.datetime.now()
+        current_time = time_now.strftime("%H%M")
+        await hass.services.async_call(
+            "ais_shell_command", "set_clock_display_text", {"text": current_time + "0"}
+        )
+
     # run each minute at first second
     _dt = dt_util.utcnow()
-    event.async_track_utc_time_change(hass, ais_run_each_minute, second=1)
+    if ais_global.has_front_clock():
+        event.async_track_utc_time_change(hass, ais_run_each_minute2, second=1)
+    else:
+        event.async_track_utc_time_change(hass, ais_run_each_minute, second=1)
 
     # AIS agent
     agent = AisAgent(hass)
@@ -3297,6 +3338,8 @@ def _process_command_from_frame(hass, service):
         return
     elif service.data["topic"] == "ais/speech_status":
         # TODO pause/resume, service.data["payload"] can be: START -> DONE/ERROR
+        event_data = {"status": str(service.data["payload"])}
+        hass.bus.fire("ais_speech_done", event_data)
         _LOGGER.debug("speech_status: " + str(service.data["payload"]))
         return
     elif service.data["topic"] == "ais/add_bookmark":
@@ -3924,136 +3967,149 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
             )
             return response
 
-    # 2. check the AIS dom intents
-    intents = hass.data.get(DOMAIN, {})
-    try:
-        for intent_type, matchers in intents.items():
-            if found_intent is not None:
+    # 2. check the user automatons intents
+    if ais_global.G_AUTOMATION_CONFIG is not None:
+        automations = {
+            state.entity_id: state.name
+            for state in hass.states.async_all()
+            if state.entity_id.startswith("automation")
+            and not state.entity_id.startswith("automation.ais_")
+        }
+
+    for key, value in automations.items():
+        if value.lower().startswith("jolka"):
+            # get aliases
+            all_commands = []
+            for auto_config in ais_global.G_AUTOMATION_CONFIG:
+                auto_name = auto_config.get("alias", "").lower().strip()
+                if "description" in auto_config and auto_name == value.lower().strip():
+                    all_commands = auto_config.get("description", "").split(";")
+                all_commands = [
+                    each_string.strip().lower() for each_string in all_commands
+                ]
+
+            all_commands.append(
+                value.lower().replace("jolka", "", 1).replace(":", "").strip()
+            )
+            text_command = text.lower().replace("jolka", "", 1).replace(":", "").strip()
+            if text_command in all_commands:
+                await hass.services.async_call(
+                    "automation", "trigger", {ATTR_ENTITY_ID: key}
+                )
+                s = True
+                found_intent = "AUTO"
+                m = "DO_NOT_SAY OK"
                 break
-            for matcher in matchers:
-                match = matcher.match(text)
-                if match:
-                    # we have a match
-                    found_intent = intent_type
+
+    # 3. check the AIS dom intents
+    if s is False:
+        intents = hass.data.get(DOMAIN, {})
+        try:
+            for intent_type, matchers in intents.items():
+                if found_intent is not None:
+                    break
+                for matcher in matchers:
+                    match = matcher.match(text)
+                    if match:
+                        # we have a match
+                        found_intent = intent_type
+                        m, s = await hass.helpers.intent.async_handle(
+                            DOMAIN,
+                            intent_type,
+                            {
+                                key: {"value": value}
+                                for key, value in match.groupdict().items()
+                            },
+                            text,
+                        )
+                        break
+            # the item was match as INTENT_TURN_ON but we don't have such device - maybe it is radio or podcast???
+            if s is False and found_intent == INTENT_TURN_ON:
+                m_org = m
+                m, s = await hass.helpers.intent.async_handle(
+                    DOMAIN,
+                    INTENT_PLAY_RADIO,
+                    {key: {"value": value} for key, value in match.groupdict().items()},
+                    text.replace("włącz", "włącz radio"),
+                )
+                if s is False:
                     m, s = await hass.helpers.intent.async_handle(
                         DOMAIN,
-                        intent_type,
+                        INTENT_PLAY_PODCAST,
                         {
                             key: {"value": value}
                             for key, value in match.groupdict().items()
                         },
-                        text,
+                        text.replace("włącz", "włącz podcast"),
                     )
-                    break
-        # the item was match as INTENT_TURN_ON but we don't have such device - maybe it is radio or podcast???
-        if s is False and found_intent == INTENT_TURN_ON:
-            m_org = m
-            m, s = await hass.helpers.intent.async_handle(
-                DOMAIN,
-                INTENT_PLAY_RADIO,
-                {key: {"value": value} for key, value in match.groupdict().items()},
-                text.replace("włącz", "włącz radio"),
-            )
-            if s is False:
+                if s is False:
+                    m = m_org
+            # the item was match as INTENT_TURN_ON but we don't have such device - maybe it is climate???
+            if s is False and found_intent == INTENT_TURN_ON and "ogrzewanie" in text:
+                m_org = m
                 m, s = await hass.helpers.intent.async_handle(
                     DOMAIN,
-                    INTENT_PLAY_PODCAST,
+                    INTENT_CLIMATE_SET_ALL_ON,
                     {key: {"value": value} for key, value in match.groupdict().items()},
-                    text.replace("włącz", "włącz podcast"),
+                    text,
                 )
-            if s is False:
-                m = m_org
-        # the item was match as INTENT_TURN_ON but we don't have such device - maybe it is climate???
-        if s is False and found_intent == INTENT_TURN_ON and "ogrzewanie" in text:
-            m_org = m
-            m, s = await hass.helpers.intent.async_handle(
-                DOMAIN,
-                INTENT_CLIMATE_SET_ALL_ON,
-                {key: {"value": value} for key, value in match.groupdict().items()},
-                text,
-            )
-            if s is False:
-                m = m_org
-        # the item was match as INTENT_TURN_OFF but we don't have such device - maybe it is climate???
-        if s is False and found_intent == INTENT_TURN_OFF and "ogrzewanie" in text:
-            m_org = m
-            m, s = await hass.helpers.intent.async_handle(
-                DOMAIN,
-                INTENT_CLIMATE_SET_ALL_OFF,
-                {key: {"value": value} for key, value in match.groupdict().items()},
-                text,
-            )
-            if s is False:
-                m = m_org
+                if s is False:
+                    m = m_org
+            # the item was match as INTENT_TURN_OFF but we don't have such device - maybe it is climate???
+            if s is False and found_intent == INTENT_TURN_OFF and "ogrzewanie" in text:
+                m_org = m
+                m, s = await hass.helpers.intent.async_handle(
+                    DOMAIN,
+                    INTENT_CLIMATE_SET_ALL_OFF,
+                    {key: {"value": value} for key, value in match.groupdict().items()},
+                    text,
+                )
+                if s is False:
+                    m = m_org
 
-        # 3. search in automations
-        if s is False or found_intent is None:
-            # no success - try to run automation
-            automations = {
-                state.entity_id: state.name
-                for state in hass.states.async_all()
-                if state.entity_id.startswith("automation")
-                and not state.entity_id.startswith("automation.ais_")
-            }
-            for key, value in automations.items():
-                if value.lower().startswith("jolka"):
-                    if (
-                        value.lower().replace("jolka", "", 1).replace(":", "").strip()
-                        == text.lower().replace("jolka", "", 1).replace(":", "").strip()
-                    ):
-                        await hass.services.async_call(
-                            "automation", "trigger", {ATTR_ENTITY_ID: key}
-                        )
-                        s = True
-                        found_intent = "AUTO"
-                        m = "DO_NOT_SAY OK, uruchamiam " + value.replace(
-                            "jolka:", "", 1
-                        )
-                        break
-
-        # 4. the was no match - try again but with current context
-        # only if hot word is disabled
-        if found_intent is None and hot_word_on is False:
-            suffix = get_context_suffix(hass)
-            if suffix is not None:
-                for intent_type, matchers in intents.items():
-                    if found_intent is not None:
-                        break
-                    for matcher in matchers:
-                        match = matcher.match(suffix + " " + text)
-                        if match:
-                            # we have a match
-                            found_intent = intent_type
-                            m, s = await hass.helpers.intent.async_handle(
-                                DOMAIN,
-                                intent_type,
-                                {
-                                    key: {"value": value}
-                                    for key, value in match.groupdict().items()
-                                },
-                                suffix + " " + text,
-                            )
-                            # reset the curr button code
-                            # TODO the mic should send a button code too
-                            # in this case we will know if the call source
-                            CURR_BUTTON_CODE = 0
+            # 4. the was no match - try again but with current context
+            # only if hot word is disabled
+            if found_intent is None and hot_word_on is False:
+                suffix = get_context_suffix(hass)
+                if suffix is not None:
+                    for intent_type, matchers in intents.items():
+                        if found_intent is not None:
                             break
-        # 5. ask cloud
-        if s is False or found_intent is None:
-            # no success - try to ask the cloud
-            if m is None:
-                # no message / no match
-                m = "Nie rozumiem " + text
-            # asking without the suffix
-            if text != "":
-                ws_resp = aisCloudWS.ask(text, m)
-                m = ws_resp.text.split("---")[0]
-            else:
-                m = "Co proszę? Nic nie słyszę!"
+                        for matcher in matchers:
+                            match = matcher.match(suffix + " " + text)
+                            if match:
+                                # we have a match
+                                found_intent = intent_type
+                                m, s = await hass.helpers.intent.async_handle(
+                                    DOMAIN,
+                                    intent_type,
+                                    {
+                                        key: {"value": value}
+                                        for key, value in match.groupdict().items()
+                                    },
+                                    suffix + " " + text,
+                                )
+                                # reset the curr button code
+                                # TODO the mic should send a button code too
+                                # in this case we will know if the call source
+                                CURR_BUTTON_CODE = 0
+                                break
+            # 5. ask cloud
+            if s is False or found_intent is None:
+                # no success - try to ask the cloud
+                if m is None:
+                    # no message / no match
+                    m = "Nie rozumiem " + text
+                # asking without the suffix
+                if text != "":
+                    ws_resp = aisCloudWS.ask(text, m)
+                    m = ws_resp.text.split("---")[0]
+                else:
+                    m = "Co proszę? Nic nie słyszę!"
 
-    except Exception as e:
-        _LOGGER.info("_process: " + str(e))
-        m = "Przepraszam, ale mam problem ze zrozumieniem: " + text
+        except Exception as e:
+            _LOGGER.info("_process: " + str(e))
+            m = "Przepraszam, ale mam problem ze zrozumieniem: " + text
     # return response to the ais dom
     if m.startswith("DO_NOT_SAY"):
         m = m.replace("DO_NOT_SAY", "")

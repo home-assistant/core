@@ -19,9 +19,9 @@ from .const import (
     CONF_TARGET_ID,
     CONF_TARGET_NAME,
     DEFAULT_PORT,
+    DOMAIN,
     MYLINK_STATUS,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 

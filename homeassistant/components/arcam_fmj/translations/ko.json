@@ -8,7 +8,7 @@
         "flow_title": "Arcam FMJ: {host}",
         "step": {
             "confirm": {
-                "description": "Home Assistant \uc5d0 Arcam FMJ `{host}` \uc744(\ub97c) \ucd94\uac00\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?"
+                "description": "Home Assistant\uc5d0 Arcam FMJ `{host}`\uc744(\ub97c) \ucd94\uac00\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?"
             },
             "user": {
                 "data": {
@@ -21,7 +21,7 @@
     },
     "device_automation": {
         "trigger_type": {
-            "turn_on": "{entity_name} \uc774(\uac00) \ucf1c\uc9c0\ub3c4\ub85d \uc694\uccad\ub418\uc5c8\uc744 \ub54c"
+            "turn_on": "{entity_name}\uc774(\uac00) \ucf1c\uc9c0\ub3c4\ub85d \uc694\uccad\ub418\uc5c8\uc744 \ub54c"
         }
     }
 }

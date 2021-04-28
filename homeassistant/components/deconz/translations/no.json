@@ -14,7 +14,7 @@
         "flow_title": "",
         "step": {
             "hassio_confirm": {
-                "description": "Vil du konfigurere Home Assistant til \u00e5 koble seg til deCONZ-gateway levert av Hass.io-tillegg {addon} ?",
+                "description": "Vil du konfigurere Home Assistant til \u00e5 koble til deCONZ gateway levert av Hass.io-tillegget {addon} ?",
                 "title": "deCONZ Zigbee gateway via Hass.io-tillegg"
             },
             "link": {

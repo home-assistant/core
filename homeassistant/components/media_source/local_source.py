@@ -1,8 +1,8 @@
 """Local Media Source Implementation."""
-import logging
+from __future__ import annotations
+
 import mimetypes
 from pathlib import Path
-from typing import Tuple
 
 from aiohttp import web
 
@@ -15,8 +15,6 @@ from homeassistant.util import raise_if_invalid_path
 
 from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -43,7 +41,7 @@ class LocalSource(MediaSource):
         return Path(self.hass.config.media_dirs[source_dir_id], location)
 
     @callback
-    def async_parse_identifier(self, item: MediaSourceItem) -> Tuple[str, str]:
+    def async_parse_identifier(self, item: MediaSourceItem) -> tuple[str, str]:
         """Parse identifier."""
         if not item.identifier:
             # Empty source_dir_id and location
@@ -72,7 +70,7 @@ class LocalSource(MediaSource):
         return PlayMedia(f"/media/{item.identifier}", mime_type)
 
     async def async_browse_media(
-        self, item: MediaSourceItem, media_types: Tuple[str] = MEDIA_MIME_TYPES
+        self, item: MediaSourceItem, media_types: tuple[str] = MEDIA_MIME_TYPES
     ) -> BrowseMediaSource:
         """Return media."""
         # AIS - allow to play ais lib in browser

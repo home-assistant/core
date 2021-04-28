@@ -7,7 +7,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 from .data import MetOfficeData
 
 _LOGGER = logging.getLogger(__name__)

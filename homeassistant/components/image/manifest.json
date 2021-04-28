@@ -3,7 +3,7 @@
   "name": "Image",
   "config_flow": false,
   "documentation": "https://www.home-assistant.io/integrations/image",
-  "requirements": ["pillow==8.1.1"],
+  "requirements": ["pillow==8.1.2"],
   "dependencies": ["http"],
   "codeowners": ["@home-assistant/core"],
   "quality_scale": "internal"

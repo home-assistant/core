@@ -1,5 +1,8 @@
 """Lighting channels module for Zigbee Home Automation."""
-from typing import Coroutine, Optional
+from __future__ import annotations
+
+from contextlib import suppress
+from typing import Coroutine
 
 import zigpy.zcl.clusters.lighting as lighting
 
@@ -37,31 +40,29 @@ class ColorChannel(ZigbeeChannel):
     @property
     def color_capabilities(self) -> int:
         """Return color capabilities of the light."""
-        try:
+        with suppress(KeyError):
             return self.cluster["color_capabilities"]
-        except KeyError:
-            pass
         if self.cluster.get("color_temperature") is not None:
             return self.CAPABILITIES_COLOR_XY | self.CAPABILITIES_COLOR_TEMP
         return self.CAPABILITIES_COLOR_XY
 
     @property
-    def color_loop_active(self) -> Optional[int]:
+    def color_loop_active(self) -> int | None:
         """Return cached value of the color_loop_active attribute."""
         return self.cluster.get("color_loop_active")
 
     @property
-    def color_temperature(self) -> Optional[int]:
+    def color_temperature(self) -> int | None:
         """Return cached value of color temperature."""
         return self.cluster.get("color_temperature")
 
     @property
-    def current_x(self) -> Optional[int]:
+    def current_x(self) -> int | None:
         """Return cached value of the current_x attribute."""
         return self.cluster.get("current_x")
 
     @property
-    def current_y(self) -> Optional[int]:
+    def current_y(self) -> int | None:
         """Return cached value of the current_y attribute."""
         return self.cluster.get("current_y")
 

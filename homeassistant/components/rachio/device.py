@@ -1,6 +1,7 @@
 """Adapter to wrap the rachiopy api for home assistant."""
+from __future__ import annotations
+
 import logging
-from typing import Optional
 
 import voluptuous as vol
 
@@ -239,7 +240,7 @@ class RachioIro:
         # Only enabled zones
         return [z for z in self._zones if z[KEY_ENABLED]]
 
-    def get_zone(self, zone_id) -> Optional[dict]:
+    def get_zone(self, zone_id) -> dict | None:
         """Return the zone with the given ID."""
         for zone in self.list_zones(include_disabled=True):
             if zone[KEY_ID] == zone_id:

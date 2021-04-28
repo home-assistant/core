@@ -2,14 +2,18 @@
 from enum import Enum
 import logging
 
+from homeassistant.components.sensor import SensorEntity
+
 from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
+# the desired duration, in hours, of the cycle
 ATTR_DURATION = "duration"
-ATTR_LAST_UPDATED = "last_updated"
+ATTR_CYCLE_LAST_UPDATED = "cycle_last_updated"
 ATTR_MODE = "mode"
+# the hour of the day at which to start the cycle (0-23)
 ATTR_START_HOUR = "start_hour"
 
 
@@ -42,7 +46,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class SmartTubSensor(SmartTubSensorBase):
+class SmartTubSensor(SmartTubSensorBase, SensorEntity):
     """Generic class for SmartTub status sensors."""
 
     @property
@@ -59,7 +63,7 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(
-            coordinator, spa, "primary filtration cycle", "primary_filtration"
+            coordinator, spa, "Primary Filtration Cycle", "primary_filtration"
         )
 
     @property
@@ -68,12 +72,12 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
         return self._state.status.name.lower()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         state = self._state
         return {
             ATTR_DURATION: state.duration,
-            ATTR_LAST_UPDATED: state.last_updated.isoformat(),
+            ATTR_CYCLE_LAST_UPDATED: state.last_updated.isoformat(),
             ATTR_MODE: state.mode.name.lower(),
             ATTR_START_HOUR: state.start_hour,
         }
@@ -94,10 +98,10 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
         return self._state.status.name.lower()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         state = self._state
         return {
-            ATTR_LAST_UPDATED: state.last_updated.isoformat(),
+            ATTR_CYCLE_LAST_UPDATED: state.last_updated.isoformat(),
             ATTR_MODE: state.mode.name.lower(),
         }

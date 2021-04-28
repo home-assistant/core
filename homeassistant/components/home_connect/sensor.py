@@ -3,6 +3,7 @@
 from datetime import timedelta
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_ENTITIES, DEVICE_CLASS_TIMESTAMP
 import homeassistant.util.dt as dt_util
 
@@ -27,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(await hass.async_add_executor_job(get_entities), True)
 
 
-class HomeConnectSensor(HomeConnectEntity):
+class HomeConnectSensor(HomeConnectEntity, SensorEntity):
     """Sensor class for Home Connect."""
 
     def __init__(self, device, desc, key, unit, icon, device_class, sign=1):

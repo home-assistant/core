@@ -12,7 +12,7 @@ on:
 env:
   CACHE_VERSION: 1
   DEFAULT_PYTHON: 3.8
-  PRE_COMMIT_HOME: ~/.cache/pre-commit
+  PRE_COMMIT_CACHE: ~/.cache/pre-commit
 
 jobs:
   # Separate job to pre-populate the base dependency cache
@@ -20,6 +20,9 @@ jobs:
   prepare-base:
     name: Prepare base dependencies
     runs-on: ubuntu-latest
+    outputs:
+      python-key: ${{ steps.generate-python-key.outputs.key }}
+      pre-commit-key: ${{ steps.generate-pre-commit-key.outputs.key }}
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
@@ -28,21 +31,25 @@ jobs:
         uses: actions/setup-python@v2.2.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Generate partial Python venv restore key
+        id: generate-python-key
+        run: >-
+          echo "::set-output name=key::base-venv-${{ env.CACHE_VERSION }}-${{
+            hashFiles('requirements.txt') }}-${{
+            hashFiles('requirements_test.txt') }}-${{
+            hashFiles('homeassistant/package_constraints.txt') }}"
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache@v2.1.4
         with:
           path: venv
           key: >-
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
-            steps.python.outputs.python-version }}-${{
-            hashFiles('requirements.txt') }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            steps.generate-python-key.outputs.key }}
           restore-keys: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements_test.txt') }}-
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version }}-${{ hashFiles('requirements.txt') }}
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{ steps.python.outputs.python-version }}-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements_test.txt') }}-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements.txt') }}-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-venv-${{ env.CACHE_VERSION }}-
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -50,15 +57,20 @@ jobs:
           . venv/bin/activate
           pip install -U "pip<20.3" setuptools
           pip install -r requirements.txt -r requirements_test.txt
+      - name: Generate partial pre-commit restore key
+        id: generate-pre-commit-key
+        run: >-
+          echo "::set-output name=key::pre-commit-${{ env.CACHE_VERSION }}-${{
+            hashFiles('.pre-commit-config.yaml') }}"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
         uses: actions/cache@v2.1.4
         with:
-          path: ${{ env.PRE_COMMIT_HOME }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          path: ${{ env.PRE_COMMIT_CACHE }}
+          key: >-
+            ${{ runner.os }}-${{ steps.generate-pre-commit-key.outputs.key }}
           restore-keys: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-
+            ${{ runner.os }}-pre-commit-${{ env.CACHE_VERSION }}-
       - name: Install pre-commit dependencies
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -82,12 +94,8 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: venv
-          key: >-
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
-            steps.python.outputs.python-version }}-${{
-            hashFiles('requirements.txt') }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}
+          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.prepare-base.outputs.python-key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -97,13 +105,12 @@ jobs:
         id: cache-precommit
         uses: actions/cache@v2.1.4
         with:
-          path: ${{ env.PRE_COMMIT_HOME }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
-      - name: Fail job if cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
+          path: ${{ env.PRE_COMMIT_CACHE }}
+          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
+      - name: Fail job if pre-commit cache restore failed
+        if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
-          echo "Failed to restore Python virtual environment from cache"
+          echo "Failed to restore pre-commit environment from cache"
           exit 1
       - name: Run bandit
         run: |
@@ -127,12 +134,8 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: venv
-          key: >-
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
-            steps.python.outputs.python-version }}-${{
-            hashFiles('requirements.txt') }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}
+          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.prepare-base.outputs.python-key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -142,13 +145,12 @@ jobs:
         id: cache-precommit
         uses: actions/cache@v2.1.4
         with:
-          path: ${{ env.PRE_COMMIT_HOME }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
-      - name: Fail job if cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
+          path: ${{ env.PRE_COMMIT_CACHE }}
+          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
+      - name: Fail job if pre-commit cache restore failed
+        if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
-          echo "Failed to restore Python virtual environment from cache"
+          echo "Failed to restore pre-commit environment from cache"
           exit 1
       - name: Run black
         run: |
@@ -172,12 +174,8 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: venv
-          key: >-
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
-            steps.python.outputs.python-version }}-${{
-            hashFiles('requirements.txt') }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}
+          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.prepare-base.outputs.python-key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -187,13 +185,12 @@ jobs:
         id: cache-precommit
         uses: actions/cache@v2.1.4
         with:
-          path: ${{ env.PRE_COMMIT_HOME }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
-      - name: Fail job if cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
+          path: ${{ env.PRE_COMMIT_CACHE }}
+          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
+      - name: Fail job if pre-commit cache restore failed
+        if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
-          echo "Failed to restore Python virtual environment from cache"
+          echo "Failed to restore pre-commit environment from cache"
           exit 1
       - name: Register codespell problem matcher
         run: |
@@ -239,12 +236,8 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: venv
-          key: >-
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
-            steps.python.outputs.python-version }}-${{
-            hashFiles('requirements.txt') }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}
+          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.prepare-base.outputs.python-key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -254,13 +247,12 @@ jobs:
         id: cache-precommit
         uses: actions/cache@v2.1.4
         with:
-          path: ${{ env.PRE_COMMIT_HOME }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
-      - name: Fail job if cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
+          path: ${{ env.PRE_COMMIT_CACHE }}
+          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
+      - name: Fail job if pre-commit cache restore failed
+        if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
-          echo "Failed to restore Python virtual environment from cache"
+          echo "Failed to restore pre-commit environment from cache"
           exit 1
       - name: Register check executables problem matcher
         run: |
@@ -287,12 +279,8 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: venv
-          key: >-
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
-            steps.python.outputs.python-version }}-${{
-            hashFiles('requirements.txt') }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}
+          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.prepare-base.outputs.python-key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -302,13 +290,12 @@ jobs:
         id: cache-precommit
         uses: actions/cache@v2.1.4
         with:
-          path: ${{ env.PRE_COMMIT_HOME }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
-      - name: Fail job if cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
+          path: ${{ env.PRE_COMMIT_CACHE }}
+          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
+      - name: Fail job if pre-commit cache restore failed
+        if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
-          echo "Failed to restore Python virtual environment from cache"
+          echo "Failed to restore pre-commit environment from cache"
           exit 1
       - name: Register flake8 problem matcher
         run: |
@@ -335,12 +322,8 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: venv
-          key: >-
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
-            steps.python.outputs.python-version }}-${{
-            hashFiles('requirements.txt') }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}
+          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.prepare-base.outputs.python-key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -350,13 +333,12 @@ jobs:
         id: cache-precommit
         uses: actions/cache@v2.1.4
         with:
-          path: ${{ env.PRE_COMMIT_HOME }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
-      - name: Fail job if cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
+          path: ${{ env.PRE_COMMIT_CACHE }}
+          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
+      - name: Fail job if pre-commit cache restore failed
+        if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
-          echo "Failed to restore Python virtual environment from cache"
+          echo "Failed to restore pre-commit environment from cache"
           exit 1
       - name: Run isort
         run: |
@@ -380,12 +362,8 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: venv
-          key: >-
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
-            steps.python.outputs.python-version }}-${{
-            hashFiles('requirements.txt') }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}
+          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.prepare-base.outputs.python-key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -395,13 +373,12 @@ jobs:
         id: cache-precommit
         uses: actions/cache@v2.1.4
         with:
-          path: ${{ env.PRE_COMMIT_HOME }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
-      - name: Fail job if cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
+          path: ${{ env.PRE_COMMIT_CACHE }}
+          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
+      - name: Fail job if pre-commit cache restore failed
+        if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
-          echo "Failed to restore Python virtual environment from cache"
+          echo "Failed to restore pre-commit environment from cache"
           exit 1
       - name: Register check-json problem matcher
         run: |
@@ -428,12 +405,8 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: venv
-          key: >-
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
-            steps.python.outputs.python-version }}-${{
-            hashFiles('requirements.txt') }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}
+          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.prepare-base.outputs.python-key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -443,13 +416,12 @@ jobs:
         id: cache-precommit
         uses: actions/cache@v2.1.4
         with:
-          path: ${{ env.PRE_COMMIT_HOME }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
-      - name: Fail job if cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
+          path: ${{ env.PRE_COMMIT_CACHE }}
+          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
+      - name: Fail job if pre-commit cache restore failed
+        if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
-          echo "Failed to restore Python virtual environment from cache"
+          echo "Failed to restore pre-commit environment from cache"
           exit 1
       - name: Run pyupgrade
         run: |
@@ -484,12 +456,8 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: venv
-          key: >-
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
-            steps.python.outputs.python-version }}-${{
-            hashFiles('requirements.txt') }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}
+          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.prepare-base.outputs.python-key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -499,13 +467,12 @@ jobs:
         id: cache-precommit
         uses: actions/cache@v2.1.4
         with:
-          path: ${{ env.PRE_COMMIT_HOME }}
-          key: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
-      - name: Fail job if cache restore failed
-        if: steps.cache-venv.outputs.cache-hit != 'true'
+          path: ${{ env.PRE_COMMIT_CACHE }}
+          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
+      - name: Fail job if pre-commit cache restore failed
+        if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
-          echo "Failed to restore Python virtual environment from cache"
+          echo "Failed to restore pre-commit environment from cache"
           exit 1
       - name: Register yamllint problem matcher
         run: |
@@ -531,11 +498,8 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: venv
-          key: >-
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{
-            matrix.python-version }}-${{ hashFiles('requirements_test.txt')
-            }}-${{ hashFiles('requirements_all.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-${{
+            needs.prepare-tests.outputs.python-key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -563,12 +527,8 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: venv
-          key: >-
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-base-venv-${{
-            steps.python.outputs.python-version }}-${{
-            hashFiles('requirements.txt') }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}
+          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.prepare-base.outputs.python-key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -585,24 +545,31 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8, 3.9]
+    outputs:
+      python-key: ${{ steps.generate-python-key.outputs.key }}
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v2
+      - name: Generate partial Python venv restore key
+        id: generate-python-key
+        run: >-
+          echo "::set-output name=key::venv-${{ env.CACHE_VERSION }}-${{
+            hashFiles('requirements_test.txt') }}-${{
+            hashFiles('requirements_all.txt') }}-${{
+            hashFiles('homeassistant/package_constraints.txt') }}"
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v2.1.4
         with:
           path: venv
           key: >-
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{
-            matrix.python-version }}-${{ hashFiles('requirements_test.txt')
-            }}-${{ hashFiles('requirements_all.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}
+            ${{ runner.os }}-${{ matrix.python-version }}-${{
+            steps.generate-python-key.outputs.key }}
           restore-keys: |
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('requirements_test.txt') }}-${{ hashFiles('requirements_all.txt') }}
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('requirements_test.txt') }}
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{ matrix.python-version }}-
+            ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements_test.txt') }}-${{ hashFiles('requirements_all.txt') }}-
+            ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements_test.txt') }}-
+            ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ env.CACHE_VERSION }}-
       - name: Create full Python ${{ matrix.python-version }} virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -633,11 +600,8 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: venv
-          key: >-
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{
-            matrix.python-version }}-${{ hashFiles('requirements_test.txt')
-            }}-${{ hashFiles('requirements_all.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-${{
+            needs.prepare-tests.outputs.python-key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -667,11 +631,8 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: venv
-          key: >-
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{
-            matrix.python-version }}-${{ hashFiles('requirements_test.txt')
-            }}-${{ hashFiles('requirements_all.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-${{
+            needs.prepare-tests.outputs.python-key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -689,6 +650,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: prepare-tests
     strategy:
+      fail-fast: false
       matrix:
         group: [1, 2, 3, 4]
         python-version: [3.8, 3.9]
@@ -703,11 +665,8 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: venv
-          key: >-
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{
-            matrix.python-version }}-${{ hashFiles('requirements_test.txt')
-            }}-${{ hashFiles('requirements_all.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-${{
+            needs.prepare-tests.outputs.python-key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -735,11 +694,12 @@ jobs:
             --test-group-count 4 \
             --test-group=${{ matrix.group }} \
             --cov homeassistant \
+            --cov-report= \
             -o console_output_style=count \
             -p no:sugar \
             tests
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v2.2.2
+        uses: actions/upload-artifact@v2.2.3
         with:
           name: coverage-${{ matrix.python-version }}-group${{ matrix.group }}
           path: .coverage
@@ -750,7 +710,7 @@ jobs:
   coverage:
     name: Process test coverage
     runs-on: ubuntu-latest
-    needs: pytest
+    needs: ["prepare-tests", "pytest"]
     strategy:
       matrix:
         python-version: [3.8]
@@ -763,11 +723,8 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: venv
-          key: >-
-            ${{ env.CACHE_VERSION}}-${{ runner.os }}-venv-${{
-            matrix.python-version }}-${{ hashFiles('requirements_test.txt')
-            }}-${{ hashFiles('requirements_all.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}
+          key: ${{ runner.os }}-${{ matrix.python-version }}-${{
+            needs.prepare-tests.outputs.python-key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -782,4 +739,4 @@ jobs:
           coverage report --fail-under=94
           coverage xml
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1.2.2
+        uses: codecov/codecov-action@v1.3.2

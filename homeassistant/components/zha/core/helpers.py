@@ -4,6 +4,7 @@ Helpers for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
+from __future__ import annotations
 
 import asyncio
 import binascii
@@ -13,7 +14,7 @@ import itertools
 import logging
 from random import uniform
 import re
-from typing import Any, Callable, Iterator, List, Optional, Tuple
+from typing import Any, Callable, Iterator
 
 import voluptuous as vol
 import zigpy.exceptions
@@ -67,7 +68,7 @@ async def safe_read(
 
 async def get_matched_clusters(
     source_zha_device: ZhaDeviceType, target_zha_device: ZhaDeviceType
-) -> List[BindingPair]:
+) -> list[BindingPair]:
     """Get matched input/output cluster pairs for 2 devices."""
     source_clusters = source_zha_device.async_get_std_clusters()
     target_clusters = target_zha_device.async_get_std_clusters()
@@ -131,7 +132,7 @@ async def async_get_zha_device(hass, device_id):
     return zha_gateway.devices[ieee]
 
 
-def find_state_attributes(states: List[State], key: str) -> Iterator[Any]:
+def find_state_attributes(states: list[State], key: str) -> Iterator[Any]:
     """Find attributes with matching key from states."""
     for state in states:
         value = state.attributes.get(key)
@@ -150,9 +151,9 @@ def mean_tuple(*args):
 
 
 def reduce_attribute(
-    states: List[State],
+    states: list[State],
     key: str,
-    default: Optional[Any] = None,
+    default: Any | None = None,
     reduce: Callable[..., Any] = mean_int,
 ) -> Any:
     """Find the first attribute matching key from states.
@@ -280,7 +281,7 @@ QR_CODES = (
 )
 
 
-def qr_to_install_code(qr_code: str) -> Tuple[zigpy.types.EUI64, bytes]:
+def qr_to_install_code(qr_code: str) -> tuple[zigpy.types.EUI64, bytes]:
     """Try to parse the QR code.
 
     if successful, return a tuple of a EUI64 address and install code.

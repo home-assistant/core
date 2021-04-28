@@ -1,7 +1,7 @@
 """Config flow to configure the Elgato Key Light integration."""
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
 from elgato import Elgato, ElgatoError
 import voluptuous as vol
@@ -11,7 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_SERIAL_NUMBER, DOMAIN  # pylint: disable=unused-import
+from .const import CONF_SERIAL_NUMBER, DOMAIN
 
 
 class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -25,8 +25,8 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
     serial_number: str
 
     async def async_step_user(
-        self, user_input: Dict[str, Any] | None = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._async_show_setup_form()
@@ -42,8 +42,8 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
         return self._async_create_entry()
 
     async def async_step_zeroconf(
-        self, discovery_info: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, discovery_info: dict[str, Any]
+    ) -> dict[str, Any]:
         """Handle zeroconf discovery."""
         self.host = discovery_info[CONF_HOST]
         self.port = discovery_info[CONF_PORT]
@@ -53,21 +53,22 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
         except ElgatoError:
             return self.async_abort(reason="cannot_connect")
 
+        self._set_confirm_only()
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={"serial_number": self.serial_number},
         )
 
     async def async_step_zeroconf_confirm(
-        self, _: Dict[str, Any] | None = None
-    ) -> Dict[str, Any]:
+        self, _: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Handle a flow initiated by zeroconf."""
         return self._async_create_entry()
 
     @callback
     def _async_show_setup_form(
-        self, errors: Dict[str, str] | None = None
-    ) -> Dict[str, Any]:
+        self, errors: dict[str, str] | None = None
+    ) -> dict[str, Any]:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -81,7 +82,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _async_create_entry(self) -> Dict[str, Any]:
+    def _async_create_entry(self) -> dict[str, Any]:
         return self.async_create_entry(
             title=self.serial_number,
             data={

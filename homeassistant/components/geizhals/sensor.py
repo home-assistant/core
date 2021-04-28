@@ -4,13 +4,11 @@ from datetime import timedelta
 from geizhals import Device, Geizhals
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import CONF_DESCRIPTION, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-CONF_DESCRIPTION = "description"
 CONF_PRODUCT_ID = "product_id"
 CONF_LOCALE = "locale"
 
@@ -38,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([Geizwatch(name, description, product_id, domain)], True)
 
 
-class Geizwatch(Entity):
+class Geizwatch(SensorEntity):
     """Implementation of Geizwatch."""
 
     def __init__(self, name, description, product_id, domain):
@@ -72,7 +70,7 @@ class Geizwatch(Entity):
         return self._device.prices[0]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         while len(self._device.prices) < 4:
             self._device.prices.append("None")

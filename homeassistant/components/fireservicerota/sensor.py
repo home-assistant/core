@@ -1,6 +1,7 @@
 """Sensor platform for FireServiceRota integration."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -21,7 +22,7 @@ async def async_setup_entry(
     async_add_entities([IncidentsSensor(client)])
 
 
-class IncidentsSensor(RestoreEntity):
+class IncidentsSensor(RestoreEntity, SensorEntity):
     """Representation of FireServiceRota incidents sensor."""
 
     def __init__(self, client):
@@ -64,7 +65,7 @@ class IncidentsSensor(RestoreEntity):
         return False
 
     @property
-    def device_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> object:
         """Return available attributes for sensor."""
         attr = {}
         data = self._state_attributes

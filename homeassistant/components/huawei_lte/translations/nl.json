@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dit apparaat is reeds geconfigureerd",
-            "already_in_progress": "Dit apparaat wordt al geconfigureerd",
+            "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
             "not_huawei_lte": "Geen Huawei LTE-apparaat"
         },
         "error": {
@@ -15,6 +15,7 @@
             "response_error": "Onbekende fout van het apparaat",
             "unknown": "Onverwachte fout"
         },
+        "flow_title": "Huawei LTE: {name}",
         "step": {
             "user": {
                 "data": {

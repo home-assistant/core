@@ -21,7 +21,9 @@
             "init": {
                 "data": {
                     "floor_temperature": "Etasje Temperatur",
-                    "precision": "Presisjon"
+                    "precision": "Presisjon",
+                    "read_precision": "Les presisjon",
+                    "set_precision": "Angi presisjon"
                 },
                 "description": "Alternativer for OpenTherm Gateway"
             }

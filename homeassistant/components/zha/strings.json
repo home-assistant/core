@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "ZHA: {name}",
     "step": {
       "user": {
         "title": "ZHA",
@@ -21,7 +22,9 @@
         }
       }
     },
-    "error": { "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]" },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }

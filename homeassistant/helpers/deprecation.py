@@ -1,8 +1,10 @@
 """Deprecation helpers for Home Assistant."""
+from __future__ import annotations
+
 import functools
 import inspect
 import logging
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 from ..helpers.frame import MissingIntegrationFrame, get_integration_frame
 
@@ -49,8 +51,8 @@ def deprecated_substitute(substitute_name: str) -> Callable[..., Callable]:
 
 
 def get_deprecated(
-    config: Dict[str, Any], new_name: str, old_name: str, default: Optional[Any] = None
-) -> Optional[Any]:
+    config: dict[str, Any], new_name: str, old_name: str, default: Any | None = None
+) -> Any | None:
     """Allow an old config name to be deprecated with a replacement.
 
     If the new config isn't found, but the old one is, the old value is used
@@ -85,7 +87,7 @@ def deprecated_function(replacement: str) -> Callable[..., Callable]:
         """Decorate function as deprecated."""
 
         @functools.wraps(func)
-        def deprecated_func(*args: tuple, **kwargs: Dict[str, Any]) -> Any:
+        def deprecated_func(*args: tuple, **kwargs: dict[str, Any]) -> Any:
             """Wrap for the original function."""
             logger = logging.getLogger(func.__module__)
             try:

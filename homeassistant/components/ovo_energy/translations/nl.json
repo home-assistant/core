@@ -18,7 +18,9 @@
                 "data": {
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
-                }
+                },
+                "description": "Stel een OVO Energy instance in om toegang te krijgen tot je energieverbruik.",
+                "title": "Voeg OVO Energie Account toe"
             }
         }
     }

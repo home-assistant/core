@@ -6,7 +6,7 @@ from tellcore import telldus
 import tellcore.constants as tellcore_constants
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
@@ -15,7 +15,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,7 +125,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class TellstickSensor(Entity):
+class TellstickSensor(SensorEntity):
     """Representation of a Tellstick sensor."""
 
     def __init__(self, name, tellcore_sensor, datatype, sensor_info):

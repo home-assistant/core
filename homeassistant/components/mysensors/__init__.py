@@ -1,8 +1,10 @@
 """Connect to a MySensors gateway via pymysensors API."""
+from __future__ import annotations
+
 import asyncio
 from functools import partial
 import logging
-from typing import Callable, Dict, List, Optional, Tuple, Type, Union
+from typing import Callable
 
 from mysensors import BaseAsyncGateway
 import voluptuous as vol
@@ -36,7 +38,7 @@ from .const import (
     MYSENSORS_DISCOVERY,
     MYSENSORS_GATEWAYS,
     MYSENSORS_ON_UNLOAD,
-    SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT,
+    PLATFORMS_WITH_ENTRY_SUPPORT,
     DevId,
     SensorType,
 )
@@ -222,7 +224,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT
+                for platform in PLATFORMS_WITH_ENTRY_SUPPORT
             ]
         )
         await finish_setup(hass, entry, gateway)
@@ -241,7 +243,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT
+                for platform in PLATFORMS_WITH_ENTRY_SUPPORT
             ]
         )
     )
@@ -265,13 +267,13 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
 def setup_mysensors_platform(
     hass: HomeAssistant,
     domain: str,  # hass platform name
-    discovery_info: Dict[str, List[DevId]],
-    device_class: Union[Type[MySensorsDevice], Dict[SensorType, Type[MySensorsEntity]]],
-    device_args: Optional[
-        Tuple
-    ] = None,  # extra arguments that will be given to the entity constructor
-    async_add_entities: Optional[Callable] = None,
-) -> Optional[List[MySensorsDevice]]:
+    discovery_info: dict[str, list[DevId]],
+    device_class: type[MySensorsDevice] | dict[SensorType, type[MySensorsEntity]],
+    device_args: (
+        None | tuple
+    ) = None,  # extra arguments that will be given to the entity constructor
+    async_add_entities: Callable | None = None,
+) -> list[MySensorsDevice] | None:
     """Set up a MySensors platform.
 
     Sets up a bunch of instances of a single platform that is supported by this integration.
@@ -281,10 +283,10 @@ def setup_mysensors_platform(
     """
     if device_args is None:
         device_args = ()
-    new_devices: List[MySensorsDevice] = []
-    new_dev_ids: List[DevId] = discovery_info[ATTR_DEVICES]
+    new_devices: list[MySensorsDevice] = []
+    new_dev_ids: list[DevId] = discovery_info[ATTR_DEVICES]
     for dev_id in new_dev_ids:
-        devices: Dict[DevId, MySensorsDevice] = get_mysensors_devices(hass, domain)
+        devices: dict[DevId, MySensorsDevice] = get_mysensors_devices(hass, domain)
         if dev_id in devices:
             _LOGGER.debug(
                 "Skipping setup of %s for platform %s as it already exists",
@@ -293,7 +295,7 @@ def setup_mysensors_platform(
             )
             continue
         gateway_id, node_id, child_id, value_type = dev_id
-        gateway: Optional[BaseAsyncGateway] = get_mysensors_gateway(hass, gateway_id)
+        gateway: BaseAsyncGateway | None = get_mysensors_gateway(hass, gateway_id)
         if not gateway:
             _LOGGER.warning("Skipping setup of %s, no gateway found", dev_id)
             continue

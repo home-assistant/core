@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "login_method": "Metode Masuk",
+                    "password": "Kata Sandi",
+                    "timeout": "Tenggang waktu (detik)",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Jika Metode Masuk adalah 'email', Nama Pengguna adalah alamat email. Jika Metode Masuk adalah 'telepon', Nama Pengguna adalah nomor telepon dalam format '+NNNNNNNNN'.",
+                "title": "Siapkan akun August"
+            },
+            "validation": {
+                "data": {
+                    "code": "Kode verifikasi"
+                },
+                "description": "Periksa {login_method} ({username}) Anda dan masukkan kode verifikasi di bawah ini",
+                "title": "Autentikasi dua faktor"
+            }
+        }
+    }
+}

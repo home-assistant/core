@@ -14,7 +14,7 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "De API-sleutel voor deze site",
+                    "api_key": "API-sleutel",
                     "name": "De naam van deze installatie",
                     "site_id": "De SolarEdge site-id"
                 },

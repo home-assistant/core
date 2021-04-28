@@ -1,5 +1,7 @@
 """Helper to test significant Person state changes."""
-from typing import Any, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 
@@ -12,7 +14,7 @@ def async_check_significant_change(
     new_state: str,
     new_attrs: dict,
     **kwargs: Any,
-) -> Optional[bool]:
+) -> bool | None:
     """Test if state significantly changed."""
 
     if new_state != old_state:

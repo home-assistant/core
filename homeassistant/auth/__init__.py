@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict
 from datetime import timedelta
-from typing import Any, Dict, List, Optional, Tuple, cast
+from typing import Any, Dict, Optional, Tuple, cast
 
 import jwt
 
@@ -36,8 +36,8 @@ class InvalidProvider(Exception):
 
 async def auth_manager_from_config(
     hass: HomeAssistant,
-    provider_configs: List[Dict[str, Any]],
-    module_configs: List[Dict[str, Any]],
+    provider_configs: list[dict[str, Any]],
+    module_configs: list[dict[str, Any]],
 ) -> AuthManager:
     """Initialize an auth manager from config.
 
@@ -87,8 +87,8 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
         self,
         handler_key: Any,
         *,
-        context: Optional[Dict[str, Any]] = None,
-        data: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
     ) -> data_entry_flow.FlowHandler:
         """Create a login flow."""
         auth_provider = self.auth_manager.get_auth_provider(*handler_key)
@@ -97,8 +97,8 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
         return await auth_provider.async_login_flow(context)
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, flow: data_entry_flow.FlowHandler, result: dict[str, Any]
+    ) -> dict[str, Any]:
         """Return a user as result of login flow."""
         flow = cast(LoginFlow, flow)
 
@@ -157,7 +157,7 @@ class AuthManager:
         self.login_flow = AuthManagerFlowManager(hass, self)
 
     @property
-    def auth_providers(self) -> List[AuthProvider]:
+    def auth_providers(self) -> list[AuthProvider]:
         """Return a list of available auth providers."""
         # AIS dom ----------------------------------------------------------------
         try:
@@ -179,17 +179,17 @@ class AuthManager:
         return list(self._providers.values())
 
     @property
-    def auth_mfa_modules(self) -> List[MultiFactorAuthModule]:
+    def auth_mfa_modules(self) -> list[MultiFactorAuthModule]:
         """Return a list of available auth modules."""
         return list(self._mfa_modules.values())
 
     def get_auth_provider(
-        self, provider_type: str, provider_id: Optional[str]
-    ) -> Optional[AuthProvider]:
+        self, provider_type: str, provider_id: str | None
+    ) -> AuthProvider | None:
         """Return an auth provider, None if not found."""
         return self._providers.get((provider_type, provider_id))
 
-    def get_auth_providers(self, provider_type: str) -> List[AuthProvider]:
+    def get_auth_providers(self, provider_type: str) -> list[AuthProvider]:
         """Return a List of auth provider of one type, Empty if not found."""
         return [
             provider
@@ -197,30 +197,30 @@ class AuthManager:
             if p_type == provider_type
         ]
 
-    def get_auth_mfa_module(self, module_id: str) -> Optional[MultiFactorAuthModule]:
+    def get_auth_mfa_module(self, module_id: str) -> MultiFactorAuthModule | None:
         """Return a multi-factor auth module, None if not found."""
         return self._mfa_modules.get(module_id)
 
-    async def async_get_users(self) -> List[models.User]:
+    async def async_get_users(self) -> list[models.User]:
         """Retrieve all users."""
         return await self._store.async_get_users()
 
-    async def async_get_user(self, user_id: str) -> Optional[models.User]:
+    async def async_get_user(self, user_id: str) -> models.User | None:
         """Retrieve a user."""
         return await self._store.async_get_user(user_id)
 
-    async def async_get_owner(self) -> Optional[models.User]:
+    async def async_get_owner(self) -> models.User | None:
         """Retrieve the owner."""
         users = await self.async_get_users()
         return next((user for user in users if user.is_owner), None)
 
-    async def async_get_group(self, group_id: str) -> Optional[models.Group]:
+    async def async_get_group(self, group_id: str) -> models.Group | None:
         """Retrieve all groups."""
         return await self._store.async_get_group(group_id)
 
     async def async_get_user_by_credentials(
         self, credentials: models.Credentials
-    ) -> Optional[models.User]:
+    ) -> models.User | None:
         """Get a user by credential, return None if not found."""
         for user in await self.async_get_users():
             for creds in user.credentials:
@@ -230,7 +230,7 @@ class AuthManager:
         return None
 
     async def async_create_system_user(
-        self, name: str, group_ids: Optional[List[str]] = None
+        self, name: str, group_ids: list[str] | None = None
     ) -> models.User:
         """Create a system user."""
         user = await self._store.async_create_user(
@@ -242,10 +242,10 @@ class AuthManager:
         return user
 
     async def async_create_user(
-        self, name: str, group_ids: Optional[List[str]] = None
+        self, name: str, group_ids: list[str] | None = None
     ) -> models.User:
         """Create a user."""
-        kwargs: Dict[str, Any] = {
+        kwargs: dict[str, Any] = {
             "name": name,
             "is_active": True,
             "group_ids": group_ids or [],
@@ -311,12 +311,12 @@ class AuthManager:
     async def async_update_user(
         self,
         user: models.User,
-        name: Optional[str] = None,
-        is_active: Optional[bool] = None,
-        group_ids: Optional[List[str]] = None,
+        name: str | None = None,
+        is_active: bool | None = None,
+        group_ids: list[str] | None = None,
     ) -> None:
         """Update a user."""
-        kwargs: Dict[str, Any] = {}
+        kwargs: dict[str, Any] = {}
         if name is not None:
             kwargs["name"] = name
         if group_ids is not None:
@@ -379,9 +379,9 @@ class AuthManager:
 
         await module.async_depose_user(user.id)
 
-    async def async_get_enabled_mfa(self, user: models.User) -> Dict[str, str]:
+    async def async_get_enabled_mfa(self, user: models.User) -> dict[str, str]:
         """List enabled mfa modules for user."""
-        modules: Dict[str, str] = OrderedDict()
+        modules: dict[str, str] = OrderedDict()
         for module_id, module in self._mfa_modules.items():
             if await module.async_is_user_setup(user.id):
                 modules[module_id] = module.name
@@ -390,12 +390,12 @@ class AuthManager:
     async def async_create_refresh_token(
         self,
         user: models.User,
-        client_id: Optional[str] = None,
-        client_name: Optional[str] = None,
-        client_icon: Optional[str] = None,
-        token_type: Optional[str] = None,
+        client_id: str | None = None,
+        client_name: str | None = None,
+        client_icon: str | None = None,
+        token_type: str | None = None,
         access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION,
-        credential: Optional[models.Credentials] = None,
+        credential: models.Credentials | None = None,
     ) -> models.RefreshToken:
         """Create a new refresh token for a user."""
         if not user.is_active:
@@ -449,13 +449,13 @@ class AuthManager:
 
     async def async_get_refresh_token(
         self, token_id: str
-    ) -> Optional[models.RefreshToken]:
+    ) -> models.RefreshToken | None:
         """Get refresh token by id."""
         return await self._store.async_get_refresh_token(token_id)
 
     async def async_get_refresh_token_by_token(
         self, token: str
-    ) -> Optional[models.RefreshToken]:
+    ) -> models.RefreshToken | None:
         """Get refresh token by token."""
         return await self._store.async_get_refresh_token_by_token(token)
 
@@ -467,7 +467,7 @@ class AuthManager:
 
     @callback
     def async_create_access_token(
-        self, refresh_token: models.RefreshToken, remote_ip: Optional[str] = None
+        self, refresh_token: models.RefreshToken, remote_ip: str | None = None
     ) -> str:
         """Create a new access token."""
         self.async_validate_refresh_token(refresh_token, remote_ip)
@@ -488,7 +488,7 @@ class AuthManager:
     @callback
     def _async_resolve_provider(
         self, refresh_token: models.RefreshToken
-    ) -> Optional[AuthProvider]:
+    ) -> AuthProvider | None:
         """Get the auth provider for the given refresh token.
 
         Raises an exception if the expected provider is no longer available or return
@@ -509,7 +509,7 @@ class AuthManager:
 
     @callback
     def async_validate_refresh_token(
-        self, refresh_token: models.RefreshToken, remote_ip: Optional[str] = None
+        self, refresh_token: models.RefreshToken, remote_ip: str | None = None
     ) -> None:
         """Validate that a refresh token is usable.
 
@@ -521,7 +521,7 @@ class AuthManager:
 
     async def async_validate_access_token(
         self, token: str
-    ) -> Optional[models.RefreshToken]:
+    ) -> models.RefreshToken | None:
         """Return refresh token if an access token is valid."""
         try:
             unverif_claims = jwt.decode(token, verify=False)
@@ -552,7 +552,7 @@ class AuthManager:
     @callback
     def _async_get_auth_provider(
         self, credentials: models.Credentials
-    ) -> Optional[AuthProvider]:
+    ) -> AuthProvider | None:
         """Get auth provider from a set of credentials."""
         auth_provider_key = (
             credentials.auth_provider_type,

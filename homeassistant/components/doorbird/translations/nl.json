@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Deze DoorBird is al geconfigureerd",
+            "already_configured": "Apparaat is al geconfigureerd",
             "link_local_address": "Link-lokale adressen worden niet ondersteund",
             "not_doorbird_device": "Dit apparaat is geen DoorBird"
         },
         "error": {
-            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
@@ -14,7 +14,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host (IP-adres)",
+                    "host": "Host",
                     "name": "Apparaatnaam",
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"

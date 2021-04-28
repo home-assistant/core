@@ -1,8 +1,8 @@
 """Support for AVM Fritz!Box smarthome temperature sensor only devices."""
 import requests
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_DEVICES, TEMP_CELSIUS
-from homeassistant.helpers.entity import Entity
 
 from .const import (
     ATTR_STATE_DEVICE_LOCKED,
@@ -32,7 +32,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class FritzBoxTempSensor(Entity):
+class FritzBoxTempSensor(SensorEntity):
     """The entity class for Fritzbox temperature sensors."""
 
     def __init__(self, device, fritz):
@@ -80,7 +80,7 @@ class FritzBoxTempSensor(Entity):
             self._fritz.login()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         attrs = {
             ATTR_STATE_DEVICE_LOCKED: self._device.device_lock,

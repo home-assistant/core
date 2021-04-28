@@ -3,6 +3,7 @@ from zwave_js_server.event import Event
 
 from homeassistant.components.binary_sensor import DEVICE_CLASS_MOTION
 from homeassistant.const import DEVICE_CLASS_BATTERY, STATE_OFF, STATE_ON
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     DISABLED_LEGACY_BINARY_SENSOR,
@@ -61,7 +62,7 @@ async def test_disabled_legacy_sensor(hass, multisensor_6, integration):
     """Test disabled legacy boolean binary sensor."""
     # this node has Notification CC implemented so legacy binary sensor should be disabled
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entity_id = DISABLED_LEGACY_BINARY_SENSOR
     state = hass.states.get(entity_id)
     assert state is None

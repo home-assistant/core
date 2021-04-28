@@ -158,7 +158,7 @@ class HassEzvizCamera(Camera):
         return True
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the Ezviz-specific camera state attributes."""
         return {
             # if privacy == true, the device closed the lid or did a 180° tilt

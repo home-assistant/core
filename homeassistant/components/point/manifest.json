@@ -3,7 +3,7 @@
   "name": "Minut Point",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/point",
-  "requirements": ["pypoint==2.0.0"],
+  "requirements": ["pypoint==2.1.0"],
   "dependencies": ["webhook", "http"],
   "codeowners": ["@fredrike"],
   "quality_scale": "gold"

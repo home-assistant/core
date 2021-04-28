@@ -9,12 +9,12 @@ from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_ERROR,
-    ConfigEntry,
 )
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
 from tests.components.huisbaasje.test_data import MOCK_CURRENT_MEASUREMENTS
 
 
@@ -36,20 +36,20 @@ async def test_setup_entry(hass: HomeAssistant):
         return_value=MOCK_CURRENT_MEASUREMENTS,
     ) as mock_current_measurements:
         hass.config.components.add(huisbaasje.DOMAIN)
-        config_entry = ConfigEntry(
-            1,
-            huisbaasje.DOMAIN,
-            "userId",
-            {
+        config_entry = MockConfigEntry(
+            version=1,
+            domain=huisbaasje.DOMAIN,
+            title="userId",
+            data={
                 CONF_ID: "userId",
                 CONF_USERNAME: "username",
                 CONF_PASSWORD: "password",
             },
-            "test",
-            CONN_CLASS_CLOUD_POLL,
+            source="test",
+            connection_class=CONN_CLASS_CLOUD_POLL,
             system_options={},
         )
-        hass.config_entries._entries.append(config_entry)
+        config_entry.add_to_hass(hass)
 
         assert config_entry.state == ENTRY_STATE_NOT_LOADED
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -77,20 +77,20 @@ async def test_setup_entry_error(hass: HomeAssistant):
         "huisbaasje.Huisbaasje.authenticate", side_effect=HuisbaasjeException
     ) as mock_authenticate:
         hass.config.components.add(huisbaasje.DOMAIN)
-        config_entry = ConfigEntry(
-            1,
-            huisbaasje.DOMAIN,
-            "userId",
-            {
+        config_entry = MockConfigEntry(
+            version=1,
+            domain=huisbaasje.DOMAIN,
+            title="userId",
+            data={
                 CONF_ID: "userId",
                 CONF_USERNAME: "username",
                 CONF_PASSWORD: "password",
             },
-            "test",
-            CONN_CLASS_CLOUD_POLL,
+            source="test",
+            connection_class=CONN_CLASS_CLOUD_POLL,
             system_options={},
         )
-        hass.config_entries._entries.append(config_entry)
+        config_entry.add_to_hass(hass)
 
         assert config_entry.state == ENTRY_STATE_NOT_LOADED
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -119,20 +119,20 @@ async def test_unload_entry(hass: HomeAssistant):
         return_value=MOCK_CURRENT_MEASUREMENTS,
     ) as mock_current_measurements:
         hass.config.components.add(huisbaasje.DOMAIN)
-        config_entry = ConfigEntry(
-            1,
-            huisbaasje.DOMAIN,
-            "userId",
-            {
+        config_entry = MockConfigEntry(
+            version=1,
+            domain=huisbaasje.DOMAIN,
+            title="userId",
+            data={
                 CONF_ID: "userId",
                 CONF_USERNAME: "username",
                 CONF_PASSWORD: "password",
             },
-            "test",
-            CONN_CLASS_CLOUD_POLL,
+            source="test",
+            connection_class=CONN_CLASS_CLOUD_POLL,
             system_options={},
         )
-        hass.config_entries._entries.append(config_entry)
+        config_entry.add_to_hass(hass)
 
         # Load config entry
         assert await hass.config_entries.async_setup(config_entry.entry_id)

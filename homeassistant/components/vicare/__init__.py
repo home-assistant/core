@@ -3,6 +3,7 @@ import enum
 import logging
 
 from PyViCare.PyViCareDevice import Device
+from PyViCare.PyViCareFuelCell import FuelCell
 from PyViCare.PyViCareGazBoiler import GazBoiler
 from PyViCare.PyViCareHeatPump import HeatPump
 import voluptuous as vol
@@ -19,7 +20,7 @@ from homeassistant.helpers.storage import STORAGE_DIR
 
 _LOGGER = logging.getLogger(__name__)
 
-VICARE_PLATFORMS = ["climate", "sensor", "binary_sensor", "water_heater"]
+PLATFORMS = ["climate", "sensor", "binary_sensor", "water_heater"]
 
 DOMAIN = "vicare"
 PYVICARE_ERROR = "error"
@@ -38,6 +39,7 @@ class HeatingType(enum.Enum):
     generic = "generic"
     gas = "gas"
     heatpump = "heatpump"
+    fuelcell = "fuelcell"
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -77,6 +79,8 @@ def setup(hass, config):
             vicare_api = GazBoiler(conf[CONF_USERNAME], conf[CONF_PASSWORD], **params)
         elif heating_type == HeatingType.heatpump:
             vicare_api = HeatPump(conf[CONF_USERNAME], conf[CONF_PASSWORD], **params)
+        elif heating_type == HeatingType.fuelcell:
+            vicare_api = FuelCell(conf[CONF_USERNAME], conf[CONF_PASSWORD], **params)
         else:
             vicare_api = Device(conf[CONF_USERNAME], conf[CONF_PASSWORD], **params)
     except AttributeError:
@@ -90,7 +94,7 @@ def setup(hass, config):
     hass.data[DOMAIN][VICARE_NAME] = conf[CONF_NAME]
     hass.data[DOMAIN][VICARE_HEATING_TYPE] = heating_type
 
-    for platform in VICARE_PLATFORMS:
+    for platform in PLATFORMS:
         discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     return True

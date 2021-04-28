@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from abc import ABC
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
 
 from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
@@ -28,9 +27,9 @@ class PlayMedia:
 class BrowseMediaSource(BrowseMedia):
     """Represent a browsable media file."""
 
-    children: Optional[List["BrowseMediaSource"]]
+    children: list[BrowseMediaSource] | None
 
-    def __init__(self, *, domain: Optional[str], identifier: Optional[str], **kwargs):
+    def __init__(self, *, domain: str | None, identifier: str | None, **kwargs):
         """Initialize media source browse media."""
         media_content_id = f"{URI_SCHEME}{domain or ''}"
         if identifier:
@@ -47,7 +46,7 @@ class MediaSourceItem:
     """A parsed media item."""
 
     hass: HomeAssistant
-    domain: Optional[str]
+    domain: str | None
     identifier: str
 
     async def async_browse(self) -> BrowseMediaSource:
@@ -118,7 +117,7 @@ class MediaSource(ABC):
         raise NotImplementedError
 
     async def async_browse_media(
-        self, item: MediaSourceItem, media_types: Tuple[str]
+        self, item: MediaSourceItem, media_types: tuple[str]
     ) -> BrowseMediaSource:
         """Browse media."""
         raise NotImplementedError

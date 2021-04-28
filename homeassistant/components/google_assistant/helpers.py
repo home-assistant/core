@@ -1,10 +1,11 @@
 """Helper classes for Google Assistant integration."""
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from asyncio import gather
 from collections.abc import Mapping
 import logging
 import pprint
-from typing import Dict, List, Optional, Tuple
 
 from aiohttp.web import json_response
 
@@ -14,9 +15,10 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CLOUD_NEVER_EXPOSED_ENTITIES,
     CONF_NAME,
+    EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Context, HomeAssistant, State, callback
+from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
 from homeassistant.helpers.area_registry import AreaEntry
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -44,7 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def _get_entity_and_device(
     hass, entity_id
-) -> Optional[Tuple[RegistryEntry, DeviceEntry]]:
+) -> tuple[RegistryEntry, DeviceEntry] | None:
     """Fetch the entity and device entries for a entity_id."""
     dev_reg, ent_reg = await gather(
         hass.helpers.device_registry.async_get_registry(),
@@ -58,7 +60,7 @@ async def _get_entity_and_device(
     return entity_entry, device_entry
 
 
-async def _get_area(hass, entity_entry, device_entry) -> Optional[AreaEntry]:
+async def _get_area(hass, entity_entry, device_entry) -> AreaEntry | None:
     """Calculate the area for an entity."""
     if entity_entry and entity_entry.area_id:
         area_id = entity_entry.area_id
@@ -71,7 +73,7 @@ async def _get_area(hass, entity_entry, device_entry) -> Optional[AreaEntry]:
     return area_reg.areas.get(area_id)
 
 
-async def _get_device_info(device_entry) -> Optional[Dict[str, str]]:
+async def _get_device_info(device_entry) -> dict[str, str] | None:
     """Retrieve the device info for a device."""
     if not device_entry:
         return None
@@ -102,6 +104,16 @@ class AbstractConfig(ABC):
         """Perform async initialization of config."""
         self._store = GoogleConfigStore(self.hass)
         await self._store.async_load()
+
+        if self.hass.state == CoreState.running:
+            await self.async_sync_entities_all()
+            return
+
+        async def sync_google(_):
+            """Sync entities to Google."""
+            await self.async_sync_entities_all()
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, sync_google)
 
     @property
     def enabled(self):
@@ -192,7 +204,10 @@ class AbstractConfig(ABC):
         """Sync all entities to Google."""
         # Remove any pending sync
         self._google_sync_unsub.pop(agent_user_id, lambda: None)()
-        return await self._async_request_sync_devices(agent_user_id)
+        status = await self._async_request_sync_devices(agent_user_id)
+        if status == 404:
+            await self.async_disconnect_agent_user(agent_user_id)
+        return status
 
     async def async_sync_entities_all(self):
         """Sync all entities to Google for all registered agents."""
@@ -254,13 +269,17 @@ class AbstractConfig(ABC):
         if webhook_id is None:
             return
 
-        webhook.async_register(
-            self.hass,
-            DOMAIN,
-            "Local Support",
-            webhook_id,
-            self._handle_local_webhook,
-        )
+        try:
+            webhook.async_register(
+                self.hass,
+                DOMAIN,
+                "Local Support",
+                webhook_id,
+                self._handle_local_webhook,
+            )
+        except ValueError:
+            _LOGGER.info("Webhook handler is already defined!")
+            return
 
         self._local_sdk_active = True
 
@@ -344,7 +363,7 @@ class RequestData:
         user_id: str,
         source: str,
         request_id: str,
-        devices: Optional[List[dict]],
+        devices: list[dict] | None,
     ):
         """Initialize the request data."""
         self.config = config
@@ -578,7 +597,7 @@ def deep_update(target, source):
 
 
 @callback
-def async_get_entities(hass, config) -> List[GoogleEntity]:
+def async_get_entities(hass, config) -> list[GoogleEntity]:
     """Return all entities that are supported by Google."""
     entities = []
     for state in hass.states.async_all():

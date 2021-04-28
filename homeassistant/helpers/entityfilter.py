@@ -1,7 +1,9 @@
 """Helper class to implement include/exclude of entities and domains."""
+from __future__ import annotations
+
 import fnmatch
 import re
-from typing import Callable, Dict, List, Pattern
+from typing import Callable, Pattern
 
 import voluptuous as vol
 
@@ -19,7 +21,7 @@ CONF_EXCLUDE_ENTITIES = "exclude_entities"
 CONF_ENTITY_GLOBS = "entity_globs"
 
 
-def convert_filter(config: Dict[str, List[str]]) -> Callable[[str], bool]:
+def convert_filter(config: dict[str, list[str]]) -> Callable[[str], bool]:
     """Convert the filter schema into a filter."""
     filt = generate_filter(
         config[CONF_INCLUDE_DOMAINS],
@@ -57,7 +59,7 @@ FILTER_SCHEMA = vol.All(BASE_FILTER_SCHEMA, convert_filter)
 
 
 def convert_include_exclude_filter(
-    config: Dict[str, Dict[str, List[str]]]
+    config: dict[str, dict[str, list[str]]]
 ) -> Callable[[str], bool]:
     """Convert the include exclude filter schema into a filter."""
     include = config[CONF_INCLUDE]
@@ -277,7 +279,7 @@ def _glob_to_re(glob: str) -> Pattern[str]:
     return re.compile(fnmatch.translate(glob))
 
 
-def _test_against_patterns(patterns: List[Pattern[str]], entity_id: str) -> bool:
+def _test_against_patterns(patterns: list[Pattern[str]], entity_id: str) -> bool:
     """Test entity against list of patterns, true if any match."""
     for pattern in patterns:
         if pattern.match(entity_id):
@@ -289,12 +291,12 @@ def _test_against_patterns(patterns: List[Pattern[str]], entity_id: str) -> bool
 # It's safe since we don't modify it. And None causes typing warnings
 # pylint: disable=dangerous-default-value
 def generate_filter(
-    include_domains: List[str],
-    include_entities: List[str],
-    exclude_domains: List[str],
-    exclude_entities: List[str],
-    include_entity_globs: List[str] = [],
-    exclude_entity_globs: List[str] = [],
+    include_domains: list[str],
+    include_entities: list[str],
+    exclude_domains: list[str],
+    exclude_entities: list[str],
+    include_entity_globs: list[str] = [],
+    exclude_entity_globs: list[str] = [],
 ) -> Callable[[str], bool]:
     """Return a function that will filter entities based on the args."""
     include_d = set(include_domains)

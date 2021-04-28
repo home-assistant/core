@@ -25,9 +25,13 @@
         },
         "step": {
             "entity_config": {
+                "description": "Optionen f\u00fcr `{entity_id}` konfigurieren",
                 "title": "Entit\u00e4t konfigurieren"
             },
             "init": {
+                "data": {
+                    "entity_id": "Konfiguriere eine bestimmte Entit\u00e4t."
+                },
                 "title": "MyLink-Optionen konfigurieren"
             },
             "target_config": {
@@ -35,5 +39,6 @@
                 "title": "MyLink-Cover konfigurieren"
             }
         }
-    }
+    },
+    "title": ""
 }

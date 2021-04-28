@@ -52,7 +52,7 @@ class BMWLock(BMWConnectedDriveBaseEntity, LockEntity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the lock."""
         vehicle_state = self._vehicle.state
         result = self._attrs.copy()

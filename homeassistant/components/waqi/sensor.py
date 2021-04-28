@@ -7,6 +7,7 @@ import aiohttp
 import voluptuous as vol
 from waqiasync import WaqiClient
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_TEMPERATURE,
@@ -17,7 +18,6 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,7 +93,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(dev, True)
 
 
-class WaqiSensor(Entity):
+class WaqiSensor(SensorEntity):
     """Implementation of a WAQI sensor."""
 
     def __init__(self, client, station):
@@ -151,7 +151,7 @@ class WaqiSensor(Entity):
         return "AQI"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the last update."""
         attrs = {}
 

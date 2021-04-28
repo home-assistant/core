@@ -14,8 +14,8 @@
         "flow_title": "pasarela deCONZ Zigbee ({host})",
         "step": {
             "hassio_confirm": {
-                "description": "\u00bfQuieres configurar Home Assistant para que se conecte al gateway de deCONZ proporcionado por el add-on {addon} de hass.io?",
-                "title": "Add-on deCONZ Zigbee v\u00eda Hass.io"
+                "description": "\u00bfQuieres configurar Home Assistant para que se conecte al gateway de deCONZ proporcionado por el add-on {addon} de Supervisor?",
+                "title": "Add-on deCONZ Zigbee v\u00eda Supervisor"
             },
             "link": {
                 "description": "Desbloquea tu gateway de deCONZ para registrarte con Home Assistant.\n\n1. Dir\u00edgete a deCONZ Settings -> Gateway -> Advanced\n2. Pulsa el bot\u00f3n \"Authenticate app\"",

@@ -17,7 +17,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
-from tests.components.light.conftest import mock_light_profiles  # noqa
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
 @pytest.fixture

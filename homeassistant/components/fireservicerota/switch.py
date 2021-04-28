@@ -73,7 +73,7 @@ class ResponseSwitch(SwitchEntity):
         return self._client.on_duty
 
     @property
-    def device_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> object:
         """Return available attributes for switch."""
         attr = {}
         if not self._state_attributes:

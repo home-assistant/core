@@ -265,7 +265,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         self._remove_dispatcher = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device-specific attributes."""
         squeezebox_attr = {
             attr: getattr(self, attr)

@@ -903,7 +903,7 @@ async def test_dst(hass):
 
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
-        state.attributes["after"] == "2019-03-31T03:30:00+02:00"
-        state.attributes["before"] == "2019-03-31T03:40:00+02:00"
-        state.attributes["next_update"] == "2019-03-31T03:30:00+02:00"
+        assert state.attributes["after"] == "2019-03-31T03:30:00+02:00"
+        assert state.attributes["before"] == "2019-03-31T03:40:00+02:00"
+        assert state.attributes["next_update"] == "2019-03-31T03:30:00+02:00"
         assert state.state == STATE_OFF

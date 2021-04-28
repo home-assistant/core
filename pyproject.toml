@@ -22,10 +22,11 @@ ignore = [
 ]
 # Use a conservative default here; 2 should speed up most setups and not hurt
 # any too bad. Override on command line as appropriate.
-# Disabled for now: https://github.com/PyCQA/pylint/issues/3584
-#jobs = 2
+jobs = 2
+init-hook='from pylint.config.find_default_config_files import find_default_config_files; from pathlib import Path; import sys; sys.path.append(str(Path(Path(list(find_default_config_files())[0]).parent, "pylint/plugins")))'
 load-plugins = [
     "pylint_strict_informational",
+    "hass_logger"
 ]
 persistent = false
 extension-pkg-whitelist = [
@@ -34,6 +35,7 @@ extension-pkg-whitelist = [
 ]
 
 [tool.pylint.BASIC]
+class-const-naming-style = "any"
 good-names = [
     "_",
     "ev",

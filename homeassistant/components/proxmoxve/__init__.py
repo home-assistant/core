@@ -185,12 +185,12 @@ async def async_setup(hass: HomeAssistant, config: dict):
     hass.data[DOMAIN][COORDINATOR] = coordinator
 
     # Fetch initial data
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         await hass.async_create_task(
             hass.helpers.discovery.async_load_platform(
-                component, DOMAIN, {"config": config}, config
+                platform, DOMAIN, {"config": config}, config
             )
         )
 

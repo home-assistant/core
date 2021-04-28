@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nama Sensor"
+                },
+                "description": "Ingin memulai penyiapan?",
+                "title": "Alamat IP Lokal"
+            }
+        }
+    },
+    "title": "Alamat IP Lokal"
+}

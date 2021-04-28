@@ -46,7 +46,7 @@ INSTANCE_SCHEMA = vol.All(
     ),
 )
 
-has_unique_values = vol.Schema(vol.Unique())  # pylint: disable=invalid-name
+has_unique_values = vol.Schema(vol.Unique())
 # because we want a handy alias
 
 
@@ -148,9 +148,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
     data[config_entry.entry_id] = api
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     if not hass.services.has_service(DOMAIN, SERVICE_API_CALL):
@@ -166,8 +166,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

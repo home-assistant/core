@@ -3,7 +3,7 @@
   "name": "deCONZ",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/deconz",
-  "requirements": ["pydeconz==77"],
+  "requirements": ["pydeconz==78"],
   "ssdp": [
     {
       "manufacturer": "Royal Philips Electronics"

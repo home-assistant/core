@@ -146,4 +146,5 @@ async def base_config_test(
         None,
         method_discovery=method_discovery,
         check_config_only=True,
+        config_modbus=config_modbus,
     )

@@ -3,16 +3,20 @@ import asyncio
 from functools import partial
 import logging
 
-from miio import AirConditioningCompanionV3  # pylint: disable=import-error
-from miio import ChuangmiPlug, DeviceException, PowerStrip
-from miio.powerstrip import PowerMode  # pylint: disable=import-error
+from miio import AirConditioningCompanionV3, ChuangmiPlug, DeviceException, PowerStrip
+from miio.powerstrip import PowerMode
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    DEVICE_CLASS_SWITCH,
+    PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
+    ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_NAME,
     CONF_TOKEN,
@@ -25,12 +29,14 @@ from .const import (
     CONF_GATEWAY,
     CONF_MODEL,
     DOMAIN,
+    KEY_COORDINATOR,
     SERVICE_SET_POWER_MODE,
     SERVICE_SET_POWER_PRICE,
     SERVICE_SET_WIFI_LED_OFF,
     SERVICE_SET_WIFI_LED_ON,
 )
 from .device import XiaomiMiioEntity
+from .gateway import XiaomiGatewayDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +45,13 @@ DATA_KEY = "switch.xiaomi_miio"
 
 MODEL_POWER_STRIP_V2 = "zimi.powerstrip.v2"
 MODEL_PLUG_V3 = "chuangmi.plug.v3"
+
+KEY_CHANNEL = "channel"
+GATEWAY_SWITCH_VARS = {
+    "status_ch0": {KEY_CHANNEL: 0},
+    "status_ch1": {KEY_CHANNEL: 1},
+    "status_ch2": {KEY_CHANNEL: 2},
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -64,7 +77,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 ATTR_POWER = "power"
-ATTR_TEMPERATURE = "temperature"
 ATTR_LOAD_POWER = "load_power"
 ATTR_MODEL = "model"
 ATTR_POWER_MODE = "power_mode"
@@ -115,7 +127,7 @@ SERVICE_TO_METHOD = {
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Import Miio configuration from YAML."""
     _LOGGER.warning(
-        "Loading Xiaomi Miio Switch via platform setup is deprecated. Please remove it from your configuration."
+        "Loading Xiaomi Miio Switch via platform setup is deprecated; Please remove it from your configuration"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -135,6 +147,25 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     name = config_entry.title
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
+
+    if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
+        gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
+        # Gateway sub devices
+        sub_devices = gateway.devices
+        coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
+        for sub_device in sub_devices.values():
+            if sub_device.device_type != "Switch":
+                continue
+            switch_variables = set(sub_device.status) & set(GATEWAY_SWITCH_VARS)
+            if switch_variables:
+                entities.extend(
+                    [
+                        XiaomiGatewaySwitch(
+                            coordinator, sub_device, config_entry, variable
+                        )
+                        for variable in switch_variables
+                    ]
+                )
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE or (
         config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY
@@ -228,6 +259,40 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, update_before_add=True)
 
 
+class XiaomiGatewaySwitch(XiaomiGatewayDevice, SwitchEntity):
+    """Representation of a XiaomiGatewaySwitch."""
+
+    def __init__(self, coordinator, sub_device, entry, variable):
+        """Initialize the XiaomiSensor."""
+        super().__init__(coordinator, sub_device, entry)
+        self._channel = GATEWAY_SWITCH_VARS[variable][KEY_CHANNEL]
+        self._data_key = f"status_ch{self._channel}"
+        self._unique_id = f"{sub_device.sid}-ch{self._channel}"
+        self._name = f"{sub_device.name} ch{self._channel} ({sub_device.sid})"
+
+    @property
+    def device_class(self):
+        """Return the device class of this entity."""
+        return DEVICE_CLASS_SWITCH
+
+    @property
+    def is_on(self):
+        """Return true if switch is on."""
+        return self._sub_device.status[self._data_key] == "on"
+
+    async def async_turn_on(self, **kwargs):
+        """Turn the switch on."""
+        await self.hass.async_add_executor_job(self._sub_device.on, self._channel)
+
+    async def async_turn_off(self, **kwargs):
+        """Turn the switch off."""
+        await self.hass.async_add_executor_job(self._sub_device.off, self._channel)
+
+    async def async_toggle(self, **kwargs):
+        """Toggle the switch."""
+        await self.hass.async_add_executor_job(self._sub_device.toggle, self._channel)
+
+
 class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
     """Representation of a Xiaomi Plug Generic."""
 
@@ -253,7 +318,7 @@ class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._state_attrs
 

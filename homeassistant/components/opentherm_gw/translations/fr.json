@@ -21,7 +21,9 @@
             "init": {
                 "data": {
                     "floor_temperature": "Temp\u00e9rature du sol",
-                    "precision": "Pr\u00e9cision"
+                    "precision": "Pr\u00e9cision",
+                    "read_precision": "Pr\u00e9cision de lecture",
+                    "set_precision": "D\u00e9finir la pr\u00e9cision"
                 },
                 "description": "Options pour la passerelle OpenTherm"
             }

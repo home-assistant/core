@@ -1,5 +1,5 @@
 """Support for HomematicIP Cloud cover devices."""
-from typing import Optional
+from __future__ import annotations
 
 from homematicip.aio.device import (
     AsyncBlindModule,
@@ -95,7 +95,7 @@ class HomematicipBlindModule(HomematicipGenericEntity, CoverEntity):
         )
 
     @property
-    def is_closed(self) -> Optional[bool]:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._device.primaryShadingLevel is not None:
             return self._device.primaryShadingLevel == HMIP_COVER_CLOSED
@@ -168,7 +168,7 @@ class HomematicipMultiCoverShutter(HomematicipGenericEntity, CoverEntity):
         await self._device.set_shutter_level(level, self._channel)
 
     @property
-    def is_closed(self) -> Optional[bool]:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._device.functionalChannels[self._channel].shutterLevel is not None:
             return (
@@ -265,7 +265,7 @@ class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
         return door_state_to_position.get(self._device.doorState)
 
     @property
-    def is_closed(self) -> Optional[bool]:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         return self._device.doorState == DoorState.CLOSED
 
@@ -305,7 +305,7 @@ class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
         return None
 
     @property
-    def is_closed(self) -> Optional[bool]:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._device.shutterLevel is not None:
             return self._device.shutterLevel == HMIP_COVER_CLOSED

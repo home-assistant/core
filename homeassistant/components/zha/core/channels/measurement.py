@@ -74,3 +74,31 @@ class TemperatureMeasurement(ZigbeeChannel):
             "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
         }
     ]
+
+
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+    measurement.CarbonMonoxideConcentration.cluster_id
+)
+class CarbonMonoxideConcentration(ZigbeeChannel):
+    """Carbon Monoxide measurement channel."""
+
+    REPORT_CONFIG = [
+        {
+            "attr": "measured_value",
+            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
+        }
+    ]
+
+
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+    measurement.CarbonDioxideConcentration.cluster_id
+)
+class CarbonDioxideConcentration(ZigbeeChannel):
+    """Carbon Dioxide measurement channel."""
+
+    REPORT_CONFIG = [
+        {
+            "attr": "measured_value",
+            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
+        }
+    ]

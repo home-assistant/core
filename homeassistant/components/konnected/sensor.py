@@ -1,4 +1,5 @@
 """Support for DHT and DS18B20 sensors attached to a Konnected device."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_NAME,
@@ -12,7 +13,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as KONNECTED_DOMAIN, SIGNAL_DS18B20_NEW
 
@@ -70,7 +70,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(hass, SIGNAL_DS18B20_NEW, async_add_ds18b20)
 
 
-class KonnectedSensor(Entity):
+class KonnectedSensor(SensorEntity):
     """Represents a Konnected DHT Sensor."""
 
     def __init__(self, device_id, data, sensor_type, addr=None, initial_state=None):

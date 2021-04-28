@@ -1,7 +1,9 @@
 """Tests for Vizio config flow."""
+from __future__ import annotations
+
 from contextlib import asynccontextmanager
 from datetime import timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 from unittest.mock import call, patch
 
 import pytest
@@ -87,7 +89,7 @@ async def _add_config_entry_to_hass(
     await hass.async_block_till_done()
 
 
-def _get_ha_power_state(vizio_power_state: Optional[bool]) -> str:
+def _get_ha_power_state(vizio_power_state: bool | None) -> str:
     """Return HA power state given Vizio power state."""
     if vizio_power_state:
         return STATE_ON
@@ -98,7 +100,7 @@ def _get_ha_power_state(vizio_power_state: Optional[bool]) -> str:
     return STATE_UNAVAILABLE
 
 
-def _assert_sources_and_volume(attr: Dict[str, Any], vizio_device_class: str) -> None:
+def _assert_sources_and_volume(attr: dict[str, Any], vizio_device_class: str) -> None:
     """Assert source list, source, and volume level based on attr dict and device class."""
     assert attr["source_list"] == INPUT_LIST
     assert attr["source"] == CURRENT_INPUT
@@ -111,7 +113,7 @@ def _assert_sources_and_volume(attr: Dict[str, Any], vizio_device_class: str) ->
 
 def _get_attr_and_assert_base_attr(
     hass: HomeAssistantType, device_class: str, power_state: str
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Return entity attributes  after asserting name, device class, and power state."""
     attr = hass.states.get(ENTITY_ID).attributes
     assert attr["friendly_name"] == NAME
@@ -123,7 +125,7 @@ def _get_attr_and_assert_base_attr(
 
 @asynccontextmanager
 async def _cm_for_test_setup_without_apps(
-    all_settings: Dict[str, Any], vizio_power_state: Optional[bool]
+    all_settings: dict[str, Any], vizio_power_state: bool | None
 ) -> None:
     """Context manager to setup test for Vizio devices without including app specific patches."""
     with patch(
@@ -140,7 +142,7 @@ async def _cm_for_test_setup_without_apps(
 
 
 async def _test_setup_tv(
-    hass: HomeAssistantType, vizio_power_state: Optional[bool]
+    hass: HomeAssistantType, vizio_power_state: bool | None
 ) -> None:
     """Test Vizio TV entity setup."""
     ha_power_state = _get_ha_power_state(vizio_power_state)
@@ -164,7 +166,7 @@ async def _test_setup_tv(
 
 
 async def _test_setup_speaker(
-    hass: HomeAssistantType, vizio_power_state: Optional[bool]
+    hass: HomeAssistantType, vizio_power_state: bool | None
 ) -> None:
     """Test Vizio Speaker entity setup."""
     ha_power_state = _get_ha_power_state(vizio_power_state)
@@ -201,7 +203,7 @@ async def _test_setup_speaker(
 
 @asynccontextmanager
 async def _cm_for_test_setup_tv_with_apps(
-    hass: HomeAssistantType, device_config: Dict[str, Any], app_config: Dict[str, Any]
+    hass: HomeAssistantType, device_config: dict[str, Any], app_config: dict[str, Any]
 ) -> None:
     """Context manager to setup test for Vizio TV with support for apps."""
     config_entry = MockConfigEntry(
@@ -229,7 +231,7 @@ async def _cm_for_test_setup_tv_with_apps(
 
 
 def _assert_source_list_with_apps(
-    list_to_test: List[str], attr: Dict[str, Any]
+    list_to_test: list[str], attr: dict[str, Any]
 ) -> None:
     """Assert source list matches list_to_test after removing INPUT_APPS from list."""
     for app_to_remove in INPUT_APPS:
@@ -244,7 +246,7 @@ async def _test_service(
     domain: str,
     vizio_func_name: str,
     ha_service_name: str,
-    additional_service_data: Optional[Dict[str, Any]],
+    additional_service_data: dict[str, Any] | None,
     *args,
     **kwargs,
 ) -> None:
@@ -460,8 +462,8 @@ async def test_options_update(
 
 async def _test_update_availability_switch(
     hass: HomeAssistantType,
-    initial_power_state: Optional[bool],
-    final_power_state: Optional[bool],
+    initial_power_state: bool | None,
+    final_power_state: bool | None,
     caplog: pytest.fixture,
 ) -> None:
     now = dt_util.utcnow()

@@ -6,7 +6,7 @@ from miio import DeviceException, gateway
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import ATTR_AVAILABLE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,3 +89,11 @@ class XiaomiGatewayDevice(CoordinatorEntity, Entity):
             "model": self._sub_device.model,
             "sw_version": self._sub_device.firmware_version,
         }
+
+    @property
+    def available(self):
+        """Return if entity is available."""
+        if self.coordinator.data is None:
+            return False
+
+        return self.coordinator.data[self._sub_device.sid][ATTR_AVAILABLE]

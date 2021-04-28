@@ -1,4 +1,6 @@
 """Script to check the configuration file."""
+from __future__ import annotations
+
 import argparse
 import asyncio
 from collections import OrderedDict
@@ -6,29 +8,29 @@ from collections.abc import Mapping, Sequence
 from glob import glob
 import logging
 import os
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable
 from unittest.mock import patch
 
-from homeassistant import bootstrap, core
+from homeassistant import core
 from homeassistant.config import get_default_config_dir
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.check_config import async_check_ha_config_file
+from homeassistant.util.yaml import Secrets
 import homeassistant.util.yaml.loader as yaml_loader
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-REQUIREMENTS = ("colorlog==4.7.2",)
+REQUIREMENTS = ("colorlog==4.8.0",)
 
 _LOGGER = logging.getLogger(__name__)
 # pylint: disable=protected-access
-MOCKS: Dict[str, Tuple[str, Callable]] = {
+MOCKS: dict[str, tuple[str, Callable]] = {
     "load": ("homeassistant.util.yaml.loader.load_yaml", yaml_loader.load_yaml),
     "load*": ("homeassistant.config.load_yaml", yaml_loader.load_yaml),
     "secrets": ("homeassistant.util.yaml.loader.secret_yaml", yaml_loader.secret_yaml),
 }
-SILENCE = ("homeassistant.scripts.check_config.yaml_loader.clear_secret_cache",)
 
-PATCHES: Dict[str, Any] = {}
+PATCHES: dict[str, Any] = {}
 
 C_HEAD = "bold"
 ERROR_STR = "General Errors"
@@ -48,7 +50,7 @@ def color(the_color, *args, reset=None):
         raise ValueError(f"Invalid color {k!s} in {the_color}") from k
 
 
-def run(script_args: List) -> int:
+def run(script_args: list) -> int:
     """Handle check config commandline script."""
     parser = argparse.ArgumentParser(description="Check Home Assistant configuration.")
     parser.add_argument("--script", choices=["check_config"])
@@ -83,7 +85,7 @@ def run(script_args: List) -> int:
 
     res = check(config_dir, args.secrets)
 
-    domain_info: List[str] = []
+    domain_info: list[str] = []
     if args.info:
         domain_info = args.info.split(",")
 
@@ -123,7 +125,7 @@ def run(script_args: List) -> int:
                 dump_dict(res["components"].get(domain))
 
     if args.secrets:
-        flatsecret: Dict[str, str] = {}
+        flatsecret: dict[str, str] = {}
 
         for sfn, sdict in res["secret_cache"].items():
             sss = []
@@ -149,19 +151,19 @@ def run(script_args: List) -> int:
 def check(config_dir, secrets=False):
     """Perform a check by mocking hass load functions."""
     logging.getLogger("homeassistant.loader").setLevel(logging.CRITICAL)
-    res: Dict[str, Any] = {
+    res: dict[str, Any] = {
         "yaml_files": OrderedDict(),  # yaml_files loaded
         "secrets": OrderedDict(),  # secret cache and secrets loaded
         "except": OrderedDict(),  # exceptions raised (with config)
         #'components' is a HomeAssistantConfig  # noqa: E265
-        "secret_cache": None,
+        "secret_cache": {},
     }
 
     # pylint: disable=possibly-unused-variable
-    def mock_load(filename):
+    def mock_load(filename, secrets=None):
         """Mock hass.util.load_yaml to save config file names."""
         res["yaml_files"][filename] = True
-        return MOCKS["load"][1](filename)
+        return MOCKS["load"][1](filename, secrets)
 
     # pylint: disable=possibly-unused-variable
     def mock_secrets(ldr, node):
@@ -172,10 +174,6 @@ def check(config_dir, secrets=False):
             val = None
         res["secrets"][node.value] = val
         return val
-
-    # Patches to skip functions
-    for sil in SILENCE:
-        PATCHES[sil] = patch(sil)
 
     # Patches with local mock functions
     for key, val in MOCKS.items():
@@ -192,11 +190,19 @@ def check(config_dir, secrets=False):
 
     if secrets:
         # Ensure !secrets point to the patched function
-        yaml_loader.yaml.SafeLoader.add_constructor("!secret", yaml_loader.secret_yaml)
+        yaml_loader.SafeLineLoader.add_constructor("!secret", yaml_loader.secret_yaml)
+
+    def secrets_proxy(*args):
+        secrets = Secrets(*args)
+        res["secret_cache"] = secrets._cache
+        return secrets
 
     try:
-        res["components"] = asyncio.run(async_check_config(config_dir))
-        res["secret_cache"] = OrderedDict(yaml_loader.__SECRET_CACHE)
+        with patch.object(yaml_loader, "Secrets", secrets_proxy):
+            res["components"] = asyncio.run(async_check_config(config_dir))
+        res["secret_cache"] = {
+            str(key): val for key, val in res["secret_cache"].items()
+        }
         for err in res["components"].errors:
             domain = err.domain or ERROR_STR
             res["except"].setdefault(domain, []).append(err.message)
@@ -212,10 +218,9 @@ def check(config_dir, secrets=False):
             pat.stop()
         if secrets:
             # Ensure !secrets point to the original function
-            yaml_loader.yaml.SafeLoader.add_constructor(
+            yaml_loader.SafeLineLoader.add_constructor(
                 "!secret", yaml_loader.secret_yaml
             )
-        bootstrap.clear_secret_cache()
 
     return res
 

@@ -1,5 +1,5 @@
 """Provides device conditions for sensors."""
-from typing import Dict, List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -14,6 +14,8 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_TYPE,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
@@ -41,6 +43,8 @@ from . import DOMAIN
 DEVICE_CLASS_NONE = "none"
 
 CONF_IS_BATTERY_LEVEL = "is_battery_level"
+CONF_IS_CO = "is_carbon_monoxide"
+CONF_IS_CO2 = "is_carbon_dioxide"
 CONF_IS_CURRENT = "is_current"
 CONF_IS_ENERGY = "is_energy"
 CONF_IS_HUMIDITY = "is_humidity"
@@ -56,6 +60,8 @@ CONF_IS_VALUE = "is_value"
 
 ENTITY_CONDITIONS = {
     DEVICE_CLASS_BATTERY: [{CONF_TYPE: CONF_IS_BATTERY_LEVEL}],
+    DEVICE_CLASS_CO: [{CONF_TYPE: CONF_IS_CO}],
+    DEVICE_CLASS_CO2: [{CONF_TYPE: CONF_IS_CO2}],
     DEVICE_CLASS_CURRENT: [{CONF_TYPE: CONF_IS_CURRENT}],
     DEVICE_CLASS_ENERGY: [{CONF_TYPE: CONF_IS_ENERGY}],
     DEVICE_CLASS_HUMIDITY: [{CONF_TYPE: CONF_IS_HUMIDITY}],
@@ -77,6 +83,8 @@ CONDITION_SCHEMA = vol.All(
             vol.Required(CONF_TYPE): vol.In(
                 [
                     CONF_IS_BATTERY_LEVEL,
+                    CONF_IS_CO,
+                    CONF_IS_CO2,
                     CONF_IS_CURRENT,
                     CONF_IS_ENERGY,
                     CONF_IS_HUMIDITY,
@@ -101,9 +109,9 @@ CONDITION_SCHEMA = vol.All(
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> List[Dict[str, str]]:
+) -> list[dict[str, str]]:
     """List device conditions."""
-    conditions: List[Dict[str, str]] = []
+    conditions: list[dict[str, str]] = []
     entity_registry = await async_get_registry(hass)
     entries = [
         entry

@@ -14,8 +14,8 @@
         "flow_title": "Passarel\u00b7la d'enlla\u00e7 deCONZ Zigbee ({host})",
         "step": {
             "hassio_confirm": {
-                "description": "Vols configurar Home Assistant perqu\u00e8 es connecti amb la passarel\u00b7la deCONZ proporcionada pel complement de Hass.io: {addon}?",
-                "title": "Passarel\u00b7la d'enlla\u00e7 deCONZ Zigbee (complement de Hass.io)"
+                "description": "Vols configurar Home Assistant perqu\u00e8 es connecti amb la passarel\u00b7la deCONZ proporcionada pel complement de Hass.io {addon}?",
+                "title": "Passarel\u00b7la d'enlla\u00e7 deCONZ Zigbee via complement de Hass.io"
             },
             "link": {
                 "description": "Desbloqueja la teva passarel\u00b7la d'enlla\u00e7 deCONZ per a registrar-te amb Home Assistant.\n\n1. V\u00e9s a la configuraci\u00f3 del sistema deCONZ -> Passarel\u00b7la -> Avan\u00e7at\n2. Prem el bot\u00f3 \"Autenticar applicaci\u00f3\"",

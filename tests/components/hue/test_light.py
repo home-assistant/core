@@ -7,12 +7,7 @@ import aiohue
 from homeassistant import config_entries
 from homeassistant.components import hue
 from homeassistant.components.hue import light as hue_light
-from homeassistant.helpers.device_registry import (
-    async_get_registry as async_get_device_registry,
-)
-from homeassistant.helpers.entity_registry import (
-    async_get_registry as async_get_entity_registry,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import color
 
 HUE_LIGHT_NS = "homeassistant.components.light.hue."
@@ -937,8 +932,8 @@ async def test_group_features(hass, mock_bridge):
     group_3 = hass.states.get("light.dining_room")
     assert group_3.attributes["supported_features"] == extended_color_feature
 
-    entity_registry = await async_get_entity_registry(hass)
-    device_registry = await async_get_device_registry(hass)
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
 
     entry = entity_registry.async_get("light.hue_lamp_1")
     device_entry = device_registry.async_get(entry.device_id)

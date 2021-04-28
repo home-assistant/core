@@ -1,5 +1,5 @@
 """Light for Shelly."""
-from typing import Optional, Tuple
+from __future__ import annotations
 
 from aioshelly import Block
 
@@ -96,7 +96,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return self.block.output
 
     @property
-    def mode(self) -> Optional[str]:
+    def mode(self) -> str | None:
         """Return the color mode of the light."""
         if self.mode_result:
             return self.mode_result["mode"]
@@ -118,15 +118,16 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         """Brightness of light."""
         if self.mode == "color":
             if self.control_result:
-                brightness = self.control_result["gain"]
+                brightness_pct = self.control_result["gain"]
             else:
-                brightness = self.block.gain
+                brightness_pct = self.block.gain
         else:
             if self.control_result:
-                brightness = self.control_result["brightness"]
+                brightness_pct = self.control_result["brightness"]
             else:
-                brightness = self.block.brightness
-        return int(brightness / 100 * 255)
+                brightness_pct = self.block.brightness
+
+        return round(255 * brightness_pct / 100)
 
     @property
     def white_value(self) -> int:
@@ -138,7 +139,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return int(white)
 
     @property
-    def hs_color(self) -> Tuple[float, float]:
+    def hs_color(self) -> tuple[float, float]:
         """Return the hue and saturation color value of light."""
         if self.mode == "white":
             return color_RGB_to_hs(255, 255, 255)
@@ -154,7 +155,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return color_RGB_to_hs(red, green, blue)
 
     @property
-    def color_temp(self) -> Optional[int]:
+    def color_temp(self) -> int | None:
         """Return the CT color value in mireds."""
         if self.mode == "color":
             return None
@@ -188,11 +189,11 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         set_mode = None
         params = {"turn": "on"}
         if ATTR_BRIGHTNESS in kwargs:
-            tmp_brightness = int(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
+            brightness_pct = int(100 * (kwargs[ATTR_BRIGHTNESS] + 1) / 255)
             if hasattr(self.block, "gain"):
-                params["gain"] = tmp_brightness
+                params["gain"] = brightness_pct
             if hasattr(self.block, "brightness"):
-                params["brightness"] = tmp_brightness
+                params["brightness"] = brightness_pct
         if ATTR_COLOR_TEMP in kwargs:
             color_temp = color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
             color_temp = min(self._max_kelvin, max(self._min_kelvin, color_temp))

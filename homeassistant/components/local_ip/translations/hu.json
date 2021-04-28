@@ -1,10 +1,14 @@
 {
     "config": {
+        "abort": {
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
         "step": {
             "user": {
                 "data": {
                     "name": "\u00c9rz\u00e9kel\u0151 neve"
                 },
+                "description": "El szeretn\u00e9d kezdeni a be\u00e1ll\u00edt\u00e1st?",
                 "title": "Helyi IP c\u00edm"
             }
         }

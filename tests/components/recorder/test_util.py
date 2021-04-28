@@ -88,8 +88,7 @@ def test_validate_or_move_away_sqlite_database_with_integrity_check(
     test_db_file = f"{test_dir}/broken.db"
     dburl = f"{SQLITE_URL_PREFIX}{test_db_file}"
 
-    util.validate_sqlite_database(test_db_file, db_integrity_check) is True
-
+    assert util.validate_sqlite_database(test_db_file, db_integrity_check) is False
     assert os.path.exists(test_db_file) is True
     assert (
         util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is False
@@ -125,8 +124,7 @@ def test_validate_or_move_away_sqlite_database_without_integrity_check(
     test_db_file = f"{test_dir}/broken.db"
     dburl = f"{SQLITE_URL_PREFIX}{test_db_file}"
 
-    util.validate_sqlite_database(test_db_file, db_integrity_check) is True
-
+    assert util.validate_sqlite_database(test_db_file, db_integrity_check) is False
     assert os.path.exists(test_db_file) is True
     assert (
         util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is False

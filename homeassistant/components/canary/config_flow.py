@@ -1,6 +1,8 @@
 """Config flow for Canary."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from canary.api import Api
 from requests import ConnectTimeout, HTTPError
@@ -11,13 +13,17 @@ from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS, DEFAULT_TIMEOUT
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import (
+    CONF_FFMPEG_ARGUMENTS,
+    DEFAULT_FFMPEG_ARGUMENTS,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_input(hass: HomeAssistantType, data: dict) -> Dict[str, Any]:
+def validate_input(hass: HomeAssistantType, data: dict) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -45,14 +51,14 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
         return CanaryOptionsFlowHandler(config_entry)
 
     async def async_step_import(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
+        self, user_input: ConfigType | None = None
+    ) -> dict[str, Any]:
         """Handle a flow initiated by configuration file."""
         return await self.async_step_user(user_input)
 
     async def async_step_user(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
+        self, user_input: ConfigType | None = None
+    ) -> dict[str, Any]:
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -100,7 +106,7 @@ class CanaryOptionsFlowHandler(OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: Optional[ConfigType] = None):
+    async def async_step_init(self, user_input: ConfigType | None = None):
         """Manage Canary options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

@@ -1,9 +1,8 @@
 """Support for Waterfurnace."""
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
+from homeassistant.components.sensor import ENTITY_ID_FORMAT, SensorEntity
 from homeassistant.const import PERCENTAGE, POWER_WATT, TEMP_FAHRENHEIT
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 from . import DOMAIN as WF_DOMAIN, UPDATE_TOPIC
@@ -61,7 +60,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class WaterFurnaceSensor(Entity):
+class WaterFurnaceSensor(SensorEntity):
     """Implementing the Waterfurnace sensor."""
 
     def __init__(self, client, config):

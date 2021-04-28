@@ -1,6 +1,7 @@
 """Support for Locative."""
+from __future__ import annotations
+
 import logging
-from typing import Dict
 
 from aiohttp import web
 import voluptuous as vol
@@ -34,7 +35,7 @@ def _id(value: str) -> str:
     return value.replace("-", "")
 
 
-def _validate_test_mode(obj: Dict) -> Dict:
+def _validate_test_mode(obj: dict) -> dict:
     """Validate that id is provided outside of test mode."""
     if ATTR_ID not in obj and obj[ATTR_TRIGGER] != "test":
         raise vol.Invalid("Location id not specified")

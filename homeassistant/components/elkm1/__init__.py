@@ -52,7 +52,7 @@ SYNC_TIMEOUT = 120
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_DOMAINS = [
+PLATFORMS = [
     "alarm_control_panel",
     "climate",
     "light",
@@ -262,9 +262,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         "keypads": {},
     }
 
-    for component in SUPPORTED_DOMAINS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -289,8 +289,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in SUPPORTED_DOMAINS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -429,7 +429,7 @@ class ElkEntity(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the default attributes of the element."""
         return {**self._element.as_dict(), **self.initial_attrs()}
 

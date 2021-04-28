@@ -9,7 +9,7 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby po\u0142\u0105czy\u0142 si\u0119 z AdGuard Home przez dodatek Hass.io {addon}?",
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby po\u0142\u0105czy\u0142 si\u0119 z AdGuard Home przez dodatek Hass.io: {addon}?",
                 "title": "AdGuard Home przez dodatek Hass.io"
             },
             "user": {

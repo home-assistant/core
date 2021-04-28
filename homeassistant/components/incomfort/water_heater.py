@@ -1,7 +1,9 @@
 """Support for an Intergas boiler via an InComfort/Intouch Lan2RF gateway."""
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from aiohttp import ClientResponseError
 
@@ -50,7 +52,7 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
         return "mdi:thermometer-lines"
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {k: v for k, v in self._heater.status.items() if k in HEATER_ATTRS}
 

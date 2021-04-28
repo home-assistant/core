@@ -10,7 +10,7 @@
         "step": {
             "hassio_confirm": {
                 "description": "Kas soovid seadistada Home Assistant-i \u00fchenduse AdGuard Home'iga mida pakub Hass.io lisandmoodul: {addon} ?",
-                "title": "AdGuard Home Hass.io pistikprogrammi kaudu"
+                "title": "AdGuard Home Hass.io lisandmooduli abil"
             },
             "user": {
                 "data": {

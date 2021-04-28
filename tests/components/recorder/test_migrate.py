@@ -8,7 +8,8 @@ from sqlalchemy.exc import InternalError, OperationalError, ProgrammingError
 from sqlalchemy.pool import StaticPool
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.recorder import const, migration, models
+from homeassistant.components.recorder import RecorderRuns, const, migration, models
+import homeassistant.util.dt as dt_util
 
 from tests.components.recorder import models_original
 
@@ -51,8 +52,16 @@ async def test_schema_migrate(hass):
     throwing exceptions. Maintaining a set of assertions based on schema
     inspection could quickly become quite cumbersome.
     """
+
+    def _mock_setup_run(self):
+        self.run_info = RecorderRuns(
+            start=self.recording_start, created=dt_util.utcnow()
+        )
+
     with patch("sqlalchemy.create_engine", new=create_engine_test), patch(
-        "homeassistant.components.recorder.Recorder._setup_run"
+        "homeassistant.components.recorder.Recorder._setup_run",
+        side_effect=_mock_setup_run,
+        autospec=True,
     ) as setup_run:
         await async_setup_component(
             hass, "recorder", {"recorder": {"db_url": "sqlite://"}}

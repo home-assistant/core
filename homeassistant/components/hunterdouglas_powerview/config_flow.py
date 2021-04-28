@@ -10,8 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import async_get_device_info
-from .const import DEVICE_NAME, DEVICE_SERIAL_NUMBER, HUB_EXCEPTIONS
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DEVICE_NAME, DEVICE_SERIAL_NUMBER, DOMAIN, HUB_EXCEPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 

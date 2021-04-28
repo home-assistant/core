@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(minutes=1)
+SCAN_INTERVAL = timedelta(minutes=2)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -230,16 +230,25 @@ class SuplaMqttSoftBridge(Entity):
         self._supla_mqtt_client.loop_start()
 
     async def async_update(self):
-        """Reconnect with SUPLA MQTT to receive the discovery and status info."""
+        """Sensor update."""
         self._sensor_update_counter = self._sensor_update_counter + 1
-        if self._sensor_update_counter == 1:
+        # Reconnect with SUPLA MQTT on start, to receive the discovery and status info.
+        if self._sensor_update_counter < 3:
             self.ais_reconnect()
-        elif (
-            self._supla_mqtt_client.is_connected()
-            and self._sensor_update_counter > 1
-            and self._supla_received < 2
-        ):
+            return
+        # Reconnect with SUPLA MQTT if not connected
+        if not self._supla_mqtt_client.is_connected():
+            _LOGGER.warning("No connection to SUPLA MQTT - trying to reconnect.")
             self.ais_reconnect()
-        elif self._sensor_update_counter % 60 == 0:
-            self._sensor_update_counter = 0
-            self.ais_reconnect()
+            return
+        # discovery if connected
+        if self._sensor_update_counter % 30 == 0:
+            publish_properties = properties.Properties(PacketTypes.PUBLISH)
+            publish_properties.UserProperty = [("source", "AIS")]
+            self._supla_mqtt_client.publish(
+                "supla/" + self._username + "/refresh_request",
+                payload="ALL",
+                qos=self._qos,
+                retain=False,
+                properties=publish_properties,
+            )

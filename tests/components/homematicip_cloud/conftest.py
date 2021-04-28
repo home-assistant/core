@@ -25,7 +25,7 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from .helper import AUTH_TOKEN, HAPID, HAPPIN, HomeFactory
 
 from tests.common import MockConfigEntry
-from tests.components.light.conftest import mock_light_profiles  # noqa
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
 @pytest.fixture(name="mock_connection")

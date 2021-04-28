@@ -1,5 +1,6 @@
 """Support for TPLink HS100/HS110/HS200 smart switch."""
 import asyncio
+from contextlib import suppress
 import logging
 import time
 
@@ -100,7 +101,7 @@ class SmartPlugSwitch(SwitchEntity):
         self.smartplug.turn_off()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._emeter_params
 
@@ -151,13 +152,10 @@ class SmartPlugSwitch(SwitchEntity):
                 )
 
                 emeter_statics = self.smartplug.get_emeter_daily()
-                try:
+                with suppress(KeyError):  # Device returned no daily history
                     self._emeter_params[ATTR_TODAY_ENERGY_KWH] = "{:.3f}".format(
                         emeter_statics[int(time.strftime("%e"))]
                     )
-                except KeyError:
-                    # Device returned no daily history
-                    pass
             return True
         except (SmartDeviceException, OSError) as ex:
             if update_attempt == 0:

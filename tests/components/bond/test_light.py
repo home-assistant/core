@@ -16,6 +16,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
@@ -107,7 +108,7 @@ async def test_fan_entity_registry(hass: core.HomeAssistant):
         bond_device_id="test-device-id",
     )
 
-    registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    registry: EntityRegistry = er.async_get(hass)
     entity = registry.entities["light.fan_name"]
     assert entity.unique_id == "test-hub-id_test-device-id"
 
@@ -122,7 +123,7 @@ async def test_fan_up_light_entity_registry(hass: core.HomeAssistant):
         bond_device_id="test-device-id",
     )
 
-    registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    registry: EntityRegistry = er.async_get(hass)
     entity = registry.entities["light.fan_name_up_light"]
     assert entity.unique_id == "test-hub-id_test-device-id_up_light"
 
@@ -137,7 +138,7 @@ async def test_fan_down_light_entity_registry(hass: core.HomeAssistant):
         bond_device_id="test-device-id",
     )
 
-    registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    registry: EntityRegistry = er.async_get(hass)
     entity = registry.entities["light.fan_name_down_light"]
     assert entity.unique_id == "test-hub-id_test-device-id_down_light"
 
@@ -152,7 +153,7 @@ async def test_fireplace_entity_registry(hass: core.HomeAssistant):
         bond_device_id="test-device-id",
     )
 
-    registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    registry: EntityRegistry = er.async_get(hass)
     entity = registry.entities["light.fireplace_name"]
     assert entity.unique_id == "test-hub-id_test-device-id"
 
@@ -167,7 +168,7 @@ async def test_fireplace_with_light_entity_registry(hass: core.HomeAssistant):
         bond_device_id="test-device-id",
     )
 
-    registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    registry: EntityRegistry = er.async_get(hass)
     entity_flame = registry.entities["light.fireplace_name"]
     assert entity_flame.unique_id == "test-hub-id_test-device-id"
     entity_light = registry.entities["light.fireplace_name_light"]
@@ -184,7 +185,7 @@ async def test_light_entity_registry(hass: core.HomeAssistant):
         bond_device_id="test-device-id",
     )
 
-    registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    registry: EntityRegistry = er.async_get(hass)
     entity = registry.entities["light.light_name"]
     assert entity.unique_id == "test-hub-id_test-device-id"
 

@@ -121,6 +121,8 @@ G_AIS_IMG_PATH = "/data/data/pl.sviete.dom/files/home/AIS/www/img/"
 G_LOG_SETTINGS_INFO_FILE = "/.dom/.ais_log_settings_info"
 G_DB_SETTINGS_INFO_FILE = "/.dom/.ais_db_settings_info"
 
+G_AUTOMATION_CONFIG = None
+
 
 def set_ais_android_id_dom_file_path(path):
     global G_AIS_SECURE_ANDROID_ID_DOM_FILE
@@ -289,6 +291,22 @@ def has_root():
         subprocess.check_output("su -c echo", shell=True)  # nosec
     except Exception as e:
         _LOGGER.info("No access to root")
+        return False
+    return True
+
+
+def has_front_clock():
+    if platform.machine() == "x86_64":
+        return False
+
+    import subprocess
+
+    try:
+        subprocess.check_output(
+            "su -c 'ls /data/local/ais_screen_control'", shell=True  # nosec
+        )
+    except Exception as e:
+        _LOGGER.info("No front clock")
         return False
     return True
 

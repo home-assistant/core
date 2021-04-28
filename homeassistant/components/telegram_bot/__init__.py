@@ -330,7 +330,7 @@ async def async_setup(hass, config):
             attribute_templ = data.get(attribute)
             if attribute_templ:
                 if any(
-                    [isinstance(attribute_templ, vtype) for vtype in [float, int, str]]
+                    isinstance(attribute_templ, vtype) for vtype in [float, int, str]
                 ):
                     data[attribute] = attribute_templ
                 else:

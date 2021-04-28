@@ -6,24 +6,24 @@ from py17track import Client as SeventeenTrackClient
 from py17track.errors import SeventeenTrackError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    ATTR_FRIENDLY_NAME,
     ATTR_LOCATION,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import Throttle, slugify
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DESTINATION_COUNTRY = "destination_country"
-ATTR_FRIENDLY_NAME = "friendly_name"
 ATTR_INFO_TEXT = "info_text"
+ATTR_TIMESTAMP = "timestamp"
 ATTR_ORIGIN_COUNTRY = "origin_country"
 ATTR_PACKAGES = "packages"
 ATTR_PACKAGE_TYPE = "package_type"
@@ -65,9 +65,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Configure the platform and add the sensors."""
 
-    websession = aiohttp_client.async_get_clientsession(hass)
+    session = aiohttp_client.async_get_clientsession(hass)
 
-    client = SeventeenTrackClient(websession)
+    client = SeventeenTrackClient(session=session)
 
     try:
         login_result = await client.profile.login(
@@ -89,11 +89,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         scan_interval,
         config[CONF_SHOW_ARCHIVED],
         config[CONF_SHOW_DELIVERED],
+        str(hass.config.time_zone),
     )
     await data.async_update()
 
 
-class SeventeenTrackSummarySensor(Entity):
+class SeventeenTrackSummarySensor(SensorEntity):
     """Define a summary sensor."""
 
     def __init__(self, data, status, initial_state):
@@ -109,7 +110,7 @@ class SeventeenTrackSummarySensor(Entity):
         return self._state is not None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return self._attrs
 
@@ -151,6 +152,7 @@ class SeventeenTrackSummarySensor(Entity):
                 {
                     ATTR_FRIENDLY_NAME: package.friendly_name,
                     ATTR_INFO_TEXT: package.info_text,
+                    ATTR_TIMESTAMP: package.timestamp,
                     ATTR_STATUS: package.status,
                     ATTR_LOCATION: package.location,
                     ATTR_TRACKING_NUMBER: package.tracking_number,
@@ -163,7 +165,7 @@ class SeventeenTrackSummarySensor(Entity):
         self._state = self._data.summary.get(self._status)
 
 
-class SeventeenTrackPackageSensor(Entity):
+class SeventeenTrackPackageSensor(SensorEntity):
     """Define an individual package sensor."""
 
     def __init__(self, data, package):
@@ -172,6 +174,7 @@ class SeventeenTrackPackageSensor(Entity):
             ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
             ATTR_DESTINATION_COUNTRY: package.destination_country,
             ATTR_INFO_TEXT: package.info_text,
+            ATTR_TIMESTAMP: package.timestamp,
             ATTR_LOCATION: package.location,
             ATTR_ORIGIN_COUNTRY: package.origin_country,
             ATTR_PACKAGE_TYPE: package.package_type,
@@ -190,7 +193,7 @@ class SeventeenTrackPackageSensor(Entity):
         return self._data.packages.get(self._tracking_number) is not None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return self._attrs
 
@@ -237,7 +240,11 @@ class SeventeenTrackPackageSensor(Entity):
             return
 
         self._attrs.update(
-            {ATTR_INFO_TEXT: package.info_text, ATTR_LOCATION: package.location}
+            {
+                ATTR_INFO_TEXT: package.info_text,
+                ATTR_TIMESTAMP: package.timestamp,
+                ATTR_LOCATION: package.location,
+            }
         )
         self._state = package.status
         self._friendly_name = package.friendly_name
@@ -277,7 +284,13 @@ class SeventeenTrackData:
     """Define a data handler for 17track.net."""
 
     def __init__(
-        self, client, async_add_entities, scan_interval, show_archived, show_delivered
+        self,
+        client,
+        async_add_entities,
+        scan_interval,
+        show_archived,
+        show_delivered,
+        timezone,
     ):
         """Initialize."""
         self._async_add_entities = async_add_entities
@@ -287,6 +300,7 @@ class SeventeenTrackData:
         self.account_id = client.profile.account_id
         self.packages = {}
         self.show_delivered = show_delivered
+        self.timezone = timezone
         self.summary = {}
 
         self.async_update = Throttle(self._scan_interval)(self._async_update)
@@ -297,7 +311,7 @@ class SeventeenTrackData:
 
         try:
             packages = await self._client.profile.packages(
-                show_archived=self._show_archived
+                show_archived=self._show_archived, tz=self.timezone
             )
             _LOGGER.debug("New package data received: %s", packages)
 

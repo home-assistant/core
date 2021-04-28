@@ -12,7 +12,7 @@ async def test_switch(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device = MagicMock(spec=pv.VeraSwitch)  # type: pv.VeraSwitch
+    vera_device: pv.VeraSwitch = MagicMock(spec=pv.VeraSwitch)
     vera_device.device_id = 1
     vera_device.vera_device_id = vera_device.device_id
     vera_device.comm_failure = False

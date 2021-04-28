@@ -78,6 +78,7 @@ async def async_attach_trigger(
     attribute = config.get(CONF_ATTRIBUTE)
     job = HassJob(action)
 
+    trigger_id = automation_info.get("trigger_id") if automation_info else None
     _variables = {}
     if automation_info:
         _variables = automation_info.get("variables") or {}
@@ -139,6 +140,7 @@ async def async_attach_trigger(
                         "to_state": to_s,
                         "for": time_delta if not time_delta else period[entity_id],
                         "description": f"numeric state of {entity_id}",
+                        "id": trigger_id,
                     }
                 },
                 to_s.context,

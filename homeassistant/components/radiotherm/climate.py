@@ -181,7 +181,7 @@ class RadioThermostat(ClimateEntity):
         return PRECISION_HALVES
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         return {ATTR_FAN_ACTION: self._fstate}
 
@@ -372,6 +372,6 @@ class RadioThermostat(ClimateEntity):
             self.device.program_mode = PRESET_MODE_TO_CODE[preset_mode]
         else:
             _LOGGER.error(
-                "preset_mode  %s not in PRESET_MODES",
+                "Preset_mode %s not in PRESET_MODES",
                 preset_mode,
             )

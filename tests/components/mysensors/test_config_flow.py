@@ -1,5 +1,6 @@
 """Test the MySensors config flow."""
-from typing import Dict, Optional, Tuple
+from __future__ import annotations
+
 from unittest.mock import patch
 
 import pytest
@@ -349,7 +350,7 @@ async def test_config_invalid(
     hass: HomeAssistantType,
     gateway_type: ConfGatewayType,
     expected_step_id: str,
-    user_input: Dict[str, any],
+    user_input: dict[str, any],
     err_field,
     err_string,
 ):
@@ -420,7 +421,7 @@ async def test_config_invalid(
         },
     ],
 )
-async def test_import(hass: HomeAssistantType, user_input: Dict):
+async def test_import(hass: HomeAssistantType, user_input: dict):
     """Test importing a gateway."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -712,9 +713,9 @@ async def test_import(hass: HomeAssistantType, user_input: Dict):
 )
 async def test_duplicate(
     hass: HomeAssistantType,
-    first_input: Dict,
-    second_input: Dict,
-    expected_result: Optional[Tuple[str, str]],
+    first_input: dict,
+    second_input: dict,
+    expected_result: tuple[str, str] | None,
 ):
     """Test duplicate detection."""
     await setup.async_setup_component(hass, "persistent_notification", {})

@@ -1,6 +1,7 @@
 """Common code for tplink."""
+from __future__ import annotations
+
 import logging
-from typing import List
 
 from pyHS100 import (
     Discover,
@@ -30,7 +31,7 @@ class SmartDevices:
     """Hold different kinds of devices."""
 
     def __init__(
-        self, lights: List[SmartDevice] = None, switches: List[SmartDevice] = None
+        self, lights: list[SmartDevice] = None, switches: list[SmartDevice] = None
     ):
         """Initialize device holder."""
         self._lights = lights or []

@@ -4,6 +4,6 @@
   "name": "Rheem EcoNet Products",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/econet",
-  "requirements": ["pyeconet==0.1.12"],
+  "requirements": ["pyeconet==0.1.13"],
   "codeowners": ["@vangorra", "@w1ll1am23"]
 }

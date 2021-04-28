@@ -1,10 +1,51 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "not_irobot_device": "A felfedezett eszk\u00f6z nem iRobot eszk\u00f6z"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "flow_title": "iRobot {name} ({host})",
         "step": {
+            "init": {
+                "data": {
+                    "host": "Hoszt"
+                },
+                "title": "Automatikus csatlakoz\u00e1s az eszk\u00f6zh\u00f6z"
+            },
+            "link_manual": {
+                "data": {
+                    "password": "Jelsz\u00f3"
+                },
+                "title": "Jelsz\u00f3 megad\u00e1sa"
+            },
+            "manual": {
+                "data": {
+                    "blid": "BLID",
+                    "host": "Hoszt"
+                },
+                "title": "Manu\u00e1lis csatlakoz\u00e1s az eszk\u00f6zh\u00f6z"
+            },
             "user": {
                 "data": {
+                    "blid": "BLID",
+                    "delay": "K\u00e9sleltet\u00e9s",
                     "host": "Hoszt",
                     "password": "Jelsz\u00f3"
+                },
+                "title": "Csatlakoz\u00e1s az eszk\u00f6zh\u00f6z"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Folyamatos",
+                    "delay": "K\u00e9sleltet\u00e9s"
                 }
             }
         }

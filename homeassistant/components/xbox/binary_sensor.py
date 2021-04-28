@@ -1,6 +1,7 @@
 """Xbox friends binary sensors."""
+from __future__ import annotations
+
 from functools import partial
-from typing import Dict, List
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
@@ -44,7 +45,7 @@ class XboxBinarySensorEntity(XboxBaseSensorEntity, BinarySensorEntity):
 @callback
 def async_update_friends(
     coordinator: XboxUpdateCoordinator,
-    current: Dict[str, List[XboxBinarySensorEntity]],
+    current: dict[str, list[XboxBinarySensorEntity]],
     async_add_entities,
 ) -> None:
     """Update friends."""
@@ -73,7 +74,7 @@ def async_update_friends(
 async def async_remove_entities(
     xuid: str,
     coordinator: XboxUpdateCoordinator,
-    current: Dict[str, XboxBinarySensorEntity],
+    current: dict[str, XboxBinarySensorEntity],
 ) -> None:
     """Remove friend sensors from Home Assistant."""
     registry = await async_get_entity_registry(coordinator.hass)

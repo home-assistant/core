@@ -1,8 +1,10 @@
 """Support for climate devices through the SmartThings cloud API."""
+from __future__ import annotations
+
 import asyncio
 from collections.abc import Iterable
 import logging
-from typing import Optional, Sequence
+from typing import Sequence
 
 from pysmartthings import Attribute, Capability
 
@@ -103,7 +105,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
+def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     """Return all capabilities supported if minimum required are present."""
     supported = [
         Capability.air_conditioner_mode,
@@ -274,7 +276,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         return self._device.status.supported_thermostat_fan_modes
 
     @property
-    def hvac_action(self) -> Optional[str]:
+    def hvac_action(self) -> str | None:
         """Return the current running hvac operation if supported."""
         return OPERATING_STATE_TO_ACTION.get(
             self._device.status.thermostat_operating_state
@@ -415,7 +417,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         return self._device.status.temperature
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """
         Return device specific state attributes.
 

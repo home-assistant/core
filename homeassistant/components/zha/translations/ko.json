@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uad6c\uc131\ub9cc \uac00\ub2a5\ud569\ub2c8\ub2e4."
+            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uc778\uc2a4\ud134\uc2a4\ub9cc \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
         },
         "error": {
             "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
@@ -34,8 +34,8 @@
     },
     "device_automation": {
         "action_type": {
-            "squawk": "\ube44\uc0c1",
-            "warn": "\uacbd\uace0"
+            "squawk": "\uc2a4\ucffc\ud06c \ud558\uae30",
+            "warn": "\uacbd\uace0\ud558\uae30"
         },
         "trigger_subtype": {
             "both_buttons": "\ub450 \uac1c",
@@ -63,28 +63,29 @@
         },
         "trigger_type": {
             "device_dropped": "\uae30\uae30\uac00 \ub5a8\uc5b4\uc84c\uc744 \ub54c",
-            "device_flipped": "\"{subtype}\" \uae30\uae30\uac00 \ub4a4\uc9d1\uc5b4\uc9c8 \ub54c",
-            "device_knocked": "\"{subtype}\" \uae30\uae30\uac00 \ub450\ub4dc\ub824\uc9c8 \ub54c",
-            "device_rotated": "\"{subtype}\" \uae30\uae30\uac00 \ud68c\uc804\ub420 \ub54c",
-            "device_shaken": "\uae30\uae30\uac00 \ud754\ub4e4\ub9b4 \ub54c",
-            "device_slid": "\"{subtype}\" \uae30\uae30\uac00 \ubbf8\ub044\ub7ec\uc9c8 \ub54c",
-            "device_tilted": "\uae30\uae30\uac00 \uae30\uc6b8\uc5b4\uc9c8 \ub54c",
-            "remote_button_alt_double_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub450 \ubc88 \ub20c\ub9b4 \ub54c (\ub300\uccb4 \ubaa8\ub4dc)",
-            "remote_button_alt_long_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \uacc4\uc18d \ub20c\ub824\uc9c8 \ub54c (\ub300\uccb4 \ubaa8\ub4dc)",
-            "remote_button_alt_long_release": "\"{subtype}\" \ubc84\ud2bc\uc774 \uae38\uac8c \ub20c\ub838\ub2e4\uac00 \uc190\uc744 \ub5c4 \ub54c (\ub300\uccb4\ubaa8\ub4dc)",
-            "remote_button_alt_quadruple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub124 \ubc88 \ub20c\ub9b4 \ub54c (\ub300\uccb4 \ubaa8\ub4dc)",
-            "remote_button_alt_quintuple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub2e4\uc12f \ubc88 \ub20c\ub9b4 \ub54c (\ub300\uccb4 \ubaa8\ub4dc)",
-            "remote_button_alt_short_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub20c\ub9b4 \ub54c (\ub300\uccb4 \ubaa8\ub4dc)",
-            "remote_button_alt_short_release": "\"{subtype}\" \ubc84\ud2bc\uc5d0\uc11c \uc190\uc744 \ub5c4 \ub54c (\ub300\uccb4 \ubaa8\ub4dc)",
-            "remote_button_alt_triple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \uc138 \ubc88 \ub20c\ub9b4 \ub54c (\ub300\uccb4 \ubaa8\ub4dc)",
-            "remote_button_double_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub450 \ubc88 \ub20c\ub9b4 \ub54c",
-            "remote_button_long_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \uacc4\uc18d \ub20c\ub824\uc9c8 \ub54c",
-            "remote_button_long_release": "\"{subtype}\" \ubc84\ud2bc\uc774 \uae38\uac8c \ub20c\ub838\ub2e4\uac00 \uc190\uc744 \ub5c4 \ub54c",
-            "remote_button_quadruple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub124 \ubc88 \ub20c\ub9b4 \ub54c",
-            "remote_button_quintuple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub2e4\uc12f \ubc88 \ub20c\ub9b4 \ub54c",
-            "remote_button_short_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub20c\ub9b4 \ub54c",
-            "remote_button_short_release": "\"{subtype}\" \ubc84\ud2bc\uc5d0\uc11c \uc190\uc744 \ub5c4 \ub54c",
-            "remote_button_triple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \uc138 \ubc88 \ub20c\ub9b4 \ub54c"
+            "device_flipped": "\"{subtype}\"(\uc73c)\ub85c \uae30\uae30\uac00 \ub4a4\uc9d1\uc5b4\uc84c\uc744 \ub54c",
+            "device_knocked": "\"{subtype}\"(\uc73c)\ub85c \uae30\uae30\uac00 \ub450\ub4dc\ub824\uc84c\uc744 \ub54c",
+            "device_offline": "\uae30\uae30\uac00 \uc624\ud504\ub77c\uc778\uc774 \ub418\uc5c8\uc744 \ub54c",
+            "device_rotated": "\"{subtype}\"(\uc73c)\ub85c \uae30\uae30\uac00 \ud68c\uc804\ub418\uc5c8\uc744 \ub54c",
+            "device_shaken": "\uae30\uae30\uac00 \ud754\ub4e4\ub838\uc744 \ub54c",
+            "device_slid": "\"{subtype}\"(\uc73c)\ub85c \uae30\uae30\uac00 \ubbf8\ub044\ub7ec\uc84c\uc744 \ub54c",
+            "device_tilted": "\uae30\uae30\uac00 \uae30\uc6b8\uc5b4\uc84c\uc744 \ub54c",
+            "remote_button_alt_double_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub450 \ubc88 \ub20c\ub838\uc744 \ub54c (\ub300\uccb4 \ubaa8\ub4dc)",
+            "remote_button_alt_long_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \uacc4\uc18d \ub20c\ub838\uc744 \ub54c (\ub300\uccb4 \ubaa8\ub4dc)",
+            "remote_button_alt_long_release": "\"{subtype}\" \ubc84\ud2bc\uc774 \uae38\uac8c \ub20c\ub838\ub2e4\uac00 \ub5bc\uc600\uc744 \ub54c (\ub300\uccb4\ubaa8\ub4dc)",
+            "remote_button_alt_quadruple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub124 \ubc88 \ub20c\ub838\uc744 \ub54c (\ub300\uccb4 \ubaa8\ub4dc)",
+            "remote_button_alt_quintuple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub2e4\uc12f \ubc88 \ub20c\ub838\uc744 \ub54c (\ub300\uccb4 \ubaa8\ub4dc)",
+            "remote_button_alt_short_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub20c\ub838\uc744 \ub54c (\ub300\uccb4 \ubaa8\ub4dc)",
+            "remote_button_alt_short_release": "\"{subtype}\" \ubc84\ud2bc\uc5d0\uc11c \uc190\uc744 \ub5bc\uc5c8\uc744 \ub54c (\ub300\uccb4 \ubaa8\ub4dc)",
+            "remote_button_alt_triple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \uc138 \ubc88 \ub20c\ub838\uc744 \ub54c (\ub300\uccb4 \ubaa8\ub4dc)",
+            "remote_button_double_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub450 \ubc88 \ub20c\ub838\uc744 \ub54c",
+            "remote_button_long_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \uacc4\uc18d \ub20c\ub838\uc744 \ub54c",
+            "remote_button_long_release": "\"{subtype}\" \ubc84\ud2bc\uc774 \uae38\uac8c \ub20c\ub838\ub2e4\uac00 \ub5bc\uc600\uc744 \ub54c",
+            "remote_button_quadruple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub124 \ubc88 \ub20c\ub838\uc744 \ub54c",
+            "remote_button_quintuple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub2e4\uc12f \ubc88 \ub20c\ub838\uc744 \ub54c",
+            "remote_button_short_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \ub20c\ub838\uc744 \ub54c",
+            "remote_button_short_release": "\"{subtype}\" \ubc84\ud2bc\uc5d0\uc11c \uc190\uc744 \ub5bc\uc5c8\uc744 \ub54c",
+            "remote_button_triple_press": "\"{subtype}\" \ubc84\ud2bc\uc774 \uc138 \ubc88 \ub20c\ub838\uc744 \ub54c"
         }
     }
 }

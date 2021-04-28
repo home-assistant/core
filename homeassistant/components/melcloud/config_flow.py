@@ -1,6 +1,7 @@
 """Config flow for the MELCloud platform."""
+from __future__ import annotations
+
 import asyncio
-from typing import Optional
 
 from aiohttp import ClientError, ClientResponseError
 from async_timeout import timeout
@@ -16,7 +17,7 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -37,8 +38,8 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         username: str,
         *,
-        password: Optional[str] = None,
-        token: Optional[str] = None,
+        password: str | None = None,
+        token: str | None = None,
     ):
         """Create client."""
         if password is None and token is None:

@@ -1,10 +1,10 @@
 """Support for KEBA charging station sensors."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_POWER,
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
 
@@ -62,7 +62,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors)
 
 
-class KebaSensor(Entity):
+class KebaSensor(SensorEntity):
     """The entity class for KEBA charging stations sensors."""
 
     def __init__(self, keba, key, name, entity_type, icon, unit, device_class=None):
@@ -114,7 +114,7 @@ class KebaSensor(Entity):
         return self._unit
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the binary sensor."""
         return self._attributes
 

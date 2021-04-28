@@ -1,5 +1,5 @@
 """Support for Synology DSM binary sensors."""
-from typing import Dict
+from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -71,7 +71,7 @@ class SynoDSMSecurityBinarySensor(SynologyDSMBaseEntity, BinarySensorEntity):
         return bool(self._api.security)
 
     @property
-    def device_state_attributes(self) -> Dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return security checks details."""
         return self._api.security.status_by_check
 

@@ -1,9 +1,10 @@
 """Support for Huawei LTE sensors."""
+from __future__ import annotations
 
 from bisect import bisect
 import logging
 import re
-from typing import Callable, Dict, List, NamedTuple, Optional, Pattern, Tuple, Union
+from typing import Callable, NamedTuple, Pattern
 
 import attr
 
@@ -11,6 +12,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DOMAIN as SENSOR_DOMAIN,
+    SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -45,17 +47,17 @@ _LOGGER = logging.getLogger(__name__)
 class SensorMeta(NamedTuple):
     """Metadata for defining sensors."""
 
-    name: Optional[str] = None
-    device_class: Optional[str] = None
-    icon: Union[str, Callable[[StateType], str], None] = None
-    unit: Optional[str] = None
+    name: str | None = None
+    device_class: str | None = None
+    icon: str | Callable[[StateType], str] | None = None
+    unit: str | None = None
     enabled_default: bool = False
-    include: Optional[Pattern[str]] = None
-    exclude: Optional[Pattern[str]] = None
-    formatter: Optional[Callable[[str], Tuple[StateType, Optional[str]]]] = None
+    include: Pattern[str] | None = None
+    exclude: Pattern[str] | None = None
+    formatter: Callable[[str], tuple[StateType, str | None]] | None = None
 
 
-SENSOR_META: Dict[Union[str, Tuple[str, str]], SensorMeta] = {
+SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     KEY_DEVICE_INFORMATION: SensorMeta(
         include=re.compile(r"^WanIP.*Address$", re.IGNORECASE)
     ),
@@ -329,11 +331,11 @@ SENSOR_META: Dict[Union[str, Tuple[str, str]], SensorMeta] = {
 async def async_setup_entry(
     hass: HomeAssistantType,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up from config entry."""
     router = hass.data[DOMAIN].routers[config_entry.data[CONF_URL]]
-    sensors: List[Entity] = []
+    sensors: list[Entity] = []
     for key in SENSOR_KEYS:
         items = router.data.get(key)
         if not items:
@@ -354,7 +356,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-def format_default(value: StateType) -> Tuple[StateType, Optional[str]]:
+def format_default(value: StateType) -> tuple[StateType, str | None]:
     """Format value."""
     unit = None
     if value is not None:
@@ -372,7 +374,7 @@ def format_default(value: StateType) -> Tuple[StateType, Optional[str]]:
 
 
 @attr.s
-class HuaweiLteSensor(HuaweiLteBaseEntity):
+class HuaweiLteSensor(HuaweiLteBaseEntity, SensorEntity):
     """Huawei LTE sensor entity."""
 
     key: str = attr.ib()
@@ -380,7 +382,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntity):
     meta: SensorMeta = attr.ib()
 
     _state: StateType = attr.ib(init=False, default=STATE_UNKNOWN)
-    _unit: Optional[str] = attr.ib(init=False)
+    _unit: str | None = attr.ib(init=False)
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""
@@ -406,17 +408,17 @@ class HuaweiLteSensor(HuaweiLteBaseEntity):
         return self._state
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return sensor device class."""
         return self.meta.device_class
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return sensor's unit of measurement."""
         return self.meta.unit or self._unit
 
     @property
-    def icon(self) -> Optional[str]:
+    def icon(self) -> str | None:
         """Return icon for sensor."""
         icon = self.meta.icon
         if callable(icon):

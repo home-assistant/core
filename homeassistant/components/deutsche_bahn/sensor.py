@@ -4,10 +4,9 @@ from datetime import timedelta
 import schiene
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_OFFSET
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 CONF_DESTINATION = "to"
@@ -40,7 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([DeutscheBahnSensor(start, destination, offset, only_direct)], True)
 
 
-class DeutscheBahnSensor(Entity):
+class DeutscheBahnSensor(SensorEntity):
     """Implementation of a Deutsche Bahn sensor."""
 
     def __init__(self, start, goal, offset, only_direct):
@@ -65,7 +64,7 @@ class DeutscheBahnSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         connections = self.data.connections[0]
         if len(self.data.connections) > 1:

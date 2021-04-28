@@ -99,7 +99,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         return "alpr"
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {ATTR_PLATES: self.plates, ATTR_VEHICLES: self.vehicles}
 

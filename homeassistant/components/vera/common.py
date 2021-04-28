@@ -1,5 +1,7 @@
 """Common vera code."""
-from typing import DefaultDict, List, NamedTuple, Set
+from __future__ import annotations
+
+from typing import DefaultDict, NamedTuple
 
 import pyvera as pv
 
@@ -15,12 +17,12 @@ class ControllerData(NamedTuple):
     """Controller data."""
 
     controller: pv.VeraController
-    devices: DefaultDict[str, List[pv.VeraDevice]]
-    scenes: List[pv.VeraScene]
+    devices: DefaultDict[str, list[pv.VeraDevice]]
+    scenes: list[pv.VeraScene]
     config_entry: ConfigEntry
 
 
-def get_configured_platforms(controller_data: ControllerData) -> Set[str]:
+def get_configured_platforms(controller_data: ControllerData) -> set[str]:
     """Get configured platforms for a controller."""
     platforms = []
     for platform in controller_data.devices:

@@ -1,7 +1,8 @@
 """Support for Keenetic routers as device tracker."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import List, Optional, Set
 
 from ndms2_client import Device
 import voluptuous as vol
@@ -57,8 +58,8 @@ async def async_get_scanner(hass: HomeAssistant, config):
     """Import legacy configuration from YAML."""
 
     scanner_config = config[DEVICE_TRACKER_DOMAIN]
-    scan_interval: Optional[timedelta] = scanner_config.get(CONF_SCAN_INTERVAL)
-    consider_home: Optional[timedelta] = scanner_config.get(CONF_CONSIDER_HOME)
+    scan_interval: timedelta | None = scanner_config.get(CONF_SCAN_INTERVAL)
+    consider_home: timedelta | None = scanner_config.get(CONF_CONSIDER_HOME)
 
     host: str = scanner_config[CONF_HOST]
     hass.data[DOMAIN][f"imported_options_{host}"] = {
@@ -139,9 +140,9 @@ async def async_setup_entry(
 
 
 @callback
-def update_items(router: KeeneticRouter, async_add_entities, tracked: Set[str]):
+def update_items(router: KeeneticRouter, async_add_entities, tracked: set[str]):
     """Update tracked device state from the hub."""
-    new_tracked: List[KeeneticTracker] = []
+    new_tracked: list[KeeneticTracker] = []
     for mac, device in router.last_devices.items():
         if mac not in tracked:
             tracked.add(mac)
@@ -207,7 +208,7 @@ class KeeneticTracker(ScannerEntity):
         return self._router.available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         if self.is_connected:
             return {

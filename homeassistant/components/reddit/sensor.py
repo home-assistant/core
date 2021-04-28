@@ -5,7 +5,7 @@ import logging
 import praw
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ID,
     CONF_CLIENT_ID,
@@ -15,7 +15,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +81,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class RedditSensor(Entity):
+class RedditSensor(SensorEntity):
     """Representation of a Reddit sensor."""
 
     def __init__(self, reddit, subreddit: str, limit: int, sort_by: str):
@@ -105,7 +104,7 @@ class RedditSensor(Entity):
         return len(self._subreddit_data)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_SUBREDDIT: self._subreddit,

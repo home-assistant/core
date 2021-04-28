@@ -1,5 +1,5 @@
 """Support for ASUSWRT routers."""
-from typing import Dict
+from __future__ import annotations
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
@@ -56,41 +56,22 @@ class AsusWrtDevice(ScannerEntity):
     def __init__(self, router: AsusWrtRouter, device) -> None:
         """Initialize a AsusWrt device."""
         self._router = router
-        self._mac = device.mac
-        self._name = device.name or DEFAULT_DEVICE_NAME
-        self._active = False
-        self._icon = None
-        self._attrs = {}
-
-    @callback
-    def async_update_state(self) -> None:
-        """Update the AsusWrt device."""
-        device = self._router.devices[self._mac]
-        self._active = device.is_connected
-
-        self._attrs = {
-            "mac": device.mac,
-            "ip_address": device.ip_address,
-        }
-        if device.last_activity:
-            self._attrs["last_time_reachable"] = device.last_activity.isoformat(
-                timespec="seconds"
-            )
+        self._device = device
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self._mac
+        return self._device.mac
 
     @property
     def name(self) -> str:
         """Return the name."""
-        return self._name
+        return self._device.name or DEFAULT_DEVICE_NAME
 
     @property
     def is_connected(self):
         """Return true if the device is connected to the network."""
-        return self._active
+        return self._device.is_connected
 
     @property
     def source_type(self) -> str:
@@ -98,24 +79,28 @@ class AsusWrtDevice(ScannerEntity):
         return SOURCE_TYPE_ROUTER
 
     @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def device_state_attributes(self) -> Dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, any]:
         """Return the attributes."""
-        return self._attrs
+        attrs = {
+            "mac": self._device.mac,
+            "ip_address": self._device.ip_address,
+        }
+        if self._device.last_activity:
+            attrs["last_time_reachable"] = self._device.last_activity.isoformat(
+                timespec="seconds"
+            )
+        return attrs
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> dict[str, any]:
         """Return the device information."""
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "AsusWRT Tracked device",
+        data = {
+            "connections": {(CONNECTION_NETWORK_MAC, self._device.mac)},
         }
+        if self._device.name:
+            data["default_name"] = self._device.name
+
+        return data
 
     @property
     def should_poll(self) -> bool:
@@ -125,12 +110,11 @@ class AsusWrtDevice(ScannerEntity):
     @callback
     def async_on_demand_update(self):
         """Update state."""
-        self.async_update_state()
+        self._device = self._router.devices[self._device.mac]
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         """Register state update callback."""
-        self.async_update_state()
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,

@@ -1,6 +1,8 @@
 """Support for Sure Petcare cat/pet flaps."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 from surepy import (
     MESTART_RESOURCE,
@@ -185,12 +187,12 @@ async def async_setup(hass, config) -> bool:
 class SurePetcareAPI:
     """Define a generic Sure Petcare object."""
 
-    def __init__(self, hass, surepy: SurePetcare, ids: List[Dict[str, Any]]) -> None:
+    def __init__(self, hass, surepy: SurePetcare, ids: list[dict[str, Any]]) -> None:
         """Initialize the Sure Petcare object."""
         self.hass = hass
         self.surepy = surepy
         self.ids = ids
-        self.states: Dict[str, Any] = {}
+        self.states: dict[str, Any] = {}
 
     async def async_update(self, arg: Any = None) -> None:
         """Refresh Sure Petcare data."""

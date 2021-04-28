@@ -5,6 +5,7 @@ import logging
 from socket import timeout
 
 from motionblinds import MotionMulticast
+from motionblinds.motion_blinds import ParseException
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_API_KEY, CONF_HOST, EVENT_HOMEASSISTANT_STOP
@@ -13,16 +14,85 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
+    ATTR_AVAILABLE,
     DOMAIN,
     KEY_COORDINATOR,
     KEY_GATEWAY,
     KEY_MULTICAST_LISTENER,
     MANUFACTURER,
-    MOTION_PLATFORMS,
+    PLATFORMS,
+    UPDATE_INTERVAL,
+    UPDATE_INTERVAL_FAST,
 )
 from .gateway import ConnectMotionGateway
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
+    """Class to manage fetching data from single endpoint."""
+
+    def __init__(
+        self,
+        hass,
+        logger,
+        gateway,
+        *,
+        name,
+        update_interval=None,
+        update_method=None,
+    ):
+        """Initialize global data updater."""
+        super().__init__(
+            hass,
+            logger,
+            name=name,
+            update_method=update_method,
+            update_interval=update_interval,
+        )
+
+        self._gateway = gateway
+
+    def update_gateway(self):
+        """Call all updates using one async_add_executor_job."""
+        data = {}
+
+        try:
+            self._gateway.Update()
+        except (timeout, ParseException):
+            # let the error be logged and handled by the motionblinds library
+            data[KEY_GATEWAY] = {ATTR_AVAILABLE: False}
+            return data
+        else:
+            data[KEY_GATEWAY] = {ATTR_AVAILABLE: True}
+
+        for blind in self._gateway.device_list.values():
+            try:
+                blind.Update()
+            except (timeout, ParseException):
+                # let the error be logged and handled by the motionblinds library
+                data[blind.mac] = {ATTR_AVAILABLE: False}
+            else:
+                data[blind.mac] = {ATTR_AVAILABLE: True}
+
+        return data
+
+    async def _async_update_data(self):
+        """Fetch the latest data from the gateway and blinds."""
+        data = await self.hass.async_add_executor_job(self.update_gateway)
+
+        all_available = True
+        for device in data.values():
+            if not device[ATTR_AVAILABLE]:
+                all_available = False
+                break
+
+        if all_available:
+            self.update_interval = timedelta(seconds=UPDATE_INTERVAL)
+        else:
+            self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
+
+        return data
 
 
 def setup(hass: core.HomeAssistant, config: dict):
@@ -60,36 +130,18 @@ async def async_setup_entry(
         raise ConfigEntryNotReady
     motion_gateway = connect_gateway_class.gateway_device
 
-    def update_gateway():
-        """Call all updates using one async_add_executor_job."""
-        motion_gateway.Update()
-        for blind in motion_gateway.device_list.values():
-            try:
-                blind.Update()
-            except timeout:
-                # let the error be logged and handled by the motionblinds library
-                pass
-
-    async def async_update_data():
-        """Fetch data from the gateway and blinds."""
-        try:
-            await hass.async_add_executor_job(update_gateway)
-        except timeout:
-            # let the error be logged and handled by the motionblinds library
-            pass
-
-    coordinator = DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinatorMotionBlinds(
         hass,
         _LOGGER,
+        motion_gateway,
         # Name of the data. For logging purposes.
         name=entry.title,
-        update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=600),
+        update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
 
     # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = {
         KEY_GATEWAY: motion_gateway,
@@ -107,9 +159,9 @@ async def async_setup_entry(
         sw_version=motion_gateway.protocol,
     )
 
-    for component in MOTION_PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -122,8 +174,8 @@ async def async_unload_entry(
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in MOTION_PLATFORMS
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

@@ -47,7 +47,7 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.components.light.conftest import mock_light_profiles  # noqa
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 COMPONENT_PREFIX = "homeassistant.components.smartthings."
 

@@ -18,7 +18,7 @@
                     "name": "Nazwa urz\u0105dzenia",
                     "token": "Token API"
                 },
-                "description": "B\u0119dziesz potrzebowa\u0107 tokenu API (32 znaki), odwied\u017a https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token, aby uzyska\u0107 instrukcje. Zauwa\u017c i\u017c jest to inny token ni\u017c w integracji Xiaomi Aqara.",
+                "description": "B\u0119dziesz potrzebowa\u0107 tokenu API (32 znaki), odwied\u017a https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token, aby uzyska\u0107 instrukcje. Zauwa\u017c i\u017c jest to inny token ni\u017c w integracji Xiaomi Aqara.",
                 "title": "Po\u0142\u0105czenie z bramk\u0105 Xiaomi b\u0105d\u017a innym urz\u0105dzeniem Xiaomi Miio"
             },
             "gateway": {

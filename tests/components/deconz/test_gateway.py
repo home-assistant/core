@@ -4,6 +4,7 @@ from copy import deepcopy
 from unittest.mock import Mock, patch
 
 import pydeconz
+from pydeconz.websocket import STATE_RETRYING, STATE_RUNNING
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -29,8 +30,14 @@ from homeassistant.components.ssdp import (
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, SOURCE_SSDP
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PORT,
+    CONTENT_TYPE_JSON,
+    STATE_OFF,
+    STATE_UNAVAILABLE,
+)
 
 from tests.common import MockConfigEntry
 
@@ -116,8 +123,7 @@ async def setup_deconz_integration(
     if aioclient_mock:
         mock_deconz_request(aioclient_mock, config, get_state_response)
 
-    with patch("pydeconz.DeconzSession.start", return_value=True):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     return config_entry
@@ -173,21 +179,35 @@ async def test_gateway_setup_fails(hass):
     assert not hass.data[DECONZ_DOMAIN]
 
 
-async def test_connection_status_signalling(hass, aioclient_mock):
+async def test_connection_status_signalling(
+    hass, aioclient_mock, mock_deconz_websocket
+):
     """Make sure that connection status triggers a dispatcher send."""
-    config_entry = await setup_deconz_integration(hass, aioclient_mock)
-    gateway = get_gateway_from_config_entry(hass, config_entry)
+    data = {
+        "sensors": {
+            "1": {
+                "name": "presence",
+                "type": "ZHAPresence",
+                "state": {"presence": False},
+                "config": {"on": True, "reachable": True},
+                "uniqueid": "00:00:00:00:00:00:00:00-00",
+            }
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        await setup_deconz_integration(hass, aioclient_mock)
 
-    event_call = Mock()
-    unsub = async_dispatcher_connect(hass, gateway.signal_reachable, event_call)
+    assert hass.states.get("binary_sensor.presence").state == STATE_OFF
 
-    gateway.async_connection_status_callback(False)
+    await mock_deconz_websocket(state=STATE_RETRYING)
     await hass.async_block_till_done()
 
-    assert gateway.available is False
-    assert len(event_call.mock_calls) == 1
+    assert hass.states.get("binary_sensor.presence").state == STATE_UNAVAILABLE
 
-    unsub()
+    await mock_deconz_websocket(state=STATE_RUNNING)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.presence").state == STATE_OFF
 
 
 async def test_update_address(hass, aioclient_mock):

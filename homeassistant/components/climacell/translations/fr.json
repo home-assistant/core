@@ -3,7 +3,7 @@
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
             "invalid_api_key": "Cl\u00e9 API invalide",
-            "rate_limited": "Currently rate limited, please try again later.",
+            "rate_limited": "Nombre maximal de tentatives de connexion d\u00e9pass\u00e9, veuillez r\u00e9essayer ult\u00e9rieurement",
             "unknown": "Erreur inattendue"
         },
         "step": {

@@ -1,16 +1,24 @@
 """The dhcp integration."""
 
 from abc import abstractmethod
+from datetime import timedelta
 import fnmatch
 from ipaddress import ip_address as make_ip_address
 import logging
 import os
 import threading
 
+from aiodiscover import DiscoverHosts
+from aiodiscover.discovery import (
+    HOSTNAME as DISCOVERY_HOSTNAME,
+    IP_ADDRESS as DISCOVERY_IP_ADDRESS,
+    MAC_ADDRESS as DISCOVERY_MAC_ADDRESS,
+)
 from scapy.arch.common import compile_filter
 from scapy.config import conf
 from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
+from scapy.layers.inet import IP
 from scapy.layers.l2 import Ether
 from scapy.sendrecv import AsyncSniffer
 
@@ -29,9 +37,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.event import async_track_state_added_domain
+from homeassistant.helpers.event import (
+    async_track_state_added_domain,
+    async_track_time_interval,
+)
 from homeassistant.loader import async_get_dhcp
-from homeassistant.util.network import is_link_local
+from homeassistant.util.network import is_invalid, is_link_local, is_loopback
 
 from .const import DOMAIN
 
@@ -42,6 +53,7 @@ HOSTNAME = "hostname"
 MAC_ADDRESS = "macaddress"
 IP_ADDRESS = "ip"
 DHCP_REQUEST = 3
+SCAN_INTERVAL = timedelta(minutes=60)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +66,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         integration_matchers = await async_get_dhcp(hass)
         watchers = []
 
-        for cls in (DHCPWatcher, DeviceTrackerWatcher):
+        for cls in (DHCPWatcher, DeviceTrackerWatcher, NetworkWatcher):
             watcher = cls(hass, address_data, integration_matchers)
             await watcher.async_start()
             watchers.append(watcher)
@@ -82,13 +94,23 @@ class WatcherBase:
 
     def process_client(self, ip_address, hostname, mac_address):
         """Process a client."""
-        if is_link_local(make_ip_address(ip_address)):
-            # Ignore self assigned addresses
+        made_ip_address = make_ip_address(ip_address)
+
+        if (
+            is_link_local(made_ip_address)
+            or is_loopback(made_ip_address)
+            or is_invalid(made_ip_address)
+        ):
+            # Ignore self assigned addresses, loopback, invalid
             return
 
         data = self._address_data.get(ip_address)
 
-        if data and data[MAC_ADDRESS] == mac_address and data[HOSTNAME] == hostname:
+        if (
+            data
+            and data[MAC_ADDRESS] == mac_address
+            and data[HOSTNAME].startswith(hostname)
+        ):
             # If the address data is the same no need
             # to process it
             return
@@ -126,13 +148,65 @@ class WatcherBase:
                 self.hass.config_entries.flow.async_init(
                     entry["domain"],
                     context={"source": DOMAIN},
-                    data={IP_ADDRESS: ip_address, **data},
+                    data={
+                        IP_ADDRESS: ip_address,
+                        HOSTNAME: lowercase_hostname,
+                        MAC_ADDRESS: data[MAC_ADDRESS],
+                    },
                 )
             )
 
     @abstractmethod
     def create_task(self, task):
         """Pass a task to async_add_task based on which context we are in."""
+
+
+class NetworkWatcher(WatcherBase):
+    """Class to query ptr records routers."""
+
+    def __init__(self, hass, address_data, integration_matchers):
+        """Initialize class."""
+        super().__init__(hass, address_data, integration_matchers)
+        self._unsub = None
+        self._discover_hosts = None
+        self._discover_task = None
+
+    async def async_stop(self):
+        """Stop scanning for new devices on the network."""
+        if self._unsub:
+            self._unsub()
+            self._unsub = None
+        if self._discover_task:
+            self._discover_task.cancel()
+            self._discover_task = None
+
+    async def async_start(self):
+        """Start scanning for new devices on the network."""
+        self._discover_hosts = DiscoverHosts()
+        self._unsub = async_track_time_interval(
+            self.hass, self.async_start_discover, SCAN_INTERVAL
+        )
+        self.async_start_discover()
+
+    @callback
+    def async_start_discover(self, *_):
+        """Start a new discovery task if one is not running."""
+        if self._discover_task and not self._discover_task.done():
+            return
+        self._discover_task = self.create_task(self.async_discover())
+
+    async def async_discover(self):
+        """Process discovery."""
+        for host in await self._discover_hosts.async_discover():
+            self.process_client(
+                host[DISCOVERY_IP_ADDRESS],
+                host[DISCOVERY_HOSTNAME],
+                _format_mac(host[DISCOVERY_MAC_ADDRESS]),
+            )
+
+    def create_task(self, task):
+        """Pass a task to async_create_task since we are in async context."""
+        return self.hass.async_create_task(task)
 
 
 class DeviceTrackerWatcher(WatcherBase):
@@ -184,7 +258,7 @@ class DeviceTrackerWatcher(WatcherBase):
 
     def create_task(self, task):
         """Pass a task to async_create_task since we are in async context."""
-        self.hass.async_create_task(task)
+        return self.hass.async_create_task(task)
 
 
 class DHCPWatcher(WatcherBase):
@@ -207,8 +281,11 @@ class DHCPWatcher(WatcherBase):
 
     async def async_start(self):
         """Start watching for dhcp packets."""
+        # disable scapy promiscuous mode as we do not need it
+        conf.sniff_promisc = 0
+
         try:
-            _verify_l2socket_creation_permission()
+            await self.hass.async_add_executor_job(_verify_l2socket_setup, FILTER)
         except (Scapy_Exception, OSError) as ex:
             if os.geteuid() == 0:
                 _LOGGER.error("Cannot watch for dhcp packets: %s", ex)
@@ -219,7 +296,7 @@ class DHCPWatcher(WatcherBase):
             return
 
         try:
-            await _async_verify_working_pcap(self.hass, FILTER)
+            await self.hass.async_add_executor_job(_verify_working_pcap, FILTER)
         except (Scapy_Exception, ImportError) as ex:
             _LOGGER.error(
                 "Cannot watch for dhcp packets without a functional packet filter: %s",
@@ -233,6 +310,7 @@ class DHCPWatcher(WatcherBase):
             prn=self.handle_dhcp_packet,
             store=0,
         )
+
         self._sniffer.start()
 
     def handle_dhcp_packet(self, packet):
@@ -247,7 +325,7 @@ class DHCPWatcher(WatcherBase):
             # DHCP request
             return
 
-        ip_address = _decode_dhcp_option(options, REQUESTED_ADDR)
+        ip_address = _decode_dhcp_option(options, REQUESTED_ADDR) or packet[IP].src
         hostname = _decode_dhcp_option(options, HOSTNAME)
         mac_address = _format_mac(packet[Ether].src)
 
@@ -258,7 +336,7 @@ class DHCPWatcher(WatcherBase):
 
     def create_task(self, task):
         """Pass a task to hass.add_job since we are in a thread."""
-        self.hass.add_job(task)
+        return self.hass.add_job(task)
 
 
 def _decode_dhcp_option(dhcp_options, key):
@@ -283,7 +361,7 @@ def _format_mac(mac_address):
     return format_mac(mac_address).replace(":", "")
 
 
-def _verify_l2socket_creation_permission():
+def _verify_l2socket_setup(cap_filter):
     """Create a socket using the scapy configured l2socket.
 
     Try to create the socket
@@ -292,15 +370,13 @@ def _verify_l2socket_creation_permission():
     thread so we will not be able to capture
     any permission or bind errors.
     """
-    # disable scapy promiscuous mode as we do not need it
-    conf.sniff_promisc = 0
-    conf.L2socket()
+    conf.L2socket(filter=cap_filter)
 
 
-async def _async_verify_working_pcap(hass, cap_filter):
+def _verify_working_pcap(cap_filter):
     """Verify we can create a packet filter.
 
     If we cannot create a filter we will be listening for
     all traffic which is too intensive.
     """
-    await hass.async_add_executor_job(compile_filter, cap_filter)
+    compile_filter(cap_filter)

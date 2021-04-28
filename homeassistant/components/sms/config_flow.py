@@ -1,13 +1,13 @@
 """Config flow for SMS integration."""
 import logging
 
-import gammu  # pylint: disable=import-error, no-member
+import gammu  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_DEVICE
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 from .gateway import create_sms_gateway
 
 _LOGGER = logging.getLogger(__name__)

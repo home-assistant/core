@@ -1,5 +1,7 @@
 """Helper to handle a set of topics to subscribe to."""
-from typing import Any, Callable, Dict, Optional
+from __future__ import annotations
+
+from typing import Any, Callable
 
 import attr
 
@@ -19,7 +21,7 @@ class EntitySubscription:
     hass: HomeAssistantType = attr.ib()
     topic: str = attr.ib()
     message_callback: MessageCallbackType = attr.ib()
-    unsubscribe_callback: Optional[Callable[[], None]] = attr.ib()
+    unsubscribe_callback: Callable[[], None] | None = attr.ib()
     qos: int = attr.ib(default=0)
     encoding: str = attr.ib(default="utf-8")
 
@@ -62,8 +64,8 @@ class EntitySubscription:
 @bind_hass
 async def async_subscribe_topics(
     hass: HomeAssistantType,
-    new_state: Optional[Dict[str, EntitySubscription]],
-    topics: Dict[str, Any],
+    new_state: dict[str, EntitySubscription] | None,
+    topics: dict[str, Any],
 ):
     """(Re)Subscribe to a set of MQTT topics.
 

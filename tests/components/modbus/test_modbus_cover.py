@@ -15,7 +15,16 @@ from homeassistant.const import (
 from .conftest import base_config_test, base_test
 
 
-@pytest.mark.parametrize("do_options", [False, True])
+@pytest.mark.parametrize(
+    "do_options",
+    [
+        {},
+        {
+            CONF_SLAVE: 10,
+            CONF_SCAN_INTERVAL: 20,
+        },
+    ],
+)
 @pytest.mark.parametrize("read_type", [CALL_TYPE_COIL, CONF_REGISTER])
 async def test_config_cover(hass, do_options, read_type):
     """Run test for cover."""
@@ -23,14 +32,8 @@ async def test_config_cover(hass, do_options, read_type):
     device_config = {
         CONF_NAME: device_name,
         read_type: 1234,
+        **do_options,
     }
-    if do_options:
-        device_config.update(
-            {
-                CONF_SLAVE: 10,
-                CONF_SCAN_INTERVAL: 20,
-            }
-        )
     await base_config_test(
         hass,
         device_config,

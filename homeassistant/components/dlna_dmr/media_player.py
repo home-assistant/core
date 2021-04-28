@@ -1,9 +1,10 @@
 """Support for DLNA DMR (Device Media Renderer)."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import functools
 import logging
-from typing import Optional
 
 import aiohttp
 from async_upnp_client import UpnpFactory
@@ -13,14 +14,6 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_IMAGE,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_TVSHOW,
-    MEDIA_TYPE_VIDEO,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -69,28 +62,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-HOME_ASSISTANT_UPNP_CLASS_MAPPING = {
-    MEDIA_TYPE_MUSIC: "object.item.audioItem",
-    MEDIA_TYPE_TVSHOW: "object.item.videoItem",
-    MEDIA_TYPE_MOVIE: "object.item.videoItem",
-    MEDIA_TYPE_VIDEO: "object.item.videoItem",
-    MEDIA_TYPE_EPISODE: "object.item.videoItem",
-    MEDIA_TYPE_CHANNEL: "object.item.videoItem",
-    MEDIA_TYPE_IMAGE: "object.item.imageItem",
-    MEDIA_TYPE_PLAYLIST: "object.item.playlistItem",
-}
-UPNP_CLASS_DEFAULT = "object.item"
-HOME_ASSISTANT_UPNP_MIME_TYPE_MAPPING = {
-    MEDIA_TYPE_MUSIC: "audio/*",
-    MEDIA_TYPE_TVSHOW: "video/*",
-    MEDIA_TYPE_MOVIE: "video/*",
-    MEDIA_TYPE_VIDEO: "video/*",
-    MEDIA_TYPE_EPISODE: "video/*",
-    MEDIA_TYPE_CHANNEL: "video/*",
-    MEDIA_TYPE_IMAGE: "image/*",
-    MEDIA_TYPE_PLAYLIST: "playlist/*",
-}
-
 
 def catch_request_errors():
     """Catch asyncio.TimeoutError, aiohttp.ClientError errors."""
@@ -116,7 +87,7 @@ async def async_start_event_handler(
     server_host: str,
     server_port: int,
     requester,
-    callback_url_override: Optional[str] = None,
+    callback_url_override: str | None = None,
 ):
     """Register notify view."""
     hass_data = hass.data[DLNA_DMR_DATA]
@@ -341,20 +312,15 @@ class DlnaDmrDevice(MediaPlayerEntity):
     @catch_request_errors()
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
+        _LOGGER.debug("Playing media: %s, %s, %s", media_type, media_id, kwargs)
         title = "Home Assistant"
-        mime_type = HOME_ASSISTANT_UPNP_MIME_TYPE_MAPPING.get(media_type, media_type)
-        upnp_class = HOME_ASSISTANT_UPNP_CLASS_MAPPING.get(
-            media_type, UPNP_CLASS_DEFAULT
-        )
 
         # Stop current playing media
         if self._device.can_stop:
             await self.async_media_stop()
 
         # Queue media
-        await self._device.async_set_transport_uri(
-            media_id, title, mime_type, upnp_class
-        )
+        await self._device.async_set_transport_uri(media_id, title)
         await self._device.async_wait_for_can_play()
 
         # If already playing, no need to call Play

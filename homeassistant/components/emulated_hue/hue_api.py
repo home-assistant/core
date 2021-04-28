@@ -391,11 +391,9 @@ class HueOneLightChangeView(HomeAssistantView):
                     return self.json_message("Bad request", HTTP_BAD_REQUEST)
         if HUE_API_STATE_XY in request_json:
             try:
-                parsed[STATE_XY] = tuple(
-                    (
-                        float(request_json[HUE_API_STATE_XY][0]),
-                        float(request_json[HUE_API_STATE_XY][1]),
-                    )
+                parsed[STATE_XY] = (
+                    float(request_json[HUE_API_STATE_XY][0]),
+                    float(request_json[HUE_API_STATE_XY][1]),
                 )
             except ValueError:
                 _LOGGER.error("Unable to parse data (2): %s", request_json)
@@ -441,11 +439,13 @@ class HueOneLightChangeView(HomeAssistantView):
         # saturation and color temp
         if entity.domain == light.DOMAIN:
             if parsed[STATE_ON]:
-                if entity_features & SUPPORT_BRIGHTNESS:
-                    if parsed[STATE_BRIGHTNESS] is not None:
-                        data[ATTR_BRIGHTNESS] = hue_brightness_to_hass(
-                            parsed[STATE_BRIGHTNESS]
-                        )
+                if (
+                    entity_features & SUPPORT_BRIGHTNESS
+                    and parsed[STATE_BRIGHTNESS] is not None
+                ):
+                    data[ATTR_BRIGHTNESS] = hue_brightness_to_hass(
+                        parsed[STATE_BRIGHTNESS]
+                    )
 
                 if entity_features & SUPPORT_COLOR:
                     if any((parsed[STATE_HUE], parsed[STATE_SATURATION])):
@@ -468,13 +468,17 @@ class HueOneLightChangeView(HomeAssistantView):
                     if parsed[STATE_XY] is not None:
                         data[ATTR_XY_COLOR] = parsed[STATE_XY]
 
-                if entity_features & SUPPORT_COLOR_TEMP:
-                    if parsed[STATE_COLOR_TEMP] is not None:
-                        data[ATTR_COLOR_TEMP] = parsed[STATE_COLOR_TEMP]
+                if (
+                    entity_features & SUPPORT_COLOR_TEMP
+                    and parsed[STATE_COLOR_TEMP] is not None
+                ):
+                    data[ATTR_COLOR_TEMP] = parsed[STATE_COLOR_TEMP]
 
-                if entity_features & SUPPORT_TRANSITION:
-                    if parsed[STATE_TRANSITON] is not None:
-                        data[ATTR_TRANSITION] = parsed[STATE_TRANSITON] / 10
+                if (
+                    entity_features & SUPPORT_TRANSITION
+                    and parsed[STATE_TRANSITON] is not None
+                ):
+                    data[ATTR_TRANSITION] = parsed[STATE_TRANSITON] / 10
 
         # If the requested entity is a script, add some variables
         elif entity.domain == script.DOMAIN:
@@ -491,11 +495,13 @@ class HueOneLightChangeView(HomeAssistantView):
             # only setting the temperature
             service = None
 
-            if entity_features & SUPPORT_TARGET_TEMPERATURE:
-                if parsed[STATE_BRIGHTNESS] is not None:
-                    domain = entity.domain
-                    service = SERVICE_SET_TEMPERATURE
-                    data[ATTR_TEMPERATURE] = parsed[STATE_BRIGHTNESS]
+            if (
+                entity_features & SUPPORT_TARGET_TEMPERATURE
+                and parsed[STATE_BRIGHTNESS] is not None
+            ):
+                domain = entity.domain
+                service = SERVICE_SET_TEMPERATURE
+                data[ATTR_TEMPERATURE] = parsed[STATE_BRIGHTNESS]
 
         # If the requested entity is a humidifier, set the humidity
         elif entity.domain == humidifier.DOMAIN:
@@ -507,43 +513,48 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # If the requested entity is a media player, convert to volume
         elif entity.domain == media_player.DOMAIN:
-            if entity_features & SUPPORT_VOLUME_SET:
-                if parsed[STATE_BRIGHTNESS] is not None:
-                    turn_on_needed = True
-                    domain = entity.domain
-                    service = SERVICE_VOLUME_SET
-                    # Convert 0-100 to 0.0-1.0
-                    data[ATTR_MEDIA_VOLUME_LEVEL] = parsed[STATE_BRIGHTNESS] / 100.0
+            if (
+                entity_features & SUPPORT_VOLUME_SET
+                and parsed[STATE_BRIGHTNESS] is not None
+            ):
+                turn_on_needed = True
+                domain = entity.domain
+                service = SERVICE_VOLUME_SET
+                # Convert 0-100 to 0.0-1.0
+                data[ATTR_MEDIA_VOLUME_LEVEL] = parsed[STATE_BRIGHTNESS] / 100.0
 
         # If the requested entity is a cover, convert to open_cover/close_cover
         elif entity.domain == cover.DOMAIN:
             domain = entity.domain
+            service = SERVICE_CLOSE_COVER
             if service == SERVICE_TURN_ON:
                 service = SERVICE_OPEN_COVER
-            else:
-                service = SERVICE_CLOSE_COVER
 
-            if entity_features & SUPPORT_SET_POSITION:
-                if parsed[STATE_BRIGHTNESS] is not None:
-                    domain = entity.domain
-                    service = SERVICE_SET_COVER_POSITION
-                    data[ATTR_POSITION] = parsed[STATE_BRIGHTNESS]
+            if (
+                entity_features & SUPPORT_SET_POSITION
+                and parsed[STATE_BRIGHTNESS] is not None
+            ):
+                domain = entity.domain
+                service = SERVICE_SET_COVER_POSITION
+                data[ATTR_POSITION] = parsed[STATE_BRIGHTNESS]
 
         # If the requested entity is a fan, convert to speed
-        elif entity.domain == fan.DOMAIN:
-            if entity_features & SUPPORT_SET_SPEED:
-                if parsed[STATE_BRIGHTNESS] is not None:
-                    domain = entity.domain
-                    # Convert 0-100 to a fan speed
-                    brightness = parsed[STATE_BRIGHTNESS]
-                    if brightness == 0:
-                        data[ATTR_SPEED] = SPEED_OFF
-                    elif 0 < brightness <= 33.3:
-                        data[ATTR_SPEED] = SPEED_LOW
-                    elif 33.3 < brightness <= 66.6:
-                        data[ATTR_SPEED] = SPEED_MEDIUM
-                    elif 66.6 < brightness <= 100:
-                        data[ATTR_SPEED] = SPEED_HIGH
+        elif (
+            entity.domain == fan.DOMAIN
+            and entity_features & SUPPORT_SET_SPEED
+            and parsed[STATE_BRIGHTNESS] is not None
+        ):
+            domain = entity.domain
+            # Convert 0-100 to a fan speed
+            brightness = parsed[STATE_BRIGHTNESS]
+            if brightness == 0:
+                data[ATTR_SPEED] = SPEED_OFF
+            elif 0 < brightness <= 33.3:
+                data[ATTR_SPEED] = SPEED_LOW
+            elif 33.3 < brightness <= 66.6:
+                data[ATTR_SPEED] = SPEED_MEDIUM
+            elif 66.6 < brightness <= 100:
+                data[ATTR_SPEED] = SPEED_HIGH
 
         # Map the off command to on
         if entity.domain in config.off_maps_to_on_domains:

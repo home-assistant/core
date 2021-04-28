@@ -3,6 +3,7 @@
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_api_key": "Ongeldige API-sleutel",
+            "rate_limited": "Momenteel is een beperkt aantal aanvragen mogelijk, probeer later opnieuw.",
             "unknown": "Onverwachte fout"
         },
         "step": {
@@ -13,7 +14,7 @@
                     "longitude": "Lengtegraad",
                     "name": "Naam"
                 },
-                "description": "Indien Breedtegraad en Lengtegraad niet worden opgegeven, worden de standaardwaarden in de Home Assistant-configuratie gebruikt. Er wordt een entiteit gemaakt voor elk voorspellingstype maar alleen degene die u selecteert worden standaard ingeschakeld."
+                "description": "Indien Breedtegraad en Lengtegraad niet worden opgegeven, worden de standaardwaarden in de Home Assistant-configuratie gebruikt. Er wordt een entiteit gemaakt voor elk voorspellingstype, maar alleen degenen die u selecteert worden standaard ingeschakeld."
             }
         }
     },
@@ -21,7 +22,8 @@
         "step": {
             "init": {
                 "data": {
-                    "forecast_types": "Voorspellingstype(n)"
+                    "forecast_types": "Voorspellingstype(n)",
+                    "timestep": "Min. Tussen NowCast-voorspellingen"
                 },
                 "description": "Als u ervoor kiest om de `nowcast` voorspellingsentiteit in te schakelen, kan u het aantal minuten tussen elke voorspelling configureren. Het aantal voorspellingen hangt af van het aantal gekozen minuten tussen de voorspellingen.",
                 "title": "Update ClimaCell Opties"

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kasutaja on juba seadistatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "authorize_url_timeout": "Kinnitus-URLi loomise ajal\u00f5pp",
+            "missing_configuration": "Komponent pole seadistatud. Palun loe dokumentatsiooni.",
+            "no_url_available": "URL-i pole saadaval. Selle t\u00f5rke kohta teabe saamiseks vaata [spikrijaotis]({docs_url})",
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+        },
+        "create_entry": {
+            "default": "Tuvastamine \u00f5nnestus"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Vali tuvastusmeetod"
+            }
+        }
+    },
+    "title": ""
+}

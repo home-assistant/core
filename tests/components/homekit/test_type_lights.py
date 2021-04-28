@@ -24,7 +24,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import CoreState
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import async_mock_service
 
@@ -354,7 +354,7 @@ async def test_light_restore(hass, hk_driver, events):
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
 
     registry.async_get_or_create("light", "hue", "1234", suggested_object_id="simple")
     registry.async_get_or_create(

@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Habilitar descobriment autom\u00e0tic"
                 },
-                "description": "Vols configurar Home Assistant perqu\u00e8 es connecti amb el broker MQTT proporcionat pel complement de Hass.io: {addon}?",
-                "title": "Broker MQTT a trav\u00e9s del complement de Hass.io"
+                "description": "Vols configurar Home Assistant perqu\u00e8 es connecti amb el broker MQTT proporcionat pel complement de Hass.io {addon}?",
+                "title": "Broker MQTT via complement de Hass.io"
             }
         }
     },

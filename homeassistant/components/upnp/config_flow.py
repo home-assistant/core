@@ -1,6 +1,8 @@
 """Config flow for UPNP."""
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping
 
 import voluptuous as vol
 
@@ -55,7 +57,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._discoveries: Mapping = None
 
     async def async_step_user(
-        self, user_input: Optional[Mapping] = None
+        self, user_input: Mapping | None = None
     ) -> Mapping[str, Any]:
         """Handle a flow start."""
         _LOGGER.debug("async_step_user: user_input: %s", user_input)
@@ -111,9 +113,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
         )
 
-    async def async_step_import(
-        self, import_info: Optional[Mapping]
-    ) -> Mapping[str, Any]:
+    async def async_step_import(self, import_info: Mapping | None) -> Mapping[str, Any]:
         """Import a new UPnP/IGD device as a config entry.
 
         This flow is triggered by `async_setup`. If no device has been
@@ -204,7 +204,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_ssdp_confirm()
 
     async def async_step_ssdp_confirm(
-        self, user_input: Optional[Mapping] = None
+        self, user_input: Mapping | None = None
     ) -> Mapping[str, Any]:
         """Confirm integration via SSDP."""
         _LOGGER.debug("async_step_ssdp_confirm: user_input: %s", user_input)

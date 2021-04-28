@@ -1,5 +1,5 @@
 """Provides device actions for ZHA devices."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -54,7 +54,7 @@ async def async_call_action_from_config(
     )
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device actions."""
     try:
         zha_device = await async_get_zha_device(hass, device_id)

@@ -6,6 +6,8 @@
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_host": "Ongeldige hostnaam of IP-adres",
+            "pwd_and_ssh": "Geef alleen wachtwoord of SSH-sleutelbestand op",
+            "pwd_or_ssh": "Geef een wachtwoord of SSH-sleutelbestand op",
             "ssh_not_file": "SSH-sleutelbestand niet gevonden",
             "unknown": "Onverwachte fout"
         },
@@ -17,8 +19,11 @@
                     "name": "Naam",
                     "password": "Wachtwoord",
                     "port": "Poort",
+                    "protocol": "Te gebruiken communicatieprotocol",
+                    "ssh_key": "Pad naar uw SSH-sleutelbestand (in plaats van wachtwoord)",
                     "username": "Gebruikersnaam"
                 },
+                "description": "Stel de vereiste parameter in om verbinding te maken met uw router",
                 "title": "AsusWRT"
             }
         }
@@ -27,6 +32,10 @@
         "step": {
             "init": {
                 "data": {
+                    "consider_home": "Aantal seconden dat wordt gewacht voordat een apparaat als afwezig wordt beschouwd",
+                    "dnsmasq": "De locatie in de router van de dnsmasq.leases-bestanden",
+                    "interface": "De interface waarvan u statistieken wilt (bijv. Eth0, eth1 enz.)",
+                    "require_ip": "Apparaten moeten een IP-adres hebben (voor toegangspuntmodus)",
                     "track_unknown": "Volg onbekende / naamloze apparaten"
                 },
                 "title": "AsusWRT-opties"

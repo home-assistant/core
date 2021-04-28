@@ -27,11 +27,12 @@ from .const import (
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_WILL,
+    DOMAIN,
 )
 from .util import MQTT_WILL_BIRTH_SCHEMA
 
 
-@config_entries.HANDLERS.register("mqtt")
+@config_entries.HANDLERS.register(DOMAIN)
 class FlowHandler(config_entries.ConfigFlow):
     """Handle a config flow."""
 

@@ -1,7 +1,11 @@
 {
     "config": {
+        "abort": {
+            "missing_configuration": "A komponens nincs konfigur\u00e1lva. K\u00e9rlek, k\u00f6vesd a dokument\u00e1ci\u00f3t.",
+            "no_url_available": "Nincs el\u00e9rhet\u0151 URL. A hib\u00e1r\u00f3l tov\u00e1bbi inform\u00e1ci\u00f3t [a s\u00fag\u00f3ban]({docs_url}) tal\u00e1lsz."
+        },
         "create_entry": {
-            "default": "Sikeres autentik\u00e1ci\u00f3"
+            "default": "Sikeres hiteles\u00edt\u00e9s"
         },
         "step": {
             "pick_implementation": {

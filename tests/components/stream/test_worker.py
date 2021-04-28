@@ -57,6 +57,11 @@ class FakePyAvStream:
         self.time_base = fractions.Fraction(1, rate)
         self.profile = "ignored-profile"
 
+        class FakeCodec:
+            name = "aac"
+
+        self.codec = FakeCodec()
+
 
 VIDEO_STREAM = FakePyAvStream(VIDEO_STREAM_FORMAT, VIDEO_FRAME_RATE)
 AUDIO_STREAM = FakePyAvStream(AUDIO_STREAM_FORMAT, AUDIO_SAMPLE_RATE)
@@ -87,13 +92,18 @@ class PacketSequence:
             raise StopIteration
         self.packet += 1
 
-        class FakePacket:
+        class FakePacket(bytearray):
+            # Be a bytearray so that memoryview works
+            def __init__(self):
+                super().__init__(3)
+
             time_base = fractions.Fraction(1, VIDEO_FRAME_RATE)
             dts = self.packet * PACKET_DURATION / time_base
             pts = self.packet * PACKET_DURATION / time_base
             duration = PACKET_DURATION / time_base
             stream = VIDEO_STREAM
             is_keyframe = True
+            size = 3
 
         return FakePacket()
 
@@ -107,8 +117,8 @@ class FakePyAvContainer:
         self.packets = PacketSequence(0)
 
         class FakePyAvStreams:
-            video = video_stream
-            audio = audio_stream
+            video = [video_stream] if video_stream else []
+            audio = [audio_stream] if audio_stream else []
 
         self.streams = FakePyAvStreams()
 
@@ -171,8 +181,8 @@ class MockPyAv:
 
     def __init__(self, video=True, audio=False):
         """Initialize the MockPyAv."""
-        video_stream = [VIDEO_STREAM] if video else []
-        audio_stream = [AUDIO_STREAM] if audio else []
+        video_stream = VIDEO_STREAM if video else None
+        audio_stream = AUDIO_STREAM if audio else None
         self.container = FakePyAvContainer(
             video_stream=video_stream, audio_stream=audio_stream
         )
@@ -413,6 +423,23 @@ async def test_audio_packets_not_found(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
+async def test_adts_aac_audio(hass):
+    """Set up an ADTS AAC audio stream and disable audio."""
+    py_av = MockPyAv(audio=True)
+
+    num_packets = PACKETS_TO_WAIT_FOR_AUDIO + 1
+    packets = list(PacketSequence(num_packets))
+    packets[1].stream = AUDIO_STREAM
+    packets[1].dts = packets[0].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
+    packets[1].pts = packets[0].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
+    # The following is packet data is a sign of ADTS AAC
+    packets[1][0] = 255
+    packets[1][1] = 241
+
+    decoded_stream = await async_decode_stream(hass, iter(packets), py_av=py_av)
+    assert len(decoded_stream.audio_packets) == 0
+
+
 async def test_audio_is_first_packet(hass):
     """Set up an audio stream and audio packet is the first packet in the stream."""
     py_av = MockPyAv(audio=True)
@@ -547,3 +574,18 @@ async def test_update_stream_source(hass):
 
         # Ccleanup
         stream.stop()
+
+
+async def test_worker_log(hass, caplog):
+    """Test that the worker logs the url without username and password."""
+    stream = Stream(hass, "https://abcd:efgh@foo.bar")
+    stream.add_provider(STREAM_OUTPUT_FORMAT)
+    with patch("av.open") as av_open:
+        av_open.side_effect = av.error.InvalidDataError(-2, "error")
+        segment_buffer = SegmentBuffer(stream.outputs)
+        stream_worker(
+            "https://abcd:efgh@foo.bar", {}, segment_buffer, threading.Event()
+        )
+        await hass.async_block_till_done()
+    assert "https://abcd:efgh@foo.bar" not in caplog.text
+    assert "https://****:****@foo.bar" in caplog.text

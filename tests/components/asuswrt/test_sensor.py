@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components import device_tracker, sensor
 from homeassistant.components.asuswrt.const import DOMAIN
-from homeassistant.components.asuswrt.sensor import _SensorTypes
+from homeassistant.components.asuswrt.sensor import DEFAULT_PREFIX
 from homeassistant.components.device_tracker.const import CONF_CONSIDER_HOME
 from homeassistant.const import (
     CONF_HOST,
@@ -19,6 +19,7 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -64,44 +65,7 @@ def mock_controller_connect():
 
 async def test_sensors(hass, connect):
     """Test creating an AsusWRT sensor."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
-
-    # Pre-enable the status sensor
-    entity_reg.async_get_or_create(
-        sensor.DOMAIN,
-        DOMAIN,
-        f"{DOMAIN} {_SensorTypes(_SensorTypes.DEVICES).sensor_name}",
-        suggested_object_id="asuswrt_connected_devices",
-        disabled_by=None,
-    )
-    entity_reg.async_get_or_create(
-        sensor.DOMAIN,
-        DOMAIN,
-        f"{DOMAIN} {_SensorTypes(_SensorTypes.DOWNLOAD_SPEED).sensor_name}",
-        suggested_object_id="asuswrt_download_speed",
-        disabled_by=None,
-    )
-    entity_reg.async_get_or_create(
-        sensor.DOMAIN,
-        DOMAIN,
-        f"{DOMAIN} {_SensorTypes(_SensorTypes.DOWNLOAD).sensor_name}",
-        suggested_object_id="asuswrt_download",
-        disabled_by=None,
-    )
-    entity_reg.async_get_or_create(
-        sensor.DOMAIN,
-        DOMAIN,
-        f"{DOMAIN} {_SensorTypes(_SensorTypes.UPLOAD_SPEED).sensor_name}",
-        suggested_object_id="asuswrt_upload_speed",
-        disabled_by=None,
-    )
-    entity_reg.async_get_or_create(
-        sensor.DOMAIN,
-        DOMAIN,
-        f"{DOMAIN} {_SensorTypes(_SensorTypes.UPLOAD).sensor_name}",
-        suggested_object_id="asuswrt_upload",
-        disabled_by=None,
-    )
+    entity_reg = er.async_get(hass)
 
     # init config entry
     config_entry = MockConfigEntry(
@@ -109,6 +73,50 @@ async def test_sensors(hass, connect):
         data=CONFIG_DATA,
         options={CONF_CONSIDER_HOME: 60},
     )
+
+    # init variable
+    unique_id = DOMAIN
+    name_prefix = DEFAULT_PREFIX
+    obj_prefix = name_prefix.lower()
+    sensor_prefix = f"{sensor.DOMAIN}.{obj_prefix}"
+
+    # Pre-enable the status sensor
+    entity_reg.async_get_or_create(
+        sensor.DOMAIN,
+        DOMAIN,
+        f"{unique_id} {name_prefix} Devices Connected",
+        suggested_object_id=f"{obj_prefix}_devices_connected",
+        disabled_by=None,
+    )
+    entity_reg.async_get_or_create(
+        sensor.DOMAIN,
+        DOMAIN,
+        f"{unique_id} {name_prefix} Download Speed",
+        suggested_object_id=f"{obj_prefix}_download_speed",
+        disabled_by=None,
+    )
+    entity_reg.async_get_or_create(
+        sensor.DOMAIN,
+        DOMAIN,
+        f"{unique_id} {name_prefix} Download",
+        suggested_object_id=f"{obj_prefix}_download",
+        disabled_by=None,
+    )
+    entity_reg.async_get_or_create(
+        sensor.DOMAIN,
+        DOMAIN,
+        f"{unique_id} {name_prefix} Upload Speed",
+        suggested_object_id=f"{obj_prefix}_upload_speed",
+        disabled_by=None,
+    )
+    entity_reg.async_get_or_create(
+        sensor.DOMAIN,
+        DOMAIN,
+        f"{unique_id} {name_prefix} Upload",
+        suggested_object_id=f"{obj_prefix}_upload",
+        disabled_by=None,
+    )
+
     config_entry.add_to_hass(hass)
 
     # initial devices setup
@@ -119,11 +127,11 @@ async def test_sensors(hass, connect):
 
     assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_HOME
     assert hass.states.get(f"{device_tracker.DOMAIN}.testtwo").state == STATE_HOME
-    assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_connected_devices").state == "2"
-    assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_download_speed").state == "160.0"
-    assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_download").state == "60.0"
-    assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_upload_speed").state == "80.0"
-    assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_upload").state == "50.0"
+    assert hass.states.get(f"{sensor_prefix}_download_speed").state == "160.0"
+    assert hass.states.get(f"{sensor_prefix}_download").state == "60.0"
+    assert hass.states.get(f"{sensor_prefix}_upload_speed").state == "80.0"
+    assert hass.states.get(f"{sensor_prefix}_upload").state == "50.0"
+    assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "2"
 
     # add one device and remove another
     MOCK_DEVICES.pop("a1:b1:c1:d1:e1:f1")
@@ -137,7 +145,7 @@ async def test_sensors(hass, connect):
     assert hass.states.get(f"{device_tracker.DOMAIN}.test").state == STATE_HOME
     assert hass.states.get(f"{device_tracker.DOMAIN}.testtwo").state == STATE_HOME
     assert hass.states.get(f"{device_tracker.DOMAIN}.testthree").state == STATE_HOME
-    assert hass.states.get(f"{sensor.DOMAIN}.asuswrt_connected_devices").state == "2"
+    assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "2"
 
     hass.config_entries.async_update_entry(
         config_entry, options={CONF_CONSIDER_HOME: 0}

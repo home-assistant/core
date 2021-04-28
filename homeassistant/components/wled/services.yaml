@@ -2,6 +2,9 @@ effect:
   name: Set effect
   description: Control the effect settings of WLED.
   target:
+    entity:
+      integration: wled
+      domain: light
   fields:
     effect:
       name: Effect
@@ -48,6 +51,9 @@ preset:
   name: Set preset
   description: Set a preset for the WLED device.
   target:
+    entity:
+      integration: wled
+      domain: light
   fields:
     preset:
       name: Preset ID

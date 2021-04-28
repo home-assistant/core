@@ -1,7 +1,8 @@
 """HomeAssistant specific aiohttp Site."""
+from __future__ import annotations
+
 import asyncio
 from ssl import SSLContext
-from typing import List, Optional, Union
 
 from aiohttp import web
 from yarl import URL
@@ -22,18 +23,18 @@ class HomeAssistantTCPSite(web.BaseSite):
 
     __slots__ = ("_host", "_port", "_reuse_address", "_reuse_port", "_hosturl")
 
-    def __init__(
+    def __init__(  # noqa: D107
         self,
-        runner: "web.BaseRunner",
-        host: Union[None, str, List[str]],
+        runner: web.BaseRunner,
+        host: None | str | list[str],
         port: int,
         *,
         shutdown_timeout: float = 10.0,
-        ssl_context: Optional[SSLContext] = None,
+        ssl_context: SSLContext | None = None,
         backlog: int = 128,
-        reuse_address: Optional[bool] = None,
-        reuse_port: Optional[bool] = None,
-    ) -> None:  # noqa: D107
+        reuse_address: bool | None = None,
+        reuse_port: bool | None = None,
+    ) -> None:
         super().__init__(
             runner,
             shutdown_timeout=shutdown_timeout,

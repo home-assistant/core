@@ -4,6 +4,7 @@ from unittest.mock import patch
 from pyownet.protocol import ConnError, OwnetError
 
 from homeassistant.components.onewire.const import CONF_TYPE_OWSERVER, DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import (
     CONN_CLASS_LOCAL_POLL,
     ENTRY_STATE_LOADED,
@@ -11,10 +12,17 @@ from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_RETRY,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
-from . import setup_onewire_owserver_integration, setup_onewire_sysbus_integration
+from . import (
+    setup_onewire_owserver_integration,
+    setup_onewire_patched_owserver_integration,
+    setup_onewire_sysbus_integration,
+    setup_owproxy_mock_devices,
+)
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 
 
 async def test_owserver_connect_failure(hass):
@@ -87,3 +95,41 @@ async def test_unload_entry(hass):
     assert config_entry_owserver.state == ENTRY_STATE_NOT_LOADED
     assert config_entry_sysbus.state == ENTRY_STATE_NOT_LOADED
     assert not hass.data.get(DOMAIN)
+
+
+@patch("homeassistant.components.onewire.onewirehub.protocol.proxy")
+async def test_registry_cleanup(owproxy, hass):
+    """Test for 1-Wire device.
+
+    As they would be on a clean setup: all binary-sensors and switches disabled.
+    """
+    await async_setup_component(hass, "persistent_notification", {})
+    entity_registry = mock_registry(hass)
+    device_registry = mock_device_registry(hass)
+
+    # Initialise with two components
+    setup_owproxy_mock_devices(
+        owproxy, SENSOR_DOMAIN, ["10.111111111111", "28.111111111111"]
+    )
+    with patch("homeassistant.components.onewire.PLATFORMS", [SENSOR_DOMAIN]):
+        await setup_onewire_patched_owserver_integration(hass)
+        await hass.async_block_till_done()
+
+    assert len(dr.async_entries_for_config_entry(device_registry, "2")) == 2
+    assert len(er.async_entries_for_config_entry(entity_registry, "2")) == 2
+
+    # Second item has disappeared from bus, and was removed manually from the front-end
+    setup_owproxy_mock_devices(owproxy, SENSOR_DOMAIN, ["10.111111111111"])
+    entity_registry.async_remove("sensor.28_111111111111_temperature")
+    await hass.async_block_till_done()
+
+    assert len(er.async_entries_for_config_entry(entity_registry, "2")) == 1
+    assert len(dr.async_entries_for_config_entry(device_registry, "2")) == 2
+
+    # Second item has disappeared from bus, and was removed manually from the front-end
+    with patch("homeassistant.components.onewire.PLATFORMS", [SENSOR_DOMAIN]):
+        await hass.config_entries.async_reload("2")
+        await hass.async_block_till_done()
+
+    assert len(er.async_entries_for_config_entry(entity_registry, "2")) == 1
+    assert len(dr.async_entries_for_config_entry(device_registry, "2")) == 1

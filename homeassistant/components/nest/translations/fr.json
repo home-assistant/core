@@ -30,7 +30,7 @@
                 "data": {
                     "code": "Code PIN"
                 },
-                "description": "Pour associer votre compte Nest, [autorisez votre compte]({url}). \n\n Apr\u00e8s autorisation, copiez-collez le code PIN fourni ci-dessous.",
+                "description": "Pour associer votre compte Nest, [autorisez votre compte]({url}). \n\n Apr\u00e8s autorisation, copiez-collez le code NIP fourni ci-dessous.",
                 "title": "Lier un compte Nest"
             },
             "pick_implementation": {

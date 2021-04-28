@@ -20,11 +20,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
-    """Old way of setting up deCONZ integrations."""
-    return True
-
-
 async def async_setup_entry(hass, config_entry):
     """Set up a deCONZ bridge for a config entry.
 

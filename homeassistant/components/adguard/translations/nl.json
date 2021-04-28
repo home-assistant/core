@@ -9,8 +9,8 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Wilt u Home Assistant configureren om verbinding te maken met AdGuard Home van de Hass.io-add-on: {addon}?",
-                "title": "AdGuard Home via Hass.io add-on"
+                "description": "Wilt u Home Assistant configureren om verbinding te maken met AdGuard Home van de Supervisor-add-on: {addon}?",
+                "title": "AdGuard Home via Supervisor add-on"
             },
             "user": {
                 "data": {

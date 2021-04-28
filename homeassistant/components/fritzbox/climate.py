@@ -191,7 +191,7 @@ class FritzboxThermostat(ClimateEntity):
         return MAX_TEMPERATURE
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attrs = {
             ATTR_STATE_BATTERY_LOW: self._device.battery_low,

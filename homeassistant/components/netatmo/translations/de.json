@@ -15,6 +15,28 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "Abwesenheit",
+            "hg": "Frostw\u00e4chter",
+            "schedule": "Zeitplan"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} hat einen Alarm erkannt",
+            "animal": "{entity_name} hat ein Tier erkannt",
+            "cancel_set_point": "{entity_name} hat seinen Zeitplan wieder aufgenommen",
+            "human": "{entity_name} hat einen Menschen erkannt",
+            "movement": "{entity_name} hat eine Bewegung erkannt",
+            "outdoor": "{entity_name} hat ein Ereignis im Freien erkannt",
+            "person": "{entity_name} hat eine Person erkannt",
+            "person_away": "{entity_name} hat erkannt, dass eine Person gegangen ist",
+            "set_point": "Solltemperatur {entity_name} manuell eingestellt",
+            "therm_mode": "{entity_name} wechselte zu \"{subtype}\"",
+            "turned_off": "{entity_name} ausgeschaltet",
+            "turned_on": "{entity_name} eingeschaltet",
+            "vehicle": "{entity_name} hat ein Fahrzeug erkannt"
+        }
+    },
     "options": {
         "step": {
             "public_weather": {
@@ -30,6 +52,7 @@
             },
             "public_weather_areas": {
                 "data": {
+                    "new_area": "Bereichsname",
                     "weather_areas": "Wettergebiete"
                 },
                 "description": "Konfiguriere \u00f6ffentliche Wettersensoren.",

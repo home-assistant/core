@@ -1,8 +1,8 @@
 """Constants used by Home Assistant components."""
 
 MAJOR_VERSION = 2021
-MINOR_VERSION = 3
-PATCH_VERSION = "7"
+MINOR_VERSION = 4
+PATCH_VERSION = "6"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER = (3, 8, 0)
@@ -74,6 +74,7 @@ CONF_CUSTOMIZE_GLOB = "customize_glob"
 CONF_DEFAULT = "default"
 CONF_DELAY = "delay"
 CONF_DELAY_TIME = "delay_time"
+CONF_DESCRIPTION = "description"
 CONF_DEVICE = "device"
 CONF_DEVICES = "devices"
 CONF_DEVICE_CLASS = "device_class"
@@ -210,7 +211,6 @@ EVENT_HOMEASSISTANT_STARTED = "homeassistant_started"
 EVENT_HOMEASSISTANT_STOP = "homeassistant_stop"
 EVENT_HOMEASSISTANT_FINAL_WRITE = "homeassistant_final_write"
 EVENT_LOGBOOK_ENTRY = "logbook_entry"
-EVENT_PLATFORM_DISCOVERED = "platform_discovered"
 EVENT_SERVICE_REGISTERED = "service_registered"
 EVENT_SERVICE_REMOVED = "service_removed"
 EVENT_STATE_CHANGED = "state_changed"
@@ -221,6 +221,8 @@ EVENT_TIME_CHANGED = "time_changed"
 
 # #### DEVICE CLASSES ####
 DEVICE_CLASS_BATTERY = "battery"
+DEVICE_CLASS_CO = "carbon_monoxide"
+DEVICE_CLASS_CO2 = "carbon_dioxide"
 DEVICE_CLASS_HUMIDITY = "humidity"
 DEVICE_CLASS_ILLUMINANCE = "illuminance"
 DEVICE_CLASS_SIGNAL_STRENGTH = "signal_strength"
@@ -312,9 +314,6 @@ CONF_UNIT_SYSTEM_IMPERIAL: str = "imperial"
 
 # Electrical attributes
 ATTR_VOLTAGE = "voltage"
-
-# Contains the information that is discovered
-ATTR_DISCOVERED = "discovered"
 
 # Location of the device/sensor
 ATTR_LOCATION = "location"

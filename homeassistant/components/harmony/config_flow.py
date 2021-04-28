@@ -119,6 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.harmony_config, {}
             )
 
+        self._set_confirm_only()
         return self.async_show_form(
             step_id="link",
             errors=errors,

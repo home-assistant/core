@@ -4,7 +4,12 @@ Provide a mock sensor platform.
 Call init before using it in your tests to ensure clean test data.
 """
 import homeassistant.components.sensor as sensor
-from homeassistant.const import PERCENTAGE, PRESSURE_HPA, SIGNAL_STRENGTH_DECIBELS
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
+    PRESSURE_HPA,
+    SIGNAL_STRENGTH_DECIBELS,
+)
 
 from tests.common import MockEntity
 
@@ -13,6 +18,8 @@ DEVICE_CLASSES.append("none")
 
 UNITS_OF_MEASUREMENT = {
     sensor.DEVICE_CLASS_BATTERY: PERCENTAGE,  # % of battery that is left
+    sensor.DEVICE_CLASS_CO: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO concentration
+    sensor.DEVICE_CLASS_CO2: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO2 concentration
     sensor.DEVICE_CLASS_HUMIDITY: PERCENTAGE,  # % of humidity in the air
     sensor.DEVICE_CLASS_ILLUMINANCE: "lm",  # current light level (lx/lm)
     sensor.DEVICE_CLASS_SIGNAL_STRENGTH: SIGNAL_STRENGTH_DECIBELS,  # signal strength (dB/dBm)

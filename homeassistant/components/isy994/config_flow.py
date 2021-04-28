@@ -22,10 +22,10 @@ from .const import (
     DEFAULT_SENSOR_STRING,
     DEFAULT_TLS_VERSION,
     DEFAULT_VAR_SENSOR_STRING,
+    DOMAIN,
     ISY_URL_POSTFIX,
     UDN_UUID_PREFIX,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         https = True
         port = host.port or 443
     else:
-        _LOGGER.error("isy994 host value in configuration is invalid")
+        _LOGGER.error("The isy994 host value in configuration is invalid")
         raise InvalidHost
 
     # Connect to ISY controller.

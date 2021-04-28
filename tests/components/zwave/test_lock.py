@@ -98,7 +98,7 @@ def test_track_message_workaround(mock_openzwave):
     device = lock.get_device(node=node, values=values)
     value_changed(values.primary)
     assert device.is_locked
-    assert device.device_state_attributes[lock.ATTR_NOTIFICATION] == "RF Lock"
+    assert device.extra_state_attributes[lock.ATTR_NOTIFICATION] == "RF Lock"
 
     # Simulate a keypad unlock. We trigger a value_changed() which simulates
     # the Alarm notification received from the lock. Then, we trigger
@@ -113,7 +113,7 @@ def test_track_message_workaround(mock_openzwave):
     value_changed(values.primary)
     assert not device.is_locked
     assert (
-        device.device_state_attributes[lock.ATTR_LOCK_STATUS]
+        device.extra_state_attributes[lock.ATTR_LOCK_STATUS]
         == "Unlocked with Keypad by user 3"
     )
 
@@ -122,7 +122,7 @@ def test_track_message_workaround(mock_openzwave):
     node.stats["lastReceivedMessage"][5] = const.COMMAND_CLASS_DOOR_LOCK
     value_changed(values.primary)
     assert device.is_locked
-    assert device.device_state_attributes[lock.ATTR_NOTIFICATION] == "RF Lock"
+    assert device.extra_state_attributes[lock.ATTR_NOTIFICATION] == "RF Lock"
 
 
 def test_v2btze_value_changed(mock_openzwave):
@@ -198,7 +198,7 @@ def test_lock_access_control(mock_openzwave):
     )
     device = lock.get_device(node=node, values=values, node_config={})
 
-    assert device.device_state_attributes[lock.ATTR_NOTIFICATION] == "Lock Jammed"
+    assert device.extra_state_attributes[lock.ATTR_NOTIFICATION] == "Lock Jammed"
 
 
 def test_lock_alarm_type(mock_openzwave):
@@ -212,28 +212,28 @@ def test_lock_alarm_type(mock_openzwave):
     )
     device = lock.get_device(node=node, values=values, node_config={})
 
-    assert lock.ATTR_LOCK_STATUS not in device.device_state_attributes
+    assert lock.ATTR_LOCK_STATUS not in device.extra_state_attributes
 
     values.alarm_type.data = 21
     value_changed(values.alarm_type)
     assert (
-        device.device_state_attributes[lock.ATTR_LOCK_STATUS] == "Manually Locked None"
+        device.extra_state_attributes[lock.ATTR_LOCK_STATUS] == "Manually Locked None"
     )
 
     values.alarm_type.data = 18
     value_changed(values.alarm_type)
     assert (
-        device.device_state_attributes[lock.ATTR_LOCK_STATUS]
+        device.extra_state_attributes[lock.ATTR_LOCK_STATUS]
         == "Locked with Keypad by user None"
     )
 
     values.alarm_type.data = 161
     value_changed(values.alarm_type)
-    assert device.device_state_attributes[lock.ATTR_LOCK_STATUS] == "Tamper Alarm: None"
+    assert device.extra_state_attributes[lock.ATTR_LOCK_STATUS] == "Tamper Alarm: None"
 
     values.alarm_type.data = 9
     value_changed(values.alarm_type)
-    assert device.device_state_attributes[lock.ATTR_LOCK_STATUS] == "Deadbolt Jammed"
+    assert device.extra_state_attributes[lock.ATTR_LOCK_STATUS] == "Deadbolt Jammed"
 
 
 def test_lock_alarm_level(mock_openzwave):
@@ -247,14 +247,14 @@ def test_lock_alarm_level(mock_openzwave):
     )
     device = lock.get_device(node=node, values=values, node_config={})
 
-    assert lock.ATTR_LOCK_STATUS not in device.device_state_attributes
+    assert lock.ATTR_LOCK_STATUS not in device.extra_state_attributes
 
     values.alarm_type.data = 21
     values.alarm_level.data = 1
     value_changed(values.alarm_type)
     value_changed(values.alarm_level)
     assert (
-        device.device_state_attributes[lock.ATTR_LOCK_STATUS]
+        device.extra_state_attributes[lock.ATTR_LOCK_STATUS]
         == "Manually Locked by Key Cylinder or Inside thumb turn"
     )
 
@@ -263,7 +263,7 @@ def test_lock_alarm_level(mock_openzwave):
     value_changed(values.alarm_type)
     value_changed(values.alarm_level)
     assert (
-        device.device_state_attributes[lock.ATTR_LOCK_STATUS]
+        device.extra_state_attributes[lock.ATTR_LOCK_STATUS]
         == "Locked with Keypad by user alice"
     )
 
@@ -272,7 +272,7 @@ def test_lock_alarm_level(mock_openzwave):
     value_changed(values.alarm_type)
     value_changed(values.alarm_level)
     assert (
-        device.device_state_attributes[lock.ATTR_LOCK_STATUS]
+        device.extra_state_attributes[lock.ATTR_LOCK_STATUS]
         == "Tamper Alarm: Too many keypresses"
     )
 

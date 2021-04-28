@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 import time
 
-from miio import ChuangmiIr, DeviceException  # pylint: disable=import-error
+from miio import ChuangmiIr, DeviceException
 import voluptuous as vol
 
 from homeassistant.components.remote import (

@@ -71,7 +71,7 @@ class PowerViewScene(HDEntity, Scene):
         return self._scene.name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
 

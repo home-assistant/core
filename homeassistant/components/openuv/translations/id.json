@@ -1,15 +1,18 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Lokasi sudah dikonfigurasi"
+        },
         "error": {
             "invalid_api_key": "Kunci API tidak valid"
         },
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Kunci API OpenUV",
+                    "api_key": "Kunci API",
                     "elevation": "Ketinggian",
                     "latitude": "Lintang",
-                    "longitude": "Garis bujur"
+                    "longitude": "Bujur"
                 },
                 "title": "Isi informasi Anda"
             }

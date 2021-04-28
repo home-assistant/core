@@ -82,6 +82,9 @@ async def async_setup(hass, config):
     async def set_io_scheduler(service):
         await _set_io_scheduler(hass, service)
 
+    async def set_clock_display_text(service):
+        await _set_clock_display_text(hass, service)
+
     # register services
     hass.services.async_register(DOMAIN, "change_host_name", change_host_name)
     hass.services.async_register(DOMAIN, "cec_command", cec_command)
@@ -104,6 +107,12 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "disable_irda_remote", disable_irda_remote)
     hass.services.async_register(DOMAIN, "set_scaling_governor", set_scaling_governor)
     hass.services.async_register(DOMAIN, "set_io_scheduler", set_io_scheduler)
+    if ais_global.has_front_clock():
+        hass.services.async_register(
+            DOMAIN, "set_clock_display_text", set_clock_display_text
+        )
+        comm = r'su -c "echo AIS > /sys/class/fd655/panel"'
+        await _run(comm)
     return True
 
 
@@ -500,7 +509,11 @@ async def _disable_irda_remote(hass, call):
 
 
 async def _set_scaling_governor(hass, call):
-    if not ais_global.has_root() or multiprocessing.cpu_count() > 5:
+    if (
+        not ais_global.has_root()
+        or multiprocessing.cpu_count() > 5
+        or "4.9.113" in platform.uname()
+    ):
         return
     # /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
     scaling_available_governors = ["hotplug", "interactive", "performance"]
@@ -511,7 +524,6 @@ async def _set_scaling_governor(hass, call):
         scaling = call.data["scaling"]
     # default powersave freq
     # /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies
-    # scaling_available_frequencies = 100000 250000 500000 667000 1000000 1200000
     freq = "1000000"
     if scaling == "performance":
         freq = "1200000"
@@ -546,3 +558,12 @@ async def _set_io_scheduler(hass, call):
     if scheduler in available_io_schedulers:
         comm = r'su -c "echo ' + scheduler + ' > /sys/block/mmcblk0/queue/scheduler"'
         await _run(comm)
+
+
+async def _set_clock_display_text(hass, call):
+    if not ais_global.has_root():
+        return
+    text = call.data["text"]
+
+    comm = r'su -c "echo ' + text + ' > /sys/class/fd655/panel"'
+    await _run(comm)

@@ -4,6 +4,7 @@ from datetime import timedelta
 from ovoenergy import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -53,7 +54,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class OVOEnergySensor(OVOEnergyDeviceEntity):
+class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
     """Defines a OVO Energy sensor."""
 
     def __init__(
@@ -100,7 +101,7 @@ class OVOEnergyLastElectricityReading(OVOEnergySensor):
         return usage.electricity[-1].consumption
 
     @property
-    def device_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.electricity:
@@ -135,7 +136,7 @@ class OVOEnergyLastGasReading(OVOEnergySensor):
         return usage.gas[-1].consumption
 
     @property
-    def device_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.gas:
@@ -171,7 +172,7 @@ class OVOEnergyLastElectricityCost(OVOEnergySensor):
         return usage.electricity[-1].cost.amount
 
     @property
-    def device_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.electricity:
@@ -207,7 +208,7 @@ class OVOEnergyLastGasCost(OVOEnergySensor):
         return usage.gas[-1].cost.amount
 
     @property
-    def device_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.gas:

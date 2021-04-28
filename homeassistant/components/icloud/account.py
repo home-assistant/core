@@ -1,8 +1,9 @@
 """iCloud account."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import operator
-from typing import Dict, Optional
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
@@ -95,7 +96,7 @@ class IcloudAccount:
 
         self._icloud_dir = icloud_dir
 
-        self.api: Optional[PyiCloudService] = None
+        self.api: PyiCloudService | None = None
         self._owner_fullname = None
         self._family_members_fullname = {}
         self._devices = {}
@@ -114,8 +115,7 @@ class IcloudAccount:
                 with_family=self._with_family,
             )
 
-            if not self.api.is_trusted_session or self.api.requires_2fa:
-                # Session is no longer trusted
+            if self.api.requires_2fa:
                 # Trigger a new log in to ensure the user enters the 2FA code again.
                 raise PyiCloudFailedLoginException
 
@@ -124,9 +124,9 @@ class IcloudAccount:
             # Login failed which means credentials need to be updated.
             _LOGGER.error(
                 (
-                    "Your password for '%s' is no longer working. Go to the "
+                    "Your password for '%s' is no longer working; Go to the "
                     "Integrations menu and click on Configure on the discovered Apple "
-                    "iCloud card to login again."
+                    "iCloud card to login again"
                 ),
                 self._config_entry.data[CONF_USERNAME],
             )
@@ -162,7 +162,7 @@ class IcloudAccount:
         if self.api is None:
             return
 
-        if not self.api.is_trusted_session or self.api.requires_2fa:
+        if self.api.requires_2fa:
             self._require_reauth()
             return
 
@@ -345,7 +345,7 @@ class IcloudAccount:
         return self._owner_fullname
 
     @property
-    def family_members_fullname(self) -> Dict[str, str]:
+    def family_members_fullname(self) -> dict[str, str]:
         """Return the account family members fullname."""
         return self._family_members_fullname
 
@@ -355,7 +355,7 @@ class IcloudAccount:
         return self._fetch_interval
 
     @property
-    def devices(self) -> Dict[str, any]:
+    def devices(self) -> dict[str, any]:
         """Return the account devices."""
         return self._devices
 
@@ -496,11 +496,11 @@ class IcloudDevice:
         return self._battery_status
 
     @property
-    def location(self) -> Dict[str, any]:
+    def location(self) -> dict[str, any]:
         """Return the Apple device location."""
         return self._location
 
     @property
-    def state_attributes(self) -> Dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, any]:
         """Return the attributes."""
         return self._attrs

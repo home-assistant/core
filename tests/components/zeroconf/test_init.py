@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from zeroconf import (
     BadTypeInNameException,
+    Error as ZeroconfError,
     InterfaceChoice,
     IPVersion,
     ServiceInfo,
@@ -495,3 +496,35 @@ async def test_get_instance(hass, mock_zeroconf):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert len(mock_zeroconf.ha_close.mock_calls) == 1
+
+
+async def test_removed_ignored(hass, mock_zeroconf):
+    """Test we remove it when a zeroconf entry is removed."""
+    mock_zeroconf.get_service_info.side_effect = ZeroconfError
+
+    def service_update_mock(zeroconf, services, handlers):
+        """Call service update handler."""
+        handlers[0](
+            zeroconf, "_service.added", "name._service.added", ServiceStateChange.Added
+        )
+        handlers[0](
+            zeroconf,
+            "_service.updated",
+            "name._service.updated",
+            ServiceStateChange.Updated,
+        )
+        handlers[0](
+            zeroconf,
+            "_service.removed",
+            "name._service.removed",
+            ServiceStateChange.Removed,
+        )
+
+    with patch.object(zeroconf, "HaServiceBrowser", side_effect=service_update_mock):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert len(mock_zeroconf.get_service_info.mock_calls) == 2
+    assert mock_zeroconf.get_service_info.mock_calls[0][1][0] == "_service.added"
+    assert mock_zeroconf.get_service_info.mock_calls[1][1][0] == "_service.updated"

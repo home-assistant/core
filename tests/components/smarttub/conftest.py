@@ -105,6 +105,14 @@ def mock_spa():
 
     mock_spa.get_lights.return_value = [mock_light_off, mock_light_on]
 
+    mock_filter_reminder = create_autospec(smarttub.SpaReminder, instance=True)
+    mock_filter_reminder.id = "FILTER01"
+    mock_filter_reminder.name = "MyFilter"
+    mock_filter_reminder.remaining_days = 2
+    mock_filter_reminder.snoozed = False
+
+    mock_spa.get_reminders.return_value = [mock_filter_reminder]
+
     return mock_spa
 
 

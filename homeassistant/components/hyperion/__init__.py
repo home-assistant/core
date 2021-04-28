@@ -1,8 +1,10 @@
 """The Hyperion component."""
+from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import logging
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, cast
+from typing import Any, Callable, cast
 
 from awesomeversion import AwesomeVersion
 from hyperion import client, const as hyperion_const
@@ -70,7 +72,7 @@ def get_hyperion_unique_id(server_id: str, instance: int, name: str) -> str:
     return f"{server_id}_{instance}_{name}"
 
 
-def split_hyperion_unique_id(unique_id: str) -> Optional[Tuple[str, int, str]]:
+def split_hyperion_unique_id(unique_id: str) -> tuple[str, int, str] | None:
     """Split a unique_id into a (server_id, instance, type) tuple."""
     data = tuple(unique_id.split("_", 2))
     if len(data) != 3:
@@ -92,7 +94,7 @@ def create_hyperion_client(
 async def async_create_connect_hyperion_client(
     *args: Any,
     **kwargs: Any,
-) -> Optional[client.HyperionClient]:
+) -> client.HyperionClient | None:
     """Create and connect a Hyperion Client."""
     hyperion_client = create_hyperion_client(*args, **kwargs)
 
@@ -158,7 +160,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryNotReady
     version = await hyperion_client.async_sysinfo_version()
     if version is not None:
-        try:
+        with suppress(ValueError):
             if AwesomeVersion(version) < AwesomeVersion(HYPERION_VERSION_WARN_CUTOFF):
                 _LOGGER.warning(
                     "Using a Hyperion server version < %s is not recommended -- "
@@ -167,8 +169,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                     HYPERION_VERSION_WARN_CUTOFF,
                     HYPERION_RELEASES_URL,
                 )
-        except ValueError:
-            pass
 
     # Client needs authentication, but no token provided? => Reauth.
     auth_resp = await hyperion_client.async_is_auth_required()
@@ -207,17 +207,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         CONF_ON_UNLOAD: [],
     }
 
-    async def async_instances_to_clients(response: Dict[str, Any]) -> None:
+    async def async_instances_to_clients(response: dict[str, Any]) -> None:
         """Convert instances to Hyperion clients."""
         if not response or hyperion_const.KEY_DATA not in response:
             return
         await async_instances_to_clients_raw(response[hyperion_const.KEY_DATA])
 
-    async def async_instances_to_clients_raw(instances: List[Dict[str, Any]]) -> None:
+    async def async_instances_to_clients_raw(instances: list[dict[str, Any]]) -> None:
         """Convert instances to Hyperion clients."""
         registry = await async_get_registry(hass)
-        running_instances: Set[int] = set()
-        stopped_instances: Set[int] = set()
+        running_instances: set[int] = set()
+        stopped_instances: set[int] = set()
         existing_instances = hass.data[DOMAIN][config_entry.entry_id][
             CONF_INSTANCE_CLIENTS
         ]
@@ -281,12 +281,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     async def setup_then_listen() -> None:
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_setup(config_entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_setup(config_entry, platform)
+                for platform in PLATFORMS
             ]
         )
         assert hyperion_client
-        await async_instances_to_clients_raw(hyperion_client.instances)
+        if hyperion_client.instances is not None:
+            await async_instances_to_clients_raw(hyperion_client.instances)
         hass.data[DOMAIN][config_entry.entry_id][CONF_ON_UNLOAD].append(
             config_entry.add_update_listener(_async_entry_updated)
         )
@@ -309,8 +310,8 @@ async def async_unload_entry(
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

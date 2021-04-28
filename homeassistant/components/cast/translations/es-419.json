@@ -9,5 +9,15 @@
                 "description": "\u00bfDesea configurar Google Cast?"
             }
         }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "ignore_cec": "Lista opcional que se pasar\u00e1 a pychromecast.IGNORE_CEC.",
+                    "uuid": "Lista opcional de UUID. No se agregar\u00e1n los dispositivos Cast que no est\u00e9n listados."
+                }
+            }
+        }
     }
 }

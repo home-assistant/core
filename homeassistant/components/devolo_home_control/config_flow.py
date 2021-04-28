@@ -8,11 +8,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
-from .const import (  # pylint:disable=unused-import
-    CONF_MYDEVOLO,
-    DEFAULT_MYDEVOLO,
-    DOMAIN,
-)
+from .const import CONF_MYDEVOLO, DEFAULT_MYDEVOLO, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

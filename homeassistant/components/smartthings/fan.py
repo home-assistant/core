@@ -1,6 +1,8 @@
 """Support for fans through the SmartThings cloud API."""
+from __future__ import annotations
+
 import math
-from typing import Optional, Sequence
+from typing import Sequence
 
 from pysmartthings import Capability
 
@@ -29,7 +31,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
+def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     """Return all capabilities supported if minimum required are present."""
     supported = [Capability.switch, Capability.fan_speed]
     # Must have switch and fan_speed
@@ -76,7 +78,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         return self._device.status.switch
 
     @property
-    def percentage(self) -> str:
+    def percentage(self) -> int:
         """Return the current speed percentage."""
         return ranged_value_to_percentage(SPEED_RANGE, self._device.status.fan_speed)
 

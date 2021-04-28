@@ -1,6 +1,7 @@
 """Implement the Google Smart Home traits."""
+from __future__ import annotations
+
 import logging
-from typing import List, Optional
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -27,6 +28,7 @@ from homeassistant.const import (
     ATTR_CODE,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     CAST_APP_ID_HOMEASSISTANT,
@@ -152,7 +154,7 @@ def _google_temp_unit(units):
     return "C"
 
 
-def _next_selected(items: List[str], selected: Optional[str]) -> Optional[str]:
+def _next_selected(items: list[str], selected: str | None) -> str | None:
     """Return the next item in a item list starting at given value.
 
     If selected is missing in items, None is returned
@@ -762,7 +764,7 @@ class TemperatureSettingTrait(_Trait):
                 mode in modes for mode in ("heatcool", "heat", "cool")
             ):
                 modes.append("on")
-            response["availableThermostatModes"] = ",".join(modes)
+            response["availableThermostatModes"] = modes
 
         return response
 
@@ -789,7 +791,7 @@ class TemperatureSettingTrait(_Trait):
             if preset in self.preset_to_google:
                 response["thermostatMode"] = self.preset_to_google[preset]
             else:
-                response["thermostatMode"] = self.hvac_to_google.get(operation)
+                response["thermostatMode"] = self.hvac_to_google.get(operation, "none")
 
             current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
             if current_temp is not None:
@@ -1424,11 +1426,10 @@ class ModesTrait(_Trait):
         elif self.state.domain == input_select.DOMAIN:
             mode_settings["option"] = self.state.state
         elif self.state.domain == humidifier.DOMAIN:
-            if humidifier.ATTR_MODE in attrs:
-                mode_settings["mode"] = attrs.get(humidifier.ATTR_MODE)
-        elif self.state.domain == light.DOMAIN:
-            if light.ATTR_EFFECT in attrs:
-                mode_settings["effect"] = attrs.get(light.ATTR_EFFECT)
+            if ATTR_MODE in attrs:
+                mode_settings["mode"] = attrs.get(ATTR_MODE)
+        elif self.state.domain == light.DOMAIN and light.ATTR_EFFECT in attrs:
+            mode_settings["effect"] = attrs.get(light.ATTR_EFFECT)
 
         if mode_settings:
             response["on"] = self.state.state not in (STATE_OFF, STATE_UNKNOWN)
@@ -1460,7 +1461,7 @@ class ModesTrait(_Trait):
                 humidifier.DOMAIN,
                 humidifier.SERVICE_SET_MODE,
                 {
-                    humidifier.ATTR_MODE: requested_mode,
+                    ATTR_MODE: requested_mode,
                     ATTR_ENTITY_ID: self.state.entity_id,
                 },
                 blocking=True,
@@ -1616,15 +1617,17 @@ class OpenCloseTrait(_Trait):
         if self.state.domain == binary_sensor.DOMAIN:
             response["queryOnlyOpenClose"] = True
             response["discreteOnlyOpenClose"] = True
-        elif self.state.domain == cover.DOMAIN:
-            if features & cover.SUPPORT_SET_POSITION == 0:
-                response["discreteOnlyOpenClose"] = True
+        elif (
+            self.state.domain == cover.DOMAIN
+            and features & cover.SUPPORT_SET_POSITION == 0
+        ):
+            response["discreteOnlyOpenClose"] = True
 
-                if (
-                    features & cover.SUPPORT_OPEN == 0
-                    and features & cover.SUPPORT_CLOSE == 0
-                ):
-                    response["queryOnlyOpenClose"] = True
+            if (
+                features & cover.SUPPORT_OPEN == 0
+                and features & cover.SUPPORT_CLOSE == 0
+            ):
+                response["queryOnlyOpenClose"] = True
 
         if self.state.attributes.get(ATTR_ASSUMED_STATE):
             response["commandOnlyOpenClose"] = True

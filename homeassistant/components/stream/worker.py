@@ -5,6 +5,7 @@ import logging
 
 import av
 
+from . import redact_credentials
 from .const import (
     AUDIO_CODECS,
     MAX_MISSING_DTS,
@@ -25,7 +26,7 @@ def create_stream_buffer(video_stream, audio_stream, sequence):
     segment = io.BytesIO()
     container_options = {
         # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
-        "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont",
+        "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont+negative_cts_offsets",
         "avoid_negative_ts": "disabled",
         "fragment_index": str(sequence),
     }
@@ -127,7 +128,7 @@ def stream_worker(source, options, segment_buffer, quit_event):
     try:
         container = av.open(source, options=options, timeout=STREAM_TIMEOUT)
     except av.AVError:
-        _LOGGER.error("Error opening stream %s", source)
+        _LOGGER.error("Error opening stream %s", redact_credentials(str(source)))
         return
     try:
         video_stream = container.streams.video[0]
@@ -208,6 +209,16 @@ def stream_worker(source, options, segment_buffer, quit_event):
                     missing_dts += 1
                     continue
                 if packet.stream == audio_stream:
+                    # detect ADTS AAC and disable audio
+                    if audio_stream.codec.name == "aac" and packet.size > 2:
+                        with memoryview(packet) as packet_view:
+                            if packet_view[0] == 0xFF and packet_view[1] & 0xF0 == 0xF0:
+                                _LOGGER.warning(
+                                    "ADTS AAC detected - disabling audio stream"
+                                )
+                                container_packets = container.demux(video_stream)
+                                audio_stream = None
+                                continue
                     found_audio = True
                 elif (
                     segment_start_pts is None

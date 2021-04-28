@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import datetime as py_datetime
 import logging
-import typing
 
 import voluptuous as vol
 
@@ -16,14 +15,14 @@ from homeassistant.const import (
     CONF_NAME,
     SERVICE_RELOAD,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceCallType
+from homeassistant.helpers.typing import ConfigType, ServiceCallType
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,7 +101,7 @@ CONFIG_SCHEMA = vol.Schema(
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input datetime."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
@@ -178,16 +177,16 @@ class DateTimeStorageCollection(collection.StorageCollection):
     CREATE_SCHEMA = vol.Schema(vol.All(CREATE_FIELDS, has_date_or_time))
     UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
 
-    async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
+    async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         return self.CREATE_SCHEMA(data)
 
     @callback
-    def _get_suggested_id(self, info: typing.Dict) -> str:
+    def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
-    async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
+    async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
         return has_date_or_time({**data, **update_data})
@@ -196,7 +195,7 @@ class DateTimeStorageCollection(collection.StorageCollection):
 class InputDatetime(RestoreEntity):
     """Representation of a datetime input."""
 
-    def __init__(self, config: typing.Dict) -> None:
+    def __init__(self, config: dict) -> None:
         """Initialize a select input."""
         self._config = config
         self.editable = True
@@ -230,7 +229,7 @@ class InputDatetime(RestoreEntity):
             )
 
     @classmethod
-    def from_yaml(cls, config: typing.Dict) -> InputDatetime:
+    def from_yaml(cls, config: dict) -> InputDatetime:
         """Return entity instance initialized from yaml storage."""
         input_dt = cls(config)
         input_dt.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
@@ -320,7 +319,7 @@ class InputDatetime(RestoreEntity):
         return self._current_datetime.strftime(FMT_TIME)
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {
             ATTR_EDITABLE: self.editable,
@@ -360,7 +359,7 @@ class InputDatetime(RestoreEntity):
         return attrs
 
     @property
-    def unique_id(self) -> typing.Optional[str]:
+    def unique_id(self) -> str | None:
         """Return unique id of the entity."""
         return self._config[CONF_ID]
 
@@ -394,7 +393,7 @@ class InputDatetime(RestoreEntity):
         )
         self.async_write_ha_state()
 
-    async def async_update_config(self, config: typing.Dict) -> None:
+    async def async_update_config(self, config: dict) -> None:
         """Handle when the config is updated."""
         self._config = config
         self.async_write_ha_state()

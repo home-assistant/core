@@ -18,8 +18,8 @@
         "description": "Unlock your deCONZ gateway to register with Home Assistant.\n\n1. Go to deCONZ Settings -> Gateway -> Advanced\n2. Press \"Authenticate app\" button"
       },
       "hassio_confirm": {
-        "title": "deCONZ Zigbee gateway via Hass.io add-on",
-        "description": "Do you want to configure Home Assistant to connect to the deCONZ gateway provided by the Hass.io add-on {addon}?"
+        "title": "deCONZ Zigbee gateway via Home Assistant add-on",
+        "description": "Do you want to configure Home Assistant to connect to the deCONZ gateway provided by the add-on {addon}?"
       }
     },
     "error": {

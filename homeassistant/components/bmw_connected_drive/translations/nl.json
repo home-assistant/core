@@ -16,5 +16,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "account_options": {
+                "data": {
+                    "read_only": "Alleen-lezen (alleen sensoren en notificatie, geen uitvoering van diensten, geen vergrendeling)",
+                    "use_location": "Gebruik Home Assistant locatie voor auto locatie peilingen (vereist voor niet i3/i8 voertuigen geproduceerd voor 7/2014)"
+                }
+            }
+        }
     }
 }

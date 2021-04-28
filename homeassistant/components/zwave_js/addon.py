@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from functools import partial
-from typing import Any, Callable, Optional, TypeVar, cast
+from typing import Any, Callable, TypeVar, cast
 
 from homeassistant.components.hassio import (
     async_create_snapshot,
@@ -66,9 +66,9 @@ class AddonManager:
     def __init__(self, hass: HomeAssistant) -> None:
         """Set up the add-on manager."""
         self._hass = hass
-        self._install_task: Optional[asyncio.Task] = None
-        self._start_task: Optional[asyncio.Task] = None
-        self._update_task: Optional[asyncio.Task] = None
+        self._install_task: asyncio.Task | None = None
+        self._start_task: asyncio.Task | None = None
+        self._update_task: asyncio.Task | None = None
 
     def task_in_progress(self) -> bool:
         """Return True if any of the add-on tasks are in progress."""
