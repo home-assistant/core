@@ -33,6 +33,7 @@ persistent = false
 extension-pkg-whitelist = [
     "ciso8601",
     "cv2",
+    "math",
 ]
 
 [tool.pylint.BASIC]
