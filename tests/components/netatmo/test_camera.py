@@ -357,7 +357,7 @@ async def test_webhook_person_event(hass, config_entry):
 
 
 async def test_setup_component_no_devices(hass, config_entry):
-    """Test setup with webhook."""
+    """Test setup with no devices."""
     with patch(
         "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth.async_post_request"
     ) as mock_post, patch(
