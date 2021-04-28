@@ -23,7 +23,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=DEFAULT_SCAN_INTERVAL)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the calendar platform for event devices."""
-    global MIN_TIME_BETWEEN_UPDATES
+    global MIN_TIME_BETWEEN_UPDATES  # pylint: disable=global-statement
     MIN_TIME_BETWEEN_UPDATES = (
         timedelta(minutes=config_entry.options.get(CONF_SCAN_INTERVAL))
         if config_entry.options.get(CONF_SCAN_INTERVAL) is not None

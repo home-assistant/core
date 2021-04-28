@@ -1,4 +1,6 @@
 """Test the Uonet+ Vulcan config flow."""
+import shutil
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.vulcan import config_flow, const
 from homeassistant.const import CONF_PIN, CONF_REGION, CONF_TOKEN
@@ -33,6 +35,7 @@ async def test_config_flow_auth_success(hass):
     assert result["type"] == "create_entry"
     assert result["title"] == "Jan Kowalski"
     assert result["data"] == {"student_id": "111", "login": "jan@fakelog.cf"}
+    shutil.rmtree(".vulcan")
 
 
 async def test_config_flow_auth_invalid_token(hass):
