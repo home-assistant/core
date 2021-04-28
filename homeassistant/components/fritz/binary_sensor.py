@@ -89,7 +89,8 @@ class FritzBoxConnectivitySensor(BinarySensorEntity):
         try:
             if "WANCommonInterfaceConfig1" in self._fritzbox_tools.connection.services:
                 connection = self._connection_call_action()
-                is_up = await self.hass.async_add_executor_job(connection)
+                link_props = await self.hass.async_add_executor_job(self._fritzbox_tools.connection.call_action, "WANCommonInterfaceConfig1", "GetCommonLinkProperties")
+                is_up = link_props["NewPhysicalLinkStatus"]
                 self._is_on = is_up == "Up"
             else:
                 self._is_on = self.hass.async_add_executor_job(
