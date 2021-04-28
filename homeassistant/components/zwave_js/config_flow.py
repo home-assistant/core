@@ -212,7 +212,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await self.install_task
         except AddonError as err:
-            _LOGGER.error("Failed to install Z-Wave JS add-on: %s", err)
+            _LOGGER.error(err)
             return self.async_show_progress_done(next_step_id="install_failed")
 
         self.integration_created_addon = True
@@ -274,7 +274,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await self.start_task
         except (CannotConnect, AddonError) as err:
-            _LOGGER.error("Failed to start Z-Wave JS add-on: %s", err)
+            _LOGGER.error(err)
             return self.async_show_progress_done(next_step_id="start_failed")
 
         return self.async_show_progress_done(next_step_id="finish_addon_setup")
@@ -309,7 +309,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     break
             else:
-                raise CannotConnect("Failed to start add-on: timeout")
+                raise CannotConnect("Failed to start Z-Wave JS add-on: timeout")
         finally:
             # Continue the flow after show progress when the task is done.
             self.hass.async_create_task(
@@ -352,7 +352,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             addon_info: dict = await addon_manager.async_get_addon_info()
         except AddonError as err:
-            _LOGGER.error("Failed to get Z-Wave JS add-on info: %s", err)
+            _LOGGER.error(err)
             raise AbortFlow("addon_info_failed") from err
 
         return addon_info
@@ -374,12 +374,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_set_addon_config(self, config: dict) -> None:
         """Set Z-Wave JS add-on config."""
-        options = {"options": config}
         addon_manager: AddonManager = get_addon_manager(self.hass)
         try:
-            await addon_manager.async_set_addon_options(options)
+            await addon_manager.async_set_addon_options(config)
         except AddonError as err:
-            _LOGGER.error("Failed to set Z-Wave JS add-on config: %s", err)
+            _LOGGER.error(err)
             raise AbortFlow("addon_set_config_failed") from err
 
     async def _async_install_addon(self) -> None:
@@ -399,7 +398,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             discovery_info_config = await addon_manager.async_get_addon_discovery_info()
         except AddonError as err:
-            _LOGGER.error("Failed to get Z-Wave JS add-on discovery info: %s", err)
+            _LOGGER.error(err)
             raise AbortFlow("addon_get_discovery_info_failed") from err
 
         return discovery_info_config
