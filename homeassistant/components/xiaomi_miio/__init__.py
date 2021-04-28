@@ -180,13 +180,8 @@ async def async_unload_entry(
     """Unload a config entry."""
     platforms = get_platforms(config_entry)
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in platforms
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, platforms
     )
 
     hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
