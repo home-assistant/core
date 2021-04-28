@@ -438,6 +438,9 @@ async def test_options_flow(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
+    with patch(
+        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.login", return_value=True
+    ):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
@@ -455,3 +458,96 @@ async def test_options_flow(hass):
         const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
         const.CONF_CLOUD_SUBDEVICES: True,
     }
+
+
+async def test_options_flow_incomplete(hass):
+    """Test specifying incomplete settings using options flow."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={
+            const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
+            CONF_HOST: TEST_HOST,
+            CONF_TOKEN: TEST_TOKEN,
+            const.CONF_MODEL: TEST_MODEL,
+            const.CONF_MAC: TEST_MAC,
+        },
+        title=TEST_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_info = get_mock_info()
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        return_value=mock_info,
+    ), patch(
+        "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
+            const.CONF_CLOUD_SUBDEVICES: True,
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"base": "cloud_credentials_incomplete"}
+
+
+async def test_options_flow_login_error(hass):
+    """Test specifying non default settings using options flow with login error."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={
+            const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
+            CONF_HOST: TEST_HOST,
+            CONF_TOKEN: TEST_TOKEN,
+            const.CONF_MODEL: TEST_MODEL,
+            const.CONF_MAC: TEST_MAC,
+        },
+        title=TEST_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_info = get_mock_info()
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        return_value=mock_info,
+    ), patch(
+        "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+    with patch(
+        "homeassistant.components.xiaomi_miio.config_flow.MiCloud.login", return_value=False
+    ):
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            const.CONF_CLOUD_USERNAME: TEST_CLOUD_USER,
+            const.CONF_CLOUD_PASSWORD: TEST_CLOUD_PASS,
+            const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
+            const.CONF_CLOUD_SUBDEVICES: True,
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"base": "cloud_login_error"}
