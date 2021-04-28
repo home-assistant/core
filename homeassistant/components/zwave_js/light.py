@@ -206,12 +206,23 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if white_value is not None and self._supports_white_value:
             # white led brightness is controlled by white level
             # rgb leds (if any) can be on at the same time
-            await self._async_set_colors(
-                {
-                    ColorComponent.WARM_WHITE: white_value,
-                    ColorComponent.COLD_WHITE: white_value,
-                }
-            )
+            white_channel = {}
+
+            if self.get_zwave_value(
+                "targetColor",
+                CommandClass.SWITCH_COLOR,
+                value_property_key=ColorComponent.WARM_WHITE,
+            ):
+                white_channel[ColorComponent.WARM_WHITE] = white_value
+
+            if self.get_zwave_value(
+                "targetColor",
+                CommandClass.SWITCH_COLOR,
+                value_property_key=ColorComponent.COLD_WHITE,
+            ):
+                white_channel[ColorComponent.COLD_WHITE] = white_value
+
+            await self._async_set_colors(white_channel)
 
         # set brightness
         await self._async_set_brightness(
