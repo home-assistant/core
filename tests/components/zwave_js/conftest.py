@@ -655,6 +655,8 @@ def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_fixt
 def vision_security_zl7432_fixture(client, vision_security_zl7432_state):
     """Mock a vision security zl7432 node."""
     node = Node(client, copy.deepcopy(vision_security_zl7432_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
 
 
 @pytest.fixture(name="zen_31")
