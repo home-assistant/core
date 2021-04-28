@@ -1,6 +1,7 @@
 """Provides functionality to interact with lights."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 import csv
 import dataclasses
 from datetime import timedelta
@@ -10,6 +11,7 @@ from typing import cast, final
 
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -74,7 +76,7 @@ COLOR_MODES_BRIGHTNESS = VALID_COLOR_MODES - {COLOR_MODE_ONOFF}
 COLOR_MODES_COLOR = {COLOR_MODE_HS, COLOR_MODE_RGB, COLOR_MODE_RGBW, COLOR_MODE_XY}
 
 
-def valid_supported_color_modes(color_modes):
+def valid_supported_color_modes(color_modes: Iterable[str]) -> set[str]:
     """Validate the given color modes."""
     color_modes = set(color_modes)
     if (
@@ -87,21 +89,21 @@ def valid_supported_color_modes(color_modes):
     return color_modes
 
 
-def brightness_supported(color_modes):
+def brightness_supported(color_modes: Iterable[str]) -> bool:
     """Test if brightness is supported."""
     if not color_modes:
         return False
     return any(mode in COLOR_MODES_BRIGHTNESS for mode in color_modes)
 
 
-def color_supported(color_modes):
+def color_supported(color_modes: Iterable[str]) -> bool:
     """Test if color is supported."""
     if not color_modes:
         return False
     return any(mode in COLOR_MODES_COLOR for mode in color_modes)
 
 
-def color_temp_supported(color_modes):
+def color_temp_supported(color_modes: Iterable[str]) -> bool:
     """Test if color temperature is supported."""
     if not color_modes:
         return False
@@ -202,7 +204,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
-def is_on(hass, entity_id):
+def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the lights are on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
 
@@ -395,14 +397,16 @@ async def async_setup(hass, config):  # noqa: C901
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN].async_setup_entry(entry)
+    component = cast(EntityComponent, hass.data[DOMAIN])
+    return await component.async_setup_entry(entry)
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN].async_unload_entry(entry)
+    component = cast(EntityComponent, hass.data[DOMAIN])
+    return await component.async_unload_entry(entry)
 
 
 def _coerce_none(value: str) -> None:
