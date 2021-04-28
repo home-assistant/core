@@ -14,8 +14,7 @@ add_event:
       required: true
       example: "Your email"
       selector:
-        entity:
-          domain: calendar
+        text:
     summary:
       name: Summary
       description: Acts as the title of the event.
@@ -58,4 +57,4 @@ add_event:
       description: Days or weeks that you want to create the event in.
       example: '"days": 2 or "weeks": 2'
       selector:
-        text:
+        object:
