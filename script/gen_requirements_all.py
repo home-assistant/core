@@ -13,7 +13,6 @@ from script.hassfest.model import Integration
 
 COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",
-    "Adafruit-DHT",
     "avea",  # depends on bluepy
     "avion",
     "beacontools",
