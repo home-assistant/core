@@ -1,7 +1,6 @@
 """Support for MySensors covers."""
 from enum import Enum, unique
 import logging
-from typing import Callable
 
 from homeassistant.components import mysensors
 from homeassistant.components.cover import ATTR_POSITION, DOMAIN, CoverEntity
@@ -11,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,9 @@ class CoverState(Enum):
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ):
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
 

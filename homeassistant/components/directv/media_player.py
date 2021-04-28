@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable
 
 from directv import DIRECTV
 
@@ -27,6 +26,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import DIRECTVEntity
@@ -66,7 +66,7 @@ SUPPORT_DTV_CLIENT = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list, bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> bool:
     """Set up the DirecTV config entry."""
     dtv = hass.data[DOMAIN][entry.entry_id]

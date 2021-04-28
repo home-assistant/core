@@ -1,8 +1,6 @@
 """Support for ReCollect Waste sensors."""
 from __future__ import annotations
 
-from typing import Callable
-
 from aiorecollect.client import PickupType
 import voluptuous as vol
 
@@ -16,6 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -57,7 +56,7 @@ def async_get_pickup_type_names(
 async def async_setup_platform(
     hass: HomeAssistant,
     config: dict,
-    async_add_entities: Callable,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: dict = None,
 ):
     """Import Recollect Waste configuration from YAML."""
@@ -75,7 +74,7 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up ReCollect Waste sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]

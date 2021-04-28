@@ -65,6 +65,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.network import is_internal_request
+from homeassistant.helpers.typing import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import SonosData
@@ -146,7 +147,9 @@ UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sonos from a config entry."""
     platform = entity_platform.current_platform.get()

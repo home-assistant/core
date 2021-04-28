@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any, Callable
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LOCATION, DEVICE_CLASS_TIMESTAMP, PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import IPPDataUpdateCoordinator, IPPEntity
@@ -29,7 +29,7 @@ from .const import (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up IPP sensor based on a config entry."""
     coordinator: IPPDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]

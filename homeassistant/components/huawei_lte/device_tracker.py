@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any, Callable, Dict, List, cast
+from typing import Any, Dict, List, cast
 
 import attr
 from stringcase import snakecase
@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import AddEntitiesCallback
 
 from . import HuaweiLteBaseEntity, Router
 from .const import (
@@ -53,7 +54,7 @@ def _get_hosts(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
 
@@ -130,7 +131,7 @@ def _is_us(host: _HostType) -> bool:
 def async_add_new_entities(
     hass: HomeAssistant,
     router_url: str,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
     tracked: set[str],
 ) -> None:
     """Add new entities that are not already being tracked."""

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from bsblan import BSBLan, BSBLanError, Info, State
 
@@ -27,7 +27,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import AddEntitiesCallback
 
 from .const import (
     ATTR_IDENTIFIERS,
@@ -76,7 +76,7 @@ BSBLAN_TO_HA_PRESET = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up BSBLan device based on a config entry."""
     bsblan: BSBLan = hass.data[DOMAIN][entry.entry_id][DATA_BSBLAN_CLIENT]

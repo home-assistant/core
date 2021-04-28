@@ -1,6 +1,4 @@
 """MySensors platform that offers a Climate (MySensors-HVAC) component."""
-from typing import Callable
-
 from homeassistant.components import mysensors
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -21,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import AddEntitiesCallback
 
 DICT_HA_TO_MYS = {
     HVAC_MODE_AUTO: "AutoChangeOver",
@@ -40,7 +39,9 @@ OPERATION_LIST = [HVAC_MODE_OFF, HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ):
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
 
