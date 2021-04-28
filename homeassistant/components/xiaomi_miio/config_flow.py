@@ -2,6 +2,8 @@
 import logging
 from re import search
 
+from micloud import MiCloud
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -48,8 +50,22 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
+        errors = {}
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            use_cloud = user_input.get(CONF_CLOUD_SUBDEVICES, False)
+            cloud_username = user_input.get(CONF_CLOUD_USERNAME)
+            cloud_password = user_input.get(CONF_CLOUD_PASSWORD)
+
+            if use_cloud:
+                if cloud_username is None or cloud_password is None or cloud_country is None:
+                    errors["base"] = "cloud_credentials_incomplete"
+                else:
+                    miio_cloud = MiCloud(cloud_username, cloud_password)
+                    if not await self.hass.async_add_executor_job(miio_cloud.login):
+                        errors["base"] = "cloud_login_error"
+
+            if not errors:
+                return self.async_create_entry(title="", data=user_input)
 
         settings_schema = vol.Schema(
             {
@@ -74,7 +90,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
 
-        return self.async_show_form(step_id="init", data_schema=settings_schema)
+        return self.async_show_form(step_id="init", data_schema=settings_schema, errors=errors)
 
 
 class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

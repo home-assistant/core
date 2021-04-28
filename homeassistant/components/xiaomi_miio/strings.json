@@ -22,6 +22,10 @@
     }
   },
   "options": {
+    "error": {
+      "cloud_credentials_incomplete": "Cloud credentials incomplete, please fill in username, password and country",
+      "cloud_login_error": "Could not login to Xioami Miio Cloud, check the credentials."
+    },
     "step": {
       "init": {
         "title": "Xiaomi Miio",
