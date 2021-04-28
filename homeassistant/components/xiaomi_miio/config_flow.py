@@ -3,7 +3,6 @@ import logging
 from re import search
 
 from micloud import MiCloud
-
 import voluptuous as vol
 
 from homeassistant import config_entries
