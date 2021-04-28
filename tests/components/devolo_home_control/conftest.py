@@ -4,11 +4,6 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.core import HomeAssistant
-
-from . import configure_integration
-from .mocks import DeviceMock
-
 
 def pytest_configure(config):
     """Define custom markers."""
@@ -36,12 +31,3 @@ def patch_mydevolo(request):
         return_value=["1400000000000001", "1400000000000002"],
     ):
         yield
-
-
-@pytest.fixture()
-async def entry(hass: HomeAssistant):
-    """Fixture to configure and unload the integration entry."""
-    DeviceMock.available = True
-    entry = configure_integration(hass)
-    yield entry
-    await hass.config_entries.async_unload(entry.entry_id)

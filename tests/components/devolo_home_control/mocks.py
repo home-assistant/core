@@ -76,6 +76,7 @@ class HomeControlMockBinarySensor(HomeControlMock):
     binary_sensor_devices = [BinarySensorMock()]
     devices = {"Test": BinarySensorMock()}
     publisher = Publisher(devices.keys())
+    publisher.unregister = MagicMock()
     updater = Updater(devices=devices, gateway=None, publisher=publisher)
 
 
