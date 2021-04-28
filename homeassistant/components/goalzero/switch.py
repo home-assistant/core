@@ -20,7 +20,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         )
         for switch_name in SWITCH_DICT
     ]
-    async_add_entities(switches, True)
+    async_add_entities(switches)
 
 
 class YetiSwitch(YetiEntity, SwitchEntity):
@@ -49,7 +49,7 @@ class YetiSwitch(YetiEntity, SwitchEntity):
     @property
     def unique_id(self):
         """Return the unique id of the switch."""
-        return f"{self._server_unique_id}/{self._condition_name}"
+        return f"{self._server_unique_id}/{self._condition}"
 
     @property
     def is_on(self):
