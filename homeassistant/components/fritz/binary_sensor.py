@@ -91,7 +91,7 @@ class FritzBoxConnectivitySensor(BinarySensorEntity):
                 is_up = link_props["NewPhysicalLinkStatus"]
                 self._is_on = is_up == "Up"
             else:
-                self._fritzbox_tools.fritzstatus.is_connected
+                self._is_on = self._fritzbox_tools.fritzstatus.is_connected
 
             self._is_available = True
 
