@@ -159,7 +159,8 @@ def async_parse_identifier(
     item: MediaSourceItem,
 ) -> tuple[str, str, int | None]:
     """Parse identifier."""
-    if not item.identifier:
+    print(item.identifier)
+    if "/" not in item.identifier:
         return "events", "", None
 
     source, path = item.identifier.lstrip("/").split("/", 1)
