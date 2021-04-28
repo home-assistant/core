@@ -1,5 +1,6 @@
 """The tests for Netatmo component."""
 import asyncio
+from datetime import timedelta
 from time import time
 from unittest.mock import AsyncMock, patch
 
@@ -10,6 +11,7 @@ from homeassistant.components.netatmo import DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import CoreState
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt
 
 from .common import (
     FAKE_WEBHOOK_ACTIVATION,
@@ -18,7 +20,7 @@ from .common import (
     simulate_webhook,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.cloud import mock_cloud
 
 # Fake webhook thermostat mode change to "Max"
@@ -361,7 +363,7 @@ async def test_setup_component_api_timeout(hass):
 
 
 async def test_setup_component_with_delay(hass, config_entry):
-    """Test setup of the netatmo component with dev account."""
+    """Test setup of the netatmo component with delayed startup."""
     hass.state = CoreState.not_running
 
     with patch(
@@ -380,13 +382,22 @@ async def test_setup_component_with_delay(hass, config_entry):
 
         await hass.async_block_till_done()
 
-        fake_post_requests.assert_called()
+        calls = fake_post_requests.call_count
+        assert calls == 10
+
         mock_impl.assert_called_once()
         mock_webhook.assert_not_called()
 
         await hass.async_start()
         await hass.async_block_till_done()
         mock_webhook.assert_called_once()
+
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(seconds=60),
+        )
+        await hass.async_block_till_done()
+        assert fake_post_requests.call_count > calls
 
     assert hass.config_entries.async_entries(DOMAIN)
     assert len(hass.states.async_all()) > 0
