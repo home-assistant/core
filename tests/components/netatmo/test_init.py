@@ -8,6 +8,7 @@ import pyatmo
 from homeassistant import config_entries
 from homeassistant.components.netatmo import DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.core import CoreState
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -357,3 +358,35 @@ async def test_setup_component_api_timeout(hass):
 
     mock_auth.assert_called_once()
     mock_impl.assert_called_once()
+
+
+async def test_setup_component_with_delay(hass, config_entry):
+    """Test setup of the netatmo component with dev account."""
+    hass.state = CoreState.not_running
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+    ) as mock_impl, patch(
+        "homeassistant.components.webhook.async_generate_url"
+    ) as mock_webhook, patch(
+        "pyatmo.auth.AbstractAsyncAuth.async_post_request",
+        AsyncMock(side_effect=fake_post_request),
+    ) as fake_post_requests, patch(
+        "homeassistant.components.netatmo.PLATFORMS", ["light"]
+    ):
+        assert await async_setup_component(
+            hass, "netatmo", {"netatmo": {"client_id": "123", "client_secret": "abc"}}
+        )
+
+        await hass.async_block_till_done()
+
+        fake_post_requests.assert_called()
+        mock_impl.assert_called_once()
+        mock_webhook.assert_not_called()
+
+        await hass.async_start()
+        await hass.async_block_till_done()
+        mock_webhook.assert_called_once()
+
+    assert hass.config_entries.async_entries(DOMAIN)
+    assert len(hass.states.async_all()) > 0
