@@ -105,13 +105,13 @@ def _add_camera(
     entry: ConfigEntry,
     camera_id: int,
     camera: dict[str, Any],
-    device_identifier: tuple[str, str, int],
+    device_identifier: tuple[str, str],
 ) -> None:
     """Add a motionEye camera to hass."""
 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={device_identifier},  # type: ignore[arg-type]
+        identifiers={device_identifier},
         manufacturer=MOTIONEYE_MANUFACTURER,
         model=MOTIONEYE_MANUFACTURER,
         name=camera[KEY_NAME],
@@ -164,13 +164,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_COORDINATOR: coordinator,
     }
 
-    current_cameras: set[tuple[str, str, int]] = set()
+    current_cameras: set[tuple[str, str]] = set()
     device_registry = await dr.async_get_registry(hass)
 
     @callback
     def _async_process_motioneye_cameras() -> None:
         """Process motionEye camera additions and removals."""
-        inbound_camera: set[tuple[str, str, int]] = set()
+        inbound_camera: set[tuple[str, str]] = set()
         assert coordinator.data is not None
         if KEY_CAMERAS not in coordinator.data:
             return

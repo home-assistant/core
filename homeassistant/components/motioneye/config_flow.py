@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, cast
+from typing import cast
 
 from motioneye_client.client import (
     MotionEyeClientConnectionError,
@@ -79,7 +79,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is None:
             return _get_form(
-                cast(Dict[str, Any], reauth_entry.data) if reauth_entry else {}
+                cast(ConfigType, reauth_entry.data) if reauth_entry else {}
             )
 
         try:
