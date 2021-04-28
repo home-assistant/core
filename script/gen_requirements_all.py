@@ -66,10 +66,6 @@ urllib3>=1.24.3
 # Constrain H11 to ensure we get a new enough version to support non-rfc line endings
 h11>=0.12.0
 
-# Constrain httpcore to fix exception when connection dropped
-# https://github.com/encode/httpcore/issues/239
-httpcore>=0.12.3
-
 # Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
 # https://github.com/advisories/GHSA-93xj-8mrv-444m
 httplib2>=0.19.0
