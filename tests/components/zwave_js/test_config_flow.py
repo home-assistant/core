@@ -1055,5 +1055,7 @@ async def test_install_addon_failure(hass, supervisor, addon_installed, install_
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
+    assert install_addon.call_args == call(hass, "core_zwave_js")
+
     assert result["type"] == "abort"
     assert result["reason"] == "addon_install_failed"
