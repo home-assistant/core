@@ -331,7 +331,7 @@ async def async_setup(hass, config):  # noqa: C901
         elif ATTR_RGB_COLOR in params and COLOR_MODE_RGB not in supported_color_modes:
             rgb_color = params.pop(ATTR_RGB_COLOR)
             if COLOR_MODE_RGBW in supported_color_modes:
-                params[ATTR_RGBW_COLOR] = (*rgb_color, 0)
+                params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             if COLOR_MODE_RGBWW in supported_color_modes:
                 params[ATTR_RGBWW_COLOR] = (*rgb_color, 0, 0)
             elif COLOR_MODE_HS in supported_color_modes:
@@ -345,7 +345,8 @@ async def async_setup(hass, config):  # noqa: C901
             elif COLOR_MODE_RGB in supported_color_modes:
                 params[ATTR_RGB_COLOR] = color_util.color_xy_to_RGB(*xy_color)
             elif COLOR_MODE_RGBW in supported_color_modes:
-                params[ATTR_RGBW_COLOR] = (*color_util.color_xy_to_RGB(*xy_color), 0)
+                rgb_color = color_util.color_xy_to_RGB(*xy_color)
+                params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif COLOR_MODE_RGBWW in supported_color_modes:
                 params[ATTR_RGBWW_COLOR] = (
                     *color_util.color_xy_to_RGB(*xy_color),
