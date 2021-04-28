@@ -2,6 +2,7 @@
 import logging
 
 import aiohttp
+import pyatmo
 import voluptuous as vol
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
@@ -181,7 +182,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         """Return a still image response from the camera."""
         try:
             return await self._data.async_get_live_snapshot(camera_id=self._id)
-        except aiohttp.ClientPayloadError as err:
+        except (aiohttp.ClientPayloadError, pyatmo.exceptions.ApiError) as err:
             _LOGGER.error(err)
 
     @property
