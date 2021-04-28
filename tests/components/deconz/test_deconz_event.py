@@ -265,7 +265,19 @@ async def test_deconz_alarm_events(hass, aioclient_mock, mock_deconz_websocket):
         CONF_CODE: "1234",
     }
 
-    # Unsupported event
+    # Unsupported events
+
+    event_changed_sensor = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "1",
+        "state": {"action": "unsupported,1234,1"},
+    }
+    await mock_deconz_websocket(data=event_changed_sensor)
+    await hass.async_block_till_done()
+
+    assert len(captured_events) == 1
 
     event_changed_sensor = {
         "t": "event",
