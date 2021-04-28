@@ -85,19 +85,19 @@ class YetiEntity(CoordinatorEntity):
     def device_info(self):
         """Return the device information of the entity."""
         if self.api.data:
-            _sw_version = self.api.data["firmwareVersion"]
+            sw_version = self.api.data["firmwareVersion"]
         else:
-            _sw_version = None
+            sw_version = None
         if self.api.sysdata:
-            _model = self.api.sysdata["model"]
+            model = self.api.sysdata["model"]
         else:
-            _model = _model or None
+            model = model or None
         return {
             "identifiers": {(DOMAIN, self._server_unique_id)},
             "manufacturer": "Goal Zero",
-            "model": _model,
+            "model": model,
             "name": self._name,
-            "sw_version": _sw_version,
+            "sw_version": sw_version,
         }
 
     @property
