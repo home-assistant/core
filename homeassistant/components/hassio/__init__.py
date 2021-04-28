@@ -1,7 +1,6 @@
 """Support for Hass.io."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 import os
@@ -336,7 +335,7 @@ def get_supervisor_ip():
     return os.environ["SUPERVISOR"].partition(":")[0]
 
 
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
+async def async_setup(hass: HomeAssistant, config: Config) -> bool:  # noqa: C901
     """Set up the Hass.io component."""
     # Check local setup
     for env in ("HASSIO", "HASSIO_TOKEN"):
@@ -518,31 +517,21 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     dev_reg = await async_get_registry(hass)
-    coordinator = HassioDataUpdateCoordinator(hass, config_entry, dev_reg)
+    coordinator = HassioDataUpdateCoordinator(hass, entry, dev_reg)
     hass.data[ADDONS_COORDINATOR] = coordinator
     await coordinator.async_refresh()
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     # Pop add-on data
     hass.data.pop(ADDONS_COORDINATOR, None)

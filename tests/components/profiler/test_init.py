@@ -5,9 +5,7 @@ from unittest.mock import patch
 
 from homeassistant import setup
 from homeassistant.components.profiler import (
-    CONF_SCAN_INTERVAL,
     CONF_SECONDS,
-    CONF_TYPE,
     SERVICE_DUMP_LOG_OBJECTS,
     SERVICE_LOG_EVENT_LOOP_SCHEDULED,
     SERVICE_LOG_THREAD_FRAMES,
@@ -17,6 +15,7 @@ from homeassistant.components.profiler import (
     SERVICE_STOP_LOG_OBJECTS,
 )
 from homeassistant.components.profiler.const import DOMAIN
+from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed

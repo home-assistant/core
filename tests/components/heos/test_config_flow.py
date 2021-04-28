@@ -8,7 +8,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components import heos, ssdp
 from homeassistant.components.heos.config_flow import HeosFlowHandler
 from homeassistant.components.heos.const import DATA_DISCOVERED_HOSTS, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST
 
 
@@ -36,7 +36,7 @@ async def test_cannot_connect_shows_error_form(hass, controller):
     """Test form is shown with error when cannot connect."""
     controller.connect.side_effect = HeosError()
     result = await hass.config_entries.flow.async_init(
-        heos.DOMAIN, context={"source": "user"}, data={CONF_HOST: "127.0.0.1"}
+        heos.DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "127.0.0.1"}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -52,7 +52,7 @@ async def test_create_entry_when_host_valid(hass, controller):
     data = {CONF_HOST: "127.0.0.1"}
     with patch("homeassistant.components.heos.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
-            heos.DOMAIN, context={"source": "user"}, data=data
+            heos.DOMAIN, context={"source": SOURCE_USER}, data=data
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["result"].unique_id == DOMAIN
@@ -68,7 +68,7 @@ async def test_create_entry_when_friendly_name_valid(hass, controller):
     data = {CONF_HOST: "Office (127.0.0.1)"}
     with patch("homeassistant.components.heos.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
-            heos.DOMAIN, context={"source": "user"}, data=data
+            heos.DOMAIN, context={"source": SOURCE_USER}, data=data
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["result"].unique_id == DOMAIN
@@ -83,7 +83,7 @@ async def test_discovery_shows_create_form(hass, controller, discovery_data):
     """Test discovery shows form to confirm setup and subsequent abort."""
 
     await hass.config_entries.flow.async_init(
-        heos.DOMAIN, context={"source": "ssdp"}, data=discovery_data
+        heos.DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data
     )
     await hass.async_block_till_done()
     flows_in_progress = hass.config_entries.flow.async_progress()
@@ -96,7 +96,7 @@ async def test_discovery_shows_create_form(hass, controller, discovery_data):
     discovery_data[ssdp.ATTR_UPNP_FRIENDLY_NAME] = "Bedroom"
 
     await hass.config_entries.flow.async_init(
-        heos.DOMAIN, context={"source": "ssdp"}, data=discovery_data
+        heos.DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data
     )
     await hass.async_block_till_done()
     flows_in_progress = hass.config_entries.flow.async_progress()

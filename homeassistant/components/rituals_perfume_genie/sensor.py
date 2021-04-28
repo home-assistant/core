@@ -105,7 +105,7 @@ class DiffuserBatterySensor(DiffuserEntity):
         return {
             "battery-charge.png": 100,
             "battery-full.png": 100,
-            "battery-75.png": 50,
+            "Battery-75.png": 50,
             "battery-50.png": 25,
             "battery-low.png": 10,
         }[self.coordinator.data[HUB][SENSORS][BATTERY][ICON]]

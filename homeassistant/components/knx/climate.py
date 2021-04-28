@@ -7,6 +7,7 @@ from typing import Any, Callable
 from xknx import XKNX
 from xknx.devices import Climate as XknxClimate, ClimateMode as XknxClimateMode
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
+from xknx.telegram.address import parse_device_group_address
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -17,7 +18,8 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -42,11 +44,35 @@ async def async_setup_platform(
     platform_config = discovery_info["platform_config"]
     xknx: XKNX = hass.data[DOMAIN].xknx
 
+    _async_migrate_unique_id(hass, platform_config)
     entities = []
     for entity_config in platform_config:
         entities.append(KNXClimate(xknx, entity_config))
 
     async_add_entities(entities)
+
+
+@callback
+def _async_migrate_unique_id(
+    hass: HomeAssistant, platform_config: list[ConfigType]
+) -> None:
+    """Change unique_ids used in 2021.4 to include target_temperature GA."""
+    entity_registry = er.async_get(hass)
+    for entity_config in platform_config:
+        # normalize group address strings - ga_temperature_state was the old uid
+        ga_temperature_state = parse_device_group_address(
+            entity_config[ClimateSchema.CONF_TEMPERATURE_ADDRESS][0]
+        )
+        old_uid = str(ga_temperature_state)
+
+        entity_id = entity_registry.async_get_entity_id("climate", DOMAIN, old_uid)
+        if entity_id is None:
+            continue
+        ga_target_temperature_state = parse_device_group_address(
+            entity_config[ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS][0]
+        )
+        new_uid = f"{ga_temperature_state}_{ga_target_temperature_state}"
+        entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
 
 
 class KNXClimate(KnxEntity, ClimateEntity):
@@ -57,6 +83,10 @@ class KNXClimate(KnxEntity, ClimateEntity):
         self._device: XknxClimate
         super().__init__(self._create_climate(xknx, config))
 
+        self._unique_id = (
+            f"{self._device.temperature.group_address_state}_"
+            f"{self._device.target_temperature.group_address_state}"
+        )
         self._unit_of_measurement = TEMP_CELSIUS
 
     @staticmethod

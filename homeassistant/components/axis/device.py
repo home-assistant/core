@@ -264,20 +264,9 @@ class AxisNetworkDevice:
         """Reset this device to default state."""
         self.disconnect_from_stream()
 
-        unload_ok = all(
-            await asyncio.gather(
-                *[
-                    self.hass.config_entries.async_forward_entry_unload(
-                        self.config_entry, platform
-                    )
-                    for platform in PLATFORMS
-                ]
-            )
+        return await self.hass.config_entries.async_unload_platforms(
+            self.config_entry, PLATFORMS
         )
-        if not unload_ok:
-            return False
-
-        return True
 
 
 async def get_device(hass, host, port, username, password):
