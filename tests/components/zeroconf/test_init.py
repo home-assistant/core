@@ -58,7 +58,7 @@ def service_update_mock(zeroconf, services, handlers, *, limit_service=None):
     for service in services:
         if limit_service is not None and service != limit_service:
             continue
-        handlers[0](zeroconf, service, f"name.{service}", ServiceStateChange.Added)
+        handlers[0](zeroconf, service, f"_name.{service}", ServiceStateChange.Added)
 
 
 def get_service_info_mock(service_type, name):
@@ -273,7 +273,7 @@ async def test_service_with_invalid_name(hass, mock_zeroconf, caplog):
         await hass.async_block_till_done()
 
     assert len(mock_service_browser.mock_calls) == 1
-    assert "Failed to get info for device name" in caplog.text
+    assert "Failed to get info for device" in caplog.text
 
 
 async def test_zeroconf_match_macaddress(hass, mock_zeroconf):
