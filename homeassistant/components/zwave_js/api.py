@@ -14,6 +14,7 @@ from zwave_js_server.const import CommandClass, LogLevel
 from zwave_js_server.exceptions import InvalidNewValue, NotFoundError, SetValueFailed
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.log_message import LogMessage
+from zwave_js_server.model.node import Node
 from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
@@ -77,10 +78,39 @@ def async_get_entry(orig_func: Callable) -> Callable:
         """Provide user specific data and store to function."""
         entry_id = msg[ENTRY_ID]
         entry = hass.config_entries.async_get_entry(entry_id)
+        if entry is None:
+            connection.send_error(
+                msg[ID], ERR_NOT_FOUND, f"Config entry {entry_id} not found"
+            )
+            return
         client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
         await orig_func(hass, connection, msg, entry, client)
 
     return async_get_entry_func
+
+
+def async_get_node(orig_func: Callable) -> Callable:
+    """Decorate async function to get node."""
+
+    @async_get_entry
+    @wraps(orig_func)
+    async def async_get_node_func(
+        hass: HomeAssistant,
+        connection: ActiveConnection,
+        msg: dict,
+        entry: ConfigEntry,
+        client: Client,
+    ) -> None:
+        """Provide user specific data and store to function."""
+        node_id = msg[NODE_ID]
+        node = client.driver.controller.nodes.get(node_id)
+
+        if node is None:
+            connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
+            return
+        await orig_func(hass, connection, msg, node)
+
+    return async_get_node_func
 
 
 @callback
@@ -362,21 +392,14 @@ async def websocket_remove_node(
         vol.Required(NODE_ID): int,
     },
 )
-@async_get_entry
+@async_get_node
 async def websocket_refresh_node_info(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict,
-    entry: ConfigEntry,
-    client: Client,
+    node: Node,
 ) -> None:
     """Re-interview a node."""
-    node_id = msg[NODE_ID]
-    node = client.driver.controller.nodes.get(node_id)
-
-    if node is None:
-        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
-        return
 
     @callback
     def async_cleanup() -> None:
@@ -419,22 +442,14 @@ async def websocket_refresh_node_info(
         vol.Required(NODE_ID): int,
     },
 )
-@async_get_entry
+@async_get_node
 async def websocket_refresh_node_values(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict,
-    entry: ConfigEntry,
-    client: Client,
+    node: Node,
 ) -> None:
     """Refresh node values."""
-    node_id = msg[NODE_ID]
-    node = client.driver.controller.nodes.get(node_id)
-
-    if node is None:
-        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
-        return
-
     await node.async_refresh_values()
     connection.send_result(msg[ID])
 
@@ -449,22 +464,14 @@ async def websocket_refresh_node_values(
         vol.Required(COMMAND_CLASS_ID): int,
     },
 )
-@async_get_entry
+@async_get_node
 async def websocket_refresh_node_cc_values(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict,
-    entry: ConfigEntry,
-    client: Client,
+    node: Node,
 ) -> None:
     """Refresh node values for a particular CommandClass."""
-    node_id = msg[NODE_ID]
-    node = client.driver.controller.nodes.get(node_id)
-
-    if node is None:
-        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
-        return
-
     command_class_id = msg[COMMAND_CLASS_ID]
 
     try:
@@ -491,24 +498,17 @@ async def websocket_refresh_node_cc_values(
         vol.Required(VALUE): int,
     }
 )
-@async_get_entry
+@async_get_node
 async def websocket_set_config_parameter(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict,
-    entry: ConfigEntry,
-    client: Client,
+    node: Node,
 ) -> None:
     """Set a config parameter value for a Z-Wave node."""
-    node_id = msg[NODE_ID]
     property_ = msg[PROPERTY]
     property_key = msg.get(PROPERTY_KEY)
     value = msg[VALUE]
-    node = client.driver.controller.nodes.get(node_id)
-
-    if node is None:
-        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
-        return
 
     try:
         zwave_value, cmd_status = await async_set_config_parameter(
