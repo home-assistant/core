@@ -199,10 +199,6 @@ class CastDevice(MediaPlayerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect Chromecast object when removed."""
         await self._async_disconnect()
-        if self._cast_info.uuid is not None:
-            # Remove the entity from the added casts so that it can dynamically
-            # be re-added again.
-            self.hass.data[ADDED_CAST_DEVICES_KEY].remove(self._cast_info.uuid)
         if self._add_remove_handler:
             self._add_remove_handler()
             self._add_remove_handler = None
@@ -212,7 +208,6 @@ class CastDevice(MediaPlayerEntity):
 
     def async_set_cast_info(self, cast_info):
         """Set the cast information."""
-
         self._cast_info = cast_info
 
     async def async_connect_to_chromecast(self):

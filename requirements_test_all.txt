@@ -423,7 +423,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210423.0
+home-assistant-frontend==20210427.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -521,6 +521,9 @@ mullvad-api==1.0.0
 
 # homeassistant.components.tts
 mutagen==1.45.1
+
+# homeassistant.components.mutesync
+mutesync==0.0.1
 
 # homeassistant.components.keenetic_ndms2
 ndms2_client==0.1.1
@@ -1067,7 +1070,7 @@ rokuecp==0.8.1
 roombapy==1.6.3
 
 # homeassistant.components.roon
-roonapi==0.0.32
+roonapi==0.0.36
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0

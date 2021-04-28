@@ -1,0 +1,74 @@
+blueprint:
+  name: Confirmable Notification
+  description: >-
+    A script that sends an actionable notification with a confirmation before
+    running the specified action.
+  domain: script
+  source_url: https://github.com/home-assistant/core/blob/master/homeassistant/components/script/blueprints/confirmable_notification.yaml
+  input:
+    notify_device:
+      name: Device to notify
+      description: Device needs to run the official Home Assistant app to receive notifications.
+      selector:
+        device:
+          integration: mobile_app
+    title:
+      name: "Title"
+      description: "The title of the button shown in the notification."
+      default: ""
+      selector:
+        text:
+    message:
+      name: "Message"
+      description: "The message body"
+      selector:
+        text:
+    confirm_text:
+      name: "Confirmation Text"
+      description: "Text to show on the confirmation button"
+      default: "Confirm"
+      selector:
+        text:
+    confirm_action:
+      name: "Confirmation Action"
+      description: "Action to run when notification is confirmed"
+      default: []
+      selector:
+        action:
+    dismiss_text:
+      name: "Dismiss Text"
+      description: "Text to show on the dismiss button"
+      default: "Dismiss"
+      selector:
+        text:
+    dismiss_action:
+      name: "Dismiss Action"
+      description: "Action to run when notification is dismissed"
+      default: []
+      selector:
+        action:
+
+mode: restart
+
+sequence:
+  - alias: "Send notification"
+    domain: mobile_app
+    type: notify
+    device_id: !input notify_device
+    title: !input title
+    message: !input message
+    data:
+      actions:
+        - action: "CONFIRM"
+          title: !input confirm_text
+        - action: "DISMISS"
+          title: !input dismiss_text
+  - alias: "Awaiting response"
+    wait_for_trigger:
+      - platform: event
+        event_type: mobile_app_notification_action
+  - choose:
+      - conditions: "{{ wait.trigger.event.data.action == 'CONFIRM' }}"
+        sequence: !input confirm_action
+      - conditions: "{{ wait.trigger.event.data.action == 'DISMISS' }}"
+        sequence: !input dismiss_action

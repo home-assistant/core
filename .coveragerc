@@ -641,6 +641,8 @@ omit =
     homeassistant/components/msteams/notify.py
     homeassistant/components/mullvad/__init__.py
     homeassistant/components/mullvad/binary_sensor.py
+    homeassistant/components/mutesync/__init__.py
+    homeassistant/components/mutesync/binary_sensor.py
     homeassistant/components/nest/const.py
     homeassistant/components/mvglive/sensor.py
     homeassistant/components/mychevy/*
