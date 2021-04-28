@@ -372,7 +372,7 @@ async def websocket_refresh_node_info(
 ) -> None:
     """Re-interview a node."""
     node_id = msg[NODE_ID]
-    node = client.driver.controller.nodes[node_id]
+    node = client.driver.controller.nodes.get(node_id)
 
     if node is None:
         connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
@@ -429,7 +429,7 @@ async def websocket_refresh_node_values(
 ) -> None:
     """Refresh node values."""
     node_id = msg[NODE_ID]
-    node = client.driver.controller.nodes[node_id]
+    node = client.driver.controller.nodes.get(node_id)
 
     if node is None:
         connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
@@ -459,7 +459,7 @@ async def websocket_refresh_node_cc_values(
 ) -> None:
     """Refresh node values for a particular CommandClass."""
     node_id = msg[NODE_ID]
-    node = client.driver.controller.nodes[node_id]
+    node = client.driver.controller.nodes.get(node_id)
 
     if node is None:
         connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
