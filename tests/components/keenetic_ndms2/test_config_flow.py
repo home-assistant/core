@@ -136,7 +136,7 @@ async def test_host_already_configured(hass, connect):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        keenetic.DOMAIN, context={"source": "user"}
+        keenetic.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -151,7 +151,7 @@ async def test_connection_error(hass, connect_error):
     """Test error when connection is unsuccessful."""
 
     result = await hass.config_entries.flow.async_init(
-        keenetic.DOMAIN, context={"source": "user"}
+        keenetic.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_DATA

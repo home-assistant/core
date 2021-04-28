@@ -102,7 +102,7 @@ async def async_setup_entry(
     disconnect_dispatcher = async_dispatcher_connect(
         hass, UPDATE_SIGNAL, _async_maybe_add_new_entities
     )
-    router.unload_handlers.append(disconnect_dispatcher)
+    config_entry.async_on_unload(disconnect_dispatcher)
 
     # Add new entities from initial scan
     async_add_new_entities(hass, router.url, async_add_entities, tracked)

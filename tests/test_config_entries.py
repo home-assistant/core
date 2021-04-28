@@ -257,14 +257,12 @@ async def test_remove_entry(hass, manager):
 
     async def mock_setup_entry(hass, entry):
         """Mock setting up entry."""
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, "light")
-        )
+        hass.config_entries.async_setup_platforms(entry, ["light"])
         return True
 
     async def mock_unload_entry(hass, entry):
         """Mock unloading an entry."""
-        result = await hass.config_entries.async_forward_entry_unload(entry, "light")
+        result = await hass.config_entries.async_unload_platforms(entry, ["light"])
         assert result
         return result
 
@@ -2068,7 +2066,7 @@ async def test_unignore_create_entry(hass, manager):
         # But after a 'tick' the unignore step has run and we can see a config entry.
         await hass.async_block_till_done()
         entry = hass.config_entries.async_entries("comp")[0]
-        assert entry.source == "unignore"
+        assert entry.source == config_entries.SOURCE_UNIGNORE
         assert entry.unique_id == "mock-unique-id"
         assert entry.title == "yo"
 

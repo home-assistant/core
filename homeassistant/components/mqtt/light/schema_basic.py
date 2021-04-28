@@ -250,7 +250,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         )
         self._optimistic_xy = optimistic or topic[CONF_XY_STATE_TOPIC] is None
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self):  # noqa: C901
         """(Re)Subscribe to topics."""
         topics = {}
 
@@ -579,7 +579,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         return supported_features
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):  # noqa: C901
         """Turn the device on.
 
         This method is a coroutine.

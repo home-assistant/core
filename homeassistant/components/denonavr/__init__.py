@@ -11,12 +11,10 @@ from homeassistant.helpers.httpx_client import get_async_client
 
 from .config_flow import (
     CONF_SHOW_ALL_SOURCES,
-    CONF_UPDATE_AUDYSSEY,
     CONF_ZONE2,
     CONF_ZONE3,
     DEFAULT_SHOW_SOURCES,
     DEFAULT_TIMEOUT,
-    DEFAULT_UPDATE_AUDYSSEY,
     DEFAULT_ZONE2,
     DEFAULT_ZONE3,
     DOMAIN,
@@ -25,6 +23,7 @@ from .receiver import ConnectDenonAVR
 
 CONF_RECEIVER = "receiver"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
+PLATFORMS = ["media_player"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,15 +54,10 @@ async def async_setup_entry(
 
     hass.data[DOMAIN][entry.entry_id] = {
         CONF_RECEIVER: receiver,
-        CONF_UPDATE_AUDYSSEY: entry.options.get(
-            CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
-        ),
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "media_player")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -72,8 +66,8 @@ async def async_unload_entry(
     hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
 ):
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_forward_entry_unload(
-        config_entry, "media_player"
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
 
     hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()

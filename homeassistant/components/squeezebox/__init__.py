@@ -10,12 +10,12 @@ from .const import DISCOVERY_TASK, DOMAIN, PLAYER_DISCOVERY_UNSUB
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS = [MP_DOMAIN]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Logitech Squeezebox from a config entry."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, MP_DOMAIN)
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
@@ -34,4 +34,4 @@ async def async_unload_entry(hass, entry):
         hass.data[DOMAIN][DISCOVERY_TASK].cancel()
         hass.data[DOMAIN].pop(DISCOVERY_TASK)
 
-    return await hass.config_entries.async_forward_entry_unload(entry, MP_DOMAIN)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

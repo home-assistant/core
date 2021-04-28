@@ -1,13 +1,14 @@
 # Automatically generated from .pre-commit-config.yaml by gen_requirements_all.py, do not edit
 
 bandit==1.7.0
-black==20.8b1
+black==21.4b0
 codespell==2.0.0
 flake8-comprehensions==3.4.0
 flake8-docstrings==1.6.0
 flake8-noqa==1.1.0
 flake8==3.9.1
 isort==5.8.0
+mccabe==0.6.1
 pycodestyle==2.7.0
 pydocstyle==6.0.0
 pyflakes==2.3.1

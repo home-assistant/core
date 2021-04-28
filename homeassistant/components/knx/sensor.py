@@ -46,6 +46,7 @@ class KNXSensor(KnxEntity, SensorEntity):
         """Initialize of a KNX sensor."""
         self._device: XknxSensor
         super().__init__(self._create_sensor(xknx, config))
+        self._unique_id = f"{self._device.sensor_value.group_address_state}"
 
     @staticmethod
     def _create_sensor(xknx: XKNX, config: ConfigType) -> XknxSensor:

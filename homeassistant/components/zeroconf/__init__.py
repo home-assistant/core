@@ -1,6 +1,7 @@
 """Support for exposing Home Assistant via Zeroconf."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from contextlib import suppress
 import fnmatch
 from functools import partial
@@ -8,7 +9,7 @@ import ipaddress
 from ipaddress import ip_address
 import logging
 import socket
-from typing import Any, Iterable, TypedDict, cast
+from typing import Any, TypedDict, cast
 
 from pyroute2 import IPRoute
 import voluptuous as vol
@@ -22,7 +23,7 @@ from zeroconf import (
     Zeroconf,
 )
 
-from homeassistant import util
+from homeassistant import config_entries, util
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
@@ -400,7 +401,9 @@ def handle_homekit(
 
         hass.add_job(
             hass.config_entries.flow.async_init(
-                homekit_models[test_model], context={"source": "homekit"}, data=info
+                homekit_models[test_model],
+                context={"source": config_entries.SOURCE_HOMEKIT},
+                data=info,
             )  # type: ignore
         )
         return True

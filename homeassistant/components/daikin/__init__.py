@@ -81,25 +81,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not daikin_api:
         return False
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: daikin_api})
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    await asyncio.wait(
-        [
-            hass.config_entries.async_forward_entry_unload(config_entry, platform)
-            for platform in PLATFORMS
-        ]
-    )
-    hass.data[DOMAIN].pop(config_entry.entry_id)
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN)
-    return True
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
+    return unload_ok
 
 
 async def daikin_api_setup(hass, host, key, uuid, password):

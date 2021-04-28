@@ -1,6 +1,7 @@
 """Definition of Picnic sensors."""
+from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
@@ -48,33 +49,37 @@ class PicnicSensor(CoordinatorEntity):
         self._service_unique_id = config_entry.unique_id
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
         return self.properties.get("unit")
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         return f"{self._service_unique_id}.{self.sensor_type}"
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the entity."""
         return self._to_capitalized_name(self.sensor_type)
 
     @property
     def state(self) -> StateType:
         """Return the state of the entity."""
-        data_set = self.coordinator.data.get(self.properties["data_type"], {})
+        data_set = (
+            self.coordinator.data.get(self.properties["data_type"], {})
+            if self.coordinator.data is not None
+            else {}
+        )
         return self.properties["state"](data_set)
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self.properties.get("class")
 
     @property
-    def icon(self) -> Optional[str]:
+    def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
         return self.properties["icon"]
 

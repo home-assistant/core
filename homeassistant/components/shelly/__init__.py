@@ -33,6 +33,7 @@ from .const import (
     POLLING_TIMEOUT_SEC,
     REST,
     REST_SENSORS_UPDATE_INTERVAL,
+    SHBTN_MODELS,
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
 )
@@ -136,10 +137,7 @@ async def async_device_setup(
         ] = ShellyDeviceRestWrapper(hass, device)
         platforms = PLATFORMS
 
-    for platform in platforms:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, platforms)
 
 
 class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
@@ -180,6 +178,17 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Handle device updates."""
         if not self.device.initialized:
             return
+
+        # For buttons which are battery powered - set initial value for last_event_count
+        if self.model in SHBTN_MODELS and self._last_input_events_count.get(1) is None:
+            for block in self.device.blocks:
+                if block.type != "device":
+                    continue
+
+                if block.wakeupEvent[0] == "button":
+                    self._last_input_events_count[1] = -1
+
+                break
 
         # Check for input events
         for block in self.device.blocks:
@@ -322,14 +331,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][REST] = None
         platforms = PLATFORMS
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in platforms
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
     if unload_ok:
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][COAP].shutdown()
         hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)

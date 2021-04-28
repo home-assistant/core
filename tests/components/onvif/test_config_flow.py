@@ -137,7 +137,7 @@ async def setup_onvif_integration(
     options=None,
     unique_id=MAC,
     entry_id="1",
-    source="user",
+    source=config_entries.SOURCE_USER,
 ):
     """Create an ONVIF config entry."""
     if not config:
@@ -180,7 +180,7 @@ async def test_flow_discovered_devices(hass):
     """Test that config flow works for discovered devices."""
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -245,7 +245,7 @@ async def test_flow_discovered_devices_ignore_configured_manual_input(hass):
     await setup_onvif_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -296,7 +296,7 @@ async def test_flow_discovery_ignore_existing_and_abort(hass):
     )
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -348,7 +348,7 @@ async def test_flow_discovery_ignore_existing_and_abort(hass):
 async def test_flow_manual_entry(hass):
     """Test that config flow works for discovered devices."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

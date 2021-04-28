@@ -101,7 +101,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return user_input[CONF_URL] in existing_urls
 
-    async def async_step_user(
+    async def async_step_user(  # noqa: C901
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResultDict:
         """Handle user initiated config flow."""

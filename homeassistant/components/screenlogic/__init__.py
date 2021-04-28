@@ -1,6 +1,5 @@
 """The Screenlogic integration."""
 import asyncio
-from collections import defaultdict
 from datetime import timedelta
 import logging
 
@@ -73,52 +72,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await coordinator.async_config_entry_first_refresh()
 
-    device_data = defaultdict(list)
-
-    for circuit in coordinator.data["circuits"]:
-        device_data["switch"].append(circuit)
-
-    for sensor in coordinator.data["sensors"]:
-        if sensor == "chem_alarm":
-            device_data["binary_sensor"].append(sensor)
-        else:
-            if coordinator.data["sensors"][sensor]["value"] != 0:
-                device_data["sensor"].append(sensor)
-
-    for pump in coordinator.data["pumps"]:
-        if (
-            coordinator.data["pumps"][pump]["data"] != 0
-            and "currentWatts" in coordinator.data["pumps"][pump]
-        ):
-            device_data["pump"].append(pump)
-
-    for body in coordinator.data["bodies"]:
-        device_data["body"].append(body)
-
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
-        "devices": device_data,
         "listener": entry.add_update_listener(async_update_listener),
     }
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     hass.data[DOMAIN][entry.entry_id]["listener"]()
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
@@ -166,10 +132,16 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
 class ScreenlogicEntity(CoordinatorEntity):
     """Base class for all ScreenLogic entities."""
 
-    def __init__(self, coordinator, data_key):
+    def __init__(self, coordinator, data_key, enabled=True):
         """Initialize of the entity."""
         super().__init__(coordinator)
         self._data_key = data_key
+        self._enabled_default = enabled
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Entity enabled by default."""
+        return self._enabled_default
 
     @property
     def mac(self):
