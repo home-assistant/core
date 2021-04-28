@@ -599,15 +599,15 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
         """Initialize the Synology DSM entity."""
         super().__init__(coordinator)
 
-        self._api: SynoApi = api
-        self._api_key: str = entity_type.split(":")[0]
-        self.entity_type: str = entity_type.split(":")[-1]
-        self._name: str = f"{api.network.hostname} {entity_info[ENTITY_NAME]}"
-        self._class: str | None = entity_info[ENTITY_CLASS]
-        self._enable_default: bool = entity_info[ENTITY_ENABLE]
-        self._icon: str | None = entity_info[ENTITY_ICON]
-        self._unit: str | None = entity_info[ENTITY_UNIT]
-        self._unique_id: str = f"{self._api.information.serial}_{entity_type}"
+        self._api = api
+        self._api_key = entity_type.split(":")[0]
+        self.entity_type = entity_type.split(":")[-1]
+        self._name = f"{api.network.hostname} {entity_info[ENTITY_NAME]}"
+        self._class = entity_info[ENTITY_CLASS]
+        self._enable_default = entity_info[ENTITY_ENABLE]
+        self._icon = entity_info[ENTITY_ICON]
+        self._unit = entity_info[ENTITY_UNIT]
+        self._unique_id = f"{self._api.information.serial}_{entity_type}"
 
     @property
     def unique_id(self) -> str:

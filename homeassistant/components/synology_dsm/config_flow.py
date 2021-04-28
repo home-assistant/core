@@ -15,8 +15,14 @@ from synology_dsm.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow, exceptions
+from homeassistant import exceptions
 from homeassistant.components import ssdp
+from homeassistant.config_entries import (
+    CONN_CLASS_CLOUD_POLL,
+    ConfigEntry,
+    ConfigFlow,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_DISKS,
     CONF_HOST,
@@ -31,7 +37,9 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResultDict
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     CONF_DEVICE_TOKEN,
@@ -50,7 +58,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_OTP_CODE = "otp_code"
 
 
-def _discovery_schema_with_defaults(discovery_info: dict[str, Any]) -> vol.Schema:
+def _discovery_schema_with_defaults(discovery_info: DiscoveryInfoType) -> vol.Schema:
     return vol.Schema(_ordered_shared_schema(discovery_info))
 
 
@@ -80,15 +88,16 @@ def _ordered_shared_schema(
     }
 
 
-class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
+    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> SynologyDSMOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SynologyDSMOptionsFlowHandler(config_entry)
@@ -102,7 +111,7 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         user_input: dict[str, Any] | None = None,
         errors: dict[str, str] | None = None,
-    ) -> data_entry_flow.FlowResultDict:
+    ) -> FlowResultDict:
         """Show the setup form to the user."""
         if not user_input:
             user_input = {}
@@ -124,7 +133,7 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResultDict:
+    ) -> FlowResultDict:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -202,8 +211,8 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=host, data=config_data)
 
     async def async_step_ssdp(
-        self, discovery_info: dict[str, Any]
-    ) -> data_entry_flow.FlowResultDict:
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResultDict:
         """Handle a discovered synology_dsm."""
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
         friendly_name = (
@@ -228,19 +237,17 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResultDict:
+    ) -> FlowResultDict:
         """Import a config entry."""
         return await self.async_step_user(user_input)
 
-    async def async_step_link(
-        self, user_input: dict[str, Any]
-    ) -> data_entry_flow.FlowResultDict:
+    async def async_step_link(self, user_input: dict[str, Any]) -> FlowResultDict:
         """Link a config entry from discovery."""
         return await self.async_step_user(user_input)
 
     async def async_step_2sa(
         self, user_input: dict[str, Any], errors: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResultDict:
+    ) -> FlowResultDict:
         """Enter 2SA code to anthenticate."""
         if not self.saved_user_input:
             self.saved_user_input = user_input
@@ -267,16 +274,16 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return mac in existing_macs
 
 
-class SynologyDSMOptionsFlowHandler(config_entries.OptionsFlow):
+class SynologyDSMOptionsFlowHandler(OptionsFlow):
     """Handle a option flow."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: ConfigEntry):
         """Initialize options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResultDict:
+    ) -> FlowResultDict:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
