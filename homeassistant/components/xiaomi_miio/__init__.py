@@ -167,11 +167,7 @@ async def async_setup_device_entry(
     if not platforms:
         return False
 
-    undo_listener = entry.add_update_listener(update_listener)
-
-    hass.data[DOMAIN][entry.entry_id] = {
-        UNDO_UPDATE_LISTENER: undo_listener,
-    }
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     for platform in platforms:
         hass.async_create_task(
