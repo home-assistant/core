@@ -4,6 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.core import HomeAssistant
+
 from . import configure_integration
 
 
@@ -36,10 +38,8 @@ def patch_mydevolo(request):
 
 
 @pytest.fixture()
-async def entry(hass):
+async def entry(hass: HomeAssistant):
     """Fixture to configure and unload the integration entry."""
     entry = configure_integration(hass)
-
     yield entry
-
     await hass.config_entries.async_unload(entry.entry_id)
