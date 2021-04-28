@@ -1,8 +1,6 @@
 """Support for the Netatmo camera lights."""
 import logging
 
-import pyatmo
-
 from homeassistant.components.light import LightEntity
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
@@ -34,24 +32,19 @@ async def async_setup_entry(hass, entry, async_add_entities):
     await data_handler.register_data_class(
         CAMERA_DATA_CLASS_NAME, CAMERA_DATA_CLASS_NAME, None
     )
-    data_class = data_handler.data[CAMERA_DATA_CLASS_NAME]
+    data_class = data_handler.data.get(CAMERA_DATA_CLASS_NAME)
 
     if not data_class or data_class.raw_data == {}:
         raise PlatformNotReady
 
     async def get_entities():
         """Retrieve Netatmo entities."""
-
         entities = []
         all_cameras = []
 
-        try:
-            for home in data_handler.data[CAMERA_DATA_CLASS_NAME].cameras.values():
-                for camera in home.values():
-                    all_cameras.append(camera)
-
-        except pyatmo.NoDevice:
-            _LOGGER.debug("No cameras found")
+        for home in data_handler.data[CAMERA_DATA_CLASS_NAME].cameras.values():
+            for camera in home.values():
+                all_cameras.append(camera)
 
         for camera in all_cameras:
             if camera["type"] == "NOC":

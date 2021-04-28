@@ -187,7 +187,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         HOMECOACH_DATA_CLASS_NAME,
     ]:
         await data_handler.register_data_class(data_class_name, data_class_name, None)
-        data_class = data_handler.data[data_class_name]
+        data_class = data_handler.data.get(data_class_name)
 
         if not data_class or data_class.raw_data == {}:
             raise PlatformNotReady

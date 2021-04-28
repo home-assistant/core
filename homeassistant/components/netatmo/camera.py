@@ -2,7 +2,6 @@
 import logging
 
 import aiohttp
-import pyatmo
 import voluptuous as vol
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
@@ -52,7 +51,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     await data_handler.register_data_class(
         CAMERA_DATA_CLASS_NAME, CAMERA_DATA_CLASS_NAME, None
     )
-    data_class = data_handler.data[CAMERA_DATA_CLASS_NAME]
+    data_class = data_handler.data.get(CAMERA_DATA_CLASS_NAME)
 
     if not data_class or data_class.raw_data == {}:
         raise PlatformNotReady
@@ -60,32 +59,28 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async def get_entities():
         """Retrieve Netatmo entities."""
         entities = []
-        try:
-            all_cameras = []
-            for home in data_class.cameras.values():
-                for camera in home.values():
-                    all_cameras.append(camera)
+        all_cameras = []
 
-            for camera in all_cameras:
-                _LOGGER.debug("Adding camera %s %s", camera["id"], camera["name"])
-                entities.append(
-                    NetatmoCamera(
-                        data_handler,
-                        camera["id"],
-                        camera["type"],
-                        camera["home_id"],
-                        DEFAULT_QUALITY,
-                    )
-                )
+        for home in data_class.cameras.values():
+            for camera in home.values():
+                all_cameras.append(camera)
 
-            for person_id, person_data in data_handler.data[
-                CAMERA_DATA_CLASS_NAME
-            ].persons.items():
-                hass.data[DOMAIN][DATA_PERSONS][person_id] = person_data.get(
-                    ATTR_PSEUDO
+        for camera in all_cameras:
+            _LOGGER.debug("Adding camera %s %s", camera["id"], camera["name"])
+            entities.append(
+                NetatmoCamera(
+                    data_handler,
+                    camera["id"],
+                    camera["type"],
+                    camera["home_id"],
+                    DEFAULT_QUALITY,
                 )
-        except pyatmo.NoDevice:
-            _LOGGER.debug("No cameras found")
+            )
+
+        for person_id, person_data in data_handler.data[
+            CAMERA_DATA_CLASS_NAME
+        ].persons.items():
+            hass.data[DOMAIN][DATA_PERSONS][person_id] = person_data.get(ATTR_PSEUDO)
 
         return entities
 
