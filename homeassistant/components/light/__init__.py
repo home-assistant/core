@@ -73,7 +73,13 @@ VALID_COLOR_MODES = {
     COLOR_MODE_RGBWW,
 }
 COLOR_MODES_BRIGHTNESS = VALID_COLOR_MODES - {COLOR_MODE_ONOFF}
-COLOR_MODES_COLOR = {COLOR_MODE_HS, COLOR_MODE_RGB, COLOR_MODE_RGBW, COLOR_MODE_XY}
+COLOR_MODES_COLOR = {
+    COLOR_MODE_HS,
+    COLOR_MODE_RGB,
+    COLOR_MODE_RGBW,
+    COLOR_MODE_RGBWW,
+    COLOR_MODE_XY,
+}
 
 
 def valid_supported_color_modes(color_modes: Iterable[str]) -> set[str]:
@@ -323,10 +329,9 @@ async def async_setup(hass, config):  # noqa: C901
                 rgb_color = color_util.color_hs_to_RGB(*hs_color)
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif COLOR_MODE_RGBWW in supported_color_modes:
-                params[ATTR_RGBWW_COLOR] = (
-                    *color_util.color_hs_to_RGB(*hs_color),
-                    0,
-                    0,
+                rgb_color = color_util.color_hs_to_RGB(*hs_color)
+                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
+                    *rgb_color, light.min_mireds, light.max_mireds
                 )
             elif COLOR_MODE_XY in supported_color_modes:
                 params[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
@@ -335,7 +340,9 @@ async def async_setup(hass, config):  # noqa: C901
             if COLOR_MODE_RGBW in supported_color_modes:
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             if COLOR_MODE_RGBWW in supported_color_modes:
-                params[ATTR_RGBWW_COLOR] = (*rgb_color, 0, 0)
+                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
+                    *rgb_color, light.min_mireds, light.max_mireds
+                )
             elif COLOR_MODE_HS in supported_color_modes:
                 params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
             elif COLOR_MODE_XY in supported_color_modes:
@@ -350,10 +357,9 @@ async def async_setup(hass, config):  # noqa: C901
                 rgb_color = color_util.color_xy_to_RGB(*xy_color)
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
             elif COLOR_MODE_RGBWW in supported_color_modes:
-                params[ATTR_RGBWW_COLOR] = (
-                    *color_util.color_xy_to_RGB(*xy_color),
-                    0,
-                    0,
+                rgb_color = color_util.color_xy_to_RGB(*xy_color)
+                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
+                    *rgb_color, light.min_mireds, light.max_mireds
                 )
 
         # Remove deprecated white value if the light supports color mode
@@ -698,6 +704,15 @@ class LightEntity(ToggleEntity):
             data[ATTR_RGB_COLOR] = tuple(int(x) for x in rgb_color[0:3])
             data[ATTR_RGBW_COLOR] = tuple(int(x) for x in rgbw_color[0:4])
             data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+        elif color_mode == COLOR_MODE_RGBWW and self.rgbww_color:
+            rgbww_color = self.rgbww_color
+            rgb_color = color_util.color_rgbww_to_rgb(
+                *rgbww_color, self.min_mireds, self.max_mireds
+            )
+            data[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
+            data[ATTR_RGB_COLOR] = tuple(int(x) for x in rgb_color[0:3])
+            data[ATTR_RGBWW_COLOR] = tuple(int(x) for x in rgbww_color[0:5])
+            data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
         return data
 
     @final
@@ -734,9 +749,6 @@ class LightEntity(ToggleEntity):
 
         if color_mode in COLOR_MODES_COLOR:
             data.update(self._light_internal_convert_color(color_mode))
-
-        if color_mode == COLOR_MODE_RGBWW:
-            data[ATTR_RGBWW_COLOR] = self.rgbww_color
 
         if supported_features & SUPPORT_COLOR_TEMP and not self.supported_color_modes:
             # Backwards compatibility
