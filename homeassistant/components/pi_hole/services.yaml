@@ -9,6 +9,7 @@ disable:
     duration:
       name: Duration
       description: Time that the Pi-hole should be disabled for
+      required: true
       example: "00:00:15"
       selector:
         text:
