@@ -8,6 +8,7 @@ from zwave_js_server.exceptions import InvalidNewValue, NotFoundError, SetValueF
 
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
+    COMMAND_CLASS_ID,
     CONFIG,
     ENABLED,
     ENTRY_ID,
@@ -294,17 +295,101 @@ async def test_refresh_node_info(
 
     client.async_send_command_no_wait.reset_mock()
 
+
+async def test_refresh_node_values(
+    hass, client, integration, hass_ws_client, multisensor_6
+):
+    """Test that the refresh_node_values WS API call works."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command_no_wait.return_value = None
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/refresh_node_values",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 52,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "node.refresh_values"
+    assert args["nodeId"] == 52
+
+    client.async_send_command_no_wait.reset_mock()
+
+    # Test getting non-existent node fails
     await ws_client.send_json(
         {
             ID: 2,
-            TYPE: "zwave_js/refresh_node_info",
+            TYPE: "zwave_js/refresh_node_values",
             ENTRY_ID: entry.entry_id,
-            NODE_ID: 999,
+            NODE_ID: 99999,
         }
     )
     msg = await ws_client.receive_json()
     assert not msg["success"]
-    assert msg["error"]["code"] == "not_found"
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test getting non-existent entry fails
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/refresh_node_values",
+            ENTRY_ID: "fake_entry_id",
+            NODE_ID: 52,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+
+async def test_refresh_node_cc_values(
+    hass, client, integration, hass_ws_client, multisensor_6
+):
+    """Test that the refresh_node_cc_values WS API call works."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command_no_wait.return_value = None
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/refresh_node_cc_values",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 52,
+            COMMAND_CLASS_ID: 112,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "node.refresh_cc_values"
+    assert args["nodeId"] == 52
+    assert args["commandClass"] == 112
+
+    client.async_send_command_no_wait.reset_mock()
+
+    # Test using invalid CC ID fails
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/refresh_node_cc_values",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 52,
+            COMMAND_CLASS_ID: 9999,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
 
 
 async def test_set_config_parameter(
