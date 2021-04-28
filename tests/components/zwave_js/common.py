@@ -25,3 +25,4 @@ AEON_SMART_SWITCH_LIGHT_ENTITY = "light.smart_switch_6"
 ID_LOCK_CONFIG_PARAMETER_SENSOR = (
     "sensor.z_wave_module_for_id_lock_150_and_101_config_parameter_door_lock_mode"
 )
+ZEN_31_ENTITY = "light.kitchen_under_cabinet_lights"
