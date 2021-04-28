@@ -80,8 +80,6 @@ def async_device_setup(
         sw_version=fritz_tools.device_info["sw_version"],
     )
 
-    return True
-
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigType) -> bool:
     """Unload FRITZ!Box Tools config entry."""
