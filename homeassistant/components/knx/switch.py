@@ -53,6 +53,7 @@ class KNXSwitch(KnxEntity, SwitchEntity):
                 invert=config[SwitchSchema.CONF_INVERT],
             )
         )
+        self._unique_id = f"{self._device.switch.group_address}"
 
     @property
     def is_on(self) -> bool:

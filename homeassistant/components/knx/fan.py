@@ -44,7 +44,7 @@ class KNXFan(KnxEntity, FanEntity):
         """Initialize of KNX fan."""
         self._device: XknxFan
         super().__init__(device)
-
+        self._unique_id = f"{self._device.speed.group_address}"
         self._step_range: tuple[int, int] | None = None
         if device.max_step:
             # FanSpeedMode.STEP:
