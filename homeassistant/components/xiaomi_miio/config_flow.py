@@ -55,9 +55,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             use_cloud = user_input.get(CONF_CLOUD_SUBDEVICES, False)
             cloud_username = user_input.get(CONF_CLOUD_USERNAME)
             cloud_password = user_input.get(CONF_CLOUD_PASSWORD)
+            cloud_country = user_input.get(CONF_CLOUD_COUNTRY)
 
             if use_cloud:
-                if cloud_username is None or cloud_password is None or cloud_country is None:
+                if (
+                    cloud_username is None
+                    or cloud_password is None
+                    or cloud_country is None
+                ):
                     errors["base"] = "cloud_credentials_incomplete"
                 else:
                     miio_cloud = MiCloud(cloud_username, cloud_password)
@@ -90,7 +95,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
 
-        return self.async_show_form(step_id="init", data_schema=settings_schema, errors=errors)
+        return self.async_show_form(
+            step_id="init", data_schema=settings_schema, errors=errors
+        )
 
 
 class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

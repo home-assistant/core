@@ -56,7 +56,8 @@ class ConnectXiaomiGateway:
             )
 
             # get the connected sub devices
-            if (use_cloud
+            if (
+                use_cloud
                 and cloud_username is not None
                 and cloud_password is not None
                 and cloud_country is not None

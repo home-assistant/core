@@ -1,5 +1,4 @@
 """Support for Xiaomi Miio."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -23,7 +22,6 @@ from .const import (
     MODELS_LIGHT,
     MODELS_SWITCH,
     MODELS_VACUUM,
-    UNDO_UPDATE_LISTENER,
 )
 from .gateway import ConnectXiaomiGateway
 
@@ -147,7 +145,6 @@ async def async_setup_gateway_entry(
     hass.data[DOMAIN][entry.entry_id] = {
         CONF_GATEWAY: gateway.gateway_device,
         KEY_COORDINATOR: coordinator,
-        UNDO_UPDATE_LISTENER: undo_listener,
     }
 
     for platform in GATEWAY_PLATFORMS:
