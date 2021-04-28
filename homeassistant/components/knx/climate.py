@@ -17,7 +17,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -37,7 +37,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up climate(s) for KNX platform."""
-    await _migrate_unique_id(hass, discovery_info)
+    _async_migrate_unique_id(hass, discovery_info)
     entities = []
     for device in hass.data[DOMAIN].xknx.devices:
         if isinstance(device, XknxClimate):
@@ -45,7 +45,8 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-async def _migrate_unique_id(
+@callback
+def _async_migrate_unique_id(
     hass: HomeAssistant, discovery_info: DiscoveryInfoType | None
 ) -> None:
     """Change unique_ids used in 2021.4 to include target_temperature GA."""
@@ -62,12 +63,13 @@ async def _migrate_unique_id(
         old_uid = str(ga_temperature_state)
 
         entity_id = entity_registry.async_get_entity_id("climate", DOMAIN, old_uid)
-        if entity_id is not None:
-            ga_target_temperature_state = parse_device_group_address(
-                entity_config[ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS][0]
-            )
-            new_uid = f"{ga_temperature_state}_{ga_target_temperature_state}"
-            entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
+        if entity_id is None:
+            continue
+        ga_target_temperature_state = parse_device_group_address(
+            entity_config[ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS][0]
+        )
+        new_uid = f"{ga_temperature_state}_{ga_target_temperature_state}"
+        entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
 
 
 class KNXClimate(KnxEntity, ClimateEntity):

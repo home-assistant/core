@@ -41,7 +41,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up cover(s) for KNX platform."""
-    await _migrate_unique_id(hass, discovery_info)
+    _async_migrate_unique_id(hass, discovery_info)
     entities = []
     for device in hass.data[DOMAIN].xknx.devices:
         if isinstance(device, XknxCover):
@@ -49,7 +49,8 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-async def _migrate_unique_id(
+@callback
+def _async_migrate_unique_id(
     hass: HomeAssistant, discovery_info: DiscoveryInfoType | None
 ) -> None:
     """Change unique_ids used in 2021.4 to include position_target GA."""
@@ -61,22 +62,24 @@ async def _migrate_unique_id(
     for entity_config in platform_config:
         # normalize group address strings - ga_updown was the old uid but is optional
         updown_addresses = entity_config.get(CoverSchema.CONF_MOVE_LONG_ADDRESS)
-        if updown_addresses is not None:
-            ga_updown = parse_device_group_address(updown_addresses[0])
-            old_uid = str(ga_updown)
+        if updown_addresses is None:
+            continue
+        ga_updown = parse_device_group_address(updown_addresses[0])
+        old_uid = str(ga_updown)
 
-            entity_id = entity_registry.async_get_entity_id("cover", DOMAIN, old_uid)
-            if entity_id is not None:
-                position_target_addresses = entity_config.get(
-                    CoverSchema.CONF_POSITION_ADDRESS
-                )
-                ga_position_target = (
-                    parse_device_group_address(position_target_addresses[0])
-                    if position_target_addresses is not None
-                    else None
-                )
-                new_uid = f"{ga_updown}_{ga_position_target}"
-                entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
+        entity_id = entity_registry.async_get_entity_id("cover", DOMAIN, old_uid)
+        if entity_id is None:
+            continue
+        position_target_addresses = entity_config.get(
+            CoverSchema.CONF_POSITION_ADDRESS
+        )
+        ga_position_target = (
+            parse_device_group_address(position_target_addresses[0])
+            if position_target_addresses is not None
+            else None
+        )
+        new_uid = f"{ga_updown}_{ga_position_target}"
+        entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
 
 
 class KNXCover(KnxEntity, CoverEntity):
