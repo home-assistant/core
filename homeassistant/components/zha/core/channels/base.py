@@ -88,6 +88,7 @@ class ZigbeeChannel(LogMixin):
     """Base channel for a Zigbee cluster."""
 
     REPORT_CONFIG = ()
+    BIND: bool = True
 
     def __init__(
         self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
@@ -247,7 +248,8 @@ class ZigbeeChannel(LogMixin):
     async def async_configure(self) -> None:
         """Set cluster binding and attribute reporting."""
         if not self._ch_pool.skip_configuration:
-            await self.bind()
+            if self.BIND:
+                await self.bind()
             if self.cluster.is_server:
                 await self.configure_reporting()
             ch_specific_cfg = getattr(self, "async_configure_channel_specific", None)
