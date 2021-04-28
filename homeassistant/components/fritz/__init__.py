@@ -68,7 +68,7 @@ async def async_device_setup(
 ):
     """Set up a device that is online."""
     dev_reg = await device_registry.async_get_registry(hass)
-    entry = dev_reg.async_get_or_create(
+    dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
         name=entry.title,
         connections={(device_registry.CONNECTION_NETWORK_MAC, fritz_tools.mac)},
