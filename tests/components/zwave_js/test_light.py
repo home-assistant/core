@@ -9,6 +9,7 @@ from homeassistant.components.light import (
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
     ATTR_RGB_COLOR,
+    ATTR_WHITE_VALUE,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
 
@@ -16,6 +17,7 @@ from .common import (
     AEON_SMART_SWITCH_LIGHT_ENTITY,
     BULB_6_MULTI_COLOR_LIGHT_ENTITY,
     EATON_RF9640_ENTITY,
+    ZEN_31_ENTITY,
 )
 
 
@@ -411,3 +413,67 @@ async def test_optional_light(hass, client, aeon_smart_switch_6, integration):
     """Test a device that has an additional light endpoint being identified as light."""
     state = hass.states.get(AEON_SMART_SWITCH_LIGHT_ENTITY)
     assert state.state == STATE_ON
+
+
+async def test_white_value_light(hass, client, zen_31, integration):
+    """Test the light entity."""
+    zen_31
+    state = hass.states.get(ZEN_31_ENTITY)
+
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 177
+
+    # Test turning on
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": ZEN_31_ENTITY, ATTR_WHITE_VALUE: 128},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 94
+    assert args["valueId"] == {
+        "commandClassName": "Color Switch",
+        "commandClass": 51,
+        "endpoint": 1,
+        "property": "targetColor",
+        "propertyName": "targetColor",
+        "ccVersion": 0,
+        "metadata": {
+            "label": "Target Color",
+            "type": "any",
+            "readable": True,
+            "writeable": True,
+        },
+        "value": {"blue": 70, "green": 159, "red": 255, "warmWhite": 141},
+    }
+    assert args["value"] == {"warmWhite": 128}
+
+    args = client.async_send_command.call_args_list[1][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 94
+    assert args["valueId"] == {
+        "commandClassName": "Multilevel Switch",
+        "commandClass": 38,
+        "endpoint": 1,
+        "property": "targetValue",
+        "propertyName": "targetValue",
+        "ccVersion": 0,
+        "metadata": {
+            "label": "Target value",
+            "max": 99,
+            "min": 0,
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "label": "Target value",
+        },
+        "value": 59,
+    }
+    assert args["value"] == 255
+
+    client.async_send_command.reset_mock()
