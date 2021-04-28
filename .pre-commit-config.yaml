@@ -58,7 +58,7 @@ repos:
       - id: no-commit-to-branch
         args:
           - --branch=dev
-          - --branch=master
+          # - --branch=master
           - --branch=rc
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.24.2

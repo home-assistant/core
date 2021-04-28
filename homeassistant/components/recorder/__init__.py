@@ -532,8 +532,7 @@ class Recorder(threading.Thread):
                     self._pending_expunge.append(dbstate)
             except (TypeError, ValueError):
                 _LOGGER.warning(
-                    "State is not JSON serializable: %s",
-                    event.data.get("new_state"),
+                    "State is not JSON serializable: %s", event.data.get("new_state")
                 )
             except Exception as err:  # pylint: disable=broad-except
                 # Must catch the exception to prevent the loop from collapsing
@@ -642,10 +641,7 @@ class Recorder(threading.Thread):
             self.event_session.connection().scalar(select([1]))
             return
         except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.error(
-                "Error in database connectivity during keepalive: %s",
-                err,
-            )
+            _LOGGER.error("Error in database connectivity during keepalive: %s", err)
             self._reopen_event_session()
 
     @callback
