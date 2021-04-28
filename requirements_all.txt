@@ -4,9 +4,6 @@
 # homeassistant.components.aemet
 AEMET-OpenData==0.1.8
 
-# homeassistant.components.dht
-# Adafruit-DHT==1.4.0
-
 # homeassistant.components.sht31
 Adafruit-GPIO==1.0.3
 
@@ -100,6 +97,9 @@ accuweather==0.1.1
 
 # homeassistant.components.bmp280
 adafruit-circuitpython-bmp280==3.1.1
+
+# homeassistant.components.dht
+adafruit-circuitpython-dht==3.6.0
 
 # homeassistant.components.mcp23017
 adafruit-circuitpython-mcp230xx==2.2.2
