@@ -43,7 +43,7 @@ class ConnectXiaomiGateway:
         """Connect to the Xiaomi Gateway."""
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
-        use_cloud = self._config_entry.options.get(CONF_CLOUD_SUBDEVICES)
+        use_cloud = self._config_entry.options.get(CONF_CLOUD_SUBDEVICES, False)
         cloud_username = self._config_entry.options.get(CONF_CLOUD_USERNAME)
         cloud_password = self._config_entry.options.get(CONF_CLOUD_PASSWORD)
         cloud_country = self._config_entry.options.get(CONF_CLOUD_COUNTRY)
@@ -56,11 +56,10 @@ class ConnectXiaomiGateway:
             )
 
             # get the connected sub devices
-            if (
-                cloud_username is not None
+            if (use_cloud
+                and cloud_username is not None
                 and cloud_password is not None
                 and cloud_country is not None
-                and use_cloud
             ):
                 # use miio-cloud
                 miio_cloud = MiCloud(cloud_username, cloud_password)
