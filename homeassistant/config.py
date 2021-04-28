@@ -288,9 +288,8 @@ def _write_default_config(config_dir: str) -> bool:
     # Writing files with YAML does not create the most human readable results
     # So we're hard coding a YAML template.
     try:
-        if not os.path.isfile(config_path):
-            with open(config_path, "wt") as config_file:
-                config_file.write(DEFAULT_CONFIG)
+        with open(config_path, "wt") as config_file:
+            config_file.write(DEFAULT_CONFIG)
 
         if not os.path.isfile(secret_path):
             with open(secret_path, "wt") as secret_file:
