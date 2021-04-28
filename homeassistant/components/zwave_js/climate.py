@@ -58,6 +58,7 @@ from homeassistant.helpers.temperature import convert_temperature
 from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
+from .helpers import get_value_of_zwave_value
 
 # Map Z-Wave HVAC Mode to Home Assistant value
 # Note: We treat "auto" as "heat_cool" as most Z-Wave devices
@@ -285,12 +286,12 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def current_humidity(self) -> int | None:
         """Return the current humidity level."""
-        return self.get_value_of_zwave_value(self._current_humidity)
+        return get_value_of_zwave_value(self._current_humidity)
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self.get_value_of_zwave_value(self._current_temp)
+        return get_value_of_zwave_value(self._current_temp)
 
     @property
     def target_temperature(self) -> float | None:
@@ -302,7 +303,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             temp = self._setpoint_value(self._current_mode_setpoint_enums[0])
         except (IndexError, ValueError):
             return None
-        return self.get_value_of_zwave_value(temp)
+        return get_value_of_zwave_value(temp)
 
     @property
     def target_temperature_high(self) -> float | None:
@@ -314,7 +315,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             temp = self._setpoint_value(self._current_mode_setpoint_enums[1])
         except (IndexError, ValueError):
             return None
-        return self.get_value_of_zwave_value(temp)
+        return get_value_of_zwave_value(temp)
 
     @property
     def target_temperature_low(self) -> float | None:
@@ -517,7 +518,7 @@ class DynamicCurrentTempClimate(ZWaveClimate):
         """Return the current temperature."""
         if self._current_temp_dependent_value:
             lookup_key = self._transform_function(self._current_temp_dependent_value)
-            return self.get_value_of_zwave_value(self._lookup.get(lookup_key))
+            return get_value_of_zwave_value(self._lookup.get(lookup_key))
 
         # Fallback
         return super().current_temperature

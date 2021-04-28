@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
@@ -167,11 +166,6 @@ class ZWaveBaseEntity(Entity):
 
         self.on_value_update()
         self.async_write_ha_state()
-
-    @callback
-    def get_value_of_zwave_value(self, value: ZwaveValue | None) -> Any | None:
-        """Return the value of a ZwaveValue."""
-        return value.value if value else None
 
     @callback
     def get_zwave_value(
