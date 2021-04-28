@@ -7,7 +7,7 @@ from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.entity import Entity
 
 from .const import DATA_DEVICE_IDS, DOMAIN, MANUFACTURER, MODELS, SIGNAL_NAME
-from .data_handler import NetatmoDataHandler
+from .data_handler import PUBLICDATA_DATA_CLASS_NAME, NetatmoDataHandler
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class NetatmoBase(Entity):
                     home_id=data_class["home_id"],
                 )
 
-            elif data_class["name"] == "PublicData":
+            elif data_class["name"] == PUBLICDATA_DATA_CLASS_NAME:
                 await self.data_handler.register_data_class(
                     data_class["name"],
                     signal_name,
