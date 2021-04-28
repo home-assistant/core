@@ -530,6 +530,14 @@ class HeatitZTRM3Climate(ZWaveClimate):
                 str(self._current_temp_config_param.value)
             ]
 
+            # Possible states are:
+            # "F-mode, floor sensor mode"
+            # "A-mode, internal room sensor mode"
+            # "AF-mode, internal sensor and floor sensor mode"
+            # "A2-mode, external room sensor mode"
+            # "A2F-mode, external sensor with floor limitation"
+            #
+            # We can use the characters before the dash to choose a sensor
             temp_sensor = temp_sensor_state.split("-")[0]
             # internal sensor
             if temp_sensor in ("A", "AF"):
