@@ -2,11 +2,11 @@
   "image": "homeassistant/{arch}-homeassistant",
   "shadow_repository": "ghcr.io/home-assistant",
   "build_from": {
-    "aarch64": "ghcr.io/home-assistant/aarch64-homeassistant-base:2021.04.2",
-    "armhf": "ghcr.io/home-assistant/armhf-homeassistant-base:2021.04.2",
-    "armv7": "ghcr.io/home-assistant/armv7-homeassistant-base:2021.04.2",
-    "amd64": "ghcr.io/home-assistant/amd64-homeassistant-base:2021.04.2",
-    "i386": "ghcr.io/home-assistant/i386-homeassistant-base:2021.04.2"
+    "aarch64": "ghcr.io/home-assistant/aarch64-homeassistant-base:2021.04.3",
+    "armhf": "ghcr.io/home-assistant/armhf-homeassistant-base:2021.04.3",
+    "armv7": "ghcr.io/home-assistant/armv7-homeassistant-base:2021.04.3",
+    "amd64": "ghcr.io/home-assistant/amd64-homeassistant-base:2021.04.3",
+    "i386": "ghcr.io/home-assistant/i386-homeassistant-base:2021.04.3"
   },
   "labels": {
     "io.hass.type": "core",
