@@ -9,6 +9,8 @@ custom_cleaning:
     mode:
       name: Set cleaning mode
       description: "Set the cleaning mode: 1 for eco and 2 for turbo. Defaults to turbo if not set."
+      default: 2
+      example: 2
       selector:
         number:
           min: 1
@@ -17,6 +19,8 @@ custom_cleaning:
     navigation:
       name: Set navigation mode
       description: "Set the navigation mode: 1 for normal, 2 for extra care, 3 for deep. Defaults to normal if not set."
+      default: 1
+      example: 1
       selector:
         number:
           min: 1
@@ -25,6 +29,8 @@ custom_cleaning:
     category:
       name: Use cleaning map
       description: "Whether to use a persistent map or not for cleaning (i.e. No go lines): 2 for no map, 4 for map. Default to using map if not set (and fallback to no map if no map is found)."
+      default: 4
+      example: 2
       selector:
         number:
           min: 2
