@@ -998,7 +998,7 @@ python-openzwave-mqtt[mqtt-client]==1.4.0
 python-picnic-api==1.1.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.23
+python-smarttub==0.0.24
 
 # homeassistant.components.songpal
 python-songpal==0.12
