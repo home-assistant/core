@@ -669,7 +669,7 @@ glances_api==0.2.0
 gntp==1.0.3
 
 # homeassistant.components.goalzero
-goalzero==0.1.4
+goalzero==0.1.7
 
 # homeassistant.components.gogogate2
 gogogate2-api==3.0.0
@@ -1274,7 +1274,7 @@ pyaftership==0.1.2
 pyairnow==1.1.0
 
 # homeassistant.components.airvisual
-pyairvisual==5.0.4
+pyairvisual==5.0.8
 
 # homeassistant.components.almond
 pyalmond==0.0.2
