@@ -37,6 +37,7 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity):
         """Initialize of KNX binary sensor."""
         self._device: XknxBinarySensor
         super().__init__(device)
+        self._unique_id = f"{self._device.remote_value.group_address_state}"
 
     @property
     def device_class(self) -> str | None:
