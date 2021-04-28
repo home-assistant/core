@@ -514,7 +514,7 @@ class HeatitZTRM3Climate(ZWaveClimate):
             add_to_watched_value_ids=True,
         )
         # Config parameter that indicates which sensor is being used for current temp
-        self._current_temp_sensor = self.get_zwave_value(
+        self._current_temp_config_param = self.get_zwave_value(
             2,
             command_class=CommandClass.CONFIGURATION,
             endpoint=0,
@@ -524,10 +524,10 @@ class HeatitZTRM3Climate(ZWaveClimate):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self._current_temp_sensor:
+        if self._current_temp_config_param:
             # This should get us F, A, AF, A2, or A2F
-            temp_sensor_state = self._current_temp_sensor.metadata.states[
-                str(self._current_temp_sensor.value)
+            temp_sensor_state = self._current_temp_config_param.metadata.states[
+                str(self._current_temp_config_param.value)
             ]
 
             temp_sensor = temp_sensor_state.split("-")[0]
