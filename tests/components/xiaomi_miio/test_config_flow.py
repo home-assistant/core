@@ -495,6 +495,8 @@ async def test_options_flow_incomplete(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
+            const.CONF_CLOUD_USERNAME: None,
+            const.CONF_CLOUD_PASSWORD: None,
             const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
             const.CONF_CLOUD_SUBDEVICES: True,
         },
