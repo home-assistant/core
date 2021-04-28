@@ -70,9 +70,7 @@ def _async_migrate_unique_id(
         entity_id = entity_registry.async_get_entity_id("cover", DOMAIN, old_uid)
         if entity_id is None:
             continue
-        position_target_addresses = entity_config.get(
-            CoverSchema.CONF_POSITION_ADDRESS
-        )
+        position_target_addresses = entity_config.get(CoverSchema.CONF_POSITION_ADDRESS)
         ga_position_target = (
             parse_device_group_address(position_target_addresses[0])
             if position_target_addresses is not None
