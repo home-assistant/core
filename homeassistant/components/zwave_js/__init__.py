@@ -316,9 +316,9 @@ async def async_setup_entry(  # noqa: C901
         )
         entity_id = ent_reg.async_get_entity_id(disc_info.platform, DOMAIN, unique_id)
 
-        raw_value = value = value.value
+        raw_value = value_ = value.value
         if value.metadata.states:
-            value = value.metadata.states.get(str(value), value)
+            value_ = value.metadata.states.get(str(value), value_)
 
         hass.bus.async_fire(
             ZWAVE_JS_VALUE_UPDATED_EVENT,
@@ -334,7 +334,7 @@ async def async_setup_entry(  # noqa: C901
                 ATTR_PROPERTY_NAME: value.property_name,
                 ATTR_PROPERTY_KEY: value.property_key,
                 ATTR_PROPERTY_KEY_NAME: value.property_key_name,
-                ATTR_VALUE: value,
+                ATTR_VALUE: value_,
                 ATTR_VALUE_RAW: raw_value,
             },
         )
