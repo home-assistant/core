@@ -374,6 +374,10 @@ async def websocket_refresh_node_info(
     node_id = msg[NODE_ID]
     node = client.driver.controller.nodes[node_id]
 
+    if node is None:
+        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
+        return
+
     @callback
     def async_cleanup() -> None:
         """Remove signal listeners."""
@@ -427,6 +431,10 @@ async def websocket_refresh_node_values(
     node_id = msg[NODE_ID]
     node = client.driver.controller.nodes[node_id]
 
+    if node is None:
+        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
+        return
+
     await node.async_refresh_values()
     connection.send_result(msg[ID])
 
@@ -452,7 +460,20 @@ async def websocket_refresh_node_cc_values(
     """Refresh node values for a particular CommandClass."""
     node_id = msg[NODE_ID]
     node = client.driver.controller.nodes[node_id]
-    command_class = CommandClass(msg[COMMAND_CLASS_ID])
+
+    if node is None:
+        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
+        return
+
+    command_class_id = msg[COMMAND_CLASS_ID]
+
+    try:
+        command_class = CommandClass(command_class_id)
+    except ValueError:
+        connection.send_error(
+            msg[ID], ERR_NOT_FOUND, f"Command class {command_class_id} not found"
+        )
+        return
 
     await node.async_refresh_cc_values(command_class)
     connection.send_result(msg[ID])
@@ -483,7 +504,12 @@ async def websocket_set_config_parameter(
     property_ = msg[PROPERTY]
     property_key = msg.get(PROPERTY_KEY)
     value = msg[VALUE]
-    node = client.driver.controller.nodes[node_id]
+    node = client.driver.controller.nodes.get(node_id)
+
+    if node is None:
+        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
+        return
+
     try:
         zwave_value, cmd_status = await async_set_config_parameter(
             node, value, property_, property_key=property_key
