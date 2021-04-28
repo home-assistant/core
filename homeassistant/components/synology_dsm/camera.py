@@ -13,7 +13,6 @@ from synology_dsm.exceptions import (
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -47,10 +46,8 @@ async def async_setup_entry(
     coordinator: DataUpdateCoordinator[dict[str, dict[str, SynoCamera]]] = data[
         COORDINATOR_CAMERAS
     ]
-    await coordinator.async_refresh()
-
-    if coordinator.data is None:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
+    assert coordinator.data is not None
 
     async_add_entities(
         SynoDSMCamera(api, coordinator, camera_id)

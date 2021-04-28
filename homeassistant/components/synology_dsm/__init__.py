@@ -378,7 +378,7 @@ class SynoApi:
         self.utilisation: SynoCoreUtilization = None
 
         # Should we fetch them
-        self._fetching_entities: dict[str, set] = {}
+        self._fetching_entities: dict[str, set[str]] = {}
         self._with_information = True
         self._with_security = True
         self._with_storage = True
@@ -417,7 +417,7 @@ class SynoApi:
         await self.async_update()
 
     @callback
-    def subscribe(self, api_key: str, unique_id: str) -> Callable:
+    def subscribe(self, api_key: str, unique_id: str) -> Callable[[], None]:
         """Subscribe an entity to API fetches."""
         _LOGGER.debug("Subscribe new entity: %s", unique_id)
         if api_key not in self._fetching_entities:
