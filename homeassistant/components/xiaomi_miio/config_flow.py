@@ -57,11 +57,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             cloud_country = user_input.get(CONF_CLOUD_COUNTRY)
 
             if use_cloud:
-                if (
-                    not cloud_username
-                    or not cloud_password
-                    or not cloud_country
-                ):
+                if not cloud_username or not cloud_password or not cloud_country:
                     errors["base"] = "cloud_credentials_incomplete"
                 else:
                     miio_cloud = MiCloud(cloud_username, cloud_password)
