@@ -651,6 +651,11 @@ async def test_default_profiles_light(
         blocking=True,
     )
 
+    _, data = dev.last_call("turn_off")
+    assert data == {
+        light.ATTR_TRANSITION: 3,
+    }
+
 
 async def test_light_context(hass, hass_admin_user):
     """Test that light context works."""
