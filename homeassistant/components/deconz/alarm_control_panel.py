@@ -153,7 +153,7 @@ class DeconzAlarmControlPanel(DeconzDevice, AlarmControlPanelEntity):
     @property
     def state(self) -> str:
         """Return the state of the control panel."""
-        return DECONZ_TO_ALARM_STATE.get(self._device.state, None)
+        return DECONZ_TO_ALARM_STATE.get(self._device.state)
 
     async def async_alarm_arm_away(self, code: None = None) -> None:
         """Send arm away command."""
