@@ -93,6 +93,16 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         self._min_mireds = 153  # 6500K as a safe default
         self._max_mireds = 370  # 2700K as a safe default
         self._supported_features = SUPPORT_BRIGHTNESS
+        self._warm_white = self.get_zwave_value(
+            "targetColor",
+            CommandClass.SWITCH_COLOR,
+            value_property_key=ColorComponent.WARM_WHITE,
+        )
+        self._cold_white = self.get_zwave_value(
+            "targetColor",
+            CommandClass.SWITCH_COLOR,
+            value_property_key=ColorComponent.COLD_WHITE,
+        )
 
         # get additional (optional) values and set features
         self._target_value = self.get_zwave_value("targetValue")
@@ -208,18 +218,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             # rgb leds (if any) can be on at the same time
             white_channel = {}
 
-            if self.get_zwave_value(
-                "targetColor",
-                CommandClass.SWITCH_COLOR,
-                value_property_key=ColorComponent.WARM_WHITE,
-            ):
+            if self._warm_white:
                 white_channel[ColorComponent.WARM_WHITE] = white_value
 
-            if self.get_zwave_value(
-                "targetColor",
-                CommandClass.SWITCH_COLOR,
-                value_property_key=ColorComponent.COLD_WHITE,
-            ):
+            if self._cold_white:
                 white_channel[ColorComponent.COLD_WHITE] = white_value
 
             await self._async_set_colors(white_channel)
