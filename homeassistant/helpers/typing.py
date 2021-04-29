@@ -1,17 +1,8 @@
 """Typing Helpers for Home Assistant."""
-from __future__ import annotations
-
-from collections.abc import Iterable
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, Mapping, Optional, Tuple, Union
-
-from typing_extensions import Protocol
+from typing import Any, Dict, Mapping, Optional, Tuple, Union
 
 import homeassistant.core
-
-# Avoid circular dependency.
-if TYPE_CHECKING:
-    from homeassistant.helpers.entity import Entity
 
 GPSType = Tuple[float, float]
 ConfigType = Dict[str, Any]
@@ -40,12 +31,3 @@ class UndefinedType(Enum):
 
 
 UNDEFINED = UndefinedType._singleton  # pylint: disable=protected-access
-
-
-class AddEntitiesCallback(Protocol):
-    """Protocol type for add_entities from homeassistant.helpers.entity_platform."""
-
-    def __call__(
-        self, new_entities: Iterable[Entity], update_before_add: bool = False
-    ) -> None:
-        """Define add_entities type."""
