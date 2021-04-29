@@ -214,19 +214,11 @@ class DemoLight(LightEntity):
         """Flag supported color modes."""
         return self._color_modes
 
-    def _clear_colors(self) -> None:
-        """Clear color data."""
-        self._color_temp = None
-        self._hs_color = None
-        self._rgbw_color = None
-        self._rgbww_color = None
-
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the light on."""
         self._state = True
 
         if ATTR_RGBW_COLOR in kwargs:
-            self._clear_colors()
             self._color_mode = COLOR_MODE_RGBW
             self._rgbw_color = kwargs[ATTR_RGBW_COLOR]
 
