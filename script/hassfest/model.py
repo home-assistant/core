@@ -100,7 +100,7 @@ class Integration:
         """Add an error."""
         self.errors.append(Error(*args, **kwargs))
 
-    def add_warning(self, *args, **kwargs):
+    def add_warning(self, *args: Any, **kwargs: Any) -> None:
         """Add an warning."""
         self.warnings.append(Error(*args, **kwargs))
 
