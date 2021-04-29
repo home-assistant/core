@@ -45,7 +45,6 @@ EVENT_SHELLY_CLICK = "shelly.click"
 ATTR_CLICK_TYPE = "click_type"
 ATTR_CHANNEL = "channel"
 ATTR_DEVICE = "device"
-
 CONF_SUBTYPE = "subtype"
 
 BASIC_INPUTS_EVENTS_TYPES = {

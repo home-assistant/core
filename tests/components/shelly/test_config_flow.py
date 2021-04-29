@@ -7,7 +7,6 @@ import aioshelly
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.shelly import async_setup
 from homeassistant.components.shelly.const import DOMAIN
 
 from tests.common import MockConfigEntry
@@ -21,13 +20,11 @@ DISCOVERY_INFO = {
     "name": "shelly1pm-12345",
     "properties": {"id": "shelly1pm-12345"},
 }
-MOCK_CONFIG = {"domain": "Shelly", "coap_port": 1234}
 
 
 async def test_form(hass):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -70,7 +67,6 @@ async def test_form(hass):
 async def test_title_without_name(hass):
     """Test we set the title to the hostname when the device doesn't have a name."""
     await setup.async_setup_component(hass, "persistent_notification", {})
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -116,7 +112,6 @@ async def test_title_without_name(hass):
 
 async def test_form_auth(hass):
     """Test manual configuration if auth is required."""
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -192,10 +187,6 @@ async def test_form_errors_get_info(hass, error):
 )
 async def test_form_errors_test_connection(hass, error):
     """Test we handle errors."""
-
-    config = MOCK_CONFIG.copy()
-    await async_setup(hass, config)
-
     exc, base_error = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -243,7 +234,6 @@ async def test_form_already_configured(hass):
 
 async def test_user_setup_ignored_device(hass):
     """Test user can successfully setup an ignored device."""
-
     await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(
         domain="shelly",
@@ -318,7 +308,6 @@ async def test_form_firmware_unsupported(hass):
 )
 async def test_form_auth_errors_test_connection(hass, error):
     """Test we handle errors in authenticated devices."""
-
     exc, base_error = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
