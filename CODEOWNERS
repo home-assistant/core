@@ -451,7 +451,7 @@ homeassistant/components/soma/* @ratsept
 homeassistant/components/somfy/* @tetienne
 homeassistant/components/sonarr/* @ctalkington
 homeassistant/components/songpal/* @rytilahti @shenxn
-homeassistant/components/sonos/* @cgtobi
+homeassistant/components/sonos/* @cgtobi @jjlawren
 homeassistant/components/spaceapi/* @fabaff
 homeassistant/components/speedtestdotnet/* @rohankapoorcom @engrbm87
 homeassistant/components/spider/* @peternijssen
