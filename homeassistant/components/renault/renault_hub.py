@@ -48,17 +48,18 @@ class RenaultHub:
 
         self._account = await self._client.get_api_account(account_id)
         vehicles = await self._account.get_vehicles()
-        for vehicle_link in vehicles.vehicleLinks:
-            # Generate vehicle proxy
-            vin = vehicle_link.vin
-            vehicle = RenaultVehicleProxy(
-                hass=self._hass,
-                vehicle=await self._account.get_api_vehicle(vin),
-                details=vehicle_link.vehicleDetails,
-                scan_interval=scan_interval,
-            )
-            await vehicle.async_initialise()
-            self._vehicles[vin] = vehicle
+        if vehicles.vehicleLinks:
+            for vehicle_link in vehicles.vehicleLinks:
+                if vehicle_link.vin and vehicle_link.vehicleDetails:
+                    # Generate vehicle proxy
+                    vehicle = RenaultVehicleProxy(
+                        hass=self._hass,
+                        vehicle=await self._account.get_api_vehicle(vehicle_link.vin),
+                        details=vehicle_link.vehicleDetails,
+                        scan_interval=scan_interval,
+                    )
+                    await vehicle.async_initialise()
+                    self._vehicles[vehicle_link.vin] = vehicle
 
     async def get_account_ids(self) -> list[str]:
         """Get Kamereon account ids."""

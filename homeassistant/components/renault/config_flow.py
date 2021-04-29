@@ -22,8 +22,8 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the Renault config flow."""
-        self.renault_config = {}
-        self.renault_hub = None
+        self.renault_config: dict[str, Any] = {}
+        self.renault_hub: RenaultHub | None = None
 
     async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Handle a Renault config flow start.
@@ -69,6 +69,7 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 title=user_input[CONF_KAMEREON_ACCOUNT_ID], data=self.renault_config
             )
 
+        assert self.renault_hub
         accounts = await self.renault_hub.get_account_ids()
         if len(accounts) == 0:
             return self.async_abort(reason="kamereon_no_account")

@@ -32,7 +32,7 @@ async def get_entities(proxy: RenaultHub) -> list[RenaultDataEntity]:
 
 async def get_vehicle_entities(vehicle: RenaultVehicleProxy) -> list[RenaultDataEntity]:
     """Create Renault entities for single vehicle."""
-    entities = []
+    entities: list[RenaultDataEntity] = []
     if "cockpit" in vehicle.coordinators.keys():
         entities.append(RenaultMileageSensor(vehicle, "Mileage"))
         if vehicle.details.uses_fuel():

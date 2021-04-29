@@ -32,8 +32,8 @@ class RenaultVehicleProxy:
         self._details = details
         self._device_info = {
             "identifiers": {(DOMAIN, details.vin)},
-            "manufacturer": details.get_brand_label().capitalize(),
-            "model": details.get_model_label().capitalize(),
+            "manufacturer": (details.get_brand_label() or "").capitalize(),
+            "model": (details.get_model_label() or "").capitalize(),
             "name": details.registrationNumber,
             "sw_version": details.get_model_code(),
         }
