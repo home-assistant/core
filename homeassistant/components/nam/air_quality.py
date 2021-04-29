@@ -1,11 +1,12 @@
 """Support for the Nettigo Air Monitor air_quality service."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any
 
 from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -16,7 +17,7 @@ PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add a Nettigo Air Monitor entities from a config_entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
