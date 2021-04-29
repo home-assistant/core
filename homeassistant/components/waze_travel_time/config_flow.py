@@ -105,14 +105,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         user_input = user_input or {}
 
-        if CONF_ORIGIN in user_input:
-            default_name = (
-                f"{DEFAULT_NAME}: {user_input[CONF_ORIGIN]} -> "
-                f"{user_input[CONF_DESTINATION]}"
-            )
-        else:
-            default_name = DEFAULT_NAME
-
         if user_input:
             await self.async_set_unique_id(
                 slugify(
@@ -132,7 +124,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             ):
                 return self.async_create_entry(
-                    title=user_input.get(CONF_NAME, default_name),
+                    title=user_input.get(CONF_NAME, DEFAULT_NAME),
                     data=user_input,
                 )
 
@@ -144,7 +136,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_NAME, default=user_input.get(CONF_NAME, default_name)
+                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
                     ): cv.string,
                     vol.Required(CONF_ORIGIN): cv.string,
                     vol.Required(CONF_DESTINATION): cv.string,
