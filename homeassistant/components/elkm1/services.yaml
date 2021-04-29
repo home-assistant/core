@@ -1,126 +1,216 @@
 alarm_bypass:
+  name: Alarm bypass
   description: Bypass all zones for the area.
+  target:
+    entity:
+      integration: elkm1
+      domain: alarm_control_panel
   fields:
-    entity_id:
-      description: Name of alarm control panel to bypass.
-      example: "alarm_control_panel.main"
     code:
+      name: Code
       description: An code to authorize the bypass of the alarm control panel.
+      required: true
       example: 4242
+      selector:
+        text:
 
 alarm_clear_bypass:
+  name: Alarm clear bypass
   description: Remove bypass on all zones for the area.
+  target:
+    entity:
+      integration: elkm1
+      domain: alarm_control_panel
   fields:
-    entity_id:
-      description: Name of alarm control panel to clear bypass.
-      example: "alarm_control_panel.main"
     code:
+      name: Code
       description: An code to authorize the bypass clear of the alarm control panel.
+      required: true
       example: 4242
+      selector:
+        text:
 
 alarm_arm_home_instant:
+  name: Alarm are home instant
   description: Arm the ElkM1 in home instant mode.
+  target:
+    entity:
+      integration: elkm1
+      domain: alarm_control_panel
   fields:
-    entity_id:
-      description: Name of alarm control panel to arm.
-      example: "alarm_control_panel.main"
     code:
+      name: Code
       description: An code to arm the alarm control panel.
+      required: true
       example: 1234
+      selector:
+        text:
 
 alarm_arm_night_instant:
+  name: Alarm arm night instant
   description: Arm the ElkM1 in night instant mode.
+  target:
+    entity:
+      integration: elkm1
+      domain: alarm_control_panel
   fields:
-    entity_id:
-      description: Name of alarm control panel to arm.
-      example: "alarm_control_panel.main"
     code:
+      name: Code
       description: An code to arm the alarm control panel.
+      required: true
       example: 1234
+      selector:
+        text:
 
 alarm_arm_vacation:
+  name: Alarm arm vacation
   description: Arm the ElkM1 in vacation mode.
+  target:
+    entity:
+      integration: elkm1
+      domain: alarm_control_panel
   fields:
-    entity_id:
-      description: Name of alarm control panel to arm.
-      example: "alarm_control_panel.main"
     code:
+      name: Code
       description: An code to arm the alarm control panel.
+      required: true
       example: 1234
+      selector:
+        text:
 
 alarm_display_message:
+  name: Alarm display message
   description: Display a message on all of the ElkM1 keypads for an area.
+  target:
+    entity:
+      integration: elkm1
+      domain: alarm_control_panel
   fields:
-    entity_id:
-      description: Name of alarm control panel to display messages on.
-      example: "alarm_control_panel.main"
     clear:
-      description: 0=clear message, 1=clear message with * key, 2=Display until timeout; default 2
+      name: Clear
+      description: 0=clear message, 1=clear message with * key, 2=Display until timeout
       example: 1
+      default: 2
+      selector:
+        number:
+          min: 0
+          max: 2
     beep:
-      description: 0=no beep, 1=beep; default 0
+      name: Beep
+      description: 0=no beep, 1=beep
       example: 1
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 1
     timeout:
-      description: Time to display message, 0=forever, max 65535, default 0
+      name: Timeout
+      description: Time to display message, 0=forever, max 65535
       example: 4242
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 65535
     line1:
-      description: Up to 16 characters of text (truncated if too long). Default blank.
-      example: The answer to life,
+      name: Line 1
+      description: Up to 16 characters of text (truncated if too long).
+      example: The answer to life.
+      default: ''
+      selector:
+        text:
     line2:
-      description: Up to 16 characters of text (truncated if too long). Default blank.
+      name: Line 2
+      description: Up to 16 characters of text (truncated if too long).
       example: the universe, and everything.
+      default: ''
+      selector:
+        text:
 
 set_time:
+  name: Set time
   description: Set the time for the panel.
   fields:
     prefix:
+      name: Prefix
       description: Prefix for the panel.
       example: gatehouse
+      selector:
+        text:
 
 speak_phrase:
+  name: Speak phrase
   description: Speak a phrase. See list of phrases in ElkM1 ASCII Protocol documentation.
   fields:
     number:
+      name: Phrase number
       description: Phrase number to speak.
+      required: true
       example: 42
+      selector:
+        text:
 
 speak_word:
+  name: Speak word
   description: Speak a word. See list of words in ElkM1 ASCII Protocol documentation.
   fields:
     number:
+      name: Word number
       description: Word number to speak.
+      required: true
       example: 142
+      selector:
+        number:
+          min: 1
+          max: 473
 
 sensor_counter_refresh:
+  name: Sensor counter refresh
   description: Refresh the value of a counter from the panel.
-  fields:
-    entity_id:
-      description: Name of counter to refresh.
-      example: "sensor.counting_sheep"
+  target:
+    entity:
+      integration: elkm1
+      domain: alarm_control_panel
 
 sensor_counter_set:
+  name: Sensor counter set
   description: Set the value of a counter on the panel.
+  target:
+    entity:
+      integration: elkm1
+      domain: alarm_control_panel
   fields:
-    entity_id:
-      description: Name of counter to set.
-      example: "sensor.test42"
     value:
+      name: Value
       description: Value to set the counter to.
+      required: true
       example: 4242
+      selector:
+        number:
+          min: 0
+          max: 65536
 
 sensor_zone_bypass:
+  name: Sensor zone bypass
   description: Bypass zone.
+  target:
+    entity:
+      integration: elkm1
+      domain: alarm_control_panel
   fields:
-    entity_id:
-      description: Name of zone to bypass.
-      example: "sensor.window42"
     code:
+      name: Code
       description: An code to authorize the bypass of the zone.
+      required: true
       example: 4242
+      selector:
+        text:
 
 sensor_zone_trigger:
+  name: Sensor zone trigger
   description: Trigger zone.
-  fields:
-    entity_id:
-      description: Name of zone to trigger.
-      example: "sensor.motion42"
+  target:
+    entity:
+      integration: elkm1
+      domain: alarm_control_panel

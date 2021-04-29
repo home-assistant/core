@@ -1,64 +1,109 @@
 # Describes the format for available fan services
 
 set_night_mode:
+  name: Set night mode
   description: Set the fan in night mode.
+  target:
+    entity:
+      integration: dyson
+      domain: fan
   fields:
-    entity_id:
-      description: Name(s) of the entities to enable/disable night mode
-      example: "fan.living_room"
     night_mode:
       description: Night mode status
+      required: true
       example: true
+      selector:
+        boolean:
 
 set_auto_mode:
+  name: Set auto mode
   description: Set the fan in auto mode.
+  target:
+    entity:
+      integration: dyson
+      domain: fan
   fields:
-    entity_id:
-      description: Name(s) of the entities to enable/disable auto mode
-      example: "fan.living_room"
     auto_mode:
       description: Auto mode status
+      required: true
       example: true
+      selector:
+        boolean:
 
 set_angle:
+  name: Set angle
   description: Set the oscillation angle of the selected fan(s).
+  target:
+    entity:
+      integration: dyson
+      domain: fan
   fields:
-    entity_id:
-      description: Name(s) of the entities for which to set the angle
-      example: "fan.living_room"
     angle_low:
       description: The angle at which the oscillation should start
+      required: true
       example: 1
+      selector:
+        number:
+          min: 5
+          max: 355
+          unit_of_measurement: '°'
     angle_high:
       description: The angle at which the oscillation should end
+      required: true
       example: 255
+      selector:
+        number:
+          min: 5
+          max: 355
+          unit_of_measurement: '°'
 
 set_flow_direction_front:
+  name: Set flow direction front
   description: Set the fan flow direction.
+  target:
+    entity:
+      integration: dyson
+      domain: fan
   fields:
-    entity_id:
-      description: Name(s) of the entities to set frontal flow direction for
-      example: "fan.living_room"
     flow_direction_front:
+      name: Flow direction front
       description: Frontal flow direction
+      required: true
       example: true
+      selector:
+        boolean:
 
 set_timer:
+  name: Set timer
   description: Set the sleep timer.
+  target:
+    entity:
+      integration: dyson
+      domain: fan
   fields:
-    entity_id:
-      description: Name(s) of the entities to set the sleep timer for
-      example: "fan.living_room"
     timer:
       description: The value in minutes to set the timer to, 0 to disable it
+      required: true
       example: 30
+      selector:
+        number:
+          min: 0
+          max: 720
+          unit_of_measurement: minutes
 
 set_speed:
+  name: Set speed
   description: Set the exact speed of the fan.
+  target:
+    entity:
+      integration: dyson
+      domain: fan
   fields:
-    entity_id:
-      description: Name(s) of the entities to set the speed for
-      example: "fan.living_room"
     dyson_speed:
       description: Speed
+      required: true
       example: 1
+      selector:
+        number:
+          min: 1
+          max: 10
