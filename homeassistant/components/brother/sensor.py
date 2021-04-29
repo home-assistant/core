@@ -97,7 +97,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     @property
     def icon(self) -> str | None:
         """Return the icon."""
-        return SENSOR_TYPES[self.kind]["icon"]
+        return self._description["icon"]
 
     @property
     def unique_id(self) -> str:
@@ -107,7 +107,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
-        return SENSOR_TYPES[self.kind]["unit"]
+        return self._description["unit"]
 
     @property
     def device_info(self) -> dict[str, Any]:
@@ -117,4 +117,4 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return SENSOR_TYPES[self.kind]["enabled"]
+        return self._description["enabled"]
