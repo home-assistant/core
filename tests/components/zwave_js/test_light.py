@@ -460,7 +460,7 @@ async def test_rgbw_light(hass, client, zen_31, integration):
         },
         "value": {"blue": 70, "green": 159, "red": 255, "warmWhite": 141},
     }
-    assert args["value"] == {'blue': 0, 'green': 0, 'red': 0, "warmWhite": 128}
+    assert args["value"] == {"blue": 0, "green": 0, "red": 0, "warmWhite": 128}
 
     args = client.async_send_command.call_args_list[1][0][0]
     assert args["command"] == "node.set_value"
