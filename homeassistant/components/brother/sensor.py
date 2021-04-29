@@ -1,12 +1,13 @@
 """Support for the Brother service."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import BrotherDataUpdateCoordinator
@@ -24,7 +25,7 @@ ATTR_REMAINING_PAGES = "remaining_pages"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add Brother entities from a config_entry."""
     coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
