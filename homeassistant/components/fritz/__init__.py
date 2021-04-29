@@ -65,7 +65,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigType) -> bool:
     fritzbox.async_unload()
 
     fritz_data = hass.data[DATA_FRITZ]
-    fritz_data.tracked.pop(fritzbox._unique_id)
+    fritz_data.tracked.pop(fritzbox.unique_id)
 
     if not bool(fritz_data.tracked):
         hass.data.pop(DATA_FRITZ)
