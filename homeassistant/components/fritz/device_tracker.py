@@ -85,7 +85,7 @@ async def async_setup_entry(
 def _async_add_entities(router, async_add_entities, data_fritz):
     """Add new tracker entities from the router."""
 
-    def _is_existant(mac, device):
+    def _is_tracked(mac, device):
         for tracked in data_fritz.tracked.values():
             if mac in tracked:
                 return True
