@@ -97,8 +97,6 @@ class EntryState(Enum):
 
         For backwards compatibility with out of tree components, to be removed.
         """
-        if self is other:
-            return True
         if isinstance(other, str):
             _, integration, path = get_integration_frame()
             msg = (
@@ -110,8 +108,8 @@ class EntryState(Enum):
                 msg += ", please report this to maintainer of %s"
                 params.append(integration)
             _LOGGER.warning(msg, *params)
-            return bool(self.value == other)
-        return self.__class__ == other.__class__ and bool(self.value == other.value)
+            return bool(self._value_ == other)
+        return super().__eq__(other)
 
     @property
     def recoverable(self) -> bool:
