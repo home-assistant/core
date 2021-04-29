@@ -452,9 +452,9 @@ class SimpliSafe:
         # removing it (and not providing a clear alternative).
         # asyncio.create_task(self.websocket.async_connect())
 
-        async def async_websocket_disconnect(_):
-            """Define an event handler to disconnect from the websocket."""
-            await self.websocket.async_disconnect()
+        # async def async_websocket_disconnect(_):
+        #     """Define an event handler to disconnect from the websocket."""
+        #     await self.websocket.async_disconnect()
 
         # 2021-04-29: Disabling disconnection from the websocket due to the SimpliSafe
         # cloud removing it (and not providing a clear alternative).
