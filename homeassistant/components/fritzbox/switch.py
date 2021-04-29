@@ -30,7 +30,7 @@ ATTR_TOTAL_CONSUMPTION_UNIT_VALUE = ENERGY_KILO_WATT_HOUR
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Fritzbox smarthome switch from ConfigEntry."""
+    """Set up the FRITZ!SmartHome switch from ConfigEntry."""
     entities = []
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
@@ -55,7 +55,7 @@ async def async_setup_entry(
 
 
 class FritzboxSwitch(FritzBoxEntity, SwitchEntity):
-    """The switch class for Fritzbox switches."""
+    """The switch class for FRITZ!SmartHome switches."""
 
     @property
     def available(self):

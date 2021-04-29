@@ -1,4 +1,4 @@
-"""Support for AVM Fritz!Box smarthome devices."""
+"""Support for AVM FRITZ!SmartHome devices."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -28,7 +28,7 @@ from .const import CONF_CONNECTIONS, CONF_COORDINATOR, DOMAIN, LOGGER, PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up the AVM Fritz!Box platforms."""
+    """Set up the AVM FRITZ!SmartHome platforms."""
     fritz = Fritzhome(
         host=entry.data[CONF_HOST],
         user=entry.data[CONF_USERNAME],
@@ -93,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unloading the AVM Fritz!Box platforms."""
+    """Unloading the AVM FRITZ!SmartHome platforms."""
     fritz = hass.data[DOMAIN][entry.entry_id][CONF_CONNECTIONS]
     await hass.async_add_executor_job(fritz.logout)
 
