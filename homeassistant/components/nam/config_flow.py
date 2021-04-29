@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aiohttp.client_exceptions import ClientConnectorError
 import async_timeout
@@ -119,6 +119,4 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # when reading data from sensors. The nettigo-air-monitor library tries to get
         # the data 4 times, so we use a longer than usual timeout here.
         with async_timeout.timeout(30):
-            mac = await nam.async_get_mac_address()
-
-        return mac  # type: ignore[no-any-return]
+            return cast(str, await nam.async_get_mac_address())
