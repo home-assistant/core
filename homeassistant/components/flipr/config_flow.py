@@ -112,12 +112,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         }
                     ),
                 )
-            # Else : no flipr_id found. Allow the user to enter it.
-            # It may cause no data found afterwards in metrics...
-            return self.async_show_form(
-                step_id="flipr_id",
-                data_schema=vol.Schema({vol.Required(CONF_FLIPR_ID): str}),
-            )
+            # Else : no flipr_id found. Tell the user with an error message.
+            errors = {}
+            errors["base"] = "no_flipr_id_found"
+            return self._show_setup_form(errors)
 
         # Get chosen or entered flipr_id.
         self._flipr_id = user_input[CONF_FLIPR_ID]

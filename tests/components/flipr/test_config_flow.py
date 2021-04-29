@@ -113,7 +113,7 @@ async def test_multiple_flip_id(hass, mock_setup):
 
 
 async def test_no_flip_id(hass, mock_setup):
-    """Test no flipr id entered."""
+    """Test no flipr id found."""
     with patch(
         "flipr_api.FliprAPIRestClient.search_flipr_ids",
         return_value=[],
@@ -127,24 +127,11 @@ async def test_no_flip_id(hass, mock_setup):
             },
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "flipr_id"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_FLIPR_ID: "FLIP_Entered"},
-        )
+        assert result["step_id"] == "user"
+        assert result["type"] == "form"
+        assert result["errors"] == {"base": "no_flipr_id_found"}
 
     assert len(mock_flipr_client.mock_calls) == 1
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "FLIP_Entered"
-    assert result["result"].unique_id == "FLIP_Entered"
-    assert result["data"] == {
-        CONF_EMAIL: "dummylogin",
-        CONF_PASSWORD: "dummypass",
-        CONF_FLIPR_ID: "FLIP_Entered",
-    }
 
 
 async def test_http_errors(hass, mock_setup):

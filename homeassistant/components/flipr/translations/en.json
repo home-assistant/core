@@ -6,7 +6,8 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
-            "unknown": "Unexpected error"
+            "unknown": "Unexpected error",
+            "no_flipr_id_found": "No flipr id associated to your account for now. You should verify it is working with the Flipr's mobile app first."
         },
         "step": {
             "user": {
@@ -21,7 +22,7 @@
                 "data": {
                     "flipr_id": "Flipr ID"
                 },
-                "description": "Enter or choose your flipr ID (6 chars)",
+                "description": "Choose your flipr ID in the list",
                 "title": "Flipr device"
             }
         }
