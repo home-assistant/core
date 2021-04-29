@@ -10,6 +10,8 @@ from logging import Logger
 from types import ModuleType
 from typing import TYPE_CHECKING, Callable
 
+from typing_extensions import Protocol
+
 from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_RESTORED,
@@ -56,6 +58,15 @@ DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class AddEntitiesCallback(Protocol):
+    """Protocol type for EntityPlatform.add_entities callback."""
+
+    def __call__(
+        self, new_entities: Iterable[Entity], update_before_add: bool = False
+    ) -> None:
+        """Define add_entities type."""
 
 
 class EntityPlatform:
