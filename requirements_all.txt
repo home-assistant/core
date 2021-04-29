@@ -762,7 +762,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210407.1
+home-assistant-frontend==20210429.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -2027,7 +2027,7 @@ rxv==0.6.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws[websocket]==1.6.0
+samsungtvws==1.6.0
 
 # homeassistant.components.satel_integra
 satel_integra==0.3.4
