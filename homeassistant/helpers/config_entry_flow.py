@@ -110,12 +110,17 @@ def register_discovery_flow(
     """Register flow for discovered integrations that not require auth."""
     if connection_class is not UNDEFINED:
         _LOGGER.warning(
-            f"The {title} ({domain}) integration is setting a connection_class"
-            " when calling the 'register_discovery_flow()' method in its"
-            " config flow. The connection class has been deprecated and will"
-            " be removed in a future release of Home Assistant."
-            " If '{title}' is a custom integration, please contact the author"
-            " of that integration about this warning."
+            (
+                "The %s (%s) integration is setting a connection_class"
+                " when calling the 'register_discovery_flow()' method in its"
+                " config flow. The connection class has been deprecated and will"
+                " be removed in a future release of Home Assistant."
+                " If '%s' is a custom integration, please contact the author"
+                " of that integration about this warning.",
+            ),
+            title,
+            domain,
+            title,
         )
 
     class DiscoveryFlow(DiscoveryFlowHandler):
