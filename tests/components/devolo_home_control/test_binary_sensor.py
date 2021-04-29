@@ -3,8 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.binary_sensor import DOMAIN as COMPONENTS_DOMAIN
-from homeassistant.components.devolo_home_control import DOMAIN
+from homeassistant.components.binary_sensor import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
@@ -30,24 +29,20 @@ async def test_binary_sensor(hass: HomeAssistant):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{COMPONENTS_DOMAIN}.test")
+    state = hass.states.get(f"{DOMAIN}.test")
     assert state is not None
     assert state.state == STATE_OFF
 
     # Emulate websocket message: sensor turned on
-    hass.data[DOMAIN][entry.entry_id]["gateways"][0].publisher.dispatch(
-        "Test", ("Test", True)
-    )
+    HomeControlMockBinarySensor.publisher.dispatch("Test", ("Test", True))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{COMPONENTS_DOMAIN}.test").state == STATE_ON
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_ON
 
     # Emulate websocket message: device went offline
     DeviceMock.available = False
-    hass.data[DOMAIN][entry.entry_id]["gateways"][0].publisher.dispatch(
-        "Test", ("Status", False, "status")
-    )
+    HomeControlMockBinarySensor.publisher.dispatch("Test", ("Status", False, "status"))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{COMPONENTS_DOMAIN}.test").state == STATE_UNAVAILABLE
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -62,31 +57,25 @@ async def test_remote_control(hass: HomeAssistant):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{COMPONENTS_DOMAIN}.test")
+    state = hass.states.get(f"{DOMAIN}.test")
     assert state is not None
     assert state.state == STATE_OFF
 
     # Emulate websocket message: button pressed
-    hass.data[DOMAIN][entry.entry_id]["gateways"][0].publisher.dispatch(
-        "Test", ("Test", 1)
-    )
+    HomeControlMockRemoteControl.publisher.dispatch("Test", ("Test", 1))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{COMPONENTS_DOMAIN}.test").state == STATE_ON
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_ON
 
     # Emulate websocket message: button released
-    hass.data[DOMAIN][entry.entry_id]["gateways"][0].publisher.dispatch(
-        "Test", ("Test", 0)
-    )
+    HomeControlMockRemoteControl.publisher.dispatch("Test", ("Test", 0))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{COMPONENTS_DOMAIN}.test").state == STATE_OFF
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_OFF
 
     # Emulate websocket message: device went offline
     DeviceMock.available = False
-    hass.data[DOMAIN][entry.entry_id]["gateways"][0].publisher.dispatch(
-        "Test", ("Status", False, "status")
-    )
+    HomeControlMockRemoteControl.publisher.dispatch("Test", ("Status", False, "status"))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{COMPONENTS_DOMAIN}.test").state == STATE_UNAVAILABLE
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -100,7 +89,7 @@ async def test_disabled(hass: HomeAssistant):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.states.get(f"{COMPONENTS_DOMAIN}.devolo.WarningBinaryFI:Test") is None
+    assert hass.states.get(f"{DOMAIN}.devolo.WarningBinaryFI:Test") is None
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
