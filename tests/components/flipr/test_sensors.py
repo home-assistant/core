@@ -55,8 +55,6 @@ async def test_sensors(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.flipr.decrypt_data", return_value="myPassword"
-    ), patch(
         "flipr_api.FliprAPIRestClient.get_pool_measure_latest",
         return_value=MOCK_FLIPR_MEASURE,
     ):

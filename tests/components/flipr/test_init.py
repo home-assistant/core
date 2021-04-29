@@ -15,16 +15,13 @@ async def test_unload_entry(hass: HomeAssistant):
         domain=DOMAIN,
         data={
             CONF_EMAIL: "dummylogin",
-            CONF_PASSWORD: "ENCRYPTED_DATA_ah_ah",
+            CONF_PASSWORD: "dummypass",
             CONF_FLIPR_ID: "FLIP_Entered",
         },
         unique_id="123456",
     )
     entry.add_to_hass(hass)
-    with patch("homeassistant.components.flipr.FliprAPIRestClient"), patch(
-        "homeassistant.components.flipr.decrypt_data",
-        return_value="DECRYPTED_DATA_ah_ah",
-    ):
+    with patch("homeassistant.components.flipr.FliprAPIRestClient"):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         await hass.config_entries.async_unload(entry.entry_id)

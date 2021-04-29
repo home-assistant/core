@@ -11,7 +11,6 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 from .const import CONF_FLIPR_ID
 from .const import DOMAIN  # pylint:disable=unused-import
-from .crypt_util import encrypt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,14 +64,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self._flipr_id)
         self._abort_if_unique_id_configured()
 
-        # Encrypt password before storing it in the config json file.
-        crypted_password = encrypt_data(self._password, self._flipr_id)
-
         return self.async_create_entry(
             title=self._flipr_id,
             data={
                 CONF_EMAIL: self._username,
-                CONF_PASSWORD: crypted_password,
+                CONF_PASSWORD: self._password,
                 CONF_FLIPR_ID: self._flipr_id,
             },
         )

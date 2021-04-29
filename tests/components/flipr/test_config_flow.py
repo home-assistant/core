@@ -53,10 +53,7 @@ async def test_nominal_case(hass, mock_setup):
     with patch(
         "flipr_api.FliprAPIRestClient.search_flipr_ids",
         return_value=["flipid"],
-    ) as mock_flipr_client, patch(
-        "homeassistant.components.flipr.config_flow.encrypt_data",
-        return_value="ENCRYPTED_DATA_ah_ah",
-    ) as mock_crypt_util:
+    ) as mock_flipr_client:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
@@ -69,14 +66,13 @@ async def test_nominal_case(hass, mock_setup):
         await hass.async_block_till_done()
 
     assert len(mock_flipr_client.mock_calls) == 1
-    assert len(mock_crypt_util.mock_calls) == 1
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "flipid"
     assert result["result"].unique_id == "flipid"
     assert result["data"] == {
         CONF_EMAIL: "dummylogin",
-        CONF_PASSWORD: "ENCRYPTED_DATA_ah_ah",
+        CONF_PASSWORD: "dummypass",
         CONF_FLIPR_ID: "flipid",
     }
 
@@ -86,10 +82,7 @@ async def test_multiple_flip_id(hass, mock_setup):
     with patch(
         "flipr_api.FliprAPIRestClient.search_flipr_ids",
         return_value=["FLIP1", "FLIP2"],
-    ) as mock_flipr_client, patch(
-        "homeassistant.components.flipr.config_flow.encrypt_data",
-        return_value="ENCRYPTED_DATA_ah_ah",
-    ) as mock_crypt_util:
+    ) as mock_flipr_client:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
@@ -108,14 +101,13 @@ async def test_multiple_flip_id(hass, mock_setup):
         )
 
     assert len(mock_flipr_client.mock_calls) == 1
-    assert len(mock_crypt_util.mock_calls) == 1
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "FLIP2"
     assert result["result"].unique_id == "FLIP2"
     assert result["data"] == {
         CONF_EMAIL: "dummylogin",
-        CONF_PASSWORD: "ENCRYPTED_DATA_ah_ah",
+        CONF_PASSWORD: "dummypass",
         CONF_FLIPR_ID: "FLIP2",
     }
 
@@ -125,10 +117,7 @@ async def test_no_flip_id(hass, mock_setup):
     with patch(
         "flipr_api.FliprAPIRestClient.search_flipr_ids",
         return_value=[],
-    ) as mock_flipr_client, patch(
-        "homeassistant.components.flipr.config_flow.encrypt_data",
-        return_value="ENCRYPTED_DATA_ah_ah",
-    ) as mock_crypt_util:
+    ) as mock_flipr_client:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
@@ -147,14 +136,13 @@ async def test_no_flip_id(hass, mock_setup):
         )
 
     assert len(mock_flipr_client.mock_calls) == 1
-    assert len(mock_crypt_util.mock_calls) == 1
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "FLIP_Entered"
     assert result["result"].unique_id == "FLIP_Entered"
     assert result["data"] == {
         CONF_EMAIL: "dummylogin",
-        CONF_PASSWORD: "ENCRYPTED_DATA_ah_ah",
+        CONF_PASSWORD: "dummypass",
         CONF_FLIPR_ID: "FLIP_Entered",
     }
 
