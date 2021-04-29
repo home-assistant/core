@@ -20,7 +20,41 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
+TEST_MODBUS_NAME = "modbusTest"
 _LOGGER = logging.getLogger(__name__)
+
+
+@pytest.fixture
+def mock_pymodbus():
+    """Mock pymodbus."""
+    mock_pb = mock.MagicMock()
+    with mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_pb
+    ), mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusSerialClient",
+        return_value=mock_pb,
+    ), mock.patch(
+        "homeassistant.components.modbus.modbus.ModbusUdpClient", return_value=mock_pb
+    ):
+        yield mock_pb
+
+
+@pytest.fixture
+async def mock_modbus(hass, mock_pymodbus):
+    """Load integration modbus using mocked pymodbus."""
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: "tcp",
+                CONF_HOST: "modbusTestHost",
+                CONF_PORT: 5501,
+                CONF_NAME: TEST_MODBUS_NAME,
+            }
+        ]
+    }
+    assert await async_setup_component(hass, DOMAIN, config) is True
+    await hass.async_block_till_done()
+    yield mock_pymodbus
 
 
 class ReadResult:
