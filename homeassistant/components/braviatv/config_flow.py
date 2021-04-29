@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 def host_valid(host):
     """Return True if hostname or IP address is valid."""
     try:
-        if ipaddress.ip_address(host).version == (4 or 6):
+        if ipaddress.ip_address(host).version in [4, 6]:
             return True
     except ValueError:
         disallowed = re.compile(r"[^a-zA-Z\d\-]")
