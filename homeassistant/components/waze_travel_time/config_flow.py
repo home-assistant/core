@@ -41,10 +41,6 @@ class WazeOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Handle the initial step."""
         if user_input is not None:
-            for key in user_input:
-                if user_input[key] in (None, ""):
-                    user_input.pop(key)
-
             return self.async_create_entry(
                 title="",
                 data={k: v for k, v in user_input.items() if v not in (None, "")},
