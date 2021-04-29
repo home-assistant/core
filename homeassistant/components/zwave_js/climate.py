@@ -494,7 +494,7 @@ class DynamicCurrentTempClimate(ZWaveClimate):
         """Initialize thermostat."""
         super().__init__(config_entry, client, info)
         if not self.info.platform_data:
-            raise TypeError("Expected platform data is missing from discovery schema")
+            raise ValueError("Expected platform data is missing from discovery info")
 
         self._lookup_table: dict[
             str | int, ZwaveValue | None
