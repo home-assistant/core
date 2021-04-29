@@ -4,7 +4,7 @@ from __future__ import annotations
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ADDONS_COORDINATOR
 from .const import ATTR_VERSION, ATTR_VERSION_LATEST

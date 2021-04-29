@@ -19,7 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 DICT_HA_TO_MYS = {
     HVAC_MODE_AUTO: "AutoChangeOver",

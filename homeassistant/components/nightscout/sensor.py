@@ -12,7 +12,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DATE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN
 

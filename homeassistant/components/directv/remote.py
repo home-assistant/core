@@ -11,7 +11,7 @@ from directv import DIRECTV, DIRECTVError
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DIRECTVEntity
 from .const import DOMAIN

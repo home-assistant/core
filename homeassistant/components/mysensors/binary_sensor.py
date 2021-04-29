@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 SENSORS = {
     "S_DOOR": "door",

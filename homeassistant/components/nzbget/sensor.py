@@ -13,7 +13,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import NZBGetEntity

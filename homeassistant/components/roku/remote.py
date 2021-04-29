@@ -4,7 +4,7 @@ from __future__ import annotations
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RokuDataUpdateCoordinator, RokuEntity, roku_exception_handler
 from .const import DOMAIN

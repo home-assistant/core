@@ -64,8 +64,8 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.network import is_internal_request
-from homeassistant.helpers.typing import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import SonosData

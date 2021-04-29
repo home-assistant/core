@@ -6,7 +6,7 @@ from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import on_unload
 from ...config_entries import ConfigEntry
