@@ -56,14 +56,17 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
                     user_input[CONF_ARRIVAL_TIME] = time
                 else:
                     user_input[CONF_DEPARTURE_TIME] = time
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(
+                title="",
+                data={k: v for k, v in user_input.items() if v not in (None, "")},
+            )
 
         if CONF_ARRIVAL_TIME in self.config_entry.options:
             default_time_type = ARRIVAL_TIME
             default_time = self.config_entry.options[CONF_ARRIVAL_TIME]
         else:
             default_time_type = DEPARTURE_TIME
-            default_time = self.config_entry.options.get(CONF_ARRIVAL_TIME)
+            default_time = self.config_entry.options.get(CONF_ARRIVAL_TIME, "")
 
         return self.async_show_form(
             step_id="init",
@@ -75,10 +78,10 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_LANGUAGE,
                         default=self.config_entry.options.get(CONF_LANGUAGE),
-                    ): vol.In(ALL_LANGUAGES),
+                    ): vol.In([None, *ALL_LANGUAGES]),
                     vol.Optional(
                         CONF_AVOID, default=self.config_entry.options.get(CONF_AVOID)
-                    ): vol.In(AVOID),
+                    ): vol.In([None, *AVOID]),
                     vol.Optional(
                         CONF_UNITS, default=self.config_entry.options[CONF_UNITS]
                     ): vol.In(UNITS),
@@ -89,17 +92,17 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_TRAFFIC_MODEL,
                         default=self.config_entry.options.get(CONF_TRAFFIC_MODEL),
-                    ): vol.In(TRAVEL_MODEL),
+                    ): vol.In([None, *TRAVEL_MODEL]),
                     vol.Optional(
                         CONF_TRANSIT_MODE,
                         default=self.config_entry.options.get(CONF_TRANSIT_MODE),
-                    ): vol.In(TRANSPORT_TYPE),
+                    ): vol.In([None, *TRANSPORT_TYPE]),
                     vol.Optional(
                         CONF_TRANSIT_ROUTING_PREFERENCE,
                         default=self.config_entry.options.get(
                             CONF_TRANSIT_ROUTING_PREFERENCE
                         ),
-                    ): vol.In(TRANSIT_PREFS),
+                    ): vol.In([None, *TRANSIT_PREFS]),
                 }
             ),
         )
