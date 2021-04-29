@@ -97,7 +97,7 @@ def _async_add_entities(router, async_add_entities, data_fritz):
         data_fritz.tracked[router.unique_id] = set()
 
     for mac, device in router.devices.items():
-        if _is_existant(mac, device):
+        if device.ip_address == "" or _is_tracked(mac, device):
             continue
 
         new_tracked.append(FritzBoxTracker(router, device))
