@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     }
 
     for device in account_devices:
-        hublot = device.data[HUB][HUBLOT]
+        hublot = device.hub_data[HUBLOT]
 
         coordinator = RitualsPerufmeGenieDataUpdateCoordinator(hass, device)
         await coordinator.async_refresh()
@@ -74,7 +74,6 @@ class RitualsPerufmeGenieDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=UPDATE_INTERVAL,
         )
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> None:
         """Fetch data from Rituals."""
         await self._device.update_data()
-        return self._device.data

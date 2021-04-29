@@ -12,7 +12,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import BATTERY, COORDINATORS, DEVICES, DOMAIN, HUB, ID, SENSORS
+from .const import COORDINATORS, DEVICES, DOMAIN, ID, SENSORS
 from .entity import DiffuserEntity
 
 TITLE = "title"
@@ -44,7 +44,7 @@ async def async_setup_entry(
         entities.append(DiffuserPerfumeSensor(diffuser, coordinator))
         entities.append(DiffuserFillSensor(diffuser, coordinator))
         entities.append(DiffuserWifiSensor(diffuser, coordinator))
-        if BATTERY in diffuser.data[HUB][SENSORS]:
+        if diffuser.has_battery:
             entities.append(DiffuserBatterySensor(diffuser, coordinator))
 
     async_add_entities(entities)
@@ -60,14 +60,14 @@ class DiffuserPerfumeSensor(DiffuserEntity):
     @property
     def icon(self) -> str:
         """Return the perfume sensor icon."""
-        if self.coordinator.data[HUB][SENSORS][PERFUME][ID] == PERFUME_NO_CARTRIDGE_ID:
+        if self._diffuser.hub_data[SENSORS][PERFUME][ID] == PERFUME_NO_CARTRIDGE_ID:
             return "mdi:tag-remove"
         return "mdi:tag-text"
 
     @property
     def state(self) -> str:
         """Return the state of the perfume sensor."""
-        return self.coordinator.data[HUB][SENSORS][PERFUME][TITLE]
+        return self._diffuser.hub_data[SENSORS][PERFUME][TITLE]
 
 
 class DiffuserFillSensor(DiffuserEntity):
@@ -80,14 +80,14 @@ class DiffuserFillSensor(DiffuserEntity):
     @property
     def icon(self) -> str:
         """Return the fill sensor icon."""
-        if self.coordinator.data[HUB][SENSORS][FILL][ID] == FILL_NO_CARTRIDGE_ID:
+        if self._diffuser.hub_data[SENSORS][FILL][ID] == FILL_NO_CARTRIDGE_ID:
             return "mdi:beaker-question"
         return "mdi:beaker"
 
     @property
     def state(self) -> str:
         """Return the state of the fill sensor."""
-        return self.coordinator.data[HUB][SENSORS][FILL][TITLE]
+        return self._diffuser.hub_data[SENSORS][FILL][TITLE]
 
 
 class DiffuserBatterySensor(DiffuserEntity):
@@ -100,15 +100,7 @@ class DiffuserBatterySensor(DiffuserEntity):
     @property
     def state(self) -> int:
         """Return the state of the battery sensor."""
-        # Use ICON because TITLE may change in the future.
-        # ICON filename does not match the image.
-        return {
-            "battery-charge.png": 100,
-            "battery-full.png": 100,
-            "Battery-75.png": 50,
-            "battery-50.png": 25,
-            "battery-low.png": 10,
-        }[self.coordinator.data[HUB][SENSORS][BATTERY][ICON]]
+        return self._diffuser.battery_percentage
 
     @property
     def device_class(self) -> str:
@@ -131,13 +123,7 @@ class DiffuserWifiSensor(DiffuserEntity):
     @property
     def state(self) -> int:
         """Return the state of the wifi sensor."""
-        # Use ICON because TITLE may change in the future.
-        return {
-            "icon-signal.png": 100,
-            "icon-signal-75.png": 70,
-            "icon-signal-low.png": 25,
-            "icon-signal-0.png": 0,
-        }[self.coordinator.data[HUB][SENSORS][WIFI][ICON]]
+        return self._diffuser.wifi_percentage
 
     @property
     def device_class(self) -> str:
