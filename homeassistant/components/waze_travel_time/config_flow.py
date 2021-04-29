@@ -41,7 +41,10 @@ class WazeOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Handle the initial step."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(
+                title="",
+                data={k: v for k, v in user_input.items() if v not in (None, "")},
+            )
 
         return self.async_show_form(
             step_id="init",
@@ -49,11 +52,11 @@ class WazeOptionsFlow(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_INCL_FILTER,
-                        default=self.config_entry.options.get(CONF_INCL_FILTER),
+                        default=self.config_entry.options.get(CONF_INCL_FILTER, ""),
                     ): cv.string,
                     vol.Optional(
                         CONF_EXCL_FILTER,
-                        default=self.config_entry.options.get(CONF_EXCL_FILTER),
+                        default=self.config_entry.options.get(CONF_EXCL_FILTER, ""),
                     ): cv.string,
                     vol.Optional(
                         CONF_REALTIME,

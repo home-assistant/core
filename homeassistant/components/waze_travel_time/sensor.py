@@ -331,7 +331,11 @@ class WazeTravelTimeData:
                         if excl_filter.lower() not in k.lower()
                     }
 
-                route = list(routes)[0]
+                if len(routes) > 0:
+                    route = list(routes)[0]
+                else:
+                    _LOGGER.warning("No routes found")
+                    return
 
                 self.duration, distance = routes[route]
 
