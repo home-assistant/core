@@ -56,7 +56,10 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
                     user_input[CONF_ARRIVAL_TIME] = time
                 else:
                     user_input[CONF_DEPARTURE_TIME] = time
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(
+                title="",
+                data={k: v for k, v in user_input.items() if v not in (None, "")},
+            )
 
         if CONF_ARRIVAL_TIME in self.config_entry.options:
             default_time_type = ARRIVAL_TIME
