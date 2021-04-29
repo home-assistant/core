@@ -213,12 +213,15 @@ async def test_pb_service_write_register(hass, caplog, mock_modbus):
     caplog.set_level(logging.DEBUG)
     mock_modbus.write_register.return_value = ExceptionResponse(0x06)
     await hass.services.async_call(DOMAIN, SERVICE_WRITE_REGISTER, data, blocking=True)
+    assert mock_modbus.write_register.called
     assert caplog.messages[-1].startswith("Pymodbus:")
     mock_modbus.write_register.return_value = IllegalFunctionRequest(0x06)
     await hass.services.async_call(DOMAIN, SERVICE_WRITE_REGISTER, data, blocking=True)
+    assert mock_modbus.write_register.called
     assert caplog.messages[-1].startswith("Pymodbus:")
     mock_modbus.write_register.side_effect = ModbusException("fail write_")
     await hass.services.async_call(DOMAIN, SERVICE_WRITE_REGISTER, data, blocking=True)
+    assert mock_modbus.write_register.called
     assert caplog.messages[-1].startswith("Pymodbus:")
 
     # Pymodbus write multiple, response OK.
@@ -233,12 +236,16 @@ async def test_pb_service_write_register(hass, caplog, mock_modbus):
     # Pymodbus write multiple, response error or exception
     mock_modbus.write_registers.return_value = ExceptionResponse(0x06)
     await hass.services.async_call(DOMAIN, SERVICE_WRITE_REGISTER, data, blocking=True)
+    assert mock_modbus.write_registers.called
     assert caplog.messages[-1].startswith("Pymodbus:")
     mock_modbus.write_registers.return_value = IllegalFunctionRequest(0x06)
     await hass.services.async_call(DOMAIN, SERVICE_WRITE_REGISTER, data, blocking=True)
+    assert mock_modbus.write_registers.called
     assert caplog.messages[-1].startswith("Pymodbus:")
     mock_modbus.write_registers.side_effect = ModbusException("fail write_")
     await hass.services.async_call(DOMAIN, SERVICE_WRITE_REGISTER, data, blocking=True)
+    assert mock_modbus.write_registers.called
+    assert caplog.messages[-1].startswith("Pymodbus:")
 
 
 async def test_pb_service_write_coil(hass, caplog, mock_modbus):
@@ -262,12 +269,16 @@ async def test_pb_service_write_coil(hass, caplog, mock_modbus):
     caplog.set_level(logging.DEBUG)
     mock_modbus.write_coil.return_value = ExceptionResponse(0x06)
     await hass.services.async_call(DOMAIN, SERVICE_WRITE_COIL, data, blocking=True)
+    assert mock_modbus.write_coil.called
     assert caplog.messages[-1].startswith("Pymodbus:")
     mock_modbus.write_coil.return_value = IllegalFunctionRequest(0x06)
     await hass.services.async_call(DOMAIN, SERVICE_WRITE_COIL, data, blocking=True)
+    assert mock_modbus.write_coil.called
     assert caplog.messages[-1].startswith("Pymodbus:")
     mock_modbus.write_coil.side_effect = ModbusException("fail write_")
     await hass.services.async_call(DOMAIN, SERVICE_WRITE_COIL, data, blocking=True)
+    assert mock_modbus.write_coil.called
+    assert caplog.messages[-1].startswith("Pymodbus:")
 
     # Pymodbus write multiple, response OK.
     data[ATTR_STATE] = [True, False, True]
@@ -281,12 +292,15 @@ async def test_pb_service_write_coil(hass, caplog, mock_modbus):
     # Pymodbus write multiple, response error or exception
     mock_modbus.write_coils.return_value = ExceptionResponse(0x06)
     await hass.services.async_call(DOMAIN, SERVICE_WRITE_COIL, data, blocking=True)
+    assert mock_modbus.write_coils.called
     assert caplog.messages[-1].startswith("Pymodbus:")
     mock_modbus.write_coils.return_value = IllegalFunctionRequest(0x06)
     await hass.services.async_call(DOMAIN, SERVICE_WRITE_COIL, data, blocking=True)
+    assert mock_modbus.write_coils.called
     assert caplog.messages[-1].startswith("Pymodbus:")
     mock_modbus.write_coils.side_effect = ModbusException("fail write_")
     await hass.services.async_call(DOMAIN, SERVICE_WRITE_COIL, data, blocking=True)
+    assert mock_modbus.write_coils.called
     assert caplog.messages[-1].startswith("Pymodbus:")
 
 
