@@ -21,13 +21,11 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         domain: str,
         title: str,
         discovery_function: DiscoveryFunctionType,
-        connection_class: str,
     ) -> None:
         """Initialize the discovery config flow."""
         self._domain = domain
         self._title = title
         self._discovery_function = discovery_function
-        self.CONNECTION_CLASS = connection_class  # pylint: disable=invalid-name
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -104,7 +102,6 @@ def register_discovery_flow(
     domain: str,
     title: str,
     discovery_function: DiscoveryFunctionType,
-    connection_class: str,
 ) -> None:
     """Register flow for discovered integrations that not require auth."""
 
@@ -112,7 +109,7 @@ def register_discovery_flow(
         """Discovery flow handler."""
 
         def __init__(self) -> None:
-            super().__init__(domain, title, discovery_function, connection_class)
+            super().__init__(domain, title, discovery_function)
 
     config_entries.HANDLERS.register(domain)(DiscoveryFlow)
 

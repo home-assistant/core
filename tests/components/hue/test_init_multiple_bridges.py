@@ -7,7 +7,6 @@ from aiohue.scenes import Scenes
 from aiohue.sensors import Sensors
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components import hue
 from homeassistant.components.hue import sensor_base as hue_sensor_base
 from homeassistant.setup import async_setup_component
@@ -132,7 +131,6 @@ def create_config_entry():
     return MockConfigEntry(
         domain=hue.DOMAIN,
         data={"host": "mock-host"},
-        connection_class=config_entries.CONN_CLASS_LOCAL_POLL,
     )
 
 

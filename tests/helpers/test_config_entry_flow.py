@@ -26,7 +26,7 @@ def discovery_flow_conf(hass):
 
     with patch.dict(config_entries.HANDLERS):
         config_entry_flow.register_discovery_flow(
-            "test", "Test", has_discovered_devices, config_entries.CONN_CLASS_LOCAL_POLL
+            "test", "Test", has_discovered_devices
         )
         yield handler_conf
 
