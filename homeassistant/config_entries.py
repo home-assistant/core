@@ -23,6 +23,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.event import Event
+from homeassistant.helpers.frame import get_integration_frame
 from homeassistant.helpers.typing import UNDEFINED, DiscoveryInfoType, UndefinedType
 from homeassistant.setup import async_process_deps_reqs, async_setup_component
 from homeassistant.util.decorator import Registry
@@ -89,6 +90,28 @@ class EntryState(Enum):
         obj._value_ = value
         obj._recoverable = recoverable
         return cast("EntryState", obj)
+
+    def __eq__(self, other: Any) -> bool:
+        """
+        Make comparison to a str succeed if value is equal.
+
+        For backwards compatibility with out of tree components, to be removed.
+        """
+        if self is other:
+            return True
+        if isinstance(other, str):
+            _, integration, path = get_integration_frame()
+            msg = (
+                "Config entry state is compared to a str in %s, this is deprecated. "
+                "Compare using `is` to an EntryState instead"
+            )
+            params = [integration]
+            if path == "custom_components/":
+                msg += ", please report this to maintainer of %s"
+                params.append(integration)
+            _LOGGER.warning(msg, *params)
+            return bool(self.value == other)
+        return self.__class__ == other.__class__ and bool(self.value == other.value)
 
     @property
     def recoverable(self) -> bool:
