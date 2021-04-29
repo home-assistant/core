@@ -44,6 +44,9 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.components.zwave_js.device_platform_helpers import (
+    DynamicCurrentTempClimateHelper,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -493,32 +496,26 @@ class DynamicCurrentTempClimate(ZWaveClimate):
     ) -> None:
         """Initialize thermostat."""
         super().__init__(config_entry, client, info)
-        self._current_temp_dependent_value = None
-        if not self.info.platform_helpers:
-            return
+        if not self.info.platform_helper or not isinstance(
+            self.info.platform_helper, DynamicCurrentTempClimateHelper
+        ):
+            raise TypeError("Expected platform helper is missing")
 
-        # Lookup map to map the transformed value of a dependent Value to a current
-        # temperature Value
-        self._lookup = {}
-        lookup = self.info.platform_helpers["lookup"]
-        for key in lookup:
-            val = self.get_zwave_value(**lookup[key], add_to_watched_value_ids=True)
-            for sub_key in key:
-                self._lookup[sub_key] = val
-        # Value that indicates which sensor is being used for current temp
-        self._current_temp_dependent_value = self.get_zwave_value(
-            **self.info.platform_helpers["dependent_value"],
-            add_to_watched_value_ids=True,
+        self._lookup_table: dict[
+            str | int, ZwaveValue | None
+        ] = self.info.platform_helper.lookup_table
+        self._dependent_value: ZwaveValue | None = (
+            self.info.platform_helper.dependent_value
         )
-        # Transform function that converts the dependent Value into a key for lookup
-        self._transform_function = self.info.platform_helpers["transform_function"]
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self._current_temp_dependent_value:
-            lookup_key = self._transform_function(self._current_temp_dependent_value)
-            return get_value_of_zwave_value(self._lookup.get(lookup_key))
+        if self._dependent_value:
+            lookup_key = self._dependent_value.metadata.states[
+                str(self._dependent_value.value)
+            ].split("-")[0]
+            return get_value_of_zwave_value(self._lookup_table.get(lookup_key))
 
         # Fallback
         return super().current_temperature

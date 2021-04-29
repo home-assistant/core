@@ -36,6 +36,10 @@ class ZWaveBaseEntity(Entity):
         )
         # entities requiring additional values, can add extra ids to this list
         self.watched_value_ids = {self.info.primary_value.value_id}
+        if self.info.platform_helper:
+            self.watched_value_ids = self.watched_value_ids.union(
+                self.info.platform_helper.value_ids_to_watch
+            )
 
     @callback
     def on_value_update(self) -> None:

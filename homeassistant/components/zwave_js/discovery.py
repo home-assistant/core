@@ -12,6 +12,12 @@ from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.core import callback
 
+from .device_platform_helpers import (
+    BaseDevicePlatformHelper,
+    DynamicCurrentTempClimateHelper,
+    ZwaveValueID,
+)
+
 
 @dataclass
 class ZwaveDiscoveryInfo:
@@ -28,7 +34,7 @@ class ZwaveDiscoveryInfo:
     # hint for the platform about this discovered entity
     platform_hint: str | None = ""
     # helper data and functions to use in platform setup
-    platform_helpers: dict[str, Any] | None = None
+    platform_helper: BaseDevicePlatformHelper | None = None
 
 
 @dataclass
@@ -72,7 +78,7 @@ class ZWaveDiscoverySchema:
     # [optional] hint for platform
     hint: str | None = None
     # [optional] helper data and functions to use in platform setup
-    helpers: dict[str, Any] | None = None
+    helper: BaseDevicePlatformHelper | None = None
     # [optional] the node's manufacturer_id must match ANY of these values
     manufacturer_id: set[int] | None = None
     # [optional] the node's product_id must match ANY of these values
@@ -230,37 +236,39 @@ DISCOVERY_SCHEMAS = [
             property={"mode"},
             type={"number"},
         ),
-        helpers={
-            "lookup": {
-                # Internal sensor
-                ("A", "AF"): {
-                    "value_property": THERMOSTAT_CURRENT_TEMP_PROPERTY,
-                    "command_class": CommandClass.SENSOR_MULTILEVEL,
-                    "endpoint": 2,
-                },
-                # External sensor
-                ("A2", "A2F"): {
-                    "value_property": THERMOSTAT_CURRENT_TEMP_PROPERTY,
-                    "command_class": CommandClass.SENSOR_MULTILEVEL,
-                    "endpoint": 3,
-                },
+        helper=DynamicCurrentTempClimateHelper(
+            {
+                # Internal Sensor
+                "A": ZwaveValueID(
+                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=2,
+                ),
+                "AF": ZwaveValueID(
+                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=2,
+                ),
+                # External Sensor
+                "A2": ZwaveValueID(
+                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=3,
+                ),
+                "A2F": ZwaveValueID(
+                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=3,
+                ),
                 # Floor sensor
-                ("F"): {
-                    "value_property": THERMOSTAT_CURRENT_TEMP_PROPERTY,
-                    "command_class": CommandClass.SENSOR_MULTILEVEL,
-                    "endpoint": 4,
-                },
+                "F": ZwaveValueID(
+                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=4,
+                ),
             },
-            # Sensor mode config parameter
-            "dependent_value": {
-                "value_property": 2,
-                "command_class": CommandClass.CONFIGURATION,
-                "endpoint": 0,
-            },
-            "transform_function": (
-                lambda value: value.metadata.states[str(value.value)].split("-")[0]
-            ),
-        },
+            ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
+        ),
     ),
     # ====== START OF CONFIG PARAMETER SPECIFIC MAPPING SCHEMAS =======
     # Door lock mode config parameter. Functionality equivalent to Notification CC
@@ -572,6 +580,10 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
             ):
                 continue
 
+            # resolve helper data into usable format
+            if schema.helper and not schema.helper.resolved:
+                schema.helper.resolve(value)
+
             # all checks passed, this value belongs to an entity
             yield ZwaveDiscoveryInfo(
                 node=value.node,
@@ -579,7 +591,7 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
                 assumed_state=schema.assumed_state,
                 platform=schema.platform,
                 platform_hint=schema.hint,
-                platform_helpers=schema.helpers,
+                platform_helper=schema.helper,
             )
 
             if not schema.allow_multi:
