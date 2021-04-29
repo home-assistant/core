@@ -40,7 +40,6 @@ from .const import (
     CONF_TRANSIT_ROUTING_PREFERENCE,
     CONF_TRAVEL_MODE,
     CONF_UNITS,
-    DEFAULT_NAME,
     DOMAIN,
     TRACKABLE_DOMAINS,
     TRANSIT_PREFS,
@@ -100,11 +99,9 @@ async def async_setup_entry(
     async_add_entities: Callable[[list[SensorEntity], bool], None],
 ) -> None:
     """Set up a Google travel time sensor entry."""
-    name = None
     if not config_entry.options:
         new_data = config_entry.data.copy()
         options = new_data.pop(CONF_OPTIONS, {})
-        name = new_data.pop(CONF_NAME, None)
 
         if CONF_UNITS not in options:
             options[CONF_UNITS] = hass.config.units.name
@@ -129,7 +126,7 @@ async def async_setup_entry(
     api_key = config_entry.data[CONF_API_KEY]
     origin = config_entry.data[CONF_ORIGIN]
     destination = config_entry.data[CONF_DESTINATION]
-    name = name or f"{DEFAULT_NAME}: {origin} -> {destination}"
+    name = config_entry.data[CONF_NAME]
 
     if not await hass.async_add_executor_job(
         is_valid_config_entry, hass, _LOGGER, api_key, origin, destination
