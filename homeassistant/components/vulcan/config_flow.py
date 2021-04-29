@@ -39,7 +39,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle config flow."""
         if self._async_current_entries():
-            return await self.async_step_add_student()
+            return await self.async_step_add_next_config_entry()
 
         return await self.async_step_auth()
 
@@ -104,14 +104,17 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_select_student(self, account, _students, user_input=None):
+    async def async_step_select_student(
+        self, user_input=None, account=None, _students=None
+    ):
         """Allow user to select student."""
         errors = {}
         students_list = {}
-        for student in _students:
-            students_list[
-                str(student.pupil.id)
-            ] = f"{student.pupil.first_name} {student.pupil.last_name}"
+        if _students is not None:
+            for student in _students:
+                students_list[
+                    str(student.pupil.id)
+                ] = f"{student.pupil.first_name} {student.pupil.last_name}"
         if user_input is not None:
             student_id = user_input["student"]
             await self.async_set_unique_id(str(student_id))
@@ -196,25 +199,60 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_add_student(self, user_input=None):
+    async def async_step_add_next_config_entry(self, user_input=None):
         """Flow initialized when user is adding next entry of that integration."""
+        if os.path.exists(".vulcan"):
+            file_list = os.listdir(".vulcan")
+            if len(file_list) < 2:
+                return await self.async_step_auth()
+
+            valid_credentials_list = []
+            for file in file_list:
+                if file.startswith("account-") and file.endswith(".json"):
+                    if file.replace("account", "keystore") in file_list:
+                        valid_credentials_list.append(
+                            file[len("account-") :][: -len(".json")]
+                        )
+            if valid_credentials_list == []:
+                return await self.async_step_auth()
+
         errors = {}
         if user_input is not None:
             if user_input["use_saved_credentials"]:
-                if len(os.listdir(".vulcan")) == 2:
-                    for file in os.listdir(".vulcan"):
-                        if file.startswith("keystore"):
-                            with open(os.path.join(".vulcan", file)) as _file:
-                                keystore = Keystore.load(_file)
-                        elif file.startswith("account"):
-                            with open(os.path.join(".vulcan", file)) as _file:
-                                account = Account.load(_file)
+                if len(valid_credentials_list) == 1:
+                    with open(
+                        f".vulcan/keystore-{valid_credentials_list[0]}.json"
+                    ) as _file:
+                        keystore = Keystore.load(_file)
+                    with open(
+                        f".vulcan/account-{valid_credentials_list[0]}.json"
+                    ) as _file:
+                        account = Account.load(_file)
                     client = Vulcan(keystore, account)
                     _students = await client.get_students()
                     await client.close()
-                    if len(_students) == 1:
+                    new_students = []
+                    existing_entry_ids = []
+                    for entry in self.hass.config_entries.async_entries(DOMAIN):
+                        existing_entry_ids.append(entry.data.get("student_id"))
+                    for student in _students:
+                        if not str(student.pupil.id) in existing_entry_ids:
+                            new_students.append(student)
+                    if new_students == []:
                         return self.async_abort(reason="all_student_already_configured")
-                    return await self.async_step_select_student(account, _students)
+                    if len(new_students) == 1:
+                        await self.async_set_unique_id(str(new_students[0].pupil.id))
+                        self._abort_if_unique_id_configured()
+                        return self.async_create_entry(
+                            title=f"{new_students[0].pupil.first_name} {new_students[0].pupil.last_name}",
+                            data={
+                                "student_id": str(new_students[0].pupil.id),
+                                "login": account.user_login,
+                            },
+                        )
+                    return await self.async_step_select_student(
+                        account=account, _students=new_students
+                    )
                 return await self.async_step_select_saved_credentials()
             return await self.async_step_auth()
 
@@ -222,7 +260,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required("use_saved_credentials", default=True): bool,
         }
         return self.async_show_form(
-            step_id="add_student",
+            step_id="add_next_config_entry",
             data_schema=vol.Schema(data_schema),
             errors=errors,
         )
