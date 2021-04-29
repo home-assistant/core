@@ -1359,9 +1359,6 @@ pycomfoconnect==0.4
 # homeassistant.components.coolmaster
 pycoolmasternet-async==0.1.2
 
-# homeassistant.components.flipr
-pycryptodome==3.10.1
-
 # homeassistant.components.microsoft
 pycsspeechtts==1.0.4
 
