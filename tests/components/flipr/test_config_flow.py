@@ -5,7 +5,7 @@ import pytest
 from requests.exceptions import HTTPError, Timeout
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.flipr.const import CONF_FLIPR_ID, DOMAIN
+from homeassistant.components.flipr.const import CONF_FLIPR_IDS, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 
@@ -40,7 +40,7 @@ async def test_invalid_credential(hass, mock_setup):
             data={
                 CONF_EMAIL: "bad_login",
                 CONF_PASSWORD: "bad_pass",
-                CONF_FLIPR_ID: "",
+                CONF_FLIPR_IDS: "",
             },
         )
 
@@ -60,7 +60,7 @@ async def test_nominal_case(hass, mock_setup):
             data={
                 CONF_EMAIL: "dummylogin",
                 CONF_PASSWORD: "dummypass",
-                CONF_FLIPR_ID: "flipid",
+                CONF_FLIPR_IDS: "flipid",
             },
         )
         await hass.async_block_till_done()
@@ -73,7 +73,7 @@ async def test_nominal_case(hass, mock_setup):
     assert result["data"] == {
         CONF_EMAIL: "dummylogin",
         CONF_PASSWORD: "dummypass",
-        CONF_FLIPR_ID: "flipid",
+        CONF_FLIPR_IDS: "flipid",
     }
 
 
@@ -92,23 +92,15 @@ async def test_multiple_flip_id(hass, mock_setup):
             },
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "flipr_id"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_FLIPR_ID: "FLIP2"},
-        )
-
     assert len(mock_flipr_client.mock_calls) == 1
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "FLIP2"
-    assert result["result"].unique_id == "FLIP2"
+    assert result["title"] == "FLIP1,FLIP2"
+    assert result["result"].unique_id == "FLIP1,FLIP2"
     assert result["data"] == {
         CONF_EMAIL: "dummylogin",
         CONF_PASSWORD: "dummypass",
-        CONF_FLIPR_ID: "FLIP2",
+        CONF_FLIPR_IDS: "FLIP1,FLIP2",
     }
 
 
@@ -143,7 +135,7 @@ async def test_http_errors(hass, mock_setup):
             data={
                 CONF_EMAIL: "nada",
                 CONF_PASSWORD: "nada",
-                CONF_FLIPR_ID: "",
+                CONF_FLIPR_IDS: "",
             },
         )
 
@@ -160,7 +152,7 @@ async def test_http_errors(hass, mock_setup):
             data={
                 CONF_EMAIL: "nada",
                 CONF_PASSWORD: "nada",
-                CONF_FLIPR_ID: "",
+                CONF_FLIPR_IDS: "",
             },
         )
 
