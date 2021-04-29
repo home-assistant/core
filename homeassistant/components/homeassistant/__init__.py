@@ -21,7 +21,6 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
 from homeassistant.helpers import config_validation as cv, recorder
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
     async_extract_referenced_entity_ids,
@@ -49,10 +48,9 @@ SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
 
 
 SHUTDOWN_SERVICES = (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
-WEBSOCKET_RECEIVE_DELAY = 1
 
 
-async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:  # noqa: C901
     """Set up general services related to Home Assistant."""
 
     async def async_handle_turn_service(service):
@@ -143,15 +141,7 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
             )
 
         if call.service == SERVICE_HOMEASSISTANT_STOP:
-            # We delay the stop by WEBSOCKET_RECEIVE_DELAY to ensure the frontend
-            # can receive the response before the webserver shuts down
-            @ha.callback
-            def _async_stop(_):
-                # This must not be a tracked task otherwise
-                # the task itself will block stop
-                asyncio.create_task(hass.async_stop())
-
-            async_call_later(hass, WEBSOCKET_RECEIVE_DELAY, _async_stop)
+            asyncio.create_task(hass.async_stop())
             return
 
         errors = await conf_util.async_check_ha_config_file(hass)
@@ -172,19 +162,7 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
             )
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
-            # We delay the restart by WEBSOCKET_RECEIVE_DELAY to ensure the frontend
-            # can receive the response before the webserver shuts down
-            @ha.callback
-            def _async_stop_with_code(_):
-                # This must not be a tracked task otherwise
-                # the task itself will block restart
-                asyncio.create_task(hass.async_stop(RESTART_EXIT_CODE))
-
-            async_call_later(
-                hass,
-                WEBSOCKET_RECEIVE_DELAY,
-                _async_stop_with_code,
-            )
+            asyncio.create_task(hass.async_stop(RESTART_EXIT_CODE))
 
     async def async_handle_update_service(call):
         """Service handler for updating an entity."""

@@ -3,5 +3,6 @@
   "name": "Xiaomi TV",
   "documentation": "https://www.home-assistant.io/integrations/xiaomi_tv",
   "requirements": ["pymitv==1.4.3"],
-  "codeowners": ["@simse"]
+  "codeowners": ["@simse"],
+  "iot_class": "assumed_state"
 }

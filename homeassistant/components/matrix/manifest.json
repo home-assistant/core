@@ -3,5 +3,6 @@
   "name": "Matrix",
   "documentation": "https://www.home-assistant.io/integrations/matrix",
   "requirements": ["matrix-client==0.3.2"],
-  "codeowners": ["@tinloaf"]
+  "codeowners": ["@tinloaf"],
+  "iot_class": "cloud_push"
 }

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import ColorComponent, CommandClass
@@ -24,6 +24,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
 from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
@@ -45,7 +46,9 @@ MULTI_COLOR_MAP = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Light from Config Entry."""
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
@@ -93,6 +96,16 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         self._min_mireds = 153  # 6500K as a safe default
         self._max_mireds = 370  # 2700K as a safe default
         self._supported_features = SUPPORT_BRIGHTNESS
+        self._warm_white = self.get_zwave_value(
+            "targetColor",
+            CommandClass.SWITCH_COLOR,
+            value_property_key=ColorComponent.WARM_WHITE,
+        )
+        self._cold_white = self.get_zwave_value(
+            "targetColor",
+            CommandClass.SWITCH_COLOR,
+            value_property_key=ColorComponent.COLD_WHITE,
+        )
 
         # get additional (optional) values and set features
         self._target_value = self.get_zwave_value("targetValue")
@@ -206,12 +219,15 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if white_value is not None and self._supports_white_value:
             # white led brightness is controlled by white level
             # rgb leds (if any) can be on at the same time
-            await self._async_set_colors(
-                {
-                    ColorComponent.WARM_WHITE: white_value,
-                    ColorComponent.COLD_WHITE: white_value,
-                }
-            )
+            white_channel = {}
+
+            if self._warm_white:
+                white_channel[ColorComponent.WARM_WHITE] = white_value
+
+            if self._cold_white:
+                white_channel[ColorComponent.COLD_WHITE] = white_value
+
+            await self._async_set_colors(white_channel)
 
         # set brightness
         await self._async_set_brightness(

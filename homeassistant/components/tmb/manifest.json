@@ -3,5 +3,6 @@
   "name": "Transports Metropolitans de Barcelona",
   "documentation": "https://www.home-assistant.io/integrations/tmb",
   "requirements": ["tmb==0.0.4"],
-  "codeowners": ["@alemuro"]
+  "codeowners": ["@alemuro"],
+  "iot_class": "local_polling"
 }

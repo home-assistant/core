@@ -60,7 +60,7 @@ async def async_setup_entry(hass, entry):
     async def _close(event):
         await tibber_connection.rt_disconnect()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
+    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
     try:
         await tibber_connection.update_info()
@@ -73,10 +73,7 @@ async def async_setup_entry(hass, entry):
         _LOGGER.error("Failed to login. %s", exp)
         return False
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     # set up notify platform, no entry support for notify component yet,
     # have to use discovery to load platform.
@@ -90,17 +87,10 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
-
     if unload_ok:
         tibber_connection = hass.data.get(DOMAIN)
         await tibber_connection.rt_disconnect()
-
     return unload_ok

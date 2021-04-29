@@ -13,12 +13,13 @@ from zwave_js_server.model.notification import (
     EntryControlNotification,
     NotificationNotification,
 )
-from zwave_js_server.model.value import ValueNotification
+from zwave_js_server.model.value import Value, ValueNotification
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
+    ATTR_ENTITY_ID,
     CONF_URL,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -50,6 +51,7 @@ from .const import (
     ATTR_TYPE,
     ATTR_VALUE,
     ATTR_VALUE_RAW,
+    CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INTEGRATION_CREATED_ADDON,
     CONF_NETWORK_KEY,
     CONF_USB_PATH,
@@ -62,9 +64,10 @@ from .const import (
     LOGGER,
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
+    ZWAVE_JS_VALUE_UPDATED_EVENT,
 )
-from .discovery import async_discover_values
-from .helpers import get_device_id
+from .discovery import ZwaveDiscoveryInfo, async_discover_values
+from .helpers import async_enable_statistics, get_device_id, get_unique_id
 from .migrate import async_migrate_discovered_value
 from .services import ZWaveServices
 
@@ -107,7 +110,9 @@ def register_node_in_dev_reg(
     return device
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up Z-Wave JS from a config entry."""
     use_addon = entry.data.get(CONF_USE_ADDON)
     if use_addon:
@@ -137,6 +142,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if device.id not in registered_unique_ids:
             registered_unique_ids[device.id] = defaultdict(set)
 
+        value_updates_disc_info = []
+
         # run discovery on all node values and create/update entities
         for disc_info in async_discover_values(node):
             platform = disc_info.platform
@@ -163,6 +170,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             LOGGER.debug("Discovered entity: %s", disc_info)
             async_dispatcher_send(
                 hass, f"{DOMAIN}_{entry.entry_id}_add_{platform}", disc_info
+            )
+
+            # Capture discovery info for values we want to watch for updates
+            if disc_info.assumed_state:
+                value_updates_disc_info.append(disc_info)
+
+        # add listener for value updated events if necessary
+        if value_updates_disc_info:
+            unsubscribe_callbacks.append(
+                node.on(
+                    "value updated",
+                    lambda event: async_on_value_updated(
+                        value_updates_disc_info, event["value"]
+                    ),
+                )
             )
 
         # add listener for stateless node value notification events
@@ -271,6 +293,52 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         hass.bus.async_fire(ZWAVE_JS_NOTIFICATION_EVENT, event_data)
 
+    @callback
+    def async_on_value_updated(
+        value_updates_disc_info: list[ZwaveDiscoveryInfo], value: Value
+    ) -> None:
+        """Fire value updated event."""
+        # Get the discovery info for the value that was updated. If we can't
+        # find the discovery info, we don't need to fire an event
+        try:
+            disc_info = next(
+                disc_info
+                for disc_info in value_updates_disc_info
+                if disc_info.primary_value.value_id == value.value_id
+            )
+        except StopIteration:
+            return
+
+        device = dev_reg.async_get_device({get_device_id(client, value.node)})
+
+        unique_id = get_unique_id(
+            client.driver.controller.home_id, disc_info.primary_value.value_id
+        )
+        entity_id = ent_reg.async_get_entity_id(disc_info.platform, DOMAIN, unique_id)
+
+        raw_value = value_ = value.value
+        if value.metadata.states:
+            value_ = value.metadata.states.get(str(value), value_)
+
+        hass.bus.async_fire(
+            ZWAVE_JS_VALUE_UPDATED_EVENT,
+            {
+                ATTR_NODE_ID: value.node.node_id,
+                ATTR_HOME_ID: client.driver.controller.home_id,
+                ATTR_DEVICE_ID: device.id,  # type: ignore
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_COMMAND_CLASS: value.command_class,
+                ATTR_COMMAND_CLASS_NAME: value.command_class_name,
+                ATTR_ENDPOINT: value.endpoint,
+                ATTR_PROPERTY: value.property_,
+                ATTR_PROPERTY_NAME: value.property_name,
+                ATTR_PROPERTY_KEY: value.property_key,
+                ATTR_PROPERTY_KEY_NAME: value.property_key_name,
+                ATTR_VALUE: value_,
+                ATTR_VALUE_RAW: raw_value,
+            },
+        )
+
     # connect and throw error if connection failed
     try:
         async with timeout(CONNECT_TIMEOUT):
@@ -321,6 +389,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return
 
         LOGGER.info("Connection to Zwave JS Server initialized")
+
+        # If opt in preference hasn't been specified yet, we do nothing, otherwise
+        # we apply the preference
+        if opted_in := entry.data.get(CONF_DATA_COLLECTION_OPTED_IN):
+            await async_enable_statistics(client)
+        elif opted_in is False:
+            await client.driver.async_disable_statistics()
 
         # Check for nodes that no longer exist and remove them
         stored_devices = device_registry.async_entries_for_config_entry(

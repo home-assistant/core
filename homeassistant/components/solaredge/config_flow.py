@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util import slugify
 
 from .const import CONF_SITE_ID, DEFAULT_NAME, DOMAIN
@@ -56,7 +57,7 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
@@ -92,7 +93,7 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Import a config entry."""
         if self._site_in_configuration_exists(user_input[CONF_SITE_ID]):
             return self.async_abort(reason="already_configured")

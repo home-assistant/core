@@ -1,7 +1,10 @@
 """Decorators for the Websocket API."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Awaitable
 from functools import wraps
-from typing import Awaitable, Callable
+from typing import Callable
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized

@@ -19,7 +19,7 @@ from sqlalchemy import (
     Text,
     distinct,
 )
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 
 from homeassistant.core import Event, EventOrigin, State, split_entity_id
 from homeassistant.helpers.json import JSONEncoder

@@ -49,7 +49,7 @@ BASIC_INPUTS_EVENTS_TYPES = {
     "long",
 }
 
-SHBTN_1_INPUTS_EVENTS_TYPES = {
+SHBTN_INPUTS_EVENTS_TYPES = {
     "single",
     "double",
     "triple",
@@ -71,6 +71,8 @@ INPUTS_EVENTS_SUBTYPES = {
     "button2": 2,
     "button3": 3,
 }
+
+SHBTN_MODELS = ["SHBTN-1", "SHBTN-2"]
 
 # Kelvin value for colorTemp
 KELVIN_MAX_VALUE = 6500

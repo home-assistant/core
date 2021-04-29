@@ -20,7 +20,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_INSTANCE_CLIENTS,
@@ -290,24 +290,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def _async_entry_updated(
-    hass: HomeAssistantType, config_entry: ConfigEntry
-) -> None:
+async def _async_entry_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Handle entry updates."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
     if unload_ok and config_entry.entry_id in hass.data[DOMAIN]:
         config_data = hass.data[DOMAIN].pop(config_entry.entry_id)

@@ -255,6 +255,7 @@ omit =
     homeassistant/components/envirophat/sensor.py
     homeassistant/components/envisalink/*
     homeassistant/components/ephember/climate.py
+    homeassistant/components/epson/__init__.py
     homeassistant/components/epson/const.py
     homeassistant/components/epson/media_player.py
     homeassistant/components/epsonworkforce/sensor.py
@@ -328,6 +329,9 @@ omit =
     homeassistant/components/freebox/router.py
     homeassistant/components/freebox/sensor.py
     homeassistant/components/freebox/switch.py
+    homeassistant/components/fritz/__init__.py
+    homeassistant/components/fritz/common.py
+    homeassistant/components/fritz/const.py
     homeassistant/components/fritz/device_tracker.py
     homeassistant/components/fritzbox_callmonitor/__init__.py
     homeassistant/components/fritzbox_callmonitor/const.py
@@ -354,6 +358,7 @@ omit =
     homeassistant/components/goalfeed/*
     homeassistant/components/goalzero/__init__.py
     homeassistant/components/goalzero/binary_sensor.py
+    homeassistant/components/goalzero/switch.py
     homeassistant/components/google/*
     homeassistant/components/google_cloud/tts.py
     homeassistant/components/google_maps/device_tracker.py
@@ -615,9 +620,7 @@ omit =
     homeassistant/components/mochad/*
     homeassistant/components/modbus/climate.py
     homeassistant/components/modbus/cover.py
-    homeassistant/components/modbus/modbus.py
     homeassistant/components/modbus/switch.py
-    homeassistant/components/modbus/sensor.py
     homeassistant/components/modem_callerid/sensor.py
     homeassistant/components/motion_blinds/__init__.py
     homeassistant/components/motion_blinds/const.py
@@ -629,6 +632,8 @@ omit =
     homeassistant/components/msteams/notify.py
     homeassistant/components/mullvad/__init__.py
     homeassistant/components/mullvad/binary_sensor.py
+    homeassistant/components/mutesync/__init__.py
+    homeassistant/components/mutesync/binary_sensor.py
     homeassistant/components/nest/const.py
     homeassistant/components/mvglive/sensor.py
     homeassistant/components/mychevy/*
@@ -698,6 +703,7 @@ omit =
     homeassistant/components/omnilogic/__init__.py
     homeassistant/components/omnilogic/common.py
     homeassistant/components/omnilogic/sensor.py
+    homeassistant/components/omnilogic/switch.py
     homeassistant/components/ondilo_ico/__init__.py
     homeassistant/components/ondilo_ico/api.py
     homeassistant/components/ondilo_ico/const.py
@@ -826,11 +832,13 @@ omit =
     homeassistant/components/rest/switch.py
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
+    homeassistant/components/rituals_perfume_genie/binary_sensor.py
     homeassistant/components/rituals_perfume_genie/entity.py
     homeassistant/components/rituals_perfume_genie/sensor.py
     homeassistant/components/rituals_perfume_genie/switch.py
     homeassistant/components/rituals_perfume_genie/__init__.py
     homeassistant/components/rocketchat/notify.py
+    homeassistant/components/roomba/__init__.py
     homeassistant/components/roomba/binary_sensor.py
     homeassistant/components/roomba/braava.py
     homeassistant/components/roomba/irobot_base.py
@@ -862,6 +870,7 @@ omit =
     homeassistant/components/screenlogic/binary_sensor.py
     homeassistant/components/screenlogic/climate.py
     homeassistant/components/screenlogic/sensor.py
+    homeassistant/components/screenlogic/services.py
     homeassistant/components/screenlogic/switch.py
     homeassistant/components/scsgate/*
     homeassistant/components/scsgate/cover.py

@@ -75,17 +75,21 @@ DHCP = [
     {
         "domain": "lyric",
         "hostname": "lyric-*",
-        "macaddress": "48A2E6"
+        "macaddress": "48A2E6*"
     },
     {
         "domain": "lyric",
         "hostname": "lyric-*",
-        "macaddress": "B82CA0"
+        "macaddress": "B82CA0*"
     },
     {
         "domain": "lyric",
         "hostname": "lyric-*",
-        "macaddress": "00D02D"
+        "macaddress": "00D02D*"
+    },
+    {
+        "domain": "myq",
+        "macaddress": "645299*"
     },
     {
         "domain": "nest",
@@ -194,6 +198,30 @@ DHCP = [
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "508A06*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "7CF666*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "10D561*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "D4A651*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "68572D*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "1869D8*"
     },
     {
         "domain": "verisure",

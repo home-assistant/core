@@ -13,6 +13,7 @@ import zigpy_xbee.zigbee.application
 import zigpy_zigate.zigbee.application
 import zigpy_znp.zigbee.application
 
+from homeassistant.components.alarm_control_panel import DOMAIN as ALARM
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.climate import DOMAIN as CLIMATE
 from homeassistant.components.cover import DOMAIN as COVER
@@ -83,6 +84,7 @@ CHANNEL_ELECTRICAL_MEASUREMENT = "electrical_measurement"
 CHANNEL_EVENT_RELAY = "event_relay"
 CHANNEL_FAN = "fan"
 CHANNEL_HUMIDITY = "humidity"
+CHANNEL_IAS_ACE = "ias_ace"
 CHANNEL_IAS_WD = "ias_wd"
 CHANNEL_IDENTIFY = "identify"
 CHANNEL_ILLUMINANCE = "illuminance"
@@ -106,6 +108,7 @@ CLUSTER_TYPE_IN = "in"
 CLUSTER_TYPE_OUT = "out"
 
 PLATFORMS = (
+    ALARM,
     BINARY_SENSOR,
     CLIMATE,
     COVER,
@@ -117,6 +120,10 @@ PLATFORMS = (
     SENSOR,
     SWITCH,
 )
+
+CONF_ALARM_MASTER_CODE = "alarm_master_code"
+CONF_ALARM_FAILED_TRIES = "alarm_failed_tries"
+CONF_ALARM_ARM_REQUIRES_CODE = "alarm_arm_requires_code"
 
 CONF_BAUDRATE = "baudrate"
 CONF_CUSTOM_QUIRKS_PATH = "custom_quirks_path"
@@ -134,6 +141,14 @@ CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION): cv.positive_int,
         vol.Required(CONF_ENABLE_IDENTIFY_ON_JOIN, default=True): cv.boolean,
+    }
+)
+
+CONF_ZHA_ALARM_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ALARM_MASTER_CODE, default="1234"): cv.string,
+        vol.Required(CONF_ALARM_FAILED_TRIES, default=3): cv.positive_int,
+        vol.Required(CONF_ALARM_ARM_REQUIRES_CODE, default=False): cv.boolean,
     }
 )
 
@@ -191,8 +206,13 @@ POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 PRESET_SCHEDULE = "schedule"
 PRESET_COMPLEX = "complex"
 
+ZHA_ALARM_OPTIONS = "zha_alarm_options"
 ZHA_OPTIONS = "zha_options"
-ZHA_CONFIG_SCHEMAS = {ZHA_OPTIONS: CONF_ZHA_OPTIONS_SCHEMA}
+
+ZHA_CONFIG_SCHEMAS = {
+    ZHA_OPTIONS: CONF_ZHA_OPTIONS_SCHEMA,
+    ZHA_ALARM_OPTIONS: CONF_ZHA_ALARM_SCHEMA,
+}
 
 
 class RadioType(enum.Enum):
@@ -339,6 +359,11 @@ WARNING_DEVICE_SQUAWK_MODE_ARMED = 0
 WARNING_DEVICE_SQUAWK_MODE_DISARMED = 1
 
 ZHA_DISCOVERY_NEW = "zha_discovery_new_{}"
+ZHA_CHANNEL_MSG = "zha_channel_message"
+ZHA_CHANNEL_MSG_BIND = "zha_channel_bind"
+ZHA_CHANNEL_MSG_CFG_RPT = "zha_channel_configure_reporting"
+ZHA_CHANNEL_MSG_DATA = "zha_channel_msg_data"
+ZHA_CHANNEL_CFG_DONE = "zha_channel_cfg_done"
 ZHA_GW_MSG = "zha_gateway_message"
 ZHA_GW_MSG_DEVICE_FULL_INIT = "device_fully_initialized"
 ZHA_GW_MSG_DEVICE_INFO = "device_info"

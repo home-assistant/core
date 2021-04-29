@@ -14,6 +14,13 @@
                     "password": "Contrasenya",
                     "username": "Correu electr\u00f2nic / ID de devolo"
                 }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Contrasenya",
+                    "username": "Correu electr\u00f2nic / ID de devolo"
+                }
             }
         }
     }

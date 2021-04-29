@@ -1,5 +1,4 @@
 """Support for ASUSWRT devices."""
-import asyncio
 
 import voluptuous as vol
 
@@ -14,8 +13,8 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     CONF_DNSMASQ,
@@ -112,7 +111,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up AsusWrt platform."""
 
     # import options from yaml if empty
@@ -125,10 +124,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     router.async_on_close(entry.add_update_listener(update_listener))
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def async_close_connection(event):
         """Close AsusWrt connection on HA Stop."""
@@ -146,16 +142,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
     if unload_ok:
         hass.data[DOMAIN][entry.entry_id]["stop_listener"]()
         router = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
@@ -166,7 +156,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return unload_ok
 
 
-async def update_listener(hass: HomeAssistantType, entry: ConfigEntry):
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
     """Update when config_entry options update."""
     router = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
 

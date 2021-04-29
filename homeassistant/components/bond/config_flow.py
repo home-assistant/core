@@ -16,6 +16,7 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -91,7 +92,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _, hub_name = await _validate_input(self.hass, self._discovered)
         self._discovered[CONF_NAME] = hub_name
 
-    async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType) -> dict[str, Any]:  # type: ignore
+    async def async_step_zeroconf(
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         name: str = discovery_info[CONF_NAME]
         host: str = discovery_info[CONF_HOST]
@@ -115,7 +118,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Handle confirmation flow for discovered bond hub."""
         errors = {}
         if user_input is not None:
@@ -156,7 +159,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:

@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine, Iterable
 from contextvars import ContextVar
 from datetime import datetime, timedelta
 import logging
 from logging import Logger
 from types import ModuleType
-from typing import TYPE_CHECKING, Callable, Coroutine, Iterable
+from typing import TYPE_CHECKING, Callable
+
+from typing_extensions import Protocol
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -55,6 +58,15 @@ DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class AddEntitiesCallback(Protocol):
+    """Protocol type for EntityPlatform.add_entities callback."""
+
+    def __call__(
+        self, new_entities: Iterable[Entity], update_before_add: bool = False
+    ) -> None:
+        """Define add_entities type."""
 
 
 class EntityPlatform:
@@ -173,6 +185,18 @@ class EntityPlatform:
             )
 
         await self._async_setup_platform(async_create_setup_task)
+
+    async def async_shutdown(self) -> None:
+        """Call when Home Assistant is stopping."""
+        self.async_cancel_retry_setup()
+        self.async_unsub_polling()
+
+    @callback
+    def async_cancel_retry_setup(self) -> None:
+        """Cancel retry setup."""
+        if self._async_cancel_retry_setup is not None:
+            self._async_cancel_retry_setup()
+            self._async_cancel_retry_setup = None
 
     async def async_setup_entry(self, config_entry: config_entries.ConfigEntry) -> bool:
         """Set up the platform from a config entry."""
@@ -375,7 +399,7 @@ class EntityPlatform:
             self.scan_interval,
         )
 
-    async def _async_add_entity(  # type: ignore[no-untyped-def]
+    async def _async_add_entity(  # type: ignore[no-untyped-def]  # noqa: C901
         self, entity, update_before_add, entity_registry, device_registry
     ):
         """Add an entity to the platform."""
@@ -549,9 +573,7 @@ class EntityPlatform:
 
         This method must be run in the event loop.
         """
-        if self._async_cancel_retry_setup is not None:
-            self._async_cancel_retry_setup()
-            self._async_cancel_retry_setup = None
+        self.async_cancel_retry_setup()
 
         if not self.entities:
             return
@@ -560,10 +582,15 @@ class EntityPlatform:
 
         await asyncio.gather(*tasks)
 
+        self.async_unsub_polling()
+        self._setup_complete = False
+
+    @callback
+    def async_unsub_polling(self) -> None:
+        """Stop polling."""
         if self._async_unsub_polling is not None:
             self._async_unsub_polling()
             self._async_unsub_polling = None
-        self._setup_complete = False
 
     async def async_destroy(self) -> None:
         """Destroy an entity platform.

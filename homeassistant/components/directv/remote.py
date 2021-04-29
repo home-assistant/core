@@ -1,15 +1,17 @@
 """Support for the DIRECTV remote."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Iterable
+from typing import Any
 
 from directv import DIRECTV, DIRECTVError
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DIRECTVEntity
 from .const import DOMAIN
@@ -20,9 +22,9 @@ SCAN_INTERVAL = timedelta(minutes=2)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list, bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> bool:
     """Load DirecTV remote based on a config entry."""
     dtv = hass.data[DOMAIN][entry.entry_id]

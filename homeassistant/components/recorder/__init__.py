@@ -21,6 +21,7 @@ from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_EXCLUDE,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
@@ -42,10 +43,13 @@ import homeassistant.util.dt as dt_util
 from . import migration, purge
 from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
 from .models import Base, Events, RecorderRuns, States
+from .pool import RecorderPool
 from .util import (
     dburl_to_path,
+    end_incomplete_runs,
     move_away_broken_database,
     session_scope,
+    setup_connection_for_dialect,
     validate_or_move_away_sqlite_database,
 )
 
@@ -91,6 +95,9 @@ CONF_PURGE_KEEP_DAYS = "purge_keep_days"
 CONF_PURGE_INTERVAL = "purge_interval"
 CONF_EVENT_TYPES = "event_types"
 CONF_COMMIT_INTERVAL = "commit_interval"
+
+INVALIDATED_ERR = "Database connection invalidated"
+CONNECTIVITY_ERR = "Error in database connectivity during commit"
 
 EXCLUDE_SCHEMA = INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER.extend(
     {vol.Optional(CONF_EVENT_TYPES): vol.All(cv.ensure_list, [cv.string])}
@@ -338,10 +345,11 @@ class Recorder(threading.Thread):
             "The recorder queue reached the maximum size of %s; Events are no longer being recorded",
             MAX_QUEUE_BACKLOG,
         )
-        self._stop_queue_watcher_and_event_listener()
+        self._async_stop_queue_watcher_and_event_listener()
 
-    def _stop_queue_watcher_and_event_listener(self):
-        """Stop watching the queue."""
+    @callback
+    def _async_stop_queue_watcher_and_event_listener(self):
+        """Stop watching the queue and listening for events."""
         if self._queue_watcher:
             self._queue_watcher()
             self._queue_watcher = None
@@ -370,11 +378,31 @@ class Recorder(threading.Thread):
     def async_register(self, shutdown_task, hass_started):
         """Post connection initialize."""
 
+        def _empty_queue(event):
+            """Empty the queue if its still present at final write."""
+
+            # If the queue is full of events to be processed because
+            # the database is so broken that every event results in a retry
+            # we will never be able to get though the events to shutdown in time.
+            #
+            # We drain all the events in the queue and then insert
+            # an empty one to ensure the next thing the recorder sees
+            # is a request to shutdown.
+            while True:
+                try:
+                    self.queue.get_nowait()
+                except queue.Empty:
+                    break
+            self.queue.put(None)
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, _empty_queue)
+
         def shutdown(event):
             """Shut down the Recorder."""
             if not hass_started.done():
                 hass_started.set_result(shutdown_task)
             self.queue.put(None)
+            self.hass.add_job(self._async_stop_queue_watcher_and_event_listener)
             self.join()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
@@ -399,7 +427,7 @@ class Recorder(threading.Thread):
             "The recorder could not start, check [the logs](/config/logs)",
             "Recorder",
         )
-        self._stop_queue_watcher_and_event_listener()
+        self._async_stop_queue_watcher_and_event_listener()
 
     @callback
     def async_connection_success(self):
@@ -639,19 +667,18 @@ class Recorder(threading.Thread):
         return False
 
     def _commit_event_session_or_retry(self):
+        """Commit the event session if there is work to do."""
+        if not self.event_session.new and not self.event_session.dirty:
+            return
         tries = 1
         while tries <= self.db_max_retries:
             try:
                 self._commit_event_session()
                 return
             except (exc.InternalError, exc.OperationalError) as err:
-                if err.connection_invalidated:
-                    message = "Database connection invalidated"
-                else:
-                    message = "Error in database connectivity during commit"
                 _LOGGER.error(
                     "%s: Error executing query: %s. (retrying in %s seconds)",
-                    message,
+                    INVALIDATED_ERR if err.connection_invalidated else CONNECTIVITY_ERR,
                     err,
                     self.db_retry_wait,
                 )
@@ -749,30 +776,16 @@ class Recorder(threading.Thread):
             """Dbapi specific connection settings."""
             if self._completed_database_setup:
                 return
-
-            # We do not import sqlite3 here so mysql/other
-            # users do not have to pay for it to be loaded in
-            # memory
-            if self.db_url.startswith(SQLITE_URL_PREFIX):
-                old_isolation = dbapi_connection.isolation_level
-                dbapi_connection.isolation_level = None
-                cursor = dbapi_connection.cursor()
-                cursor.execute("PRAGMA journal_mode=WAL")
-                cursor.close()
-                dbapi_connection.isolation_level = old_isolation
-                # WAL mode only needs to be setup once
-                # instead of every time we open the sqlite connection
-                # as its persistent and isn't free to call every time.
-                self._completed_database_setup = True
-            elif self.db_url.startswith("mysql"):
-                cursor = dbapi_connection.cursor()
-                cursor.execute("SET session wait_timeout=28800")
-                cursor.close()
+            self._completed_database_setup = setup_connection_for_dialect(
+                self.engine.dialect.name, dbapi_connection
+            )
 
         if self.db_url == SQLITE_URL_PREFIX or ":memory:" in self.db_url:
             kwargs["connect_args"] = {"check_same_thread": False}
             kwargs["poolclass"] = StaticPool
             kwargs["pool_reset_on_return"] = None
+        elif self.db_url.startswith(SQLITE_URL_PREFIX):
+            kwargs["poolclass"] = RecorderPool
         else:
             kwargs["echo"] = False
 
@@ -803,17 +816,9 @@ class Recorder(threading.Thread):
     def _setup_run(self):
         """Log the start of the current run."""
         with session_scope(session=self.get_session()) as session:
-            for run in session.query(RecorderRuns).filter_by(end=None):
-                run.closed_incorrect = True
-                run.end = self.recording_start
-                _LOGGER.warning(
-                    "Ended unfinished session (id=%s from %s)", run.run_id, run.start
-                )
-                session.add(run)
-
-            self.run_info = RecorderRuns(
-                start=self.recording_start, created=dt_util.utcnow()
-            )
+            start = self.recording_start
+            end_incomplete_runs(session, start)
+            self.run_info = RecorderRuns(start=start, created=dt_util.utcnow())
             session.add(self.run_info)
             session.flush()
             session.expunge(self.run_info)
@@ -836,6 +841,6 @@ class Recorder(threading.Thread):
 
     def _shutdown(self):
         """Save end time for current run."""
-        self._stop_queue_watcher_and_event_listener()
+        self.hass.add_job(self._async_stop_queue_watcher_and_event_listener)
         self._end_session()
         self._close_connection()

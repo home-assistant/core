@@ -2,11 +2,8 @@
   "domain": "philips_js",
   "name": "Philips TV",
   "documentation": "https://www.home-assistant.io/integrations/philips_js",
-  "requirements": [
-    "ha-philipsjs==2.7.0"
-  ],
-  "codeowners": [
-    "@elupus"
-  ],
-  "config_flow": true
+  "requirements": ["ha-philipsjs==2.7.0"],
+  "codeowners": ["@elupus"],
+  "config_flow": true,
+  "iot_class": "local_polling"
 }

@@ -4,5 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/geonetnz_volcano",
   "requirements": ["aio_geojson_geonetnz_volcano==0.5"],
-  "codeowners": ["@exxamalte"]
+  "codeowners": ["@exxamalte"],
+  "iot_class": "cloud_polling"
 }

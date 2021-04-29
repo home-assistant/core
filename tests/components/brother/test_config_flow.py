@@ -40,8 +40,8 @@ async def test_create_entry_with_hostname(hass):
         assert result["data"][CONF_TYPE] == CONFIG[CONF_TYPE]
 
 
-async def test_create_entry_with_ip_address(hass):
-    """Test that the user step works with printer IP address."""
+async def test_create_entry_with_ipv4_address(hass):
+    """Test that the user step works with printer IPv4 address."""
     with patch(
         "brother.Brother._get_data",
         return_value=json.loads(load_fixture("brother_printer_data.json")),
@@ -55,6 +55,24 @@ async def test_create_entry_with_ip_address(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "HL-L2340DW 0123456789"
         assert result["data"][CONF_HOST] == "127.0.0.1"
+        assert result["data"][CONF_TYPE] == "laser"
+
+
+async def test_create_entry_with_ipv6_address(hass):
+    """Test that the user step works with printer IPv6 address."""
+    with patch(
+        "brother.Brother._get_data",
+        return_value=json.loads(load_fixture("brother_printer_data.json")),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_HOST: "2001:db8::1428:57ab", CONF_TYPE: "laser"},
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "HL-L2340DW 0123456789"
+        assert result["data"][CONF_HOST] == "2001:db8::1428:57ab"
         assert result["data"][CONF_TYPE] == "laser"
 
 
@@ -116,16 +134,6 @@ async def test_device_exists_abort(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
-
-
-async def test_zeroconf_no_data(hass):
-    """Test we abort if zeroconf provides no data."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "cannot_connect"
 
 
 async def test_zeroconf_not_brother_printer_error(hass):

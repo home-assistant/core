@@ -1,5 +1,4 @@
 """The Coronavirus integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -15,14 +14,14 @@ from .const import DOMAIN
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Coronavirus component."""
     # Make sure coordinator is initialized.
     await get_coordinator(hass)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Coronavirus from a config entry."""
     if isinstance(entry.data["country"], int):
         hass.config_entries.async_update_entry(
@@ -44,29 +43,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not entry.unique_id:
         hass.config_entries.async_update_entry(entry, unique_id=entry.data["country"])
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    coordinator = await get_coordinator(hass)
+    if not coordinator.last_update_success:
+        await coordinator.async_config_entry_first_refresh()
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def get_coordinator(hass):
+async def get_coordinator(
+    hass: HomeAssistant,
+) -> update_coordinator.DataUpdateCoordinator:
     """Get the data update coordinator."""
     if DOMAIN in hass.data:
         return hass.data[DOMAIN]

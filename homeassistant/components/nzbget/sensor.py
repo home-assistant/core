@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Callable
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -13,8 +12,8 @@ from homeassistant.const import (
     DATA_RATE_MEGABYTES_PER_SECOND,
     DEVICE_CLASS_TIMESTAMP,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import NZBGetEntity
@@ -42,9 +41,9 @@ SENSOR_TYPES = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up NZBGet sensor based on a config entry."""
     coordinator: NZBGetDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][

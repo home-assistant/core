@@ -56,14 +56,17 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
                     user_input[CONF_ARRIVAL_TIME] = time
                 else:
                     user_input[CONF_DEPARTURE_TIME] = time
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(
+                title="",
+                data={k: v for k, v in user_input.items() if v not in (None, "")},
+            )
 
         if CONF_ARRIVAL_TIME in self.config_entry.options:
             default_time_type = ARRIVAL_TIME
             default_time = self.config_entry.options[CONF_ARRIVAL_TIME]
         else:
             default_time_type = DEPARTURE_TIME
-            default_time = self.config_entry.options.get(CONF_ARRIVAL_TIME)
+            default_time = self.config_entry.options.get(CONF_ARRIVAL_TIME, "")
 
         return self.async_show_form(
             step_id="init",
@@ -75,10 +78,10 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_LANGUAGE,
                         default=self.config_entry.options.get(CONF_LANGUAGE),
-                    ): vol.In(ALL_LANGUAGES),
+                    ): vol.In([None, *ALL_LANGUAGES]),
                     vol.Optional(
                         CONF_AVOID, default=self.config_entry.options.get(CONF_AVOID)
-                    ): vol.In(AVOID),
+                    ): vol.In([None, *AVOID]),
                     vol.Optional(
                         CONF_UNITS, default=self.config_entry.options[CONF_UNITS]
                     ): vol.In(UNITS),
@@ -89,17 +92,17 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_TRAFFIC_MODEL,
                         default=self.config_entry.options.get(CONF_TRAFFIC_MODEL),
-                    ): vol.In(TRAVEL_MODEL),
+                    ): vol.In([None, *TRAVEL_MODEL]),
                     vol.Optional(
                         CONF_TRANSIT_MODE,
                         default=self.config_entry.options.get(CONF_TRANSIT_MODE),
-                    ): vol.In(TRANSPORT_TYPE),
+                    ): vol.In([None, *TRANSPORT_TYPE]),
                     vol.Optional(
                         CONF_TRANSIT_ROUTING_PREFERENCE,
                         default=self.config_entry.options.get(
                             CONF_TRANSIT_ROUTING_PREFERENCE
                         ),
-                    ): vol.In(TRANSIT_PREFS),
+                    ): vol.In([None, *TRANSIT_PREFS]),
                 }
             ),
         )
@@ -122,29 +125,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
-        if user_input is not None:
-            if await self.hass.async_add_executor_job(
-                is_valid_config_entry,
-                self.hass,
-                _LOGGER,
-                user_input[CONF_API_KEY],
-                user_input[CONF_ORIGIN],
-                user_input[CONF_DESTINATION],
-            ):
-                await self.async_set_unique_id(
-                    slugify(
-                        f"{DOMAIN}_{user_input[CONF_ORIGIN]}_{user_input[CONF_DESTINATION]}"
-                    )
+        user_input = user_input or {}
+        if user_input:
+            await self.async_set_unique_id(
+                slugify(
+                    f"{DOMAIN}_{user_input[CONF_ORIGIN]}_{user_input[CONF_DESTINATION]}"
                 )
-                self._abort_if_unique_id_configured()
+            )
+            self._abort_if_unique_id_configured()
+            if (
+                self.source == config_entries.SOURCE_IMPORT
+                or await self.hass.async_add_executor_job(
+                    is_valid_config_entry,
+                    self.hass,
+                    _LOGGER,
+                    user_input[CONF_API_KEY],
+                    user_input[CONF_ORIGIN],
+                    user_input[CONF_DESTINATION],
+                )
+            ):
                 return self.async_create_entry(
-                    title=user_input.get(
-                        CONF_NAME,
-                        (
-                            f"{DEFAULT_NAME}: {user_input[CONF_ORIGIN]} -> "
-                            f"{user_input[CONF_DESTINATION]}"
-                        ),
-                    ),
+                    title=user_input.get(CONF_NAME, DEFAULT_NAME),
                     data=user_input,
                 )
 
@@ -155,6 +156,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    vol.Required(
+                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
+                    ): cv.string,
                     vol.Required(CONF_API_KEY): cv.string,
                     vol.Required(CONF_DESTINATION): cv.string,
                     vol.Required(CONF_ORIGIN): cv.string,

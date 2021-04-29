@@ -1,5 +1,4 @@
 """The HVV integration."""
-import asyncio
 
 from homeassistant.components.binary_sensor import DOMAIN as DOMAIN_BINARY_SENSOR
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
@@ -12,11 +11,6 @@ from .const import DOMAIN
 from .hub import GTIHub
 
 PLATFORMS = [DOMAIN_SENSOR, DOMAIN_BINARY_SENSOR]
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the HVV component."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -32,22 +26,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = hub
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

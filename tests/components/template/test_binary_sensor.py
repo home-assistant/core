@@ -12,13 +12,14 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import CoreState
+from homeassistant.core import Context, CoreState
+from homeassistant.helpers import entity_registry
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
 
-async def test_setup(hass):
+async def test_setup_legacy(hass):
     """Test the setup."""
     config = {
         "binary_sensor": {
@@ -841,8 +842,16 @@ async def test_unique_id(hass):
     """Test unique_id option only creates one binary sensor per id."""
     await setup.async_setup_component(
         hass,
-        binary_sensor.DOMAIN,
+        "template",
         {
+            "template": {
+                "unique_id": "group-id",
+                "binary_sensor": {
+                    "name": "top-level",
+                    "unique_id": "sensor-id",
+                    "state": "on",
+                },
+            },
             "binary_sensor": {
                 "platform": "template",
                 "sensors": {
@@ -863,7 +872,21 @@ async def test_unique_id(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 2
+
+    ent_reg = entity_registry.async_get(hass)
+
+    assert len(ent_reg.entities) == 2
+    assert (
+        ent_reg.async_get_entity_id("binary_sensor", "template", "group-id-sensor-id")
+        is not None
+    )
+    assert (
+        ent_reg.async_get_entity_id(
+            "binary_sensor", "template", "not-so-unique-anymore"
+        )
+        is not None
+    )
 
 
 async def test_template_validation_error(hass, caplog):
@@ -906,3 +929,146 @@ async def test_template_validation_error(hass, caplog):
 
     state = hass.states.get("binary_sensor.test")
     assert state.attributes.get("icon") is None
+
+
+async def test_trigger_entity(hass):
+    """Test trigger entity works."""
+    assert await setup.async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {"invalid": "config"},
+                # Config after invalid should still be set up
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "binary_sensors": {
+                        "hello": {
+                            "friendly_name": "Hello Name",
+                            "unique_id": "hello_name-id",
+                            "device_class": "battery",
+                            "value_template": "{{ trigger.event.data.beer == 2 }}",
+                            "entity_picture_template": "{{ '/local/dogs.png' }}",
+                            "icon_template": "{{ 'mdi:pirate' }}",
+                            "attribute_templates": {
+                                "plus_one": "{{ trigger.event.data.beer + 1 }}"
+                            },
+                        },
+                    },
+                    "binary_sensor": [
+                        {
+                            "name": "via list",
+                            "unique_id": "via_list-id",
+                            "device_class": "battery",
+                            "state": "{{ trigger.event.data.beer == 2 }}",
+                            "picture": "{{ '/local/dogs.png' }}",
+                            "icon": "{{ 'mdi:pirate' }}",
+                            "attributes": {
+                                "plus_one": "{{ trigger.event.data.beer + 1 }}",
+                                "another": "{{ trigger.event.data.uno_mas or 1 }}",
+                            },
+                        }
+                    ],
+                },
+                {
+                    "trigger": [],
+                    "binary_sensors": {
+                        "bare_minimum": {
+                            "value_template": "{{ trigger.event.data.beer == 1 }}"
+                        },
+                    },
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.hello_name")
+    assert state is not None
+    assert state.state == "off"
+
+    state = hass.states.get("binary_sensor.bare_minimum")
+    assert state is not None
+    assert state.state == "off"
+
+    context = Context()
+    hass.bus.async_fire("test_event", {"beer": 2}, context=context)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.hello_name")
+    assert state.state == "on"
+    assert state.attributes.get("device_class") == "battery"
+    assert state.attributes.get("icon") == "mdi:pirate"
+    assert state.attributes.get("entity_picture") == "/local/dogs.png"
+    assert state.attributes.get("plus_one") == 3
+    assert state.context is context
+
+    ent_reg = entity_registry.async_get(hass)
+    assert len(ent_reg.entities) == 2
+    assert (
+        ent_reg.entities["binary_sensor.hello_name"].unique_id
+        == "listening-test-event-hello_name-id"
+    )
+    assert (
+        ent_reg.entities["binary_sensor.via_list"].unique_id
+        == "listening-test-event-via_list-id"
+    )
+
+    state = hass.states.get("binary_sensor.via_list")
+    assert state.state == "on"
+    assert state.attributes.get("device_class") == "battery"
+    assert state.attributes.get("icon") == "mdi:pirate"
+    assert state.attributes.get("entity_picture") == "/local/dogs.png"
+    assert state.attributes.get("plus_one") == 3
+    assert state.attributes.get("another") == 1
+    assert state.context is context
+
+    # Even if state itself didn't change, attributes might have changed
+    hass.bus.async_fire("test_event", {"beer": 2, "uno_mas": "si"})
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.via_list")
+    assert state.state == "on"
+    assert state.attributes.get("another") == "si"
+
+
+async def test_template_with_trigger_templated_delay_on(hass):
+    """Test binary sensor template with template delay on."""
+    config = {
+        "template": {
+            "trigger": {"platform": "event", "event_type": "test_event"},
+            "binary_sensor": {
+                "name": "test",
+                "state": "{{ trigger.event.data.beer == 2 }}",
+                "device_class": "motion",
+                "delay_on": '{{ ({ "seconds": 6 / 2 }) }}',
+                "auto_off": '{{ ({ "seconds": 1 + 1 }) }}',
+            },
+        }
+    }
+    await setup.async_setup_component(hass, "template", config)
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    context = Context()
+    hass.bus.async_fire("test_event", {"beer": 2}, context=context)
+    await hass.async_block_till_done()
+
+    future = dt_util.utcnow() + timedelta(seconds=3)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
+
+    # Now wait for the auto-off
+    future = dt_util.utcnow() + timedelta(seconds=2)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"

@@ -21,10 +21,10 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     CC_ATTR_TEMPERATURE,
@@ -72,7 +72,7 @@ def _get_config_schema(
     )
 
 
-def _get_unique_id(hass: HomeAssistantType, input_dict: dict[str, Any]):
+def _get_unique_id(hass: HomeAssistant, input_dict: dict[str, Any]):
     """Return unique ID from config data."""
     return (
         f"{input_dict[CONF_API_KEY]}"
@@ -88,9 +88,7 @@ class ClimaCellOptionsConfigFlow(config_entries.OptionsFlow):
         """Initialize ClimaCell options flow."""
         self._config_entry = config_entry
 
-    async def async_step_init(
-        self, user_input: dict[str, Any] = None
-    ) -> dict[str, Any]:
+    async def async_step_init(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Manage the ClimaCell options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -121,9 +119,7 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return ClimaCellOptionsConfigFlow(config_entry)
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] = None
-    ) -> dict[str, Any]:
+    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:

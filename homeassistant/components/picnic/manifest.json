@@ -1,0 +1,9 @@
+{
+  "domain": "picnic",
+  "name": "Picnic",
+  "config_flow": true,
+  "iot_class": "cloud_polling",
+  "documentation": "https://www.home-assistant.io/integrations/picnic",
+  "requirements": ["python-picnic-api==1.1.0"],
+  "codeowners": ["@corneyl"]
+}

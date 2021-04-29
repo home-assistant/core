@@ -2,17 +2,17 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 from datetime import datetime, timedelta
 import logging
 from time import monotonic
-from typing import Any, Awaitable, Callable, Generic, TypeVar
+from typing import Any, Callable, Generic, TypeVar
 import urllib.error
 
 import aiohttp
 import requests
 
 from homeassistant import config_entries
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity, event
@@ -52,7 +52,12 @@ class DataUpdateCoordinator(Generic[T]):
         self.update_method = update_method
         self.update_interval = update_interval
 
-        self.data: T | None = None
+        # It's None before the first successful update.
+        # Components should call async_config_entry_first_refresh
+        # to make sure the first update was successful.
+        # Set type to just T to remove annoying checks that data is not None
+        # when it was already checked during setup.
+        self.data: T = None  # type: ignore[assignment]
 
         self._listeners: list[CALLBACK_TYPE] = []
         self._job = HassJob(self._handle_refresh_interval)
@@ -73,10 +78,6 @@ class DataUpdateCoordinator(Generic[T]):
             request_refresh_debouncer.function = self.async_refresh
 
         self._debounced_refresh = request_refresh_debouncer
-
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self._async_stop_refresh
-        )
 
     @callback
     def async_add_listener(self, update_callback: CALLBACK_TYPE) -> Callable[[], None]:
@@ -128,7 +129,7 @@ class DataUpdateCoordinator(Generic[T]):
     async def _handle_refresh_interval(self, _now: datetime) -> None:
         """Handle a refresh interval occurrence."""
         self._unsub_refresh = None
-        await self.async_refresh()
+        await self._async_refresh(log_failures=True, scheduled=True)
 
     async def async_request_refresh(self) -> None:
         """Request a refresh.
@@ -137,7 +138,7 @@ class DataUpdateCoordinator(Generic[T]):
         """
         await self._debounced_refresh.async_call()
 
-    async def _async_update_data(self) -> T | None:
+    async def _async_update_data(self) -> T:
         """Fetch the latest data from the source."""
         if self.update_method is None:
             raise NotImplementedError("Update method not implemented")
@@ -161,8 +162,11 @@ class DataUpdateCoordinator(Generic[T]):
         """Refresh data and log errors."""
         await self._async_refresh(log_failures=True)
 
-    async def _async_refresh(
-        self, log_failures: bool = True, raise_on_auth_failed: bool = False
+    async def _async_refresh(  # noqa: C901
+        self,
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
     ) -> None:
         """Refresh data."""
         if self._unsub_refresh:
@@ -170,6 +174,10 @@ class DataUpdateCoordinator(Generic[T]):
             self._unsub_refresh = None
 
         self._debounced_refresh.async_cancel()
+
+        if scheduled and self.hass.is_stopping:
+            return
+
         start = monotonic()
         auth_failed = False
 
@@ -249,7 +257,7 @@ class DataUpdateCoordinator(Generic[T]):
                 self.name,
                 monotonic() - start,
             )
-            if not auth_failed and self._listeners:
+            if not auth_failed and self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()
 
         for update_callback in self._listeners:

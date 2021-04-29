@@ -158,7 +158,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_broker()
 
     async def async_step_broker(self, user_input=None):
-        """Manage the MQTT options."""
+        """Manage the MQTT broker configuration."""
         errors = {}
         current_config = self.config_entry.data
         yaml_config = self.hass.data.get(DATA_MQTT_CONFIG, {})
@@ -201,6 +201,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="broker",
             data_schema=vol.Schema(fields),
             errors=errors,
+            last_step=False,
         )
 
     async def async_step_options(self, user_input=None):
@@ -321,6 +322,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="options",
             data_schema=vol.Schema(fields),
             errors=errors,
+            last_step=True,
         )
 
 
