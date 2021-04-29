@@ -6,6 +6,7 @@ homeassistant.components
 homeassistant.components.automation.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bond.*
+homeassistant.components.brother.*
 homeassistant.components.calendar.*
 homeassistant.components.cover.*
 homeassistant.components.device_automation.*
