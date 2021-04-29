@@ -43,7 +43,6 @@ from .const import (
     DEFAULT_AVOID_FERRIES,
     DEFAULT_AVOID_SUBSCRIPTION_ROADS,
     DEFAULT_AVOID_TOLL_ROADS,
-    DEFAULT_NAME,
     DEFAULT_REALTIME,
     DEFAULT_VEHICLE_TYPE,
     DOMAIN,
@@ -117,10 +116,9 @@ async def async_setup_entry(
         CONF_AVOID_SUBSCRIPTION_ROADS: DEFAULT_AVOID_SUBSCRIPTION_ROADS,
         CONF_AVOID_TOLL_ROADS: DEFAULT_AVOID_TOLL_ROADS,
     }
-    name = None
+
     if not config_entry.options:
         new_data = config_entry.data.copy()
-        name = new_data.pop(CONF_NAME, None)
         options = {}
         for key in [
             CONF_INCL_FILTER,
@@ -144,7 +142,7 @@ async def async_setup_entry(
     destination = config_entry.data[CONF_DESTINATION]
     origin = config_entry.data[CONF_ORIGIN]
     region = config_entry.data[CONF_REGION]
-    name = name or f"{DEFAULT_NAME}: {origin} -> {destination}"
+    name = config_entry.data[CONF_NAME]
 
     if not await hass.async_add_executor_job(
         is_valid_config_entry, hass, _LOGGER, origin, destination, region
