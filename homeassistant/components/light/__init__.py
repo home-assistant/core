@@ -498,16 +498,15 @@ class Profiles:
         self.data = await self.hass.async_add_executor_job(self._load_profile_data)
 
     @callback
-    def apply_default(self, entity_id: str, is_on: bool, params: dict) -> None:
+    def apply_default(self, entity_id: str, state_on: bool, params: dict) -> None:
         """Return the default profile for the given light."""
         for _entity_id in (entity_id, "group.all_lights"):
             name = f"{_entity_id}.default"
             if name in self.data:
-                if not is_on or (not params and is_on):
+                if not state_on or not params:
                     self.apply_profile(name, params)
                 elif self.data[name].transition is not None:
                     params.setdefault(ATTR_TRANSITION, self.data[name].transition)
-                return
 
     @callback
     def apply_profile(self, name: str, params: dict) -> None:
