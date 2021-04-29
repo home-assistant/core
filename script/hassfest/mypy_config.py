@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import configparser
 import io
+import os
+from pathlib import Path
 from typing import Final
 
 from .model import Config, Integration
@@ -320,6 +322,22 @@ def generate_and_validate(config: Config) -> str:
             )
         if module in ignored_modules_set:
             config.add_error("mypy_config", f"Module '{module}' is in ignored list")
+
+    # Validate that all modules exist.
+    all_modules = strict_modules + IGNORED_MODULES
+    for module in all_modules:
+        if module.endswith(".*"):
+            module_path = Path(module[:-2].replace(".", os.path.sep))
+            if not module_path.is_dir():
+                config.add_error("mypy_config", f"Module '{module} is not a folder")
+        else:
+            module = module.replace(".", os.path.sep)
+            module_path = Path(f"{module}.py")
+            if module_path.is_file():
+                continue
+            module_path = Path(module) / "__init__.py"
+            if not module_path.is_file():
+                config.add_error("mypy_config", f"Module '{module} doesn't exist")
 
     mypy_config = configparser.ConfigParser()
 
