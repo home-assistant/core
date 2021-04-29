@@ -47,8 +47,9 @@ async def test_minimum_fields(hass, validate_config_entry, bypass_setup):
     )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == f"{DEFAULT_NAME}: location1 -> location2"
+    assert result2["title"] == DEFAULT_NAME
     assert result2["data"] == {
+        CONF_NAME: DEFAULT_NAME,
         CONF_API_KEY: "api_key",
         CONF_ORIGIN: "location1",
         CONF_DESTINATION: "location2",
@@ -281,6 +282,7 @@ async def test_import_flow(hass, validate_config_entry, bypass_update):
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.data == {
+        CONF_NAME: "test_name",
         CONF_API_KEY: "api_key",
         CONF_ORIGIN: "location1",
         CONF_DESTINATION: "location2",
