@@ -43,7 +43,7 @@
                "credentials":"Login"
             }
          },
-         "add_student":{
+         "add_next_config_entry":{
             "description":"Dodaj kolejnego ucznia.",
             "data":{
                "use_saved_credentials":"Użyj zapisanych danych logowania"
