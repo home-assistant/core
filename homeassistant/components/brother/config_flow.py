@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_TYPE
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN, PRINTER_TYPES
@@ -48,7 +48,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -82,7 +82,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: DiscoveryInfoType
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
         if not discovery_info.get("name") or not discovery_info["name"].startswith(
             "Brother"
@@ -116,7 +116,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle a flow initiated by zeroconf."""
         if user_input is not None:
             title = f"{self.brother.model} {self.brother.serial}"
