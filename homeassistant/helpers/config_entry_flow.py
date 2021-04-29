@@ -115,7 +115,7 @@ def register_discovery_flow(
             " config flow. The connection class has been deprecated and will"
             " be removed in a future release of Home Assistant."
             " If '{title}' is a custom integration, please contact the author"
-            " of that integration about his warning."
+            " of that integration about this warning."
         )
 
     class DiscoveryFlow(DiscoveryFlowHandler):
