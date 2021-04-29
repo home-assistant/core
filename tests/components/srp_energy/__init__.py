@@ -38,7 +38,6 @@ async def init_integration(
         domain=srp_energy.SRP_ENERGY_DOMAIN,
         source=source,
         data=config,
-        connection_class=config_entries.CONN_CLASS_CLOUD_POLL,
         options=options,
         entry_id=entry_id,
     )

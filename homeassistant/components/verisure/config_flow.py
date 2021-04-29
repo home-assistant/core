@@ -11,12 +11,7 @@ from verisure import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    CONN_CLASS_CLOUD_POLL,
-    ConfigEntry,
-    ConfigFlow,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -35,7 +30,6 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Verisure."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
     email: str
     entry: ConfigEntry

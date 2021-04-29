@@ -10,7 +10,6 @@ import requests
 from homeassistant import config_entries
 from homeassistant.components.picnic import const
 from homeassistant.components.picnic.const import CONF_COUNTRY_CODE, SENSOR_TYPES
-from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CURRENCY_EURO,
@@ -110,7 +109,6 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         self.config_entry = MockConfigEntry(
             domain=const.DOMAIN,
             data=config_data,
-            connection_class=CONN_CLASS_CLOUD_POLL,
             unique_id="295-6y3-1nf4",
         )
         self.config_entry.add_to_hass(self.hass)

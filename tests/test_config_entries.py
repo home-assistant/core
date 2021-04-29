@@ -546,7 +546,6 @@ async def test_saving_and_loading(hass):
         """Test flow."""
 
         VERSION = 5
-        CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
         async def async_step_user(self, user_input=None):
             """Test user step."""
@@ -562,7 +561,6 @@ async def test_saving_and_loading(hass):
         """Test flow."""
 
         VERSION = 3
-        CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
         async def async_step_user(self, user_input=None):
             """Test user step."""
@@ -597,7 +595,6 @@ async def test_saving_and_loading(hass):
         assert orig.title == loaded.title
         assert orig.data == loaded.data
         assert orig.source == loaded.source
-        assert orig.connection_class == loaded.connection_class
         assert orig.unique_id == loaded.unique_id
 
 

@@ -1,14 +1,17 @@
 """Helpers for data entry flows for config entries."""
 from __future__ import annotations
 
+import logging
 from typing import Any, Awaitable, Callable, Union
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.typing import UNDEFINED, DiscoveryInfoType, UndefinedType
 
 DiscoveryFunctionType = Callable[[], Union[Awaitable[bool], bool]]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class DiscoveryFlowHandler(config_entries.ConfigFlow):
@@ -21,13 +24,11 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         domain: str,
         title: str,
         discovery_function: DiscoveryFunctionType,
-        connection_class: str,
     ) -> None:
         """Initialize the discovery config flow."""
         self._domain = domain
         self._title = title
         self._discovery_function = discovery_function
-        self.CONNECTION_CLASS = connection_class  # pylint: disable=invalid-name
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -104,15 +105,29 @@ def register_discovery_flow(
     domain: str,
     title: str,
     discovery_function: DiscoveryFunctionType,
-    connection_class: str,
+    connection_class: str | UndefinedType = UNDEFINED,
 ) -> None:
     """Register flow for discovered integrations that not require auth."""
+    if connection_class is not UNDEFINED:
+        _LOGGER.warning(
+            (
+                "The %s (%s) integration is setting a connection_class"
+                " when calling the 'register_discovery_flow()' method in its"
+                " config flow. The connection class has been deprecated and will"
+                " be removed in a future release of Home Assistant."
+                " If '%s' is a custom integration, please contact the author"
+                " of that integration about this warning.",
+            ),
+            title,
+            domain,
+            domain,
+        )
 
     class DiscoveryFlow(DiscoveryFlowHandler):
         """Discovery flow handler."""
 
         def __init__(self) -> None:
-            super().__init__(domain, title, discovery_function, connection_class)
+            super().__init__(domain, title, discovery_function)
 
     config_entries.HANDLERS.register(domain)(DiscoveryFlow)
 
