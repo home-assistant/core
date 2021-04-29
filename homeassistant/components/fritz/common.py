@@ -184,6 +184,14 @@ class FritzBoxTools:
         return dev_info
 
 
+class FritzData:
+    """Storage class for platform global data."""
+
+    def __init__(self) -> None:
+        """Initialize the data."""
+        self.tracked = {}
+
+
 class FritzDevice:
     """FritzScanner device."""
 

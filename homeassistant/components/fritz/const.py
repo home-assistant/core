@@ -4,6 +4,7 @@ DOMAIN = "fritz"
 
 PLATFORMS = ["device_tracker"]
 
+DATA_FRITZ = "fritz_data"
 
 DEFAULT_DEVICE_NAME = "Unknown device"
 DEFAULT_HOST = "192.168.178.1"
