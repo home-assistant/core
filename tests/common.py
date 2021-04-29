@@ -731,7 +731,6 @@ class MockConfigEntry(config_entries.ConfigEntry):
         state=None,
         options={},
         system_options={},
-        connection_class=config_entries.CONN_CLASS_UNKNOWN,
         unique_id=None,
         disabled_by=None,
         reason=None,
@@ -745,7 +744,6 @@ class MockConfigEntry(config_entries.ConfigEntry):
             "options": options,
             "version": version,
             "title": title,
-            "connection_class": connection_class,
             "unique_id": unique_id,
             "disabled_by": disabled_by,
         }

@@ -6,7 +6,6 @@ from pyownet.protocol import ConnError, OwnetError
 from homeassistant.components.onewire.const import CONF_TYPE_OWSERVER, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import (
-    CONN_CLASS_LOCAL_POLL,
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_RETRY,
@@ -37,7 +36,6 @@ async def test_owserver_connect_failure(hass):
             CONF_PORT: "1234",
         },
         unique_id=f"{CONF_TYPE_OWSERVER}:1.2.3.4:1234",
-        connection_class=CONN_CLASS_LOCAL_POLL,
         options={},
         entry_id="2",
     )
@@ -66,7 +64,6 @@ async def test_failed_owserver_listing(hass):
             CONF_PORT: "1234",
         },
         unique_id=f"{CONF_TYPE_OWSERVER}:1.2.3.4:1234",
-        connection_class=CONN_CLASS_LOCAL_POLL,
         options={},
         entry_id="2",
     )
