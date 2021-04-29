@@ -114,7 +114,7 @@ async def test_setup_camera_new_data_same(hass: HomeAssistant) -> None:
     """Test a data refresh with the same data."""
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
-    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)  # type: ignore[no-untyped-call]
+    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
     await hass.async_block_till_done()
     assert hass.states.get(TEST_CAMERA_ENTITY_ID)
 
@@ -146,7 +146,7 @@ async def test_setup_camera_new_data_camera_removed(hass: HomeAssistant) -> None
     assert device_registry.async_get_device({TEST_CAMERA_DEVICE_IDENTIFIER})
 
     client.async_get_cameras = AsyncMock(return_value={KEY_CAMERAS: []})
-    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)  # type: ignore[no-untyped-call]
+    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
     await hass.async_block_till_done()
     assert not hass.states.get(TEST_CAMERA_ENTITY_ID)
     assert not device_registry.async_get_device({TEST_CAMERA_DEVICE_IDENTIFIER})
@@ -162,7 +162,7 @@ async def test_setup_camera_new_data_error(hass: HomeAssistant) -> None:
     await setup_mock_motioneye_config_entry(hass, client=client)
     assert hass.states.get(TEST_CAMERA_ENTITY_ID)
     client.async_get_cameras = AsyncMock(side_effect=MotionEyeClientError)
-    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)  # type: ignore[no-untyped-call]
+    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
     await hass.async_block_till_done()
     entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
     assert entity_state
@@ -180,7 +180,7 @@ async def test_setup_camera_new_data_without_streaming(hass: HomeAssistant) -> N
     cameras = copy.deepcopy(TEST_CAMERAS)
     cameras[KEY_CAMERAS][0][KEY_VIDEO_STREAMING] = False
     client.async_get_cameras = AsyncMock(return_value=cameras)
-    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)  # type: ignore[no-untyped-call]
+    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
     await hass.async_block_till_done()
     entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
     assert entity_state
@@ -286,7 +286,7 @@ async def test_state_attributes(hass: HomeAssistant) -> None:
     cameras = copy.deepcopy(TEST_CAMERAS)
     cameras[KEY_CAMERAS][0][KEY_MOTION_DETECTION] = False
     client.async_get_cameras = AsyncMock(return_value=cameras)
-    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)  # type: ignore[no-untyped-call]
+    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
     await hass.async_block_till_done()
 
     entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)

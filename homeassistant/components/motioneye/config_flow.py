@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import Any, Dict, cast
 
 from motioneye_client.client import (
     MotionEyeClientConnectionError,
@@ -15,7 +15,6 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow
 from homeassistant.const import CONF_SOURCE, CONF_URL
 from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from . import create_motioneye_client
 from .const import (
@@ -35,12 +34,12 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_user(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResultDict:
         """Handle the initial step."""
 
         def _get_form(
-            user_input: ConfigType, errors: dict[str, str] | None = None
+            user_input: dict[str, Any], errors: dict[str, str] | None = None
         ) -> FlowResultDict:
             """Show the form to the user."""
             return self.async_show_form(
@@ -79,7 +78,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is None:
             return _get_form(
-                cast(ConfigType, reauth_entry.data) if reauth_entry else {}
+                cast(Dict[str, Any], reauth_entry.data) if reauth_entry else {}
             )
 
         try:
@@ -133,7 +132,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(
         self,
-        config_data: ConfigType | None = None,
+        config_data: dict[str, Any] | None = None,
     ) -> FlowResultDict:
         """Handle a reauthentication flow."""
         return await self.async_step_user(config_data)
