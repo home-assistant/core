@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REGION,
     CONF_UNIT_SYSTEM_IMPERIAL,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     TIME_MINUTES,
 )
 from homeassistant.core import Config, CoreState, HomeAssistant
@@ -189,7 +189,7 @@ class WazeTravelTime(SensorEntity):
         """Handle when entity is added."""
         if self.hass.state != CoreState.running:
             self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, self.first_update
+                EVENT_HOMEASSISTANT_STARTED, self.first_update
             )
         else:
             await self.first_update()
