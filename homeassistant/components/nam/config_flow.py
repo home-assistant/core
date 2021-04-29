@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 import async_timeout
@@ -14,7 +15,7 @@ from homeassistant.const import ATTR_NAME, CONF_HOST
 from homeassistant.data_entry_flow import FlowResultDict
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN
 
@@ -32,7 +33,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.host: str = None  # type: ignore[assignment]
 
     async def async_step_user(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResultDict:
         """Handle a flow initialized by the user."""
         errors = {}
@@ -91,7 +92,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm_discovery()
 
     async def async_step_confirm_discovery(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResultDict:
         """Handle discovery confirm."""
         errors: dict = {}
