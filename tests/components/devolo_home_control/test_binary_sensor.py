@@ -39,7 +39,6 @@ async def test_binary_sensor(hass: HomeAssistant):
         "Test", ("Test", True)
     )
     await hass.async_block_till_done()
-
     assert hass.states.get(f"{COMPONENTS_DOMAIN}.test").state == STATE_ON
 
     # Emulate websocket message: device went offline
@@ -48,7 +47,6 @@ async def test_binary_sensor(hass: HomeAssistant):
         "Test", ("Status", False, "status")
     )
     await hass.async_block_till_done()
-
     assert hass.states.get(f"{COMPONENTS_DOMAIN}.test").state == STATE_UNAVAILABLE
 
 
@@ -88,7 +86,6 @@ async def test_remote_control(hass: HomeAssistant):
         "Test", ("Status", False, "status")
     )
     await hass.async_block_till_done()
-
     assert hass.states.get(f"{COMPONENTS_DOMAIN}.test").state == STATE_UNAVAILABLE
 
 
