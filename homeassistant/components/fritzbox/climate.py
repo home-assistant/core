@@ -1,4 +1,4 @@
-"""Support for AVM Fritz!Box smarthome thermostate devices."""
+"""Support for AVM FRITZ!SmartHome thermostate devices."""
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
