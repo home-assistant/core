@@ -47,7 +47,6 @@ async def async_setup_entry(
         COORDINATOR_CAMERAS
     ]
     await coordinator.async_config_entry_first_refresh()
-    assert coordinator.data is not None
 
     async_add_entities(
         SynoDSMCamera(api, coordinator, camera_id)
@@ -65,7 +64,6 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         camera_id: str,
     ) -> None:
         """Initialize a Synology camera."""
-        assert coordinator.data is not None
         super().__init__(
             api,
             f"{SynoSurveillanceStation.CAMERA_API_KEY}:{camera_id}",
@@ -85,7 +83,6 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
     @property
     def camera_data(self) -> SynoCamera:
         """Camera data."""
-        assert self.coordinator.data is not None
         return self.coordinator.data["cameras"][self._camera_id]
 
     @property

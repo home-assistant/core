@@ -74,7 +74,6 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        assert self.coordinator.data is not None
         return bool(self.coordinator.data["switches"][self.entity_type])
 
     async def async_turn_on(self, **kwargs: Any) -> None:
