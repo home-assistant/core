@@ -762,7 +762,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210428.0
+home-assistant-frontend==20210407.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1210,7 +1210,7 @@ pwmled==1.6.7
 py-canary==0.5.1
 
 # homeassistant.components.cpuspeed
-py-cpuinfo==7.0.0
+py-cpuinfo==8.0.0
 
 # homeassistant.components.melissa
 py-melissa-climate==2.1.4

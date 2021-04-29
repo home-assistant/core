@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PORT
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -22,7 +22,7 @@ class LiteJetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Create a LiteJet config entry based upon user input."""
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
