@@ -18,6 +18,7 @@ import voluptuous as vol
 from homeassistant import core
 from homeassistant.components import ais_cloud, ais_drives_service, conversation
 import homeassistant.components.ais_dom.ais_global as ais_global
+from homeassistant.components.blueprint import BlueprintInputs
 from homeassistant.components.conversation.default_agent import (
     DefaultAgent,
     async_register,
@@ -3989,9 +3990,21 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
                         and auto_name == value.lower().strip()
                     ):
                         all_commands = auto_config.get("description", "").split(";")
-                    all_commands = [
-                        each_string.strip().lower() for each_string in all_commands
-                    ]
+                if isinstance(auto_config, BlueprintInputs):
+                    blueprint_inputs = auto_config
+                    raw_blueprint_inputs = blueprint_inputs.config_with_inputs
+                    auto_name = raw_blueprint_inputs.get("alias", "").lower().strip()
+                    if (
+                        "description" in raw_blueprint_inputs
+                        and auto_name == value.lower().strip()
+                    ):
+                        all_commands = raw_blueprint_inputs.get(
+                            "description", ""
+                        ).split(";")
+
+                all_commands = [
+                    each_string.strip().lower() for each_string in all_commands
+                ]
 
             all_commands.append(
                 value.lower().replace("jolka", "", 1).replace(":", "").strip()
