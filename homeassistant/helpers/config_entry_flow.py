@@ -1,14 +1,17 @@
 """Helpers for data entry flows for config entries."""
 from __future__ import annotations
 
+import logging
 from typing import Any, Awaitable, Callable, Union
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.typing import UNDEFINED, DiscoveryInfoType, UndefinedType
 
 DiscoveryFunctionType = Callable[[], Union[Awaitable[bool], bool]]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class DiscoveryFlowHandler(config_entries.ConfigFlow):
@@ -102,8 +105,18 @@ def register_discovery_flow(
     domain: str,
     title: str,
     discovery_function: DiscoveryFunctionType,
+    connection_class: str | UndefinedType = UNDEFINED,
 ) -> None:
     """Register flow for discovered integrations that not require auth."""
+    if connection_class is not UNDEFINED:
+        _LOGGER.warning(
+            f"The {title} ({domain}) integration is setting a connection_class"
+            " when calling the 'register_discovery_flow()' method in its"
+            " config flow. The connection class has been deprecated and will"
+            " be removed in a future release of Home Assistant."
+            " If '{title}' is a custom integration, please contact the author"
+            " of that integration about his warning."
+        )
 
     class DiscoveryFlow(DiscoveryFlowHandler):
         """Discovery flow handler."""

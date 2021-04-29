@@ -344,3 +344,14 @@ async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
 
     assert len(mock_delete.mock_calls) == 1
     assert result["require_restart"] is False
+
+
+async def test_warning_deprecated_connection_class(hass, caplog):
+    """Test that we log a warning when the connection_class is used."""
+    discovery_function = Mock()
+    with patch.dict(config_entries.HANDLERS):
+        config_entry_flow.register_discovery_flow(
+            "test", "Test", discovery_function, connection_class="local_polling"
+        )
+
+    assert "integration is setting a connection_class" in caplog.text
