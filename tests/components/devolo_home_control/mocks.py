@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock
 
 from devolo_home_control_api.publisher.publisher import Publisher
-from devolo_home_control_api.publisher.updater import Updater
 
 
 class BinarySensorPropertyMock:
@@ -77,7 +76,6 @@ class HomeControlMockBinarySensor(HomeControlMock):
     devices = {"Test": BinarySensorMock()}
     publisher = Publisher(devices.keys())
     publisher.unregister = MagicMock()
-    updater = Updater(devices=devices, gateway=None, publisher=publisher)
 
 
 class HomeControlMockRemoteControl(HomeControlMock):
