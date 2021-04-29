@@ -236,7 +236,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     for entry in self.hass.config_entries.async_entries(DOMAIN):
                         existing_entry_ids.append(entry.data.get("student_id"))
                     for student in _students:
-                        if not str(student.pupil.id) in existing_entry_ids:
+                        if str(student.pupil.id) not in existing_entry_ids:
                             new_students.append(student)
                     if new_students == []:
                         return self.async_abort(reason="all_student_already_configured")
