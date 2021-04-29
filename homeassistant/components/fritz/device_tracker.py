@@ -86,9 +86,6 @@ def _async_add_entities(router, async_add_entities, data_fritz):
     """Add new tracker entities from the router."""
 
     def _is_existant(mac, device):
-        if device.ip_address == "":
-            return True
-
         for tracked in data_fritz.tracked.values():
             if mac in tracked:
                 return True
