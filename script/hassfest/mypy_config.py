@@ -359,6 +359,12 @@ def generate_and_validate(config: Config) -> str:
     for key in STRICT_SETTINGS:
         mypy_config.set(strict_section, key, "true")
 
+    # Disable strict checks for tests
+    tests_section = "mypy-tests.*"
+    mypy_config.add_section(tests_section)
+    for key in STRICT_SETTINGS:
+        mypy_config.set(tests_section, key, "false")
+
     ignored_section = "mypy-" + ",".join(IGNORED_MODULES)
     mypy_config.add_section(ignored_section)
     mypy_config.set(ignored_section, "ignore_errors", "true")
