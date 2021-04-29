@@ -1,4 +1,4 @@
-"""Helper classes for device platform discovery."""
+"""Data template classes for discovery used to generate device specific data for setup."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -19,8 +19,8 @@ class ZwaveValueID:
 
 
 @dataclass
-class BaseDevicePlatformHelper:
-    """Base class for device platform helpers."""
+class BaseDiscoverySchemaDataTemplate:
+    """Base class for discovery schema data templates."""
 
     def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
         """
@@ -62,8 +62,8 @@ class BaseDevicePlatformHelper:
 
 
 @dataclass
-class DynamicCurrentTempClimateHelper(BaseDevicePlatformHelper):
-    """Helper class for Z-Wave JS Climate entities that have dynamic current temps."""
+class DynamicCurrentTempClimateDataTemplate(BaseDiscoverySchemaDataTemplate):
+    """Data template class for Z-Wave JS Climate entities with dynamic current temps."""
 
     lookup_table: dict[str | int, ZwaveValueID]
     dependent_value: ZwaveValueID

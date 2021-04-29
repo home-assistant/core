@@ -12,9 +12,9 @@ from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.core import callback
 
-from .device_platform_helpers import (
-    BaseDevicePlatformHelper,
-    DynamicCurrentTempClimateHelper,
+from .discovery_data_template import (
+    BaseDiscoverySchemaDataTemplate,
+    DynamicCurrentTempClimateDataTemplate,
     ZwaveValueID,
 )
 
@@ -79,8 +79,8 @@ class ZWaveDiscoverySchema:
     primary_value: ZWaveValueDiscoverySchema
     # [optional] hint for platform
     hint: str | None = None
-    # [optional] helper data and functions to use in platform setup
-    helper: BaseDevicePlatformHelper | None = None
+    # [optional] template to generate platform specific data to use in setup
+    data_template: BaseDiscoverySchemaDataTemplate | None = None
     # [optional] the node's manufacturer_id must match ANY of these values
     manufacturer_id: set[int] | None = None
     # [optional] the node's product_id must match ANY of these values
@@ -238,7 +238,7 @@ DISCOVERY_SCHEMAS = [
             property={"mode"},
             type={"number"},
         ),
-        helper=DynamicCurrentTempClimateHelper(
+        data_template=DynamicCurrentTempClimateDataTemplate(
             {
                 # Internal Sensor
                 "A": ZwaveValueID(
@@ -582,12 +582,12 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
             ):
                 continue
 
-            # resolve helper data into usable format
+            # resolve helper data from template
             resolved_data = None
             additional_value_ids_to_watch = None
-            if schema.helper:
-                resolved_data = schema.helper.resolve_data(value)
-                additional_value_ids_to_watch = schema.helper.value_ids_to_watch(
+            if schema.data_template:
+                resolved_data = schema.data_template.resolve_data(value)
+                additional_value_ids_to_watch = schema.data_template.value_ids_to_watch(
                     resolved_data
                 )
 
