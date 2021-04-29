@@ -253,7 +253,7 @@ class ModbusHub:
             except ModbusException as exception_error:
                 self._log_error(exception_error)
                 return None
-            if type(result) in [ExceptionResponse, IllegalFunctionRequest]:
+            if isinstance(result, (ExceptionResponse, IllegalFunctionRequest)):
                 self._log_error(result)
                 return None
             self._in_error = False
@@ -268,7 +268,7 @@ class ModbusHub:
             except ModbusException as exception_error:
                 self._log_error(exception_error)
                 return None
-            if type(result) in [ExceptionResponse, IllegalFunctionRequest]:
+            if isinstance(result, (ExceptionResponse, IllegalFunctionRequest)):
                 self._log_error(result)
                 return None
             self._in_error = False
@@ -283,7 +283,7 @@ class ModbusHub:
             except ModbusException as exception_error:
                 self._log_error(exception_error)
                 return None
-            if type(result) in [ExceptionResponse, IllegalFunctionRequest]:
+            if isinstance(result, (ExceptionResponse, IllegalFunctionRequest)):
                 self._log_error(result)
                 return None
             self._in_error = False
@@ -298,7 +298,7 @@ class ModbusHub:
             except ModbusException as exception_error:
                 self._log_error(exception_error)
                 return False
-            if type(result) in [ExceptionResponse, IllegalFunctionRequest]:
+            if isinstance(result, (ExceptionResponse, IllegalFunctionRequest)):
                 self._log_error(result)
                 return False
             self._in_error = False
@@ -313,7 +313,7 @@ class ModbusHub:
             except ModbusException as exception_error:
                 self._log_error(exception_error)
                 return False
-            if type(result) in [ExceptionResponse, IllegalFunctionRequest]:
+            if isinstance(result, (ExceptionResponse, IllegalFunctionRequest)):
                 self._log_error(result)
                 return False
             self._in_error = False
@@ -328,7 +328,7 @@ class ModbusHub:
             except ModbusException as exception_error:
                 self._log_error(exception_error)
                 return False
-            if type(result) in [ExceptionResponse, IllegalFunctionRequest]:
+            if isinstance(result, (ExceptionResponse, IllegalFunctionRequest)):
                 self._log_error(result)
                 return False
             self._in_error = False
@@ -343,7 +343,7 @@ class ModbusHub:
             except ModbusException as exception_error:
                 self._log_error(exception_error)
                 return False
-            if type(result) in [ExceptionResponse, IllegalFunctionRequest]:
+            if isinstance(result, (ExceptionResponse, IllegalFunctionRequest)):
                 self._log_error(result)
                 return False
             self._in_error = False
