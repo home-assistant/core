@@ -44,9 +44,6 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.components.zwave_js.device_platform_helpers import (
-    DynamicCurrentTempClimateHelper,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -496,17 +493,15 @@ class DynamicCurrentTempClimate(ZWaveClimate):
     ) -> None:
         """Initialize thermostat."""
         super().__init__(config_entry, client, info)
-        if not self.info.platform_helper or not isinstance(
-            self.info.platform_helper, DynamicCurrentTempClimateHelper
-        ):
-            raise TypeError("Expected platform helper is missing")
+        if not self.info.platform_data:
+            raise TypeError("Expected platform data is missing from discovery schema")
 
         self._lookup_table: dict[
             str | int, ZwaveValue | None
-        ] = self.info.platform_helper.lookup_table
-        self._dependent_value: ZwaveValue | None = (
-            self.info.platform_helper.dependent_value
-        )
+        ] = self.info.platform_data["lookup_table"]
+        self._dependent_value: ZwaveValue | None = self.info.platform_data[
+            "dependent_value"
+        ]
 
     @property
     def current_temperature(self) -> float | None:

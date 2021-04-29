@@ -33,8 +33,10 @@ class ZwaveDiscoveryInfo:
     platform: str
     # hint for the platform about this discovered entity
     platform_hint: str | None = ""
-    # helper data and functions to use in platform setup
-    platform_helper: BaseDevicePlatformHelper | None = None
+    # helper data to use in platform setup
+    platform_data: dict[str, Any] | None = None
+    # additional values that need to be watched by entity
+    additional_value_ids_to_watch: set[str] | None = None
 
 
 @dataclass
@@ -581,8 +583,13 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
                 continue
 
             # resolve helper data into usable format
+            resolved_data = None
+            additional_value_ids_to_watch = None
             if schema.helper:
-                schema.helper.resolve(value)
+                resolved_data = schema.helper.resolve_data(value)
+                additional_value_ids_to_watch = schema.helper.value_ids_to_watch(
+                    resolved_data
+                )
 
             # all checks passed, this value belongs to an entity
             yield ZwaveDiscoveryInfo(
@@ -591,7 +598,8 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
                 assumed_state=schema.assumed_state,
                 platform=schema.platform,
                 platform_hint=schema.hint,
-                platform_helper=schema.helper,
+                platform_data=resolved_data,
+                additional_value_ids_to_watch=additional_value_ids_to_watch,
             )
 
             if not schema.allow_multi:
