@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_KAMEREON_ACCOUNT_ID, CONF_LOCALE, DOMAIN
 from .renault_hub import RenaultHub
@@ -25,9 +25,7 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.renault_config = {}
         self.renault_hub = None
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] = None
-    ) -> FlowResultDict:
+    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Handle a Renault config flow start.
 
         Ask the user for API keys.
@@ -44,7 +42,7 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_kamereon()
         return self._show_user_form()
 
-    def _show_user_form(self, errors: dict[str, Any] = None) -> FlowResultDict:
+    def _show_user_form(self, errors: dict[str, Any] = None) -> FlowResult:
         """Show the API keys form."""
         return self.async_show_form(
             step_id="user",
@@ -60,7 +58,7 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_kamereon(
         self, user_input: dict[str, Any] = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Select Kamereon account."""
         if user_input:
             await self.async_set_unique_id(user_input[CONF_KAMEREON_ACCOUNT_ID])
