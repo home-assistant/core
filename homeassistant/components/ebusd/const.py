@@ -4,7 +4,7 @@ from homeassistant.const import (
     PERCENTAGE,
     PRESSURE_BAR,
     TEMP_CELSIUS,
-    TIME_SECONDS,    
+    TIME_SECONDS,
 )
 
 DOMAIN = "ebusd"
