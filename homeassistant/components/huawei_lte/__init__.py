@@ -162,7 +162,7 @@ class Router:
         return DEFAULT_DEVICE_NAME
 
     @property
-    def device_identifiers(self) -> set[tuple[str, str]]:
+    def device_identifiers(self) -> set[tuple[str, ...]]:
         """Get router identifiers for device registry."""
         try:
             return {(DOMAIN, self.data[KEY_DEVICE_INFORMATION]["SerialNumber"])}
