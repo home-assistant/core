@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import ATTR_NAME, CONF_HOST
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -34,7 +34,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -71,7 +71,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: DiscoveryInfoType
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
         self.host = discovery_info[CONF_HOST]
 
@@ -93,7 +93,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm_discovery(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle discovery confirm."""
         errors: dict = {}
 
