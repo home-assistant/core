@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -88,9 +88,7 @@ class ClimaCellOptionsConfigFlow(config_entries.OptionsFlow):
         """Initialize ClimaCell options flow."""
         self._config_entry = config_entry
 
-    async def async_step_init(
-        self, user_input: dict[str, Any] = None
-    ) -> FlowResultDict:
+    async def async_step_init(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Manage the ClimaCell options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -121,9 +119,7 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return ClimaCellOptionsConfigFlow(config_entry)
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] = None
-    ) -> FlowResultDict:
+    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:

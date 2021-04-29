@@ -8,7 +8,7 @@ from toonapi import Agreement, Toon, ToonError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
@@ -30,7 +30,7 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Return logger."""
         return logging.getLogger(__name__)
 
-    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResultDict:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Test connection and load up agreements."""
         self.data = data
 
@@ -50,7 +50,7 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_step_import(
         self, config: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Start a configuration flow based on imported data.
 
         This step is merely here to trigger "discovery" when the `toon`
@@ -67,7 +67,7 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_step_agreement(
         self, user_input: dict[str, Any] = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Select Toon agreement to add."""
         if len(self.agreements) == 1:
             return await self._create_entry(self.agreements[0])
@@ -88,7 +88,7 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         agreement_index = agreements_list.index(user_input[CONF_AGREEMENT])
         return await self._create_entry(self.agreements[agreement_index])
 
-    async def _create_entry(self, agreement: Agreement) -> FlowResultDict:
+    async def _create_entry(self, agreement: Agreement) -> FlowResult:
         if CONF_MIGRATE in self.context:
             await self.hass.config_entries.async_remove(self.context[CONF_MIGRATE])
 

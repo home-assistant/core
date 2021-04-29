@@ -14,7 +14,7 @@ from homeassistant import config_entries, core
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .bridge import authenticate_bridge
@@ -118,7 +118,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle manual bridge setup."""
         if user_input is None:
             return self.async_show_form(
@@ -253,7 +253,7 @@ class HueOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Manage Hue options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

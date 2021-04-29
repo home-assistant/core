@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -53,13 +53,11 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(
         self, user_input: ConfigType | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle a flow initiated by configuration file."""
         return await self.async_step_user(user_input)
 
-    async def async_step_user(
-        self, user_input: ConfigType | None = None
-    ) -> FlowResultDict:
+    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
