@@ -2,7 +2,7 @@
     "config": {
         "step": {
             "oauth": {
-                "description": "Access to SUPLA MQTT requires authorization in SUPLA Cloud.\n\n ###### ![AIS logo](https://ai-speaker.com/images/brands/ais_supla_mqtt/mqtt_broker_ais_supla.png?v=2) \n\n Click the **SUBMIT** below to start the authorization process",
+                "description": "⚠️NOTE! THIS INTEGRATION CHANGES THE MQTT BROKER CONFIGURATION ON THE GATE. If you are using a custom MQTT configuration, it will be overwritten.⚠️\n\n Access to SUPLA MQTT requires authorization in SUPLA Cloud.\n\n ###### ![AIS logo](https://ai-speaker.com/images/brands/ais_supla_mqtt/mqtt_broker_ais_supla.png?v=2) \n\n Click the **SUBMIT** below to start the authorization process",
                 "title": "Authentication the access in SUPLA Cloud"
             }
         },

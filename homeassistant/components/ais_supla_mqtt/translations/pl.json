@@ -2,7 +2,7 @@
     "config": {
         "step": {
             "oauth": {
-                "description": "Pobranie parametrów połączenia do SUPLA MQTT Broker wymaga autoryzacji w SUPLA Cloud.\n\n ###### ![AIS logo](https://ai-speaker.com/images/brands/ais_supla_mqtt/mqtt_broker_ais_supla.png?v=2) \n\n Kliknij przycisk **ZATWIERDŹ** poniżej żeby rozpocząć proces autoryzacji.",
+                "description": "\n\n **⚠️UWAGA! TA INTEGRACJA ZMIENIA KONFIGURACJĘ BROKERA MQTT NA BRAMCE. Jeśli używasz niestandardowej konfiguracji MQTT, to zostanie ona nadpisana.⚠️**\n\nPobranie parametrów połączenia do SUPLA MQTT Broker wymaga autoryzacji w SUPLA Cloud.\n\n ###### ![AIS logo](https://ai-speaker.com/images/brands/ais_supla_mqtt/mqtt_broker_ais_supla.png?v=2) \n\n Kliknij przycisk **ZATWIERDŹ** poniżej żeby rozpocząć proces autoryzacji.",
                 "title": "Uwierzytelnianie dostępu w SUPLA Cloud"
             }
         },
