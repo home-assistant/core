@@ -1,7 +1,7 @@
 """Base classes for Renault entities."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from renault_api.kamereon.models import KamereonVehicleCockpitData
 
@@ -55,4 +55,4 @@ class RenaultCockpitDataEntity(RenaultDataEntity):
     @property
     def data(self) -> KamereonVehicleCockpitData:  # for type hints
         """Return collected data."""
-        return self.coordinator.data
+        return cast(KamereonVehicleCockpitData, self.coordinator.data)

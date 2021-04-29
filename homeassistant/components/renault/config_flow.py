@@ -25,7 +25,9 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.renault_config: dict[str, Any] = {}
         self.renault_hub: RenaultHub | None = None
 
-    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a Renault config flow start.
 
         Ask the user for API keys.
@@ -42,7 +44,7 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_kamereon()
         return self._show_user_form()
 
-    def _show_user_form(self, errors: dict[str, Any] = None) -> FlowResult:
+    def _show_user_form(self, errors: dict[str, Any] | None = None) -> FlowResult:
         """Show the API keys form."""
         return self.async_show_form(
             step_id="user",
@@ -57,7 +59,7 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_kamereon(
-        self, user_input: dict[str, Any] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Select Kamereon account."""
         if user_input:
