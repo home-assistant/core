@@ -1,7 +1,7 @@
 """Helper classes for device platform discovery."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Iterable
 
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -22,7 +22,23 @@ class ZwaveValueID:
 class BaseDevicePlatformHelper:
     """Base class for device platform helpers."""
 
-    resolved: bool = field(default=False, init=False)
+    @property
+    def value_ids_to_watch(self) -> set[str]:
+        """
+        Return list of all Value IDs resolved by helper that should be watched.
+
+        Not to be overwritten by subclasses.
+        """
+        return {val.value_id for val in self._values_to_watch if val}
+
+    def resolve(self, value: ZwaveValue) -> None:
+        """
+        Resolve helper class data for a discovered value.
+
+        Can optionally be implemented by subclasses if input data needs to be
+        transformed once discovered Value is available.
+        """
+        pass
 
     def _get_value_from_id(
         self, node: ZwaveNode, value_id_obj: ZwaveValueID
@@ -36,40 +52,6 @@ class BaseDevicePlatformHelper:
             property_key=value_id_obj.property_key,
         )
         return node.values.get(value_id)
-
-    def resolve(self, value: ZwaveValue) -> None:
-        """
-        Resolve helper class data for a discovered value.
-
-        Not to be overwritten by subclasses.
-        """
-        if self.resolved:
-            raise Exception("Helper data has already been resolved.")
-        self._resolve(value)
-        self.resolved = True
-
-    @property
-    def value_ids_to_watch(self) -> set[str]:
-        """
-        Return list of all Value IDs resolved by helper that should be watched.
-
-        Not to be overwritten by subclasses.
-        """
-        if not self.resolved:
-            raise TypeError(
-                "Helper data must first be resolved using resolve() command."
-            )
-
-        return {val.value_id for val in self._values_to_watch if val}
-
-    def _resolve(self, value: ZwaveValue) -> None:
-        """
-        Resolve helper class data for a discovered value.
-
-        Can optionally be implemented by subclasses if input data needs to be
-        transformed once discovered Value is available.
-        """
-        pass
 
     @property
     def _values_to_watch(self) -> Iterable[ZwaveValue]:
@@ -90,8 +72,9 @@ class DynamicCurrentTempClimateHelper(BaseDevicePlatformHelper):
     lookup_table: dict[str | int, ZwaveValue | None] = {}
     dependent_value: ZwaveValue | None = None
 
-    def _resolve(self, value: ZwaveValue) -> None:
+    def resolve(self, value: ZwaveValue) -> None:
         """Resolve helper class data for a discovered value."""
+        self.lookup_table = {}
         for key in self.id_lookup_table:
             self.lookup_table[key] = self._get_value_from_id(
                 value.node, self.id_lookup_table[key]

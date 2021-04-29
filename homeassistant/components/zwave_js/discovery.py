@@ -581,7 +581,7 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
                 continue
 
             # resolve helper data into usable format
-            if schema.helper and not schema.helper.resolved:
+            if schema.helper:
                 schema.helper.resolve(value)
 
             # all checks passed, this value belongs to an entity
