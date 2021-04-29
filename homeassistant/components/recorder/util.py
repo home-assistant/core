@@ -19,6 +19,7 @@ from .models import (
     ALL_TABLES,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
+    TABLE_STATISTICS,
     RecorderRuns,
     process_timestamp,
 )
@@ -167,6 +168,8 @@ def basic_sanity_check(cursor):
     """Check tables to make sure select does not fail."""
 
     for table in ALL_TABLES:
+        if table == TABLE_STATISTICS:
+            continue
         if table in (TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES):
             cursor.execute(f"SELECT * FROM {table};")  # nosec # not injection
         else:

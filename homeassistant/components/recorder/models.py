@@ -6,6 +6,8 @@ from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
+    Enum,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -23,6 +25,8 @@ from homeassistant.core import Context, Event, EventOrigin, State, split_entity_
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
+from .const import STATISTIC_PERIODS
+
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
 Base = declarative_base()
@@ -38,7 +42,15 @@ TABLE_STATES = "states"
 TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
 
-ALL_TABLES = [TABLE_STATES, TABLE_EVENTS, TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES]
+TABLE_STATISTICS = "statistics"
+
+ALL_TABLES = [
+    TABLE_STATES,
+    TABLE_EVENTS,
+    TABLE_RECORDER_RUNS,
+    TABLE_SCHEMA_CHANGES,
+    TABLE_STATISTICS,
+]
 
 DATETIME_TYPE = DateTime(timezone=True).with_variant(
     mysql.DATETIME(timezone=True, fsp=6), "mysql"
@@ -196,6 +208,37 @@ class States(Base):  # type: ignore
             # When json.loads fails
             _LOGGER.exception("Error converting row to state: %s", self)
             return None
+
+
+class Statistics(Base):  # type: ignore
+    """Statistics."""
+
+    __table_args__ = {
+        "mysql_default_charset": "utf8mb4",
+        "mysql_collate": "utf8mb4_unicode_ci",
+    }
+    __tablename__ = TABLE_STATISTICS
+    id = Column(Integer, primary_key=True)
+    entity_id = Column(String(255))
+    period = Column(Enum(*STATISTIC_PERIODS))
+    start = Column(DATETIME_TYPE, index=True)
+    end = Column(DATETIME_TYPE, index=True)  # Remove, enough with start time + period?
+    mean = Column(Float())
+    median = Column(Float())
+    min = Column(Float())
+    max = Column(Float())
+    sum = Column(Float())
+
+    @staticmethod
+    def from_stats(entity_id, period, start, end, stats):
+        """Create object from a statistics."""
+        return Statistics(
+            entity_id=entity_id,
+            period=period,
+            start=start,
+            end=end,
+            **stats,
+        )
 
 
 class RecorderRuns(Base):  # type: ignore

@@ -36,12 +36,21 @@ from homeassistant.helpers.entityfilter import (
     convert_include_exclude_filter,
 )
 from homeassistant.helpers.event import async_track_time_interval, track_time_change
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platforms,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
-from . import history, migration, purge
-from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
+from . import history, migration, purge, statistics
+from .const import (
+    CONF_DB_INTEGRITY_CHECK,
+    DATA_INSTANCE,
+    DOMAIN,
+    SQLITE_URL_PREFIX,
+    STATISTIC_PERIODS,
+)
 from .models import Base, Events, RecorderRuns, States
 from .pool import RecorderPool
 from .util import (
@@ -56,6 +65,7 @@ from .util import (
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_PURGE = "purge"
+SERVICE_STATISTICS = "statistics"
 SERVICE_ENABLE = "enable"
 SERVICE_DISABLE = "disable"
 
@@ -70,6 +80,12 @@ SERVICE_PURGE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_KEEP_DAYS): cv.positive_int,
         vol.Optional(ATTR_REPACK, default=False): cv.boolean,
         vol.Optional(ATTR_APPLY_FILTER, default=False): cv.boolean,
+    }
+)
+SERVICE_STATISTICS_SCHEMA = vol.Schema(
+    {
+        vol.Required("period"): vol.In(STATISTIC_PERIODS),
+        vol.Optional("start"): cv.datetime,
     }
 )
 SERVICE_ENABLE_SCHEMA = vol.Schema({})
@@ -194,6 +210,7 @@ def run_information_with_session(session, point_in_time: datetime | None = None)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
+    hass.data[DOMAIN] = {}
     conf = config[DOMAIN]
     entity_filter = convert_include_exclude_filter(conf)
     auto_purge = conf[CONF_AUTO_PURGE]
@@ -221,8 +238,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     instance.start()
     _async_register_services(hass, instance)
     history.async_setup(hass)
+    await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)
 
     return await instance.async_db_ready
+
+
+async def _process_recorder_platform(hass, domain, platform):
+    """Process a recorder platform."""
+    hass.data[DOMAIN][domain] = platform
 
 
 @callback
@@ -235,6 +258,17 @@ def _async_register_services(hass, instance):
 
     hass.services.async_register(
         DOMAIN, SERVICE_PURGE, async_handle_purge_service, schema=SERVICE_PURGE_SCHEMA
+    )
+
+    async def async_handle_statistics_service(service):
+        """Handle calls to the statistics service."""
+        instance.do_adhoc_statistics(**service.data)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_STATISTICS,
+        async_handle_statistics_service,
+        schema=SERVICE_STATISTICS_SCHEMA,
     )
 
     async def async_handle_enable_sevice(service):
@@ -261,6 +295,13 @@ class PurgeTask(NamedTuple):
     keep_days: int
     repack: bool
     apply_filter: bool
+
+
+class StatisticsTask(NamedTuple):
+    """An object to insert into the recorder queue to run a statistics task."""
+
+    period: str
+    start: datetime.datetime
 
 
 class WaitTask:
@@ -389,6 +430,14 @@ class Recorder(threading.Thread):
 
         self.queue.put(PurgeTask(keep_days, repack, apply_filter))
 
+    def do_adhoc_statistics(self, **kwargs):
+        """Trigger an adhoc statistics run."""
+        period = kwargs.get("period")
+        start = kwargs.get("start")
+        if not start:
+            start = statistics.get_start_time(period)
+        self.queue.put(StatisticsTask(period, start))
+
     @callback
     def async_register(self, shutdown_task, hass_started):
         """Post connection initialize."""
@@ -459,6 +508,18 @@ class Recorder(threading.Thread):
         """Trigger the purge."""
         self.queue.put(PurgeTask(self.keep_days, repack=False, apply_filter=False))
 
+    @callback
+    def async_daily_statistics(self, now):
+        """Trigger the daily statistics run."""
+        start = statistics.get_start_time("daily")
+        self.queue.put(StatisticsTask("daily", start))
+
+    @callback
+    def async_hourly_statistics(self, now):
+        """Trigger the hourly statistics run."""
+        start = statistics.get_start_time("hourly")
+        self.queue.put(StatisticsTask("hourly", start))
+
     def run(self):
         """Start processing events to save."""
         shutdown_task = object()
@@ -509,6 +570,14 @@ class Recorder(threading.Thread):
 
         # Start periodic purge
         if self.auto_purge:
+            # Compile daily statistics every night at 12:12am
+            track_time_change(
+                self.hass, self.async_daily_statistics, hour=12, minute=12, second=0
+            )
+            # Compile hourly statistics every hour at *:12
+            track_time_change(
+                self.hass, self.async_hourly_statistics, hour=12, minute=12, second=0
+            )
             # Purge every night at 4:12am
             track_time_change(self.hass, self.async_purge, hour=4, minute=12, second=0)
 
@@ -608,10 +677,20 @@ class Recorder(threading.Thread):
         # Schedule a new purge task if this one didn't finish
         self.queue.put(PurgeTask(keep_days, repack, apply_filter))
 
+    def _run_statistics(self, period, start):
+        """Run statistics task."""
+        if statistics.compile_statistics(self, period, start):
+            return
+        # Schedule a new statistics task if this one didn't finish
+        self.queue.put(StatisticsTask(period, start))
+
     def _process_one_event(self, event):
         """Process one event."""
         if isinstance(event, PurgeTask):
             self._run_purge(event.keep_days, event.repack, event.apply_filter)
+            return
+        if isinstance(event, StatisticsTask):
+            self._run_statistics(event.period, event.start)
             return
         if isinstance(event, WaitTask):
             self._queue_watch.set()
