@@ -9,6 +9,10 @@
             "unknown": "Error inesperado"
         },
         "step": {
+            "reauth_confirm": {
+                "description": "La integraci\u00f3n de SmartTub necesita volver a autenticar tu cuenta",
+                "title": "Volver a autenticar la integraci\u00f3n"
+            },
             "user": {
                 "data": {
                     "email": "Correo electr\u00f3nico",
