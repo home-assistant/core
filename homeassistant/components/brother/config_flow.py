@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import ipaddress
 import re
+from typing import Any
 
 from brother import Brother, SnmpError, UnsupportedModel
 import voluptuous as vol
@@ -10,7 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.data_entry_flow import FlowResultDict
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN, PRINTER_TYPES
 from .utils import get_snmp_engine
@@ -46,7 +47,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.host: str | None = None
 
     async def async_step_user(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResultDict:
         """Handle the initial step."""
         errors = {}
@@ -114,7 +115,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResultDict:
         """Handle a flow initiated by zeroconf."""
         if user_input is not None:
