@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_MODE,
     CONF_NAME,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     TIME_MINUTES,
 )
 from homeassistant.core import CoreState, HomeAssistant
@@ -192,7 +192,7 @@ class GoogleTravelTimeSensor(SensorEntity):
         """Handle when entity is added."""
         if self.hass.state != CoreState.running:
             self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, self.first_update
+                EVENT_HOMEASSISTANT_STARTED, self.first_update
             )
         else:
             await self.first_update()
