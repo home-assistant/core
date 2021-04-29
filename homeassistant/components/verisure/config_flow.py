@@ -19,7 +19,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_GIID,
@@ -58,7 +58,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
@@ -97,7 +97,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_installation(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Select Verisure installation to add."""
         if len(self.installations) == 1:
             user_input = {CONF_GIID: list(self.installations)[0]}
@@ -125,14 +125,14 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResultDict:
+    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
         """Handle initiation of re-authentication with Verisure."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle re-authentication with Verisure."""
         errors: dict[str, str] = {}
 
@@ -174,7 +174,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResultDict:
+    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Import Verisure YAML configuration."""
         if user_input[CONF_GIID]:
             self.giid = user_input[CONF_GIID]
@@ -204,7 +204,7 @@ class VerisureOptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Manage Verisure options."""
         errors = {}
 
