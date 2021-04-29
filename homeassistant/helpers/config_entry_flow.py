@@ -120,7 +120,7 @@ def register_discovery_flow(
             ),
             title,
             domain,
-            title,
+            domain,
         )
 
     class DiscoveryFlow(DiscoveryFlowHandler):
