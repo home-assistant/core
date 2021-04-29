@@ -6,12 +6,9 @@ from uuid import uuid4
 import aiohttp
 import pytest
 
-from homeassistant.components.whirlpool import (
-    async_setup,
-    async_setup_entry,
-    async_unload_entry,
-)
+from homeassistant.components.whirlpool import async_setup_entry, async_unload_entry
 from homeassistant.components.whirlpool.const import DOMAIN
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import MockConfigEntry
 
@@ -26,7 +23,6 @@ async def init_integration(hass, entry_id):
         },
         entry_id=entry_id,
     )
-    assert await async_setup(hass, None)
     return await async_setup_entry(hass, config_entry_mock)
 
 
@@ -39,33 +35,33 @@ def auth_api_fixture():
 
 async def test_setup_entry(hass, auth_api):
     """Test setup entry."""
-    auth_api.return_value.load_auth_file = AsyncMock()
+    auth_api.return_value.do_auth = AsyncMock()
     auth_api.return_value.is_access_token_valid.return_value = True
 
     entry_id = str(uuid4())
     assert await init_integration(hass, entry_id)
-    auth_api.return_value.load_auth_file.assert_called_once()
+    auth_api.return_value.do_auth.assert_called_once_with(store=False)
     assert hass.data[DOMAIN][entry_id]["auth"] is not None
 
 
 async def test_setup_entry_http_exception(hass, auth_api):
     """Test setup entry."""
-    auth_api.return_value.load_auth_file = AsyncMock(
-        side_effect=aiohttp.ClientConnectionError
-    )
+    auth_api.return_value.do_auth = AsyncMock(side_effect=aiohttp.ClientConnectionError)
 
     entry_id = str(uuid4())
-    assert not await init_integration(hass, entry_id)
+    with pytest.raises(ConfigEntryNotReady):
+        await init_integration(hass, entry_id)
     assert entry_id not in hass.data[DOMAIN]
 
 
 async def test_setup_entry_auth_failed(hass, auth_api):
     """Test setup entry."""
-    auth_api.return_value.load_auth_file = AsyncMock()
+    auth_api.return_value.do_auth = AsyncMock()
     auth_api.return_value.is_access_token_valid.return_value = False
 
     entry_id = str(uuid4())
-    assert not await init_integration(hass, entry_id)
+    with pytest.raises(ConfigEntryNotReady):
+        await init_integration(hass, entry_id)
     assert entry_id not in hass.data[DOMAIN]
 
 

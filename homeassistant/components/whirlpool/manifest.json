@@ -12,5 +12,6 @@
   "dependencies": [],
   "codeowners": [
     "@abmantis"
-  ]
+  ],
+  "iot_class": "cloud_push"
 }

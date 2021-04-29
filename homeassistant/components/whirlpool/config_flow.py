@@ -20,7 +20,6 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-
     auth = Auth(data[CONF_USERNAME], data[CONF_PASSWORD])
     try:
         await auth.do_auth()

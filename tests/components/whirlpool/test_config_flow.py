@@ -19,8 +19,6 @@ async def test_form(hass):
     with patch("whirlpool.auth.Auth.do_auth"), patch(
         "whirlpool.auth.Auth.is_access_token_valid", return_value=True
     ), patch(
-        "homeassistant.components.whirlpool.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.whirlpool.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -39,7 +37,6 @@ async def test_form(hass):
         "username": "test-username",
         "password": "test-password",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

@@ -107,7 +107,7 @@ async def test_static_attributes(aircon_entity: AirConEntity, aircon_api):
         HVAC_MODE_FAN_ONLY,
         HVAC_MODE_OFF,
     ]
-    assert aircon_entity.fan_modes == [FAN_OFF, FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+    assert aircon_entity.fan_modes == [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW, FAN_OFF]
     assert aircon_entity.swing_modes == [SWING_HORIZONTAL, SWING_OFF]
     assert aircon_entity.temperature_unit == TEMP_CELSIUS
     assert aircon_entity.target_temperature_step == 1
