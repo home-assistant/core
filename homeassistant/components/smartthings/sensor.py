@@ -9,9 +9,9 @@ from pysmartthings import Attribute, Capability
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     AREA_SQUARE_METERS,
+    ATTR_DATE,
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
@@ -272,9 +272,37 @@ CAPABILITY_TO_SENSORS = {
     ],
 }
 
-UNITS = {"C": TEMP_CELSIUS, "F": TEMP_FAHRENHEIT}
+UNITS = {
+    "C": TEMP_CELSIUS,
+    "date": ATTR_DATE,
+    "F": TEMP_FAHRENHEIT,
+    "W": POWER_WATT,
+    "Wh": ENERGY_WATT_HOUR,
+}
 
 THREE_AXIS_NAMES = ["X Coordinate", "Y Coordinate", "Z Coordinate"]
+
+POWER_CONSUMPTION_REPORT_NAMES = {
+    "start": "Start Time",
+    "end": "End Time",
+    "energy": "Total Energy",
+    "power": "Instantaneous Power",
+    "deltaEnergy": "Load Energy",
+    "powerEnergy": "Power Watt-hours",
+    "energySaved": "Energy Saved",
+    "persistedEnergy": "Persisted Energy",
+}
+
+POWER_CONSUMPTION_REPORT_UNITS = {
+    "start": "date",
+    "end": "date",
+    "energy": "Wh",
+    "power": "W",
+    "deltaEnergy": "Wh",
+    "powerEnergy": "Wh",
+    "energySaved": "Wh",
+    "persistedEnergy": "Wh",
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -284,7 +312,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for device in broker.devices.values():
         for capability in broker.get_assigned(device.device_id, "sensor"):
             if capability == Capability.power_consumption_report:
-                sensors.append(SmartThingsPowerConsumptionReportSensor(device))
+                sensors.extend(
+                    [
+                        SmartThingsPowerConsumptionReportSensor(device, key)
+                        for key in POWER_CONSUMPTION_REPORT_NAMES
+                    ]
+                )
             elif capability == Capability.three_axis:
                 sensors.extend(
                     [
@@ -381,44 +414,35 @@ class SmartThingsThreeAxisSensor(SmartThingsEntity, SensorEntity):
 
 
 class SmartThingsPowerConsumptionReportSensor(SmartThingsEntity):
-    """Define a SmartThings Power Consumption Report."""
+    """Define a SmartTHings Power Consumption Report."""
 
-    def __init__(self, device):
+    def __init__(self, device, key):
         """Init the class."""
         super().__init__(device)
-        self._attribute = Attribute.power_consumption
-        self._name = "Energy"
-        self._primary_state_key = "energy"
-        self._device_class = DEVICE_CLASS_ENERGY
-        self._default_unit = ENERGY_WATT_HOUR
+        self._key = key
 
     @property
     def name(self) -> str:
         """Return the name of the binary sensor."""
-        return f"{self._device.label} {self._name}"
+        return "{} {}".format(
+            self._device.label, POWER_CONSUMPTION_REPORT_NAMES[self._key]
+        )
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return f"{self._device.device_id}.{self._attribute}"
+        return "{}.{}".format(
+            self._device.device_id, POWER_CONSUMPTION_REPORT_NAMES[self._key]
+        )
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        report = self._device.status.attributes[self._attribute].value
-        return report.get(self._primary_state_key)
+        report = self._device.status.attributes[Attribute.power_consumption].value
+        return report.get(self._key)
 
     @property
-    def device_class(self) -> str:
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def unit_of_measurement(self) -> str:
+    def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return self._default_unit
-
-    @property
-    def device_state_attributes(self):
-        """Return all attributes of the sensor."""
-        return self._device.status.attributes[self._attribute].value
+        unit = POWER_CONSUMPTION_REPORT_UNITS[self._key]
+        return UNITS.get(unit, unit)
