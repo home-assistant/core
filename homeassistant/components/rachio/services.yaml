@@ -11,7 +11,6 @@ set_zone_moisture_percent:
       description: Set the desired zone moisture percentage from 0 to 100.
       required: true
       example: 50
-      default: 50
       selector:
         number:
           min: 0
@@ -33,7 +32,7 @@ start_multiple_zone_schedule:
       example: 15, 20
       required: true
       selector:
-        text:
+        object:
 pause_watering:
   name: Pause Watering
   description: Pause any currently running zones or schedules.
