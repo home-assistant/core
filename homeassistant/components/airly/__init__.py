@@ -126,7 +126,7 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[str, str | float | int]:
         """Update data via library."""
-        data = {}
+        data: dict[str, str | float | int] = {}
         if self.use_nearest:
             measurements = self.airly.create_measurements_session_nearest(
                 self.latitude, self.longitude, max_distance_km=5
