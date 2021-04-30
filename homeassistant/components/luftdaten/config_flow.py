@@ -38,8 +38,7 @@ def duplicate_stations(hass):
     return {x for x in stations if stations.count(x) > 1}
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class LuftDatenFlowHandler(config_entries.ConfigFlow):
+class LuftDatenFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Luftdaten config flow."""
 
     VERSION = 1
