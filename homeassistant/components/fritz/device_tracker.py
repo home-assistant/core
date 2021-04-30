@@ -116,7 +116,7 @@ class FritzBoxTracker(FritzBoxHostEntity, ScannerEntity):
         self._model = "FRITZ!Box Tracked device"
         self._name = device.hostname or DEFAULT_DEVICE_NAME
         self._active = False
-        self._attrs = {}
+        self._attrs: dict = {}
         super().__init__()
 
     @property

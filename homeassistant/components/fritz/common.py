@@ -166,7 +166,7 @@ class FritzData:
 
     def __init__(self) -> None:
         """Initialize the data."""
-        self.tracked = {}
+        self.tracked: dict = {}
 
 
 class FritzDevice:
@@ -227,7 +227,7 @@ class FritzBoxHostEntity:
         """Init device info class."""
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self):
         """Return the device information."""
         dev_info = {}
         dev_info["connections"] = {(CONNECTION_NETWORK_MAC, self.mac_address)}

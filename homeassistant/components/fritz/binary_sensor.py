@@ -29,8 +29,6 @@ async def async_setup_entry(
             [FritzBoxConnectivitySensor(fritzbox_tools, entry.title)], True
         )
 
-    return True
-
 
 class FritzBoxConnectivitySensor(FritzBoxHostEntity, BinarySensorEntity):
     """Define FRITZ!Box connectivity class."""
@@ -43,7 +41,7 @@ class FritzBoxConnectivitySensor(FritzBoxHostEntity, BinarySensorEntity):
         self._name = f"{device_friendlyname} Connectivity"
         self._is_on = True
         self._is_available = True
-        self._attributes = {}
+        self._attributes: dict = {}
         super().__init__()
 
     @property
