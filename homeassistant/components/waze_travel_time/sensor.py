@@ -20,7 +20,6 @@ from homeassistant.const import (
     TIME_MINUTES,
 )
 from homeassistant.core import Config, CoreState, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -43,6 +42,7 @@ from .const import (
     DEFAULT_AVOID_FERRIES,
     DEFAULT_AVOID_SUBSCRIPTION_ROADS,
     DEFAULT_AVOID_TOLL_ROADS,
+    DEFAULT_NAME,
     DEFAULT_REALTIME,
     DEFAULT_VEHICLE_TYPE,
     DOMAIN,
@@ -52,7 +52,7 @@ from .const import (
     UNITS,
     VEHICLE_TYPES,
 )
-from .helpers import get_location_from_entity, is_valid_config_entry, resolve_zone
+from .helpers import get_location_from_entity, resolve_zone
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,12 +142,7 @@ async def async_setup_entry(
     destination = config_entry.data[CONF_DESTINATION]
     origin = config_entry.data[CONF_ORIGIN]
     region = config_entry.data[CONF_REGION]
-    name = config_entry.data[CONF_NAME]
-
-    if not await hass.async_add_executor_job(
-        is_valid_config_entry, hass, _LOGGER, origin, destination, region
-    ):
-        raise ConfigEntryNotReady
+    name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
 
     data = WazeTravelTimeData(
         None,
