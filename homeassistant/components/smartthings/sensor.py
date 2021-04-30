@@ -29,7 +29,7 @@ from homeassistant.const import (
 )
 
 from . import SmartThingsEntity
-from .const import DATA_BROKERS, DOMAIN, POWER_CONSUMPTION_REPORT_NAMES
+from .const import DATA_BROKERS, DOMAIN
 
 Map = namedtuple("map", "attribute name default_unit device_class")
 
@@ -386,7 +386,11 @@ class SmartThingsPowerConsumptionReportSensor(SmartThingsEntity):
     def __init__(self, device):
         """Init the class."""
         super().__init__(device)
+        self._attribute = Attribute.power_consumption
         self._name = "Power Consumption Report"
+        self._primary_attribute = "power_consumption_energy"
+        self._device_class = DEVICE_CLASS_ENERGY
+        self._default_unit = ENERGY_WATT_HOUR
 
     @property
     def name(self) -> str:
@@ -396,29 +400,39 @@ class SmartThingsPowerConsumptionReportSensor(SmartThingsEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return f"{self._device.device_id}.{self._name}"
+        return f"{self._device.device_id}.{self._attribute}"
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._device.status.power_consumption_energy
+        return getattr(self._device.status, self._primary_attribute)
 
     @property
     def device_class(self) -> str:
         """Return the device class of the sensor."""
-        return DEVICE_CLASS_ENERGY
+        return self._device_class
 
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return ENERGY_WATT_HOUR
+        return self._default_unit
 
     @property
     def device_state_attributes(self):
         """Return attributes of the sensor."""
+        attributes = [
+            "power_consumption_start",
+            "power_consumption_power",
+            "power_consumption_energy",
+            "power_consumption_end",
+            "power_consumption_delta_energy",
+            "power_consumption_power_energy",
+            "power_consumption_energy_saved",
+            "power_consumption_persisted_energy",
+        ]
         state_attributes = {}
-        for attribute, short_name in POWER_CONSUMPTION_REPORT_NAMES.items():
+        for attribute in attributes:
             value = getattr(self._device.status, attribute)
             if value is not None:
-                state_attributes[short_name] = value
+                state_attributes[attribute] = value
         return state_attributes

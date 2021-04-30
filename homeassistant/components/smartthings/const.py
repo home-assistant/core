@@ -19,16 +19,6 @@ DATA_MANAGER = "manager"
 DATA_BROKERS = "brokers"
 EVENT_BUTTON = "smartthings.button"
 
-POWER_CONSUMPTION_REPORT_NAMES = {
-    "power_consumption_start": "start",
-    "power_consumption_power": "power",
-    "power_consumption_end": "end",
-    "power_consumption_delta_energy": "delta_energy",
-    "power_consumption_power_energy": "power_energy",
-    "power_consumption_energy_saved": "energy_saved",
-    "power_consumption_persisted_energy": "persisted_energy",
-}
-
 SIGNAL_SMARTTHINGS_UPDATE = "smartthings_update"
 SIGNAL_SMARTAPP_PREFIX = "smartthings_smartap_"
 
