@@ -507,4 +507,4 @@ class DynamicCurrentTempClimate(ZWaveClimate):
         val = get_value_of_zwave_value(
             self.data_template.current_temperature_value(self.info.platform_data)
         )
-        return val or super().current_temperature
+        return val if val is not None else super().current_temperature
