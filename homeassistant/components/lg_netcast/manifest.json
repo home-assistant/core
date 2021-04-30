@@ -3,6 +3,6 @@
   "name": "LG Netcast",
   "documentation": "https://www.home-assistant.io/integrations/lg_netcast",
   "requirements": ["pylgnetcast==0.3.3"],
-  "codeowners": [],
+  "codeowners": ["@Drafteed"],
   "iot_class": "local_polling"
 }
