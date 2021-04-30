@@ -184,7 +184,6 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         """Handle updated data from the coordinator."""
         available = False
         if self.coordinator.last_update_success:
-            assert self.coordinator.data is not None
             camera = get_camera_from_cameras(self._camera_id, self.coordinator.data)
             if self._is_acceptable_streaming_camera(camera):
                 assert camera

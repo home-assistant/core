@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow
 from homeassistant.const import CONF_SOURCE, CONF_URL
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from . import create_motioneye_client
@@ -35,12 +35,12 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle the initial step."""
 
         def _get_form(
             user_input: dict[str, Any], errors: dict[str, str] | None = None
-        ) -> FlowResultDict:
+        ) -> FlowResult:
             """Show the form to the user."""
             return self.async_show_form(
                 step_id="user",
@@ -133,6 +133,6 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(
         self,
         config_data: dict[str, Any] | None = None,
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle a reauthentication flow."""
         return await self.async_step_user(config_data)
