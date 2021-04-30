@@ -1017,14 +1017,6 @@ async def test_addon_not_installed(
         await hass.async_block_till_done()
 
     assert start_addon.call_args == call(hass, "core_zwave_js")
-    long_host = (
-        "very_long_host_very_long_host_very_long_host_very_long_host_very_long"
-        "host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_ho"
-        "st_very_long_host_very_long_host_very_long_host_very_long_host_very_long_host_"
-        "very_long_host_very_long_host"
-    )
-
-    assert long_host
 
     assert result["type"] == "create_entry"
     assert result["title"] == TITLE
