@@ -117,10 +117,7 @@ class ElgatoLight(LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        temperature = None
-        if ATTR_COLOR_TEMP in kwargs:
-            temperature = kwargs[ATTR_COLOR_TEMP]
-
+        temperature = kwargs.get(ATTR_COLOR_TEMP)
         brightness = None
         if ATTR_BRIGHTNESS in kwargs:
             brightness = round((kwargs[ATTR_BRIGHTNESS] / 255) * 100)
