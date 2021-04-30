@@ -27,10 +27,6 @@ from .const import DOMAIN
 from .knx_entity import KnxEntity
 from .schema import LightSchema
 
-DEFAULT_COLOR = (0.0, 0.0)
-DEFAULT_BRIGHTNESS = 255
-DEFAULT_WHITE_VALUE = 255
-
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -187,7 +183,6 @@ class KNXLight(KnxEntity, LightEntity):
             await self._device.set_on()
             return
 
-        # return after RGB(W) color has changed as it implicitly sets the brightness
         async def set_color(
             rgb: tuple[int, int, int], white: int | None, brightness: int | None
         ) -> None:
@@ -204,6 +199,7 @@ class KNXLight(KnxEntity, LightEntity):
                 white = white * brightness // 255 if white is not None else None
             await self._device.set_color(rgb, white)
 
+        # return after RGB(W) color has changed as it implicitly sets the brightness
         if rgbw is not None:
             await set_color(rgbw[:3], rgbw[3], brightness)
             return
