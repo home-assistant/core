@@ -14,7 +14,6 @@ class FluNearYouFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an FluNearYou config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @property
     def data_schema(self):

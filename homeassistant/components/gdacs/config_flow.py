@@ -24,8 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 class GdacsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a GDACS config flow."""
 
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
-
     async def _show_form(self, errors=None):
         """Show the form to the user."""
         return self.async_show_form(

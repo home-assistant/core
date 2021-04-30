@@ -22,7 +22,6 @@ class FlowHandler(config_entries.ConfigFlow):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the Daikin config flow."""
