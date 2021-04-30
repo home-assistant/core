@@ -23,8 +23,8 @@ class ZwaveValueID:
 class BaseDiscoverySchemaDataTemplate:
     """Base class for discovery schema data templates."""
 
-    def resolve_data(
-        self, value: ZwaveValue  # pylint: disable=no-self-use
+    def resolve_data(  # pylint: disable=no-self-use
+        self, value: ZwaveValue
     ) -> dict[str, Any]:
         """
         Resolve helper class data for a discovered value.
@@ -34,8 +34,8 @@ class BaseDiscoverySchemaDataTemplate:
         """
         return {}
 
-    def values_to_watch(
-        self, resolved_data: dict[str, Any]  # pylint: disable=no-self-use
+    def values_to_watch(  # pylint: disable=no-self-use
+        self, resolved_data: dict[str, Any]
     ) -> Iterable[ZwaveValue]:
         """
         Return list of all ZwaveValues resolved by helper that should be watched.
