@@ -1,33 +1,68 @@
 set_zone_moisture_percent:
-  description: Set the moisture percentage of a zone or group of zones.
+  name: Set Zone Moisture Percent
+  description: Set the moisture percentage of a zone or list of zones.
+  target:
+    entity:
+      integration: rachio
+      domain: switch
   fields:
-    entity_id:
-      description: Name of the zone entity. Can also be a group of zones. [Required]
-      example: "switch.front_yard"
     percent:
-      description: Set the desired zone moisture percentage from 0 to 100. [Required]
+      name: Percent
+      description: Set the desired zone moisture percentage from 0 to 100.
+      required: True
       example: 50
+      default: 50
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: slider
+          unit_of_measurement: "%"
+          step: 1
 start_multiple_zone_schedule:
-  description: Create a custom schedule of zones and runtimes.
+  name: Start Multiple Zones
+  description: Create a custom schedule of zones and runtimes. Note that all zones should be on the same controller to avoid issues.
+  target:
+    entity:
+      integration: rachio
+      domain: switch
   fields:
-    entity_id:
-      description: Name of the zone or zones to run. Zones should all be on the same controller, attempting to start zones on multiple controllers may have undesired results. [Required]
-      example: "switch.front_yard, switch.side_yard"
     duration:
-      description: Number of minutes to run the zone(s). If only 1 duration is given, that time will be used for all zones. If given a list of durations, the durations will apply to the respective zone listed above. [Required]
+      name: Duration
+      description: Number of minutes to run the zone(s). If only 1 duration is given, that time will be used for all zones. If given a list of durations, the durations will apply to the respective zones listed above.
       example: 15, 20
+      required: True
+      selector:
+        text:
 pause_watering:
+  name: Pause Watering
   description: Pause any currently running zones or schedules.
   fields:
     devices:
-      description: Name of controllers to pause. Defaults to all controllers on the account if not provided. [Optional]
-      example: Main House
+      name: Devices
+      description: Name of controllers to pause. Defaults to all controllers on the account if not provided.
+      example: "Main House"
+      selector:
+        text:
     duration:
-      description: The number of minutes to pause running schedules. Accepts 1-60. Default is 60 minutes. [Optional]
-      example: 30
+      name: Duration
+      description: The number of minutes to pause running schedules. Accepts 1-60. Default is 60 minutes if not provided. 
+      example: 60
+      default: 60
+      selector:
+        number:
+          min: 1
+          max: 60
+          mode: slider
+          unit_of_measurement: "minutes"
+          step: 1
 resume_watering:
+  name: Resume Watering
   description: Resume any paused zone runs or schedules.
   fields:
     devices:
-      description: Name of controllers to resume. Defaults to all controllers on the account if not provided. [Optional]
-      example: Main House
+      name: Devices
+      description: Name of controllers to resume. Defaults to all controllers on the account if not provided.
+      example: "Main House"
+      selector:
+        text:
