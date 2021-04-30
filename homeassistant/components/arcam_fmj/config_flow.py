@@ -23,7 +23,6 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
     """Handle config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def _async_set_unique_id_and_update(self, host, port, uuid):
         await self.async_set_unique_id(uuid)

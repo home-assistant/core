@@ -10,7 +10,6 @@ class AWSFlowHandler(config_entries.ConfigFlow):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     async def async_step_import(self, user_input):
         """Import a config entry."""
