@@ -80,7 +80,7 @@ async def async_setup_entry(
         [
             SIAAlarmControlPanel(
                 *get_id_and_name(
-                    entry.data[CONF_PORT], acc[CONF_ACCOUNT], zone, DEVICE_CLASS_ALARM
+                    entry.data[CONF_PORT], acc[CONF_ACCOUNT], DEVICE_CLASS_ALARM, zone
                 ),
                 entry,
                 acc[CONF_ACCOUNT],

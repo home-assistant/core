@@ -97,4 +97,4 @@ class SIAHub:
             event_data=event.to_dict(encode_json=True),
             origin=EventOrigin.remote,
         )
-        return
+        return None
