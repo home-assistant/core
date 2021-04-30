@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Awaitable
 from datetime import timedelta
 import logging
-from typing import Callable
+from typing import Callable, TypeVar
 
 from renault_api.kamereon.exceptions import (
     AccessDeniedException,
@@ -13,11 +13,9 @@ from renault_api.kamereon.exceptions import (
 )
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-    T,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+T = TypeVar("T")
 
 
 class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
