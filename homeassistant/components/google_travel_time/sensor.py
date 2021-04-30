@@ -20,7 +20,6 @@ from homeassistant.const import (
     TIME_MINUTES,
 )
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
@@ -40,6 +39,7 @@ from .const import (
     CONF_TRANSIT_ROUTING_PREFERENCE,
     CONF_TRAVEL_MODE,
     CONF_UNITS,
+    DEFAULT_NAME,
     DOMAIN,
     TRACKABLE_DOMAINS,
     TRANSIT_PREFS,
@@ -48,7 +48,7 @@ from .const import (
     TRAVEL_MODEL,
     UNITS,
 )
-from .helpers import get_location_from_entity, is_valid_config_entry, resolve_zone
+from .helpers import get_location_from_entity, resolve_zone
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,12 +126,7 @@ async def async_setup_entry(
     api_key = config_entry.data[CONF_API_KEY]
     origin = config_entry.data[CONF_ORIGIN]
     destination = config_entry.data[CONF_DESTINATION]
-    name = config_entry.data[CONF_NAME]
-
-    if not await hass.async_add_executor_job(
-        is_valid_config_entry, hass, _LOGGER, api_key, origin, destination
-    ):
-        raise ConfigEntryNotReady
+    name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
 
     client = Client(api_key, timeout=10)
 
