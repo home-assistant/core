@@ -799,9 +799,7 @@ async def test_light_brightness_step(hass):
         blocking=True,
     )
 
-    assert (
-        entity0.state == "off"
-    )  # 126 - 126; brightness is 0, turn light should turn off
+    assert entity0.state == "off"  # 126 - 126; brightness is 0, light should turn off
 
 
 async def test_light_brightness_pct_conversion(hass):
