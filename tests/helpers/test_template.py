@@ -19,7 +19,7 @@ from homeassistant.const import (
     VOLUME_LITERS,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
+from homeassistant.helpers import device_registry as dr, template
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
@@ -1504,7 +1504,7 @@ async def test_device_entities(hass):
     # Test device without entities
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={("mac", "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     info = render_to_info(hass, f"{{{{ device_entities('{device_entry.id}') }}}}")
     assert_result_info(info, [])
