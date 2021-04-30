@@ -1,6 +1,4 @@
 """Support for Fritzbox binary sensors."""
-from typing import Callable
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_WINDOW,
     BinarySensorEntity,
@@ -13,13 +11,14 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxEntity
 from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Fritzbox binary sensor from ConfigEntry."""
     entities = []
