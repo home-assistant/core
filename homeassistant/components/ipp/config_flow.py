@@ -15,7 +15,7 @@ from pyipp import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -57,7 +57,6 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an IPP config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Set up the instance."""
