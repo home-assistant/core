@@ -1,8 +1,4 @@
 """Constants for Airly integration."""
-from __future__ import annotations
-
-from typing import TypedDict
-
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     DEVICE_CLASS_HUMIDITY,
@@ -12,6 +8,8 @@ from homeassistant.const import (
     PRESSURE_HPA,
     TEMP_CELSIUS,
 )
+
+from .model import SensorDescription
 
 ATTR_API_ADVICE = "ADVICE"
 ATTR_API_CAQI = "CAQI"
@@ -64,12 +62,3 @@ SENSOR_TYPES: dict[str, SensorDescription] = {
         "unit": TEMP_CELSIUS,
     },
 }
-
-
-class SensorDescription(TypedDict):
-    """Sensor description class."""
-
-    device_class: str | None
-    icon: str | None
-    label: str
-    unit: str
