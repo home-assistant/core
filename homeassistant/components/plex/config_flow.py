@@ -10,6 +10,7 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import http
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import (
@@ -52,6 +53,8 @@ from .const import (
 from .errors import NoServersFound, ServerNotSpecified
 from .server import PlexServer
 
+HEADER_FRONTEND_BASE = "HA-Frontend-Base"
+
 _LOGGER = logging.getLogger(__package__)
 
 
@@ -62,6 +65,18 @@ def configured_servers(hass):
         entry.data[CONF_SERVER_IDENTIFIER]
         for entry in hass.config_entries.async_entries(DOMAIN)
     }
+
+
+@callback
+def redirect_uri() -> str:
+    """Return the redirect uri."""
+    if (req := http.current_request.get()) is None:
+        raise RuntimeError("No current request in context")
+
+    if (ha_host := req.headers.get(HEADER_FRONTEND_BASE)) is None:
+        raise RuntimeError("No header in request")
+
+    return ha_host
 
 
 async def async_discover(hass):
@@ -286,7 +301,12 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_plex_website_auth(self):
         """Begin external auth flow on Plex website."""
         self.hass.http.register_view(PlexAuthorizationCallbackView)
-        hass_url = get_url(self.hass)
+        try:
+            hass_url = redirect_uri()
+        except RuntimeError as err:
+            _LOGGER.debug("%s: Falling back to get_url", err)
+            hass_url = get_url(self.hass)
+
         headers = {"Origin": hass_url}
         payload = {
             "X-Plex-Device-Name": X_PLEX_DEVICE_NAME,
