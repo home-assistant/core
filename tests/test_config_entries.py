@@ -2814,24 +2814,3 @@ async def test__async_abort_entries_match(hass, manager, matchers, reason):
 
     assert result["type"] == "abort"
     assert result["reason"] == reason
-
-
-def test_entry_state_eq():
-    """Backwards compatibility test, to be removed along with implementing __eq__."""
-    with patch(
-        "homeassistant.config_entries.get_integration_frame",
-        return_value=(None, "integration", "path/"),
-    ):
-        assert config_entries.ConfigEntryState.LOADED == "loaded"
-        assert config_entries.ConfigEntryState.LOADED != "not_loaded"
-        assert (
-            config_entries.ConfigEntryState.LOADED
-            == config_entries.ConfigEntryState.LOADED
-        )
-        assert (
-            config_entries.ConfigEntryState.LOADED
-            is config_entries.ConfigEntryState.LOADED
-        )
-        assert config_entries.ConfigEntryState.LOADED is not True
-        assert config_entries.ConfigEntryState.LOADED is not False
-        assert config_entries.ConfigEntryState.LOADED != -1
