@@ -13,8 +13,10 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    CONF_ENTITY_NAMESPACE,
     CONF_NAME,
     CONF_REGION,
+    CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM_IMPERIAL,
     EVENT_HOMEASSISTANT_STARTED,
     TIME_MINUTES,
@@ -78,7 +80,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             CONF_AVOID_SUBSCRIPTION_ROADS, default=DEFAULT_AVOID_SUBSCRIPTION_ROADS
         ): cv.boolean,
         vol.Optional(CONF_AVOID_FERRIES, default=DEFAULT_AVOID_FERRIES): cv.boolean,
-    }
+        # Remove options to exclude from import
+        vol.Remove(CONF_ENTITY_NAMESPACE): cv.string,
+        vol.Remove(CONF_SCAN_INTERVAL): cv.time_period,
+    },
+    extra=vol.REMOVE_EXTRA,
 )
 
 
