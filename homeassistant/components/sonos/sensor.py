@@ -8,7 +8,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DATA_SONOS, SONOS_CREATE_BATTERY
+from .const import SONOS_CREATE_BATTERY
 from .entity import SonosSensorEntity
 from .speaker import SonosSpeaker
 
@@ -19,7 +19,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
 
     async def _async_create_entity(speaker: SonosSpeaker) -> None:
-        entity = SonosBatteryEntity(speaker, hass.data[DATA_SONOS])
+        entity = SonosBatteryEntity(speaker)
         async_add_entities([entity])
 
     config_entry.async_on_unload(

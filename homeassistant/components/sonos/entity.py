@@ -13,7 +13,6 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 
-from . import SonosData
 from .const import (
     DOMAIN,
     SONOS_ENTITY_CREATED,
@@ -28,10 +27,9 @@ _LOGGER = logging.getLogger(__name__)
 class SonosEntity(Entity):
     """Representation of a Sonos entity."""
 
-    def __init__(self, speaker: SonosSpeaker, sonos_data: SonosData) -> None:
+    def __init__(self, speaker: SonosSpeaker) -> None:
         """Initialize a SonosEntity."""
         self.speaker = speaker
-        self.data = sonos_data
 
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""
