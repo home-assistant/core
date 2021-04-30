@@ -1,4 +1,4 @@
-"""Interfaces with the myLeviton API for Decora Smart WiFi Light products."""
+"""Interfaces with the myLeviton API for Decora Smart WiFi Fan products."""
 
 import logging
 
@@ -9,14 +9,7 @@ from decora_wifi.models.residence import Residence
 from decora_wifi.models.residential_account import ResidentialAccount
 import voluptuous as vol
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_TRANSITION,
-    PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_TRANSITION,
-    LightEntity,
-)
+from homeassistant.components.fan import PLATFORM_SCHEMA, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
@@ -32,7 +25,7 @@ NOTIFICATION_TITLE = "myLeviton Decora Setup"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Decora WiFi platform Light Switches Only."""
+    """Set up the Decora WiFi platform Fan Controllers Only."""
     email = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
     session = DecoraWiFiSession()
@@ -63,13 +56,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 for switch in residence.get_iot_switches():
                     all_switches.append(switch)
 
-        all_lights = []
-        for sw_l in all_switches:
-            if sw_l.model != "DW4SF":
-                all_lights.append(sw_l)
+        all_fans = []
+        for sw_f in all_switches:
+            if sw_f.model == "DW4SF":
+                all_fans.append(sw_f)
 
-        add_entities(DecoraWifiLight(sw) for sw in all_lights)
-
+        add_entities(DecoraWifiFan(sw) for sw in all_fans)
     except ValueError:
         _LOGGER.error("Failed to communicate with myLeviton Service")
 
@@ -85,8 +77,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.bus.listen(EVENT_HOMEASSISTANT_STOP, logout)
 
 
-class DecoraWifiLight(LightEntity):
-    """Representation of a Decora WiFi switch."""
+class DecoraWifiFan(FanEntity):
+    """Representation of a Decora WiFi Fan switch."""
 
     def __init__(self, switch):
         """Initialize the switch."""
@@ -96,7 +88,7 @@ class DecoraWifiLight(LightEntity):
     def supported_features(self):
         """Return supported features."""
         if self._switch.canSetLevel:
-            return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+            return SUPPORT_SET_SPEED
         return 0
 
     @property
@@ -105,38 +97,34 @@ class DecoraWifiLight(LightEntity):
         return self._switch.name
 
     @property
-    def brightness(self):
-        """Return the brightness of the dimmer switch."""
-        return int(self._switch.brightness * 255 / 100)
+    def speed_count(self) -> int:
+        """Flag supported features."""
+        return 4
+
+    @property
+    def percentage(self):
+        """Return the speed (brightness) of the fan switch."""
+        return int(self._switch.brightness)
 
     @property
     def is_on(self):
         """Return true if switch is on."""
         return self._switch.power == "ON"
 
-    def turn_on(self, **kwargs):
-        """Instruct the switch to turn on & adjust brightness."""
+    def turn_on(self, speed=None, percentage=None, preset_mode=None, **kwargs):
+        """Instruct the switch to turn on."""
         attribs = {"power": "ON"}
-
-        if ATTR_BRIGHTNESS in kwargs:
-            min_level = self._switch.data.get("minLevel", 0)
-            max_level = self._switch.data.get("maxLevel", 100)
-            brightness = int(kwargs[ATTR_BRIGHTNESS] * max_level / 255)
-            brightness = max(brightness, min_level)
-            attribs["brightness"] = brightness
-
-        if ATTR_TRANSITION in kwargs:
-            transition = int(kwargs[ATTR_TRANSITION])
-            attribs["fadeOnTime"] = attribs["fadeOffTime"] = transition
 
         try:
             self._switch.update_attributes(attribs)
+
         except ValueError:
-            _LOGGER.error("Failed to turn on myLeviton switch")
+            _LOGGER.error("Failed to turn on myLeviton switch: %s", attribs)
 
     def turn_off(self, **kwargs):
         """Instruct the switch to turn off."""
         attribs = {"power": "OFF"}
+
         try:
             self._switch.update_attributes(attribs)
         except ValueError:
@@ -148,3 +136,17 @@ class DecoraWifiLight(LightEntity):
             self._switch.refresh()
         except ValueError:
             _LOGGER.error("Failed to update myLeviton switch data")
+
+    def set_percentage(self, percentage) -> None:
+        """Set the speed percentage of the fan."""
+        if percentage == 0:
+            self.turn_off()
+            return
+        attribs = {"power": "ON"}
+        attribs["brightness"] = percentage
+
+        try:
+            self._switch.update_attributes(attribs)
+
+        except ValueError:
+            _LOGGER.error("Failed to update myLeviton switch: %s", attribs)
