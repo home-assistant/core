@@ -1,5 +1,4 @@
 """The buienradar integration."""
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -54,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-	unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][entry.entry_id][DATA_LISTENER]()
         hass.data[DOMAIN].pop(entry.entry_id)

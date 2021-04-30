@@ -49,20 +49,20 @@ _LOGGER = logging.getLogger(__name__)
 DATA_CONDITION = "buienradar_condition"
 
 CONDITION_CLASSES = {
-    ATTR_CONDITION_CLOUDY: ["c", "p"],
-    ATTR_CONDITION_FOG: ["d", "n"],
-    ATTR_CONDITION_HAIL: [],
-    ATTR_CONDITION_LIGHTNING: ["g"],
-    ATTR_CONDITION_LIGHTNING_RAINY: ["s"],
-    ATTR_CONDITION_PARTLYCLOUDY: ["b", "j", "o", "r"],
-    ATTR_CONDITION_POURING: ["l", "q"],
-    ATTR_CONDITION_RAINY: ["f", "h", "k", "m"],
-    ATTR_CONDITION_SNOWY: ["u", "i", "v", "t"],
-    ATTR_CONDITION_SNOWY_RAINY: ["w"],
-    ATTR_CONDITION_SUNNY: ["a"],
-    ATTR_CONDITION_WINDY: [],
-    ATTR_CONDITION_WINDY_VARIANT: [],
-    ATTR_CONDITION_EXCEPTIONAL: [],
+    ATTR_CONDITION_CLOUDY: ("c", "p"),
+    ATTR_CONDITION_FOG: ("d", "n"),
+    ATTR_CONDITION_HAIL: (),
+    ATTR_CONDITION_LIGHTNING: ("g"),
+    ATTR_CONDITION_LIGHTNING_RAINY: ("s"),
+    ATTR_CONDITION_PARTLYCLOUDY: ("b", "j", "o", "r"),
+    ATTR_CONDITION_POURING: ("l", "q"),
+    ATTR_CONDITION_RAINY: ("f", "h", "k", "m"),
+    ATTR_CONDITION_SNOWY: ("u", "i", "v", "t"),
+    ATTR_CONDITION_SNOWY_RAINY: ("w"),
+    ATTR_CONDITION_SUNNY: ("a"),
+    ATTR_CONDITION_WINDY: (),
+    ATTR_CONDITION_WINDY_VARIANT: (),
+    ATTR_CONDITION_EXCEPTIONAL: (),
 }
 
 
@@ -77,7 +77,7 @@ async def async_setup_entry(
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return False
+        return
 
     coordinates = {CONF_LATITUDE: float(latitude), CONF_LONGITUDE: float(longitude)}
 

@@ -36,7 +36,6 @@ from homeassistant.const import (
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
-
 from homeassistant.core import callback
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
@@ -203,7 +202,7 @@ async def async_setup_entry(
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return False
+        return
 
     coordinates = {CONF_LATITUDE: float(latitude), CONF_LONGITUDE: float(longitude)}
 
