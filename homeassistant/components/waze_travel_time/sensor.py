@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import re
-from typing import Any, Callable
+from typing import Callable
 
 from WazeRouteCalculator import WazeRouteCalculator, WRCError
 import voluptuous as vol
@@ -23,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Config, CoreState, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     ATTR_DESTINATION,
@@ -263,7 +264,7 @@ class WazeTravelTime(SensorEntity):
         self._waze_data.update()
 
     @property
-    def device_info(self) -> dict[str, Any] | None:
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return {
             "name": "Waze",

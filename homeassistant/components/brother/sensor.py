@@ -7,6 +7,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -32,7 +33,7 @@ async def async_setup_entry(
 
     sensors = []
 
-    device_info = {
+    device_info: DeviceInfo = {
         "identifiers": {(DOMAIN, coordinator.data.serial)},
         "name": coordinator.data.model,
         "manufacturer": ATTR_MANUFACTURER,
@@ -53,7 +54,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         self,
         coordinator: BrotherDataUpdateCoordinator,
         kind: str,
-        device_info: dict[str, Any],
+        device_info: DeviceInfo,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -110,7 +111,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         return self._description["unit"]
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return self._device_info
 

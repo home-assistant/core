@@ -24,6 +24,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import DeviceInfo
 import homeassistant.util.color as color_util
 
 from . import (
@@ -234,7 +235,7 @@ class HyperionBaseLight(LightEntity):
         return self._unique_id
 
     @property
-    def device_info(self) -> dict[str, Any] | None:
+    def device_info(self) -> DeviceInfo:
         """Return device information."""
         return {
             "identifiers": {(DOMAIN, self._device_id)},
