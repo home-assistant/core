@@ -1,8 +1,8 @@
 """Helper functions for the SIA integration."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import timedelta
+from typing import Any
 
 from pysiaalarm import SIAEvent
 
@@ -21,20 +21,15 @@ from .const import (
 
 
 def get_id_and_name(
-    port: int, account: str, zone: int = 0, entity_type: str = None
+    port: int, account: str, entity_type: str, zone: int = 0
 ) -> tuple[str, str]:
     """Give back a entity_id and name according to the variables."""
     if zone == HUB_ZONE:
-        entity_type_name = (
-            "Last Heartbeat" if entity_type == DEVICE_CLASS_TIMESTAMP else "Power"
-        )
         return (
             get_id(port, account, zone, entity_type),
-            f"{port} - {account} - {entity_type_name}",
+            f"{port} - {account} - {'Last Heartbeat' if entity_type == DEVICE_CLASS_TIMESTAMP else 'Power'}",
         )
 
-    if not entity_type:
-        raise ValueError("If zone is not 0, then a entity_type is required.")
     return (
         get_id(port, account, zone, entity_type),
         f"{port} - {account} - zone {zone} - {entity_type}",
@@ -55,7 +50,7 @@ def get_id(port: int, account: str, zone: int, entity_type: str) -> str:
     return f"{port}_{account}_{zone}_{entity_type}"
 
 
-def get_attr_from_sia_event(event: SIAEvent) -> Mapping[str, str]:
+def get_attr_from_sia_event(event: SIAEvent) -> dict[str, Any]:
     """Create the attributes dict from a SIAEvent."""
     return {
         EVENT_ACCOUNT: event.account,

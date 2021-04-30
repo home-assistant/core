@@ -1,8 +1,9 @@
 """The sia hub."""
 from __future__ import annotations
 
+from collections.abc import Awaitable
 import logging
-from typing import Any, Awaitable
+from typing import Any
 
 from pysiaalarm.aio import CommunicationsProtocol, SIAAccount, SIAClient, SIAEvent
 
@@ -41,7 +42,7 @@ class SIAHub:
         self._title: str = entry.title
         self._accounts: list[dict[str, Any]] = entry.data[CONF_ACCOUNTS]
         self._protocol: str = entry.data[CONF_PROTOCOL]
-        self.sia_accounts: list[SIAAccount] = None
+        self.sia_accounts: list[SIAAccount] | None = None
         self.sia_client: SIAClient = None
 
     async def async_setup_hub(self):
@@ -96,3 +97,4 @@ class SIAHub:
             event_data=event.to_dict(encode_json=True),
             origin=EventOrigin.remote,
         )
+        return

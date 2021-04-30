@@ -1,7 +1,6 @@
 """Module for SIA Alarm Control Panels."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from typing import Any, Callable
@@ -117,7 +116,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         self._zone: int = zone
         self._ping_interval_int: int = ping_interval
         self._event_listener_str: str = SIA_EVENT.format(self._port, account)
-        self._attr: Mapping[str, str] = {CONF_ACCOUNT: account, CONF_ZONE: zone}
+        self._attr: dict[str, Any] = {CONF_ACCOUNT: account, CONF_ZONE: zone}
 
         self._is_available: bool = True
 
@@ -221,7 +220,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         return self._is_available
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device attributes."""
         return self._attr
 
@@ -262,7 +261,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         return 0
 
     @property
-    def device_info(self) -> Mapping[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return the device_info."""
         return {
             "identifiers": {(DOMAIN, self.unique_id)},

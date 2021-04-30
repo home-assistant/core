@@ -77,7 +77,7 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION: int = 1
     CONNECTION_CLASS: str = config_entries.CONN_CLASS_LOCAL_PUSH
-    data: ConfigType = None
+    data: ConfigType = {}
 
     async def async_step_add_account(self, user_input: ConfigType = None):
         """Handle the additional accounts steps."""
