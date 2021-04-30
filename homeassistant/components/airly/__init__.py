@@ -35,7 +35,7 @@ PLATFORMS = ["air_quality", "sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
-def set_update_interval(instances: int, requests_remaining: int) -> timedelta:
+def set_update_interval(instances_count: int, requests_remaining: int) -> timedelta:
     """
     Return data update interval.
 
@@ -51,7 +51,7 @@ def set_update_interval(instances: int, requests_remaining: int) -> timedelta:
     interval = timedelta(
         minutes=min(
             max(
-                ceil(minutes_to_midnight / requests_remaining * instances),
+                ceil(minutes_to_midnight / requests_remaining * instances_count),
                 MIN_UPDATE_INTERVAL,
             ),
             MAX_UPDATE_INTERVAL,
