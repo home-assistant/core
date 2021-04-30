@@ -23,8 +23,8 @@ TEST_CFG_DATA = {CONF_LATITUDE: 51.5288504, CONF_LONGITUDE: 5.4002156}
 
 
 def radar_map_url(country_code: str = "NL") -> str:
-    """Build map url, defaulting to 512 wide (as in component)."""
-    return f"https://api.buienradar.nl/image/1.0/RadarMap{country_code}?w={700}&h={700}"
+    """Build map URL."""
+    return f"https://api.buienradar.nl/image/1.0/RadarMap{country_code}?w=700&h=700"
 
 
 async def _setup_config_entry(hass, entry_id):
