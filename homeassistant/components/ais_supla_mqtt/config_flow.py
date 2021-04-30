@@ -125,53 +125,12 @@ class SuplaMqttFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         # save mqtt connection info
-        # 1. check if mosquitto.conf exists
-        if not os.path.isfile(
-            "/data/data/pl.sviete.dom/files/usr/etc/mosquitto/mosquitto.conf"
-        ):
-            _LOGGER.error("No mosquitto.conf file exit")
-            return False
-
-        # 2. configuration file exist, check if we have bridge definition
-        bridge_settings = "connection bridge-" + ais_global.get_sercure_android_id_dom()
-        conf_file = open(
-            "/data/data/pl.sviete.dom/files/usr/etc/mosquitto/mosquitto.conf"
-        )
-        if bridge_settings in conf_file:
-            _LOGGER.error("Connection bridge exists in mosquitto.conf, exit")
-            return False
-
-        # 3. configuration add bridge definition
-        mqtt_settings = self.bridge_config
-        with open(
-            "/data/data/pl.sviete.dom/files/usr/etc/mosquitto/mosquitto.conf", "w"
-        ) as conf_file:
-            # save connection in file
-            conf_file.write("# AIS Config file for mosquitto\n")
-            conf_file.write("listener 1883 0.0.0.0\n")
-            conf_file.write("allow_anonymous true\n")
-            conf_file.write("\n")
-            conf_file.write(bridge_settings + "\n")
-            conf_file.write(
-                "address "
-                + mqtt_settings["host"]
-                + ":"
-                + str(mqtt_settings["port"])
-                + "\n"
-            )
-            conf_file.write("topic supla/# in\n")
-            conf_file.write("topic homeassistant/# in\n")
-            conf_file.write("topic supla/+/devices/+/channels/+/execute_action out\n")
-            conf_file.write("topic supla/+/devices/+/channels/+/set/+ out\n")
-            conf_file.write("remote_username " + mqtt_settings["username"] + "\n")
-            conf_file.write("remote_password " + mqtt_settings["password"] + "\n")
-            conf_file.write(
-                "bridge_cafile /data/data/pl.sviete.dom/files/usr/etc/tls/cert.pem\n"
-            )
+        ais_global.save_ais_mqtt_connection_settings(self.bridge_config)
         # restart mqtt broker
         await self.hass.services.async_call(
             "ais_shell_command", "restart_pm2_service", {"service": "mqtt"}
         )
+        # finish the config flow
         return self.async_create_entry(
             title="SUPLA MQTT BRIDGE", data=self.bridge_config
         )
