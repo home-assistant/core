@@ -204,11 +204,6 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Required("codeowners"): [str],
         vol.Optional("disabled"): str,
         vol.Optional("iot_class"): vol.In(SUPPORTED_IOT_CLASSES),
-    }
-)
-
-CUSTOM_INTEGRATION_MANIFEST_SCHEMA = MANIFEST_SCHEMA.extend(
-    {
         vol.Optional("version"): vol.All(str, verify_version),
     }
 )
@@ -234,10 +229,7 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
         return
 
     try:
-        if integration.core:
-            MANIFEST_SCHEMA(integration.manifest)
-        else:
-            CUSTOM_INTEGRATION_MANIFEST_SCHEMA(integration.manifest)
+        MANIFEST_SCHEMA(integration.manifest)
     except vol.Invalid as err:
         integration.add_error(
             "manifest", f"Invalid manifest: {humanize_error(integration.manifest, err)}"
