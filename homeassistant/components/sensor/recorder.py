@@ -18,8 +18,8 @@ DEVICE_CLASSES = {"temperature"}
 DEVICE_CLASS_STATISTICS = {"temperature": {"mean", "min", "max"}}
 
 
-def _get_entity_ids(hass: HomeAssistant) -> list[tuple[str, str]]:
-    """Get entity_id of all sensors for which to compile statistics."""
+def _get_entities(hass: HomeAssistant) -> list[tuple[str, str]]:
+    """Get (entity_id, device_class) of all sensors for which to compile statistics."""
     all_sensors = hass.states.async_entity_ids(DOMAIN)
     entity_ids = []
 
@@ -47,14 +47,14 @@ async def async_compile_statistics(
     """Compile statistics for all entities during start-end."""
     result: dict = {}
 
-    entity_ids = _get_entity_ids(hass)
+    entities = _get_entities(hass)
 
     # Get history between start and end
     history_list = await hass.async_add_executor_job(
-        history.get_significant_states, hass, start, end, entity_ids
+        history.get_significant_states, hass, start, end, [i[0] for i in entities]
     )
 
-    for entity_id, device_class in entity_ids:
+    for entity_id, device_class in entities:
         wanted_statistics = DEVICE_CLASS_STATISTICS.get(device_class)
 
         if not wanted_statistics:
