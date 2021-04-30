@@ -9,7 +9,7 @@ set_zone_moisture_percent:
     percent:
       name: Percent
       description: Set the desired zone moisture percentage from 0 to 100.
-      required: True
+      required: true
       example: 50
       default: 50
       selector:
@@ -31,7 +31,7 @@ start_multiple_zone_schedule:
       name: Duration
       description: Number of minutes to run the zone(s). If only 1 duration is given, that time will be used for all zones. If given a list of durations, the durations will apply to the respective zones listed above.
       example: 15, 20
-      required: True
+      required: true
       selector:
         text:
 pause_watering:
