@@ -12,7 +12,6 @@ class SomfyFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
     """Config flow to handle Somfy OAuth2 authentication."""
 
     DOMAIN = DOMAIN
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @property
     def logger(self) -> logging.Logger:
