@@ -15,7 +15,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME, ATTR_TEMPERATURE
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
@@ -23,7 +23,6 @@ from .const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
-    ATTR_ON,
     ATTR_SOFTWARE_VERSION,
     DATA_ELGATO_CLIENT,
     DOMAIN,
@@ -53,7 +52,7 @@ class ElgatoLight(LightEntity):
         self,
         elgato: Elgato,
         info: Info,
-    ):
+    ) -> None:
         """Initialize Elgato Key Light."""
         self._info: Info = info
         self._state: State | None = None
@@ -110,23 +109,23 @@ class ElgatoLight(LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        await self.async_turn_on(on=False)
+        try:
+            await self.elgato.light(on=False)
+        except ElgatoError:
+            _LOGGER.error("An error occurred while updating the Elgato Key Light")
+            self._state = None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        data: dict[str, bool | int] = {ATTR_ON: True}
-
-        if ATTR_ON in kwargs:
-            data[ATTR_ON] = kwargs[ATTR_ON]
-
-        if ATTR_COLOR_TEMP in kwargs:
-            data[ATTR_TEMPERATURE] = kwargs[ATTR_COLOR_TEMP]
-
+        temperature = kwargs.get(ATTR_COLOR_TEMP)
+        brightness = None
         if ATTR_BRIGHTNESS in kwargs:
-            data[ATTR_BRIGHTNESS] = round((kwargs[ATTR_BRIGHTNESS] / 255) * 100)
+            brightness = round((kwargs[ATTR_BRIGHTNESS] / 255) * 100)
 
         try:
-            await self.elgato.light(**data)
+            await self.elgato.light(
+                on=True, brightness=brightness, temperature=temperature
+            )
         except ElgatoError:
             _LOGGER.error("An error occurred while updating the Elgato Key Light")
             self._state = None
@@ -135,7 +134,7 @@ class ElgatoLight(LightEntity):
         """Update Elgato entity."""
         restoring = self._state is None
         try:
-            self._state: State = await self.elgato.state()
+            self._state = await self.elgato.state()
             if restoring:
                 _LOGGER.info("Connection restored")
         except ElgatoError as err:
