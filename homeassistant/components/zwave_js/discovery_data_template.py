@@ -1,8 +1,9 @@
 """Data template classes for discovery used to generate device specific data for setup."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Iterable
+from typing import Any
 
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
@@ -22,7 +23,9 @@ class ZwaveValueID:
 class BaseDiscoverySchemaDataTemplate:
     """Base class for discovery schema data templates."""
 
-    def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
+    def resolve_data(
+        self, value: ZwaveValue  # pylint: disable=no-self-use
+    ) -> dict[str, Any]:
         """
         Resolve helper class data for a discovered value.
 
@@ -31,7 +34,9 @@ class BaseDiscoverySchemaDataTemplate:
         """
         return {}
 
-    def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
+    def values_to_watch(
+        self, resolved_data: dict[str, Any]  # pylint: disable=no-self-use
+    ) -> Iterable[ZwaveValue]:
         """
         Return list of all ZwaveValues resolved by helper that should be watched.
 
@@ -47,8 +52,9 @@ class BaseDiscoverySchemaDataTemplate:
         """
         return {val.value_id for val in self.values_to_watch(resolved_data) if val}
 
+    @staticmethod
     def _get_value_from_id(
-        self, node: ZwaveNode, value_id_obj: ZwaveValueID
+        node: ZwaveNode, value_id_obj: ZwaveValueID
     ) -> ZwaveValue | None:
         """Get a ZwaveValue from a node using a ZwaveValueDict."""
         value_id = get_value_id(
