@@ -46,7 +46,7 @@ pause_watering:
         text:
     duration:
       name: Duration
-      description: The number of minutes to pause running schedules. Accepts 1-60. Default is 60 minutes if not provided. 
+      description: The number of minutes to pause running schedules. Accepts 1-60. Default is 60 minutes if not provided.
       example: 60
       default: 60
       selector:
