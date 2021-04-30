@@ -941,6 +941,56 @@ async def test_setup_retrying_during_unload_before_started(hass):
     )
 
 
+async def test_create_entry_options(hass):
+    """Test a config entry being created with options."""
+
+    async def mock_async_setup(hass, config):
+        """Mock setup."""
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                "comp",
+                context={"source": config_entries.SOURCE_IMPORT},
+                data={"data": "data", "option": "option"},
+            )
+        )
+        return True
+
+    async_setup_entry = AsyncMock(return_value=True)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp", async_setup=mock_async_setup, async_setup_entry=async_setup_entry
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+    await async_setup_component(hass, "persistent_notification", {})
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_import(self, user_input):
+            """Test import step creating entry, with options."""
+            return self.async_create_entry(
+                title="title",
+                data={"example": user_input["data"]},
+                options={"example": user_input["option"]},
+            )
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        assert await async_setup_component(hass, "comp", {})
+
+        await hass.async_block_till_done()
+
+        assert len(async_setup_entry.mock_calls) == 1
+
+        entries = hass.config_entries.async_entries("comp")
+        assert len(entries) == 1
+        assert entries[0].data == {"example": "data"}
+        assert entries[0].options == {"example": "option"}
+
+
 async def test_entry_options(hass, manager):
     """Test that we can set options on an entry."""
     entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
