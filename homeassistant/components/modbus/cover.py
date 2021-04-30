@@ -108,7 +108,7 @@ class ModbusCover(CoverEntity, RestoreEntity):
         self._value = state.state
 
         async_track_time_interval(
-            self.hass, lambda arg: self._update(), self._scan_interval
+            self.hass, lambda arg: self.update(), self._scan_interval
         )
 
     @property
@@ -162,7 +162,7 @@ class ModbusCover(CoverEntity, RestoreEntity):
         else:
             self._write_register(self._state_open)
 
-        self._update()
+        self.update()
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
@@ -171,9 +171,9 @@ class ModbusCover(CoverEntity, RestoreEntity):
         else:
             self._write_register(self._state_closed)
 
-        self._update()
+        self.update()
 
-    def _update(self):
+    def update(self):
         """Update the state of the cover."""
         if self._coil is not None and self._status_register is None:
             self._value = self._read_coil()
