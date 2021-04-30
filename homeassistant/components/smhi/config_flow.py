@@ -21,8 +21,7 @@ def smhi_locations(hass: HomeAssistant):
     }
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class SmhiFlowHandler(config_entries.ConfigFlow):
+class SmhiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for SMHI component."""
 
     VERSION = 1

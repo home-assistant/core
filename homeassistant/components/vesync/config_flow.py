@@ -17,8 +17,7 @@ def configured_instances(hass):
     return hass.config_entries.async_entries(DOMAIN)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class VeSyncFlowHandler(config_entries.ConfigFlow):
+class VeSyncFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
