@@ -1,6 +1,4 @@
 """Support for AVM Fritz!Box smarthome temperature sensor only devices."""
-from typing import Callable
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -13,6 +11,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxEntity
 from .const import (
@@ -24,7 +23,7 @@ from .const import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Fritzbox smarthome sensor from ConfigEntry."""
     entities = []
