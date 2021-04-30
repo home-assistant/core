@@ -26,7 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.network import get_url
 
 from .const import (
     AUTH_CALLBACK_NAME,
@@ -65,18 +64,6 @@ def configured_servers(hass):
         entry.data[CONF_SERVER_IDENTIFIER]
         for entry in hass.config_entries.async_entries(DOMAIN)
     }
-
-
-@callback
-def redirect_uri() -> str:
-    """Return the redirect uri."""
-    if (req := http.current_request.get()) is None:
-        raise RuntimeError("No current request in context")
-
-    if (ha_host := req.headers.get(HEADER_FRONTEND_BASE)) is None:
-        raise RuntimeError("No header in request")
-
-    return ha_host
 
 
 async def async_discover(hass):
@@ -301,11 +288,10 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_plex_website_auth(self):
         """Begin external auth flow on Plex website."""
         self.hass.http.register_view(PlexAuthorizationCallbackView)
-        try:
-            hass_url = redirect_uri()
-        except RuntimeError as err:
-            _LOGGER.debug("%s: Falling back to get_url", err)
-            hass_url = get_url(self.hass)
+        if (req := http.current_request.get()) is None:
+            raise RuntimeError("No current request in context")
+        if (hass_url := req.headers.get(HEADER_FRONTEND_BASE)) is None:
+            raise RuntimeError("No header in request")
 
         headers = {"Origin": hass_url}
         payload = {
