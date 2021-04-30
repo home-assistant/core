@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import namedtuple
 from collections.abc import Sequence
+import logging
 
 from pysmartthings import Attribute, Capability
 
@@ -12,8 +13,10 @@ from homeassistant.const import (
     ATTR_DATE,
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     ENERGY_KILO_WATT_HOUR,
@@ -30,6 +33,8 @@ from homeassistant.const import (
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 Map = namedtuple("map", "attribute name default_unit device_class")
 
@@ -156,7 +161,18 @@ CAPABILITY_TO_SENSORS = {
     Capability.oven_setpoint: [
         Map(Attribute.oven_setpoint, "Oven Set Point", None, None)
     ],
-    Capability.power_consumption_report: [],
+    Capability.power_consumption_report: [
+        Map("start", "Start Time", None, DEVICE_CLASS_TIMESTAMP),
+        Map("end", "End Time", None, DEVICE_CLASS_TIMESTAMP),
+        Map("energy", "Total Energy", ENERGY_WATT_HOUR, DEVICE_CLASS_ENERGY),
+        Map("power", "Instantaneous Power", POWER_WATT, DEVICE_CLASS_POWER),
+        Map("deltaEnergy", "Load Energy", ENERGY_WATT_HOUR, DEVICE_CLASS_ENERGY),
+        Map("powerEnergy", "Power Watt-hours", ENERGY_WATT_HOUR, DEVICE_CLASS_ENERGY),
+        Map("energySaved", "Energy Saved", ENERGY_WATT_HOUR, DEVICE_CLASS_ENERGY),
+        Map(
+            "persistedEnergy", "Persisted Energy", ENERGY_WATT_HOUR, DEVICE_CLASS_ENERGY
+        ),
+    ],
     Capability.power_meter: [Map(Attribute.power, "Power Meter", POWER_WATT, None)],
     Capability.power_source: [Map(Attribute.power_source, "Power Source", None, None)],
     Capability.refrigeration_setpoint: [
@@ -282,40 +298,27 @@ UNITS = {
 
 THREE_AXIS_NAMES = ["X Coordinate", "Y Coordinate", "Z Coordinate"]
 
-POWER_CONSUMPTION_REPORT_NAMES = {
-    "start": "Start Time",
-    "end": "End Time",
-    "energy": "Total Energy",
-    "power": "Instantaneous Power",
-    "deltaEnergy": "Load Energy",
-    "powerEnergy": "Power Watt-hours",
-    "energySaved": "Energy Saved",
-    "persistedEnergy": "Persisted Energy",
-}
-
-POWER_CONSUMPTION_REPORT_UNITS = {
-    "start": "date",
-    "end": "date",
-    "energy": "Wh",
-    "power": "W",
-    "deltaEnergy": "Wh",
-    "powerEnergy": "Wh",
-    "energySaved": "Wh",
-    "persistedEnergy": "Wh",
-}
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add binary sensors for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     sensors = []
     for device in broker.devices.values():
+        _LOGGER.debug("Status: %s", device.status.attributes)
         for capability in broker.get_assigned(device.device_id, "sensor"):
             if capability == Capability.power_consumption_report:
+                maps = CAPABILITY_TO_SENSORS[capability]
                 sensors.extend(
                     [
-                        SmartThingsPowerConsumptionReportSensor(device, key)
-                        for key in POWER_CONSUMPTION_REPORT_NAMES
+                        SmartThingsPowerConsumptionReportSensor(
+                            device,
+                            Attribute.power_consumption,
+                            m.attribute,
+                            m.name,
+                            m.default_unit,
+                            m.device_class,
+                        )
+                        for m in maps
                     ]
                 )
             elif capability == Capability.three_axis:
@@ -413,36 +416,36 @@ class SmartThingsThreeAxisSensor(SmartThingsEntity, SensorEntity):
             return None
 
 
-class SmartThingsPowerConsumptionReportSensor(SmartThingsEntity):
+class SmartThingsPowerConsumptionReportSensor(SmartThingsSensor):
     """Define a SmartTHings Power Consumption Report."""
 
-    def __init__(self, device, key):
+    def __init__(
+        self,
+        device,
+        attribute: str,
+        sub_attribute: str,
+        name: str,
+        default_unit: str,
+        device_class: str,
+    ):
         """Init the class."""
-        super().__init__(device)
-        self._key = key
-
-    @property
-    def name(self) -> str:
-        """Return the name of the binary sensor."""
-        return "{} {}".format(
-            self._device.label, POWER_CONSUMPTION_REPORT_NAMES[self._key]
-        )
+        super().__init__(device, attribute, name, default_unit, device_class)
+        self._sub_attribute = sub_attribute
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "{}.{}".format(
-            self._device.device_id, POWER_CONSUMPTION_REPORT_NAMES[self._key]
-        )
+        return f"{self._device.device_id}.{self._attribute}.{self._sub_attribute}"
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        report = self._device.status.attributes[Attribute.power_consumption].value
-        return report.get(self._key)
+        powerConsumptionReport = self._device.status.attributes[self._attribute].value
+        if powerConsumptionReport is None:
+            return None
+        return powerConsumptionReport.get(self._sub_attribute)
 
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        unit = POWER_CONSUMPTION_REPORT_UNITS[self._key]
-        return UNITS.get(unit, unit)
+        return self._default_unit
