@@ -17,31 +17,31 @@ PLATFORMS = [ALARM_CONTROL_PANEL_DOMAIN]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up sia from a config entry."""
-    hub = SIAHub(hass, entry)
+    hub: SIAHub = SIAHub(hass, entry)
     await hub.async_setup_hub()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = hub
     try:
-        await hub.sia_client.start(reuse_port=True)
+        await hub.sia_client.start(reuse_port=True)  # type: ignore
     except OSError as exc:
         raise ConfigEntryNotReady(
             f"SIA Server at port {entry.data[CONF_PORT]} could not start."
         ) from exc
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

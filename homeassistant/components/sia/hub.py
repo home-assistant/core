@@ -1,5 +1,8 @@
 """The sia hub."""
+from __future__ import annotations
+
 import logging
+from typing import Any, Awaitable
 
 from pysiaalarm.aio import CommunicationsProtocol, SIAAccount, SIAClient, SIAEvent
 
@@ -32,14 +35,14 @@ class SIAHub:
         entry: ConfigEntry,
     ):
         """Create the SIAHub."""
-        self._hass = hass
-        self._entry = entry
-        self._port = int(entry.data[CONF_PORT])
-        self._title = entry.title
-        self._accounts = entry.data[CONF_ACCOUNTS]
-        self._protocol = entry.data[CONF_PROTOCOL]
-        self.sia_accounts = None
-        self.sia_client = None
+        self._hass: HomeAssistant = hass
+        self._entry: ConfigEntry = entry
+        self._port: int = int(entry.data[CONF_PORT])
+        self._title: str = entry.title
+        self._accounts: list[dict[str, Any]] = entry.data[CONF_ACCOUNTS]
+        self._protocol: str = entry.data[CONF_PROTOCOL]
+        self.sia_accounts: list[SIAAccount] = None
+        self.sia_client: SIAClient = None
 
     async def async_setup_hub(self):
         """Add a device to the device_registry, register shutdown listener, load reactions."""
@@ -74,9 +77,9 @@ class SIAHub:
 
     async def async_shutdown(self, _: Event = None):
         """Shutdown the SIA server."""
-        await self.sia_client.stop()
+        await self.sia_client.stop()  # type: ignore
 
-    async def async_create_and_fire_event(self, event: SIAEvent):
+    async def async_create_and_fire_event(self, event: SIAEvent) -> Awaitable[None]:
         """Create a event on HA's bus, with the data from the SIAEvent.
 
         The created event is handled by default for only a small subset for each platform (there are about 320 SIA Codes defined, only 22 of those are used in the alarm_control_panel), a user can choose to build other automation or even entities on the same event for SIA codes not handled by the built-in platforms.

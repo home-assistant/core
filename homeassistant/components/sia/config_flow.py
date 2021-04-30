@@ -1,4 +1,6 @@
 """Config flow for sia integration."""
+from __future__ import annotations
+
 import logging
 
 from pysiaalarm import (
@@ -12,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_PORT, CONF_PROTOCOL
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_ACCOUNT,
@@ -53,7 +56,7 @@ ACCOUNT_SCHEMA = vol.Schema(
 )
 
 
-def validate_input(data: dict):
+def validate_input(data: ConfigType):
     """Validate the input by the user."""
     SIAAccount.validate_account(data[CONF_ACCOUNT], data.get(CONF_ENCRYPTION_KEY))
 
@@ -72,11 +75,11 @@ def validate_input(data: dict):
 class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for sia."""
 
-    VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
-    data = None
+    VERSION: int = 1
+    CONNECTION_CLASS: str = config_entries.CONN_CLASS_LOCAL_PUSH
+    data: ConfigType = None
 
-    async def async_step_add_account(self, user_input: dict = None):
+    async def async_step_add_account(self, user_input: ConfigType = None):
         """Handle the additional accounts steps."""
         if user_input is None:
             return self.async_show_form(
@@ -84,7 +87,7 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=ACCOUNT_SCHEMA,
             )
 
-    async def async_step_user(self, user_input: dict = None):
+    async def async_step_user(self, user_input: ConfigType = None):
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=HUB_SCHEMA)
@@ -111,7 +114,7 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=HUB_SCHEMA, errors=errors
             )
         self.update_data(user_input)
-        if self._host_already_configured(self.data[CONF_PORT]):
+        if self.data and self._host_already_configured(self.data[CONF_PORT]):
             return self.async_abort(reason="already_configured")
 
         if user_input[CONF_ADDITIONAL_ACCOUNTS]:
@@ -121,7 +124,7 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data=self.data,
         )
 
-    def update_data(self, user_input):
+    def update_data(self, user_input: ConfigType) -> None:
         """Parse the user_input and store in data attribute. If there is a port in the input, assume it is fully new and overwrite."""
         if self.data and not user_input.get(CONF_PORT):
             add_data = user_input.copy()
@@ -142,7 +145,7 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ],
         }
 
-    def _host_already_configured(self, port):
+    def _host_already_configured(self, port: int):
         """See if we already have a SIA entry matching the port."""
         for entry in self._async_current_entries():
             if CONF_PORT not in entry.data:

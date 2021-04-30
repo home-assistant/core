@@ -1,8 +1,10 @@
 """Module for SIA Alarm Control Panels."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+from datetime import timedelta
 import logging
-from typing import Any, Callable, Mapping
+from typing import Any, Callable
 
 from pysiaalarm import SIAEvent
 
@@ -22,7 +24,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
@@ -70,7 +72,9 @@ CODE_CONSEQUENCES = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable[[], None]
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[..., None],
 ) -> bool:
     """Set up SIA alarm_control_panel(s) from a config entry."""
     async_add_entities(
@@ -104,23 +108,23 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         ping_interval: int,
     ):
         """Create SIAAlarmControlPanel object."""
-        self.entity_id = ENTITY_ID_FORMAT.format(entity_id)
-        self._unique_id = f"{entry.entry_id}_{account}_{zone}_{AlarmDomain}"
-        self._entry = entry
-        self._name = name
-        self._port = self._entry.data[CONF_PORT]
-        self._account = account
-        self._zone = zone
-        self._ping_interval_int = ping_interval
-        self._event_listener_str = SIA_EVENT.format(self._port, account)
-        self._attr = {CONF_ACCOUNT: account, CONF_ZONE: zone}
+        self._unique_id: str = f"{entry.entry_id}_{account}_{zone}_{AlarmDomain}"
+        self.entity_id: str = ENTITY_ID_FORMAT.format(entity_id)
+        self._entry: ConfigEntry = entry
+        self._name: str = name
+        self._port: str = self._entry.data[CONF_PORT]
+        self._account: str = account
+        self._zone: int = zone
+        self._ping_interval_int: int = ping_interval
+        self._event_listener_str: str = SIA_EVENT.format(self._port, account)
+        self._attr: Mapping[str, str] = {CONF_ACCOUNT: account, CONF_ZONE: zone}
 
-        self._is_available = True
+        self._is_available: bool = True
 
-        self._ping_interval = None
-        self._remove_unavailability_tracker = None
-        self._state = None
-        self._old_state = None
+        self._ping_interval: timedelta | None = None
+        self._remove_unavailability_tracker: CALLBACK_TYPE | None = None
+        self._state: StateType = None
+        self._old_state: StateType = None
 
     async def async_added_to_hass(self):
         """Once the panel is added, see if it was there before and pull in that state."""
@@ -217,7 +221,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         return self._is_available
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return device attributes."""
         return self._attr
 
@@ -234,14 +238,15 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         if not self.enabled:
             return
 
-        self._remove_unavailability_tracker = async_track_time_interval(
-            self.hass,
-            self.async_set_unavailable,
-            self._ping_interval + PING_INTERVAL_MARGIN,
-        )
-        if not self._is_available:
-            self._is_available = True
-            self.async_schedule_update_ha_state()
+        if isinstance(self._ping_interval, timedelta):
+            self._remove_unavailability_tracker = async_track_time_interval(
+                self.hass,
+                self.async_set_unavailable,
+                self._ping_interval + PING_INTERVAL_MARGIN,
+            )
+            if not self._is_available:
+                self._is_available = True
+                self.async_schedule_update_ha_state()
 
     @callback
     def async_set_unavailable(self, _) -> None:
@@ -254,10 +259,10 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        return None
+        return 0
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> Mapping[str, Any]:
         """Return the device_info."""
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
