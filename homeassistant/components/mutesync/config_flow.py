@@ -26,7 +26,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """
     session = hass.helpers.aiohttp_client.async_get_clientsession()
     try:
-        async with async_timeout.timeout(10):
+        async with async_timeout.timeout(5):
             token = await mutesync.authenticate(session, data["host"])
     except aiohttp.ClientResponseError as error:
         if error.status == 403:
