@@ -25,7 +25,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 
-from .conftest import base_config_test, base_test
+from .conftest import ReadResult, base_config_test, base_test, run_service_update
 
 
 @pytest.mark.parametrize(
@@ -220,3 +220,33 @@ async def test_register_state_switch(hass, regs, expected):
         scan_interval=5,
     )
     assert state == expected
+
+
+async def test_service_switch_update(hass, mock_pymodbus):
+    """Run test for service homeassistant.update_entity."""
+
+    entity_id = "switch.test"
+    config = {
+        CONF_SWITCHES: [
+            {
+                CONF_NAME: "test",
+                CONF_ADDRESS: 1234,
+                CONF_WRITE_TYPE: CALL_TYPE_COIL,
+                CONF_VERIFY: {},
+            }
+        ]
+    }
+    mock_pymodbus.read_coils.return_value = ReadResult([0x01])
+    await run_service_update(
+        hass,
+        config,
+        entity_id,
+    )
+    assert hass.states.get(entity_id).state == STATE_ON
+    mock_pymodbus.read_coils.return_value = ReadResult([0x00])
+    await run_service_update(
+        hass,
+        config,
+        entity_id,
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF

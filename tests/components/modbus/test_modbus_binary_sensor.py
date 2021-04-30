@@ -19,7 +19,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 
-from .conftest import base_config_test, base_test
+from .conftest import ReadResult, base_config_test, base_test, run_service_update
 
 
 @pytest.mark.parametrize("do_discovery", [False, True])
@@ -99,3 +99,32 @@ async def test_all_binary_sensor(hass, do_type, regs, expected):
         scan_interval=5,
     )
     assert state == expected
+
+
+async def test_service_binary_sensor_update(hass, mock_pymodbus):
+    """Run test for service homeassistant.update_entity."""
+
+    entity_id = "binary_sensor.test"
+    config = {
+        CONF_BINARY_SENSORS: [
+            {
+                CONF_NAME: "test",
+                CONF_ADDRESS: 1234,
+                CONF_INPUT_TYPE: CALL_TYPE_COIL,
+            }
+        ]
+    }
+    mock_pymodbus.read_coils.return_value = ReadResult([0x00])
+    await run_service_update(
+        hass,
+        config,
+        entity_id,
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+    mock_pymodbus.read_coils.return_value = ReadResult([0x01])
+    await run_service_update(
+        hass,
+        config,
+        entity_id,
+    )
+    assert hass.states.get(entity_id).state == STATE_ON
