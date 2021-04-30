@@ -28,8 +28,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class FritzBoxToolsFlowHandler(ConfigFlow):
+class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a FRITZ!Box Tools config flow."""
 
     VERSION = 1

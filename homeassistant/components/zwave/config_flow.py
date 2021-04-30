@@ -14,8 +14,7 @@ from .const import (
 )
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class ZwaveFlowHandler(config_entries.ConfigFlow):
+class ZwaveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Z-Wave config flow."""
 
     VERSION = 1

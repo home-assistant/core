@@ -16,8 +16,7 @@ def configured_servers(hass):
     }
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class EmulatedRokuFlowHandler(config_entries.ConfigFlow):
+class EmulatedRokuFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an emulated_roku config flow."""
 
     VERSION = 1

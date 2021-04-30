@@ -54,8 +54,7 @@ def register_flow_implementation(
     }
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class LogiCircleFlowHandler(config_entries.ConfigFlow):
+class LogiCircleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Logi Circle component."""
 
     VERSION = 1

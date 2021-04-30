@@ -5,8 +5,7 @@ from homeassistant import config_entries
 from .const import DOMAIN
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class AWSFlowHandler(config_entries.ConfigFlow):
+class AWSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1

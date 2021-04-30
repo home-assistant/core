@@ -16,8 +16,7 @@ def format_title(host: str) -> str:
     return f"Controller ({host})"
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class HeosFlowHandler(config_entries.ConfigFlow):
+class HeosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Define a flow for HEOS."""
 
     VERSION = 1
