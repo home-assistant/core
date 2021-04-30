@@ -40,8 +40,7 @@ def register_flow_implementation(hass, domain, client_id, client_secret):
     }
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class PointFlowHandler(config_entries.ConfigFlow):
+class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1

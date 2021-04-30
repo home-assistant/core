@@ -38,8 +38,7 @@ def register_flow_implementation(hass, client_id, client_secret):
     }
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class AmbiclimateFlowHandler(config_entries.ConfigFlow):
+class AmbiclimateFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1

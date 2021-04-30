@@ -65,7 +65,6 @@ class UnexpectedStateError(HomeAssistantError):
     """Raised when the config flow is invoked in a 'should not happen' case."""
 
 
-@config_entries.HANDLERS.register(DOMAIN)
 class NestFlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):

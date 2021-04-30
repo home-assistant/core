@@ -16,8 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 DOCS_URL = "https://www.home-assistant.io/integrations/life360"
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class Life360ConfigFlow(config_entries.ConfigFlow):
+class Life360ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Life360 integration config flow."""
 
     VERSION = 1
