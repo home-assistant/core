@@ -84,11 +84,6 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        if not discovery_info.get("name") or not discovery_info["name"].startswith(
-            "Brother"
-        ):
-            return self.async_abort(reason="not_brother_printer")
-
         # Hostname is format: brother.local.
         self.host = discovery_info["hostname"].rstrip(".")
 
