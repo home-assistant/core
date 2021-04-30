@@ -6,7 +6,7 @@ from collections.abc import Awaitable
 from datetime import datetime, timedelta
 import logging
 from time import monotonic
-from typing import Any, Callable, Generic, TypeVar
+from typing import Callable, Generic, TypeVar
 import urllib.error
 
 import aiohttp
@@ -24,8 +24,6 @@ REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 T = TypeVar("T")
-
-# mypy: disallow-any-generics
 
 
 class UpdateFailed(Exception):
@@ -294,10 +292,10 @@ class DataUpdateCoordinator(Generic[T]):
             self._unsub_refresh = None
 
 
-class CoordinatorEntity(entity.Entity):
+class CoordinatorEntity(Generic[T], entity.Entity):
     """A class for entities using DataUpdateCoordinator."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator[Any]) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator[T]) -> None:
         """Create the entity with a DataUpdateCoordinator."""
         self.coordinator = coordinator
 
