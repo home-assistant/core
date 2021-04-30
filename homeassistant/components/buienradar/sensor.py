@@ -36,8 +36,8 @@ from homeassistant.const import (
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_TIMEFRAME, DEFAULT_TIMEFRAME
@@ -187,7 +187,7 @@ SENSOR_TYPES = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Create the buienradar sensor."""
     config = entry.data
@@ -212,11 +212,11 @@ async def async_setup_entry(
         timeframe,
     )
 
-    dev = []
-    for sensor_type in SENSOR_TYPES:
-        dev.append(
-            BrSensor(sensor_type, config.get(CONF_NAME, "Buienradar"), coordinates)
-        )
+    dev = [
+        BrSensor(sensor_type, config.get(CONF_NAME, "Buienradar"), coordinates)
+        for sensor_type in SENSOR_TYPES
+    ]
+
     async_add_entities(dev)
 
     data = BrData(hass, coordinates, timeframe, dev)
@@ -369,7 +369,7 @@ class BrSensor(SensorEntity):
             self._state = nested.get(self.type[len(PRECIPITATION_FORECAST) + 1 :])
             return True
 
-        if self.type == WINDSPEED or self.type == WINDGUST:
+        if self.type in [WINDSPEED, WINDGUST]:
             # hass wants windspeeds in km/h not m/s, so convert:
             self._state = data.get(self.type)
             if self._state is not None:
@@ -454,6 +454,6 @@ class BrSensor(SensorEntity):
         return self._force_update
 
     @property
-    def entity_registry_enabled_default(self):
+    def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return False

@@ -11,6 +11,7 @@ from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
@@ -26,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up buienradar radar-loop camera component."""
     config = entry.data
@@ -51,7 +52,9 @@ class BuienradarCam(Camera):
     [0]: https://www.buienradar.nl/overbuienradar/gratis-weerdata
     """
 
-    def __init__(self, latitude, longitude, delta: float, country: str):
+    def __init__(
+        self, latitude: float, longitude: float, delta: float, country: str
+    ) -> None:
         """
         Initialize the component.
 
@@ -186,6 +189,6 @@ class BuienradarCam(Camera):
         return self._unique_id
 
     @property
-    def entity_registry_enabled_default(self):
+    def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return False

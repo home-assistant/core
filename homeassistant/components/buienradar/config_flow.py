@@ -1,11 +1,17 @@
 """Config flow for buienradar integration."""
+from __future__ import annotations
+
+from collections.abc import Iterable
 import logging
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -23,9 +29,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def configured_instances(hass):
+def configured_instances(hass: HomeAssistant) -> Iterable[str]:
     """Return a set of configured buienradar instances."""
-    entries = []
+    entries: list[str] = []
     for entry in hass.config_entries.async_entries(DOMAIN):
         entries.append(
             f"{entry.data.get(CONF_LATITUDE)}-{entry.data.get(CONF_LONGITUDE)}"
@@ -40,11 +46,15 @@ class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> BuienradarOptionFlowHandler:
         """Get the options flow for this handler."""
         return BuienradarOptionFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -73,7 +83,7 @@ class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_input=None):
+    async def async_step_import(self, import_input: dict[str, Any]) -> FlowResult:
         """Import a config entry."""
         latitude = import_input[CONF_LATITUDE]
         longitude = import_input[CONF_LONGITUDE]
@@ -89,11 +99,13 @@ class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class BuienradarOptionFlowHandler(config_entries.OptionsFlow):
     """Handle options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
