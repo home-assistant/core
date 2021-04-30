@@ -89,3 +89,17 @@ class DynamicCurrentTempClimateDataTemplate(BaseDiscoverySchemaDataTemplate):
             *resolved_data["lookup_table"].values(),
             resolved_data["dependent_value"],
         ]
+
+    @staticmethod
+    def current_temperature_value(resolved_data: dict[str, Any]) -> ZwaveValue | None:
+        """Get current temperature ZwaveValue from resolved data."""
+        lookup_table: dict[str | int, ZwaveValue | None] = resolved_data["lookup_table"]
+        dependent_value: ZwaveValue | None = resolved_data["dependent_value"]
+
+        if dependent_value:
+            lookup_key = dependent_value.metadata.states[
+                str(dependent_value.value)
+            ].split("-")[0]
+            return lookup_table.get(lookup_key)
+
+        return None

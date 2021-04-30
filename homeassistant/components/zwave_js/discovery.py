@@ -33,6 +33,8 @@ class ZwaveDiscoveryInfo:
     platform: str
     # hint for the platform about this discovered entity
     platform_hint: str | None = ""
+    # data template to use in platform logic
+    platform_data_template: BaseDiscoverySchemaDataTemplate | None = None
     # helper data to use in platform setup
     platform_data: dict[str, Any] | None = None
     # additional values that need to be watched by entity
@@ -598,6 +600,7 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
                 assumed_state=schema.assumed_state,
                 platform=schema.platform,
                 platform_hint=schema.hint,
+                platform_data_template=schema.data_template,
                 platform_data=resolved_data,
                 additional_value_ids_to_watch=additional_value_ids_to_watch,
             )
