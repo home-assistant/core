@@ -14,8 +14,10 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
+    CONF_ENTITY_NAMESPACE,
     CONF_MODE,
     CONF_NAME,
+    CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STARTED,
     TIME_MINUTES,
 )
@@ -79,7 +81,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 }
             ),
         ),
-    }
+        # Remove options to exclude from import
+        vol.Remove(CONF_ENTITY_NAMESPACE): cv.string,
+        vol.Remove(CONF_SCAN_INTERVAL): cv.time_period,
+    },
+    extra=vol.REMOVE_EXTRA,
 )
 
 
