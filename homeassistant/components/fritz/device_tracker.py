@@ -15,7 +15,6 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
@@ -107,16 +106,18 @@ def _async_add_entities(router, async_add_entities, data_fritz):
         async_add_entities(new_tracked)
 
 
-class FritzBoxTracker(ScannerEntity):
+class FritzBoxTracker(FritzBoxHostEntity, ScannerEntity):
     """This class queries a FRITZ!Box router."""
 
-    def __init__(self, router: FritzBoxTools, device):
+    def __init__(self, fritzbox_tools: FritzBoxTools, device):
         """Initialize a FRITZ!Box device."""
-        self._router = router
+        self._fritzbox_tools = fritzbox_tools
         self._mac = device.mac_address
+        self._model = "FRITZ!Box Tracked device"
         self._name = device.hostname or DEFAULT_DEVICE_NAME
         self._active = False
         self._attrs = {}
+        super().__init__()
 
     @property
     def is_connected(self):
@@ -136,7 +137,7 @@ class FritzBoxTracker(ScannerEntity):
     @property
     def ip_address(self) -> str:
         """Return the primary ip address of the device."""
-        return self._router.devices[self._mac].ip_address
+        return self._fritzbox_tools.devices[self._mac].ip_address
 
     @property
     def mac_address(self) -> str:
@@ -146,23 +147,12 @@ class FritzBoxTracker(ScannerEntity):
     @property
     def hostname(self) -> str:
         """Return hostname of the device."""
-        return self._router.devices[self._mac].hostname
+        return self._fritzbox_tools.devices[self._mac].hostname
 
     @property
     def source_type(self) -> str:
         """Return tracker source type."""
         return SOURCE_TYPE_ROUTER
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "AVM",
-            "model": "FRITZ!Box Tracked device",
-        }
 
     @property
     def should_poll(self) -> bool:
@@ -179,7 +169,7 @@ class FritzBoxTracker(ScannerEntity):
     @callback
     def async_process_update(self) -> None:
         """Update device."""
-        device = self._router.devices[self._mac]
+        device = self._fritzbox_tools.devices[self._mac]
         self._active = device.is_connected
 
         if device.last_activity:
@@ -199,7 +189,7 @@ class FritzBoxTracker(ScannerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                self._router.signal_device_update,
+                self._fritzbox_tools.signal_device_update,
                 self.async_on_demand_update,
             )
         )

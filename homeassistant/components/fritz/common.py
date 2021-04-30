@@ -12,6 +12,7 @@ from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
 
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
@@ -49,8 +50,9 @@ class FritzBoxTools:
     ):
         """Initialize FritzboxTools class."""
         self._cancel_scan = None
-        self._device_info = None
         self._devices: dict[str, Any] = {}
+        self._model = None
+        self._sw_version = None
         self._unique_id = None
         self.connection = None
         self.fritzhosts = None
@@ -76,12 +78,12 @@ class FritzBoxTools:
         )
 
         self.fritzstatus = FritzStatus(fc=self.connection)
+        info = self.connection.call_action("DeviceInfo:1", "GetInfo")
         if self._unique_id is None:
-            self._unique_id = self.connection.call_action("DeviceInfo:1", "GetInfo")[
-                "NewSerialNumber"
-            ]
+            self._unique_id = info["NewSerialNumber"]
 
-        self._device_info = self._fetch_device_info()
+        self._model = info.get("NewModelName")
+        self._sw_version = info.get("NewSoftwareVersion")
 
     async def async_start(self):
         """Start FritzHosts connection."""
@@ -105,11 +107,6 @@ class FritzBoxTools:
     def unique_id(self):
         """Return unique id."""
         return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return device info."""
-        return self._device_info
 
     @property
     def devices(self) -> dict[str, Any]:
@@ -162,26 +159,6 @@ class FritzBoxTools:
         async_dispatcher_send(self.hass, self.signal_device_update)
         if new_device:
             async_dispatcher_send(self.hass, self.signal_device_new)
-
-    def _fetch_device_info(self):
-        """Fetch device info."""
-        info = self.connection.call_action("DeviceInfo:1", "GetInfo")
-
-        dev_info = {}
-        dev_info["identifiers"] = {
-            # Serial numbers are unique identifiers within a specific domain
-            (DOMAIN, self.unique_id)
-        }
-        dev_info["manufacturer"] = "AVM"
-
-        if dev_name := info.get("NewName"):
-            dev_info["name"] = dev_name
-        if dev_model := info.get("NewModelName"):
-            dev_info["model"] = dev_model
-        if dev_sw_ver := info.get("NewSoftwareVersion"):
-            dev_info["sw_version"] = dev_sw_ver
-
-        return dev_info
 
 
 class FritzData:
@@ -241,3 +218,25 @@ class FritzDevice:
     def last_activity(self):
         """Return device last activity."""
         return self._last_activity
+
+
+class FritzBoxHostEntity:
+    """Fritz host entity base class."""
+
+    def __init__(self):
+        """Init device info class."""
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        """Return the device information."""
+        dev_info = {}
+        dev_info["connections"] = {(CONNECTION_NETWORK_MAC, self.mac_address)}
+        dev_info["identifiers"] = {(DOMAIN, self.unique_id)}
+        dev_info["manufacturer"] = "AVM"
+        dev_info["name"] = self._name
+        if self.mac_address.replace(":", "") != self._fritzbox_tools.unique_id:
+            # Exclude model and via_device for router itself
+            dev_info["model"] = self._model
+            dev_info["via_device"] = (DOMAIN, self._fritzbox_tools.unique_id)
+
+        return dev_info

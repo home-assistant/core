@@ -170,7 +170,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._password = user_input[CONF_PASSWORD]
 
         if not (error := await self.fritz_tools_init()):
-            self._name = self.fritz_tools.device_info["model"]
+            self._name = self.fritz_tools._model
 
             if await self.async_check_configured_entry():
                 error = "already_configured"
