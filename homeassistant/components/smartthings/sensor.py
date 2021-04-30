@@ -3,14 +3,12 @@ from __future__ import annotations
 
 from collections import namedtuple
 from collections.abc import Sequence
-import logging
 
 from pysmartthings import Attribute, Capability
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     AREA_SQUARE_METERS,
-    ATTR_DATE,
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
@@ -33,8 +31,6 @@ from homeassistant.const import (
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 Map = namedtuple("map", "attribute name default_unit device_class")
 
@@ -288,13 +284,7 @@ CAPABILITY_TO_SENSORS = {
     ],
 }
 
-UNITS = {
-    "C": TEMP_CELSIUS,
-    "date": ATTR_DATE,
-    "F": TEMP_FAHRENHEIT,
-    "W": POWER_WATT,
-    "Wh": ENERGY_WATT_HOUR,
-}
+UNITS = {"C": TEMP_CELSIUS, "F": TEMP_FAHRENHEIT}
 
 THREE_AXIS_NAMES = ["X Coordinate", "Y Coordinate", "Z Coordinate"]
 
@@ -304,7 +294,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     sensors = []
     for device in broker.devices.values():
-        _LOGGER.debug("Status: %s", device.status.attributes)
         for capability in broker.get_assigned(device.device_id, "sensor"):
             if capability == Capability.power_consumption_report:
                 maps = CAPABILITY_TO_SENSORS[capability]
