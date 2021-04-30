@@ -2350,7 +2350,7 @@ wolf_smartset==0.1.8
 xbee-helper==0.0.7
 
 # homeassistant.components.xbox
-xbox-webapi==2.0.8
+xbox-webapi==2.0.11
 
 # homeassistant.components.xbox_live
 xboxapi==2.0.1

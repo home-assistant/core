@@ -1244,7 +1244,7 @@ wled==0.4.4
 wolf_smartset==0.1.8
 
 # homeassistant.components.xbox
-xbox-webapi==2.0.8
+xbox-webapi==2.0.11
 
 # homeassistant.components.knx
 xknx==0.18.1
