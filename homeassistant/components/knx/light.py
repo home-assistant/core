@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any, Callable
+from typing import Any, Callable, cast
 
 from xknx.devices import Light as XknxLight
 
@@ -156,29 +156,16 @@ class KNXLight(KnxEntity, LightEntity):
     @property
     def supported_color_modes(self) -> set | None:
         """Flag supported color modes."""
-        modes = set()
-        if self._device.supports_rgbw:
-            modes.add(COLOR_MODE_RGBW)
-        if self._device.supports_color:
-            modes.add(COLOR_MODE_RGB)
-        if (
-            self._device.supports_color_temperature
-            or self._device.supports_tunable_white
-        ):
-            modes.add(COLOR_MODE_COLOR_TEMP)
-        if self._device.supports_brightness and not modes:
-            # Must be the only supported mode
-            modes.add(COLOR_MODE_BRIGHTNESS)
-        if not modes:
-            # Must be the only supported mode
-            modes.add(COLOR_MODE_ONOFF)
-        return modes
+        return {self.color_mode}
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         # ignore arguments if not supported to fall back to set_on()
         brightness = (
-            kwargs.get(ATTR_BRIGHTNESS) if self._device.supports_brightness else None
+            kwargs.get(ATTR_BRIGHTNESS)
+            if self._device.supports_brightness
+            or self.color_mode in (COLOR_MODE_RGB, COLOR_MODE_RGBW)
+            else None
         )
         mireds = (
             kwargs.get(ATTR_COLOR_TEMP)
@@ -201,11 +188,27 @@ class KNXLight(KnxEntity, LightEntity):
             return
 
         # return after RGB(W) color has changed as it implicitly sets the brightness
+        async def set_color(
+            rgb: tuple[int, int, int], white: int | None, brightness: int | None
+        ) -> None:
+            """Set color of light. Normalize colors for brightness when not writable."""
+            if brightness:
+                if self._device.brightness.writable:
+                    await self._device.set_color(rgb, white)
+                    await self._device.set_brightness(brightness)
+                    return
+                rgb = cast(
+                    tuple[int, int, int],
+                    tuple(color * brightness // 255 for color in rgb),
+                )
+                white = white * brightness // 255 if white is not None else None
+            await self._device.set_color(rgb, white)
+
         if rgbw is not None:
-            await self._device.set_color(rgbw[:3], rgbw[3])
+            await set_color(rgbw[:3], rgbw[3], brightness)
             return
         if rgb is not None:
-            await self._device.set_color(rgb, None)
+            await set_color(rgb, None, brightness)
             return
 
         if mireds is not None:
