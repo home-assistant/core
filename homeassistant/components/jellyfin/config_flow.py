@@ -13,8 +13,9 @@ from jellyfin_apiclient_python.connection_manager import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import CLIENT_VERSION, DOMAIN, USER_AGENT, USER_APP_NAME
@@ -45,7 +46,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             try:
@@ -67,7 +68,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 async def validate_input(
-    hass: core.HomeAssistant, user_input: dict[str, Any]
+    hass: HomeAssistant, user_input: dict[str, Any]
 ) -> JellyfinClient:
     """Validate that the provided url and credentials can be used to connect."""
     jellyfin = Jellyfin()

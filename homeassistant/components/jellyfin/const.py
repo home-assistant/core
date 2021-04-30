@@ -1,36 +1,38 @@
 """Constants for the Jellyfin integration."""
 
-DOMAIN = "jellyfin"
+from typing import Final
 
-CLIENT_VERSION = "1.0"
+DOMAIN: Final = "jellyfin"
 
-COLLECTION_TYPE_MOVIES = "movies"
-COLLECTION_TYPE_TVSHOWS = "tvshows"
-COLLECTION_TYPE_MUSIC = "music"
+CLIENT_VERSION: Final = "1.0"
 
-DATA_CLIENT = "client"
+COLLECTION_TYPE_MOVIES: Final = "movies"
+COLLECTION_TYPE_TVSHOWS: Final = "tvshows"
+COLLECTION_TYPE_MUSIC: Final = "music"
 
-ITEM_KEY_COLLECTION_TYPE = "CollectionType"
-ITEM_KEY_ID = "Id"
-ITEM_KEY_IMAGE_TAGS = "ImageTags"
-ITEM_KEY_INDEX_NUMBER = "IndexNumber"
-ITEM_KEY_MEDIA_SOURCES = "MediaSources"
-ITEM_KEY_MEDIA_TYPE = "MediaType"
-ITEM_KEY_NAME = "Name"
+DATA_CLIENT: Final = "client"
 
-ITEM_TYPE_ALBUM = "MusicAlbum"
-ITEM_TYPE_ARTIST = "MusicArtist"
-ITEM_TYPE_AUDIO = "Audio"
-ITEM_TYPE_LIBRARY = "CollectionFolder"
+ITEM_KEY_COLLECTION_TYPE: Final = "CollectionType"
+ITEM_KEY_ID: Final = "Id"
+ITEM_KEY_IMAGE_TAGS: Final = "ImageTags"
+ITEM_KEY_INDEX_NUMBER: Final = "IndexNumber"
+ITEM_KEY_MEDIA_SOURCES: Final = "MediaSources"
+ITEM_KEY_MEDIA_TYPE: Final = "MediaType"
+ITEM_KEY_NAME: Final = "Name"
 
-MAX_STREAMING_BITRATE = "140000000"
+ITEM_TYPE_ALBUM: Final = "MusicAlbum"
+ITEM_TYPE_ARTIST: Final = "MusicArtist"
+ITEM_TYPE_AUDIO: Final = "Audio"
+ITEM_TYPE_LIBRARY: Final = "CollectionFolder"
 
-MEDIA_SOURCE_KEY_PATH = "Path"
+MAX_STREAMING_BITRATE: Final = "140000000"
 
-MEDIA_TYPE_AUDIO = "Audio"
-MEDIA_TYPE_NONE = ""
+MEDIA_SOURCE_KEY_PATH: Final = "Path"
 
-SUPPORTED_COLLECTION_TYPES = [COLLECTION_TYPE_MUSIC]
+MEDIA_TYPE_AUDIO: Final = "Audio"
+MEDIA_TYPE_NONE: Final = ""
 
-USER_APP_NAME = "Home Assistant"
-USER_AGENT = f"Home-Assistant/{CLIENT_VERSION}"
+SUPPORTED_COLLECTION_TYPES: Final = [COLLECTION_TYPE_MUSIC]
+
+USER_APP_NAME: Final = "Home Assistant"
+USER_AGENT: Final = f"Home-Assistant/{CLIENT_VERSION}"

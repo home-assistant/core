@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import mimetypes
 from typing import Any
+import urllib.parse
 
 from jellyfin_apiclient_python.api import jellyfin_url
 from jellyfin_apiclient_python.client import JellyfinClient
@@ -54,7 +55,7 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     data = hass.data[DOMAIN][entry.entry_id]
-    client = data[DATA_CLIENT]
+    client: JellyfinClient = data[DATA_CLIENT]
 
     return JellyfinSource(hass, client)
 
@@ -278,17 +279,17 @@ class JellyfinSource(MediaSource):
 
     def _get_thumbnail_url(self, media_item: dict[str, Any]) -> str | None:
         """Return the URL for the primary image of a media item if available."""
-        item_id = media_item[ITEM_KEY_ID]
         image_tags = media_item[ITEM_KEY_IMAGE_TAGS]
+
+        if "Primary" not in image_tags:
+            return None
+
+        item_id = media_item[ITEM_KEY_ID]
         api_key = self.client.config.data["auth.token"]
+        tag = image_tags["Primary"]
+        params = urllib.parse.urlencode({"Tag": tag, "api_key": api_key})
 
-        if "Primary" in image_tags:
-            tag = image_tags["Primary"]
-            return (
-                f"{self.url}Items/{item_id}/Images/Primary?Tag={tag}&api_key={api_key}"
-            )
-
-        return None
+        return f"{self.url}Items/{item_id}/Images/Primary?{params}"
 
     def _get_stream_url(self, media_item: dict[str, Any]) -> str:
         """Return the stream URL for a media item."""
@@ -306,7 +307,16 @@ class JellyfinSource(MediaSource):
         device_id = self.client.config.data["app.device_id"]
         api_key = self.client.config.data["auth.token"]
 
-        return f"{self.url}Audio/{item_id}/universal?UserId={user_id}&DeviceId={device_id}&api_key={api_key}&MaxStreamingBitrate={MAX_STREAMING_BITRATE}"
+        params = urllib.parse.urlencode(
+            {
+                "UserId": user_id,
+                "DeviceId": device_id,
+                "api_key": api_key,
+                "MaxStreamingBitrate": MAX_STREAMING_BITRATE,
+            }
+        )
+
+        return f"{self.url}Audio/{item_id}/universal?{params}"
 
 
 def _media_mime_type(media_item: dict[str, Any]) -> str:
