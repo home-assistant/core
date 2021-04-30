@@ -42,8 +42,10 @@ CONF_SWAP_WORD = "word"
 CONF_SWAP_WORD_BYTE = "word_byte"
 CONF_SWITCH = "switch"
 CONF_TARGET_TEMP = "target_temp_register"
+CONF_VERIFY = "verify"
 CONF_VERIFY_REGISTER = "verify_register"
 CONF_VERIFY_STATE = "verify_state"
+CONF_WRITE_TYPE = "write_type"
 
 # service call attributes
 ATTR_ADDRESS = "address"
