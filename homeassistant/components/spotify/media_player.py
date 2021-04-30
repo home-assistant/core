@@ -5,7 +5,7 @@ from asyncio import run_coroutine_threadsafe
 import datetime as dt
 from datetime import timedelta
 import logging
-from typing import Any, Callable
+from typing import Any
 
 import requests
 from spotipy import Spotify, SpotifyException
@@ -54,7 +54,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp
 
 from .const import (
@@ -188,7 +188,7 @@ class UnknownMediaType(BrowseError):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Spotify based on a config entry."""
     spotify = SpotifyMediaPlayer(

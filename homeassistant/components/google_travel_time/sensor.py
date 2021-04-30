@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-from typing import Callable
 
 from googlemaps import Client
 from googlemaps.distance_matrix import distance_matrix
@@ -23,6 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -102,7 +102,7 @@ def convert_time_to_utc(timestr):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list[SensorEntity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Google travel time sensor entry."""
     if not config_entry.options:

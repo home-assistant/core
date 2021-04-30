@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from itertools import chain
-from typing import Callable
 
 from gogogate2_api.common import AbstractDoor, get_configured_doors
 
@@ -14,7 +13,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import (
     DeviceDataUpdateCoordinator,
@@ -29,7 +28,7 @@ SENSOR_ID_WIRED = "WIRE"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool | None], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the config entry."""
     data_update_coordinator = get_data_update_coordinator(hass, config_entry)

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Coroutine
 from datetime import datetime
-from typing import Callable
 
 from regenmaschine.controller import Controller
 from regenmaschine.errors import RequestError
@@ -14,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import RainMachineEntity, async_update_programs_and_zones
@@ -110,7 +110,7 @@ SWITCH_TYPE_ZONE = "zone"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up RainMachine switches based on a config entry."""
     platform = entity_platform.current_platform.get()
