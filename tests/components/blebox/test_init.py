@@ -5,7 +5,7 @@ import logging
 import blebox_uniapi
 
 from homeassistant.components.blebox.const import DOMAIN
-from homeassistant.config_entries import EntryState
+from homeassistant.config_entries import ConfigEntryState
 
 from .conftest import mock_config, patch_product_identify
 
@@ -23,7 +23,7 @@ async def test_setup_failure(hass, caplog):
     await hass.async_block_till_done()
 
     assert "Identify failed at 172.100.123.4:80 ()" in caplog.text
-    assert entry.state is EntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_failure_on_connection(hass, caplog):
@@ -39,7 +39,7 @@ async def test_setup_failure_on_connection(hass, caplog):
     await hass.async_block_till_done()
 
     assert "Identify failed at 172.100.123.4:80 ()" in caplog.text
-    assert entry.state is EntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_config_entry(hass):
@@ -57,4 +57,4 @@ async def test_unload_config_entry(hass):
     await hass.async_block_till_done()
     assert not hass.data.get(DOMAIN)
 
-    assert entry.state is EntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED

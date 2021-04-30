@@ -6,7 +6,7 @@ from unittest.mock import patch
 from pymazda import MazdaAuthenticationException, MazdaException
 
 from homeassistant.components.mazda.const import DOMAIN
-from homeassistant.config_entries import EntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_EMAIL,
     CONF_PASSWORD,
@@ -39,7 +39,7 @@ async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state is EntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_init_auth_failure(hass: HomeAssistant):
@@ -56,7 +56,7 @@ async def test_init_auth_failure(hass: HomeAssistant):
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].state is EntryState.SETUP_ERROR
+    assert entries[0].state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -88,7 +88,7 @@ async def test_update_auth_failure(hass: HomeAssistant):
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].state is EntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
 
     with patch(
         "homeassistant.components.mazda.MazdaAPI.get_vehicles",
@@ -127,7 +127,7 @@ async def test_update_general_failure(hass: HomeAssistant):
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].state is EntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
 
     with patch(
         "homeassistant.components.mazda.MazdaAPI.get_vehicles",
@@ -148,11 +148,11 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].state is EntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(entries[0].entry_id)
     await hass.async_block_till_done()
-    assert entries[0].state is EntryState.NOT_LOADED
+    assert entries[0].state is ConfigEntryState.NOT_LOADED
 
 
 async def test_device_nickname(hass):

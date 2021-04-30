@@ -8,7 +8,7 @@ from requests.exceptions import HTTPError
 
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import EntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -90,14 +90,14 @@ async def test_unload_remove(hass: HomeAssistant, fritz: Mock):
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state is EntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     state = hass.states.get(entity_id)
     assert state
 
     await hass.config_entries.async_unload(entry.entry_id)
 
     assert fritz().logout.call_count == 1
-    assert entry.state is EntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNAVAILABLE
 
@@ -105,7 +105,7 @@ async def test_unload_remove(hass: HomeAssistant, fritz: Mock):
     await hass.async_block_till_done()
 
     assert fritz().logout.call_count == 1
-    assert entry.state is EntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     state = hass.states.get(entity_id)
     assert state is None
 
@@ -128,4 +128,4 @@ async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant):
 
     entries = hass.config_entries.async_entries()
     config_entry = entries[0]
-    assert config_entry.state is EntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR

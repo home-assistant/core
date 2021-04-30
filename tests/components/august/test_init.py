@@ -9,7 +9,7 @@ from yalexs.exceptions import AugustApiAIOHTTPError
 from homeassistant import setup
 from homeassistant.components.august.const import DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
-from homeassistant.config_entries import EntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_LOCK,
@@ -49,7 +49,7 @@ async def test_august_is_offline(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state is EntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unlock_throws_august_api_http_error(hass):
@@ -155,7 +155,7 @@ async def test_auth_fails(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state is EntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
 
@@ -183,7 +183,7 @@ async def test_bad_password(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state is EntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
 
@@ -209,7 +209,7 @@ async def test_http_failure(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state is EntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
     assert hass.config_entries.flow.async_progress() == []
 
@@ -233,7 +233,7 @@ async def test_unknown_auth_state(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state is EntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
 
@@ -261,7 +261,7 @@ async def test_requires_validation_state(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state is EntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     assert len(hass.config_entries.flow.async_progress()) == 1
     assert hass.config_entries.flow.async_progress()[0]["context"]["source"] == "reauth"
@@ -286,7 +286,7 @@ async def test_unknown_auth_http_401(hass):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state is EntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
 
@@ -302,7 +302,7 @@ async def test_load_unload(hass):
         hass, [august_operative_lock, august_inoperative_lock]
     )
 
-    assert config_entry.state is EntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()

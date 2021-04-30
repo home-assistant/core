@@ -60,7 +60,7 @@ async def test_setup_platform(hass, dsmr_connection_fixture):
 
     entry = conf_entries[0]
 
-    assert entry.state == config_entries.EntryState.LOADED
+    assert entry.state == config_entries.ConfigEntryState.LOADED
     assert entry.data == {**entry_data, **serial_data}
 
 
@@ -626,4 +626,4 @@ async def test_reconnect(hass, dsmr_connection_fixture):
 
     await hass.config_entries.async_unload(mock_entry.entry_id)
 
-    assert mock_entry.state == config_entries.EntryState.NOT_LOADED
+    assert mock_entry.state == config_entries.ConfigEntryState.NOT_LOADED

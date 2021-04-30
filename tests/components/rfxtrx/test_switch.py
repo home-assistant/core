@@ -169,4 +169,4 @@ async def test_unknown_event_code(hass, rfxtrx):
     assert len(conf_entries) == 1
 
     entry = conf_entries[0]
-    assert entry.state == config_entries.EntryState.LOADED
+    assert entry.state == config_entries.ConfigEntryState.LOADED

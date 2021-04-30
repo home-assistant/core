@@ -85,7 +85,7 @@ async def test_setup_component(hass):
     mock_impl.assert_called_once()
     mock_webhook.assert_called_once()
 
-    assert config_entry.state is config_entries.EntryState.LOADED
+    assert config_entry.state is config_entries.ConfigEntryState.LOADED
     assert hass.config_entries.async_entries(DOMAIN)
     assert len(hass.states.async_all()) > 0
 

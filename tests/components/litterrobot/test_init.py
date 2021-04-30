@@ -10,7 +10,7 @@ from homeassistant.components.vacuum import (
     SERVICE_START,
     STATE_DOCKED,
 )
-from homeassistant.config_entries import EntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 
 from .common import CONFIG, VACUUM_ENTITY_ID
@@ -43,8 +43,8 @@ async def test_unload_entry(hass, mock_account):
 @pytest.mark.parametrize(
     "side_effect,expected_state",
     (
-        (LitterRobotLoginException, EntryState.SETUP_ERROR),
-        (LitterRobotException, EntryState.SETUP_RETRY),
+        (LitterRobotLoginException, ConfigEntryState.SETUP_ERROR),
+        (LitterRobotException, ConfigEntryState.SETUP_RETRY),
     ),
 )
 async def test_entry_not_setup(hass, side_effect, expected_state):

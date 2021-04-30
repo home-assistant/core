@@ -5,7 +5,7 @@ from aiohttp import ClientConnectorError, ClientResponseError
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.kmtronic.const import CONF_REVERSE, DOMAIN
-from homeassistant.config_entries import EntryState
+from homeassistant.config_entries import ConfigEntryState
 
 from tests.common import MockConfigEntry
 
@@ -65,7 +65,7 @@ async def test_form_options(hass, aioclient_mock):
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is EntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -80,7 +80,7 @@ async def test_form_options(hass, aioclient_mock):
 
     await hass.async_block_till_done()
 
-    assert config_entry.state == config_entries.EntryState.LOADED
+    assert config_entry.state == config_entries.ConfigEntryState.LOADED
 
 
 async def test_form_invalid_auth(hass):

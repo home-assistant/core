@@ -3,7 +3,7 @@ import json
 from unittest.mock import patch
 
 from homeassistant.components.gios.const import DOMAIN
-from homeassistant.config_entries import EntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 
 from . import STATIONS
@@ -37,7 +37,7 @@ async def test_config_not_ready(hass):
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state is EntryState.SETUP_RETRY
+        assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry(hass):
@@ -45,12 +45,12 @@ async def test_unload_entry(hass):
     entry = await init_integration(hass)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state is EntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state is EntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
 
 

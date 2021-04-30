@@ -66,7 +66,7 @@ PATH_CONFIG = ".config_entries.json"
 SAVE_DELAY = 1
 
 
-class EntryState(Enum):
+class ConfigEntryState(Enum):
     """Config entry state."""
 
     LOADED = "loaded", True
@@ -84,12 +84,12 @@ class EntryState(Enum):
 
     _recoverable: bool
 
-    def __new__(cls: type[object], value: str, recoverable: bool) -> EntryState:
-        """Create new EntryState."""
+    def __new__(cls: type[object], value: str, recoverable: bool) -> ConfigEntryState:
+        """Create new ConfigEntryState."""
         obj = object.__new__(cls)
         obj._value_ = value
         obj._recoverable = recoverable
-        return cast("EntryState", obj)
+        return cast("ConfigEntryState", obj)
 
     def __eq__(self, other: Any) -> bool:
         """
@@ -101,7 +101,7 @@ class EntryState(Enum):
             _, integration, path = get_integration_frame()
             msg = (
                 "Config entry state is compared to a str in %s, this is deprecated. "
-                "Compare using `is` to an EntryState instead"
+                "Compare using `is` to an ConfigEntryState instead"
             )
             params = [integration]
             if path == "custom_components/":
@@ -195,7 +195,7 @@ class ConfigEntry:
         options: Mapping[str, Any] | None = None,
         unique_id: str | None = None,
         entry_id: str | None = None,
-        state: EntryState = EntryState.NOT_LOADED,
+        state: ConfigEntryState = ConfigEntryState.NOT_LOADED,
         disabled_by: str | None = None,
     ) -> None:
         """Initialize a config entry."""
@@ -276,7 +276,7 @@ class ConfigEntry:
                 err,
             )
             if self.domain == integration.domain:
-                self.state = EntryState.SETUP_ERROR
+                self.state = ConfigEntryState.SETUP_ERROR
                 self.reason = "Import error"
             return
 
@@ -290,13 +290,13 @@ class ConfigEntry:
                     self.domain,
                     err,
                 )
-                self.state = EntryState.SETUP_ERROR
+                self.state = ConfigEntryState.SETUP_ERROR
                 self.reason = "Import error"
                 return
 
             # Perform migration
             if not await self.async_migrate(hass):
-                self.state = EntryState.MIGRATION_ERROR
+                self.state = ConfigEntryState.MIGRATION_ERROR
                 self.reason = None
                 return
 
@@ -327,7 +327,7 @@ class ConfigEntry:
             self.async_start_reauth(hass)
             result = False
         except ConfigEntryNotReady as ex:
-            self.state = EntryState.SETUP_RETRY
+            self.state = ConfigEntryState.SETUP_RETRY
             self.reason = str(ex) or None
             wait_time = 2 ** min(tries, 4) * 5
             tries += 1
@@ -376,10 +376,10 @@ class ConfigEntry:
             return
 
         if result:
-            self.state = EntryState.LOADED
+            self.state = ConfigEntryState.LOADED
             self.reason = None
         else:
-            self.state = EntryState.SETUP_ERROR
+            self.state = ConfigEntryState.SETUP_ERROR
             self.reason = error_reason
 
     async def async_shutdown(self) -> None:
@@ -401,7 +401,7 @@ class ConfigEntry:
         Returns if unload is possible and was successful.
         """
         if self.source == SOURCE_IGNORE:
-            self.state = EntryState.NOT_LOADED
+            self.state = ConfigEntryState.NOT_LOADED
             self.reason = None
             return True
 
@@ -413,7 +413,7 @@ class ConfigEntry:
                 # that was uninstalled, or an integration
                 # that has been renamed without removing the config
                 # entry.
-                self.state = EntryState.NOT_LOADED
+                self.state = ConfigEntryState.NOT_LOADED
                 self.reason = None
                 return True
 
@@ -423,10 +423,10 @@ class ConfigEntry:
             if not self.state.recoverable:
                 return False
 
-            if self.state is not EntryState.LOADED:
+            if self.state is not ConfigEntryState.LOADED:
                 self.async_cancel_retry_setup()
 
-                self.state = EntryState.NOT_LOADED
+                self.state = ConfigEntryState.NOT_LOADED
                 self.reason = None
                 return True
 
@@ -434,7 +434,7 @@ class ConfigEntry:
 
         if not supports_unload:
             if integration.domain == self.domain:
-                self.state = EntryState.FAILED_UNLOAD
+                self.state = ConfigEntryState.FAILED_UNLOAD
                 self.reason = "Unload not supported"
             return False
 
@@ -445,7 +445,7 @@ class ConfigEntry:
 
             # Only adjust state if we unloaded the component
             if result and integration.domain == self.domain:
-                self.state = EntryState.NOT_LOADED
+                self.state = ConfigEntryState.NOT_LOADED
                 self.reason = None
 
             self._async_process_on_unload()
@@ -456,7 +456,7 @@ class ConfigEntry:
                 "Error unloading entry %s for %s", self.title, integration.domain
             )
             if integration.domain == self.domain:
-                self.state = EntryState.FAILED_UNLOAD
+                self.state = ConfigEntryState.FAILED_UNLOAD
                 self.reason = "Unknown error"
             return False
 
@@ -807,7 +807,7 @@ class ConfigEntries:
             raise UnknownEntry
 
         if not entry.state.recoverable:
-            unload_success = entry.state is not EntryState.FAILED_UNLOAD
+            unload_success = entry.state is not ConfigEntryState.FAILED_UNLOAD
         else:
             unload_success = await self.async_unload(entry_id)
 
@@ -891,7 +891,7 @@ class ConfigEntries:
         if entry is None:
             raise UnknownEntry
 
-        if entry.state is not EntryState.NOT_LOADED:
+        if entry.state is not ConfigEntryState.NOT_LOADED:
             raise OperationNotAllowed
 
         # Setup Component if not set up yet
@@ -906,7 +906,7 @@ class ConfigEntries:
             if not result:
                 return result
 
-        return entry.state is EntryState.LOADED  # type: ignore[comparison-overlap] # mypy bug?
+        return entry.state is ConfigEntryState.LOADED  # type: ignore[comparison-overlap] # mypy bug?
 
     async def async_unload(self, entry_id: str) -> bool:
         """Unload a config entry."""
@@ -1151,7 +1151,8 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                     if (
                         changed
                         and reload_on_update
-                        and entry.state in (EntryState.LOADED, EntryState.SETUP_RETRY)
+                        and entry.state
+                        in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY)
                     ):
                         self.hass.async_create_task(
                             self.hass.config_entries.async_reload(entry.entry_id)

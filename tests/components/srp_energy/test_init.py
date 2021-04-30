@@ -8,7 +8,7 @@ from tests.components.srp_energy import init_integration
 async def test_setup_entry(hass):
     """Test setup entry fails if deCONZ is not available."""
     config_entry = await init_integration(hass)
-    assert config_entry.state == config_entries.EntryState.LOADED
+    assert config_entry.state == config_entries.ConfigEntryState.LOADED
     assert hass.data[srp_energy.SRP_ENERGY_DOMAIN]
 
 

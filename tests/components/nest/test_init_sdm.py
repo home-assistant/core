@@ -11,7 +11,7 @@ from unittest.mock import patch
 from google_nest_sdm.exceptions import AuthException, GoogleNestException
 
 from homeassistant.components.nest import DOMAIN
-from homeassistant.config_entries import EntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.setup import async_setup_component
 
 from .common import CONFIG, async_setup_sdm_platform, create_config_entry
@@ -27,7 +27,7 @@ async def test_setup_success(hass, caplog):
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].state is EntryState.LOADED
+    assert entries[0].state is ConfigEntryState.LOADED
 
 
 async def async_setup_sdm(hass, config=CONFIG):
@@ -49,7 +49,7 @@ async def test_setup_configuration_failure(hass, caplog):
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].state is EntryState.SETUP_ERROR
+    assert entries[0].state is ConfigEntryState.SETUP_ERROR
 
     # This error comes from the python google-nest-sdm library, as a check added
     # to prevent common misconfigurations (e.g. confusing topic and subscriber)
@@ -68,7 +68,7 @@ async def test_setup_susbcriber_failure(hass, caplog):
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].state is EntryState.SETUP_RETRY
+    assert entries[0].state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_device_manager_failure(hass, caplog):
@@ -84,7 +84,7 @@ async def test_setup_device_manager_failure(hass, caplog):
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].state is EntryState.SETUP_RETRY
+    assert entries[0].state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_subscriber_auth_failure(hass, caplog):
@@ -98,7 +98,7 @@ async def test_subscriber_auth_failure(hass, caplog):
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].state is EntryState.SETUP_ERROR
+    assert entries[0].state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -116,7 +116,7 @@ async def test_setup_missing_subscriber_id(hass, caplog):
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].state is EntryState.NOT_LOADED
+    assert entries[0].state is ConfigEntryState.NOT_LOADED
 
 
 async def test_empty_config(hass, caplog):
