@@ -56,7 +56,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.dynalite.*",
     "homeassistant.components.eafm.*",
     "homeassistant.components.edl21.*",
-    "homeassistant.components.elgato.*",
     "homeassistant.components.elkm1.*",
     "homeassistant.components.emonitor.*",
     "homeassistant.components.enphase_envoy.*",
