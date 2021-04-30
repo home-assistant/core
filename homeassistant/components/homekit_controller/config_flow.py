@@ -83,8 +83,7 @@ def ensure_pin_format(pin):
     return "-".join(match.groups())
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class HomekitControllerFlowHandler(config_entries.ConfigFlow):
+class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a HomeKit config flow."""
 
     VERSION = 1
