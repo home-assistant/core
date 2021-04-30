@@ -23,7 +23,6 @@ class ZwaveValueID:
 class BaseDiscoverySchemaDataTemplate:
     """Base class for discovery schema data templates."""
 
-    # pylint: disable=no-self-use
     def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
         """
         Resolve helper class data for a discovered value.
@@ -31,15 +30,16 @@ class BaseDiscoverySchemaDataTemplate:
         Can optionally be implemented by subclasses if input data needs to be
         transformed once discovered Value is available.
         """
+        # pylint: disable=no-self-use
         return {}
 
-    # pylint: disable=no-self-use
     def values_to_watch(self, resolved_data: dict[str, Any]) -> Iterable[ZwaveValue]:
         """
         Return list of all ZwaveValues resolved by helper that should be watched.
 
         Should be implemented by subclasses only if there are values to watch.
         """
+        # pylint: disable=no-self-use
         return []
 
     def value_ids_to_watch(self, resolved_data: dict[str, Any]) -> set[str]:
