@@ -326,7 +326,7 @@ class WazeTravelTimeData:
                         if excl_filter.lower() not in k.lower()
                     }
 
-                if len(routes) > 0:
+                if routes:
                     route = list(routes)[0]
                 else:
                     _LOGGER.warning("No routes found")
