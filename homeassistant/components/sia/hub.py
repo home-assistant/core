@@ -3,6 +3,7 @@ import logging
 
 from pysiaalarm.aio import CommunicationsProtocol, SIAAccount, SIAClient, SIAEvent
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, CONF_PROTOCOL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, EventOrigin, HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -26,16 +27,17 @@ class SIAHub:
     """Class for SIA Hubs."""
 
     def __init__(
-        self, hass: HomeAssistant, hub_config: dict, entry_id: str, title: str
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
     ):
         """Create the SIAHub."""
         self._hass = hass
-        self._port = int(hub_config[CONF_PORT])
-        self.entry_id = entry_id
-        self._title = title
-        self._accounts = hub_config[CONF_ACCOUNTS]
-        self._protocol = hub_config[CONF_PROTOCOL]
-        self._remove_shutdown_listener = None
+        self._entry = entry
+        self._port = int(entry.data[CONF_PORT])
+        self._title = entry.title
+        self._accounts = entry.data[CONF_ACCOUNTS]
+        self._protocol = entry.data[CONF_PROTOCOL]
         self.sia_accounts = None
         self.sia_client = None
 
@@ -62,18 +64,16 @@ class SIAHub:
         for acc in self._accounts:
             account = acc[CONF_ACCOUNT]
             device_registry.async_get_or_create(
-                config_entry_id=self.entry_id,
+                config_entry_id=self._entry.entry_id,
                 identifiers={(DOMAIN, self._port, account)},
                 name=f"{self._port} - {account}",
             )
-        self._remove_shutdown_listener = self._hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, self.async_shutdown
+        self._entry.async_on_unload(
+            self._hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.async_shutdown)
         )
 
     async def async_shutdown(self, _: Event = None):
         """Shutdown the SIA server."""
-        if self._remove_shutdown_listener:
-            self._remove_shutdown_listener()
         await self.sia_client.stop()
 
     async def async_create_and_fire_event(self, event: SIAEvent):
@@ -89,7 +89,7 @@ class SIAHub:
             self._port,
         )
         self._hass.bus.async_fire(
-            event_type=f"{SIA_EVENT}_{self._port}_{event.account}",
+            event_type=SIA_EVENT.format(self._port, event.account),
             event_data=event.to_dict(encode_json=True),
             origin=EventOrigin.remote,
         )

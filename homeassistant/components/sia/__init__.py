@@ -17,7 +17,7 @@ PLATFORMS = [ALARM_CONTROL_PANEL_DOMAIN]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up sia from a config entry."""
-    hub = SIAHub(hass, entry.data, entry.entry_id, entry.title)
+    hub = SIAHub(hass, entry)
     await hub.async_setup_hub()
 
     hass.data.setdefault(DOMAIN, {})

@@ -11,7 +11,7 @@ CONF_IGNORE_TIMESTAMPS = "ignore_timestamps"
 
 DOMAIN = "sia"
 TITLE = "SIA Alarm on port {}"
-SIA_EVENT = "sia_event"
+SIA_EVENT = "sia_event_{}_{}"
 HUB_SENSOR_NAME = "last_heartbeat"
 HUB_ZONE = 0
 PING_INTERVAL_MARGIN = timedelta(seconds=30)

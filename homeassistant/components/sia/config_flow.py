@@ -111,8 +111,8 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=HUB_SCHEMA, errors=errors
             )
         self.update_data(user_input)
-        await self.async_set_unique_id(str(self.data[CONF_PORT]))
-        self._abort_if_unique_id_configured()
+        if self._host_already_configured(self.data[CONF_PORT]):
+            return self.async_abort(reason="already_configured")
 
         if user_input[CONF_ADDITIONAL_ACCOUNTS]:
             return await self.async_step_add_account()
@@ -141,6 +141,16 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ],
         }
+
+    def _host_already_configured(self, port):
+        """See if we already have a SIA entry matching the port."""
+        for entry in self._async_current_entries():
+            if CONF_PORT not in entry.data:
+                continue
+
+            if entry.data[CONF_PORT] == port:
+                return True
+        return False
 
 
 class InvalidPing(exceptions.HomeAssistantError):
