@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_WEBHOOK_ID,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -307,7 +307,9 @@ class MinutPointEntity(Entity):
         """Return a device description for device registry."""
         device = self.device.device
         return {
-            "connections": {("mac", device["device_mac"])},
+            "connections": {
+                (device_registry.CONNECTION_NETWORK_MAC, device["device_mac"])
+            },
             "identifieres": device["device_id"],
             "manufacturer": "Minut",
             "model": f"Point v{device['hardware_version']}",
