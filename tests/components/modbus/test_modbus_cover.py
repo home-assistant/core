@@ -10,8 +10,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
+    STATE_CLOSED,
     STATE_OPEN,
-    STATE_OPENING,
 )
 
 from .conftest import base_config_test, base_test
@@ -52,23 +52,23 @@ async def test_config_cover(hass, do_options, read_type):
     [
         (
             [0x00],
-            STATE_OPENING,
+            STATE_CLOSED,
         ),
         (
             [0x80],
-            STATE_OPENING,
+            STATE_CLOSED,
         ),
         (
             [0xFE],
-            STATE_OPENING,
+            STATE_CLOSED,
         ),
         (
             [0xFF],
-            STATE_OPENING,
+            STATE_OPEN,
         ),
         (
             [0x01],
-            STATE_OPENING,
+            STATE_OPEN,
         ),
     ],
 )
@@ -99,7 +99,7 @@ async def test_coil_cover(hass, regs, expected):
     [
         (
             [0x00],
-            STATE_OPEN,
+            STATE_CLOSED,
         ),
         (
             [0x80],
