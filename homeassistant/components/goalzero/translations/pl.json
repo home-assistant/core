@@ -14,7 +14,7 @@
                     "host": "Nazwa hosta lub adres IP",
                     "name": "Nazwa"
                 },
-                "description": "Najpierw musisz pobra\u0107 aplikacj\u0119 Goal Zero: https://www.goalzero.com/product-features/yeti-app/\n\nPost\u0119puj zgodnie z instrukcjami, aby pod\u0142\u0105czy\u0107 Yeti do sieci Wi-Fi. Nast\u0119pnie uzyskaj adres IP hosta z routera. W ustawieniach routera nale\u017cy skonfigurowa\u0107 DHCP, aby upewni\u0107 si\u0119, \u017ce adres IP hosta nie ulegnie zmianie. Post\u0119puj wg instrukcji obs\u0142ugi routera.",
+                "description": "Najpierw musisz pobra\u0107 aplikacj\u0119 Goal Zero: https://www.goalzero.com/product-features/yeti-app/\n\nPost\u0119puj zgodnie z instrukcjami, aby pod\u0142\u0105czy\u0107 Yeti do sieci Wi-Fi. W ustawieniach routera nale\u017cy skonfigurowa\u0107 rezerwacj\u0119 adres\u00f3w DHCP, aby upewni\u0107 si\u0119, \u017ce adres IP hosta nie ulegnie zmianie. Post\u0119puj wg instrukcji obs\u0142ugi routera.",
                 "title": "Goal Zero Yeti"
             }
         }
