@@ -84,11 +84,16 @@ class KNXLight(KnxEntity, LightEntity):
         """Return the brightness of this light between 0..255."""
         if self._device.supports_brightness:
             return self._device.current_brightness
+        if (rgb := self.rgb_color) is not None:
+            return max(rgb)
         return None
 
     @property
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the rgb color value [int, int, int]."""
+        if (rgbw := self.rgbw_color) is not None:
+            # used in brightness calculation when no address is given
+            return color_util.color_rgbw_to_rgb(*rgbw)
         if self._device.supports_color:
             rgb, _ = self._device.current_color
             return rgb
