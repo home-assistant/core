@@ -66,7 +66,10 @@ async def test_user_invalid_host(hass):
 
 async def test_user_very_long_host(hass):
     """Test that errors are shown when the host is longer than 253 chars."""
-    long_host = "very_long_host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_host"
+    long_host = "very_long_host_very_long_host_very_long_host_very_long_host_very_long\
+        _host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_ho\
+        st_very_long_host_very_long_host_very_long_host_very_long_host_very_long_host_\
+        very_long_host_very_long_host"
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: long_host}
     )
