@@ -3,6 +3,7 @@
 # to enable strict mypy checks.
 
 homeassistant.components
+homeassistant.components.airly.*
 homeassistant.components.automation.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bond.*

@@ -1,14 +1,19 @@
 """The Airly integration."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 from math import ceil
 
+from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 from airly import Airly
 from airly.exceptions import AirlyError
 import async_timeout
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -30,7 +35,7 @@ PLATFORMS = ["air_quality", "sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
-def set_update_interval(instances, requests_remaining):
+def set_update_interval(instances: int, requests_remaining: int) -> timedelta:
     """
     Return data update interval.
 
@@ -58,17 +63,17 @@ def set_update_interval(instances, requests_remaining):
     return interval
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Airly as config entry."""
-    api_key = config_entry.data[CONF_API_KEY]
-    latitude = config_entry.data[CONF_LATITUDE]
-    longitude = config_entry.data[CONF_LONGITUDE]
-    use_nearest = config_entry.data.get(CONF_USE_NEAREST, False)
+    api_key = entry.data[CONF_API_KEY]
+    latitude = entry.data[CONF_LATITUDE]
+    longitude = entry.data[CONF_LONGITUDE]
+    use_nearest = entry.data.get(CONF_USE_NEAREST, False)
 
     # For backwards compat, set unique ID
-    if config_entry.unique_id is None:
+    if entry.unique_id is None:
         hass.config_entries.async_update_entry(
-            config_entry, unique_id=f"{latitude}-{longitude}"
+            entry, unique_id=f"{latitude}-{longitude}"
         )
 
     websession = async_get_clientsession(hass)
@@ -81,21 +86,19 @@ async def async_setup_entry(hass, config_entry):
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
@@ -105,13 +108,13 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(
         self,
-        hass,
-        session,
-        api_key,
-        latitude,
-        longitude,
-        update_interval,
-        use_nearest,
+        hass: HomeAssistant,
+        session: ClientSession,
+        api_key: str,
+        latitude: float,
+        longitude: float,
+        update_interval: timedelta,
+        use_nearest: bool,
     ):
         """Initialize."""
         self.latitude = latitude
@@ -121,7 +124,7 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, str | float | int]:
         """Update data via library."""
         data = {}
         if self.use_nearest:
