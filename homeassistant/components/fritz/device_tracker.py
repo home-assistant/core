@@ -19,7 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .common import FritzBoxTools
+from .common import FritzBoxHostEntity, FritzBoxTools
 from .const import DATA_FRITZ, DEFAULT_DEVICE_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
