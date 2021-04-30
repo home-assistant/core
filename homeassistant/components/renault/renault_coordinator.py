@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Awaitable
 from datetime import timedelta
 import logging
-from typing import Callable, cast
+from typing import Callable
 
 from renault_api.kamereon.exceptions import (
     AccessDeniedException,
@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 
-class RenaultDataUpdateCoordinator(DataUpdateCoordinator):
+class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
     """Handle vehicle communication with Renault servers."""
 
     def __init__(
@@ -43,12 +43,12 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator):
         self.access_denied = False
         self.not_supported = False
 
-    async def _async_update_data(self) -> T | None:
+    async def _async_update_data(self) -> T:
         """Fetch the latest data from the source."""
         if self.update_method is None:
             raise NotImplementedError("Update method not implemented")
         try:
-            return cast(T, await self.update_method())
+            return await self.update_method()
         except AccessDeniedException as err:
             # Disable because the account is not allowed to access this Renault endpoint.
             self.update_interval = None
