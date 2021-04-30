@@ -4,6 +4,7 @@ import ssl
 from unittest.mock import patch
 
 import plexapi.exceptions
+import pytest
 import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
@@ -745,3 +746,43 @@ async def test_trigger_reauth(
     assert entry.data[CONF_SERVER_IDENTIFIER] == mock_plex_server.machine_identifier
     assert entry.data[PLEX_SERVER_CONFIG][CONF_URL] == PLEX_DIRECT_URL
     assert entry.data[PLEX_SERVER_CONFIG][CONF_TOKEN] == "BRAND_NEW_TOKEN"
+
+
+async def test_client_request_missing(hass):
+    """Test when client headers are not set properly."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    with patch("plexauth.PlexAuth.initiate_auth"), patch(
+        "plexauth.PlexAuth.token", return_value=None
+    ):
+        with pytest.raises(RuntimeError):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={}
+            )
+
+
+async def test_client_header_issues(hass, current_request_with_host):
+    """Test when client headers are not set properly."""
+
+    class MockRequest:
+        headers = {}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    with patch("plexauth.PlexAuth.initiate_auth"), patch(
+        "plexauth.PlexAuth.token", return_value=None
+    ), patch(
+        "homeassistant.components.http.current_request.get", return_value=MockRequest()
+    ):
+        with pytest.raises(RuntimeError):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={}
+            )
