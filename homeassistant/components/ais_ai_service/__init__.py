@@ -18,6 +18,7 @@ import voluptuous as vol
 from homeassistant import core
 from homeassistant.components import ais_cloud, ais_drives_service, conversation
 import homeassistant.components.ais_dom.ais_global as ais_global
+from homeassistant.components.blueprint import BlueprintInputs
 from homeassistant.components.conversation.default_agent import (
     DefaultAgent,
     async_register,
@@ -64,6 +65,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 
+from ..automation import AutomationConfig
 from .ais_agent import AisAgent
 
 aisCloudWS = None
@@ -3981,9 +3983,25 @@ async def _async_process(hass, text, calling_client_id=None, hot_word_on=False):
             # get aliases
             all_commands = []
             for auto_config in ais_global.G_AUTOMATION_CONFIG:
-                auto_name = auto_config.get("alias", "").lower().strip()
-                if "description" in auto_config and auto_name == value.lower().strip():
-                    all_commands = auto_config.get("description", "").split(";")
+                if isinstance(auto_config, AutomationConfig):
+                    auto_name = auto_config.get("alias", "").lower().strip()
+                    if (
+                        "description" in auto_config
+                        and auto_name == value.lower().strip()
+                    ):
+                        all_commands = auto_config.get("description", "").split(";")
+                if isinstance(auto_config, BlueprintInputs):
+                    blueprint_inputs = auto_config
+                    raw_blueprint_inputs = blueprint_inputs.config_with_inputs
+                    auto_name = raw_blueprint_inputs.get("alias", "").lower().strip()
+                    if (
+                        "description" in raw_blueprint_inputs
+                        and auto_name == value.lower().strip()
+                    ):
+                        all_commands = raw_blueprint_inputs.get(
+                            "description", ""
+                        ).split(";")
+
                 all_commands = [
                     each_string.strip().lower() for each_string in all_commands
                 ]

@@ -22,7 +22,7 @@ CLOUD_APP_URL = "https://powiedz.co/ords/f?p=100:1&x01=TOKEN:"
 def check_url(url_address):
     # check the 301 redirection
     try:
-        r = requests.head(url_address, allow_redirects=True, timeout=1)
+        r = requests.head(url_address, allow_redirects=True, timeout=2)
         return r.url
     except:
         return url_address
@@ -442,7 +442,7 @@ class AisCloudWS:
             self.url_gh + "ais_add_device",
             json=payload,
             headers=self.cloud_ws_header,
-            timeout=5,
+            timeout=10,
         )
         return ws_resp
 
@@ -455,7 +455,7 @@ class AisCloudWS:
             self.url_gh + "ais_add_token",
             json=payload,
             headers=self.cloud_ws_header,
-            timeout=5,
+            timeout=10,
         )
         return ws_resp
 
@@ -465,7 +465,7 @@ class AisCloudWS:
             self.url_gh + "ais_remove_integration",
             json=payload,
             headers=self.cloud_ws_header,
-            timeout=5,
+            timeout=10,
         )
         return ws_resp
 
@@ -477,7 +477,7 @@ class AisCloudWS:
             "broadcast": False,
             "converse": True,
         }
-        with async_timeout.timeout(5):
+        with async_timeout.timeout(10):
             ws_resp = await web_session.post(
                 self.url_gh + "ask_json", json=payload, headers=self.cloud_ws_header
             )
@@ -486,14 +486,14 @@ class AisCloudWS:
     def ask(self, question, org_answer):
         payload = {"question": question, "org_answer": org_answer}
         ws_resp = requests.get(
-            self.url + "ask", headers=self.cloud_ws_header, params=payload, timeout=5
+            self.url + "ask", headers=self.cloud_ws_header, params=payload, timeout=10
         )
         return ws_resp
 
     def audio_type(self, nature):
         try:
             rest_url = self.url + "audio_type?nature=" + nature
-            ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=5)
+            ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=10)
             return ws_resp
         except:
             _LOGGER.error("Can't connect to AIS WS!!! " + rest_url)
@@ -523,14 +523,14 @@ class AisCloudWS:
             "type": a_type,
         }
         ws_resp = requests.post(
-            rest_url, json=payload, headers=self.cloud_ws_header, timeout=5
+            rest_url, json=payload, headers=self.cloud_ws_header, timeout=10
         )
         return ws_resp
 
     def audio(self, item, a_type, text_input):
         rest_url = self.url + "audio?item=" + item + "&type="
         rest_url += a_type + "&text_input=" + text_input
-        ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=5)
+        ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=10)
         return ws_resp
 
     def audio(self, item, a_type, text_input):
@@ -542,7 +542,7 @@ class AisCloudWS:
         }
         try:
             ws_resp = requests.post(
-                rest_url, json=payload, headers=self.cloud_ws_header, timeout=5
+                rest_url, json=payload, headers=self.cloud_ws_header, timeout=10
             )
             return ws_resp
         except Exception as e:
@@ -551,7 +551,7 @@ class AisCloudWS:
     def key(self, service):
         rest_url = self.url + "key?service=" + service
         try:
-            ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=5)
+            ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=10)
             # store in cache file
             json_resp = ws_resp.json()
             with open(self.cache_key_path + "." + service + ".json", "w") as outfile:
@@ -577,7 +577,7 @@ class AisCloudWS:
         web_session = aiohttp_client.async_get_clientsession(self.hass)
         rest_url = self.url + "add_ais_media"
         try:
-            with async_timeout.timeout(5):
+            with async_timeout.timeout(10):
                 payload = {
                     "media_category": media_category,
                     "name": name,
@@ -587,7 +587,7 @@ class AisCloudWS:
                     "share": share,
                     "gate_id": ais_global.get_sercure_android_id_dom(),
                 }
-                with async_timeout.timeout(5):
+                with async_timeout.timeout(10):
                     ws_resp = await web_session.post(
                         rest_url, json=payload, headers=self.cloud_ws_header
                     )
@@ -605,7 +605,7 @@ class AisCloudWS:
                 "gate_id": ais_global.get_sercure_android_id_dom(),
             }
             ws_resp = requests.delete(
-                rest_url, json=payload, headers=self.cloud_ws_header, timeout=5
+                rest_url, json=payload, headers=self.cloud_ws_header, timeout=10
             )
             json_resp = ws_resp.json()
             return json_resp
@@ -616,13 +616,13 @@ class AisCloudWS:
         web_session = aiohttp_client.async_get_clientsession(self.hass)
         rest_url = self.url + "add_ais_media"
         try:
-            with async_timeout.timeout(5):
+            with async_timeout.timeout(10):
                 payload = {
                     "media_category": media_category,
                     "name": name,
                     "gate_id": ais_global.get_sercure_android_id_dom(),
                 }
-                with async_timeout.timeout(5):
+                with async_timeout.timeout(10):
                     ws_resp = await web_session.delete(
                         rest_url, json=payload, headers=self.cloud_ws_header
                     )
@@ -635,9 +635,9 @@ class AisCloudWS:
         web_session = aiohttp_client.async_get_clientsession(self.hass)
         rest_url = self.url + "check_ais_media"
         try:
-            with async_timeout.timeout(5):
+            with async_timeout.timeout(10):
                 payload = {"name": name, "source": source, "current_url": current_url}
-                with async_timeout.timeout(5):
+                with async_timeout.timeout(10):
                     ws_resp = await web_session.post(
                         rest_url, json=payload, headers=self.cloud_ws_header
                     )
@@ -650,9 +650,9 @@ class AisCloudWS:
         web_session = aiohttp_client.async_get_clientsession(self.hass)
         rest_url = self.url + "confirm_ais_media"
         try:
-            with async_timeout.timeout(5):
+            with async_timeout.timeout(10):
                 payload = {"name": name, "source": source, "current_url": current_url}
-                with async_timeout.timeout(5):
+                with async_timeout.timeout(10):
                     ws_resp = await web_session.post(
                         rest_url, json=payload, headers=self.cloud_ws_header
                     )
@@ -665,13 +665,13 @@ class AisCloudWS:
         web_session = aiohttp_client.async_get_clientsession(self.hass)
         rest_url = self.url + "report_ais_problem"
         try:
-            with async_timeout.timeout(5):
+            with async_timeout.timeout(10):
                 payload = {
                     "problem_type": problem_type,
                     "problem_desc": problem_desc,
                     "problem_data": problem_data,
                 }
-                with async_timeout.timeout(5):
+                with async_timeout.timeout(10):
                     ws_resp = await web_session.post(
                         rest_url, json=payload, headers=self.cloud_ws_header
                     )
@@ -752,12 +752,12 @@ class AisCloudWS:
 
     def delete_key(self, service):
         rest_url = self.url + "key?service=" + service
-        ws_resp = requests.delete(rest_url, headers=self.cloud_ws_header, timeout=5)
+        ws_resp = requests.delete(rest_url, headers=self.cloud_ws_header, timeout=10)
         return ws_resp
 
     def get_backup_info(self):
         rest_url = self.url + "backup_info"
-        ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=5)
+        ws_resp = requests.get(rest_url, headers=self.cloud_ws_header, timeout=10)
         return ws_resp
 
     def post_backup(self, file, backup_type):
@@ -790,7 +790,7 @@ class AisCloudWS:
         rest_url = self.url + "gate_id_from_pin"
         payload = {"user_id": user_id}
         ws_resp = requests.post(
-            rest_url, headers=self.cloud_ws_header, json=payload, timeout=5
+            rest_url, headers=self.cloud_ws_header, json=payload, timeout=10
         )
         return ws_resp
 
@@ -1068,7 +1068,7 @@ class AisColudData:
         if _lookup_url is not None:
             try:
                 try:
-                    resp = requests.get(check_url(_lookup_url), timeout=3.0)
+                    resp = requests.get(check_url(_lookup_url), timeout=5.0)
                 except requests.ReadTimeout:
                     _LOGGER.warning("Timeout when reading RSS %s", _lookup_url)
                     self.hass.services.call(
@@ -1638,7 +1638,7 @@ class AisColudData:
             self.hass.services.call("ais_ai_service", "say_it", {"text": "pobieram"})
             try:
                 try:
-                    resp = requests.get(check_url(_lookup_url), timeout=3.0)
+                    resp = requests.get(check_url(_lookup_url), timeout=5.0)
                 except requests.ReadTimeout:
                     _LOGGER.warning("Timeout when reading RSS %s", _lookup_url)
                     self.hass.services.call(
@@ -1743,7 +1743,7 @@ class AisColudData:
                 from readability import Document
                 import requests
 
-                response = requests.get(check_url(track["uri"]), timeout=5)
+                response = requests.get(check_url(track["uri"]), timeout=10)
                 response.encoding = "utf-8"
                 doc = Document(response.text)
                 doc_s = doc.summary()
@@ -1786,7 +1786,7 @@ class AisColudData:
         from readability.readability import Document
         import requests
 
-        response = requests.get(_url, timeout=5)
+        response = requests.get(_url, timeout=10)
         doc = Document(response.text)
         rss_help_text += doc.summary()
 

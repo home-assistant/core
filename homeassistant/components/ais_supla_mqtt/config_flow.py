@@ -1,6 +1,7 @@
 """Config flow to configure the AIS SUPLA MQTT component."""
 
 import logging
+import os
 
 import aiohttp
 import voluptuous as vol
@@ -47,7 +48,7 @@ class AuthorizationCallbackView(HomeAssistantView):
 class SuplaMqttFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """SUPLA MQTT config flow."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
@@ -122,6 +123,14 @@ class SuplaMqttFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     "error_info": f"Error code: {self.bridge_config_answer_status}. Response: {self.bridge_config}"
                 },
             )
+
+        # save mqtt connection info
+        ais_global.save_ais_mqtt_connection_settings(self.bridge_config)
+        # restart mqtt broker
+        await self.hass.services.async_call(
+            "ais_shell_command", "restart_pm2_service", {"service": "mqtt"}
+        )
+        # finish the config flow
         return self.async_create_entry(
             title="SUPLA MQTT BRIDGE", data=self.bridge_config
         )

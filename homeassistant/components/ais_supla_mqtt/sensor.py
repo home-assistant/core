@@ -2,11 +2,6 @@
 from datetime import timedelta
 import logging
 
-import paho.mqtt.client as supla_mqtt
-from paho.mqtt.packettypes import PacketTypes
-import paho.mqtt.properties as properties
-
-from homeassistant.components.ais_dom import ais_global
 import homeassistant.components.mqtt as hass_mqtt
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
@@ -31,66 +26,23 @@ class SuplaMqttSoftBridge(Entity):
     def __init__(self, hass, mqtt_settings):
         """Sensor initialization."""
         self._username = mqtt_settings["username"]
-        self._password = mqtt_settings["password"]
-        self._hostname = mqtt_settings["host"]
-        self._port = mqtt_settings["port"]
-        self._tls = mqtt_settings["tls"]
-        self._protocol = mqtt_settings["protocol"]
-        self._keepalive = 600
         self._qos = 0
         self._manufacturer = "SUPLA.ORG"
         self._model = "MQTT Bridge"
-        self._os_version = "v1"
+        self._os_version = "v2"
         self._supla_published = 0
         self._supla_received = 0
-        self._supla_mqtt_connection_code = -1
         self._sub_state = None
-        self._try_to_connect_no = 0
-
-        # connection on start
-        client_id = ais_global.get_sercure_android_id_dom()
-        self._supla_mqtt_client = supla_mqtt.Client(
-            client_id, protocol=supla_mqtt.MQTTv5
-        )
-        self._supla_mqtt_client.username_pw_set(self._username, password=self._password)
-        self._supla_mqtt_client.tls_set()
-        self._supla_mqtt_client.tls_insecure_set(True)
-
-        self._supla_mqtt_client.on_connect = self.on_supla_connect
-        self._supla_mqtt_client.on_disconnect = self.on_supla_disconnect
-        self._supla_mqtt_client.on_message = self.on_supla_message
-        self._supla_mqtt_client.on_publish = self.on_supla_publish
-
-        self._ignore_supla_topic = ""
-        self._ignore_supla_payload = ""
-        #
-        self._sensor_update_counter = 0
-
-    async def async_publish_to_supla(self, topic, payload):
-        if self._supla_mqtt_client.is_connected():
-            # remember to ignore own message when received from SUPLA mqtt
-            self._ignore_supla_topic = topic
-            self._ignore_supla_payload = payload
-            # add source == AIS as user properties to prevent the echo
-            publish_properties = properties.Properties(PacketTypes.PUBLISH)
-            publish_properties.UserProperty = [("source", "AIS")]
-
-            self._supla_mqtt_client.publish(
-                topic,
-                payload=payload,
-                qos=self._qos,
-                retain=False,
-                properties=publish_properties,
-            )
 
     @callback
     async def hass_message_received(self, msg):
         """Handle new MQTT messages."""
-        _LOGGER.debug(f"message_received {msg.payload} {msg.topic}")
-        payload = msg.payload
-        if type(payload) is bytes:
-            payload = msg.payload.decode("utf-8")
-        await self.async_publish_to_supla(msg.topic, payload)
+        self._supla_received = self._supla_published + 1
+
+    @callback
+    async def supla_message_received(self, msg):
+        """Handle new MQTT messages."""
+        self._supla_received = self._supla_received + 1
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -111,6 +63,16 @@ class SuplaMqttSoftBridge(Entity):
                 "set": {
                     "topic": "supla/+/devices/+/channels/+/set/+",
                     "msg_callback": self.hass_message_received,
+                    "qos": self._qos,
+                },
+                "set": {
+                    "topic": "supla/#",
+                    "msg_callback": self.supla_message_received,
+                    "qos": self._qos,
+                },
+                "set": {
+                    "topic": "homeassistant/#",
+                    "msg_callback": self.supla_message_received,
                     "qos": self._qos,
                 },
             },
@@ -148,21 +110,7 @@ class SuplaMqttSoftBridge(Entity):
     def state(self):
         """Return the status of the sensor."""
         # connection result codes
-        if self._supla_mqtt_connection_code == -1:
-            return "starting"
-        elif self._supla_mqtt_connection_code == 0:
-            return "success"
-        elif self._supla_mqtt_connection_code == 1:
-            return "bad protocol"
-        elif self._supla_mqtt_connection_code == 2:
-            return "client-id error"
-        elif self._supla_mqtt_connection_code == 3:
-            return "service unavailable"
-        elif self._supla_mqtt_connection_code == 4:
-            return "bad username or password"
-        elif self._supla_mqtt_connection_code == 5:
-            return "not authorised"
-        return self._supla_mqtt_connection_code
+        return "mqtt bridge connection"
 
     @property
     def unit_of_measurement(self) -> str:
@@ -175,7 +123,6 @@ class SuplaMqttSoftBridge(Entity):
         return {
             "MQTT packets sent": self._supla_published,
             "MQTT packets received": self._supla_received,
-            "MQTT trying to connect": self._try_to_connect_no,
         }
 
     @property
@@ -183,72 +130,6 @@ class SuplaMqttSoftBridge(Entity):
         """Return the icon to use in the frontend."""
         return "mdi:bridge"
 
-    def on_supla_connect(self, client_, userdata, flags, result_code, prop):
-        """Handle connection result."""
-        _LOGGER.debug(f"on_supla_connect {result_code}")
-        self._try_to_connect_no = self._try_to_connect_no + 1
-        self._supla_mqtt_connection_code = result_code
-        # Subscribing in on_connect() means that if we lose the connection and
-        # reconnect then subscriptions will be renewed.
-        client_.subscribe("homeassistant/#")
-        client_.subscribe("supla/#")
-
-    def on_supla_disconnect(self, client_, userdata, result_code):
-        """Handle connection result."""
-        _LOGGER.debug(f"on_supla_disconnect {result_code}")
-        self._supla_mqtt_connection_code = result_code
-
-    def on_supla_message(self, client, userdata, msg):
-        """The callback for when a message is received from SUPLA broker."""
-        # 1. echo reduction check if source is AIS
-        if hasattr(msg.properties, "UserProperty"):
-            user_properties = msg.properties.UserProperty
-            if ("source", "AIS") in user_properties:
-                _LOGGER.debug("on_supla_message ignore!")
-                return
-
-        # 2. echo reduction check if this message was send by AIS
-        if msg.topic != self._ignore_supla_topic or msg.payload != msg.payload:
-            payload = msg.payload.decode("utf-8")
-            hass_mqtt.async_publish(self.hass, msg.topic, payload, qos=1, retain=True)
-            self._supla_received = self._supla_received + 1
-        else:
-            _LOGGER.debug("on_supla_message ignore!")
-
-    def on_supla_publish(self, client, userdata, mid):
-        """The callback for when a message is published to SUPLA broker."""
-        _LOGGER.debug(f"on_supla_publish {mid}")
-        self._supla_published = self._supla_published + 1
-
-    def ais_reconnect(self):
-        if self._supla_mqtt_client.is_connected():
-            self._supla_mqtt_client.disconnect()
-            self._supla_mqtt_client.loop_stop(force=True)
-        self._supla_mqtt_client.connect_async(
-            self._hostname, port=self._port, keepalive=self._keepalive
-        )
-        self._supla_mqtt_client.loop_start()
-
     async def async_update(self):
         """Sensor update."""
-        self._sensor_update_counter = self._sensor_update_counter + 1
-        # Reconnect with SUPLA MQTT on start, to receive the discovery and status info.
-        if self._sensor_update_counter < 3:
-            self.ais_reconnect()
-            return
-        # Reconnect with SUPLA MQTT if not connected
-        if not self._supla_mqtt_client.is_connected():
-            _LOGGER.warning("No connection to SUPLA MQTT - trying to reconnect.")
-            self.ais_reconnect()
-            return
-        # discovery if connected
-        if self._sensor_update_counter % 30 == 0:
-            publish_properties = properties.Properties(PacketTypes.PUBLISH)
-            publish_properties.UserProperty = [("source", "AIS")]
-            self._supla_mqtt_client.publish(
-                "supla/" + self._username + "/refresh_request",
-                payload="ALL",
-                qos=self._qos,
-                retain=False,
-                properties=publish_properties,
-            )
+        pass
