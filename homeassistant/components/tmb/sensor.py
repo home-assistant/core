@@ -208,5 +208,5 @@ class TMBPlannerSensor(Entity):
 
         except HTTPError:
             _LOGGER.error(
-                "Unable to fetch data from TMB API. Please check your API keys."
+                "Unable to fetch data from TMB API. Please check your API keys"
             )
