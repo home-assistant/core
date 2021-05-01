@@ -72,7 +72,6 @@ class NestFlowHandler(
 
     DOMAIN = DOMAIN
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     def __init__(self):
         """Initialize NestFlowHandler."""
