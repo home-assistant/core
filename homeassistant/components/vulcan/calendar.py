@@ -1,4 +1,4 @@
-"""Support for Vulcan Calendar."""
+"""Support for Vulcan Calendar platform."""
 import copy
 from datetime import date, datetime, timedelta
 import logging
