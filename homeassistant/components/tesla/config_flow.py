@@ -165,12 +165,12 @@ async def validate_input(hass: core.HomeAssistant, data):
         config[CONF_EXPIRATION] = result[CONF_EXPIRATION]
         config[CONF_USERNAME] = data[CONF_USERNAME]
         config[CONF_PASSWORD] = data[CONF_PASSWORD]
+    except IncompleteCredentials as ex:
+        _LOGGER.error("Authentication error: %s %s", ex.message, ex)
+        raise InvalidAuth() from ex
     except TeslaException as ex:
         if ex.code == HTTP_UNAUTHORIZED:
             _LOGGER.error("Invalid credentials: %s", ex)
-            raise InvalidAuth() from ex
-        if isinstance(ex, IncompleteCredentials):
-            _LOGGER.error("Authentication error: %s %s", ex.message, ex)
             raise InvalidAuth() from ex
         _LOGGER.error("Unable to communicate with Tesla API: %s", ex)
         raise CannotConnect() from ex
