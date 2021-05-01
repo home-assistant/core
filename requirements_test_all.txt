@@ -423,7 +423,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210429.0
+home-assistant-frontend==20210430.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1247,7 +1247,7 @@ wled==0.4.4
 wolf_smartset==0.1.8
 
 # homeassistant.components.xbox
-xbox-webapi==2.0.8
+xbox-webapi==2.0.11
 
 # homeassistant.components.knx
 xknx==0.18.1

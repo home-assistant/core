@@ -68,10 +68,8 @@ class BondEntity(Entity):
         """Get a an HA device representing this Bond controlled device."""
         device_info: DeviceInfo = {
             "manufacturer": self._hub.make,
-            "identifiers": {
-                # TODO should be two-tuple, and no optionals # pylint: disable=fixme
-                (DOMAIN, self._hub.bond_id, self._device.device_id)  # type: ignore[arg-type]
-            },
+            # type ignore: tuple items should not be Optional
+            "identifiers": {(DOMAIN, self._hub.bond_id, self._device.device_id)},  # type: ignore[arg-type]
         }
         if self.name is not None:
             device_info["name"] = self.name

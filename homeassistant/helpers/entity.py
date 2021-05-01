@@ -115,7 +115,7 @@ class DeviceInfo(TypedDict, total=False):
 
     name: str
     connections: set[tuple[str, str]]
-    identifiers: set[tuple[str, str]]
+    identifiers: set[tuple[str, ...]]
     manufacturer: str
     model: str
     suggested_area: str

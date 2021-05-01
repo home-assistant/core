@@ -18,8 +18,7 @@ def get_entry_client(hass, entry):
     return hass.data[DOMAIN_DATA_ENTRIES][entry.entry_id]
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class ArcamFmjFlowHandler(config_entries.ConfigFlow):
+class ArcamFmjFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle config flow."""
 
     VERSION = 1
