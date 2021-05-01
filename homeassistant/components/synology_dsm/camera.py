@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable
 
 from synology_dsm.api.surveillance_station import SynoCamera, SynoSurveillanceStation
 from synology_dsm.exceptions import (
@@ -14,6 +13,7 @@ from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SynoApi, SynologyDSMBaseEntity
@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Synology NAS cameras."""
 
@@ -92,16 +92,14 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
             "identifiers": {
                 (
                     DOMAIN,
-                    self._api.information.serial,
-                    self.camera_data.id,
+                    f"{self._api.information.serial}_{self.camera_data.id}",
                 )
             },
             "name": self.camera_data.name,
             "model": self.camera_data.model,
             "via_device": (
                 DOMAIN,
-                self._api.information.serial,
-                SynoSurveillanceStation.INFO_API_KEY,
+                f"{self._api.information.serial}_{SynoSurveillanceStation.INFO_API_KEY}",
             ),
         }
 

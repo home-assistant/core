@@ -708,10 +708,12 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
-            "identifiers": {(DOMAIN, self._api.information.serial, self._device_id)},
+            "identifiers": {
+                (DOMAIN, f"{self._api.information.serial}_{self._device_id}")
+            },
             "name": f"Synology NAS ({self._device_name} - {self._device_type})",
-            "manufacturer": self._device_manufacturer,
-            "model": self._device_model,
-            "sw_version": self._device_firmware,
+            "manufacturer": self._device_manufacturer,  # type: ignore[typeddict-item]
+            "model": self._device_model,  # type: ignore[typeddict-item]
+            "sw_version": self._device_firmware,  # type: ignore[typeddict-item]
             "via_device": (DOMAIN, self._api.information.serial),
         }
