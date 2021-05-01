@@ -203,7 +203,7 @@ async def base_config_test(
     )
 
 
-async def run_service_update(hass, config, entity_id):
+async def prepare_service_update(hass, config, entity_id):
     """Run test for service write_coil."""
 
     config_modbus = {

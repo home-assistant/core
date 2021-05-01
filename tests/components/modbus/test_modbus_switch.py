@@ -25,7 +25,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 
-from .conftest import ReadResult, base_config_test, base_test, run_service_update
+from .conftest import ReadResult, base_config_test, base_test, prepare_service_update
 
 
 @pytest.mark.parametrize(
@@ -237,7 +237,7 @@ async def test_service_switch_update(hass, mock_pymodbus):
         ]
     }
     mock_pymodbus.read_coils.return_value = ReadResult([0x01])
-    await run_service_update(
+    await prepare_service_update(
         hass,
         config,
         entity_id,

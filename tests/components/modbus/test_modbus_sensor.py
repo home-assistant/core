@@ -40,7 +40,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 
-from .conftest import ReadResult, base_config_test, base_test, run_service_update
+from .conftest import ReadResult, base_config_test, base_test, prepare_service_update
 
 
 @pytest.mark.parametrize(
@@ -637,7 +637,7 @@ async def test_service_sensor_update(hass, mock_pymodbus):
         ]
     }
     mock_pymodbus.read_input_registers.return_value = ReadResult([27])
-    await run_service_update(
+    await prepare_service_update(
         hass,
         config,
         entity_id,

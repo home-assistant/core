@@ -10,7 +10,7 @@ from homeassistant.components.modbus.const import (
 )
 from homeassistant.const import CONF_NAME, CONF_SCAN_INTERVAL, CONF_SLAVE
 
-from .conftest import ReadResult, base_config_test, base_test, run_service_update
+from .conftest import ReadResult, base_config_test, base_test, prepare_service_update
 
 
 @pytest.mark.parametrize(
@@ -93,7 +93,7 @@ async def test_service_climate_update(hass, mock_pymodbus):
         ]
     }
     mock_pymodbus.read_input_registers.return_value = ReadResult([0x00])
-    await run_service_update(
+    await prepare_service_update(
         hass,
         config,
         entity_id,
