@@ -21,7 +21,6 @@ import os
 import async_timeout
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
