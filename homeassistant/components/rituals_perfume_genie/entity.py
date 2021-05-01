@@ -1,10 +1,10 @@
 """Base class for Rituals Perfume Genie diffuser entity."""
 from __future__ import annotations
 
-from typing import Any
-
 from pyrituals import Diffuser
 
+from homeassistant.components.rituals_perfume_genie import RitualsDataUpdateCoordinator
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTES, DOMAIN, HUBLOT, SENSORS
@@ -24,7 +24,10 @@ class DiffuserEntity(CoordinatorEntity):
     """Representation of a diffuser entity."""
 
     def __init__(
-        self, diffuser: Diffuser, coordinator: CoordinatorEntity, entity_suffix: str
+        self,
+        diffuser: Diffuser,
+        coordinator: RitualsDataUpdateCoordinator,
+        entity_suffix: str,
     ) -> None:
         """Init from config, hookup diffuser and coordinator."""
         super().__init__(coordinator)
@@ -49,7 +52,7 @@ class DiffuserEntity(CoordinatorEntity):
         return super().available and self._diffuser.hub_data[STATUS] == AVAILABLE_STATE
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         return {
             "name": self._hubname,

@@ -1,8 +1,11 @@
 """Support for Rituals Perfume Genie sensors."""
+from __future__ import annotations
+
 from typing import Callable
 
 from pyrituals import Diffuser
 
+from homeassistant.components.rituals_perfume_genie import RitualsDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -10,7 +13,6 @@ from homeassistant.const import (
     PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATORS, DEVICES, DOMAIN, ID, SENSORS
 from .entity import DiffuserEntity
@@ -38,7 +40,7 @@ async def async_setup_entry(
     """Set up the diffuser sensors."""
     diffusers = hass.data[DOMAIN][config_entry.entry_id][DEVICES]
     coordinators = hass.data[DOMAIN][config_entry.entry_id][COORDINATORS]
-    entities = []
+    entities: list[DiffuserEntity] = []
     for hublot, diffuser in diffusers.items():
         coordinator = coordinators[hublot]
         entities.append(DiffuserPerfumeSensor(diffuser, coordinator))
@@ -53,7 +55,9 @@ async def async_setup_entry(
 class DiffuserPerfumeSensor(DiffuserEntity):
     """Representation of a diffuser perfume sensor."""
 
-    def __init__(self, diffuser: Diffuser, coordinator: CoordinatorEntity) -> None:
+    def __init__(
+        self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
+    ) -> None:
         """Initialize the perfume sensor."""
         super().__init__(diffuser, coordinator, PERFUME_SUFFIX)
 
@@ -73,7 +77,9 @@ class DiffuserPerfumeSensor(DiffuserEntity):
 class DiffuserFillSensor(DiffuserEntity):
     """Representation of a diffuser fill sensor."""
 
-    def __init__(self, diffuser: Diffuser, coordinator: CoordinatorEntity) -> None:
+    def __init__(
+        self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
+    ) -> None:
         """Initialize the fill sensor."""
         super().__init__(diffuser, coordinator, FILL_SUFFIX)
 
@@ -93,7 +99,9 @@ class DiffuserFillSensor(DiffuserEntity):
 class DiffuserBatterySensor(DiffuserEntity):
     """Representation of a diffuser battery sensor."""
 
-    def __init__(self, diffuser: Diffuser, coordinator: CoordinatorEntity) -> None:
+    def __init__(
+        self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
+    ) -> None:
         """Initialize the battery sensor."""
         super().__init__(diffuser, coordinator, BATTERY_SUFFIX)
 
@@ -116,7 +124,9 @@ class DiffuserBatterySensor(DiffuserEntity):
 class DiffuserWifiSensor(DiffuserEntity):
     """Representation of a diffuser wifi sensor."""
 
-    def __init__(self, diffuser: Diffuser, coordinator: CoordinatorEntity) -> None:
+    def __init__(
+        self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
+    ) -> None:
         """Initialize the wifi sensor."""
         super().__init__(diffuser, coordinator, WIFI_SUFFIX)
 
