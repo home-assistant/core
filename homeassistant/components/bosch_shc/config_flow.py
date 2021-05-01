@@ -95,18 +95,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=HOST_SCHEMA,
             )
         self.host = host = user_input[CONF_HOST]
-        self.info = info = await self._get_info(host)
-        await self.async_set_unique_id(info["unique_id"])
+        self.info = await self._get_info(host)
         return await self.async_step_credentials()
-
-    async def async_create_entry(self, title: str, data: dict) -> dict:
-        """Create a config entry or update existing entry for reauth."""
-        existing_entry = await self.async_set_unique_id(self.info["unique_id"])
-        if existing_entry:
-            self.hass.config_entries.async_update_entry(existing_entry, data=data)
-            await self.hass.config_entries.async_reload(existing_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
-        return super().async_create_entry(title=title, data=data)
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -143,6 +133,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input,
                     zeroconf,
                 )
+                entry_data = {
+                    CONF_SSL_CERTIFICATE: self.hass.config.path(DOMAIN, CONF_SHC_CERT),
+                    CONF_SSL_KEY: self.hass.config.path(DOMAIN, CONF_SHC_KEY),
+                    CONF_HOST: self.host,
+                    CONF_TOKEN: result["token"],
+                    CONF_HOSTNAME: result["token"].split(":", 1)[1],
+                }
             except SHCAuthenticationError:
                 errors["base"] = "invalid_auth"
             except SHCConnectionError:
@@ -159,17 +156,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return await self.async_create_entry(
+                existing_entry = await self.async_set_unique_id(self.info["unique_id"])
+                if existing_entry:
+                    self.hass.config_entries.async_update_entry(
+                        existing_entry,
+                        data=entry_data,
+                    )
+                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                    return self.async_abort(reason="reauth_successful")
+
+                return self.async_create_entry(
                     title=self.info["title"],
-                    data={
-                        CONF_SSL_CERTIFICATE: self.hass.config.path(
-                            DOMAIN, CONF_SHC_CERT
-                        ),
-                        CONF_SSL_KEY: self.hass.config.path(DOMAIN, CONF_SHC_KEY),
-                        CONF_HOST: self.host,
-                        CONF_TOKEN: result["token"],
-                        CONF_HOSTNAME: result["token"].split(":", 1)[1],
-                    },
+                    data=entry_data,
                 )
         else:
             user_input = {}
