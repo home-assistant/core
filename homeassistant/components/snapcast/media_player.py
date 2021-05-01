@@ -3,7 +3,7 @@ import logging
 import socket
 from typing import Callable
 
-import snapcast.control
+import snapcast
 from snapcast.control.server import CONTROL_PORT, Snapserver
 import voluptuous as vol
 
@@ -76,8 +76,8 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
 ) -> bool:
     """Set up the snapcast config entry."""
-    theServer: Snapserver = hass.data[DOMAIN][config_entry.entry_id]
-    _LOGGER.debug(theServer)
+    the_server: Snapserver = hass.data[DOMAIN][config_entry.entry_id]
+    _LOGGER.debug(the_server)
 
     register_services()
 
@@ -85,18 +85,18 @@ async def async_setup_entry(
     port = config_entry.data["port"]
     hpid = f"{host}:{port}"
 
-    groups = [SnapcastGroupDevice(group, hpid) for group in theServer.groups]
-    clients = [SnapcastClientDevice(client, hpid) for client in theServer.clients]
-    devices = groups + clients
-    hass.data[DATA_KEY] = devices
-    async_add_entities(devices)
+    groups = [SnapcastGroupDevice(group, hpid) for group in the_server.groups]
+    clients = [SnapcastClientDevice(client, hpid) for client in the_server.clients]
+    hass.data[DATA_KEY]["clients"] = clients
+    hass.data[DATA_KEY]["groups"] = groups
+    async_add_entities(clients)
+    async_add_entities(groups)
 
     return False
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Snapcast platform."""
-
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT, CONTROL_PORT)
 
@@ -115,9 +115,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     groups = [SnapcastGroupDevice(group, hpid) for group in server.groups]
     clients = [SnapcastClientDevice(client, hpid) for client in server.clients]
-    devices = groups + clients
-    hass.data[DATA_KEY] = devices
-    async_add_entities(devices)
+    hass.data[DATA_KEY]["clients"] = clients
+    hass.data[DATA_KEY]["groups"] = groups
+    async_add_entities(clients)
+    async_add_entities(groups)
 
 
 async def handle_async_join(entity, service_call):
@@ -268,7 +269,7 @@ class SnapcastClientDevice(MediaPlayerEntity):
     def source(self):
         """Return the current input source."""
         stream = self._client.group.stream
-        _LOGGER.debug(f"Client source queried - {self._client.identifier}:{stream}")
+        _LOGGER.debug("Client source queried - %s:%s", self._client.identifier, stream)
         return stream
 
     @property
@@ -341,9 +342,10 @@ class SnapcastClientDevice(MediaPlayerEntity):
 
     async def async_join(self, master):
         """Join the group of the master player."""
-
         master_entity = next(
-            entity for entity in self.hass.data[DATA_KEY] if entity.entity_id == master
+            entity
+            for entity in self.hass.data[DATA_KEY]["clients"]
+            if entity.entity_id == master
         )
         if not isinstance(master_entity, SnapcastClientDevice):
             raise ValueError("Master is not a client device. Can only join clients.")
@@ -353,7 +355,6 @@ class SnapcastClientDevice(MediaPlayerEntity):
             for group in self._client.groups_available()
             if master_entity.identifier in group.clients
         )
-        _LOGGER.debug(f"master group: {master_group}")
         await master_group.add_client(self._client.identifier)
         self.async_write_ha_state()
 

@@ -41,7 +41,7 @@ async def test_success(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 2
 
 
-async def test_error(hass: HomeAssistant) -> None:
+async def test_unknown_error(hass: HomeAssistant) -> None:
     """Test what happens when there is no server to connect."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -58,4 +58,24 @@ async def test_error(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] == "form"
-    assert result["errors"] == {"base": "unknown_error"}
+    assert result["errors"] == {"base": "unknown"}
+
+
+async def test_connection_error(hass: HomeAssistant) -> None:
+    """Test what happens when there is no server to connect."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert not result["errors"]
+
+    with patch("snapcast.control.create_server", side_effect=ConnectionRefusedError):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TEST_CONNECTION,
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "cannot_connect"}

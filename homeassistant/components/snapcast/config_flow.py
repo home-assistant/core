@@ -29,7 +29,7 @@ class SnapcastConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle first step."""
 
-        def _show_form(errors={}):
+        def _show_form(errors=None):
             return self.async_show_form(
                 step_id="user",
                 data_schema=SNAPCAST_SCHEMA,
@@ -63,7 +63,7 @@ class SnapcastConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error(
                 "Could not connect to a Snapcast Server at the provided address"
             )
-            _LOGGER.error(f"Error: {errors['base']}")
+            _LOGGER.error("Error: %s", (errors["base"]))
             return _show_form(errors=errors)
 
         return self.async_create_entry(

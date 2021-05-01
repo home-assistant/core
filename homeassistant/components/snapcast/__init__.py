@@ -20,7 +20,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Snapcast from a config entry."""
-
     host = entry.data["host"]
     port = entry.data["port"]
     try:
