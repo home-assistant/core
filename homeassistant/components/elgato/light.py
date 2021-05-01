@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, Callable, cast
+from typing import Any, Callable
 
 from elgato import Elgato, ElgatoError, Info, State
 
@@ -15,18 +15,10 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
-    DATA_ELGATO_CLIENT,
-    DOMAIN,
-)
+from .const import DATA_ELGATO_CLIENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +51,7 @@ class ElgatoLight(LightEntity):
         self.elgato = elgato
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         """Return the name of the entity."""
         # Return the product name, if display name is not set
         return self._info.display_name or self._info.product_name
@@ -143,15 +135,12 @@ class ElgatoLight(LightEntity):
             self._state = None
 
     @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this Elgato Key Light."""
-        return cast(
-            DeviceInfo,
-            {
-                ATTR_IDENTIFIERS: {(DOMAIN, self._info.serial_number)},
-                ATTR_NAME: self._info.product_name,
-                ATTR_MANUFACTURER: "Elgato",
-                ATTR_MODEL: self._info.product_name,
-                ATTR_SOFTWARE_VERSION: f"{self._info.firmware_version} ({self._info.firmware_build_number})",
-            },
-        )
+        return {
+            "identifiers": {(DOMAIN, self._info.serial_number)},
+            "name": self._info.product_name,
+            "manufacturer": "Elgato",
+            "model": self._info.product_name,
+            "sw_version": f"{self._info.firmware_version} ({self._info.firmware_build_number})",
+        }
