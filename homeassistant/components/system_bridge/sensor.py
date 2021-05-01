@@ -9,6 +9,7 @@ from homeassistant.const import (
     ATTR_VOLTAGE,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
     FREQUENCY_GIGAHERTZ,
     PERCENTAGE,
     TEMP_CELSIUS,
@@ -69,6 +70,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             BridgeBatterySensor(coordinator, bridge),
+            BridgeBatteryTimeRemainingSensor(coordinator, bridge),
             BridgeCpuSpeedSensor(coordinator, bridge),
             BridgeCpuTemperatureSensor(coordinator, bridge),
             *[
@@ -140,10 +142,44 @@ class BridgeBatterySensor(BridgeSensor):
             ATTR_CAPACITY_MAX: bridge.battery.maxCapacity,
             ATTR_CAPACITY: bridge.battery.currentCapacity,
             ATTR_CHARGING: bridge.battery.isCharging,
-            ATTR_MANUFACTURER: bridge.battery.manufacturer,
             ATTR_MODEL: bridge.battery.model,
             ATTR_SERIAL: bridge.battery.serial,
-            ATTR_TIME_REMAINING: bridge.battery.timeRemaining,
+            ATTR_TYPE: bridge.battery.type,
+            ATTR_VOLTAGE: bridge.battery.voltage,
+        }
+
+
+class BridgeBatteryTimeRemainingSensor(BridgeSensor):
+    """Defines the Battery Time Remaining sensor."""
+
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            bridge,
+            "battery_time_remaining",
+            "Battery Time Remaining",
+            None,
+            DEVICE_CLASS_TIMESTAMP,
+            None,
+        )
+
+    @property
+    def state(self) -> float:
+        """Return the state of the sensor."""
+        bridge: Bridge = self.coordinator.data
+        return bridge.battery.timeRemaining
+
+    @property
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return the state attributes of the entity."""
+        bridge: Bridge = self.coordinator.data
+        return {
+            ATTR_CAPACITY_MAX: bridge.battery.maxCapacity,
+            ATTR_CAPACITY: bridge.battery.currentCapacity,
+            ATTR_CHARGING: bridge.battery.isCharging,
+            ATTR_MODEL: bridge.battery.model,
+            ATTR_SERIAL: bridge.battery.serial,
             ATTR_TYPE: bridge.battery.type,
             ATTR_VOLTAGE: bridge.battery.voltage,
         }
