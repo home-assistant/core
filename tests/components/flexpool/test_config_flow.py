@@ -16,8 +16,6 @@ async def test_form(hass):
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.flexpool.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.flexpool.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
