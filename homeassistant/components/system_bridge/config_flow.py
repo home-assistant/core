@@ -1,6 +1,8 @@
 """Config flow for System Bridge integration."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 import async_timeout
 from systembridge import Bridge
@@ -31,7 +33,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict) -> Dict[str, str]:
+async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -67,12 +69,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize flow."""
-        self._name: Optional[str] = None
-        self._input: Optional[Dict[str, Any]] = {}
+        self._name: str | None = None
+        self._input: dict[str, Any] | None = {}
 
     async def _async_get_info(
         self, user_input=None
-    ) -> Tuple[Optional[Dict[str, str]], Optional[Dict[str, str]]]:
+    ) -> tuple[dict[str, str] | None, dict[str, str] | None]:
         errors = {}
 
         try:
