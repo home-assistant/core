@@ -24,7 +24,6 @@ async def async_setup_entry(
         [
             BridgeBatteryIsChargingBinarySensor(coordinator, bridge),
         ],
-        True,
     )
 
 
