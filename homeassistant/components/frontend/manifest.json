@@ -2,7 +2,7 @@
   "domain": "frontend",
   "name": "Ais dom Frontend",
   "documentation": "https://www.ai-speaker.com",
-  "requirements": ["ais-dom-frontend==20210407.5"],
+  "requirements": ["ais-dom-frontend==20210430.0"],
   "dependencies": [
     "api",
     "auth",

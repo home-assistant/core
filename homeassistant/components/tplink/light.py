@@ -19,9 +19,9 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     LightEntity,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
@@ -77,7 +77,7 @@ FALLBACK_MIN_COLOR = 2700
 FALLBACK_MAX_COLOR = 5000
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
     """Set up lights."""
     entities = await hass.async_add_executor_job(
         add_available_devices, hass, CONF_LIGHT, TPLinkSmartBulb
@@ -350,7 +350,7 @@ class TPLinkSmartBulb(LightEntity):
         ):
             color_temp = kelvin_to_mired(light_state_params[LIGHT_STATE_COLOR_TEMP])
 
-        if light_features.supported_features & SUPPORT_COLOR:
+        if color_temp is None and light_features.supported_features & SUPPORT_COLOR:
             hue_saturation = (
                 light_state_params[LIGHT_STATE_HUE],
                 light_state_params[LIGHT_STATE_SATURATION],
@@ -375,8 +375,8 @@ class TPLinkSmartBulb(LightEntity):
             or self._last_current_power_update + CURRENT_POWER_UPDATE_INTERVAL < now
         ):
             self._last_current_power_update = now
-            self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.1f}".format(
-                self.smartbulb.current_consumption()
+            self._emeter_params[ATTR_CURRENT_POWER_W] = round(
+                float(self.smartbulb.current_consumption()), 1
             )
 
         if (
@@ -388,11 +388,11 @@ class TPLinkSmartBulb(LightEntity):
             daily_statistics = self.smartbulb.get_emeter_daily()
             monthly_statistics = self.smartbulb.get_emeter_monthly()
             try:
-                self._emeter_params[ATTR_DAILY_ENERGY_KWH] = "{:.3f}".format(
-                    daily_statistics[int(time.strftime("%d"))]
+                self._emeter_params[ATTR_DAILY_ENERGY_KWH] = round(
+                    float(daily_statistics[int(time.strftime("%d"))]), 3
                 )
-                self._emeter_params[ATTR_MONTHLY_ENERGY_KWH] = "{:.3f}".format(
-                    monthly_statistics[int(time.strftime("%m"))]
+                self._emeter_params[ATTR_MONTHLY_ENERGY_KWH] = round(
+                    float(monthly_statistics[int(time.strftime("%m"))]), 3
                 )
             except KeyError:
                 # device returned no daily/monthly history

@@ -1,8 +1,9 @@
 """Support for Verisure Smartplugs."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from time import monotonic
-from typing import Any, Callable, Iterable
+from typing import Any, Callable
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -88,9 +89,11 @@ class VerisureSmartplug(CoordinatorEntity, SwitchEntity):
         self.coordinator.verisure.set_smartplug_state(self.serial_number, True)
         self._state = True
         self._change_timestamp = monotonic()
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs) -> None:
         """Set smartplug status off."""
         self.coordinator.verisure.set_smartplug_state(self.serial_number, False)
         self._state = False
         self._change_timestamp = monotonic()
+        self.schedule_update_ha_state()

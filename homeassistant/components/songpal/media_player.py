@@ -25,13 +25,13 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_platform,
 )
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import CONF_ENDPOINT, DOMAIN, SET_SOUND_SETTING
 
@@ -53,7 +53,7 @@ INITIAL_RETRY_DELAY = 10
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: dict, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: dict, async_add_entities, discovery_info=None
 ) -> None:
     """Set up from legacy configuration file. Obsolete."""
     _LOGGER.error(
@@ -62,7 +62,7 @@ async def async_setup_platform(
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up songpal media player."""
     name = config_entry.data[CONF_NAME]

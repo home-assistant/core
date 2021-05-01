@@ -10,31 +10,6 @@ from homeassistant.setup import async_setup_component
 
 from .test_device import NAME, setup_axis_integration
 
-EVENTS = [
-    {
-        "operation": "Initialized",
-        "topic": "tns1:Device/tnsaxis:Sensor/PIR",
-        "source": "sensor",
-        "source_idx": "0",
-        "type": "state",
-        "value": "0",
-    },
-    {
-        "operation": "Initialized",
-        "topic": "tns1:PTZController/tnsaxis:PTZPresets/Channel_1",
-        "source": "PresetToken",
-        "source_idx": "0",
-        "type": "on_preset",
-        "value": "1",
-    },
-    {
-        "operation": "Initialized",
-        "topic": "tnsaxis:CameraApplicationPlatform/VMD/Camera1Profile1",
-        "type": "active",
-        "value": "1",
-    },
-]
-
 
 async def test_platform_manually_configured(hass):
     """Test that nothing happens when platform is manually configured."""
@@ -57,12 +32,30 @@ async def test_no_binary_sensors(hass):
     assert not hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)
 
 
-async def test_binary_sensors(hass):
+async def test_binary_sensors(hass, mock_rtsp_event):
     """Test that sensors are loaded properly."""
-    config_entry = await setup_axis_integration(hass)
-    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+    await setup_axis_integration(hass)
 
-    device.api.event.update(EVENTS)
+    mock_rtsp_event(
+        topic="tns1:Device/tnsaxis:Sensor/PIR",
+        data_type="state",
+        data_value="0",
+        source_name="sensor",
+        source_idx="0",
+    )
+    mock_rtsp_event(
+        topic="tnsaxis:CameraApplicationPlatform/VMD/Camera1Profile1",
+        data_type="active",
+        data_value="1",
+    )
+    # Unsupported event
+    mock_rtsp_event(
+        topic="tns1:PTZController/tnsaxis:PTZPresets/Channel_1",
+        data_type="on_preset",
+        data_value="1",
+        source_name="PresetToken",
+        source_idx="0",
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 2

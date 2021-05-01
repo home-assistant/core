@@ -23,7 +23,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 import homeassistant.util.color as color_util
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
@@ -32,7 +32,7 @@ FLASH_LENGTHS = {FLASH_SHORT: 2, FLASH_LONG: 10}
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up ESPHome lights based on a config entry."""
     await platform_async_setup_entry(

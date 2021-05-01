@@ -23,10 +23,9 @@ from aioesphomeapi import (
 import attr
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import HomeAssistantType
 
 if TYPE_CHECKING:
     from . import APIClient
@@ -73,7 +72,7 @@ class RuntimeEntryData:
 
     @callback
     def async_update_entity(
-        self, hass: HomeAssistantType, component_key: str, key: int
+        self, hass: HomeAssistant, component_key: str, key: int
     ) -> None:
         """Schedule the update of an entity."""
         signal = f"esphome_{self.entry_id}_update_{component_key}_{key}"
@@ -81,14 +80,14 @@ class RuntimeEntryData:
 
     @callback
     def async_remove_entity(
-        self, hass: HomeAssistantType, component_key: str, key: int
+        self, hass: HomeAssistant, component_key: str, key: int
     ) -> None:
         """Schedule the removal of an entity."""
         signal = f"esphome_{self.entry_id}_remove_{component_key}_{key}"
         async_dispatcher_send(hass, signal)
 
     async def _ensure_platforms_loaded(
-        self, hass: HomeAssistantType, entry: ConfigEntry, platforms: set[str]
+        self, hass: HomeAssistant, entry: ConfigEntry, platforms: set[str]
     ):
         async with self.platform_load_lock:
             needed = platforms - self.loaded_platforms
@@ -102,7 +101,7 @@ class RuntimeEntryData:
             self.loaded_platforms |= needed
 
     async def async_update_static_infos(
-        self, hass: HomeAssistantType, entry: ConfigEntry, infos: list[EntityInfo]
+        self, hass: HomeAssistant, entry: ConfigEntry, infos: list[EntityInfo]
     ) -> None:
         """Distribute an update of static infos to all platforms."""
         # First, load all platforms
@@ -119,13 +118,13 @@ class RuntimeEntryData:
         async_dispatcher_send(hass, signal, infos)
 
     @callback
-    def async_update_state(self, hass: HomeAssistantType, state: EntityState) -> None:
+    def async_update_state(self, hass: HomeAssistant, state: EntityState) -> None:
         """Distribute an update of state information to all platforms."""
         signal = f"esphome_{self.entry_id}_on_state"
         async_dispatcher_send(hass, signal, state)
 
     @callback
-    def async_update_device_state(self, hass: HomeAssistantType) -> None:
+    def async_update_device_state(self, hass: HomeAssistant) -> None:
         """Distribute an update of a core device state like availability."""
         signal = f"esphome_{self.entry_id}_on_device_update"
         async_dispatcher_send(hass, signal)

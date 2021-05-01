@@ -13,8 +13,8 @@ from homeassistant.const import (
     DATA_RATE_MEGABYTES_PER_SECOND,
     DEVICE_CLASS_TIMESTAMP,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
 from . import NZBGetEntity
@@ -42,7 +42,7 @@ SENSOR_TYPES = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:

@@ -1,6 +1,7 @@
 """Test function in __init__.py."""
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -25,7 +26,8 @@ from homeassistant.components.mysensors.const import (
     CONF_TOPIC_IN_PREFIX,
     CONF_TOPIC_OUT_PREFIX,
 )
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 
@@ -226,13 +228,15 @@ from homeassistant.setup import async_setup_component
     ],
 )
 async def test_import(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
+    mqtt: None,
     config: ConfigType,
     expected_calls: int,
     expected_to_succeed: bool,
-    expected_config_flow_user_input: dict[str, any],
-):
+    expected_config_flow_user_input: dict[str, Any],
+) -> None:
     """Test importing a gateway."""
+    await async_setup_component(hass, "persistent_notification", {})
     with patch("sys.platform", "win32"), patch(
         "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
     ), patch(

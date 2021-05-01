@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "Destinaci\u00f3",
+                    "name": "Nom",
+                    "origin": "Origen",
+                    "region": "Regi\u00f3"
+                },
+                "description": "A origen i destinaci\u00f3, introdueix l'adre\u00e7a o les coordenades GPS de la ubicaci\u00f3 (les coordenades GPS han d'estar separades per una coma). Tamb\u00e9 pots introduir un ID d'entitat (que contingui aquesta informaci\u00f3 en el seu estat), un ID d'entitat amb atributs de latitud i longitud o un sobrenom de zona."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid_ferries": "Evita ferris?",
+                    "avoid_subscription_roads": "Evita carreteres que necessiten tiquet/subscripci\u00f3?",
+                    "avoid_toll_roads": "Evita peatges?",
+                    "excl_filter": "Subcadena NO present a la descripci\u00f3 de la ruta seleccionada",
+                    "incl_filter": "Subcadena a la descripci\u00f3 de la ruta seleccionada",
+                    "realtime": "Temps de viatge en temps real?",
+                    "units": "Unitats",
+                    "vehicle_type": "Tipus de vehicle"
+                },
+                "description": "Les entrades de 'subcadena' et permeten for\u00e7ar que la integraci\u00f3 utilitzi o eviti una ruta espec\u00edfica durant el c\u00e0lcul del temps de viatge."
+            }
+        }
+    },
+    "title": "Temps de viatge de Waze"
+}

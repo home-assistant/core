@@ -25,5 +25,16 @@
                 "title": "Anmelden mit Blink-Konto"
             }
         }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "Scanintervall (Sekunden)"
+                },
+                "description": "Blink-Integration konfigurieren",
+                "title": "Blink Optionen"
+            }
+        }
     }
 }

@@ -436,8 +436,9 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._temperature = temperature
             else:
                 _LOGGER.error(
-                    "Received invalid color temperature : %s. Expected: 0-%s",
+                    "Received invalid color temperature : %s. Expected: %s-%s",
                     temperature,
+                    self.min_mireds,
                     self.max_mireds,
                 )
                 self._temperature = None

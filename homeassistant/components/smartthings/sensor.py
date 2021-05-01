@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import namedtuple
-from typing import Sequence
+from collections.abc import Sequence
 
 from pysmartthings import Attribute, Capability
 
@@ -358,12 +358,12 @@ class SmartThingsThreeAxisSensor(SmartThingsEntity, SensorEntity):
     @property
     def name(self) -> str:
         """Return the name of the binary sensor."""
-        return "{} {}".format(self._device.label, THREE_AXIS_NAMES[self._index])
+        return f"{self._device.label} {THREE_AXIS_NAMES[self._index]}"
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "{}.{}".format(self._device.device_id, THREE_AXIS_NAMES[self._index])
+        return f"{self._device.device_id}.{THREE_AXIS_NAMES[self._index]}"
 
     @property
     def state(self):

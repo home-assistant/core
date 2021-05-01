@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import wraps
-from typing import Any, Callable, Deque, Generator, cast
+from typing import Any, Callable, cast
 
 from homeassistant.helpers.typing import TemplateVarsType
 import homeassistant.util.dt as dt_util
@@ -51,6 +52,11 @@ class TraceElement:
         """Set result."""
         self._result = {**kwargs}
 
+    def update_result(self, **kwargs: Any) -> None:
+        """Set result."""
+        old_result = self._result or {}
+        self._result = {**old_result, **kwargs}
+
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this TraceElement."""
         result: dict[str, Any] = {"path": self.path, "timestamp": self._timestamp}
@@ -71,7 +77,7 @@ class TraceElement:
 
 # Context variables for tracing
 # Current trace
-trace_cv: ContextVar[dict[str, Deque[TraceElement]] | None] = ContextVar(
+trace_cv: ContextVar[dict[str, deque[TraceElement]] | None] = ContextVar(
     "trace_cv", default=None
 )
 # Stack of TraceElements
@@ -163,7 +169,7 @@ def trace_append_element(
     trace[path].append(trace_element)
 
 
-def trace_get(clear: bool = True) -> dict[str, Deque[TraceElement]] | None:
+def trace_get(clear: bool = True) -> dict[str, deque[TraceElement]] | None:
     """Return the current trace."""
     if clear:
         trace_clear()

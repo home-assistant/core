@@ -1,12 +1,12 @@
 #
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.11.0
+    rev: v2.12.0
     hooks:
       - id: pyupgrade
         args: [--py38-plus]
   - repo: https://github.com/psf/black
-    rev: 20.8b1
+    rev: 21.4b0
     hooks:
       - id: black
         args:
@@ -45,7 +45,7 @@ repos:
           - --configfile=tests/bandit.yaml
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/isort
-    rev: 5.7.0
+    rev: 5.8.0
     hooks:
       - id: isort
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -70,7 +70,7 @@ repos:
       - id: prettier
         stages: [manual]
   - repo: https://github.com/cdce8p/python-typing-update
-    rev: v0.3.2
+    rev: v0.3.3
     hooks:
       # Run `python-typing-update` hook manually from time to time
       # to update python typing syntax.

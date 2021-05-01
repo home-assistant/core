@@ -220,6 +220,8 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         self._optimistic = optimistic or (not state_template and not position_template)
         self._tilt_optimistic = tilt_optimistic or not tilt_template
         self._position = None
+        self._is_opening = False
+        self._is_closing = False
         self._tilt_value = None
         self._unique_id = unique_id
 
@@ -261,6 +263,9 @@ class CoverTemplate(TemplateEntity, CoverEntity):
                 self._position = 100
             else:
                 self._position = 0
+
+            self._is_opening = state == STATE_OPENING
+            self._is_closing = state == STATE_CLOSING
         else:
             _LOGGER.error(
                 "Received invalid cover is_on state: %s. Expected: %s",
@@ -318,6 +323,16 @@ class CoverTemplate(TemplateEntity, CoverEntity):
     def is_closed(self):
         """Return if the cover is closed."""
         return self._position == 0
+
+    @property
+    def is_opening(self):
+        """Return if the cover is currently opening."""
+        return self._is_opening
+
+    @property
+    def is_closing(self):
+        """Return if the cover is currently closing."""
+        return self._is_closing
 
     @property
     def current_cover_position(self):

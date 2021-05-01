@@ -8,5 +8,6 @@
     "oauth2client==4.0.0"
   ],
   "config_flow": true,
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

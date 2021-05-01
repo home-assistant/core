@@ -1,6 +1,7 @@
 """Helpers for config validation using voluptuous."""
 from __future__ import annotations
 
+from collections.abc import Hashable
 from datetime import (
     date as date_sys,
     datetime as datetime_sys,
@@ -14,7 +15,7 @@ from numbers import Number
 import os
 import re
 from socket import _GLOBAL_DEFAULT_TIMEOUT  # type: ignore # private, not in typeshed
-from typing import Any, Callable, Dict, Hashable, Pattern, TypeVar, cast
+from typing import Any, Callable, Dict, TypeVar, cast
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -204,7 +205,7 @@ def matches_regex(regex: str) -> Callable[[Any], str]:
     return validator
 
 
-def is_regex(value: Any) -> Pattern[Any]:
+def is_regex(value: Any) -> re.Pattern[Any]:
     """Validate that a string is a valid regular expression."""
     try:
         r = re.compile(value)
@@ -482,7 +483,7 @@ def schema_with_slug_keys(
         for key in value.keys():
             slug_validator(key)
 
-        return cast(Dict, schema(value))
+        return cast(dict, schema(value))
 
     return verify
 
@@ -711,7 +712,7 @@ def deprecated(
         - No warning if neither key nor replacement_key are provided
             - Adds replacement_key with default value in this case
     """
-    module = inspect.getmodule(inspect.stack()[1][0])
+    module = inspect.getmodule(inspect.stack(context=0)[1].frame)
     if module is not None:
         module_name = module.__name__
     else:
@@ -1200,7 +1201,7 @@ SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
 SCRIPT_ACTION_VARIABLES = "variables"
 
 
-def determine_script_action(action: dict) -> str:
+def determine_script_action(action: dict[str, Any]) -> str:
     """Determine action type."""
     if CONF_DELAY in action:
         return SCRIPT_ACTION_DELAY

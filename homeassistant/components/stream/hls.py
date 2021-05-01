@@ -81,8 +81,8 @@ class HlsPlaylistView(StreamView):
             return []
 
         playlist = [
-            "#EXT-X-MEDIA-SEQUENCE:{}".format(segments[0].sequence),
-            "#EXT-X-DISCONTINUITY-SEQUENCE:{}".format(segments[0].stream_id),
+            f"#EXT-X-MEDIA-SEQUENCE:{segments[0].sequence}",
+            f"#EXT-X-DISCONTINUITY-SEQUENCE:{segments[0].stream_id}",
         ]
 
         last_stream_id = segments[0].stream_id
@@ -91,7 +91,7 @@ class HlsPlaylistView(StreamView):
                 playlist.append("#EXT-X-DISCONTINUITY")
             playlist.extend(
                 [
-                    "#EXTINF:{:.04f},".format(float(segment.duration)),
+                    f"#EXTINF:{float(segment.duration):.04f},",
                     f"./segment/{segment.sequence}.m4s",
                 ]
             )

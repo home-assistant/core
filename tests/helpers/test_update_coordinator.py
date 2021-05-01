@@ -335,6 +335,15 @@ async def test_stop_refresh_on_ha_stop(hass, crd):
     await hass.async_block_till_done()
     assert crd.data == 1
 
+    # Ensure we can still manually refresh after stop
+    await crd.async_refresh()
+    assert crd.data == 2
+
+    # ...and that the manual refresh doesn't setup another scheduled refresh
+    async_fire_time_changed(hass, utcnow() + update_interval)
+    await hass.async_block_till_done()
+    assert crd.data == 2
+
 
 @pytest.mark.parametrize(
     "err_msg",

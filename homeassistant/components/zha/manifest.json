@@ -7,7 +7,7 @@
     "bellows==0.23.1",
     "pyserial==3.5",
     "pyserial-asyncio==0.5",
-    "zha-quirks==0.0.56",
+    "zha-quirks==0.0.57",
     "zigpy-cc==0.5.2",
     "zigpy-deconz==0.12.0",
     "zigpy==0.33.0",
@@ -16,6 +16,12 @@
     "zigpy-znp==0.4.0"
   ],
   "codeowners": ["@dmulcahey", "@adminiuga"],
-  "zeroconf": [{ "type": "_esphomelib._tcp.local.", "name": "tube*" }],
-  "after_dependencies": ["zeroconf"]
+  "zeroconf": [
+    {
+      "type": "_esphomelib._tcp.local.",
+      "name": "tube*"
+    }
+  ],
+  "after_dependencies": ["zeroconf"],
+  "iot_class": "local_polling"
 }

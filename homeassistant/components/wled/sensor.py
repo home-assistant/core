@@ -13,8 +13,8 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
 from . import WLEDDataUpdateCoordinator, WLEDDeviceEntity
@@ -22,7 +22,7 @@ from .const import ATTR_LED_COUNT, ATTR_MAX_POWER, CURRENT_MA, DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
