@@ -29,7 +29,7 @@
                 "data": {
                     "service": "Service"
                 },
-                "description": "Select **iBus** service to get the remainng time for the next bus on a given stop, or select **Planner** to get the time travel between two locations.",
+                "description": "There are two available services:<br /><br />- **iBus**: Select this service to get the remainng time for the next bus on a given stop. <br />- **Planner**: Select this service to get the travel time between two locations.",
                 "title": "Select a service"
             }
         }
