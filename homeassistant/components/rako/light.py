@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 import python_rako
 from python_rako.exceptions import RakoBridgeError
@@ -17,11 +17,13 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from . import DATA_RAKO_BRIDGE_CLIENT, DOMAIN
-from .const import ATTR_CHANNEL_ID, ATTR_MANUFACTURER, ATTR_ROOM_ID
+from .const import DATA_RAKO_BRIDGE_CLIENT, DOMAIN
 from .util import create_unique_id
+
+if TYPE_CHECKING:
+    from .bridge import RakoBridge
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +57,7 @@ async def async_setup_entry(
 class RakoLight(LightEntity):
     """Representation of a Rako Light."""
 
-    def __init__(self, bridge, light: python_rako.Light):
+    def __init__(self, bridge: RakoBridge, light: python_rako.Light):
         """Initialize a RakoLight."""
         self.bridge = bridge
         self._light = light
@@ -74,7 +76,7 @@ class RakoLight(LightEntity):
         await self.bridge.deregister_for_state_updates(self)
 
     @property
-    def unique_id(self) -> str | None:
+    def unique_id(self) -> str:
         """Light's unique ID."""
         return create_unique_id(
             self.bridge.entry_id, self._light.room_id, self._light.channel_id
@@ -86,18 +88,18 @@ class RakoLight(LightEntity):
         return self._available
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of the light."""
         return self._brightness
 
     @brightness.setter
-    def brightness(self, value):
+    def brightness(self, value: int) -> None:
         """Set the brightness. Used when state is updated outside Home Assistant."""
         self._brightness = value
         self.async_write_ha_state()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if light is on."""
         return self.brightness > 0
 
@@ -116,32 +118,32 @@ class RakoLight(LightEntity):
         await self.async_turn_on(brightness=0)
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this Rako Light."""
         return {
-            ATTR_MANUFACTURER: "Rako",
-            ATTR_ROOM_ID: self._light.room_id,
-            ATTR_CHANNEL_ID: self._light.channel_id,
+            "manufacturer": "Rako",
+            "suggested_area": self._light.room_title,
         }
 
 
 class RakoRoomLight(RakoLight):
     """Representation of a Rako Room Light."""
 
-    def __init__(self, bridge, light: python_rako.RoomLight):
+    def __init__(self, bridge: RakoBridge, light: python_rako.RoomLight):
         """Initialize a RakoLight."""
         super().__init__(bridge, light)
         self._light = light
 
     def _init_get_brightness_from_cache(self) -> int:
         scene_of_room = self.bridge.scene_cache.get(self._light.room_id, 0)
-        brightness = convert_to_brightness(scene_of_room)
+        brightness: int = convert_to_brightness(scene_of_room)
         return brightness
 
     @property
     def name(self) -> str:
         """Return the display name of this light."""
-        return self._light.room_title
+        room_title: str = self._light.room_title
+        return room_title
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -163,14 +165,14 @@ class RakoRoomLight(RakoLight):
 class RakoChannelLight(RakoLight):
     """Representation of a Rako Channel Light."""
 
-    def __init__(self, bridge, light: python_rako.ChannelLight):
+    def __init__(self, bridge: RakoBridge, light: python_rako.ChannelLight):
         """Initialize a RakoLight."""
         super().__init__(bridge, light)
         self._light = light
 
     def _init_get_brightness_from_cache(self) -> int:
         scene_of_room = self.bridge.scene_cache.get(self._light.room_id, 0)
-        brightness = self.bridge.level_cache.get_channel_level(
+        brightness: int = self.bridge.level_cache.get_channel_level(
             self._light.room_channel, scene_of_room
         )
         return brightness

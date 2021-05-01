@@ -1,4 +1,6 @@
 """The Rako integration."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN

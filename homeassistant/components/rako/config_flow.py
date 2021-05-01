@@ -4,7 +4,8 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from python_rako import Bridge, discover_bridge
+from python_rako import discover_bridge
+from python_rako.bridge import Bridge
 from python_rako.const import RAKO_BRIDGE_DEFAULT_PORT
 from python_rako.exceptions import RakoBridgeError
 from python_rako.model import BridgeInfo
@@ -32,7 +33,7 @@ class RakoConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             host = None
             try:
-                host = await asyncio.wait_for(discover_bridge(), timeout=5.0)
+                host = await asyncio.wait_for(discover_bridge(), timeout=3.0)
             except asyncio.TimeoutError:
                 pass
 
@@ -80,4 +81,4 @@ class RakoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _get_bridge_info(self, host: str, port: int) -> BridgeInfo:
         session = async_get_clientsession(self.hass)
         bridge = Bridge(host, port)
-        return await asyncio.wait_for(bridge.get_info(session), timeout=5.0)
+        return await asyncio.wait_for(bridge.get_info(session), timeout=3.0)
