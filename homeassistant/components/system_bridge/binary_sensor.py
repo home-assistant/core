@@ -1,5 +1,5 @@
 """Support for System Bridge sensors."""
-from typing import Optional
+from __future__ import annotations
 
 from systembridge import Bridge
 
