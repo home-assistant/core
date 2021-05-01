@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN  # pylint:disable=unused-import
+from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
