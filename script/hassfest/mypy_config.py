@@ -26,7 +26,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.atag.*",
     "homeassistant.components.aurora.*",
     "homeassistant.components.awair.*",
-    "homeassistant.components.axis.*",
     "homeassistant.components.azure_devops.*",
     "homeassistant.components.azure_event_hub.*",
     "homeassistant.components.blueprint.*",
