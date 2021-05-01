@@ -202,7 +202,7 @@ azure-eventhub==5.1.0
 base36==0.1.1
 
 # homeassistant.components.zha
-bellows==0.23.1
+bellows==0.24.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.7.15
