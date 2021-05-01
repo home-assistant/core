@@ -38,6 +38,7 @@ PLATFORMS = ["sensor"]
 
 async def async_setup_entry(hass, entry):
     """Set up IQVIA as config entry."""
+    hass.data.setdefault(DOMAIN, {})
     coordinators = {}
 
     if not entry.unique_id:
