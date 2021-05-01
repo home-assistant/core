@@ -32,7 +32,6 @@ async def test_form(hass):
     assert result2["data"] == {
         "address": "0xf98bc863ad9d5dc6415360251ca6f793efc3c390",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
