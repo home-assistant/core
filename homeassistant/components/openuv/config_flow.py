@@ -28,7 +28,6 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an OpenUV config flow."""
 
     VERSION = 2
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def _show_form(self, errors=None):
         """Show the form to the user."""

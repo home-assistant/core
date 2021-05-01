@@ -6,7 +6,7 @@ from typing import Any
 from elgato import Elgato, ElgatoError
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -19,7 +19,6 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Elgato Key Light config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     host: str
     port: int
