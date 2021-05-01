@@ -179,7 +179,6 @@ async def setup_bridge(hass, mock_bridge):
         "Mock Title",
         {"host": "mock-host"},
         "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
         system_options={},
     )
     mock_bridge.config_entry = config_entry

@@ -1,10 +1,10 @@
 """The National Weather Service integration."""
 from __future__ import annotations
 
-import asyncio
+from collections.abc import Awaitable
 import datetime
 import logging
-from typing import Awaitable, Callable
+from typing import Callable
 
 from pynws import SimpleNWS
 
@@ -38,11 +38,6 @@ DEBOUNCE_TIME = 60  # in seconds
 def base_unique_id(latitude, longitude):
     """Return unique id for entries in configuration."""
     return f"{latitude}_{longitude}"
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the National Weather Service (NWS) component."""
-    return True
 
 
 class NwsDataUpdateCoordinator(DataUpdateCoordinator):
@@ -159,23 +154,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await coordinator_forecast.async_refresh()
     await coordinator_forecast_hourly.async_refresh()
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
         if len(hass.data[DOMAIN]) == 0:

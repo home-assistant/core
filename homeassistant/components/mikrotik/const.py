@@ -37,6 +37,8 @@ MIKROTIK_SERVICES = {
     IS_CAPSMAN: "/caps-man/interface/print",
 }
 
+PLATFORMS = ["device_tracker"]
+
 ATTR_DEVICE_TRACKER = [
     "comment",
     "mac-address",

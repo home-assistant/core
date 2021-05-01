@@ -1,6 +1,4 @@
 """Support for MySensors binary sensors."""
-from typing import Callable
-
 from homeassistant.components import mysensors
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOISTURE,
@@ -16,9 +14,9 @@ from homeassistant.components.mysensors import on_unload
 from homeassistant.components.mysensors.const import MYSENSORS_DISCOVERY
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 SENSORS = {
     "S_DOOR": "door",
@@ -33,7 +31,9 @@ SENSORS = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ):
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
 

@@ -29,6 +29,19 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
+  "config_panel": {
+    "zha_options": {
+      "title": "Global Options",
+      "enable_identify_on_join": "Enable identify effect when devices join the network",
+      "default_light_transition": "Default light transition time (seconds)"
+    },
+    "zha_alarm_options": {
+      "title": "Alarm Control Panel Options",
+      "alarm_master_code": "Master code for the alarm control panel(s)",
+      "alarm_failed_tries": "The number of consecutive failed code entries to trigger an alarm",
+      "alarm_arm_requires_code": "Code required for arming actions"
+    }
+  },
   "device_automation": {
     "action_type": { "squawk": "Squawk", "warn": "Warn" },
     "trigger_type": {

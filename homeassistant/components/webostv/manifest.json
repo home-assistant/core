@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/webostv",
   "requirements": ["aiopylgtv==0.4.0"],
   "dependencies": ["configurator"],
-  "codeowners": ["@bendavid"]
+  "codeowners": ["@bendavid"],
+  "iot_class": "local_polling"
 }

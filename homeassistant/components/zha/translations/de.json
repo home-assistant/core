@@ -66,6 +66,7 @@
             "device_dropped": "Ger\u00e4t ist gefallen",
             "device_flipped": "Ger\u00e4t umgedreht \"{subtype}\"",
             "device_knocked": "Ger\u00e4t klopfte \"{subtype}\"",
+            "device_offline": "Ger\u00e4t offline",
             "device_rotated": "Ger\u00e4t wurde gedreht \"{subtype}\"",
             "device_shaken": "Ger\u00e4t ersch\u00fcttert",
             "device_slid": "Ger\u00e4t gerutscht \"{subtype}\"",

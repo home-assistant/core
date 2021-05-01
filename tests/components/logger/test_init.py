@@ -42,6 +42,7 @@ async def test_log_filtering(hass, caplog):
                         "doesntmatchanything",
                         ".*shouldfilterall.*",
                         "^filterthis:.*",
+                        "in the middle",
                     ],
                     "test.other_filter": [".*otherfilterer"],
                 },
@@ -62,6 +63,7 @@ async def test_log_filtering(hass, caplog):
         filter_logger, False, "this line containing shouldfilterall should be filtered"
     )
     msg_test(filter_logger, True, "this line should not be filtered filterthis:")
+    msg_test(filter_logger, False, "this in the middle should be filtered")
     msg_test(filter_logger, False, "filterthis: should be filtered")
     msg_test(filter_logger, False, "format string shouldfilter%s", "all")
     msg_test(filter_logger, True, "format string shouldfilter%s", "not")

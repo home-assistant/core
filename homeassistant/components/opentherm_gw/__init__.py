@@ -1,5 +1,4 @@
 """Support for OpenTherm Gateway devices."""
-import asyncio
 from datetime import date, datetime
 import logging
 
@@ -81,6 +80,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = [COMP_BINARY_SENSOR, COMP_CLIMATE, COMP_SENSOR]
+
 
 async def options_updated(hass, entry):
     """Handle options update."""
@@ -112,10 +113,7 @@ async def async_setup_entry(hass, config_entry):
     # Schedule directly on the loop to avoid blocking HA startup.
     hass.loop.create_task(gateway.connect_and_subscribe())
 
-    for comp in [COMP_BINARY_SENSOR, COMP_CLIMATE, COMP_SENSOR]:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, comp)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     register_services(hass)
     return True
@@ -400,14 +398,10 @@ def register_services(hass):
 
 async def async_unload_entry(hass, entry):
     """Cleanup and disconnect from gateway."""
-    await asyncio.gather(
-        hass.config_entries.async_forward_entry_unload(entry, COMP_BINARY_SENSOR),
-        hass.config_entries.async_forward_entry_unload(entry, COMP_CLIMATE),
-        hass.config_entries.async_forward_entry_unload(entry, COMP_SENSOR),
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     gateway = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][entry.data[CONF_ID]]
     await gateway.cleanup()
-    return True
+    return unload_ok
 
 
 class OpenThermGatewayDevice:

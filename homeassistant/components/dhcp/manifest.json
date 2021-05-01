@@ -2,10 +2,8 @@
   "domain": "dhcp",
   "name": "DHCP Discovery",
   "documentation": "https://www.home-assistant.io/integrations/dhcp",
-  "requirements": [
-    "scapy==2.4.4", "aiodiscover==1.3.3"
-  ],
-  "codeowners": [
-    "@bdraco"
-  ]
+  "requirements": ["scapy==2.4.5", "aiodiscover==1.4.0"],
+  "codeowners": ["@bdraco"],
+  "quality_scale": "internal",
+  "iot_class": "local_push"
 }

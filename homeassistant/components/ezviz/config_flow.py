@@ -5,7 +5,7 @@ from pyezviz.client import EzvizClient, HTTPError, InvalidURL, PyEzvizError
 from pyezviz.test_cam_rtsp import AuthTestResultFailed, InvalidHost, TestRTSPAuth
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_CUSTOMIZE,
     CONF_IP_ADDRESS,
@@ -17,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     ATTR_SERIAL,
     ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
@@ -61,7 +61,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ezviz."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
     async def _validate_and_create_auth(self, data):
         """Try to login to ezviz cloud account and create entry if successful."""

@@ -1,9 +1,9 @@
 """Config flow for 1-Wire component."""
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .const import (
     CONF_MOUNT_DIR,
@@ -33,7 +33,7 @@ DATA_SCHEMA_MOUNTDIR = vol.Schema(
 )
 
 
-async def validate_input_owserver(hass: HomeAssistantType, data):
+async def validate_input_owserver(hass: HomeAssistant, data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA_OWSERVER with values provided by the user.
@@ -50,7 +50,7 @@ async def validate_input_owserver(hass: HomeAssistantType, data):
     return {"title": host}
 
 
-def is_duplicate_owserver_entry(hass: HomeAssistantType, user_input):
+def is_duplicate_owserver_entry(hass: HomeAssistant, user_input):
     """Check existing entries for matching host and port."""
     for config_entry in hass.config_entries.async_entries(DOMAIN):
         if (
@@ -62,7 +62,7 @@ def is_duplicate_owserver_entry(hass: HomeAssistantType, user_input):
     return False
 
 
-async def validate_input_mount_dir(hass: HomeAssistantType, data):
+async def validate_input_mount_dir(hass: HomeAssistant, data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA_MOUNTDIR with values provided by the user.
@@ -82,7 +82,6 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle 1-Wire config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize 1-Wire config flow."""

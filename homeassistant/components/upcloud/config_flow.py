@@ -19,7 +19,6 @@ class UpCloudConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """UpCloud config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     username: str
     password: str
@@ -104,7 +103,7 @@ class UpCloudOptionsFlow(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(CONF_SCAN_INTERVAL)
-                    or DEFAULT_SCAN_INTERVAL.seconds,
+                    or DEFAULT_SCAN_INTERVAL.total_seconds(),
                 ): vol.All(vol.Coerce(int), vol.Range(min=30)),
             }
         )

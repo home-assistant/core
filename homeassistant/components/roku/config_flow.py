@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 from urllib.parse import urlparse
 
 from rokuecp import Roku, RokuError
@@ -13,11 +12,11 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_SERIAL,
 )
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
 
@@ -29,7 +28,7 @@ ERROR_UNKNOWN = "unknown"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: HomeAssistantType, data: dict) -> dict:
+async def validate_input(hass: HomeAssistant, data: dict) -> dict:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -48,14 +47,13 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Roku config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Set up the instance."""
         self.discovery_info = {}
 
     @callback
-    def _show_form(self, errors: dict | None = None) -> dict[str, Any]:
+    def _show_form(self, errors: dict | None = None) -> FlowResult:
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -63,7 +61,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_user(self, user_input: dict | None = None) -> dict[str, Any]:
+    async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
         """Handle a flow initialized by the user."""
         if not user_input:
             return self._show_form()
@@ -114,9 +112,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
-    async def async_step_ssdp(
-        self, discovery_info: dict | None = None
-    ) -> dict[str, Any]:
+    async def async_step_ssdp(self, discovery_info: dict | None = None) -> FlowResult:
         """Handle a flow initialized by discovery."""
         host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         name = discovery_info[ATTR_UPNP_FRIENDLY_NAME]
@@ -142,7 +138,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(
         self, user_input: dict | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Handle user-confirmation of discovered device."""
         if user_input is None:
             return self.async_show_form(

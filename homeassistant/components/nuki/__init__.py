@@ -1,6 +1,5 @@
 """The nuki component."""
 
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -10,7 +9,7 @@ from pynuki.bridge import InvalidCredentialsException
 from requests.exceptions import RequestException
 
 from homeassistant import exceptions
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -85,13 +84,8 @@ async def async_setup_entry(hass, entry):
         )
 
         locks, openers = await hass.async_add_executor_job(_get_bridge_devices, bridge)
-    except InvalidCredentialsException:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_REAUTH}, data=entry.data
-            )
-        )
-        return False
+    except InvalidCredentialsException as err:
+        raise exceptions.ConfigEntryAuthFailed from err
     except RequestException as err:
         raise exceptions.ConfigEntryNotReady from err
 
@@ -127,24 +121,14 @@ async def async_setup_entry(hass, entry):
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload the Nuki entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 

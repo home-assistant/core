@@ -15,7 +15,6 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize flow."""
@@ -133,7 +132,7 @@ class CastOptionsFlowHandler(config_entries.OptionsFlow):
             )
 
             if not bad_cec and not bad_hosts and not bad_uuid:
-                updated_config = {}
+                updated_config = dict(current_config)
                 updated_config[CONF_IGNORE_CEC] = ignore_cec
                 updated_config[CONF_KNOWN_HOSTS] = known_hosts
                 updated_config[CONF_UUID] = wanted_uuid

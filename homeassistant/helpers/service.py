@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Iterable
 import dataclasses
 from functools import partial, wraps
 import logging
-from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterable, TypedDict
+from typing import TYPE_CHECKING, Any, Callable, TypedDict
 
 import voluptuous as vol
 
@@ -362,8 +363,16 @@ async def async_extract_referenced_entity_ids(
         return selected
 
     for ent_entry in ent_reg.entities.values():
-        if ent_entry.area_id in selector.area_ids or (
-            not ent_entry.area_id and ent_entry.device_id in selected.referenced_devices
+        if (
+            # when area matches the target area
+            ent_entry.area_id in selector.area_ids
+            # when device matches a referenced devices with no explicitly set area
+            or (
+                not ent_entry.area_id
+                and ent_entry.device_id in selected.referenced_devices
+            )
+            # when device matches target device
+            or ent_entry.device_id in selector.device_ids
         ):
             selected.indirectly_referenced.add(ent_entry.entity_id)
 

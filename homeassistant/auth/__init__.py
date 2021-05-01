@@ -4,13 +4,14 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict
 from datetime import timedelta
-from typing import Any, Dict, Optional, Tuple, cast
+from typing import Any, Dict, Mapping, Optional, Tuple, cast
 
 import jwt
 
 from homeassistant import data_entry_flow
 from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util import dt as dt_util
 
 from . import auth_store, models
@@ -97,8 +98,8 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
         return await auth_provider.async_login_flow(context)
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: dict[str, Any]
-    ) -> dict[str, Any]:
+        self, flow: data_entry_flow.FlowHandler, result: FlowResult
+    ) -> FlowResult:
         """Return a user as result of login flow."""
         flow = cast(LoginFlow, flow)
 
@@ -115,7 +116,7 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
             raise KeyError(f"Unknown auth provider {result['handler']}")
 
         credentials = await auth_provider.async_get_or_create_credentials(
-            result["data"]
+            cast(Mapping[str, str], result["data"]),
         )
 
         if flow.context.get("credential_only"):

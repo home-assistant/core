@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 from homeassistant.components import huisbaasje
-from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -35,7 +34,6 @@ async def test_setup_entry(hass: HomeAssistant):
                 CONF_PASSWORD: "password",
             },
             source="test",
-            connection_class=CONN_CLASS_CLOUD_POLL,
             system_options={},
         )
         config_entry.add_to_hass(hass)
@@ -92,7 +90,6 @@ async def test_setup_entry_absent_measurement(hass: HomeAssistant):
                 CONF_PASSWORD: "password",
             },
             source="test",
-            connection_class=CONN_CLASS_CLOUD_POLL,
             system_options={},
         )
         config_entry.add_to_hass(hass)

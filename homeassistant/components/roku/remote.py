@@ -1,20 +1,19 @@
 """Support for the Roku remote."""
 from __future__ import annotations
 
-from typing import Callable
-
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RokuDataUpdateCoordinator, RokuEntity, roku_exception_handler
 from .const import DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list, bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> bool:
     """Load Roku remote based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
