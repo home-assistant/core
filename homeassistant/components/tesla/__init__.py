@@ -155,7 +155,7 @@ async def async_setup_entry(hass, config_entry):
             password=config.get(CONF_PASSWORD),
             refresh_token=config[CONF_TOKEN],
             access_token=config[CONF_ACCESS_TOKEN],
-            expiration=config[CONF_EXPIRATION],
+            expiration=config.get(CONF_EXPIRATION, 0),
             update_interval=config_entry.options.get(
                 CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
             ),
