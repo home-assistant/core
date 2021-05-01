@@ -60,6 +60,7 @@ class FritzBoxTools:
         self.password = password
         self.port = port
         self.username = username
+        self.mac = None
         self.model = None
         self.sw_version = None
 
