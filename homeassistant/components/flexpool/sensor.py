@@ -11,7 +11,7 @@ import flexpoolapi
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
-async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Etherscan.io sensors."""
     address = entry.data["address"]
 
