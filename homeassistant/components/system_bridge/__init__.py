@@ -169,9 +169,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         schema=SERVICE_SEND_COMMAND_SCHEMA,
     )
 
-    if hass.services.has_service(DOMAIN, SERVICE_OPEN):
-        return True
-
     hass.services.async_register(
         DOMAIN,
         SERVICE_OPEN,
