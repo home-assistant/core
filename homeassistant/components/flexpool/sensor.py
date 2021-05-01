@@ -1,7 +1,7 @@
 """Support for Flexpool sensors."""
 from datetime import timedelta
 
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, CONF_NAME, CONF_ICON, CONF_TYPE
 from homeassistant.helpers.entity import Entity
 
 from .const import SENSOR_DICT
@@ -70,8 +70,8 @@ class FlexpoolBalanceSensor(Entity):
     def __init__(self, name, address):
         """Initialize the sensor."""
         info = SENSOR_DICT[name]
-        self._name = info[0]
-        self._icon = info[1]
+        self._name = info[CONF_NAME]
+        self._icon = info[CONF_ICON]
         self._address = address
         self._state = None
         self._unit_of_measurement = "ETH"
@@ -110,9 +110,9 @@ class FlexpoolHashrateSensor(Entity):
     def __init__(self, name, address):
         """Initialize the sensor."""
         info = SENSOR_DICT[name]
-        self._name = info[0]
-        self._icon = info[1]
-        self._type = info[2]
+        self._name = info[CONF_NAME]
+        self._icon = info[CONF_ICON]
+        self._type = info[CONF_TYPE]
         self._address = address
         self._state = None
         self._unit = "H/s"
@@ -159,8 +159,8 @@ class FlexpoolWorkerHashrateSensor(Entity):
         """Initialize the sensor."""
         info = SENSOR_DICT[name]
         self._worker_name = worker
-        self._icon = info[1]
-        self._type = info[2]
+        self._icon = info[CONF_ICON]
+        self._type = info[CONF_TYPE]
         self._address = address
         self._state = None
         self._unit = "H/s"
@@ -214,8 +214,8 @@ class FlexpoolWorkerShareSensor(Entity):
         """Initialize the sensor."""
         info = SENSOR_DICT[name]
         self._worker_name = worker
-        self._icon = info[1]
-        self._type = info[2]
+        self._icon = info[CONF_ICON]
+        self._type = info[CONF_TYPE]
         self._address = address
         self._state = None
 
@@ -268,8 +268,8 @@ class FlexpoolPoolHashrateSensor(Entity):
     def __init__(self, name):
         """Initialize the sensor."""
         info = SENSOR_DICT[name]
-        self._name = info[0]
-        self._icon = info[1]
+        self._name = info[CONF_NAME]
+        self._icon = info[CONF_ICON]
         self._state = None
         self._unit = "H/s"
 
@@ -306,8 +306,8 @@ class FlexpoolPoolWorkersSensor(Entity):
     def __init__(self, name):
         """Initialize the sensor."""
         info = SENSOR_DICT[name]
-        self._name = info[0]
-        self._icon = info[1]
+        self._name = info[CONF_NAME]
+        self._icon = info[CONF_ICON]
         self._state = None
 
     @property
@@ -341,8 +341,8 @@ class FlexpoolPoolLuckSensor(Entity):
     def __init__(self, name):
         """Initialize the sensor."""
         info = SENSOR_DICT[name]
-        self._name = info[0]
-        self._icon = info[1]
+        self._name = info[CONF_NAME]
+        self._icon = info[CONF_ICON]
         self._state = None
 
     @property

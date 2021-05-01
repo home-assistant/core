@@ -8,5 +8,6 @@
   "codeowners": [
     "@DatDraggy"
   ],
-  "config_flow": true
+  "config_flow": true,
+  "iot_class": "Cloud Polling"
 }
