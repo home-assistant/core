@@ -28,7 +28,6 @@ from homeassistant.helpers import (
     device_registry as dr,
 )
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -57,77 +56,6 @@ SERVICE_OPEN = "open"
 SERVICE_OPEN_SCHEMA = vol.Schema(
     {vol.Required(CONF_BRIDGE): cv.string, vol.Required(CONF_PATH): cv.string}
 )
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the System Bridge integration."""
-
-    async def handle_send_command(call):
-        """Handle the send_command service call."""
-        device_registry = await hass.helpers.device_registry.async_get_registry()
-        device_entry = device_registry.async_get(call.data.get(CONF_BRIDGE))
-
-        command = call.data.get(CONF_COMMAND)
-        arguments = shlex.split(call.data.get(CONF_ARGUMENTS, ""))
-
-        coordinator: DataUpdateCoordinator = hass.data[DOMAIN][
-            next(iter(device_entry.config_entries))
-        ]
-        bridge: Bridge = coordinator.data
-
-        _LOGGER.debug(
-            "Command payload: %s",
-            {CONF_COMMAND: command, CONF_ARGUMENTS: arguments, CONF_WAIT: False},
-        )
-        try:
-            response: CommandResponse = await bridge.async_send_command(
-                {CONF_COMMAND: command, CONF_ARGUMENTS: arguments, CONF_WAIT: False}
-            )
-            if response.success:
-                _LOGGER.debug(
-                    "Sent command. Response message was: %s", response.message
-                )
-            else:
-                _LOGGER.warning(
-                    "Error sending command. Response message was: %s", response.message
-                )
-        except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
-            _LOGGER.warning("Error sending command. Error was: %s", exception)
-
-    async def handle_open(call):
-        """Handle the open service call."""
-        device_registry = await hass.helpers.device_registry.async_get_registry()
-        device_entry = device_registry.async_get(call.data.get(CONF_BRIDGE))
-
-        path = call.data.get(CONF_PATH)
-
-        coordinator: DataUpdateCoordinator = hass.data[DOMAIN][
-            next(iter(device_entry.config_entries))
-        ]
-        bridge: Bridge = coordinator.data
-
-        _LOGGER.debug("Open payload: %s", {CONF_PATH: path})
-        try:
-            await bridge.async_open({CONF_PATH: path})
-            _LOGGER.debug("Sent open request")
-        except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
-            _LOGGER.warning("Error sending. Error was: %s", exception)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SEND_COMMAND,
-        handle_send_command,
-        schema=SERVICE_SEND_COMMAND_SCHEMA,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_OPEN,
-        handle_open,
-        schema=SERVICE_OPEN_SCHEMA,
-    )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -182,6 +110,77 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
+
+    async def handle_send_command(call):
+        """Handle the send_command service call."""
+        device_registry = await hass.helpers.device_registry.async_get_registry()
+        device_entry = device_registry.async_get(call.data.get(CONF_BRIDGE))
+
+        command = call.data.get(CONF_COMMAND)
+        arguments = shlex.split(call.data.get(CONF_ARGUMENTS, ""))
+
+        coordinator: DataUpdateCoordinator = hass.data[DOMAIN][
+            next(iter(device_entry.config_entries))
+        ]
+        bridge: Bridge = coordinator.data
+
+        _LOGGER.debug(
+            "Command payload: %s",
+            {CONF_COMMAND: command, CONF_ARGUMENTS: arguments, CONF_WAIT: False},
+        )
+        try:
+            response: CommandResponse = await bridge.async_send_command(
+                {CONF_COMMAND: command, CONF_ARGUMENTS: arguments, CONF_WAIT: False}
+            )
+            if response.success:
+                _LOGGER.debug(
+                    "Sent command. Response message was: %s", response.message
+                )
+            else:
+                _LOGGER.warning(
+                    "Error sending command. Response message was: %s", response.message
+                )
+        except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
+            _LOGGER.warning("Error sending command. Error was: %s", exception)
+
+    async def handle_open(call):
+        """Handle the open service call."""
+        device_registry = await hass.helpers.device_registry.async_get_registry()
+        device_entry = device_registry.async_get(call.data.get(CONF_BRIDGE))
+
+        path = call.data.get(CONF_PATH)
+
+        coordinator: DataUpdateCoordinator = hass.data[DOMAIN][
+            next(iter(device_entry.config_entries))
+        ]
+        bridge: Bridge = coordinator.data
+
+        _LOGGER.debug("Open payload: %s", {CONF_PATH: path})
+        try:
+            await bridge.async_open({CONF_PATH: path})
+            _LOGGER.debug("Sent open request")
+        except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
+            _LOGGER.warning("Error sending. Error was: %s", exception)
+
+    if hass.services.has_service(DOMAIN, SERVICE_SEND_COMMAND):
+        return True
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEND_COMMAND,
+        handle_send_command,
+        schema=SERVICE_SEND_COMMAND_SCHEMA,
+    )
+
+    if hass.services.has_service(DOMAIN, SERVICE_OPEN):
+        return True
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_OPEN,
+        handle_open,
+        schema=SERVICE_OPEN_SCHEMA,
+    )
 
     return True
 
