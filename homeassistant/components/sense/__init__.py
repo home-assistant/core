@@ -98,8 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # successful so we do it later.
     asyncio.create_task(trends_coordinator.async_request_refresh())
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         SENSE_DATA: gateway,
         SENSE_DEVICES_DATA: sense_devices_data,
         SENSE_TRENDS_COORDINATOR: trends_coordinator,
