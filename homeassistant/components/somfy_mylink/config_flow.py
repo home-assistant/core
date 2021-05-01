@@ -51,7 +51,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Somfy MyLink."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_ASSUMED
 
     def __init__(self):
         """Initialize the somfy_mylink flow."""

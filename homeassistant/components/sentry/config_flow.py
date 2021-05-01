@@ -37,7 +37,6 @@ class SentryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Sentry config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @staticmethod
     @callback
