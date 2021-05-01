@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, Optional, cast
 
 from elgato import Elgato, ElgatoError, Info, State
 
@@ -17,7 +17,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
     ATTR_IDENTIFIERS,
@@ -59,10 +59,10 @@ class ElgatoLight(LightEntity):
         self.elgato = elgato
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return the name of the entity."""
         # Return the product name, if display name is not set
-        return self._info.display_name or self._info.product_name
+        return cast(Optional[str], self._info.display_name or self._info.product_name)
 
     @property
     def available(self) -> bool:
@@ -72,7 +72,7 @@ class ElgatoLight(LightEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
-        return self._info.serial_number
+        return cast(str, self._info.serial_number)
 
     @property
     def brightness(self) -> int | None:
@@ -84,7 +84,7 @@ class ElgatoLight(LightEntity):
     def color_temp(self) -> int | None:
         """Return the CT color value in mireds."""
         assert self._state is not None
-        return self._state.temperature
+        return cast(Optional[int], self._state.temperature)
 
     @property
     def min_mireds(self) -> int:
@@ -105,7 +105,7 @@ class ElgatoLight(LightEntity):
     def is_on(self) -> bool:
         """Return the state of the light."""
         assert self._state is not None
-        return self._state.on
+        return cast(bool, self._state.on)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
@@ -143,12 +143,15 @@ class ElgatoLight(LightEntity):
             self._state = None
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo | None:
         """Return device information about this Elgato Key Light."""
-        return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._info.serial_number)},
-            ATTR_NAME: self._info.product_name,
-            ATTR_MANUFACTURER: "Elgato",
-            ATTR_MODEL: self._info.product_name,
-            ATTR_SOFTWARE_VERSION: f"{self._info.firmware_version} ({self._info.firmware_build_number})",
-        }
+        return cast(
+            DeviceInfo,
+            {
+                ATTR_IDENTIFIERS: {(DOMAIN, self._info.serial_number)},
+                ATTR_NAME: self._info.product_name,
+                ATTR_MANUFACTURER: "Elgato",
+                ATTR_MODEL: self._info.product_name,
+                ATTR_SOFTWARE_VERSION: f"{self._info.firmware_version} ({self._info.firmware_build_number})",
+            },
+        )
