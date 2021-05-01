@@ -39,8 +39,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import (
+    DeviceEntry,
+    async_get_registry as get_dev_reg,
+)
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
@@ -189,6 +193,22 @@ async def async_setup_entry(  # noqa: C901
         return {"new_unique_id": new_unique_id}
 
     await entity_registry.async_migrate_entries(hass, entry.entry_id, _async_migrator)
+
+    # migrate device indetifiers
+    dev_reg = await get_dev_reg(hass)
+    devices: list[DeviceEntry] = device_registry.async_entries_for_config_entry(
+        dev_reg, entry.entry_id
+    )
+    for device in devices:
+        old_identifier = list(next(iter(device.identifiers)))
+        if len(old_identifier) > 2:
+            new_identifier = {
+                (old_identifier.pop(0), "_".join([str(x) for x in old_identifier]))
+            }
+            _LOGGER.debug(
+                "migrate identifier '%s' to '%s'", device.identifiers, new_identifier
+            )
+            dev_reg.async_update_device(device.id, new_identifiers=new_identifier)  # type: ignore[arg-type]
 
     # Migrate existing entry configuration
     if entry.data.get(CONF_VERIFY_SSL) is None:
