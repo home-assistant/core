@@ -1,7 +1,7 @@
 """Support for Twente Milieu sensors."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Callable
 
 from twentemilieu import (
     WASTE_TYPE_NON_RECYCLABLE,
@@ -18,7 +18,7 @@ from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DATA_UPDATE, DOMAIN
 
@@ -147,7 +147,7 @@ class TwenteMilieuSensor(SensorEntity):
             self._state = next_pickup.date().isoformat()
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about Twente Milieu."""
         return {
             "identifiers": {(DOMAIN, self._unique_id)},

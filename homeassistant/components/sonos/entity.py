@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from pysonos.core import SoCo
 
@@ -11,7 +10,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
     DOMAIN,
@@ -56,7 +55,7 @@ class SonosEntity(Entity):
         return self.speaker.soco
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         return {
             "identifiers": {(DOMAIN, self.soco.uid)},

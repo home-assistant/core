@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any, Callable
+from typing import Callable
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_GIID, DOMAIN
@@ -59,7 +59,7 @@ class VerisureDoorWindowSensor(CoordinatorEntity, BinarySensorEntity):
         return f"{self.serial_number}_door_window"
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         area = self.coordinator.data["door_window"][self.serial_number]["area"]
         return {
@@ -108,7 +108,7 @@ class VerisureEthernetStatus(CoordinatorEntity, BinarySensorEntity):
         return f"{self.coordinator.entry.data[CONF_GIID]}_ethernet"
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         return {
             "name": "Verisure Alarm",

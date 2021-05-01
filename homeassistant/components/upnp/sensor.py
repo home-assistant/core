@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -165,7 +166,7 @@ class UpnpSensor(CoordinatorEntity, SensorEntity):
         return self._sensor_type["unit"]
 
     @property
-    def device_info(self) -> Mapping[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Get device info."""
         return {
             "connections": {(dr.CONNECTION_UPNP, self._device.udn)},
