@@ -1,5 +1,6 @@
 """Support for System Bridge sensors."""
-from typing import Any, Dict, Optional
+from datetime import datetime, timedelta
+from typing import Any, Dict, Optional, Union
 
 from systembridge import Bridge
 
@@ -165,10 +166,12 @@ class BridgeBatteryTimeRemainingSensor(BridgeSensor):
         )
 
     @property
-    def state(self) -> float:
+    def state(self) -> Union[str, None]:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
-        return bridge.battery.timeRemaining
+        if bridge.battery.timeRemaining is None:
+            return None
+        return str(datetime.now() + timedelta(minutes=bridge.battery.timeRemaining))
 
     @property
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
