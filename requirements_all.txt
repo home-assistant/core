@@ -2223,7 +2223,7 @@ temperusb==1.5.3
 tesla-powerwall==0.3.5
 
 # homeassistant.components.tesla
-teslajsonpy==0.11.5
+teslajsonpy==0.18.1
 
 # homeassistant.components.tensorflow
 # tf-models-official==2.3.0

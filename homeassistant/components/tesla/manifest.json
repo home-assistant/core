@@ -3,7 +3,7 @@
   "name": "Tesla",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tesla",
-  "requirements": ["teslajsonpy==0.11.5"],
+  "requirements": ["teslajsonpy==0.18.1"],
   "codeowners": ["@zabuldon", "@alandtse"],
   "dhcp": [
     {
