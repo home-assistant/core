@@ -2,7 +2,7 @@
 import datetime
 from unittest.mock import patch
 
-from teslajsonpy import TeslaException
+from teslajsonpy.exceptions import IncompleteCredentials, TeslaException
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.tesla.const import (
@@ -79,6 +79,25 @@ async def test_form_invalid_auth(hass):
     with patch(
         "homeassistant.components.tesla.config_flow.TeslaAPI.connect",
         side_effect=TeslaException(401),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: TEST_USERNAME, CONF_PASSWORD: TEST_PASSWORD},
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_invalid_auth_incomplete_credentials(hass):
+    """Test we handle invalid auth with incomplete credentials."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.tesla.config_flow.TeslaAPI.connect",
+        side_effect=IncompleteCredentials(401),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
