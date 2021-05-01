@@ -44,6 +44,16 @@ FIXTURE_ZEROCONF = {
     },
 }
 
+FIXTURE_ZEROCONF_BAD = {
+    CONF_HOST: "1.1.1.1",
+    CONF_PORT: 9170,
+    "hostname": "test-bridge.local.",
+    "type": "_system-bridge._udp.local.",
+    "name": "System Bridge - test-bridge._system-bridge._udp.local.",
+    "properties": {
+        "something": "bad",
+    },
+}
 
 FIXTURE_OS = {
     "platform": "linux",
@@ -356,3 +366,18 @@ async def test_zeroconf_cannot_connect(
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "authenticate"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_zeroconf_bad_zeroconf_info(
+    hass, aiohttp_client, aioclient_mock, current_request_with_host
+) -> None:
+    """Test zeroconf cannot connect flow."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=FIXTURE_ZEROCONF_BAD,
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "unknown"
