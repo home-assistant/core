@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, cast
 
 from elgato import Elgato, ElgatoError, Info, State
 
@@ -62,7 +62,7 @@ class ElgatoLight(LightEntity):
     def name(self) -> str | None:
         """Return the name of the entity."""
         # Return the product name, if display name is not set
-        return cast(Optional[str], self._info.display_name or self._info.product_name)
+        return self._info.display_name or self._info.product_name
 
     @property
     def available(self) -> bool:
@@ -84,7 +84,7 @@ class ElgatoLight(LightEntity):
     def color_temp(self) -> int | None:
         """Return the CT color value in mireds."""
         assert self._state is not None
-        return cast(Optional[int], self._state.temperature)
+        return self._state.temperature
 
     @property
     def min_mireds(self) -> int:
