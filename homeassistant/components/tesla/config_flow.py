@@ -3,6 +3,7 @@ import logging
 
 import httpx
 from teslajsonpy import Controller as TeslaAPI, TeslaException
+from teslajsonpy.exceptions import IncompleteCredentials
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -19,6 +20,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.httpx_client import SERVER_SOFTWARE, USER_AGENT
 
 from .const import (
+    CONF_EXPIRATION,
     CONF_WAKE_ON_START,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_WAKE_ON_START,
@@ -161,11 +163,15 @@ async def validate_input(hass: core.HomeAssistant, data):
         result = await controller.connect(test_login=True)
         config[CONF_TOKEN] = result["refresh_token"]
         config[CONF_ACCESS_TOKEN] = result["access_token"]
+        config[CONF_EXPIRATION] = result[CONF_EXPIRATION]
         config[CONF_USERNAME] = data[CONF_USERNAME]
         config[CONF_PASSWORD] = data[CONF_PASSWORD]
     except TeslaException as ex:
         if ex.code == HTTP_UNAUTHORIZED:
             _LOGGER.error("Invalid credentials: %s", ex)
+            raise InvalidAuth() from ex
+        if isinstance(ex, IncompleteCredentials):
+            _LOGGER.error("Authentication error: %s %s", ex.message, ex)
             raise InvalidAuth() from ex
         _LOGGER.error("Unable to communicate with Tesla API: %s", ex)
         raise CannotConnect() from ex

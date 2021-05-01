@@ -35,6 +35,7 @@ from homeassistant.util import slugify
 
 from .config_flow import CannotConnect, InvalidAuth, validate_input
 from .const import (
+    CONF_EXPIRATION,
     CONF_WAKE_ON_START,
     DATA_LISTENER,
     DEFAULT_SCAN_INTERVAL,
@@ -117,6 +118,7 @@ async def async_setup(hass, base_config):
                 CONF_PASSWORD: password,
                 CONF_ACCESS_TOKEN: info[CONF_ACCESS_TOKEN],
                 CONF_TOKEN: info[CONF_TOKEN],
+                CONF_EXPIRATION: info[CONF_EXPIRATION],
             },
             options={CONF_SCAN_INTERVAL: scan_interval},
         )
@@ -153,6 +155,7 @@ async def async_setup_entry(hass, config_entry):
             password=config.get(CONF_PASSWORD),
             refresh_token=config[CONF_TOKEN],
             access_token=config[CONF_ACCESS_TOKEN],
+            expiration=config[CONF_EXPIRATION],
             update_interval=config_entry.options.get(
                 CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
             ),
