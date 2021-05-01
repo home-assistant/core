@@ -22,7 +22,6 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
     """Config flow for the HomematicIP Cloud component."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     def __init__(self) -> None:
         """Initialize HomematicIP Cloud config flow."""
