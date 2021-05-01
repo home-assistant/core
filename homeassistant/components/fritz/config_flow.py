@@ -5,7 +5,6 @@ from urllib.parse import urlparse
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_FRIENDLY_NAME,
