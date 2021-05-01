@@ -138,7 +138,7 @@ class SonarrEntity(Entity):
         return self._enabled_default
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | None:
         """Return device information about the application."""
         if self._device_id is None:
             return None
