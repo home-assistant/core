@@ -72,7 +72,7 @@ class ElgatoLight(LightEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
-        return cast(str, self._info.serial_number)
+        return self._info.serial_number
 
     @property
     def brightness(self) -> int | None:
@@ -105,7 +105,7 @@ class ElgatoLight(LightEntity):
     def is_on(self) -> bool:
         """Return the state of the light."""
         assert self._state is not None
-        return cast(bool, self._state.on)
+        return self._state.on
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
