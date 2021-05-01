@@ -9,10 +9,8 @@
             "user": {
                 "title": "Setup Syncthing integration",
                 "data": {
-                    "name": "Name",
                     "url": "URL",
                     "token": "Token",
-                    "port": "Port",
                     "verify_ssl": "Verify SSL"
                 }
             }
