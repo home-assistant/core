@@ -77,7 +77,6 @@ async def async_setup_entry(
             BridgeOsSensor(coordinator, bridge),
             BridgeProcessesLoadSensor(coordinator, bridge),
         ],
-        True,
     )
 
 
