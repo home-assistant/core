@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import fnmatch
 import re
-from typing import Callable, Pattern
+from typing import Callable
 
 import voluptuous as vol
 
@@ -274,12 +274,12 @@ INCLUDE_EXCLUDE_FILTER_SCHEMA = vol.All(
 )
 
 
-def _glob_to_re(glob: str) -> Pattern[str]:
+def _glob_to_re(glob: str) -> re.Pattern[str]:
     """Translate and compile glob string into pattern."""
     return re.compile(fnmatch.translate(glob))
 
 
-def _test_against_patterns(patterns: list[Pattern[str]], entity_id: str) -> bool:
+def _test_against_patterns(patterns: list[re.Pattern[str]], entity_id: str) -> bool:
     """Test entity against list of patterns, true if any match."""
     for pattern in patterns:
         if pattern.match(entity_id):

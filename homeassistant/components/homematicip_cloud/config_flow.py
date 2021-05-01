@@ -1,11 +1,10 @@
 """Config flow to configure the HomematicIP Cloud component."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     _LOGGER,
@@ -29,11 +28,11 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
         """Initialize HomematicIP Cloud config flow."""
         self.auth = None
 
-    async def async_step_user(self, user_input=None) -> dict[str, Any]:
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle a flow initialized by the user."""
         return await self.async_step_init(user_input)
 
-    async def async_step_init(self, user_input=None) -> dict[str, Any]:
+    async def async_step_init(self, user_input=None) -> FlowResult:
         """Handle a flow start."""
         errors = {}
 
@@ -64,7 +63,7 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
             errors=errors,
         )
 
-    async def async_step_link(self, user_input=None) -> dict[str, Any]:
+    async def async_step_link(self, user_input=None) -> FlowResult:
         """Attempt to link with the HomematicIP Cloud access point."""
         errors = {}
 
@@ -86,7 +85,7 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
 
         return self.async_show_form(step_id="link", errors=errors)
 
-    async def async_step_import(self, import_info) -> dict[str, Any]:
+    async def async_step_import(self, import_info) -> FlowResult:
         """Import a new access point as a config entry."""
         hapid = import_info[HMIPC_HAPID].replace("-", "").upper()
         authtoken = import_info[HMIPC_AUTHTOKEN]

@@ -3,12 +3,14 @@ from __future__ import annotations
 
 from abc import ABC
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Awaitable, Iterable, Mapping
 from datetime import datetime, timedelta
 import functools as ft
 import logging
+import math
+import sys
 from timeit import default_timer as timer
-from typing import Any, Awaitable, Iterable
+from typing import Any
 
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
@@ -29,6 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
@@ -41,6 +44,10 @@ SLOW_UPDATE_WARNING = 10
 DATA_ENTITY_SOURCE = "entity_info"
 SOURCE_CONFIG_ENTRY = "config_entry"
 SOURCE_PLATFORM_CONFIG = "platform_config"
+
+# Used when converting float states to string: limit precision according to machine
+# epsilon to make the string representation readable
+FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
 
 
 @callback
@@ -84,6 +91,23 @@ def async_generate_entity_id(
         test_string = f"{preferred_string}_{tries}"
 
     return test_string
+
+
+def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
+    """Get supported features for an entity.
+
+    First try the statemachine, then entity registry.
+    """
+    state = hass.states.get(entity_id)
+    if state:
+        return state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(entity_id)
+    if not entry:
+        raise HomeAssistantError(f"Unknown entity {entity_id}")
+
+    return entry.supported_features or 0
 
 
 class Entity(ABC):
@@ -309,6 +333,19 @@ class Entity(ABC):
 
         self._async_write_ha_state()
 
+    def _stringify_state(self) -> str:
+        """Convert state to string."""
+        if not self.available:
+            return STATE_UNAVAILABLE
+        state = self.state
+        if state is None:
+            return STATE_UNKNOWN
+        if isinstance(state, float):
+            # If the entity's state is a float, limit precision according to machine
+            # epsilon to make the string representation readable
+            return f"{state:.{FLOAT_PRECISION}}"
+        return str(state)
+
     @callback
     def _async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
@@ -328,11 +365,8 @@ class Entity(ABC):
         attr = self.capability_attributes
         attr = dict(attr) if attr else {}
 
-        if not self.available:
-            state = STATE_UNAVAILABLE
-        else:
-            sstate = self.state
-            state = STATE_UNKNOWN if sstate is None else str(sstate)
+        state = self._stringify_state()
+        if self.available:
             attr.update(self.state_attributes or {})
             extra_state_attributes = self.extra_state_attributes
             # Backwards compatibility for "device_state_attributes" deprecated in 2021.4

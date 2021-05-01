@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 from contextlib import suppress
 from ssl import SSLContext
 import sys
-from typing import Any, Awaitable, cast
+from typing import Any, Callable, cast
 
 import aiohttp
 from aiohttp import web
@@ -13,6 +14,7 @@ from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
 import async_timeout
 
+from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.frame import warn_use
@@ -27,6 +29,8 @@ SERVER_SOFTWARE = "AIS/{0} aiohttp/{1} Python/{2[0]}.{2[1]}".format(
     __version__, aiohttp.__version__, sys.version_info
 )
 
+WARN_CLOSE_MSG = "closes the Home Assistant aiohttp session"
+
 
 @callback
 @bind_hass
@@ -37,12 +41,14 @@ def async_get_clientsession(
 
     This method must be run in the event loop.
     """
-    key = DATA_CLIENTSESSION_NOTVERIFY
-    if verify_ssl:
-        key = DATA_CLIENTSESSION
+    key = DATA_CLIENTSESSION if verify_ssl else DATA_CLIENTSESSION_NOTVERIFY
 
     if key not in hass.data:
-        hass.data[key] = async_create_clientsession(hass, verify_ssl)
+        hass.data[key] = _async_create_clientsession(
+            hass,
+            verify_ssl,
+            auto_cleanup_method=_async_register_default_clientsession_shutdown,
+        )
 
     return cast(aiohttp.ClientSession, hass.data[key])
 
@@ -59,24 +65,44 @@ def async_create_clientsession(
 
     If auto_cleanup is False, you need to call detach() after the session
     returned is no longer used. Default is True, the session will be
-    automatically detached on homeassistant_stop.
+    automatically detached on homeassistant_stop or when being created
+    in config entry setup, the config entry is unloaded.
 
     This method must be run in the event loop.
     """
-    connector = _async_get_connector(hass, verify_ssl)
+    auto_cleanup_method = None
+    if auto_cleanup:
+        auto_cleanup_method = _async_register_clientsession_shutdown
 
+    clientsession = _async_create_clientsession(
+        hass,
+        verify_ssl,
+        auto_cleanup_method=auto_cleanup_method,
+        **kwargs,
+    )
+
+    return clientsession
+
+
+@callback
+def _async_create_clientsession(
+    hass: HomeAssistant,
+    verify_ssl: bool = True,
+    auto_cleanup_method: Callable[[HomeAssistant, aiohttp.ClientSession], None]
+    | None = None,
+    **kwargs: Any,
+) -> aiohttp.ClientSession:
+    """Create a new ClientSession with kwargs, i.e. for cookies."""
     clientsession = aiohttp.ClientSession(
-        connector=connector,
+        connector=_async_get_connector(hass, verify_ssl),
         headers={USER_AGENT: SERVER_SOFTWARE},
         **kwargs,
     )
 
-    clientsession.close = warn_use(  # type: ignore
-        clientsession.close, "closes the Home Assistant aiohttp session"
-    )
+    clientsession.close = warn_use(clientsession.close, WARN_CLOSE_MSG)  # type: ignore
 
-    if auto_cleanup:
-        _async_register_clientsession_shutdown(hass, clientsession)
+    if auto_cleanup_method:
+        auto_cleanup_method(hass, clientsession)
 
     return clientsession
 
@@ -146,7 +172,33 @@ async def async_aiohttp_proxy_stream(
 def _async_register_clientsession_shutdown(
     hass: HomeAssistant, clientsession: aiohttp.ClientSession
 ) -> None:
-    """Register ClientSession close on Home Assistant shutdown.
+    """Register ClientSession close on Home Assistant shutdown or config entry unload.
+
+    This method must be run in the event loop.
+    """
+
+    @callback
+    def _async_close_websession(*_: Any) -> None:
+        """Close websession."""
+        clientsession.detach()
+
+    unsub = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_CLOSE, _async_close_websession
+    )
+
+    config_entry = config_entries.current_entry.get()
+    if not config_entry:
+        return
+
+    config_entry.async_on_unload(unsub)
+    config_entry.async_on_unload(_async_close_websession)
+
+
+@callback
+def _async_register_default_clientsession_shutdown(
+    hass: HomeAssistant, clientsession: aiohttp.ClientSession
+) -> None:
+    """Register default ClientSession close on Home Assistant shutdown.
 
     This method must be run in the event loop.
     """

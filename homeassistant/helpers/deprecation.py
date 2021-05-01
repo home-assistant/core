@@ -59,7 +59,7 @@ def get_deprecated(
     and a warning is issued to the user.
     """
     if old_name in config:
-        module = inspect.getmodule(inspect.stack()[1][0])
+        module = inspect.getmodule(inspect.stack(context=0)[1].frame)
         if module is not None:
             module_name = module.__name__
         else:

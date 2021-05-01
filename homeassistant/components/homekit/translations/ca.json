@@ -55,7 +55,7 @@
                     "entities": "Entitats",
                     "mode": "Mode"
                 },
-                "description": "Tria les entitats a incloure. En mode accessori, nom\u00e9s s'inclou una sola entitat. En mode enlla\u00e7 inclusiu, s'exposaran totes les entitats del domini tret de que se'n seleccionin algunes en concret. En mode enlla\u00e7 excusiu, s'inclouran totes les entitats del domini excepte les entitats excloses. Per obtenir el millor rendiment, es crea una inst\u00e0ncia HomeKit per a cada repoductor multim\u00e8dia/TV i c\u00e0mera.",
+                "description": "Tria les entitats a incloure. En mode accessori, nom\u00e9s s'inclou una sola entitat. En mode enlla\u00e7 inclusiu, s'inclouran totes les entitats del domini tret de que se'n seleccionin algunes en concret. En mode enlla\u00e7 excusiu, s'inclouran totes les entitats del domini excepte les entitats excloses. Per obtenir el millor rendiment, es crea una inst\u00e0ncia HomeKit per a cada repoductor multim\u00e8dia/TV i c\u00e0mera.",
                 "title": "Selecciona les entitats a incloure"
             },
             "init": {

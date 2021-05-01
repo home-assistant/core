@@ -1,7 +1,6 @@
 """The ReCollect Waste integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import date, timedelta
 
 from aiorecollect.client import Client, PickupEvent
@@ -58,10 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = coordinator
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     hass.data[DOMAIN][DATA_LISTENER][entry.entry_id] = entry.add_update_listener(
         async_reload_entry
@@ -77,14 +73,7 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an RainMachine config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
         cancel_listener = hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)

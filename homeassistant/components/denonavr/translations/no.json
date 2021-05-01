@@ -37,6 +37,7 @@
             "init": {
                 "data": {
                     "show_all_sources": "Vis alle kilder",
+                    "update_audyssey": "Oppdater Audyssey-innstillingene",
                     "zone2": "Sett opp sone 2",
                     "zone3": "Sett opp sone 3"
                 },

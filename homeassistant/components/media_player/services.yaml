@@ -89,6 +89,7 @@ media_seek:
   name: Seek
   description:
     Send the media player the command to seek in current playing media.
+  target:
   fields:
     seek_position:
       name: Position

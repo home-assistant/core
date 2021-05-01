@@ -3,5 +3,6 @@
   "name": "Atome Linky",
   "documentation": "https://www.home-assistant.io/integrations/atome",
   "codeowners": ["@baqs"],
-  "requirements": ["pyatome==0.1.1"]
+  "requirements": ["pyatome==0.1.1"],
+  "iot_class": "cloud_polling"
 }

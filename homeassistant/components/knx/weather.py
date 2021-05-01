@@ -1,7 +1,8 @@
 """Support for KNX/IP weather station."""
 from __future__ import annotations
 
-from typing import Callable, Iterable
+from collections.abc import Iterable
+from typing import Callable
 
 from xknx.devices import Weather as XknxWeather
 
@@ -36,6 +37,7 @@ class KNXWeather(KnxEntity, WeatherEntity):
         """Initialize of a KNX sensor."""
         self._device: XknxWeather
         super().__init__(device)
+        self._unique_id = f"{self._device._temperature.group_address_state}"
 
     @property
     def temperature(self) -> float | None:

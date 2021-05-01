@@ -16,8 +16,8 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, ATTR_TEMPERATURE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     ATTR_IDENTIFIERS,
@@ -36,7 +36,7 @@ SCAN_INTERVAL = timedelta(seconds=10)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:

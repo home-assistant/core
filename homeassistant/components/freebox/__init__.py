@@ -1,13 +1,12 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
-import asyncio
 import logging
 
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN, PLATFORMS, SERVICE_REBOOT
 from .router import FreeboxRouter
@@ -37,7 +36,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Freebox entry."""
     router = FreeboxRouter(hass, entry)
     await router.setup()
@@ -45,10 +44,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.unique_id] = router
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     # Services
     async def async_reboot(call):
@@ -61,21 +57,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         """Close Freebox connection on HA Stop."""
         await router.close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_connection)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_connection)
+    )
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         router = hass.data[DOMAIN].pop(entry.unique_id)
         await router.close()

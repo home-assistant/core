@@ -86,12 +86,17 @@ GOOGLE_ASSISTANT_SCHEMA = vol.All(
     _check_report_state,
 )
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: GOOGLE_ASSISTANT_SCHEMA}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {vol.Optional(DOMAIN): GOOGLE_ASSISTANT_SCHEMA}, extra=vol.ALLOW_EXTRA
+)
 
 
 async def async_setup(hass: HomeAssistant, yaml_config: dict[str, Any]):
     """Activate Google Actions component."""
-    config = yaml_config.get(DOMAIN, {})
+    if DOMAIN not in yaml_config:
+        return True
+
+    config = yaml_config[DOMAIN]
 
     google_config = GoogleConfig(hass, config)
     await google_config.async_initialize()

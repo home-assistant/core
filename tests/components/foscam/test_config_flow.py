@@ -87,8 +87,6 @@ async def test_user_valid(hass):
     with patch(
         "homeassistant.components.foscam.config_flow.FoscamCamera",
     ) as mock_foscam_camera, patch(
-        "homeassistant.components.foscam.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.foscam.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -105,7 +103,6 @@ async def test_user_valid(hass):
         assert result["title"] == CAMERA_NAME
         assert result["data"] == VALID_CONFIG
 
-        assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -263,8 +260,6 @@ async def test_import_user_valid(hass):
     with patch(
         "homeassistant.components.foscam.config_flow.FoscamCamera",
     ) as mock_foscam_camera, patch(
-        "homeassistant.components.foscam.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.foscam.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -282,7 +277,6 @@ async def test_import_user_valid(hass):
         assert result["title"] == CAMERA_NAME
         assert result["data"] == VALID_CONFIG
 
-        assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -293,8 +287,6 @@ async def test_import_user_valid_with_name(hass):
     with patch(
         "homeassistant.components.foscam.config_flow.FoscamCamera",
     ) as mock_foscam_camera, patch(
-        "homeassistant.components.foscam.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.foscam.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -316,7 +308,6 @@ async def test_import_user_valid_with_name(hass):
         assert result["title"] == name
         assert result["data"] == VALID_CONFIG
 
-        assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1
 
 

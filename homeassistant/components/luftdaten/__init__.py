@@ -33,6 +33,8 @@ DATA_LUFTDATEN_CLIENT = "data_luftdaten_client"
 DATA_LUFTDATEN_LISTENER = "data_luftdaten_listener"
 DEFAULT_ATTRIBUTION = "Data provided by luftdaten.info"
 
+PLATFORMS = ["sensor"]
+
 SENSOR_HUMIDITY = "humidity"
 SENSOR_PM10 = "P1"
 SENSOR_PM2_5 = "P2"
@@ -152,9 +154,7 @@ async def async_setup_entry(hass, config_entry):
     except LuftdatenError as err:
         raise ConfigEntryNotReady from err
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-    )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     async def refresh_sensors(event_time):
         """Refresh Luftdaten data."""
@@ -181,7 +181,7 @@ async def async_unload_entry(hass, config_entry):
 
     hass.data[DOMAIN][DATA_LUFTDATEN_CLIENT].pop(config_entry.entry_id)
 
-    return await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 class LuftDatenData:

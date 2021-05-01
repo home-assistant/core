@@ -12,7 +12,7 @@ from pyHS100 import (
     SmartStrip,
 )
 
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN as TPLINK_DOMAIN
 
@@ -67,7 +67,7 @@ async def async_get_discoverable_devices(hass):
 
 
 async def async_discover_devices(
-    hass: HomeAssistantType, existing_devices: SmartDevices
+    hass: HomeAssistant, existing_devices: SmartDevices
 ) -> SmartDevices:
     """Get devices through discovery."""
     _LOGGER.debug("Discovering devices")

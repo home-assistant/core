@@ -1,5 +1,4 @@
 """The Panasonic Viera integration."""
-import asyncio
 from functools import partial
 import logging
 from urllib.request import URLError
@@ -104,25 +103,16 @@ async def async_setup_entry(hass, config_entry):
             data={**config, ATTR_DEVICE_INFO: device_info},
         )
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
-
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
 

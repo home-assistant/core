@@ -6,7 +6,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
-from .const import ATTR_TARIFF, DEFAULT_NAME, DEFAULT_TARIFF, DOMAIN, PLATFORM, TARIFFS
+from .const import ATTR_TARIFF, DEFAULT_NAME, DEFAULT_TARIFF, DOMAIN, PLATFORMS, TARIFFS
 
 UI_CONFIG_SCHEMA = vol.Schema(
     {
@@ -44,13 +44,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry):
     """Set up pvpc hourly pricing from a config entry."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, PLATFORM)
-    )
-
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry):
     """Unload a config entry."""
-    return await hass.config_entries.async_forward_entry_unload(entry, PLATFORM)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

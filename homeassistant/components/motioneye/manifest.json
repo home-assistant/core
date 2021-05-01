@@ -1,0 +1,13 @@
+{
+  "domain": "motioneye",
+  "name": "motionEye",
+  "documentation": "https://www.home-assistant.io/integrations/motioneye",
+  "config_flow": true,
+  "requirements": [
+    "motioneye-client==0.3.2"
+  ],
+  "codeowners": [
+    "@dermotduffy"
+  ],
+  "iot_class": "local_polling"
+}

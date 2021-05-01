@@ -28,26 +28,43 @@ async def test_reloadable(hass):
                     },
                 },
             },
-            "template": {
-                "trigger": {"platform": "event", "event_type": "event_1"},
-                "sensor": {
-                    "name": "top level",
-                    "state": "{{ trigger.event.data.source }}",
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "event_1"},
+                    "sensor": {
+                        "name": "top level",
+                        "state": "{{ trigger.event.data.source }}",
+                    },
                 },
-            },
+                {
+                    "sensor": {
+                        "name": "top level state",
+                        "state": "{{ states.sensor.top_level.state }} + 2",
+                    },
+                    "binary_sensor": {
+                        "name": "top level state",
+                        "state": "{{ states.sensor.top_level.state == 'init' }}",
+                    },
+                },
+            ],
         },
     )
     await hass.async_block_till_done()
 
     await hass.async_start()
     await hass.async_block_till_done()
+    assert hass.states.get("sensor.top_level_state").state == "unknown + 2"
+    assert hass.states.get("binary_sensor.top_level_state").state == "off"
 
     hass.bus.async_fire("event_1", {"source": "init"})
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 5
     assert hass.states.get("sensor.state").state == "mytest"
     assert hass.states.get("sensor.top_level").state == "init"
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.top_level_state").state == "init + 2"
+    assert hass.states.get("binary_sensor.top_level_state").state == "on"
 
     yaml_path = path.join(
         _get_fixtures_base_path(),

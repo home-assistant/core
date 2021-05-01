@@ -39,8 +39,6 @@ async def test_user_flow(hass):
         "homeassistant.components.hvv_departures.hub.GTI.stationInformation",
         return_value=FIXTURE_STATION_INFORMATION,
     ), patch(
-        "homeassistant.components.hvv_departures.async_setup", return_value=True
-    ), patch(
         "homeassistant.components.hvv_departures.async_setup_entry",
         return_value=True,
     ):
@@ -101,8 +99,6 @@ async def test_user_flow_no_results(hass):
     ), patch(
         "homeassistant.components.hvv_departures.hub.GTI.checkName",
         return_value={"returnCode": "OK", "results": []},
-    ), patch(
-        "homeassistant.components.hvv_departures.async_setup", return_value=True
     ), patch(
         "homeassistant.components.hvv_departures.async_setup_entry",
         return_value=True,
@@ -259,7 +255,7 @@ async def test_options_flow(hass):
         domain=DOMAIN,
         title="Wartenau",
         data=FIXTURE_CONFIG_ENTRY,
-        source="user",
+        source=SOURCE_USER,
         connection_class=CONN_CLASS_CLOUD_POLL,
         system_options={"disable_new_entities": False},
         options=FIXTURE_OPTIONS,
@@ -310,7 +306,7 @@ async def test_options_flow_invalid_auth(hass):
         domain=DOMAIN,
         title="Wartenau",
         data=FIXTURE_CONFIG_ENTRY,
-        source="user",
+        source=SOURCE_USER,
         connection_class=CONN_CLASS_CLOUD_POLL,
         system_options={"disable_new_entities": False},
         options=FIXTURE_OPTIONS,
@@ -351,7 +347,7 @@ async def test_options_flow_cannot_connect(hass):
         domain=DOMAIN,
         title="Wartenau",
         data=FIXTURE_CONFIG_ENTRY,
-        source="user",
+        source=SOURCE_USER,
         connection_class=CONN_CLASS_CLOUD_POLL,
         system_options={"disable_new_entities": False},
         options=FIXTURE_OPTIONS,

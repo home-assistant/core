@@ -1,5 +1,7 @@
 """Tests for 1-Wire integration."""
+from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 from pyownet.protocol import ProtocolError
@@ -12,10 +14,10 @@ from homeassistant.components.onewire.const import (
     DEFAULT_SYSBUS_MOUNT_DIR,
     DOMAIN,
 )
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL
+from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 
-from .const import MOCK_OWPROXY_DEVICES
+from .const import MOCK_OWPROXY_DEVICES, MOCK_SYSBUS_DEVICES
 
 from tests.common import MockConfigEntry
 
@@ -24,7 +26,7 @@ async def setup_onewire_sysbus_integration(hass):
     """Create the 1-Wire integration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        source="user",
+        source=SOURCE_USER,
         data={
             CONF_TYPE: CONF_TYPE_SYSBUS,
             CONF_MOUNT_DIR: DEFAULT_SYSBUS_MOUNT_DIR,
@@ -49,7 +51,7 @@ async def setup_onewire_owserver_integration(hass):
     """Create the 1-Wire integration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        source="user",
+        source=SOURCE_USER,
         data={
             CONF_TYPE: CONF_TYPE_OWSERVER,
             CONF_HOST: "1.2.3.4",
@@ -74,7 +76,7 @@ async def setup_onewire_patched_owserver_integration(hass):
     """Create the 1-Wire integration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        source="user",
+        source=SOURCE_USER,
         data={
             CONF_TYPE: CONF_TYPE_OWSERVER,
             CONF_HOST: "1.2.3.4",
@@ -125,3 +127,30 @@ def setup_owproxy_mock_devices(owproxy, domain, device_ids) -> None:
     )
     owproxy.return_value.dir.return_value = dir_return_value
     owproxy.return_value.read.side_effect = read_side_effect
+
+
+def setup_sysbus_mock_devices(
+    domain: str, device_ids: list[str]
+) -> tuple[list[str], list[Any]]:
+    """Set up mock for sysbus."""
+    glob_result = []
+    read_side_effect = []
+
+    for device_id in device_ids:
+        mock_device = MOCK_SYSBUS_DEVICES[device_id]
+
+        # Setup directory listing
+        glob_result += [f"/{DEFAULT_SYSBUS_MOUNT_DIR}/{device_id}"]
+
+        # Setup sub-device reads
+        device_sensors = mock_device.get(domain, [])
+        for expected_sensor in device_sensors:
+            if isinstance(expected_sensor["injected_value"], list):
+                read_side_effect += expected_sensor["injected_value"]
+            else:
+                read_side_effect.append(expected_sensor["injected_value"])
+
+    # Ensure enough read side effect
+    read_side_effect.extend([FileNotFoundError("Missing injected value")] * 20)
+
+    return (glob_result, read_side_effect)

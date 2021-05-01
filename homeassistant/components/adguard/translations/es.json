@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "El servicio ya est\u00e1 configurado",
             "existing_instance_updated": "Se ha actualizado la configuraci\u00f3n existente.",
             "single_instance_allowed": "S\u00f3lo se permite una \u00fanica configuraci\u00f3n de AdGuard Home."
         },
