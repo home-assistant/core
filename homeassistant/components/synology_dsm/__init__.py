@@ -40,6 +40,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -620,7 +621,7 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._api.information.serial)},
@@ -690,7 +691,7 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
         return bool(self._api.storage)
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._api.information.serial, self._device_id)},

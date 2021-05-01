@@ -11,6 +11,7 @@ from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS, CONF_ACCESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -209,7 +210,7 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
         return attrs
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Device information."""
         info = {
             "identifiers": {(DOMAIN, self._device.uuid)},

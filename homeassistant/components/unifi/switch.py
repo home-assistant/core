@@ -18,6 +18,7 @@ from aiounifi.events import (
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -362,7 +363,7 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
             await self.remove_item({self.key})
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Return a service description for device registry."""
         return {
             "identifiers": {(DOMAIN, f"unifi_controller_{self._item.site_id}")},

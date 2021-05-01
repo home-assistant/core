@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError, AdGuardHomeError
 import voluptuous as vol
@@ -33,7 +32,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -194,7 +193,7 @@ class AdGuardHomeDeviceEntity(AdGuardHomeEntity):
     """Defines a AdGuard Home device entity."""
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this AdGuard Home instance."""
         return {
             "identifiers": {
