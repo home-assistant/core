@@ -38,7 +38,7 @@ from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["binary_sensor", "sensor"]
 
 CONF_ARGUMENTS = "arguments"
 CONF_BRIDGE = "bridge"
