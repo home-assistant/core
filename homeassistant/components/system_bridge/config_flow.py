@@ -163,7 +163,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PORT: user_input[CONF_PORT],
             }
 
-        if self._input != {}:
+        if self._input:
             user_input = {**self._input, **(user_input or {})}
 
         errors, info = await self._async_get_info(user_input)
