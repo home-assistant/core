@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import shlex
-from typing import Any, Dict, Optional
+from typing import Optional
 
 import async_timeout
 from systembridge import Bridge
@@ -27,7 +27,8 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -58,7 +59,7 @@ SERVICE_OPEN_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the System Bridge integration."""
 
     async def handle_send_command(call):
@@ -239,7 +240,7 @@ class BridgeEntity(CoordinatorEntity):
         return self._name
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> Optional[str]:
         """Return the mdi icon of the entity."""
         return self._icon
 
@@ -248,7 +249,7 @@ class BridgeDeviceEntity(BridgeEntity):
     """Defines a System Bridge device entity."""
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> Optional[DeviceInfo]:
         """Return device information about this System Bridge instance."""
         return {
             "connections": {

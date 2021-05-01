@@ -10,8 +10,9 @@ from systembridge.objects.os import Os
 from systembridge.objects.system import System
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -29,7 +30,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data: dict):
+async def validate_input(hass: HomeAssistant, data: dict):
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.

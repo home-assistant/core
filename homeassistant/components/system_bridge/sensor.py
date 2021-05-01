@@ -12,7 +12,7 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import BridgeDeviceEntity
@@ -59,7 +59,7 @@ ATTR_VENDOR = "vendor"
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up System Bridge sensor based on a config entry."""
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -90,9 +90,9 @@ class BridgeSensor(BridgeDeviceEntity):
         bridge: Bridge,
         key: str,
         name: str,
-        icon: str,
-        device_class: str = "",
-        unit_of_measurement: str = "",
+        icon: Optional[str],
+        device_class: Optional[str],
+        unit_of_measurement: Optional[str],
     ) -> None:
         """Initialize System Bridge sensor."""
         self._device_class = device_class
@@ -106,7 +106,7 @@ class BridgeSensor(BridgeDeviceEntity):
         return self._device_class
 
     @property
-    def unit_of_measurement(self) -> str:
+    def unit_of_measurement(self) -> Optional[str]:
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
