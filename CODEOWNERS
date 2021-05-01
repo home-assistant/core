@@ -258,6 +258,7 @@ homeassistant/components/kulersky/* @emlove
 homeassistant/components/lametric/* @robbiet480
 homeassistant/components/launch_library/* @ludeeus
 homeassistant/components/lcn/* @alengwenus
+homeassistant/components/lg_netcast/* @Drafteed
 homeassistant/components/life360/* @pnbruckner
 homeassistant/components/linux_battery/* @fabaff
 homeassistant/components/litejet/* @joncar
