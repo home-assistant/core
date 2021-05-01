@@ -41,23 +41,24 @@ async def async_setup_entry(
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     bridge: Bridge = coordinator.data
 
-    async_add_entities(
-        [
-            BridgeBatterySensor(coordinator, bridge),
-            BridgeBatteryTimeRemainingSensor(coordinator, bridge),
-            BridgeCpuSpeedSensor(coordinator, bridge),
-            BridgeCpuTemperatureSensor(coordinator, bridge),
-            BridgeCpuVoltageSensor(coordinator, bridge),
-            *[
-                BridgeFilesystemSensor(coordinator, bridge, key)
-                for key, _ in bridge.filesystem.fsSize.items()
-            ],
-            BridgeKernelSensor(coordinator, bridge),
-            BridgeOsSensor(coordinator, bridge),
-            BridgeProcessesLoadSensor(coordinator, bridge),
+    entities = [
+        BridgeCpuSpeedSensor(coordinator, bridge),
+        BridgeCpuTemperatureSensor(coordinator, bridge),
+        BridgeCpuVoltageSensor(coordinator, bridge),
+        *[
+            BridgeFilesystemSensor(coordinator, bridge, key)
+            for key, _ in bridge.filesystem.fsSize.items()
         ],
-        True,
-    )
+        BridgeKernelSensor(coordinator, bridge),
+        BridgeOsSensor(coordinator, bridge),
+        BridgeProcessesLoadSensor(coordinator, bridge),
+    ]
+
+    if bridge.battery.hasBattery:
+        entities.append(BridgeBatterySensor(coordinator, bridge))
+        entities.append(BridgeBatteryTimeRemainingSensor(coordinator, bridge))
+
+    async_add_entities(entities)
 
 
 class BridgeSensor(BridgeDeviceEntity, SensorEntity):

@@ -22,11 +22,8 @@ async def async_setup_entry(
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     bridge: Bridge = coordinator.data
 
-    async_add_entities(
-        [
-            BridgeBatteryIsChargingBinarySensor(coordinator, bridge),
-        ],
-    )
+    if bridge.battery.hasBattery:
+        async_add_entities([BridgeBatteryIsChargingBinarySensor(coordinator, bridge)])
 
 
 class BridgeBinarySensor(BridgeDeviceEntity, BinarySensorEntity):
