@@ -74,9 +74,10 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
 
         if hasattr(block, "red") and hasattr(block, "green") and hasattr(block, "blue"):
             self._min_kelvin = KELVIN_MIN_VALUE_COLOR
-            self._supported_color_modes.add(COLOR_MODE_RGB)
             if hasattr(block, "white"):
                 self._supported_color_modes.add(COLOR_MODE_RGBW)
+            else:
+                self._supported_color_modes.add(COLOR_MODE_RGB)
 
         if hasattr(block, "colorTemp"):
             self._supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
@@ -146,7 +147,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return COLOR_MODE_ONOFF
 
     @property
-    def rgb_color(self) -> tuple[int, int, int] | None:
+    def rgb_color(self) -> tuple[int, int, int]:
         """Return the rgb color value [int, int, int]."""
         if self.control_result:
             red = self.control_result["red"]
@@ -156,17 +157,17 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
             red = self.block.red
             green = self.block.green
             blue = self.block.blue
-        return [red, green, blue]
+        return (red, green, blue)
 
     @property
-    def rgbw_color(self) -> tuple[int, int, int, int] | None:
+    def rgbw_color(self) -> tuple[int, int, int, int]:
         """Return the rgbw color value [int, int, int, int]."""
         if self.control_result:
             white = self.control_result["white"]
         else:
             white = self.block.white
 
-        return [*self.rgb_color, white]
+        return (*self.rgb_color, white)
 
     @property
     def color_temp(self) -> int | None:
