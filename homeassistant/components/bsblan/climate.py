@@ -27,6 +27,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -231,7 +232,7 @@ class BSBLanClimate(ClimateEntity):
         self._temperature_unit = state.current_temperature.unit
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this BSBLan device."""
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self._info.device_identification)},

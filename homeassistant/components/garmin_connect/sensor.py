@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from garminconnect import (
     GarminConnectAuthenticationError,
@@ -14,6 +13,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 
 from .alarm_util import calculate_next_active_alarms
 from .const import ATTRIBUTION, DOMAIN, GARMIN_ENTITY_LIST
@@ -138,7 +138,7 @@ class GarminConnectSensor(SensorEntity):
         return attributes
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information."""
         return {
             "identifiers": {(DOMAIN, self._unique_id)},

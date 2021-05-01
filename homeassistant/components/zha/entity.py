@@ -83,7 +83,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         return self._should_poll
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> entity.DeviceInfo:
         """Return a device description for device registry."""
         zha_device_info = self._zha_device.device_info
         ieee = zha_device_info["ieee"]

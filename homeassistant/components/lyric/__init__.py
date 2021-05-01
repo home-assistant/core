@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 from aiohttp.client_exceptions import ClientResponseError
 from aiolyric import Lyric
@@ -23,6 +22,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -183,7 +183,7 @@ class LyricDeviceEntity(LyricEntity):
     """Defines a Honeywell Lyric device entity."""
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this Honeywell Lyric instance."""
         return {
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac_id)},
