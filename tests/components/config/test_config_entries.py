@@ -50,14 +50,13 @@ async def test_get_entries(hass, client):
                 pass
 
         hass.helpers.config_entry_flow.register_discovery_flow(
-            "comp2", "Comp 2", lambda: None, core_ce.CONN_CLASS_ASSUMED
+            "comp2", "Comp 2", lambda: None
         )
 
         entry = MockConfigEntry(
             domain="comp1",
             title="Test 1",
             source="bla",
-            connection_class=core_ce.CONN_CLASS_LOCAL_POLL,
         )
         entry.supports_unload = True
         entry.add_to_hass(hass)
@@ -67,7 +66,6 @@ async def test_get_entries(hass, client):
             source="bla2",
             state=core_ce.ENTRY_STATE_SETUP_ERROR,
             reason="Unsupported API",
-            connection_class=core_ce.CONN_CLASS_ASSUMED,
         ).add_to_hass(hass)
         MockConfigEntry(
             domain="comp3",
@@ -87,7 +85,6 @@ async def test_get_entries(hass, client):
                 "title": "Test 1",
                 "source": "bla",
                 "state": "not_loaded",
-                "connection_class": "local_poll",
                 "supports_options": True,
                 "supports_unload": True,
                 "disabled_by": None,
@@ -98,7 +95,6 @@ async def test_get_entries(hass, client):
                 "title": "Test 2",
                 "source": "bla2",
                 "state": "setup_error",
-                "connection_class": "assumed",
                 "supports_options": False,
                 "supports_unload": False,
                 "disabled_by": None,
@@ -109,7 +105,6 @@ async def test_get_entries(hass, client):
                 "title": "Test 3",
                 "source": "bla3",
                 "state": "not_loaded",
-                "connection_class": "unknown",
                 "supports_options": False,
                 "supports_unload": False,
                 "disabled_by": core_ce.DISABLED_USER,
@@ -326,11 +321,10 @@ async def test_create_account(hass, client):
         "type": "create_entry",
         "version": 1,
         "result": {
-            "connection_class": "unknown",
             "disabled_by": None,
             "domain": "test",
             "entry_id": entries[0].entry_id,
-            "source": "user",
+            "source": core_ce.SOURCE_USER,
             "state": "loaded",
             "supports_options": False,
             "supports_unload": False,
@@ -397,11 +391,10 @@ async def test_two_step_flow(hass, client):
             "title": "user-title",
             "version": 1,
             "result": {
-                "connection_class": "unknown",
                 "disabled_by": None,
                 "domain": "test",
                 "entry_id": entries[0].entry_id,
-                "source": "user",
+                "source": core_ce.SOURCE_USER,
                 "state": "loaded",
                 "supports_options": False,
                 "supports_unload": False,
@@ -476,7 +469,7 @@ async def test_get_progress_index(hass, hass_ws_client):
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         form = await hass.config_entries.flow.async_init(
-            "test", context={"source": "hassio"}
+            "test", context={"source": core_ce.SOURCE_HASSIO}
         )
 
     await ws_client.send_json({"id": 5, "type": "config_entries/flow/progress"})
@@ -488,7 +481,7 @@ async def test_get_progress_index(hass, hass_ws_client):
             "flow_id": form["flow_id"],
             "handler": "test",
             "step_id": "account",
-            "context": {"source": "hassio"},
+            "context": {"source": core_ce.SOURCE_HASSIO},
         }
     ]
 
@@ -596,7 +589,6 @@ async def test_options_flow(hass, client):
         domain="test",
         entry_id="test1",
         source="bla",
-        connection_class=core_ce.CONN_CLASS_LOCAL_POLL,
     ).add_to_hass(hass)
     entry = hass.config_entries.async_entries()[0]
 
@@ -646,7 +638,6 @@ async def test_two_step_options_flow(hass, client):
         domain="test",
         entry_id="test1",
         source="bla",
-        connection_class=core_ce.CONN_CLASS_LOCAL_POLL,
     ).add_to_hass(hass)
     entry = hass.config_entries.async_entries()[0]
 
@@ -886,7 +877,7 @@ async def test_ignore_flow(hass, hass_ws_client):
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         result = await hass.config_entries.flow.async_init(
-            "test", context={"source": "user"}
+            "test", context={"source": core_ce.SOURCE_USER}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 

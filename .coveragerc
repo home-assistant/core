@@ -329,6 +329,9 @@ omit =
     homeassistant/components/freebox/router.py
     homeassistant/components/freebox/sensor.py
     homeassistant/components/freebox/switch.py
+    homeassistant/components/fritz/__init__.py
+    homeassistant/components/fritz/common.py
+    homeassistant/components/fritz/const.py
     homeassistant/components/fritz/device_tracker.py
     homeassistant/components/fritzbox_callmonitor/__init__.py
     homeassistant/components/fritzbox_callmonitor/const.py
@@ -355,6 +358,7 @@ omit =
     homeassistant/components/goalfeed/*
     homeassistant/components/goalzero/__init__.py
     homeassistant/components/goalzero/binary_sensor.py
+    homeassistant/components/goalzero/switch.py
     homeassistant/components/google/*
     homeassistant/components/google_cloud/tts.py
     homeassistant/components/google_maps/device_tracker.py
@@ -628,6 +632,8 @@ omit =
     homeassistant/components/msteams/notify.py
     homeassistant/components/mullvad/__init__.py
     homeassistant/components/mullvad/binary_sensor.py
+    homeassistant/components/mutesync/__init__.py
+    homeassistant/components/mutesync/binary_sensor.py
     homeassistant/components/nest/const.py
     homeassistant/components/mvglive/sensor.py
     homeassistant/components/mychevy/*
@@ -697,6 +703,7 @@ omit =
     homeassistant/components/omnilogic/__init__.py
     homeassistant/components/omnilogic/common.py
     homeassistant/components/omnilogic/sensor.py
+    homeassistant/components/omnilogic/switch.py
     homeassistant/components/ondilo_ico/__init__.py
     homeassistant/components/ondilo_ico/api.py
     homeassistant/components/ondilo_ico/const.py

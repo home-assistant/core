@@ -594,12 +594,9 @@ async def _cleanup_instance(
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an esphome config entry."""
     entry_data = await _cleanup_instance(hass, entry)
-    tasks = []
-    for platform in entry_data.loaded_platforms:
-        tasks.append(hass.config_entries.async_forward_entry_unload(entry, platform))
-    if tasks:
-        await asyncio.wait(tasks)
-    return True
+    return await hass.config_entries.async_unload_platforms(
+        entry, entry_data.loaded_platforms
+    )
 
 
 async def platform_async_setup_entry(

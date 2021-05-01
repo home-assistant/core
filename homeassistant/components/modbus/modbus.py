@@ -3,7 +3,9 @@ import logging
 import threading
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
+from pymodbus.constants import Defaults
 from pymodbus.exceptions import ModbusException
+from pymodbus.pdu import ExceptionResponse, IllegalFunctionRequest
 from pymodbus.transaction import ModbusRtuFramer
 
 from homeassistant.const import (
@@ -138,6 +140,7 @@ class ModbusHub:
         self._config_timeout = client_config[CONF_TIMEOUT]
         self._config_delay = 0
 
+        Defaults.Timeout = 10
         if self._config_type == "serial":
             # serial configuration
             self._config_method = client_config[CONF_METHOD]
@@ -159,10 +162,11 @@ class ModbusHub:
         return self._config_name
 
     def _log_error(self, exception_error: ModbusException, error_state=True):
+        log_text = "Pymodbus: " + str(exception_error)
         if self._in_error:
-            _LOGGER.debug(str(exception_error))
+            _LOGGER.debug(log_text)
         else:
-            _LOGGER.error(str(exception_error))
+            _LOGGER.error(log_text)
             self._in_error = error_state
 
     def setup(self):
@@ -234,6 +238,9 @@ class ModbusHub:
             except ModbusException as exception_error:
                 self._log_error(exception_error)
                 return None
+            if isinstance(result, (ExceptionResponse, IllegalFunctionRequest)):
+                self._log_error(result)
+                return None
             self._in_error = False
             return result
 
@@ -245,6 +252,9 @@ class ModbusHub:
                 result = self._client.read_discrete_inputs(address, count, **kwargs)
             except ModbusException as exception_error:
                 self._log_error(exception_error)
+                return None
+            if isinstance(result, (ExceptionResponse, IllegalFunctionRequest)):
+                self._log_error(result)
                 return None
             self._in_error = False
             return result
@@ -258,6 +268,9 @@ class ModbusHub:
             except ModbusException as exception_error:
                 self._log_error(exception_error)
                 return None
+            if isinstance(result, (ExceptionResponse, IllegalFunctionRequest)):
+                self._log_error(result)
+                return None
             self._in_error = False
             return result
 
@@ -270,6 +283,9 @@ class ModbusHub:
             except ModbusException as exception_error:
                 self._log_error(exception_error)
                 return None
+            if isinstance(result, (ExceptionResponse, IllegalFunctionRequest)):
+                self._log_error(result)
+                return None
             self._in_error = False
             return result
 
@@ -278,9 +294,12 @@ class ModbusHub:
         with self._lock:
             kwargs = {"unit": unit} if unit else {}
             try:
-                self._client.write_coil(address, value, **kwargs)
+                result = self._client.write_coil(address, value, **kwargs)
             except ModbusException as exception_error:
                 self._log_error(exception_error)
+                return False
+            if isinstance(result, (ExceptionResponse, IllegalFunctionRequest)):
+                self._log_error(result)
                 return False
             self._in_error = False
             return True
@@ -290,9 +309,12 @@ class ModbusHub:
         with self._lock:
             kwargs = {"unit": unit} if unit else {}
             try:
-                self._client.write_coils(address, values, **kwargs)
+                result = self._client.write_coils(address, values, **kwargs)
             except ModbusException as exception_error:
                 self._log_error(exception_error)
+                return False
+            if isinstance(result, (ExceptionResponse, IllegalFunctionRequest)):
+                self._log_error(result)
                 return False
             self._in_error = False
             return True
@@ -302,9 +324,12 @@ class ModbusHub:
         with self._lock:
             kwargs = {"unit": unit} if unit else {}
             try:
-                self._client.write_register(address, value, **kwargs)
+                result = self._client.write_register(address, value, **kwargs)
             except ModbusException as exception_error:
                 self._log_error(exception_error)
+                return False
+            if isinstance(result, (ExceptionResponse, IllegalFunctionRequest)):
+                self._log_error(result)
                 return False
             self._in_error = False
             return True
@@ -314,9 +339,12 @@ class ModbusHub:
         with self._lock:
             kwargs = {"unit": unit} if unit else {}
             try:
-                self._client.write_registers(address, values, **kwargs)
+                result = self._client.write_registers(address, values, **kwargs)
             except ModbusException as exception_error:
                 self._log_error(exception_error)
+                return False
+            if isinstance(result, (ExceptionResponse, IllegalFunctionRequest)):
+                self._log_error(result)
                 return False
             self._in_error = False
             return True

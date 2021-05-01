@@ -7,12 +7,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import configure_mydevolo
-from .const import (  # pylint:disable=unused-import
-    CONF_MYDEVOLO,
-    DEFAULT_MYDEVOLO,
-    DOMAIN,
-    SUPPORTED_MODEL_TYPES,
-)
+from .const import CONF_MYDEVOLO, DEFAULT_MYDEVOLO, DOMAIN, SUPPORTED_MODEL_TYPES
 from .exceptions import CredentialsInvalid
 
 
@@ -20,7 +15,6 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a devolo HomeControl config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     def __init__(self):
         """Initialize devolo Home Control flow."""

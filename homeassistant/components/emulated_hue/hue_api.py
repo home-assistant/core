@@ -322,7 +322,7 @@ class HueOneLightChangeView(HomeAssistantView):
         """Initialize the instance of the view."""
         self.config = config
 
-    async def put(self, request, username, entity_number):
+    async def put(self, request, username, entity_number):  # noqa: C901
         """Process a request to set the state of an individual light."""
         if not is_local(ip_address(request.remote)):
             return self.json_message("Only local IPs allowed", HTTP_UNAUTHORIZED)

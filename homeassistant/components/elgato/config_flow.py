@@ -6,10 +6,10 @@ from typing import Any
 from elgato import Elgato, ElgatoError
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN
@@ -19,7 +19,6 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Elgato Key Light config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     host: str
     port: int
@@ -27,7 +26,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._async_show_setup_form()
@@ -42,9 +41,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self._async_create_entry()
 
-    async def async_step_zeroconf(
-        self, discovery_info: dict[str, Any]
-    ) -> FlowResultDict:
+    async def async_step_zeroconf(self, discovery_info: dict[str, Any]) -> FlowResult:
         """Handle zeroconf discovery."""
         self.host = discovery_info[CONF_HOST]
         self.port = discovery_info[CONF_PORT]
@@ -62,14 +59,14 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(
         self, _: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle a flow initiated by zeroconf."""
         return self._async_create_entry()
 
     @callback
     def _async_show_setup_form(
         self, errors: dict[str, str] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -83,7 +80,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _async_create_entry(self) -> FlowResultDict:
+    def _async_create_entry(self) -> FlowResult:
         return self.async_create_entry(
             title=self.serial_number,
             data={

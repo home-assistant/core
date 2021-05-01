@@ -17,13 +17,7 @@ from simplipy.websocket import (
 )
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_CODE,
-    CONF_CODE,
-    CONF_TOKEN,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import ATTR_CODE, CONF_CODE, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -181,7 +175,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass, config_entry):  # noqa: C901
     """Set up SimpliSafe as config entry."""
     hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = []
 
@@ -224,10 +218,7 @@ async def async_setup_entry(hass, config_entry):
     )
     await simplisafe.async_init()
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     @callback
     def verify_system_exists(coro):
@@ -329,14 +320,7 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a SimpliSafe config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
         for remove_listener in hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id):
@@ -464,17 +448,21 @@ class SimpliSafe:
 
     async def async_init(self):
         """Initialize the data class."""
-        asyncio.create_task(self.websocket.async_connect())
+        # 2021-04-29: Disabling connection to the websocket due to the SimpliSafe cloud
+        # removing it (and not providing a clear alternative).
+        # asyncio.create_task(self.websocket.async_connect())
 
-        async def async_websocket_disconnect(_):
-            """Define an event handler to disconnect from the websocket."""
-            await self.websocket.async_disconnect()
+        # async def async_websocket_disconnect(_):
+        #     """Define an event handler to disconnect from the websocket."""
+        #     await self.websocket.async_disconnect()
 
-        self._hass.data[DOMAIN][DATA_LISTENER][self.config_entry.entry_id].append(
-            self._hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, async_websocket_disconnect
-            )
-        )
+        # 2021-04-29: Disabling disconnection from the websocket due to the SimpliSafe
+        # cloud removing it (and not providing a clear alternative).
+        # self._hass.data[DOMAIN][DATA_LISTENER][self.config_entry.entry_id].append(
+        #     self._hass.bus.async_listen_once(
+        #         EVENT_HOMEASSISTANT_STOP, async_websocket_disconnect
+        #     )
+        # )
 
         self.systems = await self._api.get_systems()
         for system in self.systems.values():

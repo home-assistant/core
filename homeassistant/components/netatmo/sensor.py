@@ -333,7 +333,7 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
         return self._enabled_default
 
     @callback
-    def async_update_callback(self):
+    def async_update_callback(self):  # noqa: C901
         """Update the entity's state."""
         if self._data is None:
             if self._state is None:

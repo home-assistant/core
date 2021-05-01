@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import re
-from typing import Any, Callable
+from typing import Callable
 
 from WazeRouteCalculator import WazeRouteCalculator, WRCError
 import voluptuous as vol
@@ -13,15 +13,17 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    CONF_ENTITY_NAMESPACE,
     CONF_NAME,
     CONF_REGION,
+    CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM_IMPERIAL,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     TIME_MINUTES,
 )
 from homeassistant.core import Config, CoreState, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     ATTR_DESTINATION,
@@ -53,7 +55,7 @@ from .const import (
     UNITS,
     VEHICLE_TYPES,
 )
-from .helpers import get_location_from_entity, is_valid_config_entry, resolve_zone
+from .helpers import get_location_from_entity, resolve_zone
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +81,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             CONF_AVOID_SUBSCRIPTION_ROADS, default=DEFAULT_AVOID_SUBSCRIPTION_ROADS
         ): cv.boolean,
         vol.Optional(CONF_AVOID_FERRIES, default=DEFAULT_AVOID_FERRIES): cv.boolean,
-    }
+        # Remove options to exclude from import
+        vol.Remove(CONF_ENTITY_NAMESPACE): cv.string,
+        vol.Remove(CONF_SCAN_INTERVAL): cv.time_period,
+    },
+    extra=vol.REMOVE_EXTRA,
 )
 
 
@@ -117,10 +123,9 @@ async def async_setup_entry(
         CONF_AVOID_SUBSCRIPTION_ROADS: DEFAULT_AVOID_SUBSCRIPTION_ROADS,
         CONF_AVOID_TOLL_ROADS: DEFAULT_AVOID_TOLL_ROADS,
     }
-    name = None
+
     if not config_entry.options:
         new_data = config_entry.data.copy()
-        name = new_data.pop(CONF_NAME, None)
         options = {}
         for key in [
             CONF_INCL_FILTER,
@@ -144,12 +149,7 @@ async def async_setup_entry(
     destination = config_entry.data[CONF_DESTINATION]
     origin = config_entry.data[CONF_ORIGIN]
     region = config_entry.data[CONF_REGION]
-    name = name or f"{DEFAULT_NAME}: {origin} -> {destination}"
-
-    if not await hass.async_add_executor_job(
-        is_valid_config_entry, hass, _LOGGER, origin, destination, region
-    ):
-        raise ConfigEntryNotReady
+    name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
 
     data = WazeTravelTimeData(
         None,
@@ -191,7 +191,7 @@ class WazeTravelTime(SensorEntity):
         """Handle when entity is added."""
         if self.hass.state != CoreState.running:
             self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, self.first_update
+                EVENT_HOMEASSISTANT_STARTED, self.first_update
             )
         else:
             await self.first_update()
@@ -264,7 +264,7 @@ class WazeTravelTime(SensorEntity):
         self._waze_data.update()
 
     @property
-    def device_info(self) -> dict[str, Any] | None:
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return {
             "name": "Waze",
@@ -333,7 +333,11 @@ class WazeTravelTimeData:
                         if excl_filter.lower() not in k.lower()
                     }
 
-                route = list(routes)[0]
+                if routes:
+                    route = list(routes)[0]
+                else:
+                    _LOGGER.warning("No routes found")
+                    return
 
                 self.duration, distance = routes[route]
 

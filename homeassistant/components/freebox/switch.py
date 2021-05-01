@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from freebox_api.exceptions import InsufficientPermissionsError
 
@@ -49,7 +50,7 @@ class FreeboxWifiSwitch(SwitchEntity):
         return self._state
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> dict[str, Any]:
         """Return the device information."""
         return self._router.device_info
 

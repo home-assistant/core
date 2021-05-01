@@ -17,7 +17,7 @@
                     "platform": "De app waar uw account is geregistreerd",
                     "username": "Gebruikersnaam"
                 },
-                "description": "Voer uw Tuya-referentie in.",
+                "description": "Voer uw Tuya-inloggegevens in.",
                 "title": "Tuya"
             }
         }

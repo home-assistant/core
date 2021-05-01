@@ -14,6 +14,13 @@
                     "password": "Wachtwoord",
                     "username": "E-mail adres / devolo ID"
                 }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Wachtwoord",
+                    "username": "E-mail / devolo ID"
+                }
             }
         }
     }

@@ -2,7 +2,7 @@
 import logging
 
 from bs4 import BeautifulSoup
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+import httpx
 import voluptuous as vol
 
 from homeassistant.components.rest.data import RestData
@@ -72,9 +72,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-            auth = HTTPDigestAuth(username, password)
+            auth = httpx.DigestAuth(username, password)
         else:
-            auth = HTTPBasicAuth(username, password)
+            auth = (username, password)
     else:
         auth = None
     rest = RestData(hass, method, resource, auth, headers, None, payload, verify_ssl)
