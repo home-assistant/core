@@ -122,9 +122,5 @@ async def test_service_binary_sensor_update(hass, mock_pymodbus):
     )
     assert hass.states.get(entity_id).state == STATE_OFF
     mock_pymodbus.read_coils.return_value = ReadResult([0x01])
-    await run_service_update(
-        hass,
-        config,
-        entity_id,
-    )
+    await run_service_update(hass, config, entity_id, reuse=True)
     assert hass.states.get(entity_id).state == STATE_ON

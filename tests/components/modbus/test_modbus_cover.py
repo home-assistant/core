@@ -196,9 +196,5 @@ async def test_service_cover_update(hass, mock_pymodbus):
     )
     assert hass.states.get(entity_id).state == STATE_CLOSED
     mock_pymodbus.read_holding_registers.return_value = ReadResult([0x01])
-    await run_service_update(
-        hass,
-        config,
-        entity_id,
-    )
+    await run_service_update(hass, config, entity_id, reuse=True)
     assert hass.states.get(entity_id).state == STATE_OPEN

@@ -644,9 +644,5 @@ async def test_service_sensor_update(hass, mock_pymodbus):
     )
     assert hass.states.get(entity_id).state == "27"
     mock_pymodbus.read_input_registers.return_value = ReadResult([32])
-    await run_service_update(
-        hass,
-        config,
-        entity_id,
-    )
+    await run_service_update(hass, config, entity_id, reuse=True)
     assert hass.states.get(entity_id).state == "32"
