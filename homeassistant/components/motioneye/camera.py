@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Dict, Optional
 
 import aiohttp
 from motioneye_client.client import MotionEyeClient
@@ -86,7 +86,7 @@ async def async_setup_entry(
     listen_for_new_cameras(hass, entry, camera_add)
 
 
-class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
+class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity[Optional[Dict[str, Any]]]):
     """motionEye mjpeg camera."""
 
     def __init__(
@@ -96,7 +96,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         password: str,
         camera: dict[str, Any],
         client: MotionEyeClient,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, Any] | None],
     ) -> None:
         """Initialize a MJPEG camera."""
         self._surveillance_username = username
