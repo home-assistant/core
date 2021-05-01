@@ -1,6 +1,6 @@
 """Config flow for System Bridge integration."""
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 import async_timeout
 from systembridge import Bridge
@@ -69,7 +69,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name: Optional[str] = None
         self._input: Optional[Dict[str, Any]] = {}
 
-    async def _async_get_info(self, user_input=None):
+    async def _async_get_info(
+        self, user_input=None
+    ) -> Tuple[Optional[Dict[str, str]], Optional[Dict[str, str]]]:
         errors = {}
 
         try:
