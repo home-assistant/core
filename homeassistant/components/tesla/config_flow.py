@@ -1,6 +1,7 @@
 """Tesla Config Flow."""
 import logging
 
+import httpx
 from teslajsonpy import Controller as TeslaAPI, TeslaException
 import voluptuous as vol
 
@@ -14,7 +15,8 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.httpx_client import SERVER_SOFTWARE, USER_AGENT
 
 from .const import (
     CONF_WAKE_ON_START,
@@ -147,11 +149,11 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
 
     config = {}
-    websession = aiohttp_client.async_create_clientsession(hass)
+    async_client = httpx.AsyncClient(headers={USER_AGENT: SERVER_SOFTWARE})
 
     try:
         controller = TeslaAPI(
-            websession,
+            async_client,
             email=data[CONF_USERNAME],
             password=data[CONF_PASSWORD],
             update_interval=DEFAULT_SCAN_INTERVAL,
@@ -167,6 +169,8 @@ async def validate_input(hass: core.HomeAssistant, data):
             raise InvalidAuth() from ex
         _LOGGER.error("Unable to communicate with Tesla API: %s", ex)
         raise CannotConnect() from ex
+    finally:
+        await async_client.aclose()
     _LOGGER.debug("Credentials successfully connected to the Tesla API")
     return config
 
