@@ -11,7 +11,7 @@ from systembridge.exceptions import BridgeException
 DOMAIN = "system_bridge"
 
 BRIDGE_CONNECTION_ERRORS = (
-    asyncio.exceptions.TimeoutError,
+    asyncio.TimeoutError,
     BridgeException,
     ClientConnectionError,
     ClientConnectorError,
