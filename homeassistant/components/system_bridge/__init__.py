@@ -116,7 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         device_registry = await hass.helpers.device_registry.async_get_registry()
         device_entry = device_registry.async_get(call.data.get(CONF_BRIDGE))
 
-        command = call.data.get(CONF_COMMAND)
+        command = call.data[CONF_COMMAND]
         arguments = shlex.split(call.data.get(CONF_ARGUMENTS, ""))
 
         coordinator: DataUpdateCoordinator = hass.data[DOMAIN][
@@ -148,7 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         device_registry = await hass.helpers.device_registry.async_get_registry()
         device_entry = device_registry.async_get(call.data.get(CONF_BRIDGE))
 
-        path = call.data.get(CONF_PATH)
+        path = call.data[CONF_PATH]
 
         coordinator: DataUpdateCoordinator = hass.data[DOMAIN][
             next(iter(device_entry.config_entries))
