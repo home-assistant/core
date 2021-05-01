@@ -5,7 +5,7 @@ from python_awair import Awair
 from python_awair.exceptions import AuthError, AwairError
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -16,7 +16,6 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Awair."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
     async def async_step_import(self, conf: dict):
         """Import a configuration from config.yaml."""
