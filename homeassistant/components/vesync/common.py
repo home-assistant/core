@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.helpers.entity import ToggleEntity
 
-from .const import VS_FANS, VS_LIGHTS, VS_SWITCHES
+from .const import VS_FANS, VS_HUMIDIFIERS, VS_LIGHTS, VS_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,12 +14,27 @@ async def async_process_devices(hass, manager):
     devices[VS_SWITCHES] = []
     devices[VS_FANS] = []
     devices[VS_LIGHTS] = []
+    devices[VS_HUMIDIFIERS] = []
 
     await hass.async_add_executor_job(manager.update)
 
     if manager.fans:
-        devices[VS_FANS].extend(manager.fans)
-        _LOGGER.info("%d VeSync fans found", len(manager.fans))
+        # VeSync classifies humidifiers as fans.
+        # Separate humidifers from the VeSync fans.
+        fans = []
+        humidifiers = []
+        for fan in manager.fans:
+            if fan.device_type in ("Classic300S",):
+                humidifiers.append(fan)
+            else:
+                fans.append(fan)
+
+        if fans:
+            devices[VS_FANS].extend(fans)
+            _LOGGER.info("%d VeSync fans found", len(fans))
+        if humidifiers:
+            devices[VS_HUMIDIFIERS].extend(humidifiers)
+            _LOGGER.info("%d VeSync humidifier found", len(humidifiers))
 
     if manager.outlets:
         devices[VS_SWITCHES].extend(manager.outlets)

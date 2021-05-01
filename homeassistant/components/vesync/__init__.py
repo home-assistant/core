@@ -17,12 +17,13 @@ from .const import (
     VS_DISCOVERY,
     VS_DISPATCHERS,
     VS_FANS,
+    VS_HUMIDIFIERS,
     VS_LIGHTS,
     VS_MANAGER,
     VS_SWITCHES,
 )
 
-PLATFORMS = ["switch", "fan", "light"]
+PLATFORMS = ["switch", "fan", "light", "humidifier"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,6 +87,7 @@ async def async_setup_entry(hass, config_entry):
     switches = hass.data[DOMAIN][VS_SWITCHES] = []
     fans = hass.data[DOMAIN][VS_FANS] = []
     lights = hass.data[DOMAIN][VS_LIGHTS] = []
+    humidifiers = hass.data[DOMAIN][VS_HUMIDIFIERS] = []
 
     hass.data[DOMAIN][VS_DISPATCHERS] = []
 
@@ -101,17 +103,23 @@ async def async_setup_entry(hass, config_entry):
         lights.extend(device_dict[VS_LIGHTS])
         hass.async_create_task(forward_setup(config_entry, "light"))
 
+    if device_dict[VS_HUMIDIFIERS]:
+        humidifiers.extend(device_dict[VS_HUMIDIFIERS])
+        hass.async_create_task(forward_setup(config_entry, "humidifier"))
+
     async def async_new_device_discovery(service):
         """Discover if new devices should be added."""
         manager = hass.data[DOMAIN][VS_MANAGER]
         switches = hass.data[DOMAIN][VS_SWITCHES]
         fans = hass.data[DOMAIN][VS_FANS]
         lights = hass.data[DOMAIN][VS_LIGHTS]
+        humidifiers = hass.data[DOMAIN][VS_HUMIDIFIERS]
 
         dev_dict = await async_process_devices(hass, manager)
         switch_devs = dev_dict.get(VS_SWITCHES, [])
         fan_devs = dev_dict.get(VS_FANS, [])
         light_devs = dev_dict.get(VS_LIGHTS, [])
+        humidifier_devs = dev_dict.get(VS_HUMIDIFIERS, [])
 
         switch_set = set(switch_devs)
         new_switches = list(switch_set.difference(switches))
@@ -142,6 +150,18 @@ async def async_setup_entry(hass, config_entry):
         if new_lights and not lights:
             lights.extend(new_lights)
             hass.async_create_task(forward_setup(config_entry, "light"))
+
+        humidifier_set = set(humidifier_devs)
+        new_humidifiers = list(humidifier_set.difference(humidifiers))
+        if new_humidifiers and humidifiers:
+            humidifiers.extend(new_humidifiers)
+            async_dispatcher_send(
+                hass, VS_DISCOVERY.format(VS_HUMIDIFIERS), new_humidifiers
+            )
+            return
+        if new_humidifiers and not humidifiers:
+            humidifiers.extend(new_humidifiers)
+            hass.async_create_task(forward_setup(config_entry, "humidifier"))
 
     hass.services.async_register(
         DOMAIN, SERVICE_UPDATE_DEVS, async_new_device_discovery
