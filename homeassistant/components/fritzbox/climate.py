@@ -159,6 +159,7 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
             return PRESET_COMFORT
         if self.device.target_temperature == self.device.eco_temperature:
             return PRESET_ECO
+        return None
 
     @property
     def preset_modes(self):

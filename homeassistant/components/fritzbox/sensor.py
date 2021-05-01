@@ -1,4 +1,4 @@
-"""Support for AVM Fritz!Box smarthome temperature sensor only devices."""
+"""Support for AVM FRITZ!SmartHome temperature sensor only devices."""
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (

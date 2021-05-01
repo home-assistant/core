@@ -1,4 +1,4 @@
-"""Support for AVM Fritz!Box smarthome switch devices."""
+"""Support for AVM FRITZ!SmartHome switch devices."""
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
