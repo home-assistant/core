@@ -20,7 +20,6 @@ class HeosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Define a flow for HEOS."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered Heos device."""

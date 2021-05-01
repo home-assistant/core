@@ -42,7 +42,6 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Luftdaten config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @callback
     def _show_form(self, errors=None):

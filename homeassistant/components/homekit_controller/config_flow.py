@@ -87,7 +87,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a HomeKit config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the homekit_controller flow."""
