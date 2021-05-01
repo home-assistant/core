@@ -15,3 +15,7 @@ SERVICE_SET_LATENCY = "set_latency"
 
 ATTR_MASTER = "master"
 ATTR_LATENCY = "latency"
+
+DEFAULT_PORT = 1705
+
+DOMAIN = "snapcast"

@@ -222,6 +222,7 @@ FLOWS = [
     "smarttub",
     "smhi",
     "sms",
+    "snapcast",
     "solaredge",
     "solarlog",
     "soma",

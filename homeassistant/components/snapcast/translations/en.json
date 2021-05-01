@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Please enter your server connection details",
+                "title": "Connect"
+            }
+        }
+    }
+}

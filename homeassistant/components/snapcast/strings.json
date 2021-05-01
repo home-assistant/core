@@ -1,0 +1,18 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Please enter your server connection details",
+                "data": {
+                    "host": "[%key:common::config_flow::data::host%]",
+                    "port": "[%key:common::config_flow::data::port%]"
+                },
+                "title": "Connect"
+            }
+        },
+        "error": {
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
+        }
+    }
+}
