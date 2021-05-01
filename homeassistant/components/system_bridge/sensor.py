@@ -3,6 +3,7 @@ from typing import Any, Dict, Optional
 
 from systembridge import Bridge
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_VOLTAGE,
@@ -80,7 +81,7 @@ async def async_setup_entry(
     )
 
 
-class BridgeSensor(BridgeDeviceEntity):
+class BridgeSensor(BridgeDeviceEntity, SensorEntity):
     """Defines a System Bridge sensor."""
 
     def __init__(
