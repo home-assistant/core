@@ -10,7 +10,6 @@ from twentemilieu import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ID
 from homeassistant.data_entry_flow import FlowResult
@@ -23,7 +22,6 @@ class TwenteMilieuFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Twente Milieu config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def _show_setup_form(
         self, errors: dict[str, str] | None = None
