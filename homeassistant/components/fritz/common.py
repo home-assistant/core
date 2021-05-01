@@ -240,13 +240,23 @@ class FritzBoxHostEntity:
     def device_info(self):
         """Return the device information."""
         dev_info = {}
-        dev_info["connections"] = {(CONNECTION_NETWORK_MAC, self.mac_address)}
-        dev_info["identifiers"] = {(DOMAIN, self.unique_id)}
+        # pylint: disable=maybe-no-member
+        dev_info["connections"] = {
+            (CONNECTION_NETWORK_MAC, self.mac_address)
+        }  # pylint: disable=maybe-no-member
+        dev_info["identifiers"] = {
+            (DOMAIN, self.unique_id)
+        }  # pylint: disable=maybe-no-member
         dev_info["manufacturer"] = "AVM"
         dev_info["name"] = self._name
-        if self.mac_address.replace(":", "") != self._fritzbox_tools.unique_id:
+        if (
+            self.mac_address.replace(":", "") != self._fritzbox_tools.unique_id
+        ):  # pylint: disable=maybe-no-member
             # Exclude model and via_device for router itself
             dev_info["model"] = self._model
-            dev_info["via_device"] = (DOMAIN, self._fritzbox_tools.unique_id)
+            dev_info["via_device"] = (
+                DOMAIN,
+                self._fritzbox_tools.unique_id,
+            )  # pylint: disable=maybe-no-member
 
         return dev_info
