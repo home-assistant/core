@@ -48,6 +48,11 @@ async def test_config_flow_auth_success(hass):
 
 async def test_config_flow_reauth_success(hass):
     """Test a successful config flow reauth."""
+    MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id="111",
+        data={"student_id": "111", "login": "jan@fakelog.cf"},
+    ).add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
     )
@@ -293,6 +298,23 @@ async def test_multiple_config_entries_without_valid_saved_credentials_2(hass):
     assert result["step_id"] == "auth"
     assert result["errors"] == {}
     shutil.rmtree(".vulcan")
+
+
+async def test_multiple_config_entries_without_valid_saved_credentials_3(hass):
+    """Test a unsuccessful config flow for multiple config entries without valid saved credentials (different situation)."""
+    MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id="123456",
+        data={"student_id": "123456", "login": "example@mail.com"},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"] == {}
 
 
 async def test_student_already_exists(hass):
