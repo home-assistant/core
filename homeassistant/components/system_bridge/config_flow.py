@@ -109,7 +109,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_authenticate(self, user_input=None):
         """Handle getting the api-key for authentication."""
-        if self._input != {}:
+        if self._input:
             user_input = {**self._input, **(user_input or {})}
         if user_input is None or user_input.get(CONF_API_KEY, None) is None:
             return self.async_show_form(
