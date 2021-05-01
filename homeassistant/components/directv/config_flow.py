@@ -9,7 +9,7 @@ from directv import DIRECTV, DIRECTVError
 import voluptuous as vol
 
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_SERIAL
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
@@ -40,7 +40,6 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for DirecTV."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Set up the instance."""

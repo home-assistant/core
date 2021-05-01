@@ -32,7 +32,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a FRITZ!Box Tools config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize FRITZ!Box Tools flow."""

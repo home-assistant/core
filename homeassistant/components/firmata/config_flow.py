@@ -17,7 +17,6 @@ class FirmataFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a firmata config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     async def async_step_import(self, import_config: dict):
         """Import a firmata board as a config entry.
