@@ -722,7 +722,7 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return bool(self._api.storage)
+        return self._api.storage  # type: ignore [no-any-return]
 
     @property
     def device_info(self) -> DeviceInfo:
