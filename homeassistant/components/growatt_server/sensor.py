@@ -568,28 +568,36 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the Growatt sensor."""
-    config = config_entry.data
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
+def get_device_list(api, config):
+    """Retrieve the device list for the selected plant."""
     plant_id = config[CONF_PLANT_ID]
-    name = config[CONF_NAME]
-
-    api = growattServer.GrowattApi()
 
     # Log in to api and fetch first plant if no plant id is defined.
-    login_response = await hass.async_add_executor_job(api.login, username, password)
+    login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
     if not login_response["success"] and login_response["errCode"] == "102":
         _LOGGER.error("Username or Password may be incorrect!")
         return
     user_id = login_response["userId"]
     if plant_id == DEFAULT_PLANT_ID:
-        plant_info = await hass.async_add_executor_job(api.plant_list, user_id)
+        plant_info = api.plant_list(user_id)
         plant_id = plant_info["data"][0]["plantId"]
 
     # Get a list of devices for specified plant to add sensors for.
-    devices = await hass.async_add_executor_job(api.device_list, plant_id)
+    devices = api.device_list(plant_id)
+    return [devices, plant_id]
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Growatt sensor."""
+    config = config_entry.data
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+    name = config[CONF_NAME]
+
+    api = growattServer.GrowattApi()
+
+    devices, plant_id = await hass.async_add_executor_job(get_device_list, api, config)
+
     entities = []
     probe = GrowattData(api, username, password, plant_id, "total")
     for sensor in TOTAL_SENSOR_TYPES:
