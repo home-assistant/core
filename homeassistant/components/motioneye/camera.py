@@ -191,7 +191,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity[Optional[Dict[str, Any
                 self._motion_detection_enabled = camera.get(KEY_MOTION_DETECTION, False)
                 available = True
         self._available = available
-        CoordinatorEntity._handle_coordinator_update(self)
+        super()._handle_coordinator_update()
 
     @property
     def brand(self) -> str:
