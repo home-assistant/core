@@ -146,8 +146,6 @@ async def test_user_flow(
     aioclient_mock.get(f"{FIXTURE_BASE_URL}/system", json=FIXTURE_SYSTEM)
 
     with patch(
-        "homeassistant.components.system_bridge.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.system_bridge.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -159,7 +157,6 @@ async def test_user_flow(
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "test-bridge"
     assert result2["data"] == FIXTURE_USER_INPUT
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -317,8 +314,6 @@ async def test_zeroconf_flow(
     aioclient_mock.get(f"{FIXTURE_ZEROCONF_BASE_URL}/system", json=FIXTURE_SYSTEM)
 
     with patch(
-        "homeassistant.components.system_bridge.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.system_bridge.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -330,7 +325,6 @@ async def test_zeroconf_flow(
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "test-bridge"
     assert result2["data"] == FIXTURE_ZEROCONF_INPUT
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
