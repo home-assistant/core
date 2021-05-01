@@ -1,4 +1,5 @@
 """The qbittorrent component."""
+import asyncio
 import logging
 
 from qbittorrent.client import LoginRequired
@@ -52,6 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except LoginRequired:
         _LOGGER.error("Invalid authentication")
         return
+
     except RequestException as err:
         _LOGGER.error("Connection failed")
         raise PlatformNotReady from err
@@ -66,3 +68,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Unload Qbittorrent Entry from config_entry."""
+
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
+    )
+
+    return unload_ok

@@ -127,6 +127,7 @@ class QBittorrentSensor(SensorEntity):
         return {
             "identifiers": {(DOMAIN, self._server_unique_id)},
             "name": self.client_name,
+            "model": self.client_name,
             "manufacturer": "QBittorrent",
         }
 
@@ -136,10 +137,14 @@ class QBittorrentSensor(SensorEntity):
             data = await self.hass.async_add_executor_job(
                 get_main_data_client, self.client
             )
+            if not self._available:
+                _LOGGER.info("Reconnected with QBittorent server")
+
             self._available = True
         except RequestException:
-            _LOGGER.error("Connection lost")
-            self._available = False
+            if self._available:
+                _LOGGER.error("Connection lost")
+                self._available = False
             return
         except self._exception:
             _LOGGER.error("Invalid authentication")
