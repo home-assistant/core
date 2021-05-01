@@ -261,7 +261,9 @@ class TeslaDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
         if self.controller.is_token_refreshed():
-            (refresh_token, access_token) = self.controller.get_tokens()
+            result = self.controller.get_tokens()
+            refresh_token = result["refresh_token"]
+            access_token = result["access_token"]
             _async_save_tokens(
                 self.hass, self.config_entry, access_token, refresh_token
             )
