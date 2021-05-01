@@ -1,6 +1,6 @@
 """Config flow for System Bridge integration."""
 import logging
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 
 import async_timeout
 from systembridge import Bridge
@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -69,9 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name: Optional[str] = None
         self._input: Optional[Dict[str, Any]] = {}
 
-    async def _async_get_info(
-        self, user_input=None
-    ) -> Tuple[Optional[Dict[str, str]], Optional[Dict[str, str]]]:
+    async def _async_get_info(self, user_input=None):
         errors = {}
 
         try:
@@ -88,7 +87,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return errors, None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -107,7 +106,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_authenticate(self, user_input=None):
+    async def async_step_authenticate(self, user_input=None) -> FlowResult:
         """Handle getting the api-key for authentication."""
         if self._input:
             user_input = {**self._input, **(user_input or {})}
@@ -133,10 +132,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
+    async def async_step_zeroconf(
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
         host = discovery_info["properties"].get("ip", None)
         uuid = discovery_info["properties"].get("uuid", None)
+
+        if host is None or uuid is None:
+            raise AbortFlow("unknown")
 
         # Check if already configured
         await self.async_set_unique_id(uuid)
@@ -150,7 +154,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_authenticate(self._input)
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, user_input=None) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         if (
             user_input is not None
