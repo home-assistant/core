@@ -52,6 +52,12 @@ def test_split_entity_id():
     assert ha.split_entity_id("domain.object_id") == ["domain", "object_id"]
 
 
+def test_raise_split_invalid_entity_id():
+    """Test split_entity_id."""
+    with pytest.raises(ha.HomeAssistantError, match="Unexpected entity ID format"):
+        assert ha.split_entity_id({"this": "is", "invalid": ["stuff", "homie"]})
+
+
 def test_async_add_hass_job_schedule_callback():
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock()
