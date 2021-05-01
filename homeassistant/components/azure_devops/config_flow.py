@@ -3,7 +3,6 @@ from aioazuredevops.client import DevOpsClient
 import aiohttp
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.azure_devops.const import (
     CONF_ORG,
     CONF_PAT,
@@ -17,7 +16,6 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Azure DevOps config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize config flow."""
