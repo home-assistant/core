@@ -1,6 +1,7 @@
 """Config flow to configure the FRITZ!Box Tools integration."""
+from __future__ import annotations
+
 import logging
-from typing import Optional
 from urllib.parse import urlparse
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
@@ -66,7 +67,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return None
 
-    async def async_check_configured_entry(self) -> Optional[ConfigEntry]:
+    async def async_check_configured_entry(self) -> ConfigEntry | None:
         """Check if entry is configured."""
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_HOST] == self._host:
