@@ -5,16 +5,15 @@ import aiosyncthing
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.util.network import normalize_url
 
-from .const import DEFAULT_NAME, DEFAULT_URL, DEFAULT_VERIFY_SSL, DOMAIN
+from .const import DEFAULT_URL, DEFAULT_VERIFY_SSL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_URL, default=DEFAULT_URL): str,
         vol.Required(CONF_TOKEN): str,
         vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
