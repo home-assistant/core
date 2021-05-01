@@ -35,7 +35,6 @@ class PlayStation4FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a PlayStation 4 config flow."""
 
     VERSION = CONFIG_ENTRY_VERSION
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the config flow."""
