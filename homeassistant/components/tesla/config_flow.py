@@ -40,6 +40,7 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the tesla flow."""
         self.username = None
+        self.reauth = False
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
@@ -51,10 +52,7 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             existing_entry = self._async_entry_for_username(user_input[CONF_USERNAME])
-            if (
-                existing_entry
-                and existing_entry.data[CONF_PASSWORD] == user_input[CONF_PASSWORD]
-            ):
+            if existing_entry and not self.reauth:
                 return self.async_abort(reason="already_configured")
 
             try:
@@ -86,6 +84,7 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(self, data):
         """Handle configuration by re-auth."""
         self.username = data[CONF_USERNAME]
+        self.reauth = True
         return await self.async_step_user()
 
     @staticmethod
