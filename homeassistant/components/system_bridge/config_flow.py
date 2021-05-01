@@ -1,6 +1,6 @@
 """Config flow for System Bridge integration."""
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 import async_timeout
 from systembridge import Bridge
@@ -70,7 +70,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name: Optional[str] = None
         self._input: Optional[Dict[str, Any]] = {}
 
-    async def _async_get_info(self, user_input=None):
+    async def _async_get_info(
+        self, user_input=None
+    ) -> Tuple[Optional[Dict[str, str]], Optional[Dict[str, str]]]:
         errors = {}
 
         try:
@@ -95,7 +97,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         errors, info = await self._async_get_info(user_input)
-        if errors is None:
+        if errors is None and info is not None:
             # Check if already configured
             await self.async_set_unique_id(info["uuid"], raise_on_progress=False)
             self._abort_if_unique_id_configured(updates={CONF_HOST: info["hostname"]})
@@ -118,7 +120,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         errors, info = await self._async_get_info(user_input)
-        if errors is None:
+        if errors is None and info is not None:
             # Check if already configured
             await self.async_set_unique_id(info["uuid"])
             self._abort_if_unique_id_configured(updates={CONF_HOST: info["hostname"]})
@@ -171,7 +173,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input = {**self._input, **(user_input or {})}
 
         errors, info = await self._async_get_info(user_input)
-        if errors is None:
+        if errors is None and info is not None:
             existing_entry = await self.async_set_unique_id(info["uuid"])
             if existing_entry:
                 self.hass.config_entries.async_update_entry(
