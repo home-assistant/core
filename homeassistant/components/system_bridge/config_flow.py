@@ -154,7 +154,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Perform reauth upon an API authentication error."""
         if (
             user_input is not None
-            and user_input != {}
             and user_input.get(CONF_HOST, None) is not None
             and user_input.get(CONF_PORT, None) is not None
         ):
