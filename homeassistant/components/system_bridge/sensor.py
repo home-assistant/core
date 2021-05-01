@@ -140,7 +140,7 @@ class BridgeBatteryTimeRemainingSensor(BridgeSensor):
 
 
 class BridgeCpuSpeedSensor(BridgeSensor):
-    """Defines a CPU sensor."""
+    """Defines a CPU speed sensor."""
 
     def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
         """Initialize System Bridge sensor."""
@@ -163,7 +163,7 @@ class BridgeCpuSpeedSensor(BridgeSensor):
 
 
 class BridgeCpuTemperatureSensor(BridgeSensor):
-    """Defines a CPU sensor."""
+    """Defines a CPU temperature sensor."""
 
     def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
         """Initialize System Bridge sensor."""
@@ -186,7 +186,7 @@ class BridgeCpuTemperatureSensor(BridgeSensor):
 
 
 class BridgeCpuVoltageSensor(BridgeSensor):
-    """Defines a CPU sensor."""
+    """Defines a CPU voltage sensor."""
 
     def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
         """Initialize System Bridge sensor."""
@@ -209,7 +209,7 @@ class BridgeCpuVoltageSensor(BridgeSensor):
 
 
 class BridgeFilesystemSensor(BridgeSensor):
-    """Defines a CPU sensor."""
+    """Defines a filesystem sensor."""
 
     def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge, key: str):
         """Initialize System Bridge sensor."""
@@ -250,7 +250,7 @@ class BridgeFilesystemSensor(BridgeSensor):
 
 
 class BridgeKernelSensor(BridgeSensor):
-    """Defines an OS sensor."""
+    """Defines a kernel sensor."""
 
     def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
         """Initialize System Bridge sensor."""
