@@ -15,18 +15,10 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_SOFTWARE_VERSION,
-    DATA_ELGATO_CLIENT,
-    DOMAIN,
-)
+from .const import DATA_ELGATO_CLIENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,12 +135,12 @@ class ElgatoLight(LightEntity):
             self._state = None
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this Elgato Key Light."""
         return {
-            ATTR_IDENTIFIERS: {(DOMAIN, self._info.serial_number)},
-            ATTR_NAME: self._info.product_name,
-            ATTR_MANUFACTURER: "Elgato",
-            ATTR_MODEL: self._info.product_name,
-            ATTR_SOFTWARE_VERSION: f"{self._info.firmware_version} ({self._info.firmware_build_number})",
+            "identifiers": {(DOMAIN, self._info.serial_number)},
+            "name": self._info.product_name,
+            "manufacturer": "Elgato",
+            "model": self._info.product_name,
+            "sw_version": f"{self._info.firmware_version} ({self._info.firmware_build_number})",
         }
