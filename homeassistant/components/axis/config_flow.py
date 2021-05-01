@@ -156,7 +156,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
         return await self._process_discovered_device(
             {
                 CONF_HOST: discovery_info[IP_ADDRESS],
-                CONF_MAC: format_mac(discovery_info.get(MAC_ADDRESS)),
+                CONF_MAC: format_mac(discovery_info.get(MAC_ADDRESS, "")),
                 CONF_NAME: discovery_info.get(HOSTNAME),
                 CONF_PORT: DEFAULT_PORT,
             }
