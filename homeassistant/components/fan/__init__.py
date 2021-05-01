@@ -242,7 +242,7 @@ class FanEntity(ToggleEntity):
             await self.async_turn_off()
             return
 
-        if speed in self.preset_modes:
+        if self.preset_modes and speed in self.preset_modes:
             if not hasattr(self.async_set_preset_mode, _FAN_NATIVE):
                 await self.async_set_preset_mode(speed)
                 return
@@ -371,7 +371,7 @@ class FanEntity(ToggleEntity):
             _LOGGER.warning(
                 "Calling fan.turn_on with the speed argument is deprecated, use percentage or preset_mode instead"
             )
-            if speed in self.preset_modes:
+            if self.preset_modes and speed in self.preset_modes:
                 preset_mode = speed
                 percentage = None
             else:
@@ -459,9 +459,13 @@ class FanEntity(ToggleEntity):
     @property
     def percentage(self) -> int | None:
         """Return the current speed as a percentage."""
-        if not self._implemented_preset_mode and self.speed in self.preset_modes:
+        if (
+            not self._implemented_preset_mode
+            and self.preset_modes
+            and self.speed in self.preset_modes
+        ):
             return None
-        if not self._implemented_percentage:
+        if not self._implemented_percentage and self.speed:
             return self.speed_to_percentage(self.speed)
         return 0
 
@@ -484,7 +488,7 @@ class FanEntity(ToggleEntity):
         speeds = []
         if self._implemented_percentage:
             speeds += [SPEED_OFF, *LEGACY_SPEED_LIST]
-        if self._implemented_preset_mode:
+        if self._implemented_preset_mode and self.preset_modes:
             speeds += self.preset_modes
         return speeds
 
@@ -601,8 +605,8 @@ class FanEntity(ToggleEntity):
 
         if supported_features & SUPPORT_SET_SPEED:
             data[ATTR_SPEED] = self.speed
-            data[ATTR_PERCENTAGE] = self.percentage
-            data[ATTR_PERCENTAGE_STEP] = self.percentage_step
+            data[ATTR_PERCENTAGE] = str(self.percentage)
+            data[ATTR_PERCENTAGE_STEP] = str(self.percentage_step)
 
         if (
             supported_features & SUPPORT_PRESET_MODE
@@ -624,8 +628,8 @@ class FanEntity(ToggleEntity):
         Requires SUPPORT_SET_SPEED.
         """
         speed = self.speed
-        if speed in self.preset_modes:
-            return speed
+        if self.preset_modes and speed in self.preset_modes:
+            return str(speed)
         return None
 
     @property
