@@ -203,24 +203,19 @@ async def base_config_test(
     )
 
 
-async def run_service_update(hass, config, entity_id, reuse=False):
+async def run_service_update(hass, config, entity_id):
     """Run test for service write_coil."""
 
-    if not reuse:
-        config_modbus = {
-            DOMAIN: {
-                CONF_NAME: DEFAULT_HUB,
-                CONF_TYPE: "tcp",
-                CONF_HOST: "modbusTest",
-                CONF_PORT: 5001,
-                **config,
-            },
-        }
-        assert await async_setup_component(hass, DOMAIN, config_modbus)
-        await hass.async_block_till_done()
-        assert await async_setup_component(hass, "homeassistant", {})
-        await hass.async_block_till_done()
-    await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
-    )
+    config_modbus = {
+        DOMAIN: {
+            CONF_NAME: DEFAULT_HUB,
+            CONF_TYPE: "tcp",
+            CONF_HOST: "modbusTest",
+            CONF_PORT: 5001,
+            **config,
+        },
+    }
+    assert await async_setup_component(hass, DOMAIN, config_modbus)
+    await hass.async_block_till_done()
+    assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()

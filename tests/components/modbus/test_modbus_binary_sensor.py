@@ -120,7 +120,14 @@ async def test_service_binary_sensor_update(hass, mock_pymodbus):
         config,
         entity_id,
     )
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+    )
+    await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OFF
+
     mock_pymodbus.read_coils.return_value = ReadResult([0x01])
-    await run_service_update(hass, config, entity_id, reuse=True)
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+    )
     assert hass.states.get(entity_id).state == STATE_ON
