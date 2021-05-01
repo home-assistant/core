@@ -1,6 +1,8 @@
 """Support for System Bridge sensors."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 from systembridge import Bridge
 
@@ -70,9 +72,9 @@ class BridgeSensor(BridgeDeviceEntity, SensorEntity):
         bridge: Bridge,
         key: str,
         name: str,
-        icon: Optional[str],
-        device_class: Optional[str],
-        unit_of_measurement: Optional[str],
+        icon: str | None,
+        device_class: str | None,
+        unit_of_measurement: str | None,
         enabled_by_default: bool,
     ) -> None:
         """Initialize System Bridge sensor."""
@@ -82,12 +84,12 @@ class BridgeSensor(BridgeDeviceEntity, SensorEntity):
         super().__init__(coordinator, bridge, key, name, icon, enabled_by_default)
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the class of this sensor."""
         return self._device_class
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
@@ -132,7 +134,7 @@ class BridgeBatteryTimeRemainingSensor(BridgeSensor):
         )
 
     @property
-    def state(self) -> Union[str, None]:
+    def state(self) -> str | None:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         if bridge.battery.timeRemaining is None:
@@ -237,7 +239,7 @@ class BridgeFilesystemSensor(BridgeSensor):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def device_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the entity."""
         bridge: Bridge = self.coordinator.data
         return {
@@ -323,7 +325,7 @@ class BridgeProcessesLoadSensor(BridgeSensor):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def device_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the entity."""
         bridge: Bridge = self.coordinator.data
         return {

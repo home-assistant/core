@@ -106,6 +106,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
+    if hass.services.has_service(DOMAIN, SERVICE_SEND_COMMAND):
+        return True
+
     async def handle_send_command(call):
         """Handle the send_command service call."""
         device_registry = await hass.helpers.device_registry.async_get_registry()
@@ -156,9 +159,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             _LOGGER.debug("Sent open request")
         except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
             _LOGGER.warning("Error sending. Error was: %s", exception)
-
-    if hass.services.has_service(DOMAIN, SERVICE_SEND_COMMAND):
-        return True
 
     hass.services.async_register(
         DOMAIN,
