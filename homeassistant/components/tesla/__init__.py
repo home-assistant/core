@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from homeasistant.core import EVENT_HOMEASSISTANT_CLOSE
+from homeasistant.const import EVENT_HOMEASSISTANT_CLOSE
 import httpx
 from teslajsonpy import Controller as TeslaAPI
 from teslajsonpy.exceptions import IncompleteCredentials, TeslaException
