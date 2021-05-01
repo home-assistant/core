@@ -98,7 +98,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors, info = await self._async_get_info(user_input)
         if errors is None:
             # Check if already configured
-            await self.async_set_unique_id(info["uuid"])
+            await self.async_set_unique_id(info["uuid"], raise_on_progress=False)
             self._abort_if_unique_id_configured(updates={CONF_HOST: info["hostname"]})
 
             return self.async_create_entry(title=info["hostname"], data=user_input)
