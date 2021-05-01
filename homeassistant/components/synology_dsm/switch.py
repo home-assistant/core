@@ -55,6 +55,8 @@ async def async_setup_entry(
 class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
     """Representation a Synology Surveillance Station Home Mode toggle."""
 
+    coordinator: DataUpdateCoordinator[dict[str, dict[str, bool]]]
+
     def __init__(
         self,
         api: SynoApi,
@@ -71,7 +73,6 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
             coordinator,
         )
         self._version = version
-        self.coordinator: DataUpdateCoordinator[dict[str, dict[str, bool]]]
 
     @property
     def is_on(self) -> bool:

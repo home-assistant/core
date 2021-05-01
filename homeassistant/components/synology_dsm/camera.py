@@ -57,6 +57,8 @@ async def async_setup_entry(
 class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
     """Representation a Synology camera."""
 
+    coordinator: DataUpdateCoordinator[dict[str, dict[str, SynoCamera]]]
+
     def __init__(
         self,
         api: SynoApi,
@@ -77,9 +79,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
             coordinator,
         )
         Camera.__init__(self)  # type: ignore[no-untyped-call]
-
         self._camera_id = camera_id
-        self.coordinator: DataUpdateCoordinator[dict[str, dict[str, SynoCamera]]]
 
     @property
     def camera_data(self) -> SynoCamera:
