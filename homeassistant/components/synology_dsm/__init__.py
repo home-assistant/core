@@ -202,13 +202,13 @@ async def async_setup_entry(  # noqa: C901
     for device in devices:
         old_identifier = list(next(iter(device.identifiers)))
         if len(old_identifier) > 2:
-            new_identifier = {
+            new_identifier: set[tuple[str, ...]] = {
                 (old_identifier.pop(0), "_".join([str(x) for x in old_identifier]))
             }
             _LOGGER.debug(
                 "migrate identifier '%s' to '%s'", device.identifiers, new_identifier
             )
-            dev_reg.async_update_device(device.id, new_identifiers=new_identifier)  # type: ignore[arg-type]
+            dev_reg.async_update_device(device.id, new_identifiers=new_identifier)
 
     # Migrate existing entry configuration
     if entry.data.get(CONF_VERIFY_SSL) is None:
