@@ -79,6 +79,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         Camera.__init__(self)  # type: ignore[no-untyped-call]
 
         self._camera_id = camera_id
+        self.coordinator: DataUpdateCoordinator[dict[str, dict[str, SynoCamera]]]
 
     @property
     def camera_data(self) -> SynoCamera:

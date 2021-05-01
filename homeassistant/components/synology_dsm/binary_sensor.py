@@ -68,7 +68,7 @@ class SynoDSMSecurityBinarySensor(SynologyDSMBaseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state."""
-        return bool(getattr(self._api.security, self.entity_type) != "safe")
+        return getattr(self._api.security, self.entity_type) != "safe"  # type: ignore[no-any-return]
 
     @property
     def available(self) -> bool:
