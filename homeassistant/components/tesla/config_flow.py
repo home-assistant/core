@@ -156,9 +156,9 @@ async def validate_input(hass: core.HomeAssistant, data):
             password=data[CONF_PASSWORD],
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
-        (config[CONF_TOKEN], config[CONF_ACCESS_TOKEN]) = await controller.connect(
-            test_login=True
-        )
+        result = await controller.connect(test_login=True)
+        config[CONF_TOKEN] = result["refresh_token"]
+        config[CONF_ACCESS_TOKEN] = result["access_token"]
         config[CONF_USERNAME] = data[CONF_USERNAME]
         config[CONF_PASSWORD] = data[CONF_PASSWORD]
     except TeslaException as ex:
