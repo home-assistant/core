@@ -9,7 +9,7 @@ from .const import DOMAIN
 PLATFORMS = ["sensor"]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flexpool from a config entry."""
 
     for platform in PLATFORMS:
