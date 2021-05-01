@@ -182,22 +182,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="credentials", data_schema=schema, errors=errors
         )
 
-    async def async_step_zeroconf(self, zeroconf_info):
+    async def async_step_zeroconf(self, discovery_info):
         """Handle zeroconf discovery."""
-        if not zeroconf_info.get("name", "").startswith("Bosch SHC"):
+        if not discovery_info.get("name", "").startswith("Bosch SHC"):
             return self.async_abort(reason="not_bosch_shc")
 
         try:
-            self.info = info = await self._get_info(zeroconf_info["host"])
+            self.info = info = await self._get_info(discovery_info["host"])
         except SHCConnectionError:
             return self.async_abort(reason="cannot_connect")
 
-        local_name = zeroconf_info["hostname"][:-1]
+        local_name = discovery_info["hostname"][:-1]
         node_name = local_name[: -len(".local")]
 
         await self.async_set_unique_id(info["unique_id"])
-        self._abort_if_unique_id_configured({CONF_HOST: zeroconf_info["host"]})
-        self.host = zeroconf_info["host"]
+        self._abort_if_unique_id_configured({CONF_HOST: discovery_info["host"]})
+        self.host = discovery_info["host"]
         self.context["title_placeholders"] = {"name": node_name}
         return await self.async_step_confirm_discovery()
 

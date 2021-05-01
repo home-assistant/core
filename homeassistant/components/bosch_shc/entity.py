@@ -25,7 +25,7 @@ async def async_remove_devices(hass, entity, entry_id):
         return device.id
 
     dev_registry = get_dev_reg(hass)
-    device_id = async_get_device_id(hass, entity._device.id)
+    device_id = async_get_device_id(hass, entity.device_id)
     if device_id is not None:
         dev_registry.async_update_device(device_id, remove_config_entry_id=entry_id)
 
@@ -74,10 +74,15 @@ class SHCEntity(Entity):
         return self._device.name
 
     @property
+    def device_id(self):
+        """Device id of the entity."""
+        return self._device.id
+
+    @property
     def device_info(self):
         """Return the device info."""
         return {
-            "identifiers": {(DOMAIN, self._device.id)},
+            "identifiers": {(DOMAIN, self.device_id)},
             "name": self._device.name,
             "manufacturer": self._device.manufacturer,
             "model": self._device.device_model,
