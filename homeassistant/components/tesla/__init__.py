@@ -5,7 +5,6 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from homeasistant.const import EVENT_HOMEASSISTANT_CLOSE
 import httpx
 from teslajsonpy import Controller as TeslaAPI
 from teslajsonpy.exceptions import IncompleteCredentials, TeslaException
@@ -20,6 +19,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_CLOSE,
     HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import callback
