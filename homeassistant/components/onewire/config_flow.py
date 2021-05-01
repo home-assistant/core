@@ -1,7 +1,7 @@
 """Config flow for 1-Wire component."""
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 
@@ -82,7 +82,6 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle 1-Wire config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize 1-Wire config flow."""
