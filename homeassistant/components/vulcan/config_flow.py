@@ -2,7 +2,7 @@
 import logging
 import os
 
-from aiohttp import ClientConnectorError
+from aiohttp import ClientConnectionError
 import voluptuous as vol
 from vulcan import Account, Keystore, Vulcan
 from vulcan._utils import VulcanAPIException
@@ -72,7 +72,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     errors["base"] = "unknown"
                     _LOGGER.error(err)
-            except ClientConnectorError as err:
+            except ClientConnectionError as err:
                 errors["base"] = "cannot_connect"
                 _LOGGER.error("Connection error: %s", err)
             except Exception:  # pylint: disable=broad-except
@@ -167,7 +167,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                 _LOGGER.error(err)
                 return await self.async_step_auth(errors={"base": "unknown"})
-            except ClientConnectorError as err:
+            except ClientConnectionError as err:
                 _LOGGER.error("Connection error: %s", err)
                 return await self.async_step_auth(errors={"base": "cannot_connect"})
             except Exception:  # pylint: disable=broad-except
@@ -215,6 +215,8 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         )
             if valid_credentials_list == []:
                 return await self.async_step_auth()
+        else:
+            return await self.async_step_auth()
 
         errors = {}
         if user_input is not None:
@@ -292,7 +294,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     errors["base"] = "unknown"
                     _LOGGER.error(err)
-            except ClientConnectorError as err:
+            except ClientConnectionError as err:
                 errors["base"] = "cannot_connect"
                 _LOGGER.error("Connection error: %s", err)
             except Exception:  # pylint: disable=broad-except
@@ -304,23 +306,21 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 client = Vulcan(keystore, account)
                 students = await client.get_students()
                 await client.close()
+                existing_entries = []
+                for entry in self.hass.config_entries.async_entries(DOMAIN):
+                    existing_entries.append(entry)
                 for student in students:
-                    for entry_id in self._async_current_ids():
-                        if str(student.pupil.id) == str(entry_id):
-                            existing_entry = await self.async_set_unique_id(
-                                str(student.pupil.id)
-                            )
+                    for entry in existing_entries:
+                        if str(student.pupil.id) == str(entry.data.get("student_id")):
                             self.hass.config_entries.async_update_entry(
-                                existing_entry,
+                                entry,
                                 title=f"{student.pupil.first_name} {student.pupil.last_name}",
                                 data={
                                     "login": account.user_login,
                                     "student_id": str(student.pupil.id),
                                 },
                             )
-                            await self.hass.config_entries.async_reload(
-                                existing_entry.entry_id
-                            )
+                            await self.hass.config_entries.async_reload(entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(

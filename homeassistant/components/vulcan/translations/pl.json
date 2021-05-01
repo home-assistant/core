@@ -27,7 +27,7 @@
             "description":"Zaloguj się ponownie do konta Vulcan za pomocą opcji rejestracji aplikacji mobilnej.",
             "data":{
                "token":"Token",
-               "symbol":"Symbol",
+               "region":"Symbol",
                "pin":"Pin"
             }
          },
