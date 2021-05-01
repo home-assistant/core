@@ -11,9 +11,11 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
+    DEVICE_CLASS_VOLTAGE,
     FREQUENCY_GIGAHERTZ,
     PERCENTAGE,
     TEMP_CELSIUS,
+    VOLT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -74,6 +76,7 @@ async def async_setup_entry(
             BridgeBatteryTimeRemainingSensor(coordinator, bridge),
             BridgeCpuSpeedSensor(coordinator, bridge),
             BridgeCpuTemperatureSensor(coordinator, bridge),
+            BridgeCpuVoltageSensor(coordinator, bridge),
             *[
                 BridgeFilesystemSensor(coordinator, bridge, key)
                 for key, _ in bridge.filesystem.fsSize.items()
@@ -81,6 +84,7 @@ async def async_setup_entry(
             BridgeOsSensor(coordinator, bridge),
             BridgeProcessesLoadSensor(coordinator, bridge),
         ],
+        True,
     )
 
 
@@ -96,12 +100,13 @@ class BridgeSensor(BridgeDeviceEntity, SensorEntity):
         icon: Optional[str],
         device_class: Optional[str],
         unit_of_measurement: Optional[str],
+        enabled_by_default: bool,
     ) -> None:
         """Initialize System Bridge sensor."""
         self._device_class = device_class
         self._unit_of_measurement = unit_of_measurement
 
-        super().__init__(coordinator, bridge, key, name, icon)
+        super().__init__(coordinator, bridge, key, name, icon, enabled_by_default)
 
     @property
     def device_class(self) -> Optional[str]:
@@ -127,6 +132,7 @@ class BridgeBatterySensor(BridgeSensor):
             None,
             DEVICE_CLASS_BATTERY,
             PERCENTAGE,
+            True,
         )
 
     @property
@@ -163,6 +169,7 @@ class BridgeBatteryTimeRemainingSensor(BridgeSensor):
             None,
             DEVICE_CLASS_TIMESTAMP,
             None,
+            True,
         )
 
     @property
@@ -201,6 +208,7 @@ class BridgeCpuSpeedSensor(BridgeSensor):
             None,
             None,
             FREQUENCY_GIGAHERTZ,
+            True,
         )
 
     @property
@@ -225,7 +233,6 @@ class BridgeCpuSpeedSensor(BridgeSensor):
             ATTR_SPEED_MIN: bridge.cpu.cpu.speedMin,
             ATTR_SPEED: bridge.cpu.cpu.speed,
             ATTR_VENDOR: bridge.cpu.cpu.vendor,
-            ATTR_VOLTAGE: bridge.cpu.cpu.voltage,
         }
 
 
@@ -242,6 +249,7 @@ class BridgeCpuTemperatureSensor(BridgeSensor):
             None,
             DEVICE_CLASS_TEMPERATURE,
             TEMP_CELSIUS,
+            False,
         )
 
     @property
@@ -262,7 +270,43 @@ class BridgeCpuTemperatureSensor(BridgeSensor):
             ATTR_MANUFACTURER: bridge.cpu.cpu.manufacturer,
             ATTR_TEMPERATURE_MAX: bridge.cpu.temperature.max,
             ATTR_VENDOR: bridge.cpu.cpu.vendor,
-            ATTR_VOLTAGE: bridge.cpu.cpu.voltage,
+        }
+
+
+class BridgeCpuVoltageSensor(BridgeSensor):
+    """Defines a CPU sensor."""
+
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            bridge,
+            "cpu_voltage",
+            "CPU Voltage",
+            None,
+            DEVICE_CLASS_VOLTAGE,
+            VOLT,
+            False,
+        )
+
+    @property
+    def state(self) -> float:
+        """Return the state of the sensor."""
+        bridge: Bridge = self.coordinator.data
+        return bridge.cpu.cpu.voltage
+
+    @property
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return the state attributes of the entity."""
+        bridge: Bridge = self.coordinator.data
+        return {
+            ATTR_BRAND: bridge.cpu.cpu.brand,
+            ATTR_CORES_PHYSICAL: bridge.cpu.cpu.physicalCores,
+            ATTR_CORES: bridge.cpu.cpu.cores,
+            ATTR_GOVERNOR: bridge.cpu.cpu.governor,
+            ATTR_MANUFACTURER: bridge.cpu.cpu.manufacturer,
+            ATTR_TEMPERATURE_MAX: bridge.cpu.temperature.max,
+            ATTR_VENDOR: bridge.cpu.cpu.vendor,
         }
 
 
@@ -279,6 +323,7 @@ class BridgeFilesystemSensor(BridgeSensor):
             None,
             None,
             PERCENTAGE,
+            True,
         )
         self._key = key
 
@@ -312,7 +357,14 @@ class BridgeOsSensor(BridgeSensor):
     def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
         """Initialize System Bridge sensor."""
         super().__init__(
-            coordinator, bridge, "os", "Operating System", "mdi:devices", None, None
+            coordinator,
+            bridge,
+            "os",
+            "Operating System",
+            "mdi:devices",
+            None,
+            None,
+            True,
         )
 
     @property
@@ -353,6 +405,7 @@ class BridgeProcessesLoadSensor(BridgeSensor):
             "mdi:percent",
             None,
             PERCENTAGE,
+            True,
         )
 
     @property
