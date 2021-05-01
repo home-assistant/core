@@ -244,5 +244,12 @@ class FritzBoxHostEntity:
                 DOMAIN,
                 self._fritzbox_tools.unique_id,
             )  # pylint: disable=maybe-no-member
+        else:
+            dev_info[
+                "model"
+            ] = self._fritzbox_tools.model  # pylint: disable=maybe-no-member
+            dev_info[
+                "sw_version"
+            ] = self._fritzbox_tools.sw_version  # pylint: disable=maybe-no-member
 
         return dev_info

@@ -13,7 +13,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry
 
 from .common import FritzBoxTools, FritzData
 from .const import DATA_FRITZ, DOMAIN, PLATFORMS
@@ -54,30 +53,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_unload)
     )
 
-    async_device_setup(hass, entry, fritz_tools)
-
     # Load the other platforms like switch
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
-
-
-@callback
-def async_device_setup(
-    hass: HomeAssistant, entry: ConfigEntry, fritz_tools: FritzBoxTools
-):
-    """Set up a device that is online."""
-    dev_reg = device_registry.async_get(hass)
-    dev_reg.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        name=entry.title,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, fritz_tools.mac)},
-        # This is duplicate but otherwise via_device can't work
-        identifiers={(DOMAIN, fritz_tools.mac)},
-        manufacturer="AVM",
-        model=fritz_tools.model,
-        sw_version=fritz_tools.sw_version,
-    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
