@@ -36,7 +36,7 @@ class BridgeBinarySensor(BridgeDeviceEntity, BinarySensorEntity):
         bridge: Bridge,
         key: str,
         name: str,
-        icon: Optional[str],
+        icon: str | None,
         device_class: Optional[str],
         enabled_by_default: bool,
     ) -> None:
