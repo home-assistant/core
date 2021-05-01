@@ -51,8 +51,6 @@ class FritzBoxTools:
         """Initialize FritzboxTools class."""
         self._cancel_scan = None
         self._devices: dict[str, Any] = {}
-        self._model = None
-        self._sw_version = None
         self._unique_id = None
         self.connection = None
         self.fritzhosts = None
@@ -62,6 +60,8 @@ class FritzBoxTools:
         self.password = password
         self.port = port
         self.username = username
+        self.model = None
+        self.sw_version = None
 
     async def async_setup(self):
         """Wrap up FritzboxTools class setup."""
@@ -82,8 +82,9 @@ class FritzBoxTools:
         if self._unique_id is None:
             self._unique_id = info["NewSerialNumber"]
 
-        self._model = info.get("NewModelName")
-        self._sw_version = info.get("NewSoftwareVersion")
+        self.model = info.get("NewModelName")
+        self.sw_version = info.get("NewSoftwareVersion")
+        self.mac = self.unique_id
 
     async def async_start(self):
         """Start FritzHosts connection."""
@@ -109,24 +110,9 @@ class FritzBoxTools:
         return self._unique_id
 
     @property
-    def model(self):
-        """Return model."""
-        return self._model
-
-    @property
-    def sw_version(self):
-        """Return device firmware version."""
-        return self._sw_version
-
-    @property
     def devices(self) -> dict[str, Any]:
         """Return devices."""
         return self._devices
-
-    @property
-    def mac(self):
-        """Return device mac address."""
-        return self.unique_id
 
     @property
     def signal_device_new(self) -> str:
