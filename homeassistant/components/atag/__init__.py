@@ -11,6 +11,7 @@ from homeassistant.components.water_heater import DOMAIN as WATER_HEATER
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -77,7 +78,7 @@ class AtagEntity(CoordinatorEntity):
         self._name = DOMAIN.title()
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Return info for device registry."""
         device = self.coordinator.data.id
         version = self.coordinator.data.apiversion
