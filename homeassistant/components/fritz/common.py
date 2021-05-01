@@ -109,6 +109,16 @@ class FritzBoxTools:
         return self._unique_id
 
     @property
+    def model(self):
+        """Return model."""
+        return self._model
+
+    @property
+    def sw_version(self):
+        """Return device firmware version."""
+        return self._sw_version
+
+    @property
     def devices(self) -> dict[str, Any]:
         """Return devices."""
         return self._devices

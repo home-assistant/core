@@ -75,8 +75,8 @@ def async_device_setup(
         # This is duplicate but otherwise via_device can't work
         identifiers={(DOMAIN, fritz_tools.mac)},
         manufacturer="AVM",
-        model=fritz_tools._model,
-        sw_version=fritz_tools._sw_version,
+        model=fritz_tools.model,
+        sw_version=fritz_tools.sw_version,
     )
 
 
