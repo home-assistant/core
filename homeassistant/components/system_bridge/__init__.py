@@ -188,8 +188,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
-    hass.services.async_remove(DOMAIN, SERVICE_SEND_COMMAND)
-    hass.services.async_remove(DOMAIN, SERVICE_OPEN)
+    if not hass.data[DOMAIN]:
+        hass.services.async_remove(DOMAIN, SERVICE_SEND_COMMAND)
+        hass.services.async_remove(DOMAIN, SERVICE_OPEN)
 
     return unload_ok
 
