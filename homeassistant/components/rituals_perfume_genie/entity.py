@@ -23,6 +23,8 @@ AVAILABLE_STATE = 1
 class DiffuserEntity(CoordinatorEntity):
     """Representation of a diffuser entity."""
 
+    coordinator: RitualsDataUpdateCoordinator
+
     def __init__(
         self,
         diffuser: Diffuser,
