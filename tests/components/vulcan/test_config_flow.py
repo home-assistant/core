@@ -572,42 +572,50 @@ async def test_multiple_config_entries_with_unexpected_exception(hass):
 
 async def test_config_flow_auth_invalid_token(hass):
     """Test a config flow initialized by the user using invalid token."""
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    with patch(
+        "homeassistant.components.vulcan.config_flow.Account.register",
+        side_effect=VulcanAPIException("Invalid token."),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "auth"
-    assert result["errors"] == {}
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "auth"
+        assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_TOKEN: "3S20000", CONF_REGION: "powiatwulkanowy", CONF_PIN: "000000"},
-    )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_TOKEN: "3S20000", CONF_REGION: "powiatwulkanowy", CONF_PIN: "000000"},
+        )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "auth"
-    assert result["errors"] == {"base": "invalid_token"}
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "auth"
+        assert result["errors"] == {"base": "invalid_token"}
 
 
 async def test_config_flow_auth_invalid_region(hass):
     """Test a config flow initialized by the user using invalid region."""
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    with patch(
+        "homeassistant.components.vulcan.config_flow.Account.register",
+        side_effect=RuntimeError("Internal Server Error (ArgumentException)"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "auth"
-    assert result["errors"] == {}
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "auth"
+        assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_TOKEN: "3S10000", CONF_REGION: "invalid_region", CONF_PIN: "000000"},
-    )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_TOKEN: "3S10000", CONF_REGION: "invalid_region", CONF_PIN: "000000"},
+        )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "auth"
-    assert result["errors"] == {"base": "invalid_symbol"}
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "auth"
+        assert result["errors"] == {"base": "invalid_symbol"}
 
 
 async def test_config_flow_auth_invalid_pin(hass):
