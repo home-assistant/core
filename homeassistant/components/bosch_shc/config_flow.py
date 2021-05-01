@@ -61,7 +61,7 @@ def create_credentials_and_validate(hass, host, user_input, zeroconf):
     return result
 
 
-def get_info_from_host(host, zeroconf):
+def get_info_from_host(hass, host, zeroconf):
     """Get information from host."""
     session = SHCSession(
         host,
@@ -70,7 +70,8 @@ def get_info_from_host(host, zeroconf):
         True,
         zeroconf,
     )
-    return session.mdns_info()
+    information = session.mdns_info()
+    return {"title": information.name, "unique_id": information.unique_id}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -221,10 +222,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get additional information."""
         zeroconf = await async_get_instance(self.hass)
 
-        information = await self.hass.async_add_executor_job(
+        return await self.hass.async_add_executor_job(
             get_info_from_host,
+            self.hass,
             host,
             zeroconf,
         )
-
-        return {"title": information.name, "unique_id": information.unique_id}
