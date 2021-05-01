@@ -1,9 +1,10 @@
 """The System Bridge integration."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
 import shlex
-from typing import Optional
 
 import async_timeout
 from systembridge import Bridge
@@ -199,7 +200,7 @@ class BridgeEntity(CoordinatorEntity):
         bridge: Bridge,
         key: str,
         name: str,
-        icon: Optional[str],
+        icon: str | None,
         enabled_by_default: bool,
     ) -> None:
         """Initialize the System Bridge entity."""
@@ -227,7 +228,7 @@ class BridgeEntity(CoordinatorEntity):
         return self._name
 
     @property
-    def icon(self) -> Optional[str]:
+    def icon(self) -> str | None:
         """Return the mdi icon of the entity."""
         return self._icon
 
@@ -241,7 +242,7 @@ class BridgeDeviceEntity(BridgeEntity):
     """Defines a System Bridge device entity."""
 
     @property
-    def device_info(self) -> Optional[DeviceInfo]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this System Bridge instance."""
         return {
             "connections": {
