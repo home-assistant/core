@@ -46,7 +46,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            errors = self._async_validate_input(
+            errors = await self._async_validate_input(
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
             if not errors:
@@ -70,13 +70,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         existing_entry = await self.async_set_unique_id(self._reauth_unique_id)
         if user_input is not None:
-            new_data = {**existing_entry.data, CONF_PASSWORD: user_input[CONF_PASSWORD]}
-            errors = self._async_validate_input(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+            errors = await self._async_validate_input(
+                existing_entry.data[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
             if not errors:
                 self.hass.config_entries.async_update_entry(
-                    existing_entry, data=new_data
+                    existing_entry,
+                    data={
+                        **existing_entry.data,
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
                 )
                 await self.hass.config_entries.async_reload(existing_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
