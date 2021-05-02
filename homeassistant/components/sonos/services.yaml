@@ -106,6 +106,12 @@ set_option:
     device:
       integration: sonos
   fields:
+    buttons_enabled:
+      name: Buttons enabled
+      description: Enable control buttons on the device
+      example: "true"
+      selector:
+        boolean:
     night_sound:
       name: Night sound
       description: Enable Night Sound mode
