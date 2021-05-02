@@ -1,11 +1,13 @@
 """Switch platform for Hyperion."""
 
+from __future__ import annotations
+
 import asyncio
 import base64
 import binascii
 import functools
 import logging
-from typing import Any, Callable, Dict, Optional, cast
+from typing import Any, Callable, Optional, cast
 
 from aiohttp import web
 from hyperion import client
@@ -28,12 +30,19 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import get_hyperion_unique_id, listen_for_instance_updates
+from . import (
+    get_hyperion_device_id,
+    get_hyperion_unique_id,
+    listen_for_instance_updates,
+)
 from .const import (
     CONF_INSTANCE_CLIENTS,
     DOMAIN,
+    HYPERION_MANUFACTURER_NAME,
+    HYPERION_MODEL_NAME,
     NAME_SUFFIX_HYPERION_CAMERA,
     SIGNAL_ENTITY_REMOVE,
     TYPE_HYPERION_CAMERA,
@@ -63,8 +72,9 @@ async def async_setup_entry(
         async_add_entities(
             [
                 HyperionCamera(
-                    camera_unique_id(instance_num),
-                    f"{instance_name} {NAME_SUFFIX_HYPERION_CAMERA}",
+                    server_id,
+                    instance_num,
+                    instance_name,
                     entry_data[CONF_INSTANCE_CLIENTS][instance_num],
                 )
             ]
@@ -99,18 +109,24 @@ class HyperionCamera(Camera):
 
     def __init__(
         self,
-        unique_id: str,
-        name: str,
+        server_id: str,
+        instance_num: int,
+        instance_name: str,
         hyperion_client: client.HyperionClient,
     ) -> None:
         """Initialize the switch."""
         super().__init__()  # type: ignore[no-untyped-call]
-        self._unique_id = unique_id
-        self._name = name
+
+        self._unique_id = get_hyperion_unique_id(
+            server_id, instance_num, TYPE_HYPERION_CAMERA
+        )
+        self._name = f"{instance_name} {NAME_SUFFIX_HYPERION_CAMERA}".strip()
+        self._device_id = get_hyperion_device_id(server_id, instance_num)
+        self._instance_name = instance_name
         self._client = hyperion_client
 
         self._image_cond = asyncio.Condition()
-        self._image: Optional[bytes] = None
+        self._image: bytes | None = None
 
         # The number of open streams, when zero the stream is stopped.
         self._image_stream_clients = 0
@@ -140,7 +156,7 @@ class HyperionCamera(Camera):
         return bool(self._client.has_loaded_state)
 
     @callback
-    async def _update_imagestream(self, img: Optional[Dict[str, Any]] = None) -> None:
+    async def _update_imagestream(self, img: dict[str, Any] | None = None) -> None:
         """Update Hyperion components."""
         if not img:
             return
@@ -156,7 +172,7 @@ class HyperionCamera(Camera):
                 return
             self._image_cond.notify_all()
 
-    async def _async_wait_for_camera_image(self) -> Optional[bytes]:
+    async def _async_wait_for_camera_image(self) -> bytes | None:
         """Return a single camera image in a stream."""
         async with self._image_cond:
             await self._image_cond.wait()
@@ -184,7 +200,7 @@ class HyperionCamera(Camera):
             self.is_streaming = False
             self.async_write_ha_state()
 
-    async def async_camera_image(self) -> Optional[bytes]:
+    async def async_camera_image(self) -> bytes | None:
         """Return single camera image bytes."""
         if not await self._start_image_streaming_for_client():
             return None
@@ -194,7 +210,7 @@ class HyperionCamera(Camera):
 
     async def handle_async_mjpeg_stream(
         self, request: web.Request
-    ) -> Optional[web.StreamResponse]:
+    ) -> web.StreamResponse | None:
         """Serve an HTTP MJPEG stream from the camera."""
         if not await self._start_image_streaming_for_client():
             return None
@@ -222,6 +238,16 @@ class HyperionCamera(Camera):
     async def async_will_remove_from_hass(self) -> None:
         """Cleanup prior to hass removal."""
         self._client.remove_callbacks(self._client_callbacks)
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information."""
+        return {
+            "identifiers": {(DOMAIN, self._device_id)},
+            "name": self._instance_name,
+            "manufacturer": HYPERION_MANUFACTURER_NAME,
+            "model": HYPERION_MODEL_NAME,
+        }
 
 
 CAMERA_TYPES = {
