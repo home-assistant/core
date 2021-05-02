@@ -371,8 +371,6 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
 class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEntity):
     """Represent a shelly sleeping block attribute entity."""
 
-    sensors = None
-
     # pylint: disable=super-init-not-called
     def __init__(
         self,
@@ -384,9 +382,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
         sensors: set | None = None,
     ) -> None:
         """Initialize the sleeping sensor."""
-        if sensors is not None and ShellySleepingBlockAttributeEntity.sensors is None:
-            ShellySleepingBlockAttributeEntity.sensors = sensors
-
+        self.sensors = sensors
         self.last_state = None
         self.wrapper = wrapper
         self.attribute = attribute
@@ -418,7 +414,11 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
     @callback
     def _update_callback(self):
         """Handle device update."""
-        if self.block is not None or not self.wrapper.device.initialized:
+        if (
+            self.block is not None
+            or not self.wrapper.device.initialized
+            or self.sensors is None
+        ):
             super()._update_callback()
             return
 
@@ -432,10 +432,12 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
                 if sensor_id != entity_sensor:
                     continue
 
+                description = self.sensors.get((block.type, sensor_id))
+                if description is None:
+                    continue
+
                 self.block = block
-                self.description = ShellySleepingBlockAttributeEntity.sensors.get(
-                    (block.type, sensor_id)
-                )
+                self.description = description
 
                 _LOGGER.debug("Entity %s attached to block", self.name)
                 super()._update_callback()
