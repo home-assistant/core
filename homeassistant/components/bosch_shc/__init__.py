@@ -15,8 +15,8 @@ from homeassistant.helpers import device_registry as dr
 from .const import (
     CONF_SSL_CERTIFICATE,
     CONF_SSL_KEY,
+    DATA_POLLING_HANDLER,
     DATA_SESSION,
-    DATA_STOP_POLLING,
     DOMAIN,
 )
 
@@ -84,9 +84,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await hass.async_add_executor_job(session.stop_polling)
 
     await hass.async_add_executor_job(session.start_polling)
-    hass.data[DOMAIN][entry.entry_id][DATA_STOP_POLLING] = hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, stop_polling
-    )
+    hass.data[DOMAIN][entry.entry_id][
+        DATA_POLLING_HANDLER
+    ] = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_polling)
 
     return True
 
@@ -95,9 +95,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     session: SHCSession = hass.data[DOMAIN][entry.entry_id][DATA_SESSION]
 
-    if hass.data[DOMAIN][entry.entry_id][DATA_STOP_POLLING]:
-        hass.data[DOMAIN][entry.entry_id][DATA_STOP_POLLING]()
-        hass.data[DOMAIN][entry.entry_id].pop(DATA_STOP_POLLING)
+    if hass.data[DOMAIN][entry.entry_id][DATA_POLLING_HANDLER]:
+        hass.data[DOMAIN][entry.entry_id][DATA_POLLING_HANDLER]()
+        hass.data[DOMAIN][entry.entry_id].pop(DATA_POLLING_HANDLER)
         await hass.async_add_executor_job(session.stop_polling)
 
     unload_ok = all(
