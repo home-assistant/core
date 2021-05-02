@@ -5,7 +5,7 @@ import asyncio
 import functools
 import logging
 import math
-from typing import Any, Callable
+from typing import Callable
 
 from aioesphomeapi import (
     APIClient,
@@ -36,7 +36,7 @@ from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo as EntityDeviceInfo, Entity
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.service import async_set_service_schema
@@ -806,7 +806,7 @@ class EsphomeBaseEntity(Entity):
         return self._static_info.unique_id
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> EntityDeviceInfo:
         """Return device registry information for this entity."""
         return {
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)}

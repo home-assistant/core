@@ -28,7 +28,7 @@ class OneWireBaseEntity(Entity):
         device_file,
         entity_type: str,
         entity_name: str = None,
-        device_info=None,
+        device_info: DeviceInfo | None = None,
         default_disabled: bool = False,
         unique_id: str = None,
     ):
@@ -82,7 +82,7 @@ class OneWireProxyEntity(OneWireBaseEntity):
         self,
         device_id: str,
         device_name: str,
-        device_info: dict[str, Any],
+        device_info: DeviceInfo,
         entity_path: str,
         entity_specs: dict[str, Any],
         owproxy: protocol._Proxy,
