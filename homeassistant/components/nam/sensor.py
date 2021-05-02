@@ -32,6 +32,8 @@ async def async_setup_entry(
 class NAMSensor(CoordinatorEntity, SensorEntity):
     """Define an Nettigo Air Monitor sensor."""
 
+    coordinator: NAMDataUpdateCoordinator
+
     def __init__(self, coordinator: NAMDataUpdateCoordinator, sensor_type: str) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -70,12 +72,12 @@ class NAMSensor(CoordinatorEntity, SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique_id for this entity."""
-        return f"{self.coordinator.unique_id}-{self.sensor_type}".lower()  # type: ignore[attr-defined]
+        return f"{self.coordinator.unique_id}-{self.sensor_type}"
 
     @property
     def device_info(self) -> Any:
         """Return the device info."""
-        return self.coordinator.device_info  # type: ignore[attr-defined]
+        return self.coordinator.device_info
 
     @property
     def available(self) -> bool:
