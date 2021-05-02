@@ -32,7 +32,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = data[MYQ_COORDINATOR]
 
     async_add_entities(
-        [MyQDevice(coordinator, device) for device in myq.covers.values()], True
+        [MyQDevice(coordinator, device) for device in myq.covers.values()]
     )
 
 
@@ -158,9 +158,3 @@ class MyQDevice(CoordinatorEntity, CoverEntity):
         if self._device.parent_device_id:
             device_info["via_device"] = (DOMAIN, self._device.parent_device_id)
         return device_info
-
-    async def async_added_to_hass(self):
-        """Subscribe to updates."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
