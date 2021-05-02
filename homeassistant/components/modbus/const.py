@@ -60,6 +60,7 @@ DATA_TYPE_CUSTOM = "custom"
 DATA_TYPE_FLOAT = "float"
 DATA_TYPE_INT = "int"
 DATA_TYPE_UINT = "uint"
+DATA_TYPE_UINT32 = "uint32"
 DATA_TYPE_STRING = "string"
 
 # call types
@@ -80,6 +81,7 @@ DEFAULT_STRUCTURE_PREFIX = ">f"
 DEFAULT_STRUCT_FORMAT = {
     DATA_TYPE_INT: {1: "h", 2: "i", 4: "q"},
     DATA_TYPE_UINT: {1: "H", 2: "I", 4: "Q"},
+    DATA_TYPE_UINT32: {1: "L", 2: "I", 4: "Q"},
     DATA_TYPE_FLOAT: {1: "e", 2: "f", 4: "d"},
 }
 DEFAULT_TEMP_UNIT = "C"
