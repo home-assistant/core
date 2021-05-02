@@ -5,7 +5,7 @@ from pyetherscan import get_balance
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_ADDRESS, CONF_NAME, CONF_TOKEN
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_ADDRESS, CONF_NAME, CONF_TOKEN, CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
 ATTRIBUTION = "Data provided by etherscan.io"
@@ -17,6 +17,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ADDRESS): cv.string,
+        vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_TOKEN): cv.string,
         vol.Optional(CONF_TOKEN_ADDRESS): cv.string,
@@ -27,6 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Etherscan.io sensors."""
     address = config.get(CONF_ADDRESS)
+    api_key = config.get(CONF_API_KEY)
     name = config.get(CONF_NAME)
     token = config.get(CONF_TOKEN)
     token_address = config.get(CONF_TOKEN_ADDRESS)
