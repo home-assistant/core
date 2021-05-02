@@ -81,10 +81,7 @@ class FritzBoxTools:
         self.fritzstatus = FritzStatus(fc=self.connection)
         info = self.connection.call_action("DeviceInfo:1", "GetInfo")
         if self._unique_id is None:
-            serial = info["NewSerialNumber"]
-            self._unique_id = ":".join(
-                [serial[i : i + 2] for i in range(0, len(serial), 2)]
-            )
+            self._unique_id = info["NewSerialNumber"]
 
         self.model = info.get("NewModelName")
         self.sw_version = info.get("NewSoftwareVersion")
@@ -238,8 +235,8 @@ class FritzBoxBaseEntity:
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self.mac_address)},
             "identifiers": {
-                (DOMAIN, self.unique_id)
-            },  # pylint: disable=maybe-no-member
+                (DOMAIN, self.unique_id)  # pylint: disable=maybe-no-member
+            },
             "name": self._device_name,  # pylint: disable=maybe-no-member
             "manufacturer": "AVM",
             "model": self._fritzbox_tools.model,  # pylint: disable=maybe-no-member

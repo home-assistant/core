@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .common import FritzBoxBaseEntity
+from .common import FritzBoxBaseEntity, FritzBoxTools
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ async def async_setup_entry(
 class FritzBoxConnectivitySensor(FritzBoxBaseEntity, BinarySensorEntity):
     """Define FRITZ!Box connectivity class."""
 
-    def __init__(self, fritzbox_tools, device_friendlyname: str):
+    def __init__(self, fritzbox_tools: FritzBoxTools, device_friendlyname: str) -> None:
         """Init FRITZ!Box connectivity class."""
         self._fritzbox_tools = fritzbox_tools
         self._unique_id = f"{self._fritzbox_tools.unique_id}-connectivity"
