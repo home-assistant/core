@@ -33,7 +33,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
 from .const import (
-    DATA_CONTROLLER_MANAGER,
+    DATA_GROUP_MANAGER,
     DATA_SOURCE_MANAGER,
     DOMAIN as HEOS_DOMAIN,
     SIGNAL_HEOS_UPDATED,
@@ -102,7 +102,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         self._signals = []
         self._supported_features = BASE_SUPPORTED_FEATURES
         self._source_manager = None
-        self._group = []
+        self._group_manager = None
 
     async def _player_update(self, player_id, event):
         """Handle player attribute updated."""
@@ -136,64 +136,10 @@ class HeosMediaPlayer(MediaPlayerEntity):
         """Clear players playlist."""
         await self._player.clear_queue()
 
-    async def async_get_group(self):
-        """Build a dictionary with HEOS group membership information."""
-        group_membership = []
-        if not self.player_id:
-            _LOGGER.info(
-                "No player_id for %s yet, not returning group info", self.entity_id
-            )
-            return group_membership
-
-        controller = self.hass.data[HEOS_DOMAIN][DATA_CONTROLLER_MANAGER].controller
-        try:
-            groups = await controller.get_groups(refresh=True)
-        except HeosError as err:
-            _LOGGER.error("HEOS Unable to get group info: %s", err)
-            return group_membership
-
-        for group in groups.values():
-            member_player_ids = {member.player_id for member in group.members}
-            if (
-                self.player_id == group.leader.player_id
-                or self.player_id in member_player_ids
-            ):
-                leader_entity_id = None
-
-                for entity in self.hass.data[DOMAIN].entities:
-                    if not isinstance(entity, HeosMediaPlayer):
-                        continue
-                    if entity.player_id == group.leader.player_id:
-                        leader_entity_id = entity.entity_id
-                    elif entity.player_id in member_player_ids:
-                        group_membership.append(entity.entity_id)
-                # Make sure the group leader is always the first element
-                group_membership.insert(0, leader_entity_id)
-                return group_membership
-        return group_membership
-
     @log_command_error("join_players")
-    async def async_join_players(self, group_members):
+    async def async_join_players(self, group_members: list):
         """Join `group_members` as a player group with the current player."""
-        player_ids = []
-        for player_entity_id in group_members:
-            for entity in self.hass.data[DOMAIN].entities:
-                if (
-                    isinstance(entity, HeosMediaPlayer)
-                    and entity.entity_id == player_entity_id
-                ):
-                    player_ids.append(entity.player_id)
-
-        controller = self.hass.data[HEOS_DOMAIN][DATA_CONTROLLER_MANAGER].controller
-        try:
-            await controller.create_group(self.player_id, player_ids)
-        except HeosError as err:
-            _LOGGER.error(
-                "Failed to group %s with %s: %s",
-                self.entity_id,
-                group_members,
-                err,
-            )
+        await self._group_manager.async_join_players(self.entity_id, group_members)
 
     @log_command_error("pause")
     async def async_media_pause(self):
@@ -302,7 +248,9 @@ class HeosMediaPlayer(MediaPlayerEntity):
         controls = self._player.now_playing_media.supported_controls
         current_support = [CONTROL_TO_SUPPORT[control] for control in controls]
         self._supported_features = reduce(ior, current_support, BASE_SUPPORTED_FEATURES)
-        self._group = await self.async_get_group()
+
+        if self._group_manager is None:
+            self._group_manager = self.hass.data[HEOS_DOMAIN][DATA_GROUP_MANAGER]
 
         if self._source_manager is None:
             self._source_manager = self.hass.data[HEOS_DOMAIN][DATA_SOURCE_MANAGER]
@@ -310,17 +258,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
     @log_command_error("unjoin_player")
     async def async_unjoin_player(self):
         """Remove this player from any group."""
-        if self.group_members:
-            controller = self.hass.data[HEOS_DOMAIN][DATA_CONTROLLER_MANAGER].controller
-            try:
-                await controller.remove_group(self.player_id)
-            except HeosError as err:
-                _LOGGER.error(
-                    "Failed to ungroup %s: %s",
-                    self.entity_id,
-                    [],
-                    err,
-                )
+        await self._group_manager.async_unjoin_player(self.entity_id)
 
     async def async_will_remove_from_hass(self):
         """Disconnect the device when removed."""
@@ -358,7 +296,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
     @property
     def group_members(self) -> list:
         """List of players which are grouped together."""
-        return self._group
+        return self._group_manager.group_membership.get(self.entity_id, [])
 
     @property
     def is_volume_muted(self) -> bool:

@@ -5,6 +5,7 @@ ATTR_USERNAME = "username"
 COMMAND_RETRY_ATTEMPTS = 2
 COMMAND_RETRY_DELAY = 1
 DATA_CONTROLLER_MANAGER = "controller"
+DATA_GROUP_MANAGER = "group_manager"
 DATA_SOURCE_MANAGER = "source_manager"
 DATA_DISCOVERED_HOSTS = "heos_discovered_hosts"
 DOMAIN = "heos"

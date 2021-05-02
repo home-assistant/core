@@ -3,9 +3,11 @@ import asyncio
 from unittest.mock import patch
 
 from pyheos import CommandFailedError, const
+from pyheos.error import HeosError
 
 from homeassistant.components.heos import media_player
 from homeassistant.components.heos.const import (
+    DATA_GROUP_MANAGER,
     DATA_SOURCE_MANAGER,
     DOMAIN,
     SIGNAL_HEOS_UPDATED,
@@ -811,7 +813,7 @@ async def test_play_media_invalid_type(hass, config_entry, config, controller, c
     assert "Unable to play media: Unsupported media type 'Other'" in caplog.text
 
 
-async def test_media_player_join_group(hass, config_entry, config, controller):
+async def test_media_player_join_group(hass, config_entry, config, controller, caplog):
     """Test grouping of media players through the join service."""
     await setup_platform(hass, config_entry, config)
     with patch.object(controller, "create_group") as mock_create_group:
@@ -830,20 +832,28 @@ async def test_media_player_join_group(hass, config_entry, config, controller):
             2,
         ],
     )
+    assert "Failed to group media_player.test_player with" not in caplog.text
+
+    with patch.object(controller, "create_group", side_effect=HeosError("error")):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_JOIN,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_GROUP_MEMBERS: ["media_player.test_player_2"],
+            },
+            blocking=True,
+        )
+    assert "Failed to group media_player.test_player with" in caplog.text
 
 
 async def test_media_player_group_members(
-    hass, config_entry, config, controller, group
+    hass, config_entry, config, controller, group, caplog
 ):
     """Test group_members attribute."""
     await setup_platform(hass, config_entry, config)
     with patch.object(controller, "get_groups", return_value=group) as mock_get_groups:
-        player = controller.players[1]
-        player.heos.dispatcher.send(
-            const.SIGNAL_PLAYER_EVENT,
-            player.player_id,
-            const.EVENT_PLAYER_STATE_CHANGED,
-        )
+        hass.data[DOMAIN][DATA_GROUP_MANAGER].force_update_groups()
         await hass.async_block_till_done()
         player_entity = hass.states.get("media_player.test_player")
         assert player_entity.attributes[ATTR_GROUP_MEMBERS] == [
@@ -851,13 +861,24 @@ async def test_media_player_group_members(
             "media_player.test_player_2",
         ]
     mock_get_groups.assert_called_once()
+    assert "Unable to get HEOS group info" not in caplog.text
+
+    with patch.object(
+        controller, "get_groups", return_value=group, side_effect=HeosError("error")
+    ):
+        hass.data[DOMAIN][DATA_GROUP_MANAGER].force_update_groups()
+        await hass.async_block_till_done()
+    assert "Unable to get HEOS group info" in caplog.text
 
 
-async def test_media_player_unjoin_group(hass, config_entry, config, controller, group):
+async def test_media_player_unjoin_group(
+    hass, config_entry, config, controller, group, caplog
+):
     """Test ungrouping of media players through the join service."""
     await setup_platform(hass, config_entry, config)
+    player = controller.players[1]
+
     with patch.object(controller, "get_groups", return_value=group):
-        player = controller.players[1]
         player.heos.dispatcher.send(
             const.SIGNAL_PLAYER_EVENT,
             player.player_id,
@@ -874,3 +895,15 @@ async def test_media_player_unjoin_group(hass, config_entry, config, controller,
                 blocking=True,
             )
         mock_create_group.assert_called_once_with(1, [])
+        assert "Failed to ungroup media_player.test_player" not in caplog.text
+
+        with patch.object(controller, "create_group", side_effect=HeosError("error")):
+            await hass.services.async_call(
+                MEDIA_PLAYER_DOMAIN,
+                SERVICE_UNJOIN,
+                {
+                    ATTR_ENTITY_ID: "media_player.test_player",
+                },
+                blocking=True,
+            )
+        assert "Failed to ungroup media_player.test_player" in caplog.text
