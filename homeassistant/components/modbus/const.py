@@ -2,7 +2,7 @@
 
 # configuration names
 CONF_BAUDRATE = "baudrate"
-CONF_BINARY_SENSORS = "binary_sensor"
+CONF_BINARY_SENSOR = "binary_sensor"
 CONF_BYTESIZE = "bytesize"
 CONF_CLIMATE = "climate"
 CONF_CLIMATES = "climates"
