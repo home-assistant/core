@@ -1,9 +1,11 @@
 """Support for Tesla cars."""
+import asyncio
 from collections import defaultdict
 from datetime import timedelta
 import logging
 
 import async_timeout
+import httpx
 from teslajsonpy import Controller as TeslaAPI
 from teslajsonpy.exceptions import IncompleteCredentials, TeslaException
 import voluptuous as vol
@@ -17,11 +19,13 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_CLOSE,
     HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.httpx_client import SERVER_SOFTWARE, USER_AGENT
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -31,6 +35,7 @@ from homeassistant.util import slugify
 
 from .config_flow import CannotConnect, InvalidAuth, validate_input
 from .const import (
+    CONF_EXPIRATION,
     CONF_WAKE_ON_START,
     DATA_LISTENER,
     DEFAULT_SCAN_INTERVAL,
@@ -113,6 +118,7 @@ async def async_setup(hass, base_config):
                 CONF_PASSWORD: password,
                 CONF_ACCESS_TOKEN: info[CONF_ACCESS_TOKEN],
                 CONF_TOKEN: info[CONF_TOKEN],
+                CONF_EXPIRATION: info[CONF_EXPIRATION],
             },
             options={CONF_SCAN_INTERVAL: scan_interval},
         )
@@ -134,7 +140,7 @@ async def async_setup_entry(hass, config_entry):
     hass.data.setdefault(DOMAIN, {})
     config = config_entry.data
     # Because users can have multiple accounts, we always create a new session so they have separate cookies
-    websession = aiohttp_client.async_create_clientsession(hass)
+    async_client = httpx.AsyncClient(headers={USER_AGENT: SERVER_SOFTWARE})
     email = config_entry.title
     if email in hass.data[DOMAIN] and CONF_SCAN_INTERVAL in hass.data[DOMAIN][email]:
         scan_interval = hass.data[DOMAIN][email][CONF_SCAN_INTERVAL]
@@ -144,27 +150,45 @@ async def async_setup_entry(hass, config_entry):
         hass.data[DOMAIN].pop(email)
     try:
         controller = TeslaAPI(
-            websession,
+            async_client,
             email=config.get(CONF_USERNAME),
             password=config.get(CONF_PASSWORD),
             refresh_token=config[CONF_TOKEN],
             access_token=config[CONF_ACCESS_TOKEN],
+            expiration=config.get(CONF_EXPIRATION, 0),
             update_interval=config_entry.options.get(
                 CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
             ),
         )
-        (refresh_token, access_token) = await controller.connect(
+        result = await controller.connect(
             wake_if_asleep=config_entry.options.get(
                 CONF_WAKE_ON_START, DEFAULT_WAKE_ON_START
             )
         )
+        refresh_token = result["refresh_token"]
+        access_token = result["access_token"]
     except IncompleteCredentials as ex:
+        await async_client.aclose()
         raise ConfigEntryAuthFailed from ex
     except TeslaException as ex:
+        await async_client.aclose()
         if ex.code == HTTP_UNAUTHORIZED:
             raise ConfigEntryAuthFailed from ex
         _LOGGER.error("Unable to communicate with Tesla API: %s", ex.message)
         return False
+
+    async def _async_close_client(*_):
+        await async_client.aclose()
+
+    @callback
+    def _async_create_close_task():
+        asyncio.create_task(_async_close_client())
+
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close_client)
+    )
+    config_entry.async_on_unload(_async_create_close_task)
+
     _async_save_tokens(hass, config_entry, access_token, refresh_token)
     coordinator = TeslaDataUpdateCoordinator(
         hass, config_entry=config_entry, controller=controller
@@ -240,7 +264,9 @@ class TeslaDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
         if self.controller.is_token_refreshed():
-            (refresh_token, access_token) = self.controller.get_tokens()
+            result = self.controller.get_tokens()
+            refresh_token = result["refresh_token"]
+            access_token = result["access_token"]
             _async_save_tokens(
                 self.hass, self.config_entry, access_token, refresh_token
             )
