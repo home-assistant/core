@@ -1,57 +1,61 @@
 """Constants for Brother integration."""
 from __future__ import annotations
 
+from typing import Final
+
 from homeassistant.const import PERCENTAGE
 
 from .model import SensorDescription
 
-ATTR_BELT_UNIT_REMAINING_LIFE = "belt_unit_remaining_life"
-ATTR_BLACK_DRUM_COUNTER = "black_drum_counter"
-ATTR_BLACK_DRUM_REMAINING_LIFE = "black_drum_remaining_life"
-ATTR_BLACK_DRUM_REMAINING_PAGES = "black_drum_remaining_pages"
-ATTR_BLACK_INK_REMAINING = "black_ink_remaining"
-ATTR_BLACK_TONER_REMAINING = "black_toner_remaining"
-ATTR_BW_COUNTER = "b/w_counter"
-ATTR_COLOR_COUNTER = "color_counter"
-ATTR_CYAN_DRUM_COUNTER = "cyan_drum_counter"
-ATTR_CYAN_DRUM_REMAINING_LIFE = "cyan_drum_remaining_life"
-ATTR_CYAN_DRUM_REMAINING_PAGES = "cyan_drum_remaining_pages"
-ATTR_CYAN_INK_REMAINING = "cyan_ink_remaining"
-ATTR_CYAN_TONER_REMAINING = "cyan_toner_remaining"
-ATTR_DRUM_COUNTER = "drum_counter"
-ATTR_DRUM_REMAINING_LIFE = "drum_remaining_life"
-ATTR_DRUM_REMAINING_PAGES = "drum_remaining_pages"
-ATTR_DUPLEX_COUNTER = "duplex_unit_pages_counter"
-ATTR_FUSER_REMAINING_LIFE = "fuser_remaining_life"
-ATTR_LASER_REMAINING_LIFE = "laser_remaining_life"
-ATTR_MAGENTA_DRUM_COUNTER = "magenta_drum_counter"
-ATTR_MAGENTA_DRUM_REMAINING_LIFE = "magenta_drum_remaining_life"
-ATTR_MAGENTA_DRUM_REMAINING_PAGES = "magenta_drum_remaining_pages"
-ATTR_MAGENTA_INK_REMAINING = "magenta_ink_remaining"
-ATTR_MAGENTA_TONER_REMAINING = "magenta_toner_remaining"
-ATTR_MANUFACTURER = "Brother"
-ATTR_PAGE_COUNTER = "page_counter"
-ATTR_PF_KIT_1_REMAINING_LIFE = "pf_kit_1_remaining_life"
-ATTR_PF_KIT_MP_REMAINING_LIFE = "pf_kit_mp_remaining_life"
-ATTR_STATUS = "status"
-ATTR_UPTIME = "uptime"
-ATTR_YELLOW_DRUM_COUNTER = "yellow_drum_counter"
-ATTR_YELLOW_DRUM_REMAINING_LIFE = "yellow_drum_remaining_life"
-ATTR_YELLOW_DRUM_REMAINING_PAGES = "yellow_drum_remaining_pages"
-ATTR_YELLOW_INK_REMAINING = "yellow_ink_remaining"
-ATTR_YELLOW_TONER_REMAINING = "yellow_toner_remaining"
+ATTR_BELT_UNIT_REMAINING_LIFE: Final = "belt_unit_remaining_life"
+ATTR_BLACK_DRUM_COUNTER: Final = "black_drum_counter"
+ATTR_BLACK_DRUM_REMAINING_LIFE: Final = "black_drum_remaining_life"
+ATTR_BLACK_DRUM_REMAINING_PAGES: Final = "black_drum_remaining_pages"
+ATTR_BLACK_INK_REMAINING: Final = "black_ink_remaining"
+ATTR_BLACK_TONER_REMAINING: Final = "black_toner_remaining"
+ATTR_BW_COUNTER: Final = "b/w_counter"
+ATTR_COLOR_COUNTER: Final = "color_counter"
+ATTR_COUNTER: Final = "counter"
+ATTR_CYAN_DRUM_COUNTER: Final = "cyan_drum_counter"
+ATTR_CYAN_DRUM_REMAINING_LIFE: Final = "cyan_drum_remaining_life"
+ATTR_CYAN_DRUM_REMAINING_PAGES: Final = "cyan_drum_remaining_pages"
+ATTR_CYAN_INK_REMAINING: Final = "cyan_ink_remaining"
+ATTR_CYAN_TONER_REMAINING: Final = "cyan_toner_remaining"
+ATTR_DRUM_COUNTER: Final = "drum_counter"
+ATTR_DRUM_REMAINING_LIFE: Final = "drum_remaining_life"
+ATTR_DRUM_REMAINING_PAGES: Final = "drum_remaining_pages"
+ATTR_DUPLEX_COUNTER: Final = "duplex_unit_pages_counter"
+ATTR_FUSER_REMAINING_LIFE: Final = "fuser_remaining_life"
+ATTR_LASER_REMAINING_LIFE: Final = "laser_remaining_life"
+ATTR_MAGENTA_DRUM_COUNTER: Final = "magenta_drum_counter"
+ATTR_MAGENTA_DRUM_REMAINING_LIFE: Final = "magenta_drum_remaining_life"
+ATTR_MAGENTA_DRUM_REMAINING_PAGES: Final = "magenta_drum_remaining_pages"
+ATTR_MAGENTA_INK_REMAINING: Final = "magenta_ink_remaining"
+ATTR_MAGENTA_TONER_REMAINING: Final = "magenta_toner_remaining"
+ATTR_MANUFACTURER: Final = "Brother"
+ATTR_PAGE_COUNTER: Final = "page_counter"
+ATTR_PF_KIT_1_REMAINING_LIFE: Final = "pf_kit_1_remaining_life"
+ATTR_PF_KIT_MP_REMAINING_LIFE: Final = "pf_kit_mp_remaining_life"
+ATTR_REMAINING_PAGES: Final = "remaining_pages"
+ATTR_STATUS: Final = "status"
+ATTR_UPTIME: Final = "uptime"
+ATTR_YELLOW_DRUM_COUNTER: Final = "yellow_drum_counter"
+ATTR_YELLOW_DRUM_REMAINING_LIFE: Final = "yellow_drum_remaining_life"
+ATTR_YELLOW_DRUM_REMAINING_PAGES: Final = "yellow_drum_remaining_pages"
+ATTR_YELLOW_INK_REMAINING: Final = "yellow_ink_remaining"
+ATTR_YELLOW_TONER_REMAINING: Final = "yellow_toner_remaining"
 
-DATA_CONFIG_ENTRY = "config_entry"
+DATA_CONFIG_ENTRY: Final = "config_entry"
 
-DOMAIN = "brother"
+DOMAIN: Final = "brother"
 
-UNIT_PAGES = "p"
+UNIT_PAGES: Final = "p"
 
-PRINTER_TYPES = ["laser", "ink"]
+PRINTER_TYPES: Final = ["laser", "ink"]
 
-SNMP = "snmp"
+SNMP: Final = "snmp"
 
-ATTRS_MAP: dict[str, tuple[str, str]] = {
+ATTRS_MAP: Final[dict[str, tuple[str, str]]] = {
     ATTR_DRUM_REMAINING_LIFE: (ATTR_DRUM_REMAINING_PAGES, ATTR_DRUM_COUNTER),
     ATTR_BLACK_DRUM_REMAINING_LIFE: (
         ATTR_BLACK_DRUM_REMAINING_PAGES,
@@ -71,7 +75,7 @@ ATTRS_MAP: dict[str, tuple[str, str]] = {
     ),
 }
 
-SENSOR_TYPES: dict[str, SensorDescription] = {
+SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
     ATTR_STATUS: {
         "icon": "mdi:printer",
         "label": ATTR_STATUS.title(),
