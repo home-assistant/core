@@ -65,8 +65,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=info["title"], data={CONF_HOST: user_input[CONF_HOST]}
                 )
-            else:
-                errors["base"] = error
+            errors["base"] = error
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -83,8 +82,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return None, "unknown"
-        else:
-            return info, None
+
+        return info, None
 
     async def async_step_dhcp(self, discovery_info):
         """Handle DHCP discovery."""
