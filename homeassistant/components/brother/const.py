@@ -1,9 +1,9 @@
 """Constants for Brother integration."""
 from __future__ import annotations
 
-from typing import TypedDict
-
 from homeassistant.const import PERCENTAGE
+
+from .model import SensorDescription
 
 ATTR_BELT_UNIT_REMAINING_LIFE = "belt_unit_remaining_life"
 ATTR_BLACK_DRUM_COUNTER = "black_drum_counter"
@@ -217,12 +217,3 @@ SENSOR_TYPES: dict[str, SensorDescription] = {
         "enabled": False,
     },
 }
-
-
-class SensorDescription(TypedDict):
-    """Sensor description class."""
-
-    icon: str | None
-    label: str
-    unit: str | None
-    enabled: bool
