@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -75,6 +76,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(
             entry, unique_id=f"{latitude}-{longitude}"
         )
+
+    # identifiers in device_info should use Tuple[str, str, str] type, but latitude and
+    # longitude are float, so we convert old device entries to use correct types
+    device_registry = await async_get_registry(hass)
+    old_ids = (DOMAIN, latitude, longitude)
+    device_entry = device_registry.async_get_device({old_ids})
+    if device_entry and entry.entry_id in device_entry.config_entries:
+        new_ids = (DOMAIN, str(latitude), str(longitude))
+        device_registry.async_update_device(device_entry.id, new_identifiers={new_ids})
 
     websession = async_get_clientsession(hass)
 

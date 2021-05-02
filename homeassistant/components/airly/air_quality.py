@@ -59,6 +59,8 @@ async def async_setup_entry(
 class AirlyAirQuality(CoordinatorEntity, AirQualityEntity):
     """Define an Airly air quality."""
 
+    coordinator: AirlyDataUpdateCoordinator
+
     def __init__(self, coordinator: AirlyDataUpdateCoordinator, name: str) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -98,14 +100,18 @@ class AirlyAirQuality(CoordinatorEntity, AirQualityEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique_id for this entity."""
-        return f"{self.coordinator.latitude}-{self.coordinator.longitude}"  # type: ignore[attr-defined]
+        return f"{self.coordinator.latitude}-{self.coordinator.longitude}"
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return {
             "identifiers": {
-                (DOMAIN, self.coordinator.latitude, self.coordinator.longitude)  # type: ignore[attr-defined]
+                (
+                    DOMAIN,
+                    str(self.coordinator.latitude),
+                    str(self.coordinator.longitude),
+                )
             },
             "name": DEFAULT_NAME,
             "manufacturer": MANUFACTURER,

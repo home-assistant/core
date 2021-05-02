@@ -46,6 +46,8 @@ async def async_setup_entry(
 class AirlySensor(CoordinatorEntity, SensorEntity):
     """Define an Airly sensor."""
 
+    coordinator: AirlyDataUpdateCoordinator
+
     def __init__(
         self, coordinator: AirlyDataUpdateCoordinator, name: str, kind: str
     ) -> None:
@@ -89,14 +91,18 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique_id for this entity."""
-        return f"{self.coordinator.latitude}-{self.coordinator.longitude}-{self.kind.lower()}"  # type: ignore[attr-defined]
+        return f"{self.coordinator.latitude}-{self.coordinator.longitude}-{self.kind.lower()}"
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return {
             "identifiers": {
-                (DOMAIN, self.coordinator.latitude, self.coordinator.longitude)  # type: ignore[attr-defined]
+                (
+                    DOMAIN,
+                    str(self.coordinator.latitude),
+                    str(self.coordinator.longitude),
+                )
             },
             "name": DEFAULT_NAME,
             "manufacturer": MANUFACTURER,
