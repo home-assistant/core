@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root xmlns="urn:schemas-upnp-org:device-1-0">
+  <specVersion>
+    <major>1</major>
+    <minor>0</minor>
+  </specVersion>
+  <device>
+    <deviceType>urn:schemas-upnp-org:device:InternetGatewayDevice:1</deviceType>
+    <friendlyName>Dummy router</friendlyName>
+    <manufacturer>Dummy router corp</manufacturer>
+    <manufacturerURL>http://www.routers.example.com/</manufacturerURL>
+    <modelDescription>Abridged router description</modelDescription>
+    <modelName>Dummy router model</modelName>
+    <UDN>uuid:a3134685-2ed9-4ccb-acbe-fa136b027cb1</UDN>
+    <serviceList>
+    </serviceList>
+  </device>
+</root>

@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<root
+  xmlns="urn:schemas-upnp-org:device-1-0">
+	<specVersion>
+		<major>1</major>
+		<minor>0</minor>
+	</specVersion>
+	<device>
+		<deviceType>urn:schemas-upnp-org:device:MediaRenderer:1</deviceType>
+		<friendlyName>Test Receiver Device</friendlyName>
+		<manufacturer>Dummy corp</manufacturer>
+		<manufacturerURL>http://www.dummy-corp.example.com/</manufacturerURL>
+		<modelDescription>Dummy model description</modelDescription>
+		<modelName>Dummy model name</modelName>
+		<UDN>uuid:7cc6da13-7f5d-4ace-9729-58b275c52f1e</UDN>
+		<iconList>
+			<icon>
+				<mimetype>image/jpeg</mimetype>
+				<width>48</width>
+				<height>48</height>
+				<depth>24</depth>
+				<url>/device_icon_48.jpg</url>
+			</icon>
+			<icon>
+				<mimetype>image/jpeg</mimetype>
+				<width>120</width>
+				<height>120</height>
+				<depth>24</depth>
+				<url>/device_icon_120.jpg</url>
+			</icon>
+			<icon>
+				<mimetype>image/png</mimetype>
+				<width>48</width>
+				<height>48</height>
+				<depth>24</depth>
+				<url>/device_icon_48.png</url>
+			</icon>
+			<icon>
+				<mimetype>image/png</mimetype>
+				<width>120</width>
+				<height>120</height>
+				<depth>24</depth>
+				<url>/device_icon_120.png</url>
+			</icon>
+		</iconList>
+		<serviceList>
+			<service>
+				<serviceType>urn:schemas-upnp-org:service:RenderingControl:1</serviceType>
+				<serviceId>urn:upnp-org:serviceId:RenderingControl</serviceId>
+				<SCPDURL>/RenderingControl/desc.xml</SCPDURL>
+				<controlURL>/RenderingControl/ctrl</controlURL>
+				<eventSubURL>/RenderingControl/evt</eventSubURL>
+			</service>
+			<service>
+				<serviceType>urn:schemas-upnp-org:service:ConnectionManager:1</serviceType>
+				<serviceId>urn:upnp-org:serviceId:ConnectionManager</serviceId>
+				<SCPDURL>/ConnectionManager/desc.xml</SCPDURL>
+				<controlURL>/ConnectionManager/ctrl</controlURL>
+				<eventSubURL>/ConnectionManager/evt</eventSubURL>
+			</service>
+			<service>
+				<serviceType>urn:schemas-upnp-org:service:AVTransport:1</serviceType>
+				<serviceId>urn:upnp-org:serviceId:AVTransport</serviceId>
+				<SCPDURL>/AVTransport/desc.xml</SCPDURL>
+				<controlURL>/AVTransport/ctrl</controlURL>
+				<eventSubURL>/AVTransport/evt</eventSubURL>
+			</service>
+		</serviceList>
+	</device>
+</root>
