@@ -931,3 +931,38 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     hass.stop()
+
+
+def test_entity_id_filter(hass_recorder):
+    """Test that entity ID filtering filters string and list."""
+    hass = hass_recorder(
+        {"include": {"domains": "hello"}, "exclude": {"domains": "hidden_domain"}}
+    )
+
+    for idx, data in enumerate(
+        (
+            {},
+            {"entity_id": "hello.world"},
+            {"entity_id": ["hello.world"]},
+            {"entity_id": ["hello.world", "hidden_domain.person"]},
+            {"entity_id": {"unexpected": "data"}},
+        )
+    ):
+        hass.bus.fire("hello", data)
+        wait_recording_done(hass)
+
+        with session_scope(hass=hass) as session:
+            db_events = list(session.query(Events).filter_by(event_type="hello"))
+            assert len(db_events) == idx + 1, data
+
+    for data in (
+        {"entity_id": "hidden_domain.person"},
+        {"entity_id": ["hidden_domain.person"]},
+    ):
+        hass.bus.fire("hello", data)
+        wait_recording_done(hass)
+
+        with session_scope(hass=hass) as session:
+            db_events = list(session.query(Events).filter_by(event_type="hello"))
+            # Keep referring idx + 1, as no new events are being added
+            assert len(db_events) == idx + 1, data
