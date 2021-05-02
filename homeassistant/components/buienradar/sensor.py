@@ -212,12 +212,12 @@ async def async_setup_entry(
         timeframe,
     )
 
-    dev = [
+    entities = [
         BrSensor(sensor_type, config.get(CONF_NAME, "Buienradar"), coordinates)
         for sensor_type in SENSOR_TYPES
     ]
 
-    async_add_entities(dev)
+    async_add_entities(entities)
 
     data = BrData(hass, coordinates, timeframe, dev)
     # schedule the first update in 1 minute from now:
