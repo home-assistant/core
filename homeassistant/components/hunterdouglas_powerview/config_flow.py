@@ -82,8 +82,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return None, "unknown"
-        else:
-            return info, None
+
+        return info, None
 
     async def async_step_dhcp(self, discovery_info):
         """Handle DHCP discovery."""
