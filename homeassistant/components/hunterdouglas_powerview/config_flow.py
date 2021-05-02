@@ -105,6 +105,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Confirm dhcp or homekit discovery."""
         # If we already have the host configured do
         # not open connections to it if we can avoid it.
+        for progress in self._async_in_progress():
+            if progress.get("context", {}).get(CONF_HOST) == self.discovered_ip:
+                return self.async_abort(reason="already_in_progress")
+
         if self._host_already_configured(self.discovered_ip):
             return self.async_abort(reason="already_configured")
 
@@ -129,6 +133,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self.powerview_config[CONF_HOST]},
             )
 
+        self.context[CONF_HOST] = self.discovered_ip
         self._set_confirm_only()
         return self.async_show_form(
             step_id="link", description_placeholders=self.powerview_config

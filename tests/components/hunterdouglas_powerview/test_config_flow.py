@@ -10,18 +10,22 @@ from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 
 from tests.common import MockConfigEntry, load_fixture
 
+HOMEKIT_DISCOVERY_INFO = {
+    "name": "Hunter Douglas Powerview Hub._hap._tcp.local.",
+    "host": "1.2.3.4",
+    "properties": {"id": "AA::BB::CC::DD::EE::FF"},
+}
+
+DHCP_DISCOVERY_INFO = {"hostname": "Hunter Douglas Powerview Hub", "ip": "1.2.3.4"}
+
 DISCOVERY_DATA = [
     (
         config_entries.SOURCE_HOMEKIT,
-        {
-            "name": "Hunter Douglas Powerview Hub._hap._tcp.local.",
-            "host": "1.2.3.4",
-            "properties": {"id": "AA::BB::CC::DD::EE::FF"},
-        },
+        HOMEKIT_DISCOVERY_INFO,
     ),
     (
         config_entries.SOURCE_DHCP,
-        {"hostname": "Hunter Douglas Powerview Hub", "ip": "1.2.3.4"},
+        DHCP_DISCOVERY_INFO,
     ),
 ]
 
@@ -161,6 +165,38 @@ async def test_form_homekit_and_dhcp(hass, source, discovery_info):
         data=discovery_info,
     )
     assert result3["type"] == "abort"
+
+
+async def test_discovered_by_homekit_and_dhcp(hass):
+    """Test we get the form with homekit and abort for dhcp source when we get both."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    mock_powerview_userdata = _get_mock_powerview_userdata()
+    with patch(
+        "homeassistant.components.hunterdouglas_powerview.UserData",
+        return_value=mock_powerview_userdata,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_HOMEKIT},
+            data=HOMEKIT_DISCOVERY_INFO,
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "link"
+
+    with patch(
+        "homeassistant.components.hunterdouglas_powerview.UserData",
+        return_value=mock_powerview_userdata,
+    ):
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DHCP_DISCOVERY_INFO,
+        )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_in_progress"
 
 
 async def test_form_cannot_connect(hass):
