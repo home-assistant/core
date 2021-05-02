@@ -1,7 +1,6 @@
 """Config flow for buienradar integration."""
 from __future__ import annotations
 
-from collections.abc import Iterable
 import logging
 from typing import Any
 
@@ -10,7 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
@@ -26,17 +25,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@callback
-def configured_instances(hass: HomeAssistant) -> Iterable[str]:
-    """Return a set of configured buienradar instances."""
-    entries: list[str] = []
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        entries.append(
-            f"{entry.data.get(CONF_LATITUDE)}-{entry.data.get(CONF_LONGITUDE)}"
-        )
-    return set(entries)
 
 
 class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -56,15 +44,14 @@ class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        errors = {}
-
         if user_input is not None:
             lat = user_input.get(CONF_LATITUDE)
             lon = user_input.get(CONF_LONGITUDE)
-            if f"{lat}-{lon}" not in configured_instances(self.hass):
-                return self.async_create_entry(title=f"{lat},{lon}", data=user_input)
 
-            errors["base"] = "already_configured"
+            await self.async_set_unique_id(f"{lat}-{lon}")
+            self._abort_if_unique_id_configured()
+
+            return self.async_create_entry(title=f"{lat},{lon}", data=user_input)
 
         data_schema = vol.Schema(
             {
@@ -80,7 +67,7 @@ class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=data_schema,
-            errors=errors,
+            errors={},
         )
 
     async def async_step_import(self, import_input: dict[str, Any]) -> FlowResult:
@@ -88,8 +75,8 @@ class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         latitude = import_input[CONF_LATITUDE]
         longitude = import_input[CONF_LONGITUDE]
 
-        if f"{latitude}-{longitude}" in configured_instances(self.hass):
-            return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(f"{latitude}-{longitude}")
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=f"{latitude},{longitude}", data=import_input

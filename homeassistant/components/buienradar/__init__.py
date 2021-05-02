@@ -139,7 +139,5 @@ def _filter_domain_configs(
     configs = []
     for entry in config:
         if entry.startswith(domain):
-            configs += list(
-                filter(lambda elem: elem["platform"] == platform, config[entry])
-            )
+            configs += [x for x in config[entry] if x["platform"] == platform]
     return configs

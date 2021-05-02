@@ -45,7 +45,7 @@ async def test_config_flow_already_configured_weather(hass):
             CONF_LATITUDE: TEST_LATITUDE,
             CONF_LONGITUDE: TEST_LONGITUDE,
         },
-        unique_id=DOMAIN,
+        unique_id=f"{TEST_LATITUDE}-{TEST_LONGITUDE}",
     )
     entry.add_to_hass(hass)
 
@@ -62,9 +62,8 @@ async def test_config_flow_already_configured_weather(hass):
         {CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE},
     )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "already_configured"}
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
 
 
 async def test_import_camera(hass):
