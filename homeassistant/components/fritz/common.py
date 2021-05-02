@@ -239,7 +239,7 @@ class FritzBoxBaseEntity:
 
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self.mac_address)},
-            "identifiers": {(DOMAIN, self._unique_id)},
+            "identifiers": {(DOMAIN, self._fritzbox_tools.unique_id)},
             "name": self._device_name,
             "manufacturer": "AVM",
             "model": self._fritzbox_tools.model,
