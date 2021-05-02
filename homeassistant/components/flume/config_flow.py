@@ -1,5 +1,6 @@
 """Config flow for flume integration."""
 import logging
+import os
 
 from pyflume import FlumeAuth, FlumeDeviceList
 from requests.exceptions import RequestException
@@ -32,11 +33,14 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-def _validate_input(hass: core.HomeAssistant, data):
+def _validate_input(hass: core.HomeAssistant, data: dict, clear_token_file: bool):
     """Validate in the executor."""
     flume_token_full_path = hass.config.path(
         f"{BASE_TOKEN_FILENAME}-{data[CONF_USERNAME]}"
     )
+    if clear_token_file and os.path.exists(flume_token_full_path):
+        os.unlink(flume_token_full_path)
+
     return FlumeDeviceList(
         FlumeAuth(
             data[CONF_USERNAME],
@@ -48,13 +52,17 @@ def _validate_input(hass: core.HomeAssistant, data):
     )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(
+    hass: core.HomeAssistant, data: dict, clear_token_file: bool = False
+):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     try:
-        flume_devices = await hass.async_add_executor_job(_validate_input, hass, data)
+        flume_devices = await hass.async_add_executor_job(
+            _validate_input, hass, data, clear_token_file
+        )
     except RequestException as err:
         raise CannotConnect from err
     except Exception as err:
@@ -111,7 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             new_data = {**existing_entry.data, CONF_PASSWORD: user_input[CONF_PASSWORD]}
             try:
-                await validate_input(self.hass, new_data)
+                await validate_input(self.hass, new_data, clear_token_file=True)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
