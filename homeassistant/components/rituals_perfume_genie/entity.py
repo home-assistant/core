@@ -7,7 +7,7 @@ from pyrituals import Diffuser
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTES, BATTERY, DOMAIN, HUB, HUBLOT, SENSORS
+from .const import ATTRIBUTES, DOMAIN, HUBLOT, SENSORS
 
 MANUFACTURER = "Rituals Cosmetics"
 MODEL = "The Perfume Genie"
@@ -30,8 +30,8 @@ class DiffuserEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self._diffuser = diffuser
         self._entity_suffix = entity_suffix
-        self._hublot = self.coordinator.data[HUB][HUBLOT]
-        self._hubname = self.coordinator.data[HUB][ATTRIBUTES][ROOMNAME]
+        self._hublot = self._diffuser.hub_data[HUBLOT]
+        self._hubname = self._diffuser.hub_data[ATTRIBUTES][ROOMNAME]
 
     @property
     def unique_id(self) -> str:
@@ -46,9 +46,7 @@ class DiffuserEntity(CoordinatorEntity):
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
-        return (
-            super().available and self.coordinator.data[HUB][STATUS] == AVAILABLE_STATE
-        )
+        return super().available and self._diffuser.hub_data[STATUS] == AVAILABLE_STATE
 
     @property
     def device_info(self) -> dict[str, Any]:
@@ -57,6 +55,6 @@ class DiffuserEntity(CoordinatorEntity):
             "name": self._hubname,
             "identifiers": {(DOMAIN, self._hublot)},
             "manufacturer": MANUFACTURER,
-            "model": MODEL if BATTERY in self._diffuser.data[HUB][SENSORS] else MODEL2,
-            "sw_version": self.coordinator.data[HUB][SENSORS][VERSION],
+            "model": MODEL if self._diffuser.has_battery else MODEL2,
+            "sw_version": self._diffuser.hub_data[SENSORS][VERSION],
         }

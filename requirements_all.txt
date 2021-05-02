@@ -1676,7 +1676,7 @@ pyrepetier==3.0.5
 pyrisco==0.3.1
 
 # homeassistant.components.rituals_perfume_genie
-pyrituals==0.0.2
+pyrituals==0.0.3
 
 # homeassistant.components.zeroconf
 pyroute2==0.5.18
