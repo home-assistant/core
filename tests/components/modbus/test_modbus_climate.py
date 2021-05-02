@@ -96,7 +96,6 @@ async def test_service_climate_update(hass, mock_pymodbus):
     await prepare_service_update(
         hass,
         config,
-        entity_id,
     )
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
