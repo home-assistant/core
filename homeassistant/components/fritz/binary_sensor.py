@@ -35,7 +35,6 @@ class FritzBoxConnectivitySensor(FritzBoxBaseEntity, BinarySensorEntity):
 
     def __init__(self, fritzbox_tools: FritzBoxTools, device_friendlyname: str) -> None:
         """Init FRITZ!Box connectivity class."""
-        self._fritzbox_tools = fritzbox_tools
         self._unique_id = f"{self._fritzbox_tools.unique_id}-connectivity"
         self._name = f"{device_friendlyname} Connectivity"
         self._is_on = True
