@@ -1,23 +1,27 @@
-"""Support for LED lights."""
+"""Support for Elgato lights."""
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, Callable
+from typing import Any
 
-from elgato import Elgato, ElgatoError, Info, State
+from elgato import Elgato, ElgatoError, Info, Settings, State
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_HS,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.entity_platform import async_get_current_platform
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 
 from .const import DATA_ELGATO_CLIENT, DOMAIN, SERVICE_IDENTIFY
 
@@ -30,12 +34,13 @@ SCAN_INTERVAL = timedelta(seconds=10)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Elgato Key Light based on a config entry."""
+    """Set up Elgato Light based on a config entry."""
     elgato: Elgato = hass.data[DOMAIN][entry.entry_id][DATA_ELGATO_CLIENT]
     info = await elgato.info()
-    async_add_entities([ElgatoLight(elgato, info)], True)
+    settings = await elgato.settings()
+    async_add_entities([ElgatoLight(elgato, info, settings)], True)
 
     platform = async_get_current_platform()
     platform.async_register_entity_service(
@@ -46,15 +51,12 @@ async def async_setup_entry(
 
 
 class ElgatoLight(LightEntity):
-    """Defines a Elgato Key Light."""
+    """Defines a Elgato Light."""
 
-    def __init__(
-        self,
-        elgato: Elgato,
-        info: Info,
-    ) -> None:
-        """Initialize Elgato Key Light."""
-        self._info: Info = info
+    def __init__(self, elgato: Elgato, info: Info, settings: Settings) -> None:
+        """Initialize Elgato Light."""
+        self._info = info
+        self._settings = settings
         self._state: State | None = None
         self.elgato = elgato
 
@@ -89,17 +91,49 @@ class ElgatoLight(LightEntity):
     @property
     def min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports."""
+        # Elgato lights with color capabilities have a different lowest value
+        if self._settings.power_on_hue is not None:
+            return 153
         return 143
 
     @property
     def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
+        # Elgato lights with color capabilities have a different highest value
+        if self._settings.power_on_hue is not None:
+            return 285
         return 344
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
+    def supported_color_modes(self) -> set[str]:
+        """Flag supported color modes."""
+        modes = [COLOR_MODE_COLOR_TEMP]
+
+        # Check if the light is capable of doing colors
+        if self._settings.power_on_hue is not None:
+            modes += [COLOR_MODE_HS]
+
+        return set(modes)
+
+    @property
+    def color_mode(self) -> str | None:
+        """Return the color mode of the light."""
+        if self._state and self._state.hue is not None:
+            return COLOR_MODE_HS
+
+        return COLOR_MODE_COLOR_TEMP
+
+    @property
+    def hs_color(self) -> tuple[float, float] | None:
+        """Return the hue and saturation color value [float, float]."""
+        if (
+            self._state is None
+            or self._state.hue is None
+            or self._state.saturation is None
+        ):
+            return None
+
+        return (self._state.hue, self._state.saturation)
 
     @property
     def is_on(self) -> bool:
@@ -112,22 +146,44 @@ class ElgatoLight(LightEntity):
         try:
             await self.elgato.light(on=False)
         except ElgatoError:
-            _LOGGER.error("An error occurred while updating the Elgato Key Light")
+            _LOGGER.exception("An error occurred while updating the Elgato Light")
             self._state = None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         temperature = kwargs.get(ATTR_COLOR_TEMP)
+
+        hue = None
+        saturation = None
+        if ATTR_HS_COLOR in kwargs:
+            hue, saturation = kwargs[ATTR_HS_COLOR]
+
         brightness = None
         if ATTR_BRIGHTNESS in kwargs:
             brightness = round((kwargs[ATTR_BRIGHTNESS] / 255) * 100)
 
+        # For Elgato lights supporting color mode, but in temperature mode;
+        # adjusting only brightness make them jump back to color mode.
+        # Resending temperature prevents that.
+        if (
+            brightness
+            and ATTR_HS_COLOR not in kwargs
+            and ATTR_COLOR_TEMP not in kwargs
+            and COLOR_MODE_HS in self.supported_color_modes
+            and self.color_mode == COLOR_MODE_COLOR_TEMP
+        ):
+            temperature = self.color_temp
+
         try:
             await self.elgato.light(
-                on=True, brightness=brightness, temperature=temperature
+                on=True,
+                brightness=brightness,
+                hue=hue,
+                saturation=saturation,
+                temperature=temperature,
             )
         except ElgatoError:
-            _LOGGER.error("An error occurred while updating the Elgato Key Light")
+            _LOGGER.exception("An error occurred while updating the Elgato Light")
             self._state = None
 
     async def async_update(self) -> None:
@@ -139,12 +195,12 @@ class ElgatoLight(LightEntity):
                 _LOGGER.info("Connection restored")
         except ElgatoError as err:
             meth = _LOGGER.error if self._state else _LOGGER.debug
-            meth("An error occurred while updating the Elgato Key Light: %s", err)
+            meth("An error occurred while updating the Elgato Light: %s", err)
             self._state = None
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return device information about this Elgato Key Light."""
+        """Return device information about this Elgato Light."""
         return {
             "identifiers": {(DOMAIN, self._info.serial_number)},
             "name": self._info.product_name,

@@ -1,4 +1,4 @@
-"""Constants for the Elgato Key Light integration."""
+"""Constants for the Elgato Light integration."""
 
 # Integration domain
 DOMAIN = "elgato"
