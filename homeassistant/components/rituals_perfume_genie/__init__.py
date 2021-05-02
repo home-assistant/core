@@ -11,7 +11,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import ACCOUNT_HASH, COORDINATORS, DEVICES, DOMAIN, HUB, HUBLOT
+from .const import ACCOUNT_HASH, COORDINATORS, DEVICES, DOMAIN, HUBLOT
 
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     }
 
     for device in account_devices:
-        hublot = device.data[HUB][HUBLOT]
+        hublot = device.hub_data[HUBLOT]
 
         coordinator = RitualsPerufmeGenieDataUpdateCoordinator(hass, device)
         await coordinator.async_refresh()
@@ -70,11 +70,10 @@ class RitualsPerufmeGenieDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{DOMAIN}-{device.data[HUB][HUBLOT]}",
+            name=f"{DOMAIN}-{device.hub_data[HUBLOT]}",
             update_interval=UPDATE_INTERVAL,
         )
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> None:
         """Fetch data from Rituals."""
         await self._device.update_data()
-        return self._device.data
