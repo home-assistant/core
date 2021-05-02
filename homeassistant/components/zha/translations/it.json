@@ -33,6 +33,19 @@
             }
         }
     },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "Codice necessario per le azioni di armamento",
+            "alarm_failed_tries": "Il numero di inserimenti consecutivi di codici falliti per attivare un allarme",
+            "alarm_master_code": "Codice principale per i pannelli di controllo degli allarmi",
+            "title": "Opzioni del pannello di controllo degli allarmi"
+        },
+        "zha_options": {
+            "default_light_transition": "Tempo di transizione della luce predefinito (secondi)",
+            "enable_identify_on_join": "Abilita l'effetto di identificazione quando i dispositivi si uniscono alla rete",
+            "title": "Opzioni globali"
+        }
+    },
     "device_automation": {
         "action_type": {
             "squawk": "Strillare",
