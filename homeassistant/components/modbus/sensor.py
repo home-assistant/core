@@ -53,6 +53,7 @@ from .const import (
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
     DATA_TYPE_UINT,
+    DATA_TYPE_UINT32,
     DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_STRUCT_FORMAT,
@@ -74,6 +75,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                     [
                         DATA_TYPE_INT,
                         DATA_TYPE_UINT,
+                        DATA_TYPE_UINT32,
                         DATA_TYPE_FLOAT,
                         DATA_TYPE_STRING,
                         DATA_TYPE_CUSTOM,
