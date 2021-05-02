@@ -68,7 +68,6 @@ async def test_config_flow_already_configured_weather(hass):
 
 async def test_import_camera(hass):
     """Test import of camera."""
-
     with patch(
         "homeassistant.components.buienradar.async_setup_entry", return_value=True
     ):
