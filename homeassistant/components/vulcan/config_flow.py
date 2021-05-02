@@ -86,7 +86,10 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await client.close()
 
                 if len(_students) > 1:
-                    return await self.async_step_select_student(account, _students)
+                    # pylint:disable=attribute-defined-outside-init
+                    self.account = account
+                    self.students = _students
+                    return await self.async_step_select_student()
                 _student = _students[0]
                 await self.async_set_unique_id(str(_student.pupil.id))
                 self._abort_if_unique_id_configured()
@@ -104,14 +107,12 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_select_student(
-        self, user_input=None, account=None, _students=None
-    ):
+    async def async_step_select_student(self, user_input=None):
         """Allow user to select student."""
         errors = {}
         students_list = {}
-        if _students is not None:
-            for student in _students:
+        if self.students is not None:
+            for student in self.students:
                 students_list[
                     str(student.pupil.id)
                 ] = f"{student.pupil.first_name} {student.pupil.last_name}"
@@ -123,7 +124,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 title=students_list[student_id],
                 data={
                     "student_id": str(student_id),
-                    "login": account.user_login,
+                    "login": self.account.user_login,
                 },
             )
 
@@ -186,7 +187,10 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         "login": account.user_login,
                     },
                 )
-            return await self.async_step_select_student(account, _students)
+            # pylint:disable=attribute-defined-outside-init
+            self.account = account
+            self.students = _students
+            return await self.async_step_select_student()
 
         data_schema = {
             vol.Required(
@@ -252,9 +256,10 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                                 "login": account.user_login,
                             },
                         )
-                    return await self.async_step_select_student(
-                        account=account, _students=new_students
-                    )
+                    # pylint:disable=attribute-defined-outside-init
+                    self.account = account
+                    self.students = new_students
+                    return await self.async_step_select_student()
                 return await self.async_step_select_saved_credentials()
             return await self.async_step_auth()
 

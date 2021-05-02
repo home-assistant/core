@@ -3,6 +3,8 @@ import os
 import shutil
 from unittest.mock import patch
 
+from vulcan.model import Student
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.vulcan import config_flow, const, register
 from homeassistant.components.vulcan.config_flow import (
@@ -43,6 +45,100 @@ async def test_config_flow_auth_success(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Jan Kowalski"
     assert result["data"] == {"student_id": "111", "login": "jan@fakelog.cf"}
+    shutil.rmtree(".vulcan")
+
+
+async def test_config_flow_auth_success_with_multiple_students(hass):
+    """Test a successful config flow with multiple students."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"] == {}
+    data = [
+        {
+            "TopLevelPartition": "region",
+            "Partition": "region-001000",
+            "ClassDisplay": "Class",
+            "Unit": {
+                "Id": 10,
+                "Symbol": "001000",
+                "Short": "I LO",
+                "RestURL": "https://lekcjaplus.vulcan.net.pl/zielonagora/001000/api",
+                "Name": "School",
+                "DisplayName": "School",
+            },
+            "ConstituentUnit": {
+                "Id": 25,
+                "Short": "I LO",
+                "Name": "School",
+                "Address": "Address",
+            },
+            "Pupil": {
+                "Id": 39447,
+                "LoginId": 36976,
+                "LoginValue": "example@mail.com",
+                "FirstName": "FirstName",
+                "SecondName": "SecondName",
+                "Surname": "Surname",
+                "Sex": True,
+            },
+            "Periods": [],
+        },
+        {
+            "TopLevelPartition": "powiatwulkanowy",
+            "Partition": "powiatwulkanowy-123456",
+            "ClassDisplay": "Class",
+            "Unit": {
+                "Id": 10,
+                "Symbol": "123456",
+                "Short": "I LO",
+                "RestURL": "https://api.fakelog.cf/powiatwulkanowy/123456/api",
+                "Name": "School",
+                "DisplayName": "School",
+            },
+            "ConstituentUnit": {
+                "Id": 25,
+                "Short": "I",
+                "Name": "School",
+                "Address": "Idk",
+            },
+            "Pupil": {
+                "Id": 111,
+                "LoginId": 111,
+                "LoginValue": "jan@fakelog.cf",
+                "FirstName": "Jan",
+                "SecondName": None,
+                "Surname": "Kowalski",
+                "Sex": True,
+            },
+            "Periods": [],
+        },
+    ]
+    with patch(
+        "homeassistant.components.vulcan.config_flow.Vulcan.get_students",
+        return_value=[Student.load(student) for student in data],
+    ):
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_TOKEN: "FK10000", CONF_REGION: "powiatwulkanowy", CONF_PIN: "000000"},
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "select_student"
+        assert result["errors"] == {}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"student": "111"},
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "Jan Kowalski"
+        assert result["data"] == {"student_id": "111", "login": "jan@fakelog.cf"}
     shutil.rmtree(".vulcan")
 
 
@@ -257,6 +353,108 @@ async def test_multiple_config_entries_using_saved_credentials(hass):
     shutil.rmtree(".vulcan")
 
 
+async def test_multiple_config_entries_using_saved_credentials_2(hass):
+    """Test a successful config flow for multiple config entries using saved credentials (different situation)."""
+    MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id="123456",
+        data={"student_id": "123456", "login": "example@mail.com"},
+    ).add_to_hass(hass)
+
+    await register.register(hass, "FK10000", "powiatwulkanowy", "000000")
+
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "add_next_config_entry"
+    assert result["errors"] == {}
+    data = [
+        {
+            "TopLevelPartition": "region",
+            "Partition": "region-001000",
+            "ClassDisplay": "Class",
+            "Unit": {
+                "Id": 10,
+                "Symbol": "001000",
+                "Short": "I LO",
+                "RestURL": "https://lekcjaplus.vulcan.net.pl/zielonagora/001000/api",
+                "Name": "School",
+                "DisplayName": "School",
+            },
+            "ConstituentUnit": {
+                "Id": 25,
+                "Short": "I LO",
+                "Name": "School",
+                "Address": "Address",
+            },
+            "Pupil": {
+                "Id": 39447,
+                "LoginId": 36976,
+                "LoginValue": "example@mail.com",
+                "FirstName": "FirstName",
+                "SecondName": "SecondName",
+                "Surname": "Surname",
+                "Sex": True,
+            },
+            "Periods": [],
+        },
+        {
+            "TopLevelPartition": "powiatwulkanowy",
+            "Partition": "powiatwulkanowy-123456",
+            "ClassDisplay": "Class",
+            "Unit": {
+                "Id": 10,
+                "Symbol": "123456",
+                "Short": "I LO",
+                "RestURL": "https://api.fakelog.cf/powiatwulkanowy/123456/api",
+                "Name": "School",
+                "DisplayName": "School",
+            },
+            "ConstituentUnit": {
+                "Id": 25,
+                "Short": "I",
+                "Name": "School",
+                "Address": "Idk",
+            },
+            "Pupil": {
+                "Id": 111,
+                "LoginId": 111,
+                "LoginValue": "jan@fakelog.cf",
+                "FirstName": "Jan",
+                "SecondName": None,
+                "Surname": "Kowalski",
+                "Sex": True,
+            },
+            "Periods": [],
+        },
+    ]
+    with patch(
+        "homeassistant.components.vulcan.config_flow.Vulcan.get_students",
+        return_value=[Student.load(student) for student in data],
+    ):
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"use_saved_credentials": True},
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "select_student"
+        assert result["errors"] == {}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"student": "111"},
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "Jan Kowalski"
+        assert result["data"] == {"student_id": "111", "login": "jan@fakelog.cf"}
+    shutil.rmtree(".vulcan")
+
+
 async def test_multiple_config_entries_without_valid_saved_credentials(hass):
     """Test a unsuccessful config flow for multiple config entries without valid saved credentials."""
     MockConfigEntry(
@@ -383,6 +581,120 @@ async def test_multiple_config_entries_with_selecting_saved_credentials(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Jan Kowalski"
     assert result["data"] == {"student_id": "111", "login": "jan@fakelog.cf"}
+    shutil.rmtree(".vulcan")
+
+
+async def test_multiple_config_entries_with_selecting_saved_credentials_2(hass):
+    """Test a successful config flow for multiple config entries with selecting saved credentials (different situation."""
+    MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id="123456",
+        data={"student_id": "123456", "login": "example@mail.com"},
+    ).add_to_hass(hass)
+
+    await register.register(hass, "FK10000", "powiatwulkanowy", "000000")
+
+    open(".vulcan/keystore-test.json", "w")
+    open(".vulcan/account-test.json", "w")
+
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "add_next_config_entry"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"use_saved_credentials": True},
+    )
+    data = [
+        {
+            "TopLevelPartition": "region",
+            "Partition": "region-001000",
+            "ClassDisplay": "Class",
+            "Unit": {
+                "Id": 10,
+                "Symbol": "001000",
+                "Short": "I LO",
+                "RestURL": "https://lekcjaplus.vulcan.net.pl/zielonagora/001000/api",
+                "Name": "School",
+                "DisplayName": "School",
+            },
+            "ConstituentUnit": {
+                "Id": 25,
+                "Short": "I LO",
+                "Name": "School",
+                "Address": "Address",
+            },
+            "Pupil": {
+                "Id": 39447,
+                "LoginId": 36976,
+                "LoginValue": "example@mail.com",
+                "FirstName": "FirstName",
+                "SecondName": "SecondName",
+                "Surname": "Surname",
+                "Sex": True,
+            },
+            "Periods": [],
+        },
+        {
+            "TopLevelPartition": "powiatwulkanowy",
+            "Partition": "powiatwulkanowy-123456",
+            "ClassDisplay": "Class",
+            "Unit": {
+                "Id": 10,
+                "Symbol": "123456",
+                "Short": "I LO",
+                "RestURL": "https://api.fakelog.cf/powiatwulkanowy/123456/api",
+                "Name": "School",
+                "DisplayName": "School",
+            },
+            "ConstituentUnit": {
+                "Id": 25,
+                "Short": "I",
+                "Name": "School",
+                "Address": "Idk",
+            },
+            "Pupil": {
+                "Id": 111,
+                "LoginId": 111,
+                "LoginValue": "jan@fakelog.cf",
+                "FirstName": "Jan",
+                "SecondName": None,
+                "Surname": "Kowalski",
+                "Sex": True,
+            },
+            "Periods": [],
+        },
+    ]
+    with patch(
+        "homeassistant.components.vulcan.config_flow.Vulcan.get_students",
+        return_value=[Student.load(student) for student in data],
+    ):
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "select_saved_credentials"
+        assert result["errors"] == {}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"credentials": ".vulcan/account-jan@fakelog.cf.json"},
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "select_student"
+        assert result["errors"] == {}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"student": "111"},
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == "Jan Kowalski"
+        assert result["data"] == {"student_id": "111", "login": "jan@fakelog.cf"}
     shutil.rmtree(".vulcan")
 
 
