@@ -225,7 +225,6 @@ class FritzBoxBaseEntity:
     ) -> None:
         """Init device info class."""
         self._fritzbox_tools = fritzbox_tools
-        self._unique_id = unique_id
         self._device_name = device_name
 
     @property
