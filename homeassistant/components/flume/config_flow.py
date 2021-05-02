@@ -72,6 +72,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self):
+        """Init flume config flow."""
+        self._reauth_unique_id = None
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
@@ -85,7 +89,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
-                errors["base"] = "invalid_auth"
+                errors[CONF_PASSWORD] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -97,6 +101,46 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input):
         """Handle import."""
         return await self.async_step_user(user_input)
+
+    async def async_step_reauth(self, user_input=None):
+        """Handle reauth."""
+        self._reauth_unique_id = self.context["unique_id"]
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Handle reauth input."""
+        errors = {}
+        existing_entry = await self.async_set_unique_id(self._reauth_unique_id)
+        if user_input is not None:
+            new_data = {**existing_entry.data, CONF_PASSWORD: user_input[CONF_PASSWORD]}
+            try:
+                await validate_input(self.hass, new_data)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors[CONF_PASSWORD] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                self.hass.config_entries.async_update_entry(
+                    existing_entry, data=new_data
+                )
+                await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            description_placeholders={
+                CONF_USERNAME: existing_entry.data[CONF_USERNAME]
+            },
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+        )
 
 
 class CannotConnect(exceptions.HomeAssistantError):
