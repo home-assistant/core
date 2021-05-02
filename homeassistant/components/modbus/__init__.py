@@ -19,7 +19,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import (
     CONF_ADDRESS,
-    CONF_BINARY_SENSORS,
+    CONF_BINARY_SENSOR,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_COUNT,
