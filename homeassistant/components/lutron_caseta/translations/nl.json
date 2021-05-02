@@ -15,6 +15,7 @@
                 "title": "Het importeren van de Cas\u00e9ta bridge configuratie is mislukt."
             },
             "link": {
+                "description": "Om te koppelen met {name} ({host}), na het verzenden van dit formulier, druk op de zwarte knop op de achterkant van de brug.",
                 "title": "Koppel met de bridge"
             },
             "user": {

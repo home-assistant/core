@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     AUTHENTICATE_TIMEOUT,
     CONF_ROON_ID,
     DEFAULT_NAME,
@@ -105,7 +105,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for roon."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the Roon flow."""

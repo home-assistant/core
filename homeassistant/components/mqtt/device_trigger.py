@@ -24,7 +24,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from . import CONF_PAYLOAD, CONF_QOS, DOMAIN, debug_info, trigger as mqtt_trigger
 from .. import mqtt
@@ -120,7 +120,7 @@ class Trigger:
 
     device_id: str = attr.ib()
     discovery_data: dict = attr.ib()
-    hass: HomeAssistantType = attr.ib()
+    hass: HomeAssistant = attr.ib()
     payload: str = attr.ib()
     qos: int = attr.ib()
     remove_signal: Callable[[], None] = attr.ib()
@@ -319,7 +319,6 @@ async def async_attach_trigger(
     """Attach a trigger."""
     if DEVICE_TRIGGERS not in hass.data:
         hass.data[DEVICE_TRIGGERS] = {}
-    config = TRIGGER_SCHEMA(config)
     device_id = config[CONF_DEVICE_ID]
     discovery_id = config[CONF_DISCOVERY_ID]
 

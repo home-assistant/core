@@ -229,7 +229,7 @@ async def async_safe_fetch(bridge, fetch_method):
     except aiohue.Unauthorized as err:
         await bridge.handle_unauthorized_error()
         raise UpdateFailed("Unauthorized") from err
-    except (aiohue.AiohueException,) as err:
+    except aiohue.AiohueException as err:
         raise UpdateFailed(f"Hue error: {err}") from err
 
 
@@ -297,12 +297,11 @@ class HueLight(CoordinatorEntity, LightEntity):
                     "bulb in the Philips Hue App."
                 )
                 _LOGGER.warning(err, self.name)
-            if self.gamut:
-                if not color.check_valid_gamut(self.gamut):
-                    err = "Color gamut of %s: %s, not valid, setting gamut to None."
-                    _LOGGER.warning(err, self.name, str(self.gamut))
-                    self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
-                    self.gamut = None
+            if self.gamut and not color.check_valid_gamut(self.gamut):
+                err = "Color gamut of %s: %s, not valid, setting gamut to None."
+                _LOGGER.debug(err, self.name, str(self.gamut))
+                self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
+                self.gamut = None
 
     @property
     def unique_id(self):

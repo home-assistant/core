@@ -17,7 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, TASMOTA_EVENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_UPDATED, clear_discovery_hash
@@ -82,7 +82,7 @@ class Trigger:
 
     device_id: str = attr.ib()
     discovery_hash: dict = attr.ib()
-    hass: HomeAssistantType = attr.ib()
+    hass: HomeAssistant = attr.ib()
     remove_update_signal: Callable[[], None] = attr.ib()
     subtype: str = attr.ib()
     tasmota_trigger: TasmotaTrigger = attr.ib()
@@ -273,7 +273,6 @@ async def async_attach_trigger(
     """Attach a device trigger."""
     if DEVICE_TRIGGERS not in hass.data:
         hass.data[DEVICE_TRIGGERS] = {}
-    config = TRIGGER_SCHEMA(config)
     device_id = config[CONF_DEVICE_ID]
     discovery_id = config[CONF_DISCOVERY_ID]
 

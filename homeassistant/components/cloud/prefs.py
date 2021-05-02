@@ -173,7 +173,7 @@ class CloudPreferences:
         updated_entities = {**entities, entity_id: updated_entity}
         await self.async_update(alexa_entity_configs=updated_entities)
 
-    async def async_set_username(self, username):
+    async def async_set_username(self, username) -> bool:
         """Set the username that is logged in."""
         # Logging out.
         if username is None:
@@ -182,17 +182,19 @@ class CloudPreferences:
             if user is not None:
                 await self._hass.auth.async_remove_user(user)
                 await self._save_prefs({**self._prefs, PREF_CLOUD_USER: None})
-            return
+            return False
 
         cur_username = self._prefs.get(PREF_USERNAME)
 
         if cur_username == username:
-            return
+            return False
 
         if cur_username is None:
             await self._save_prefs({**self._prefs, PREF_USERNAME: username})
         else:
             await self._save_prefs(self._empty_config(username))
+
+        return True
 
     def as_dict(self):
         """Return dictionary version."""

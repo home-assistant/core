@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.const import ATTR_NAME
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DOMAIN, HassioDataUpdateCoordinator
@@ -49,7 +50,7 @@ class HassioAddonEntity(CoordinatorEntity):
         return f"{self.addon_slug}_{self.attribute_name}"
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return {"identifiers": {(DOMAIN, self.addon_slug)}}
 
@@ -90,6 +91,6 @@ class HassioOSEntity(CoordinatorEntity):
         return f"home_assistant_os_{self.attribute_name}"
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return {"identifiers": {(DOMAIN, "OS")}}

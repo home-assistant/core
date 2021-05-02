@@ -8,7 +8,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.helpers.device_registry import format_mac
 
-# pylint: disable=unused-import
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
@@ -37,7 +36,6 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Xiaomi Miio config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize."""
@@ -46,6 +44,8 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, conf: dict):
         """Import a configuration from config.yaml."""
+        host = conf[CONF_HOST]
+        self.context.update({"title_placeholders": {"name": f"YAML import {host}"}})
         return await self.async_step_device(user_input=conf)
 
     async def async_step_user(self, user_input=None):

@@ -27,16 +27,15 @@ from .const import (
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_WILL,
+    DOMAIN,
 )
 from .util import MQTT_WILL_BIRTH_SCHEMA
 
 
-@config_entries.HANDLERS.register("mqtt")
-class FlowHandler(config_entries.ConfigFlow):
+class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     _hassio_discovery = None
 
@@ -157,7 +156,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_broker()
 
     async def async_step_broker(self, user_input=None):
-        """Manage the MQTT options."""
+        """Manage the MQTT broker configuration."""
         errors = {}
         current_config = self.config_entry.data
         yaml_config = self.hass.data.get(DATA_MQTT_CONFIG, {})
@@ -200,6 +199,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="broker",
             data_schema=vol.Schema(fields),
             errors=errors,
+            last_step=False,
         )
 
     async def async_step_options(self, user_input=None):
@@ -320,6 +320,7 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="options",
             data_schema=vol.Schema(fields),
             errors=errors,
+            last_step=True,
         )
 
 

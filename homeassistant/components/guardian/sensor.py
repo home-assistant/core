@@ -1,8 +1,7 @@
 """Sensors for the Elexa Guardian integration."""
 from __future__ import annotations
 
-from typing import Callable
-
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -13,6 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import PairedSensorEntity, ValveControllerEntity
@@ -47,7 +47,7 @@ VALVE_CONTROLLER_SENSORS = [SENSOR_KIND_TEMPERATURE, SENSOR_KIND_UPTIME]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Guardian switches based on a config entry."""
 
@@ -110,7 +110,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class PairedSensorSensor(PairedSensorEntity):
+class PairedSensorSensor(PairedSensorEntity, SensorEntity):
     """Define a binary sensor related to a Guardian valve controller."""
 
     def __init__(
@@ -153,7 +153,7 @@ class PairedSensorSensor(PairedSensorEntity):
             self._state = self.coordinator.data["temperature"]
 
 
-class ValveControllerSensor(ValveControllerEntity):
+class ValveControllerSensor(ValveControllerEntity, SensorEntity):
     """Define a generic Guardian sensor."""
 
     def __init__(

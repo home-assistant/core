@@ -80,9 +80,12 @@ class WiLightFan(WiLightDevice, FanEntity):
     @property
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
-        if "direction" in self._status:
-            if self._status["direction"] == WL_DIRECTION_OFF:
-                return 0
+        if (
+            "direction" in self._status
+            and self._status["direction"] == WL_DIRECTION_OFF
+        ):
+            return 0
+
         wl_speed = self._status.get("speed")
         if wl_speed is None:
             return None
@@ -96,9 +99,11 @@ class WiLightFan(WiLightDevice, FanEntity):
     @property
     def current_direction(self) -> str:
         """Return the current direction of the fan."""
-        if "direction" in self._status:
-            if self._status["direction"] != WL_DIRECTION_OFF:
-                self._direction = self._status["direction"]
+        if (
+            "direction" in self._status
+            and self._status["direction"] != WL_DIRECTION_OFF
+        ):
+            self._direction = self._status["direction"]
         return self._direction
 
     async def async_turn_on(
@@ -119,9 +124,11 @@ class WiLightFan(WiLightDevice, FanEntity):
         if percentage == 0:
             await self._client.set_fan_direction(self._index, WL_DIRECTION_OFF)
             return
-        if "direction" in self._status:
-            if self._status["direction"] == WL_DIRECTION_OFF:
-                await self._client.set_fan_direction(self._index, self._direction)
+        if (
+            "direction" in self._status
+            and self._status["direction"] == WL_DIRECTION_OFF
+        ):
+            await self._client.set_fan_direction(self._index, self._direction)
         wl_speed = percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
         await self._client.set_fan_speed(self._index, wl_speed)
 

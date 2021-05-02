@@ -8,6 +8,7 @@ from zwave_js_server.exceptions import InvalidNewValue, NotFoundError, SetValueF
 
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
+    COMMAND_CLASS_ID,
     CONFIG,
     ENABLED,
     ENTRY_ID,
@@ -17,12 +18,16 @@ from homeassistant.components.zwave_js.api import (
     LEVEL,
     LOG_TO_FILE,
     NODE_ID,
+    OPTED_IN,
     PROPERTY,
     PROPERTY_KEY,
     TYPE,
     VALUE,
 )
-from homeassistant.components.zwave_js.const import DOMAIN
+from homeassistant.components.zwave_js.const import (
+    CONF_DATA_COLLECTION_OPTED_IN,
+    DOMAIN,
+)
 from homeassistant.helpers import device_registry as dr
 
 
@@ -222,6 +227,171 @@ async def test_remove_node(
     assert device is None
 
 
+async def test_refresh_node_info(
+    hass, client, integration, hass_ws_client, multisensor_6
+):
+    """Test that the refresh_node_info WS API call works."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command_no_wait.return_value = None
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/refresh_node_info",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 52,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "node.refresh_info"
+    assert args["nodeId"] == 52
+
+    event = Event(
+        type="interview started",
+        data={"source": "node", "event": "interview started", "nodeId": 52},
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview started"
+
+    event = Event(
+        type="interview stage completed",
+        data={
+            "source": "node",
+            "event": "interview stage completed",
+            "stageName": "NodeInfo",
+            "nodeId": 52,
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview stage completed"
+    assert msg["event"]["stage"] == "NodeInfo"
+
+    event = Event(
+        type="interview completed",
+        data={"source": "node", "event": "interview completed", "nodeId": 52},
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview completed"
+
+    event = Event(
+        type="interview failed",
+        data={"source": "node", "event": "interview failed", "nodeId": 52},
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview failed"
+
+    client.async_send_command_no_wait.reset_mock()
+
+
+async def test_refresh_node_values(
+    hass, client, integration, hass_ws_client, multisensor_6
+):
+    """Test that the refresh_node_values WS API call works."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command_no_wait.return_value = None
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/refresh_node_values",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 52,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "node.refresh_values"
+    assert args["nodeId"] == 52
+
+    client.async_send_command_no_wait.reset_mock()
+
+    # Test getting non-existent node fails
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/refresh_node_values",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 99999,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test getting non-existent entry fails
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/refresh_node_values",
+            ENTRY_ID: "fake_entry_id",
+            NODE_ID: 52,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+
+async def test_refresh_node_cc_values(
+    hass, client, integration, hass_ws_client, multisensor_6
+):
+    """Test that the refresh_node_cc_values WS API call works."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command_no_wait.return_value = None
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/refresh_node_cc_values",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 52,
+            COMMAND_CLASS_ID: 112,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "node.refresh_cc_values"
+    assert args["nodeId"] == 52
+    assert args["commandClass"] == 112
+
+    client.async_send_command_no_wait.reset_mock()
+
+    # Test using invalid CC ID fails
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/refresh_node_cc_values",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 52,
+            COMMAND_CLASS_ID: 9999,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+
 async def test_set_config_parameter(
     hass, client, hass_ws_client, multisensor_6, integration
 ):
@@ -360,6 +530,48 @@ async def test_dump_view_invalid_entry_id(integration, hass_client):
     assert resp.status == 400
 
 
+async def test_subscribe_logs(hass, integration, client, hass_ws_client):
+    """Test the subscribe_logs websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {}
+
+    await ws_client.send_json(
+        {ID: 1, TYPE: "zwave_js/subscribe_logs", ENTRY_ID: entry.entry_id}
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    event = Event(
+        type="logging",
+        data={
+            "source": "driver",
+            "event": "logging",
+            "message": "test",
+            "formattedMessage": "test",
+            "direction": ">",
+            "level": "debug",
+            "primaryTags": "tag",
+            "secondaryTags": "tag2",
+            "secondaryTagPadding": 0,
+            "multiline": False,
+            "timestamp": "time",
+            "label": "label",
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"] == {
+        "message": ["test"],
+        "level": "debug",
+        "primary_tags": "tag",
+        "timestamp": "time",
+    }
+
+
 async def test_update_log_config(hass, client, integration, hass_ws_client):
     """Test that the update_log_config WS API call works and that schema validation works."""
     entry = integration
@@ -380,8 +592,8 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
 
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "update_log_config"
-    assert args["config"] == {"level": 0}
+    assert args["command"] == "driver.update_log_config"
+    assert args["config"] == {"level": "error"}
 
     client.async_send_command.reset_mock()
 
@@ -400,7 +612,7 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
 
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "update_log_config"
+    assert args["command"] == "driver.update_log_config"
     assert args["config"] == {"logToFile": True, "filename": "/test"}
 
     client.async_send_command.reset_mock()
@@ -426,9 +638,9 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
 
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "update_log_config"
+    assert args["command"] == "driver.update_log_config"
     assert args["config"] == {
-        "level": 0,
+        "level": "error",
         "logToFile": True,
         "filename": "/test",
         "forceConsole": True,
@@ -490,7 +702,7 @@ async def test_get_log_config(hass, client, integration, hass_ws_client):
         "success": True,
         "config": {
             "enabled": True,
-            "level": 0,
+            "level": "error",
             "logToFile": False,
             "filename": "/test.txt",
             "forceConsole": False,
@@ -513,3 +725,72 @@ async def test_get_log_config(hass, client, integration, hass_ws_client):
     assert log_config["log_to_file"] is False
     assert log_config["filename"] == "/test.txt"
     assert log_config["force_console"] is False
+
+
+async def test_data_collection(hass, client, integration, hass_ws_client):
+    """Test that the data collection WS API commands work."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    client.async_send_command.return_value = {"statisticsEnabled": False}
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/data_collection_status",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+    result = msg["result"]
+    assert result == {"opted_in": None, "enabled": False}
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "driver.is_statistics_enabled"
+    }
+
+    assert CONF_DATA_COLLECTION_OPTED_IN not in entry.data
+
+    client.async_send_command.reset_mock()
+
+    client.async_send_command.return_value = {}
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/update_data_collection_preference",
+            ENTRY_ID: entry.entry_id,
+            OPTED_IN: True,
+        }
+    )
+    msg = await ws_client.receive_json()
+    result = msg["result"]
+    assert result is None
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "driver.enable_statistics"
+    assert args["applicationName"] == "Home Assistant"
+    assert entry.data[CONF_DATA_COLLECTION_OPTED_IN]
+
+    client.async_send_command.reset_mock()
+
+    client.async_send_command.return_value = {}
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/update_data_collection_preference",
+            ENTRY_ID: entry.entry_id,
+            OPTED_IN: False,
+        }
+    )
+    msg = await ws_client.receive_json()
+    result = msg["result"]
+    assert result is None
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "driver.disable_statistics"
+    }
+    assert not entry.data[CONF_DATA_COLLECTION_OPTED_IN]
+
+    client.async_send_command.reset_mock()

@@ -1,8 +1,6 @@
 """Support for Insteon Thermostats via ISY994 Platform."""
 from __future__ import annotations
 
-from typing import Callable
-
 from pyisy.constants import (
     CMD_CLIMATE_FAN_SETTING,
     CMD_CLIMATE_MODE,
@@ -34,7 +32,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     _LOGGER,
@@ -61,9 +60,9 @@ ISY_SUPPORTED_FEATURES = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> bool:
     """Set up the ISY994 thermostat platform."""
     entities = []

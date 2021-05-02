@@ -10,6 +10,10 @@
         },
         "flow_title": "Lutron Cas\u00e9ta {name} ({host})",
         "step": {
+            "import_failed": {
+                "description": "Konnte die aus configuration.yaml importierte Bridge (Host: {host}) nicht einrichten.",
+                "title": "Import der Cas\u00e9ta-Bridge-Konfiguration fehlgeschlagen."
+            },
             "link": {
                 "title": "Mit der Bridge verbinden"
             },
@@ -29,7 +33,8 @@
             "button_3": "Dritte Taste",
             "button_4": "Vierte Taste",
             "off": "Aus",
-            "on": "An"
+            "on": "An",
+            "stop_all": "Alle anhalten"
         }
     }
 }

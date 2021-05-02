@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Callable
 
 import pyzerproc
 
@@ -18,11 +17,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
 
-from .const import DOMAIN
+from .const import DATA_ADDRESSES, DATA_DISCOVERY_SUBSCRIPTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,21 +36,23 @@ async def discover_entities(hass: HomeAssistant) -> list[Entity]:
 
     # Filter out already discovered lights
     new_lights = [
-        light for light in lights if light.address not in hass.data[DOMAIN]["addresses"]
+        light
+        for light in lights
+        if light.address not in hass.data[DOMAIN][DATA_ADDRESSES]
     ]
 
     entities = []
     for light in new_lights:
-        hass.data[DOMAIN]["addresses"].add(light.address)
+        hass.data[DOMAIN][DATA_ADDRESSES].add(light.address)
         entities.append(ZerprocLight(light))
 
     return entities
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Zerproc light devices."""
     warned = False
@@ -72,7 +73,9 @@ async def async_setup_entry(
     hass.async_create_task(discover())
 
     # Perform recurring discovery of new devices
-    async_track_time_interval(hass, discover, DISCOVERY_INTERVAL)
+    hass.data[DOMAIN][DATA_DISCOVERY_SUBSCRIPTION] = async_track_time_interval(
+        hass, discover, DISCOVERY_INTERVAL
+    )
 
 
 class ZerprocLight(LightEntity):

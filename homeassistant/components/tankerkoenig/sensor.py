@@ -2,6 +2,7 @@
 
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -79,7 +80,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class FuelPriceSensor(CoordinatorEntity):
+class FuelPriceSensor(CoordinatorEntity, SensorEntity):
     """Contains prices for fuel in a given station."""
 
     def __init__(self, fuel_type, station, coordinator, name, show_on_map):

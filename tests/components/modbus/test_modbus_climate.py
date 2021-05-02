@@ -10,10 +10,19 @@ from homeassistant.components.modbus.const import (
 )
 from homeassistant.const import CONF_NAME, CONF_SCAN_INTERVAL, CONF_SLAVE
 
-from .conftest import base_config_test, base_test
+from .conftest import ReadResult, base_config_test, base_test, prepare_service_update
 
 
-@pytest.mark.parametrize("do_options", [False, True])
+@pytest.mark.parametrize(
+    "do_options",
+    [
+        {},
+        {
+            CONF_SCAN_INTERVAL: 20,
+            CONF_DATA_COUNT: 2,
+        },
+    ],
+)
 async def test_config_climate(hass, do_options):
     """Run test for climate."""
     device_name = "test_climate"
@@ -22,14 +31,8 @@ async def test_config_climate(hass, do_options):
         CONF_TARGET_TEMP: 117,
         CONF_CURRENT_TEMP: 117,
         CONF_SLAVE: 10,
+        **do_options,
     }
-    if do_options:
-        device_config.update(
-            {
-                CONF_SCAN_INTERVAL: 20,
-                CONF_DATA_COUNT: 2,
-            }
-        )
     await base_config_test(
         hass,
         device_config,
@@ -73,3 +76,28 @@ async def test_temperature_climate(hass, regs, expected):
         scan_interval=5,
     )
     assert state == expected
+
+
+async def test_service_climate_update(hass, mock_pymodbus):
+    """Run test for service homeassistant.update_entity."""
+
+    entity_id = "climate.test"
+    config = {
+        CONF_CLIMATES: [
+            {
+                CONF_NAME: "test",
+                CONF_TARGET_TEMP: 117,
+                CONF_CURRENT_TEMP: 117,
+                CONF_SLAVE: 10,
+            }
+        ]
+    }
+    mock_pymodbus.read_input_registers.return_value = ReadResult([0x00])
+    await prepare_service_update(
+        hass,
+        config,
+    )
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+    )
+    assert hass.states.get(entity_id).state == "auto"

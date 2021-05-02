@@ -4,10 +4,9 @@ import re
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_SENSORS, DATA_GIGABYTES, PERCENTAGE
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as DOVADO_DOMAIN
 
@@ -53,7 +52,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities)
 
 
-class DovadoSensor(Entity):
+class DovadoSensor(SensorEntity):
     """Representation of a Dovado sensor."""
 
     def __init__(self, data, sensor):

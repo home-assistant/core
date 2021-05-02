@@ -25,6 +25,7 @@ ignore = [
 jobs = 2
 init-hook='from pylint.config.find_default_config_files import find_default_config_files; from pathlib import Path; import sys; sys.path.append(str(Path(Path(list(find_default_config_files())[0]).parent, "pylint/plugins")))'
 load-plugins = [
+    "pylint.extensions.typing",
     "pylint_strict_informational",
     "hass_logger"
 ]
@@ -35,6 +36,7 @@ extension-pkg-whitelist = [
 ]
 
 [tool.pylint.BASIC]
+class-const-naming-style = "any"
 good-names = [
     "_",
     "ev",
@@ -107,6 +109,10 @@ overgeneral-exceptions = [
     "Exception",
     "HomeAssistantError",
 ]
+
+[tool.pylint.TYPING]
+py-version = "3.8"
+runtime-typing = false
 
 [tool.pytest.ini_options]
 testpaths = [

@@ -1,7 +1,8 @@
 """Support for KNX/IP lights."""
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable
+from collections.abc import Iterable
+from typing import Any, Callable
 
 from xknx.devices import Light as XknxLight
 
@@ -16,12 +17,9 @@ from homeassistant.components.light import (
     SUPPORT_WHITE_VALUE,
     LightEntity,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
 from .const import DOMAIN
@@ -34,7 +32,7 @@ DEFAULT_WHITE_VALUE = 255
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: Callable[[Iterable[Entity]], None],
     discovery_info: DiscoveryInfoType | None = None,
@@ -54,7 +52,7 @@ class KNXLight(KnxEntity, LightEntity):
         """Initialize of KNX light."""
         self._device: XknxLight
         super().__init__(device)
-
+        self._unique_id = self._device_unique_id()
         self._min_kelvin = device.min_kelvin or LightSchema.DEFAULT_MIN_KELVIN
         self._max_kelvin = device.max_kelvin or LightSchema.DEFAULT_MAX_KELVIN
         self._min_mireds = color_util.color_temperature_kelvin_to_mired(
@@ -62,6 +60,17 @@ class KNXLight(KnxEntity, LightEntity):
         )
         self._max_mireds = color_util.color_temperature_kelvin_to_mired(
             self._min_kelvin
+        )
+
+    def _device_unique_id(self) -> str:
+        """Return unique id for this device."""
+        if self._device.switch.group_address is not None:
+            return f"{self._device.switch.group_address}"
+        return (
+            f"{self._device.red.switch.group_address}_"
+            f"{self._device.green.switch.group_address}_"
+            f"{self._device.blue.switch.group_address}_"
+            f"{self._device.white.switch.group_address}"
         )
 
     @property

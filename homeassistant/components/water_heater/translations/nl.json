@@ -11,6 +11,7 @@
             "electric": "Elektriciteit",
             "gas": "Gas",
             "heat_pump": "Warmtepomp",
+            "high_demand": "Hoge vraag",
             "off": "Uit",
             "performance": "Prestaties"
         }

@@ -1,10 +1,12 @@
 """Support for KNX/IP covers."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Any, Callable, Iterable
+from typing import Any, Callable
 
 from xknx.devices import Cover as XknxCover, Device as XknxDevice
+from xknx.telegram.address import parse_device_group_address
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -21,31 +23,61 @@ from homeassistant.components.cover import (
     SUPPORT_STOP_TILT,
     CoverEntity,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_utc_time_change
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 from .knx_entity import KnxEntity
+from .schema import CoverSchema
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: Callable[[Iterable[Entity]], None],
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up cover(s) for KNX platform."""
+    _async_migrate_unique_id(hass, discovery_info)
     entities = []
     for device in hass.data[DOMAIN].xknx.devices:
         if isinstance(device, XknxCover):
             entities.append(KNXCover(device))
     async_add_entities(entities)
+
+
+@callback
+def _async_migrate_unique_id(
+    hass: HomeAssistant, discovery_info: DiscoveryInfoType | None
+) -> None:
+    """Change unique_ids used in 2021.4 to include position_target GA."""
+    entity_registry = er.async_get(hass)
+    if not discovery_info or not discovery_info["platform_config"]:
+        return
+
+    platform_config = discovery_info["platform_config"]
+    for entity_config in platform_config:
+        # normalize group address strings - ga_updown was the old uid but is optional
+        updown_addresses = entity_config.get(CoverSchema.CONF_MOVE_LONG_ADDRESS)
+        if updown_addresses is None:
+            continue
+        ga_updown = parse_device_group_address(updown_addresses[0])
+        old_uid = str(ga_updown)
+
+        entity_id = entity_registry.async_get_entity_id("cover", DOMAIN, old_uid)
+        if entity_id is None:
+            continue
+        position_target_addresses = entity_config.get(CoverSchema.CONF_POSITION_ADDRESS)
+        ga_position_target = (
+            parse_device_group_address(position_target_addresses[0])
+            if position_target_addresses is not None
+            else None
+        )
+        new_uid = f"{ga_updown}_{ga_position_target}"
+        entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
 
 
 class KNXCover(KnxEntity, CoverEntity):
@@ -55,7 +87,9 @@ class KNXCover(KnxEntity, CoverEntity):
         """Initialize the cover."""
         self._device: XknxCover
         super().__init__(device)
-
+        self._unique_id = (
+            f"{device.updown.group_address}_{device.position_target.group_address}"
+        )
         self._unsubscribe_auto_updater: Callable[[], None] | None = None
 
     @callback

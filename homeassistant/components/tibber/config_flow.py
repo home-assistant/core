@@ -9,7 +9,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 
@@ -18,7 +18,6 @@ class TibberConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tibber integration."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_import(self, import_info):
         """Set the config entry up from yaml."""

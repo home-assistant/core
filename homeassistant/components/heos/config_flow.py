@@ -16,12 +16,10 @@ def format_title(host: str) -> str:
     return f"Controller ({host})"
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class HeosFlowHandler(config_entries.ConfigFlow):
+class HeosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Define a flow for HEOS."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered Heos device."""

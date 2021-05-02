@@ -10,11 +10,27 @@
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
+            "reauth_validate": {
+                "data": {
+                    "password": "Kata Sandi"
+                },
+                "description": "Masukkan sandi untuk {username}.",
+                "title": "Autentikasi ulang akun August"
+            },
             "user": {
                 "data": {
                     "login_method": "Metode Masuk",
                     "password": "Kata Sandi",
                     "timeout": "Tenggang waktu (detik)",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Jika Metode Masuk adalah 'email', Nama Pengguna adalah alamat email. Jika Metode Masuk adalah 'telepon', Nama Pengguna adalah nomor telepon dalam format '+NNNNNNNNN'.",
+                "title": "Siapkan akun August"
+            },
+            "user_validate": {
+                "data": {
+                    "login_method": "Metode Masuk",
+                    "password": "Kata Sandi",
                     "username": "Nama Pengguna"
                 },
                 "description": "Jika Metode Masuk adalah 'email', Nama Pengguna adalah alamat email. Jika Metode Masuk adalah 'telepon', Nama Pengguna adalah nomor telepon dalam format '+NNNNNNNNN'.",

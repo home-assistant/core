@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import functools
 import numbers
-from typing import Any, Callable
+from typing import Any
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     DOMAIN,
+    SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -25,9 +26,10 @@ from homeassistant.const import (
     PRESSURE_HPA,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType, StateType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .core import discovery
 from .core.const import (
@@ -71,7 +73,9 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation sensor from config entry."""
     entities_to_create = hass.data[DATA_ZHA][DOMAIN]
@@ -89,7 +93,7 @@ async def async_setup_entry(
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
 
-class Sensor(ZhaEntity):
+class Sensor(ZhaEntity, SensorEntity):
     """Base ZHA sensor."""
 
     SENSOR_ATTR: int | str | None = None
@@ -191,9 +195,7 @@ class Battery(Sensor):
             state_attrs["battery_quantity"] = battery_quantity
         battery_voltage = self._channel.cluster.get("battery_voltage")
         if battery_voltage is not None:
-            v_10mv = round(battery_voltage / 10, 2)
-            v_100mv = round(battery_voltage / 10, 1)
-            state_attrs["battery_voltage"] = v_100mv if v_100mv == v_10mv else v_10mv
+            state_attrs["battery_voltage"] = round(battery_voltage / 10, 2)
         return state_attrs
 
 

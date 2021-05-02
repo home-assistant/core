@@ -3,13 +3,14 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
+from collections.abc import Container, Generator
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 import functools as ft
 import logging
 import re
 import sys
-from typing import Any, Callable, Container, Generator, cast
+from typing import Any, Callable, cast
 
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import (
@@ -96,6 +97,18 @@ def condition_trace_set_result(result: bool, **kwargs: Any) -> None:
     node.set_result(result=result, **kwargs)
 
 
+def condition_trace_update_result(**kwargs: Any) -> None:
+    """Update the result of TraceElement at the top of the stack."""
+    node = trace_stack_top(trace_stack_cv)
+
+    # The condition function may be called directly, in which case tracing
+    # is not setup
+    if not node:
+        return
+
+    node.update_result(**kwargs)
+
+
 @contextmanager
 def trace_condition(variables: TemplateVarsType) -> Generator:
     """Trace condition evaluation."""
@@ -103,7 +116,7 @@ def trace_condition(variables: TemplateVarsType) -> Generator:
     trace_stack_push(trace_stack_cv, trace_element)
     try:
         yield trace_element
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:
         trace_element.set_error(ex)
         raise ex
     finally:
@@ -118,7 +131,7 @@ def trace_condition_function(condition: ConditionCheckerType) -> ConditionChecke
         """Trace condition."""
         with trace_condition(variables):
             result = condition(hass, variables)
-            condition_trace_set_result(result)
+            condition_trace_update_result(result=result)
             return result
 
     return wrapper
@@ -288,7 +301,7 @@ def numeric_state(
     ).result()
 
 
-def async_numeric_state(
+def async_numeric_state(  # noqa: C901
     hass: HomeAssistant,
     entity: None | str | State,
     below: float | str | None = None,
@@ -594,23 +607,37 @@ def sun(
 
     if sunrise is None and SUN_EVENT_SUNRISE in (before, after):
         # There is no sunrise today
+        condition_trace_set_result(False, message="no sunrise today")
         return False
 
     if sunset is None and SUN_EVENT_SUNSET in (before, after):
         # There is no sunset today
+        condition_trace_set_result(False, message="no sunset today")
         return False
 
-    if before == SUN_EVENT_SUNRISE and utcnow > cast(datetime, sunrise) + before_offset:
-        return False
+    if before == SUN_EVENT_SUNRISE:
+        wanted_time_before = cast(datetime, sunrise) + before_offset
+        condition_trace_update_result(wanted_time_before=wanted_time_before)
+        if utcnow > wanted_time_before:
+            return False
 
-    if before == SUN_EVENT_SUNSET and utcnow > cast(datetime, sunset) + before_offset:
-        return False
+    if before == SUN_EVENT_SUNSET:
+        wanted_time_before = cast(datetime, sunset) + before_offset
+        condition_trace_update_result(wanted_time_before=wanted_time_before)
+        if utcnow > wanted_time_before:
+            return False
 
-    if after == SUN_EVENT_SUNRISE and utcnow < cast(datetime, sunrise) + after_offset:
-        return False
+    if after == SUN_EVENT_SUNRISE:
+        wanted_time_after = cast(datetime, sunrise) + after_offset
+        condition_trace_update_result(wanted_time_after=wanted_time_after)
+        if utcnow < wanted_time_after:
+            return False
 
-    if after == SUN_EVENT_SUNSET and utcnow < cast(datetime, sunset) + after_offset:
-        return False
+    if after == SUN_EVENT_SUNSET:
+        wanted_time_after = cast(datetime, sunset) + after_offset
+        condition_trace_update_result(wanted_time_after=wanted_time_after)
+        if utcnow < wanted_time_after:
+            return False
 
     return True
 
@@ -644,15 +671,22 @@ def template(
 
 
 def async_template(
-    hass: HomeAssistant, value_template: Template, variables: TemplateVarsType = None
+    hass: HomeAssistant,
+    value_template: Template,
+    variables: TemplateVarsType = None,
+    trace_result: bool = True,
 ) -> bool:
     """Test if template condition matches."""
     try:
-        value: str = value_template.async_render(variables, parse_result=False)
+        info = value_template.async_render_to_info(variables, parse_result=False)
+        value = info.result()
     except TemplateError as ex:
         raise ConditionErrorMessage("template", str(ex)) from ex
 
-    return value.lower() == "true"
+    result = value.lower() == "true"
+    if trace_result:
+        condition_trace_set_result(result, entities=list(info.entities))
+    return result
 
 
 def async_template_from_config(

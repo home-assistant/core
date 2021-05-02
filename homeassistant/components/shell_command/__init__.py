@@ -1,14 +1,15 @@
 """Expose regular shell commands as services."""
 import asyncio
+from contextlib import suppress
 import logging
 import shlex
 
 import voluptuous as vol
 
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "shell_command"
 
@@ -21,7 +22,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the shell_command component."""
     conf = config.get(DOMAIN, {})
 
@@ -87,10 +88,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
                 "Timed out running command: `%s`, after: %ss", cmd, COMMAND_TIMEOUT
             )
             if process:
-                try:
+                with suppress(TypeError):
                     await process.kill()
-                except TypeError:
-                    pass
                 del process
 
             return

@@ -1,5 +1,4 @@
 """The kmtronic integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -9,7 +8,7 @@ from pykmtronic.auth import Auth
 from pykmtronic.hub import KMTronicHubAPI
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
@@ -22,13 +21,6 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 PLATFORMS = ["switch"]
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the kmtronic component."""
-    hass.data[DOMAIN] = {}
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -48,10 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 await hub.async_update_relays()
         except aiohttp.client_exceptions.ClientResponseError as err:
             raise UpdateFailed(f"Wrong credentials: {err}") from err
-        except (
-            asyncio.TimeoutError,
-            aiohttp.client_exceptions.ClientConnectorError,
-        ) as err:
+        except aiohttp.client_exceptions.ClientConnectorError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     coordinator = DataUpdateCoordinator(
@@ -61,19 +50,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_method=async_update_data,
         update_interval=timedelta(seconds=30),
     )
-    await coordinator.async_refresh()
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_HUB: hub,
         DATA_COORDINATOR: coordinator,
     }
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     update_listener = entry.add_update_listener(async_update_options)
     hass.data[DOMAIN][entry.entry_id][UPDATE_LISTENER] = update_listener
@@ -88,14 +73,7 @@ async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         update_listener = hass.data[DOMAIN][entry.entry_id][UPDATE_LISTENER]
         update_listener()

@@ -15,7 +15,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-# pylint: disable=unused-import
 from .const import DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,7 +59,6 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Logitech Squeezebox."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize an instance of the squeezebox config flow."""

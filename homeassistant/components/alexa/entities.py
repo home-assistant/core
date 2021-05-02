@@ -32,6 +32,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     CLOUD_NEVER_EXPOSED_ENTITIES,
+    CONF_DESCRIPTION,
     CONF_NAME,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -74,7 +75,7 @@ from .capabilities import (
     AlexaTimeHoldController,
     AlexaToggleController,
 )
-from .const import CONF_DESCRIPTION, CONF_DISPLAY_CATEGORIES
+from .const import CONF_DISPLAY_CATEGORIES
 
 if TYPE_CHECKING:
     from .config import AbstractConfig
@@ -503,12 +504,12 @@ class LightCapabilities(AlexaEntity):
         """Yield the supported interfaces."""
         yield AlexaPowerController(self.entity)
 
-        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if supported & light.SUPPORT_BRIGHTNESS:
+        color_modes = self.entity.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES)
+        if light.brightness_supported(color_modes):
             yield AlexaBrightnessController(self.entity)
-        if supported & light.SUPPORT_COLOR:
+        if light.color_supported(color_modes):
             yield AlexaColorController(self.entity)
-        if supported & light.SUPPORT_COLOR_TEMP:
+        if light.color_temp_supported(color_modes):
             yield AlexaColorTemperatureController(self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)

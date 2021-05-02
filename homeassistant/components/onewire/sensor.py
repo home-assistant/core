@@ -1,4 +1,7 @@
 """Support for 1-Wire environment sensors."""
+from __future__ import annotations
+
+import asyncio
 from glob import glob
 import logging
 import os
@@ -6,7 +9,7 @@ import os
 from pi1wire import InvalidCRCException, UnsupportResponseException
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 import homeassistant.helpers.config_validation as cv
@@ -264,9 +267,8 @@ def get_entities(onewirehub: OneWireHub, config):
     """Get a list of entities."""
     entities = []
     device_names = {}
-    if CONF_NAMES in config:
-        if isinstance(config[CONF_NAMES], dict):
-            device_names = config[CONF_NAMES]
+    if CONF_NAMES in config and isinstance(config[CONF_NAMES], dict):
+        device_names = config[CONF_NAMES]
 
     conf_type = config[CONF_TYPE]
     # We have an owserver on a remote(or local) host/port
@@ -394,7 +396,16 @@ def get_entities(onewirehub: OneWireHub, config):
     return entities
 
 
-class OneWireProxySensor(OneWireProxyEntity):
+class OneWireSensor(OneWireBaseEntity, SensorEntity):
+    """Mixin for sensor specific attributes."""
+
+    @property
+    def unit_of_measurement(self) -> str | None:
+        """Return the unit the value is expressed in."""
+        return self._unit_of_measurement
+
+
+class OneWireProxySensor(OneWireProxyEntity, OneWireSensor):
     """Implementation of a 1-Wire sensor connected through owserver."""
 
     @property
@@ -403,7 +414,7 @@ class OneWireProxySensor(OneWireProxyEntity):
         return self._state
 
 
-class OneWireDirectSensor(OneWireBaseEntity):
+class OneWireDirectSensor(OneWireSensor):
     """Implementation of a 1-Wire sensor directly connected to RPI GPIO."""
 
     def __init__(self, name, device_file, device_info, owsensor):
@@ -416,11 +427,31 @@ class OneWireDirectSensor(OneWireBaseEntity):
         """Return the state of the entity."""
         return self._state
 
-    def update(self):
+    async def get_temperature(self):
+        """Get the latest data from the device."""
+        attempts = 1
+        while True:
+            try:
+                return await self.hass.async_add_executor_job(
+                    self._owsensor.get_temperature
+                )
+            except UnsupportResponseException as ex:
+                _LOGGER.debug(
+                    "Cannot read from sensor %s (retry attempt %s): %s",
+                    self._device_file,
+                    attempts,
+                    ex,
+                )
+                await asyncio.sleep(0.2)
+                attempts += 1
+                if attempts > 10:
+                    raise
+
+    async def async_update(self):
         """Get the latest data from the device."""
         value = None
         try:
-            self._value_raw = self._owsensor.get_temperature()
+            self._value_raw = await self.get_temperature()
             value = round(float(self._value_raw), 1)
         except (
             FileNotFoundError,
@@ -431,7 +462,7 @@ class OneWireDirectSensor(OneWireBaseEntity):
         self._state = value
 
 
-class OneWireOWFSSensor(OneWireBaseEntity):  # pragma: no cover
+class OneWireOWFSSensor(OneWireSensor):  # pragma: no cover
     """Implementation of a 1-Wire sensor through owfs.
 
     This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.

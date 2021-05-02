@@ -1,7 +1,7 @@
 """Selectors for Home Assistant."""
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, cast
+from typing import Any, Callable, cast
 
 import voluptuous as vol
 
@@ -31,7 +31,7 @@ def validate_selector(config: Any) -> dict:
         return {selector_type: {}}
 
     return {
-        selector_type: cast(Dict, selector_class.CONFIG_SCHEMA(config[selector_type]))
+        selector_type: cast(dict, selector_class.CONFIG_SCHEMA(config[selector_type]))
     }
 
 
@@ -70,9 +70,7 @@ class DeviceSelector(Selector):
             # Model of device
             vol.Optional("model"): str,
             # Device has to contain entities matching this selector
-            vol.Optional(
-                "entity"
-            ): EntitySelector.CONFIG_SCHEMA,  # pylint: disable=no-member
+            vol.Optional("entity"): EntitySelector.CONFIG_SCHEMA,
         }
     )
 

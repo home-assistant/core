@@ -76,8 +76,6 @@ async def test_setups(hass: HomeAssistant, protocol, connection, title):
     with patch("homeassistant.components.alarmdecoder.config_flow.AdExt.open"), patch(
         "homeassistant.components.alarmdecoder.config_flow.AdExt.close"
     ), patch(
-        "homeassistant.components.alarmdecoder.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.alarmdecoder.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -92,7 +90,6 @@ async def test_setups(hass: HomeAssistant, protocol, connection, title):
         }
         await hass.async_block_till_done()
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

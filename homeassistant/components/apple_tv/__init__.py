@@ -8,6 +8,7 @@ from pyatv.const import Protocol
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_NAME,
@@ -34,17 +35,10 @@ BACKOFF_TIME_UPPER_LIMIT = 300  # Five minutes
 NOTIFICATION_TITLE = "Apple TV Notification"
 NOTIFICATION_ID = "apple_tv_notification"
 
-SOURCE_REAUTH = "reauth"
-
 SIGNAL_CONNECTED = "apple_tv_connected"
 SIGNAL_DISCONNECTED = "apple_tv_disconnected"
 
 PLATFORMS = [MP_DOMAIN, REMOTE_DOMAIN]
-
-
-async def async_setup(hass, config):
-    """Set up the Apple TV integration."""
-    return True
 
 
 async def async_setup_entry(hass, entry):
@@ -56,7 +50,9 @@ async def async_setup_entry(hass, entry):
         """Stop push updates when hass stops."""
         await manager.disconnect()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+    )
 
     async def setup_platforms():
         """Set up platforms and initiate connection."""
@@ -75,14 +71,8 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload an Apple TV config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
     if unload_ok:
         manager = hass.data[DOMAIN].pop(entry.unique_id)
         await manager.disconnect()

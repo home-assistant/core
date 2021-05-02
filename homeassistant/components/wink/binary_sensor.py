@@ -40,9 +40,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for sensor in pywink.get_sensors():
         _id = sensor.object_id() + sensor.name()
-        if _id not in hass.data[DOMAIN]["unique_ids"]:
-            if sensor.capability() in SENSOR_TYPES:
-                add_entities([WinkBinarySensorEntity(sensor, hass)])
+        if (
+            _id not in hass.data[DOMAIN]["unique_ids"]
+            and sensor.capability() in SENSOR_TYPES
+        ):
+            add_entities([WinkBinarySensorEntity(sensor, hass)])
 
     for key in pywink.get_keys():
         _id = key.object_id() + key.name()

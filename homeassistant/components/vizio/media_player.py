@@ -26,15 +26,14 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -64,7 +63,7 @@ PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
@@ -284,7 +283,7 @@ class VizioDevice(MediaPlayerEntity):
 
     @staticmethod
     async def _async_send_update_options_signal(
-        hass: HomeAssistantType, config_entry: ConfigEntry
+        hass: HomeAssistant, config_entry: ConfigEntry
     ) -> None:
         """Send update event when Vizio config entry is updated."""
         # Move this method to component level if another entity ever gets added for a single config entry.
@@ -424,7 +423,7 @@ class VizioDevice(MediaPlayerEntity):
         return self._config_entry.unique_id
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device registry information."""
         return {
             "identifiers": {(DOMAIN, self._config_entry.unique_id)},

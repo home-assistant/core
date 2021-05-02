@@ -10,6 +10,13 @@
             "unknown": "Onverwachte fout"
         },
         "step": {
+            "pair": {
+                "data": {
+                    "pin": "PIN-code"
+                },
+                "description": "Voer de pincode in die op uw tv wordt weergegeven",
+                "title": "Koppel"
+            },
             "user": {
                 "data": {
                     "api_version": "API Versie",

@@ -1,19 +1,19 @@
 """Support for Awair sensors."""
 from __future__ import annotations
 
-from typing import Callable
-
 from python_awair.devices import AwairDevice
 import voluptuous as vol
 
 from homeassistant.components.awair import AwairDataUpdateCoordinator, AwairResult
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS, CONF_ACCESS_TOKEN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -54,9 +54,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigType,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ):
     """Set up Awair sensor entity based on a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
@@ -84,7 +84,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class AwairSensor(CoordinatorEntity):
+class AwairSensor(CoordinatorEntity, SensorEntity):
     """Defines an Awair sensor entity."""
 
     def __init__(
@@ -210,7 +210,7 @@ class AwairSensor(CoordinatorEntity):
         return attrs
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Device information."""
         info = {
             "identifiers": {(DOMAIN, self._device.uuid)},

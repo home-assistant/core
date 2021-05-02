@@ -22,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-# pylint: disable=unused-import
 from .const import (
     CONF_DEVICE_ID,
     CONF_RTSP_TRANSPORT,
@@ -77,7 +76,6 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a ONVIF config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback

@@ -1,8 +1,13 @@
 """Voluptuous schemas for the KNX integration."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 from xknx.devices.climate import SetpointShiftMode
+from xknx.exceptions import CouldNotParseAddress
 from xknx.io import DEFAULT_MCAST_PORT
-from xknx.telegram.address import GroupAddress, IndividualAddress
+from xknx.telegram.address import IndividualAddress, parse_device_group_address
 
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -29,11 +34,21 @@ from .const import (
 # KNX VALIDATORS
 ##################
 
-ga_validator = vol.Any(
-    cv.matches_regex(GroupAddress.ADDRESS_RE.pattern),
-    vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
-    msg="value does not match pattern for KNX group address '<main>/<middle>/<sub>', '<main>/<sub>' or '<free>' (eg.'1/2/3', '9/234', '123')",
-)
+
+def ga_validator(value: Any) -> str | int:
+    """Validate that value is parsable as GroupAddress or InternalGroupAddress."""
+    if isinstance(value, (str, int)):
+        try:
+            parse_device_group_address(value)
+            return value
+        except CouldNotParseAddress:
+            pass
+    raise vol.Invalid(
+        f"value '{value}' is not a valid KNX group address '<main>/<middle>/<sub>', '<main>/<sub>' or '<free>' (eg.'1/2/3', '9/234', '123'), nor xknx internal address 'i-<string>'."
+    )
+
+
+ga_list_validator = vol.All(cv.ensure_list, [ga_validator])
 
 ia_validator = vol.Any(
     cv.matches_regex(IndividualAddress.ADDRESS_RE.pattern),
@@ -59,12 +74,14 @@ class ConnectionSchema:
     """Voluptuous schema for KNX connection."""
 
     CONF_KNX_LOCAL_IP = "local_ip"
+    CONF_KNX_ROUTE_BACK = "route_back"
 
     TUNNELING_SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_PORT, default=DEFAULT_MCAST_PORT): cv.port,
             vol.Required(CONF_HOST): cv.string,
             vol.Optional(CONF_KNX_LOCAL_IP): cv.string,
+            vol.Optional(CONF_KNX_ROUTE_BACK, default=False): cv.boolean,
         }
     )
 
@@ -89,6 +106,7 @@ class BinarySensorSchema:
     DEFAULT_NAME = "KNX Binary Sensor"
 
     SCHEMA = vol.All(
+        # deprecated since September 2020
         cv.deprecated("significant_bit"),
         cv.deprecated("automation"),
         vol.Schema(
@@ -97,7 +115,7 @@ class BinarySensorSchema:
                 vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
                 vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=False): cv.boolean,
                 vol.Optional(CONF_INVERT, default=False): cv.boolean,
-                vol.Required(CONF_STATE_ADDRESS): ga_validator,
+                vol.Required(CONF_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_CONTEXT_TIMEOUT): vol.All(
                     vol.Coerce(float), vol.Range(min=0, max=10)
                 ),
@@ -151,6 +169,7 @@ class ClimateSchema:
     DEFAULT_ON_OFF_INVERT = False
 
     SCHEMA = vol.All(
+        # deprecated since September 2020
         cv.deprecated("setpoint_shift_step", replacement_key=CONF_TEMPERATURE_STEP),
         vol.Schema(
             {
@@ -167,27 +186,27 @@ class ClimateSchema:
                 vol.Optional(
                     CONF_TEMPERATURE_STEP, default=DEFAULT_TEMPERATURE_STEP
                 ): vol.All(float, vol.Range(min=0, max=2)),
-                vol.Required(CONF_TEMPERATURE_ADDRESS): ga_validator,
-                vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): ga_validator,
-                vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): ga_validator,
-                vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): ga_validator,
-                vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): ga_validator,
-                vol.Optional(CONF_OPERATION_MODE_ADDRESS): ga_validator,
-                vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): ga_validator,
-                vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): ga_validator,
-                vol.Optional(CONF_CONTROLLER_STATUS_STATE_ADDRESS): ga_validator,
-                vol.Optional(CONF_CONTROLLER_MODE_ADDRESS): ga_validator,
-                vol.Optional(CONF_CONTROLLER_MODE_STATE_ADDRESS): ga_validator,
-                vol.Optional(CONF_HEAT_COOL_ADDRESS): ga_validator,
-                vol.Optional(CONF_HEAT_COOL_STATE_ADDRESS): ga_validator,
+                vol.Required(CONF_TEMPERATURE_ADDRESS): ga_list_validator,
+                vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_OPERATION_MODE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_CONTROLLER_STATUS_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_CONTROLLER_MODE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_CONTROLLER_MODE_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_HEAT_COOL_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_HEAT_COOL_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(
                     CONF_OPERATION_MODE_FROST_PROTECTION_ADDRESS
-                ): ga_validator,
-                vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS): ga_validator,
-                vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): ga_validator,
-                vol.Optional(CONF_OPERATION_MODE_STANDBY_ADDRESS): ga_validator,
-                vol.Optional(CONF_ON_OFF_ADDRESS): ga_validator,
-                vol.Optional(CONF_ON_OFF_STATE_ADDRESS): ga_validator,
+                ): ga_list_validator,
+                vol.Optional(CONF_OPERATION_MODE_NIGHT_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_OPERATION_MODE_COMFORT_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_OPERATION_MODE_STANDBY_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_ON_OFF_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_ON_OFF_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(
                     CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT
                 ): cv.boolean,
@@ -225,26 +244,37 @@ class CoverSchema:
     DEFAULT_TRAVEL_TIME = 25
     DEFAULT_NAME = "KNX Cover"
 
-    SCHEMA = vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_MOVE_LONG_ADDRESS): ga_validator,
-            vol.Optional(CONF_MOVE_SHORT_ADDRESS): ga_validator,
-            vol.Optional(CONF_STOP_ADDRESS): ga_validator,
-            vol.Optional(CONF_POSITION_ADDRESS): ga_validator,
-            vol.Optional(CONF_POSITION_STATE_ADDRESS): ga_validator,
-            vol.Optional(CONF_ANGLE_ADDRESS): ga_validator,
-            vol.Optional(CONF_ANGLE_STATE_ADDRESS): ga_validator,
-            vol.Optional(
-                CONF_TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME
-            ): cv.positive_float,
-            vol.Optional(
-                CONF_TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME
-            ): cv.positive_float,
-            vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
-            vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
-            vol.Optional(CONF_DEVICE_CLASS): cv.string,
-        }
+    SCHEMA = vol.All(
+        vol.Schema(
+            {
+                vol.Required(
+                    vol.Any(CONF_MOVE_LONG_ADDRESS, CONF_POSITION_ADDRESS),
+                    msg=f"At least one of '{CONF_MOVE_LONG_ADDRESS}' or '{CONF_POSITION_ADDRESS}' is required.",
+                ): object,
+            },
+            extra=vol.ALLOW_EXTRA,
+        ),
+        vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_MOVE_LONG_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_MOVE_SHORT_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_STOP_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_POSITION_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_POSITION_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_ANGLE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_ANGLE_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(
+                    CONF_TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME
+                ): cv.positive_float,
+                vol.Optional(
+                    CONF_TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME
+                ): cv.positive_float,
+                vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
+                vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
+                vol.Optional(CONF_DEVICE_CLASS): cv.string,
+            }
+        ),
     )
 
 
@@ -293,10 +323,10 @@ class FanSchema:
     SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Required(KNX_ADDRESS): ga_validator,
-            vol.Optional(CONF_STATE_ADDRESS): ga_validator,
-            vol.Optional(CONF_OSCILLATION_ADDRESS): ga_validator,
-            vol.Optional(CONF_OSCILLATION_STATE_ADDRESS): ga_validator,
+            vol.Required(KNX_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_OSCILLATION_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_OSCILLATION_STATE_ADDRESS): ga_list_validator,
             vol.Optional(CONF_MAX_STEP): cv.byte,
         }
     )
@@ -331,10 +361,10 @@ class LightSchema:
 
     COLOR_SCHEMA = vol.Schema(
         {
-            vol.Optional(KNX_ADDRESS): ga_validator,
-            vol.Optional(CONF_STATE_ADDRESS): ga_validator,
-            vol.Required(CONF_BRIGHTNESS_ADDRESS): ga_validator,
-            vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): ga_validator,
+            vol.Optional(KNX_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+            vol.Required(CONF_BRIGHTNESS_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): ga_list_validator,
         }
     )
 
@@ -342,25 +372,25 @@ class LightSchema:
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(KNX_ADDRESS): ga_validator,
-                vol.Optional(CONF_STATE_ADDRESS): ga_validator,
-                vol.Optional(CONF_BRIGHTNESS_ADDRESS): ga_validator,
-                vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): ga_validator,
+                vol.Optional(KNX_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_BRIGHTNESS_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): ga_list_validator,
                 vol.Exclusive(CONF_INDIVIDUAL_COLORS, "color"): {
                     vol.Inclusive(CONF_RED, "colors"): COLOR_SCHEMA,
                     vol.Inclusive(CONF_GREEN, "colors"): COLOR_SCHEMA,
                     vol.Inclusive(CONF_BLUE, "colors"): COLOR_SCHEMA,
                     vol.Optional(CONF_WHITE): COLOR_SCHEMA,
                 },
-                vol.Exclusive(CONF_COLOR_ADDRESS, "color"): ga_validator,
-                vol.Optional(CONF_COLOR_STATE_ADDRESS): ga_validator,
-                vol.Optional(CONF_COLOR_TEMP_ADDRESS): ga_validator,
-                vol.Optional(CONF_COLOR_TEMP_STATE_ADDRESS): ga_validator,
+                vol.Exclusive(CONF_COLOR_ADDRESS, "color"): ga_list_validator,
+                vol.Optional(CONF_COLOR_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_COLOR_TEMP_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_COLOR_TEMP_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(
                     CONF_COLOR_TEMP_MODE, default=DEFAULT_COLOR_TEMP_MODE
                 ): vol.All(vol.Upper, cv.enum(ColorTempModes)),
-                vol.Exclusive(CONF_RGBW_ADDRESS, "color"): ga_validator,
-                vol.Optional(CONF_RGBW_STATE_ADDRESS): ga_validator,
+                vol.Exclusive(CONF_RGBW_ADDRESS, "color"): ga_list_validator,
+                vol.Optional(CONF_RGBW_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_MIN_KELVIN, default=DEFAULT_MIN_KELVIN): vol.All(
                     vol.Coerce(int), vol.Range(min=1)
                 ),
@@ -413,8 +443,10 @@ class SceneSchema:
     SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Required(KNX_ADDRESS): ga_validator,
-            vol.Required(CONF_SCENE_NUMBER): cv.positive_int,
+            vol.Required(KNX_ADDRESS): ga_list_validator,
+            vol.Required(CONF_SCENE_NUMBER): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=64)
+            ),
         }
     )
 
@@ -432,8 +464,8 @@ class SensorSchema:
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
             vol.Optional(CONF_ALWAYS_CALLBACK, default=False): cv.boolean,
-            vol.Required(CONF_STATE_ADDRESS): ga_validator,
             vol.Required(CONF_TYPE): sensor_type_validator,
+            vol.Required(CONF_STATE_ADDRESS): ga_list_validator,
         }
     )
 
@@ -449,8 +481,8 @@ class SwitchSchema:
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_INVERT, default=False): cv.boolean,
-            vol.Required(KNX_ADDRESS): ga_validator,
-            vol.Optional(CONF_STATE_ADDRESS): ga_validator,
+            vol.Required(KNX_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
         }
     )
 
@@ -481,18 +513,18 @@ class WeatherSchema:
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
             vol.Optional(CONF_KNX_CREATE_SENSORS, default=False): cv.boolean,
-            vol.Required(CONF_KNX_TEMPERATURE_ADDRESS): ga_validator,
-            vol.Optional(CONF_KNX_BRIGHTNESS_SOUTH_ADDRESS): ga_validator,
-            vol.Optional(CONF_KNX_BRIGHTNESS_EAST_ADDRESS): ga_validator,
-            vol.Optional(CONF_KNX_BRIGHTNESS_WEST_ADDRESS): ga_validator,
-            vol.Optional(CONF_KNX_BRIGHTNESS_NORTH_ADDRESS): ga_validator,
-            vol.Optional(CONF_KNX_WIND_SPEED_ADDRESS): ga_validator,
-            vol.Optional(CONF_KNX_WIND_BEARING_ADDRESS): ga_validator,
-            vol.Optional(CONF_KNX_RAIN_ALARM_ADDRESS): ga_validator,
-            vol.Optional(CONF_KNX_FROST_ALARM_ADDRESS): ga_validator,
-            vol.Optional(CONF_KNX_WIND_ALARM_ADDRESS): ga_validator,
-            vol.Optional(CONF_KNX_DAY_NIGHT_ADDRESS): ga_validator,
-            vol.Optional(CONF_KNX_AIR_PRESSURE_ADDRESS): ga_validator,
-            vol.Optional(CONF_KNX_HUMIDITY_ADDRESS): ga_validator,
+            vol.Required(CONF_KNX_TEMPERATURE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_KNX_BRIGHTNESS_SOUTH_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_KNX_BRIGHTNESS_EAST_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_KNX_BRIGHTNESS_WEST_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_KNX_BRIGHTNESS_NORTH_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_KNX_WIND_SPEED_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_KNX_WIND_BEARING_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_KNX_RAIN_ALARM_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_KNX_FROST_ALARM_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_KNX_WIND_ALARM_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_KNX_DAY_NIGHT_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_KNX_AIR_PRESSURE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_KNX_HUMIDITY_ADDRESS): ga_list_validator,
         }
     )

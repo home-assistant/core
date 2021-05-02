@@ -1,8 +1,6 @@
 """Support for ISY994 lights."""
 from __future__ import annotations
 
-from typing import Callable
-
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
 from homeassistant.components.light import (
@@ -11,8 +9,9 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     _LOGGER,
@@ -29,9 +28,9 @@ ATTR_LAST_BRIGHTNESS = "last_brightness"
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> bool:
     """Set up the ISY994 light platform."""
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]

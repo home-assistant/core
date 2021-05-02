@@ -6,7 +6,7 @@ from btlewrap.base import BluetoothBackendException
 from mitemp_bt import mitemp_bt_poller
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_FORCE_UPDATE,
     CONF_MAC,
@@ -20,7 +20,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 try:
     import bluepy.btle  # noqa: F401 pylint: disable=unused-import
@@ -104,7 +103,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devs)
 
 
-class MiTempBtSensor(Entity):
+class MiTempBtSensor(SensorEntity):
     """Implementing the MiTempBt sensor."""
 
     def __init__(self, poller, parameter, device, name, unit, force_update, median):

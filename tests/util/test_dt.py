@@ -19,7 +19,7 @@ def test_get_time_zone_retrieves_valid_time_zone():
     time_zone = dt_util.get_time_zone(TEST_TIME_ZONE)
 
     assert time_zone is not None
-    assert TEST_TIME_ZONE == time_zone.zone
+    assert time_zone.zone == TEST_TIME_ZONE
 
 
 def test_get_time_zone_returns_none_for_garbage_time_zone():

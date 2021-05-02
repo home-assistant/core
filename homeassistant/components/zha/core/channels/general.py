@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Coroutine
+from collections.abc import Coroutine
+from typing import Any
 
 import zigpy.exceptions
 import zigpy.zcl.clusters.general as general
@@ -137,6 +138,7 @@ class BasicChannel(ZigbeeChannel):
 
     UNKNOWN = 0
     BATTERY = 3
+    BIND: bool = False
 
     POWER_SOURCES = {
         UNKNOWN: "Unknown",
@@ -184,15 +186,21 @@ class DeviceTemperature(ZigbeeChannel):
 class GreenPowerProxy(ZigbeeChannel):
     """Green Power Proxy channel."""
 
+    BIND: bool = False
+
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Groups.cluster_id)
 class Groups(ZigbeeChannel):
     """Groups channel."""
 
+    BIND: bool = False
+
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Identify.cluster_id)
 class Identify(ZigbeeChannel):
     """Identify channel."""
+
+    BIND: bool = False
 
     @callback
     def cluster_command(self, tsn, command_id, args):
@@ -367,6 +375,8 @@ class OnOffConfiguration(ZigbeeChannel):
 class Ota(ZigbeeChannel):
     """OTA Channel."""
 
+    BIND: bool = False
+
     @callback
     def cluster_command(
         self, tsn: int, command_id: int, args: list[Any] | None
@@ -391,6 +401,9 @@ class PollControl(ZigbeeChannel):
     CHECKIN_INTERVAL = 55 * 60 * 4  # 55min
     CHECKIN_FAST_POLL_TIMEOUT = 2 * 4  # 2s
     LONG_POLL = 6 * 4  # 6s
+    _IGNORED_MANUFACTURER_ID = {
+        4476,
+    }  # IKEA
 
     async def async_configure_channel_specific(self) -> None:
         """Configure channel: set check-in interval."""
@@ -416,7 +429,14 @@ class PollControl(ZigbeeChannel):
     async def check_in_response(self, tsn: int) -> None:
         """Respond to checkin command."""
         await self.checkin_response(True, self.CHECKIN_FAST_POLL_TIMEOUT, tsn=tsn)
-        await self.set_long_poll_interval(self.LONG_POLL)
+        if self._ch_pool.manufacturer_code not in self._IGNORED_MANUFACTURER_ID:
+            await self.set_long_poll_interval(self.LONG_POLL)
+        await self.fast_poll_stop()
+
+    @callback
+    def skip_manufacturer_id(self, manufacturer_code: int) -> None:
+        """Block a specific manufacturer id from changing default polling."""
+        self._IGNORED_MANUFACTURER_ID.add(manufacturer_code)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.PowerConfiguration.cluster_id)

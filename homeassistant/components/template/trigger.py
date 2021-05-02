@@ -31,6 +31,7 @@ async def async_attach_trigger(
     hass, config, action, automation_info, *, platform_type="template"
 ):
     """Listen for state changes based on configuration."""
+    trigger_id = automation_info.get("trigger_id") if automation_info else None
     value_template = config.get(CONF_VALUE_TEMPLATE)
     value_template.hass = hass
     time_delta = config.get(CONF_FOR)
@@ -100,6 +101,7 @@ async def async_attach_trigger(
         trigger_variables = {
             "for": time_delta,
             "description": description,
+            "id": trigger_id,
         }
 
         @callback
@@ -128,7 +130,7 @@ async def async_attach_trigger(
 
         trigger_variables["for"] = period
 
-        delay_cancel = async_call_later(hass, period.seconds, call_action)
+        delay_cancel = async_call_later(hass, period.total_seconds(), call_action)
 
     info = async_track_template_result(
         hass,

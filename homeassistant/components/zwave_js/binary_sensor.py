@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable, TypedDict
+from typing import TypedDict
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
@@ -25,6 +25,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
@@ -219,7 +220,9 @@ PROPERTY_SENSOR_MAPPINGS: list[PropertySensorMapping] = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave binary sensor from config entry."""
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
@@ -285,12 +288,12 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        if self.info.primary_value.command_class == CommandClass.SENSOR_BINARY:
-            # Legacy binary sensors are phased out (replaced by notification sensors)
-            # Disable by default to not confuse users
-            if self.info.node.device_class.generic.key != 0x20:
-                return False
-        return True
+        # Legacy binary sensors are phased out (replaced by notification sensors)
+        # Disable by default to not confuse users
+        return bool(
+            self.info.primary_value.command_class != CommandClass.SENSOR_BINARY
+            or self.info.node.device_class.generic.key == 0x20
+        )
 
 
 class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):

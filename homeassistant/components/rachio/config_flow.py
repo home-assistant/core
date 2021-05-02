@@ -12,11 +12,11 @@ from homeassistant.core import callback
 from .const import (
     CONF_MANUAL_RUN_MINS,
     DEFAULT_MANUAL_RUN_MINS,
+    DOMAIN,
     KEY_ID,
     KEY_STATUS,
     KEY_USERNAME,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +55,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rachio."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -78,7 +77,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_homekit(self, homekit_info):
+    async def async_step_homekit(self, discovery_info):
         """Handle HomeKit discovery."""
         if self._async_current_entries():
             # We can see rachio on the network to tell them to configure
@@ -89,7 +88,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # add a new one via "+"
             return self.async_abort(reason="already_configured")
         properties = {
-            key.lower(): value for (key, value) in homekit_info["properties"].items()
+            key.lower(): value for (key, value) in discovery_info["properties"].items()
         }
         await self.async_set_unique_id(properties["id"])
         return await self.async_step_user()

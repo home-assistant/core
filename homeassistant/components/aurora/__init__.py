@@ -1,6 +1,5 @@
 """The aurora component."""
 
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -10,7 +9,6 @@ from auroranoaa import AuroraForecast
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -35,13 +33,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["binary_sensor", "sensor"]
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Aurora component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -69,34 +60,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         threshold=threshold,
     )
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
-
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: coordinator,
         AURORA_API: api,
     }
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 

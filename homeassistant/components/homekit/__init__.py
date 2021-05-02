@@ -50,6 +50,7 @@ from . import (  # noqa: F401
     type_lights,
     type_locks,
     type_media_players,
+    type_remotes,
     type_security_systems,
     type_sensors,
     type_switches,
@@ -94,7 +95,6 @@ from .const import (
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     SERVICE_HOMEKIT_START,
     SHUTDOWN_TIMEOUT,
-    UNDO_UPDATE_LISTENER,
 )
 from .util import (
     accessory_friendly_name,
@@ -275,12 +275,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.title,
     )
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        HOMEKIT: homekit,
-        UNDO_UPDATE_LISTENER: entry.add_update_listener(_async_update_listener),
-    }
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, homekit.async_stop)
+    )
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, homekit.async_stop)
+    hass.data[DOMAIN][entry.entry_id] = {HOMEKIT: homekit}
 
     if hass.state == CoreState.running:
         await homekit.async_start()
@@ -300,9 +300,6 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     dismiss_setup_message(hass, entry.entry_id)
-
-    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
-
     homekit = hass.data[DOMAIN][entry.entry_id][HOMEKIT]
 
     if homekit.status == STATUS_RUNNING:
@@ -678,7 +675,8 @@ class HomeKit:
                 self.add_bridge_accessory(state)
             acc = self.bridge
 
-        await self.hass.async_add_executor_job(self.driver.add_accessory, acc)
+        # No need to load/persist as we do it in setup
+        self.driver.accessory = acc
 
     async def async_stop(self, *args):
         """Stop the accessory driver."""

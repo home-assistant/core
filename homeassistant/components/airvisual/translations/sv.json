@@ -5,12 +5,6 @@
             "invalid_api_key": "Ogiltig API-nyckel"
         },
         "step": {
-            "geography": {
-                "data": {
-                    "latitude": "Latitud",
-                    "longitude": "Longitud"
-                }
-            },
             "node_pro": {
                 "data": {
                     "ip_address": "Enhets IP-adress / v\u00e4rdnamn",

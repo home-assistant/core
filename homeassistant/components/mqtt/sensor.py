@@ -7,7 +7,7 @@ import functools
 import voluptuous as vol
 
 from homeassistant.components import sensor
-from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
+from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
@@ -15,12 +15,11 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from . import CONF_QOS, CONF_STATE_TOPIC, DOMAIN, PLATFORMS, subscription
@@ -49,7 +48,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT sensors through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
@@ -71,7 +70,7 @@ async def _async_setup_entity(
     async_add_entities([MqttSensor(hass, config, config_entry, discovery_data)])
 
 
-class MqttSensor(MqttEntity, Entity):
+class MqttSensor(MqttEntity, SensorEntity):
     """Representation of a sensor that can be updated using MQTT."""
 
     def __init__(self, hass, config, config_entry, discovery_data):

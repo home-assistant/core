@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import gpslogger, zone
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.gpslogger import DOMAIN, TRACKER_UPDATE
@@ -69,7 +69,7 @@ async def webhook_id(hass, gpslogger_client):
         {"internal_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM, result
 
@@ -117,14 +117,14 @@ async def test_enter_and_exit(hass, gpslogger_client, webhook_id):
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
-    assert STATE_HOME == state_name
+    assert state_name == STATE_HOME
 
     # Enter Home again
     req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
-    assert STATE_HOME == state_name
+    assert state_name == STATE_HOME
 
     data["longitude"] = 0
     data["latitude"] = 0
@@ -134,7 +134,7 @@ async def test_enter_and_exit(hass, gpslogger_client, webhook_id):
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
-    assert STATE_NOT_HOME == state_name
+    assert state_name == STATE_NOT_HOME
 
     dev_reg = dr.async_get(hass)
     assert len(dev_reg.devices) == 1
@@ -213,7 +213,7 @@ async def test_load_unload_entry(hass, gpslogger_client, webhook_id):
     await hass.async_block_till_done()
     assert req.status == HTTP_OK
     state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
-    assert STATE_HOME == state_name
+    assert state_name == STATE_HOME
     assert len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE]) == 1
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]

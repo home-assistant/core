@@ -15,10 +15,9 @@ from homeassistant.components.alexa import (
 )
 from homeassistant.components.google_assistant import const as gc, smart_home as ga
 from homeassistant.const import HTTP_OK
-from homeassistant.core import Context, callback
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.aiohttp import MockRequest
 
 from . import alexa_config, google_config, utils
@@ -31,7 +30,7 @@ class CloudClient(Interface):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         prefs: CloudPreferences,
         websession: aiohttp.ClientSession,
         alexa_user_config: dict[str, Any],
@@ -91,6 +90,7 @@ class CloudClient(Interface):
             self._alexa_config = alexa_config.AlexaConfig(
                 self._hass, self.alexa_user_config, cloud_user, self._prefs, self.cloud
             )
+            await self._alexa_config.async_initialize()
 
         return self._alexa_config
 
@@ -110,7 +110,7 @@ class CloudClient(Interface):
 
     async def logged_in(self) -> None:
         """When user logs in."""
-        await self.prefs.async_set_username(self.cloud.username)
+        is_new_user = await self.prefs.async_set_username(self.cloud.username)
 
         async def enable_alexa(_):
             """Enable Alexa."""
@@ -135,6 +135,9 @@ class CloudClient(Interface):
 
             if gconf.should_report_state:
                 gconf.async_enable_report_state()
+
+            if is_new_user:
+                await gconf.async_sync_entities(gconf.agent_user_id)
 
         tasks = []
 

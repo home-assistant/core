@@ -4,7 +4,7 @@ import logging
 import CO2Signal
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
@@ -13,7 +13,6 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 CONF_COUNTRY_CODE = "country_code"
 
@@ -52,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devs, True)
 
 
-class CO2Sensor(Entity):
+class CO2Sensor(SensorEntity):
     """Implementation of the CO2Signal sensor."""
 
     def __init__(self, token, country_code, lat, lon):

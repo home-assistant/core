@@ -21,6 +21,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_ABSOLUTE_POSITION,
+    ATTR_AVAILABLE,
     ATTR_WIDTH,
     DOMAIN,
     KEY_COORDINATOR,
@@ -160,7 +161,13 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._blind.available
+        if self.coordinator.data is None:
+            return False
+
+        if not self.coordinator.data[KEY_GATEWAY][ATTR_AVAILABLE]:
+            return False
+
+        return self.coordinator.data[self._blind.mac][ATTR_AVAILABLE]
 
     @property
     def current_cover_position(self):

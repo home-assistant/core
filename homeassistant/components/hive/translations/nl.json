@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Account is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol",
             "unknown_entry": "Kan bestaand item niet vinden."
         },
         "error": {
@@ -16,6 +17,7 @@
                 "data": {
                     "2fa": "Tweefactorauthenticatiecode"
                 },
+                "description": "Voer uw Hive-verificatiecode in. \n \n Voer code 0000 in om een andere code aan te vragen.",
                 "title": "Hive tweefactorauthenticatie"
             },
             "reauth": {
@@ -32,6 +34,7 @@
                     "scan_interval": "Scaninterval (seconden)",
                     "username": "Gebruikersnaam"
                 },
+                "description": "Voer uw Hive login informatie en configuratie in.",
                 "title": "Hive-aanmelding"
             }
         }
@@ -42,6 +45,7 @@
                 "data": {
                     "scan_interval": "Scaninterval (seconden)"
                 },
+                "description": "Werk het scaninterval bij om vaker gegevens op te vragen.",
                 "title": "Opties voor Hive"
             }
         }

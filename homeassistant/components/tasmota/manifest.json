@@ -3,8 +3,9 @@
   "name": "Tasmota",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tasmota",
-  "requirements": ["hatasmota==0.2.9"],
+  "requirements": ["hatasmota==0.2.11"],
   "dependencies": ["mqtt"],
   "mqtt": ["tasmota/discovery/#"],
-  "codeowners": ["@emontnemery"]
+  "codeowners": ["@emontnemery"],
+  "iot_class": "local_push"
 }

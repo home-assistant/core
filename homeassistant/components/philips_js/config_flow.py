@@ -17,12 +17,7 @@ from homeassistant.const import (
 )
 
 from . import LOGGER
-from .const import (  # pylint:disable=unused-import
-    CONF_SYSTEM,
-    CONST_APP_ID,
-    CONST_APP_NAME,
-    DOMAIN,
-)
+from .const import CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME, DOMAIN
 
 
 async def validate_input(
@@ -44,7 +39,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Philips TV."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self) -> None:
         """Initialize flow."""

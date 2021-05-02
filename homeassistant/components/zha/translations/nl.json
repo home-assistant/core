@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Kan geen verbinding maken"
         },
+        "flow_title": "ZHA: {name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -30,6 +31,19 @@
                 "description": "Selecteer seri\u00eble poort voor Zigbee-radio",
                 "title": "ZHA"
             }
+        }
+    },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "Code vereist voor inschakelacties",
+            "alarm_failed_tries": "Het aantal opeenvolgende foute codes om het alarm te activeren",
+            "alarm_master_code": "Mastercode voor het alarm bedieningspaneel",
+            "title": "Alarm bedieningspaneel Opties"
+        },
+        "zha_options": {
+            "default_light_transition": "Standaard licht transitietijd (seconden)",
+            "enable_identify_on_join": "Schakel het identificatie-effect in wanneer apparaten in het netwerk komen",
+            "title": "Globale opties"
         }
     },
     "device_automation": {

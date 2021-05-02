@@ -40,7 +40,6 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a AVM Fritz!Box config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize flow."""
@@ -87,10 +86,6 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return RESULT_NOT_SUPPORTED
         except OSError:
             return RESULT_NO_DEVICES_FOUND
-
-    async def async_step_import(self, user_input=None):
-        """Handle configuration by yaml file."""
-        return await self.async_step_user(user_input)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -170,12 +165,12 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry):
+    async def async_step_reauth(self, data):
         """Trigger a reauthentication flow."""
-        self._entry = entry
-        self._host = entry.data[CONF_HOST]
-        self._name = entry.data[CONF_HOST]
-        self._username = entry.data[CONF_USERNAME]
+        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        self._host = data[CONF_HOST]
+        self._name = data[CONF_HOST]
+        self._username = data[CONF_USERNAME]
 
         return await self.async_step_reauth_confirm()
 

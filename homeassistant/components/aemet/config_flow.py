@@ -6,14 +6,11 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
-from .const import DEFAULT_NAME
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DEFAULT_NAME, DOMAIN
 
 
 class AemetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for AEMET OpenData."""
-
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""

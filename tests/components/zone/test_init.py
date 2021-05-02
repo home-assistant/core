@@ -144,7 +144,7 @@ async def test_active_zone_skips_passive_zones_2(hass):
     )
     await hass.async_block_till_done()
     active = zone.async_active_zone(hass, 32.880700, -117.237561)
-    assert "zone.active_zone" == active.entity_id
+    assert active.entity_id == "zone.active_zone"
 
 
 async def test_active_zone_prefers_smaller_zone_if_same_distance(hass):
@@ -173,7 +173,7 @@ async def test_active_zone_prefers_smaller_zone_if_same_distance(hass):
     )
 
     active = zone.async_active_zone(hass, latitude, longitude)
-    assert "zone.small_zone" == active.entity_id
+    assert active.entity_id == "zone.small_zone"
 
 
 async def test_active_zone_prefers_smaller_zone_if_same_distance_2(hass):
@@ -196,7 +196,7 @@ async def test_active_zone_prefers_smaller_zone_if_same_distance_2(hass):
     )
 
     active = zone.async_active_zone(hass, latitude, longitude)
-    assert "zone.smallest_zone" == active.entity_id
+    assert active.entity_id == "zone.smallest_zone"
 
 
 async def test_in_zone_works_for_passive_zones(hass):

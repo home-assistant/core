@@ -59,7 +59,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     """Handle a UniFi config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback
@@ -192,8 +191,11 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, config_entry: dict):
+    async def async_step_reauth(self, data: dict):
         """Trigger a reauthentication flow."""
+        config_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
         self.reauth_config_entry = config_entry
 
         self.context["title_placeholders"] = {

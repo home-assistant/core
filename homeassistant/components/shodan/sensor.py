@@ -5,10 +5,9 @@ import logging
 import shodan
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([ShodanSensor(data, name)], True)
 
 
-class ShodanSensor(Entity):
+class ShodanSensor(SensorEntity):
     """Representation of the Shodan sensor."""
 
     def __init__(self, data, name):

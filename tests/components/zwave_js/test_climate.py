@@ -9,9 +9,12 @@ from homeassistant.components.climate.const import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    CURRENT_HVAC_COOL,
     CURRENT_HVAC_IDLE,
     DOMAIN as CLIMATE_DOMAIN,
     HVAC_MODE_COOL,
@@ -348,7 +351,10 @@ async def test_thermostat_different_endpoints(
     """Test an entity with values on a different endpoint from the primary value."""
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
 
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.8
+    assert state.attributes[ATTR_FAN_MODE] == "Auto low"
+    assert state.attributes[ATTR_FAN_STATE] == "Idle / off"
+    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
 
 
 async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integration):
@@ -432,6 +438,7 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
 
 async def test_thermostat_heatit(hass, client, climate_heatit_z_trm3, integration):
     """Test a thermostat v2 command class entity."""
+    node = climate_heatit_z_trm3
     state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
 
     assert state
@@ -444,6 +451,54 @@ async def test_thermostat_heatit(hass, client, climate_heatit_z_trm3, integratio
     assert state.attributes[ATTR_TEMPERATURE] == 22.5
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TARGET_TEMPERATURE
+    assert state.attributes[ATTR_MIN_TEMP] == 5
+    assert state.attributes[ATTR_MAX_TEMP] == 35
+
+    # Try switching to external sensor
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 24,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 2,
+                "propertyName": "Sensor mode",
+                "newValue": 4,
+                "prevValue": 2,
+            },
+        },
+    )
+    node.receive_event(event)
+    state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
+    assert state
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 0
+
+    # Try switching to floor sensor
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 24,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 2,
+                "propertyName": "Sensor mode",
+                "newValue": 0,
+                "prevValue": 4,
+            },
+        },
+    )
+    node.receive_event(event)
+    state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
+    assert state
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 25.5
 
 
 async def test_thermostat_srt321_hrt4_zw(hass, client, srt321_hrt4_zw, integration):
@@ -578,3 +633,20 @@ async def test_preset_and_no_setpoint(
     assert args["value"] == 1
 
     client.async_send_command.reset_mock()
+
+
+async def test_temp_unit_fix(
+    hass,
+    client,
+    climate_radio_thermostat_ct101_multiple_temp_units,
+    climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints,
+    integration,
+):
+    """Test temperaturee unit fix."""
+    state = hass.states.get("climate.thermostat")
+    assert state
+    assert state.attributes["current_temperature"] == 18.3
+
+    state = hass.states.get("climate.z_wave_thermostat")
+    assert state
+    assert state.attributes["current_temperature"] == 21.1

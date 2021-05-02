@@ -19,7 +19,7 @@ from homeassistant.const import (
     VOLUME_LITERS,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
+from homeassistant.helpers import device_registry as dr, template
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
@@ -567,11 +567,15 @@ def test_from_json(hass):
 def test_min(hass):
     """Test the min filter."""
     assert template.Template("{{ [1, 2, 3] | min }}", hass).async_render() == 1
+    assert template.Template("{{ min([1, 2, 3]) }}", hass).async_render() == 1
+    assert template.Template("{{ min(1, 2, 3) }}", hass).async_render() == 1
 
 
 def test_max(hass):
     """Test the max filter."""
     assert template.Template("{{ [1, 2, 3] | max }}", hass).async_render() == 3
+    assert template.Template("{{ max([1, 2, 3]) }}", hass).async_render() == 3
+    assert template.Template("{{ max(1, 2, 3) }}", hass).async_render() == 3
 
 
 def test_ord(hass):
@@ -880,41 +884,38 @@ def test_relative_time(mock_is_safe, hass):
     """Test relative_time method."""
     now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
     with patch("homeassistant.util.dt.now", return_value=now):
-        assert (
-            "1 hour"
-            == template.Template(
-                '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}',
-                hass,
-            ).async_render()
+        result = template.Template(
+            '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}',
+            hass,
+        ).async_render()
+        assert result == "1 hour"
+
+        result = template.Template(
+            '{{relative_time(strptime("2000-01-01 09:00:00 +01:00", "%Y-%m-%d %H:%M:%S %z"))}}',
+            hass,
+        ).async_render()
+        assert result == "2 hours"
+
+        result = template.Template(
+            '{{relative_time(strptime("2000-01-01 03:00:00 -06:00", "%Y-%m-%d %H:%M:%S %z"))}}',
+            hass,
+        ).async_render()
+        assert result == "1 hour"
+
+        result1 = str(
+            template.strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
         )
-        assert (
-            "2 hours"
-            == template.Template(
-                '{{relative_time(strptime("2000-01-01 09:00:00 +01:00", "%Y-%m-%d %H:%M:%S %z"))}}',
-                hass,
-            ).async_render()
-        )
-        assert (
-            "1 hour"
-            == template.Template(
-                '{{relative_time(strptime("2000-01-01 03:00:00 -06:00", "%Y-%m-%d %H:%M:%S %z"))}}',
-                hass,
-            ).async_render()
-        )
-        assert (
-            str(template.strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z"))
-            == template.Template(
-                '{{relative_time(strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z"))}}',
-                hass,
-            ).async_render()
-        )
-        assert (
-            "string"
-            == template.Template(
-                '{{relative_time("string")}}',
-                hass,
-            ).async_render()
-        )
+        result2 = template.Template(
+            '{{relative_time(strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z"))}}',
+            hass,
+        ).async_render()
+        assert result1 == result2
+
+        result = template.Template(
+            '{{relative_time("string")}}',
+            hass,
+        ).async_render()
+        assert result == "string"
 
 
 @patch(
@@ -925,55 +926,46 @@ def test_timedelta(mock_is_safe, hass):
     """Test relative_time method."""
     now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
     with patch("homeassistant.util.dt.now", return_value=now):
-        assert (
-            "0:02:00"
-            == template.Template(
-                "{{timedelta(seconds=120)}}",
-                hass,
-            ).async_render()
-        )
-        assert (
-            "1 day, 0:00:00"
-            == template.Template(
-                "{{timedelta(seconds=86400)}}",
-                hass,
-            ).async_render()
-        )
-        assert (
-            "1 day, 4:00:00"
-            == template.Template(
-                "{{timedelta(days=1, hours=4)}}",
-                hass,
-            ).async_render()
-        )
-        assert (
-            "1 hour"
-            == template.Template(
-                "{{relative_time(now() - timedelta(seconds=3600))}}",
-                hass,
-            ).async_render()
-        )
-        assert (
-            "1 day"
-            == template.Template(
-                "{{relative_time(now() - timedelta(seconds=86400))}}",
-                hass,
-            ).async_render()
-        )
-        assert (
-            "1 day"
-            == template.Template(
-                "{{relative_time(now() - timedelta(seconds=86401))}}",
-                hass,
-            ).async_render()
-        )
-        assert (
-            "15 days"
-            == template.Template(
-                "{{relative_time(now() - timedelta(weeks=2, days=1))}}",
-                hass,
-            ).async_render()
-        )
+        result = template.Template(
+            "{{timedelta(seconds=120)}}",
+            hass,
+        ).async_render()
+        assert result == "0:02:00"
+
+        result = template.Template(
+            "{{timedelta(seconds=86400)}}",
+            hass,
+        ).async_render()
+        assert result == "1 day, 0:00:00"
+
+        result = template.Template(
+            "{{timedelta(days=1, hours=4)}}", hass
+        ).async_render()
+        assert result == "1 day, 4:00:00"
+
+        result = template.Template(
+            "{{relative_time(now() - timedelta(seconds=3600))}}",
+            hass,
+        ).async_render()
+        assert result == "1 hour"
+
+        result = template.Template(
+            "{{relative_time(now() - timedelta(seconds=86400))}}",
+            hass,
+        ).async_render()
+        assert result == "1 day"
+
+        result = template.Template(
+            "{{relative_time(now() - timedelta(seconds=86401))}}",
+            hass,
+        ).async_render()
+        assert result == "1 day"
+
+        result = template.Template(
+            "{{relative_time(now() - timedelta(weeks=2, days=1))}}",
+            hass,
+        ).async_render()
+        assert result == "15 days"
 
 
 def test_regex_match(hass):
@@ -1011,6 +1003,17 @@ def test_regex_match(hass):
     assert tpl.async_render() is True
 
 
+def test_match_test(hass):
+    """Test match test."""
+    tpl = template.Template(
+        r"""
+{{ '123-456-7890' is match('(\\d{3})-(\\d{3})-(\\d{4})') }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+
 def test_regex_search(hass):
     """Test regex_search method."""
     tpl = template.Template(
@@ -1040,6 +1043,17 @@ def test_regex_search(hass):
     tpl = template.Template(
         """
 {{ ['Home Assistant test'] | regex_search('Assist') }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+
+def test_search_test(hass):
+    """Test search test."""
+    tpl = template.Template(
+        r"""
+{{ '123-456-7890' is search('(\\d{3})-(\\d{3})-(\\d{4})') }}
             """,
         hass,
     )
@@ -1490,7 +1504,7 @@ async def test_device_entities(hass):
     # Test device without entities
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={("mac", "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     info = render_to_info(hass, f"{{{{ device_entities('{device_entry.id}') }}}}")
     assert_result_info(info, [])
@@ -2279,9 +2293,6 @@ async def test_template_timeout(hass):
     tmp = template.Template("{{ states | count }}", hass)
     assert await tmp.async_render_will_timeout(3) is False
 
-    tmp2 = template.Template("{{ error_invalid + 1 }}", hass)
-    assert await tmp2.async_render_will_timeout(3) is False
-
     tmp3 = template.Template("static", hass)
     assert await tmp3.async_render_will_timeout(3) is False
 
@@ -2297,6 +2308,13 @@ async def test_template_timeout(hass):
 """
     tmp5 = template.Template(slow_template_str, hass)
     assert await tmp5.async_render_will_timeout(0.000001) is True
+
+
+async def test_template_timeout_raise(hass):
+    """Test we can raise from."""
+    tmp2 = template.Template("{{ error_invalid + 1 }}", hass)
+    with pytest.raises(TemplateError):
+        assert await tmp2.async_render_will_timeout(3) is False
 
 
 async def test_lights(hass):
@@ -2509,3 +2527,13 @@ async def test_parse_result(hass):
         ("0011101.00100001010001", "0011101.00100001010001"),
     ):
         assert template.Template(tpl, hass).async_render() == result
+
+
+async def test_undefined_variable(hass, caplog):
+    """Test a warning is logged on undefined variables."""
+    tpl = template.Template("{{ no_such_variable }}", hass)
+    assert tpl.async_render() == ""
+    assert (
+        "Template variable warning: 'no_such_variable' is undefined when rendering '{{ no_such_variable }}'"
+        in caplog.text
+    )

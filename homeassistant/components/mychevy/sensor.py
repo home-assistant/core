@@ -1,10 +1,9 @@
 """Support for MyChevy sensors."""
 import logging
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
 
@@ -46,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class MyChevyStatus(Entity):
+class MyChevyStatus(SensorEntity):
     """A string representing the charge mode."""
 
     _name = "MyChevy Status"
@@ -109,7 +108,7 @@ class MyChevyStatus(Entity):
         return False
 
 
-class EVSensor(Entity):
+class EVSensor(SensorEntity):
     """Base EVSensor class.
 
     The only real difference between sensors is which units and what

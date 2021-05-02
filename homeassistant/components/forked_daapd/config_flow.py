@@ -1,4 +1,5 @@
 """Config flow to configure forked-daapd devices."""
+from contextlib import suppress
 import logging
 
 from pyforked_daapd import ForkedDaapdAPI
@@ -9,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (  # pylint:disable=unused-import
+from .const import (
     CONF_LIBRESPOT_JAVA_PORT,
     CONF_MAX_PLAYLISTS,
     CONF_TTS_PAUSE_TIME,
@@ -100,7 +101,6 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a forked-daapd config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize."""
@@ -161,12 +161,10 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if discovery_info.get("properties") and discovery_info["properties"].get(
             "Machine Name"
         ):
-            try:
+            with suppress(ValueError):
                 version_num = int(
                     discovery_info["properties"].get("mtd-version", "0").split(".")[0]
                 )
-            except ValueError:
-                pass
         if version_num < 27:
             return self.async_abort(reason="not_forked_daapd")
         await self.async_set_unique_id(discovery_info["properties"]["Machine Name"])

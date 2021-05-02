@@ -4,10 +4,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import zabbix
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +78,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class ZabbixTriggerCountSensor(Entity):
+class ZabbixTriggerCountSensor(SensorEntity):
     """Get the active trigger count for all Zabbix monitored hosts."""
 
     def __init__(self, zApi, name="Zabbix"):

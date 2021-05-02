@@ -574,3 +574,18 @@ async def test_update_stream_source(hass):
 
         # Ccleanup
         stream.stop()
+
+
+async def test_worker_log(hass, caplog):
+    """Test that the worker logs the url without username and password."""
+    stream = Stream(hass, "https://abcd:efgh@foo.bar")
+    stream.add_provider(STREAM_OUTPUT_FORMAT)
+    with patch("av.open") as av_open:
+        av_open.side_effect = av.error.InvalidDataError(-2, "error")
+        segment_buffer = SegmentBuffer(stream.outputs)
+        stream_worker(
+            "https://abcd:efgh@foo.bar", {}, segment_buffer, threading.Event()
+        )
+        await hass.async_block_till_done()
+    assert "https://abcd:efgh@foo.bar" not in caplog.text
+    assert "https://****:****@foo.bar" in caplog.text

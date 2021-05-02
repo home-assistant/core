@@ -1,7 +1,7 @@
 """Support for a ScreenLogic 'circuit' switch."""
 import logging
 
-from screenlogicpy.const import ON_OFF
+from screenlogicpy.const import DATA as SL_DATA, GENERIC_CIRCUIT_NAMES, ON_OFF
 
 from homeassistant.components.switch import SwitchEntity
 
@@ -14,12 +14,13 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up entry."""
     entities = []
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator = data["coordinator"]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
 
-    for switch in data["devices"]["switch"]:
-        entities.append(ScreenLogicSwitch(coordinator, switch))
-    async_add_entities(entities, True)
+    for circuit_num, circuit in coordinator.data[SL_DATA.KEY_CIRCUITS].items():
+        enabled = circuit["name"] not in GENERIC_CIRCUIT_NAMES
+        entities.append(ScreenLogicSwitch(coordinator, circuit_num, enabled))
+
+    async_add_entities(entities)
 
 
 class ScreenLogicSwitch(ScreenlogicEntity, SwitchEntity):
@@ -44,20 +45,20 @@ class ScreenLogicSwitch(ScreenlogicEntity, SwitchEntity):
         return await self._async_set_circuit(ON_OFF.OFF)
 
     async def _async_set_circuit(self, circuit_value) -> None:
-        if await self.hass.async_add_executor_job(
-            self.gateway.set_circuit, self._data_key, circuit_value
-        ):
-            _LOGGER.debug("Screenlogic turn %s %s", circuit_value, self._data_key)
+        async with self.coordinator.api_lock:
+            success = await self.hass.async_add_executor_job(
+                self.gateway.set_circuit, self._data_key, circuit_value
+            )
+
+        if success:
+            _LOGGER.debug("Turn %s %s", self._data_key, circuit_value)
             await self.coordinator.async_request_refresh()
         else:
-            _LOGGER.info("Screenlogic turn %s %s error", circuit_value, self._data_key)
+            _LOGGER.warning(
+                "Failed to set_circuit %s %s", self._data_key, circuit_value
+            )
 
     @property
     def circuit(self):
         """Shortcut to access the circuit."""
-        return self.circuits_data[self._data_key]
-
-    @property
-    def circuits_data(self):
-        """Shortcut to access the circuits data."""
-        return self.coordinator.data["circuits"]
+        return self.coordinator.data[SL_DATA.KEY_CIRCUITS][self._data_key]

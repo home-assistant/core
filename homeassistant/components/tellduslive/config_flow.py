@@ -29,12 +29,10 @@ KEY_TOKEN_SECRET = "token_secret"
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register("tellduslive")
-class FlowHandler(config_entries.ConfigFlow):
+class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Init config flow."""
@@ -87,7 +85,7 @@ class FlowHandler(config_entries.ConfigFlow):
                     title=host,
                     data={
                         CONF_HOST: host,
-                        KEY_SCAN_INTERVAL: self._scan_interval.seconds,
+                        KEY_SCAN_INTERVAL: self._scan_interval.total_seconds(),
                         KEY_SESSION: session,
                     },
                 )
@@ -152,7 +150,7 @@ class FlowHandler(config_entries.ConfigFlow):
             title=host,
             data={
                 CONF_HOST: host,
-                KEY_SCAN_INTERVAL: self._scan_interval.seconds,
+                KEY_SCAN_INTERVAL: self._scan_interval.total_seconds(),
                 KEY_SESSION: next(iter(conf.values())),
             },
         )

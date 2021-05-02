@@ -12,7 +12,7 @@ from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 
-from .const import CONF_ENDPOINT, DOMAIN  # pylint: disable=unused-import
+from .const import CONF_ENDPOINT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +31,6 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Songpal configuration flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the flow."""

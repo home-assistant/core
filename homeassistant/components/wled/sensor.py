@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any, Callable
+from typing import Any
 
-from homeassistant.components.sensor import DEVICE_CLASS_CURRENT
+from homeassistant.components.sensor import DEVICE_CLASS_CURRENT, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_BYTES,
@@ -13,8 +13,8 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import WLEDDataUpdateCoordinator, WLEDDeviceEntity
@@ -22,9 +22,9 @@ from .const import ATTR_LED_COUNT, ATTR_MAX_POWER, CURRENT_MA, DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up WLED sensor based on a config entry."""
     coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -42,7 +42,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class WLEDSensor(WLEDDeviceEntity):
+class WLEDSensor(WLEDDeviceEntity, SensorEntity):
     """Defines a WLED sensor."""
 
     def __init__(

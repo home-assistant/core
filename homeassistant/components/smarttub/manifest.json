@@ -5,8 +5,7 @@
   "documentation": "https://www.home-assistant.io/integrations/smarttub",
   "dependencies": [],
   "codeowners": ["@mdz"],
-  "requirements": [
-      "python-smarttub==0.0.19"
-  ],
-  "quality_scale": "platinum"
+  "requirements": ["python-smarttub==0.0.24"],
+  "quality_scale": "platinum",
+  "iot_class": "cloud_polling"
 }

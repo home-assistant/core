@@ -1,6 +1,6 @@
 """Support for Coinbase sensors."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.helpers.entity import Entity
 
 ATTR_NATIVE_BALANCE = "Balance in native currency"
 
@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([sensor], True)
 
 
-class AccountSensor(Entity):
+class AccountSensor(SensorEntity):
     """Representation of a Coinbase.com sensor."""
 
     def __init__(self, coinbase_data, name, currency):
@@ -88,7 +88,7 @@ class AccountSensor(Entity):
                 self._native_currency = account["native_balance"]["currency"]
 
 
-class ExchangeRateSensor(Entity):
+class ExchangeRateSensor(SensorEntity):
     """Representation of a Coinbase.com sensor."""
 
     def __init__(self, coinbase_data, exchange_currency, native_currency):

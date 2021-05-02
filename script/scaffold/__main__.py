@@ -99,7 +99,7 @@ def main():
     if args.develop:
         print("Running tests")
         print(f"$ pytest -vvv tests/components/{info.domain}")
-        subprocess.run(["pytest", "-vvv", "tests/components/{info.domain}"])
+        subprocess.run(["pytest", "-vvv", f"tests/components/{info.domain}"])
         print()
 
     docs.print_relevant_docs(args.template, info)

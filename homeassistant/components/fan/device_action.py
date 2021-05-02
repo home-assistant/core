@@ -62,8 +62,6 @@ async def async_call_action_from_config(
     hass: HomeAssistant, config: dict, variables: dict, context: Context | None
 ) -> None:
     """Execute a device action."""
-    config = ACTION_SCHEMA(config)
-
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
 
     if config[CONF_TYPE] == "turn_on":

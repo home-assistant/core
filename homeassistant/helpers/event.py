@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Iterable
 import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
 import logging
 import time
-from typing import Any, Awaitable, Callable, Iterable, List
+from typing import Any, Callable, List, cast
 
 import attr
 
@@ -790,12 +791,14 @@ class _TrackTemplateResultInfo:
         self._track_state_changes: _TrackStateChangeFiltered | None = None
         self._time_listeners: dict[Template, Callable] = {}
 
-    def async_setup(self, raise_on_template_error: bool) -> None:
+    def async_setup(self, raise_on_template_error: bool, strict: bool = False) -> None:
         """Activation of template tracking."""
         for track_template_ in self._track_templates:
             template = track_template_.template
             variables = track_template_.variables
-            self._info[template] = info = template.async_render_to_info(variables)
+            self._info[template] = info = template.async_render_to_info(
+                variables, strict=strict
+            )
 
             if info.exception:
                 if raise_on_template_error:
@@ -1022,6 +1025,7 @@ def async_track_template_result(
     track_templates: Iterable[TrackTemplate],
     action: TrackTemplateResultListener,
     raise_on_template_error: bool = False,
+    strict: bool = False,
 ) -> _TrackTemplateResultInfo:
     """Add a listener that fires when the result of a template changes.
 
@@ -1050,6 +1054,8 @@ def async_track_template_result(
         processing the template during setup, the system
         will raise the exception instead of setting up
         tracking.
+    strict
+        When set to True, raise on undefined variables.
 
     Returns
     -------
@@ -1057,7 +1063,7 @@ def async_track_template_result(
 
     """
     tracker = _TrackTemplateResultInfo(hass, track_templates, action)
-    tracker.async_setup(raise_on_template_error)
+    tracker.async_setup(raise_on_template_error, strict=strict)
     return tracker
 
 
@@ -1165,12 +1171,10 @@ def async_track_point_in_utc_time(
 
     # Since this is called once, we accept a HassJob so we can avoid
     # having to figure out how to call the action every time its called.
-    job = action if isinstance(action, HassJob) else HassJob(action)
-
     cancel_callback: asyncio.TimerHandle | None = None
 
     @callback
-    def run_action() -> None:
+    def run_action(job: HassJob) -> None:
         """Call the action."""
         nonlocal cancel_callback
 
@@ -1185,13 +1189,14 @@ def async_track_point_in_utc_time(
         if delta > 0:
             _LOGGER.debug("Called %f seconds too early, rearming", delta)
 
-            cancel_callback = hass.loop.call_later(delta, run_action)
+            cancel_callback = hass.loop.call_later(delta, run_action, job)
             return
 
         hass.async_run_hass_job(job, utc_point_in_time)
 
+    job = action if isinstance(action, HassJob) else HassJob(action)
     delta = utc_point_in_time.timestamp() - time.time()
-    cancel_callback = hass.loop.call_later(delta, run_action)
+    cancel_callback = hass.loop.call_later(delta, run_action, job)
 
     @callback
     def unsub_point_in_time_listener() -> None:
@@ -1448,10 +1453,10 @@ def process_state_match(parameter: None | str | Iterable[str]) -> Callable[[str]
 @callback
 def _entities_domains_from_render_infos(
     render_infos: Iterable[RenderInfo],
-) -> tuple[set, set]:
+) -> tuple[set[str], set[str]]:
     """Combine from multiple RenderInfo."""
-    entities = set()
-    domains = set()
+    entities: set[str] = set()
+    domains: set[str] = set()
 
     for render_info in render_infos:
         if render_info.entities:
@@ -1492,7 +1497,7 @@ def _render_infos_to_track_states(render_infos: Iterable[RenderInfo]) -> TrackSt
 @callback
 def _event_triggers_rerender(event: Event, info: RenderInfo) -> bool:
     """Determine if a template should be re-rendered from an event."""
-    entity_id = event.data.get(ATTR_ENTITY_ID)
+    entity_id = cast(str, event.data.get(ATTR_ENTITY_ID))
 
     if info.filter(entity_id):
         return True

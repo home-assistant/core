@@ -16,10 +16,10 @@ from . import (
     CONF_NIGHTLIGHT_SWITCH_TYPE,
     CONF_SAVE_ON_CHANGE,
     CONF_TRANSITION,
+    DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
     _async_unique_name,
 )
-from . import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Yeelight."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback

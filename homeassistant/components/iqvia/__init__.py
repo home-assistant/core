@@ -6,6 +6,7 @@ from functools import partial
 from pyiqvia import Client
 from pyiqvia.errors import IQVIAError
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
@@ -35,15 +36,10 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass, config):
-    """Set up the IQVIA component."""
-    hass.data[DOMAIN] = {DATA_COORDINATOR: {}}
-    return True
-
-
 async def async_setup_entry(hass, entry):
     """Set up IQVIA as config entry."""
-    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
+    hass.data.setdefault(DOMAIN, {})
+    coordinators = {}
 
     if not entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
@@ -71,45 +67,32 @@ async def async_setup_entry(hass, entry):
         (TYPE_DISEASE_FORECAST, client.disease.extended),
         (TYPE_DISEASE_INDEX, client.disease.current),
     ]:
-        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
-            sensor_type
-        ] = DataUpdateCoordinator(
+        coordinator = coordinators[sensor_type] = DataUpdateCoordinator(
             hass,
             LOGGER,
             name=f"{entry.data[CONF_ZIP_CODE]} {sensor_type}",
             update_interval=DEFAULT_SCAN_INTERVAL,
             update_method=partial(async_get_data_from_api, api_coro),
         )
-        init_data_update_tasks.append(coordinator.async_refresh())
+        init_data_update_tasks.append(coordinator.async_config_entry_first_refresh())
 
     await asyncio.gather(*init_data_update_tasks)
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.data[DOMAIN].setdefault(DATA_COORDINATOR, {})[entry.entry_id] = coordinators
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload an OpenUV config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
-
     return unload_ok
 
 
-class IQVIAEntity(CoordinatorEntity):
+class IQVIAEntity(CoordinatorEntity, SensorEntity):
     """Define a base IQVIA entity."""
 
     def __init__(self, coordinator, entry, sensor_type, name, icon):

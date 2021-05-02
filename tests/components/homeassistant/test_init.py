@@ -137,28 +137,28 @@ class TestComponentsCore(unittest.TestCase):
         calls = mock_service(self.hass, "light", SERVICE_TURN_ON)
         turn_on(self.hass)
         self.hass.block_till_done()
-        assert 0 == len(calls)
+        assert len(calls) == 0
 
     def test_turn_on(self):
         """Test turn_on method."""
         calls = mock_service(self.hass, "light", SERVICE_TURN_ON)
         turn_on(self.hass, "light.Ceiling")
         self.hass.block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
     def test_turn_off(self):
         """Test turn_off method."""
         calls = mock_service(self.hass, "light", SERVICE_TURN_OFF)
         turn_off(self.hass, "light.Bowl")
         self.hass.block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
     def test_toggle(self):
         """Test toggle method."""
         calls = mock_service(self.hass, "light", SERVICE_TOGGLE)
         toggle(self.hass, "light.Bowl")
         self.hass.block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
     @patch("homeassistant.config.os.path.isfile", Mock(return_value=True))
     def test_reload_core_conf(self):
@@ -212,22 +212,6 @@ class TestComponentsCore(unittest.TestCase):
 
         assert mock_error.called
         assert mock_process.called is False
-
-    @patch("homeassistant.core.HomeAssistant.async_stop", return_value=None)
-    def test_stop_homeassistant(self, mock_stop):
-        """Test stop service."""
-        stop(self.hass)
-        self.hass.block_till_done()
-        assert mock_stop.called
-
-    @patch("homeassistant.core.HomeAssistant.async_stop", return_value=None)
-    @patch("homeassistant.config.async_check_ha_config_file", return_value=None)
-    def test_restart_homeassistant(self, mock_check, mock_restart):
-        """Test stop service."""
-        restart(self.hass)
-        self.hass.block_till_done()
-        assert mock_restart.called
-        assert mock_check.called
 
     @patch("homeassistant.core.HomeAssistant.async_stop", return_value=None)
     @patch(
@@ -447,3 +431,115 @@ async def test_reload_config_entry_by_entry_id(hass):
 
     assert len(mock_reload.mock_calls) == 1
     assert mock_reload.mock_calls[0][1][0] == "8955375327824e14ba89e4b29cc3ec9a"
+
+
+@pytest.mark.parametrize(
+    "service", [SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP]
+)
+async def test_raises_when_db_upgrade_in_progress(hass, service, caplog):
+    """Test an exception is raised when the database migration is in progress."""
+    await async_setup_component(hass, "homeassistant", {})
+
+    with pytest.raises(HomeAssistantError), patch(
+        "homeassistant.helpers.recorder.async_migration_in_progress",
+        return_value=True,
+    ) as mock_async_migration_in_progress:
+        await hass.services.async_call(
+            "homeassistant",
+            service,
+            blocking=True,
+        )
+        assert "The system cannot" in caplog.text
+        assert "while a database upgrade in progress" in caplog.text
+
+    assert mock_async_migration_in_progress.called
+    caplog.clear()
+
+    with patch(
+        "homeassistant.helpers.recorder.async_migration_in_progress",
+        return_value=False,
+    ) as mock_async_migration_in_progress, patch(
+        "homeassistant.config.async_check_ha_config_file", return_value=None
+    ):
+        await hass.services.async_call(
+            "homeassistant",
+            service,
+            blocking=True,
+        )
+        assert "The system cannot" not in caplog.text
+        assert "while a database upgrade in progress" not in caplog.text
+
+    assert mock_async_migration_in_progress.called
+
+
+async def test_raises_when_config_is_invalid(hass, caplog):
+    """Test an exception is raised when the configuration is invalid."""
+    await async_setup_component(hass, "homeassistant", {})
+
+    with pytest.raises(HomeAssistantError), patch(
+        "homeassistant.helpers.recorder.async_migration_in_progress",
+        return_value=False,
+    ), patch(
+        "homeassistant.config.async_check_ha_config_file", return_value=["Error 1"]
+    ) as mock_async_check_ha_config_file:
+        await hass.services.async_call(
+            "homeassistant",
+            SERVICE_HOMEASSISTANT_RESTART,
+            blocking=True,
+        )
+        assert "The system cannot" in caplog.text
+        assert "because the configuration is not valid" in caplog.text
+        assert "Error 1" in caplog.text
+
+    assert mock_async_check_ha_config_file.called
+    caplog.clear()
+
+    with patch(
+        "homeassistant.helpers.recorder.async_migration_in_progress",
+        return_value=False,
+    ), patch(
+        "homeassistant.config.async_check_ha_config_file", return_value=None
+    ) as mock_async_check_ha_config_file:
+        await hass.services.async_call(
+            "homeassistant",
+            SERVICE_HOMEASSISTANT_RESTART,
+            blocking=True,
+        )
+
+    assert mock_async_check_ha_config_file.called
+
+
+async def test_restart_homeassistant(hass):
+    """Test we can restart when there is no configuration error."""
+    await async_setup_component(hass, "homeassistant", {})
+    with patch(
+        "homeassistant.config.async_check_ha_config_file", return_value=None
+    ) as mock_check, patch(
+        "homeassistant.core.HomeAssistant.async_stop", return_value=None
+    ) as mock_restart:
+        await hass.services.async_call(
+            "homeassistant",
+            SERVICE_HOMEASSISTANT_RESTART,
+            blocking=True,
+        )
+        assert mock_check.called
+        await hass.async_block_till_done()
+        assert mock_restart.called
+
+
+async def test_stop_homeassistant(hass):
+    """Test we can stop when there is a configuration error."""
+    await async_setup_component(hass, "homeassistant", {})
+    with patch(
+        "homeassistant.config.async_check_ha_config_file", return_value=None
+    ) as mock_check, patch(
+        "homeassistant.core.HomeAssistant.async_stop", return_value=None
+    ) as mock_restart:
+        await hass.services.async_call(
+            "homeassistant",
+            SERVICE_HOMEASSISTANT_STOP,
+            blocking=True,
+        )
+        assert not mock_check.called
+        await hass.async_block_till_done()
+        assert mock_restart.called

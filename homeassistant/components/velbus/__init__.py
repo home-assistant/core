@@ -1,5 +1,4 @@
 """Support for Velbus devices."""
-import asyncio
 import logging
 
 import velbus
@@ -7,10 +6,10 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import CONF_MEMO_TEXT, DOMAIN, SERVICE_SET_MEMO_TEXT
 
@@ -44,7 +43,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Establish connection with velbus."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -109,19 +108,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Remove the velbus connection."""
-    await asyncio.wait(
-        [
-            hass.config_entries.async_forward_entry_unload(entry, platform)
-            for platform in PLATFORMS
-        ]
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     hass.data[DOMAIN][entry.entry_id]["cntrl"].stop()
     hass.data[DOMAIN].pop(entry.entry_id)
     if not hass.data[DOMAIN]:
         hass.data.pop(DOMAIN)
-    return True
+    return unload_ok
 
 
 class VelbusEntity(Entity):

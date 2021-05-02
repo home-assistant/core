@@ -28,7 +28,7 @@ from withings_api.common import (
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
     HTTP_UNAUTHORIZED,
@@ -740,7 +740,7 @@ class DataManager:
                 context = {
                     const.PROFILE: self._profile,
                     "userid": self._user_id,
-                    "source": "reauth",
+                    "source": SOURCE_REAUTH,
                 }
 
                 # Check if reauth flow already exists.
@@ -774,8 +774,12 @@ class DataManager:
     async def async_get_measures(self) -> dict[MeasureType, Any]:
         """Get the measures data."""
         _LOGGER.debug("Updating withings measures")
+        now = dt.utcnow()
+        startdate = now - datetime.timedelta(days=7)
 
-        response = await self._hass.async_add_executor_job(self._api.measure_get_meas)
+        response = await self._hass.async_add_executor_job(
+            self._api.measure_get_meas, None, None, startdate, now, None, startdate
+        )
 
         # Sort from oldest to newest.
         groups = sorted(
@@ -966,11 +970,6 @@ class BaseWithingsSensor(Entity):
     def unique_id(self) -> str:
         """Return a unique, Home Assistant friendly identifier for this entity."""
         return self._unique_id
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return self._attribute.unit_of_measurement
 
     @property
     def icon(self) -> str:

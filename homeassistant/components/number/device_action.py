@@ -55,11 +55,6 @@ async def async_call_action_from_config(
     hass: HomeAssistant, config: dict, variables: dict, context: Context | None
 ) -> None:
     """Execute a device action."""
-    config = ACTION_SCHEMA(config)
-
-    if config[CONF_TYPE] != ATYP_SET_VALUE:
-        return
-
     await hass.services.async_call(
         DOMAIN,
         const.SERVICE_SET_VALUE,
@@ -74,11 +69,6 @@ async def async_call_action_from_config(
 
 async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> dict:
     """List action capabilities."""
-    action_type = config[CONF_TYPE]
-
-    if action_type != ATYP_SET_VALUE:
-        return {}
-
     fields = {vol.Required(const.ATTR_VALUE): vol.Coerce(float)}
 
     return {"extra_fields": vol.Schema(fields)}

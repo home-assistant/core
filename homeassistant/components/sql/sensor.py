@@ -2,22 +2,29 @@
 import datetime
 import decimal
 import logging
+import re
 
 import sqlalchemy
 from sqlalchemy.orm import scoped_session, sessionmaker
 import voluptuous as vol
 
 from homeassistant.components.recorder import CONF_DB_URL, DEFAULT_DB_FILE, DEFAULT_URL
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_COLUMN_NAME = "column"
 CONF_QUERIES = "queries"
 CONF_QUERY = "query"
+
+DB_URL_RE = re.compile("//.*:.*@")
+
+
+def redact_credentials(data):
+    """Redact credentials from string data."""
+    return DB_URL_RE.sub("//****:****@", data)
 
 
 def validate_sql_select(value):
@@ -48,6 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if not db_url:
         db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
 
+    sess = None
     try:
         engine = sqlalchemy.create_engine(db_url)
         sessmaker = scoped_session(sessionmaker(bind=engine))
@@ -57,10 +65,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         sess.execute("SELECT 1;")
 
     except sqlalchemy.exc.SQLAlchemyError as err:
-        _LOGGER.error("Couldn't connect using %s DB_URL: %s", db_url, err)
+        _LOGGER.error(
+            "Couldn't connect using %s DB_URL: %s",
+            redact_credentials(db_url),
+            redact_credentials(str(err)),
+        )
         return
     finally:
-        sess.close()
+        if sess:
+            sess.close()
 
     queries = []
 
@@ -90,7 +103,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(queries, True)
 
 
-class SQLSensor(Entity):
+class SQLSensor(SensorEntity):
     """Representation of an SQL sensor."""
 
     def __init__(self, name, sessmaker, query, column, unit, value_template):
@@ -138,7 +151,7 @@ class SQLSensor(Entity):
                 self._state = None
                 return
 
-            for res in result:
+            for res in result.mappings():
                 _LOGGER.debug("result = %s", res.items())
                 data = res[self._column_name]
                 for key, value in res.items():
@@ -148,7 +161,11 @@ class SQLSensor(Entity):
                         value = str(value)
                     self._attributes[key] = value
         except sqlalchemy.exc.SQLAlchemyError as err:
-            _LOGGER.error("Error executing query %s: %s", self._query, err)
+            _LOGGER.error(
+                "Error executing query %s: %s",
+                self._query,
+                redact_credentials(str(err)),
+            )
             return
         finally:
             sess.close()
