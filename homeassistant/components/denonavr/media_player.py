@@ -246,7 +246,6 @@ class DenonDevice(MediaPlayerEntity):
             "manufacturer": self._config_entry.data[CONF_MANUFACTURER],
             "name": self._config_entry.title,
             "model": f"{self._config_entry.data[CONF_MODEL]}-{self._config_entry.data[CONF_TYPE]}",
-            "serial_number": self._config_entry.data[CONF_SERIAL_NUMBER],
         }
 
         return device_info
