@@ -42,7 +42,7 @@ class TotalConnectAlarm(alarm.AlarmControlPanelEntity):
         """Initialize the TotalConnect status."""
         self._name = name
         self._location_id = location_id
-        self._unique_id = f"{location_id}"
+        self._unique_id = str(location_id)
         self._client = client
         self._state = None
         self._extra_state_attributes = {}
