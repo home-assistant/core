@@ -8,5 +8,10 @@
   "homekit": {
     "models": ["tado", "AC02"]
   },
+  "dhcp": [
+    {
+      "hostname": "tado*"
+    }
+  ],
   "iot_class": "cloud_polling"
 }
