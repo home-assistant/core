@@ -1,27 +1,27 @@
 {
-  "config": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    },
-    "error": {
-      "invalid_url": "Invalid URL",
-      "syncthru_not_supported": "Device does not support SyncThru",
-      "unknown_state": "Printer state unknown, verify URL and network connectivity"
-    },
-    "flow_title": "Samsung SyncThru Printer: {name}",
-    "step": {
-      "confirm": {
-        "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "url": "[%key:component::syncthru::config::step::user::data::url%]"
+    "config": {
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        },
+        "error": {
+            "invalid_url": "Invalid URL",
+            "syncthru_not_supported": "Device does not support SyncThru",
+            "unknown_state": "Printer state unknown, verify URL and network connectivity"
+        },
+        "flow_title": "Samsung SyncThru Printer: {name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "name": "[%key:common::config_flow::data::name%]",
+                    "url": "[%key:component::syncthru::config::step::user::data::url%]"
+                }
+            },
+            "user": {
+                "data": {
+                    "name": "[%key:common::config_flow::data::name%]",
+                    "url": "Web interface URL"
+                }
+            }
         }
-      },
-      "user": {
-        "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "url": "Web interface URL"
-        }
-      }
     }
-  }
 }

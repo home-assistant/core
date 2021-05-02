@@ -45,13 +45,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise ConfigEntryNotReady
             return printer
 
-    coordinator = hass.data[DOMAIN][entry.entry_id] = DataUpdateCoordinator(
+    coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name=DOMAIN,
         update_method=async_update_data,
         update_interval=timedelta(seconds=30),
     )
+    hass.data[DOMAIN][entry.entry_id] = coordinator
     await coordinator.async_config_entry_first_refresh()
 
     device_registry = await dr.async_get_registry(hass)
@@ -74,12 +75,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def device_identifiers(printer: SyncThru) -> set[tuple[str, ...]]:
+def device_identifiers(printer: SyncThru):
     """Get device identifiers for device registry."""
     return {(DOMAIN, printer.serial_number())}
 
 
-def device_connections(printer: SyncThru) -> set[tuple[str, str]]:
+def device_connections(printer: SyncThru):
     """Get device connections for device registry."""
     connections = set()
     try:
