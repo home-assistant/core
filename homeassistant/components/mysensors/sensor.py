@@ -1,6 +1,4 @@
 """Support for MySensors sensors."""
-from typing import Callable
-
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components import mysensors
@@ -25,8 +23,9 @@ from homeassistant.const import (
     VOLT,
     VOLUME_CUBIC_METERS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 SENSORS = {
     "V_TEMP": [None, "mdi:thermometer"],
@@ -64,7 +63,9 @@ SENSORS = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ):
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
 

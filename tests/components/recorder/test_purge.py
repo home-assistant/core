@@ -2,9 +2,9 @@
 from datetime import datetime, timedelta
 import json
 import sqlite3
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-from sqlalchemy.exc import DatabaseError
+from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
 
 from homeassistant.components import recorder
@@ -12,7 +12,8 @@ from homeassistant.components.recorder.models import Events, RecorderRuns, State
 from homeassistant.components.recorder.purge import purge_old_data
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import EVENT_STATE_CHANGED
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .common import (
@@ -25,7 +26,7 @@ from .conftest import SetupRecorderInstanceT
 
 
 async def test_purge_old_states(
-    hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
     """Test deleting old states."""
     instance = await async_setup_recorder_instance(hass)
@@ -57,7 +58,7 @@ async def test_purge_old_states(
 
 
 async def test_purge_old_states_encouters_database_corruption(
-    hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
     """Test database image image is malformed while deleting old states."""
     instance = await async_setup_recorder_instance(hass)
@@ -88,8 +89,69 @@ async def test_purge_old_states_encouters_database_corruption(
         assert states_after_purge.count() == 0
 
 
+async def test_purge_old_states_encounters_temporary_mysql_error(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    caplog,
+):
+    """Test retry on specific mysql operational errors."""
+    instance = await async_setup_recorder_instance(hass)
+
+    await _add_test_states(hass, instance)
+    await async_wait_recording_done_without_instance(hass)
+
+    mysql_exception = OperationalError("statement", {}, [])
+    mysql_exception.orig = MagicMock(args=(1205, "retryable"))
+
+    with patch(
+        "homeassistant.components.recorder.purge.time.sleep"
+    ) as sleep_mock, patch(
+        "homeassistant.components.recorder.purge._purge_old_recorder_runs",
+        side_effect=[mysql_exception, None],
+    ), patch.object(
+        instance.engine.dialect, "name", "mysql"
+    ):
+        await hass.services.async_call(
+            recorder.DOMAIN, recorder.SERVICE_PURGE, {"keep_days": 0}
+        )
+        await hass.async_block_till_done()
+        await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done_without_instance(hass)
+
+    assert "retrying" in caplog.text
+    assert sleep_mock.called
+
+
+async def test_purge_old_states_encounters_operational_error(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    caplog,
+):
+    """Test error on operational errors that are not mysql does not retry."""
+    instance = await async_setup_recorder_instance(hass)
+
+    await _add_test_states(hass, instance)
+    await async_wait_recording_done_without_instance(hass)
+
+    exception = OperationalError("statement", {}, [])
+
+    with patch(
+        "homeassistant.components.recorder.purge._purge_old_recorder_runs",
+        side_effect=exception,
+    ):
+        await hass.services.async_call(
+            recorder.DOMAIN, recorder.SERVICE_PURGE, {"keep_days": 0}
+        )
+        await hass.async_block_till_done()
+        await async_wait_recording_done_without_instance(hass)
+        await async_wait_recording_done_without_instance(hass)
+
+    assert "retrying" not in caplog.text
+    assert "Error purging history" in caplog.text
+
+
 async def test_purge_old_events(
-    hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
     """Test deleting old events."""
     instance = await async_setup_recorder_instance(hass)
@@ -112,7 +174,7 @@ async def test_purge_old_events(
 
 
 async def test_purge_old_recorder_runs(
-    hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
     """Test deleting old recorder runs keeps current run."""
     instance = await async_setup_recorder_instance(hass)
@@ -134,7 +196,7 @@ async def test_purge_old_recorder_runs(
 
 
 async def test_purge_method(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
     caplog,
 ):
@@ -204,12 +266,12 @@ async def test_purge_method(
 
 
 async def test_purge_edge_case(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
 ):
     """Test states and events are purged even if they occurred shortly before purge_before."""
 
-    async def _add_db_entries(hass: HomeAssistantType, timestamp: datetime) -> None:
+    async def _add_db_entries(hass: HomeAssistant, timestamp: datetime) -> None:
         with recorder.session_scope(hass=hass) as session:
             session.add(
                 Events(
@@ -261,7 +323,7 @@ async def test_purge_edge_case(
 
 
 async def test_purge_filtered_states(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
 ):
     """Test filtered states are purged."""
@@ -269,7 +331,7 @@ async def test_purge_filtered_states(
     instance = await async_setup_recorder_instance(hass, config)
     assert instance.entity_filter("sensor.excluded") is False
 
-    def _add_db_entries(hass: HomeAssistantType) -> None:
+    def _add_db_entries(hass: HomeAssistant) -> None:
         with recorder.session_scope(hass=hass) as session:
             # Add states and state_changed events that should be purged
             for days in range(1, 4):
@@ -406,14 +468,14 @@ async def test_purge_filtered_states(
 
 
 async def test_purge_filtered_events(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
 ):
     """Test filtered events are purged."""
     config: ConfigType = {"exclude": {"event_types": ["EVENT_PURGE"]}}
     instance = await async_setup_recorder_instance(hass, config)
 
-    def _add_db_entries(hass: HomeAssistantType) -> None:
+    def _add_db_entries(hass: HomeAssistant) -> None:
         with recorder.session_scope(hass=hass) as session:
             # Add events that should be purged
             for days in range(1, 4):
@@ -487,7 +549,7 @@ async def test_purge_filtered_events(
 
 
 async def test_purge_filtered_events_state_changed(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     async_setup_recorder_instance: SetupRecorderInstanceT,
 ):
     """Test filtered state_changed events are purged. This should also remove all states."""
@@ -496,7 +558,7 @@ async def test_purge_filtered_events_state_changed(
     # Assert entity_id is NOT excluded
     assert instance.entity_filter("sensor.excluded") is True
 
-    def _add_db_entries(hass: HomeAssistantType) -> None:
+    def _add_db_entries(hass: HomeAssistant) -> None:
         with recorder.session_scope(hass=hass) as session:
             # Add states and state_changed events that should be purged
             for days in range(1, 4):
@@ -591,7 +653,7 @@ async def test_purge_filtered_events_state_changed(
         assert session.query(States).get(63).old_state_id == 62  # should have been kept
 
 
-async def _add_test_states(hass: HomeAssistantType, instance: recorder.Recorder):
+async def _add_test_states(hass: HomeAssistant, instance: recorder.Recorder):
     """Add multiple states to the db for testing."""
     utcnow = dt_util.utcnow()
     five_days_ago = utcnow - timedelta(days=5)
@@ -639,7 +701,7 @@ async def _add_test_states(hass: HomeAssistantType, instance: recorder.Recorder)
             old_state_id = state.state_id
 
 
-async def _add_test_events(hass: HomeAssistantType, instance: recorder.Recorder):
+async def _add_test_events(hass: HomeAssistant, instance: recorder.Recorder):
     """Add a few events for testing."""
     utcnow = dt_util.utcnow()
     five_days_ago = utcnow - timedelta(days=5)
@@ -672,7 +734,7 @@ async def _add_test_events(hass: HomeAssistantType, instance: recorder.Recorder)
             )
 
 
-async def _add_test_recorder_runs(hass: HomeAssistantType, instance: recorder.Recorder):
+async def _add_test_recorder_runs(hass: HomeAssistant, instance: recorder.Recorder):
     """Add a few recorder_runs for testing."""
     utcnow = dt_util.utcnow()
     five_days_ago = utcnow - timedelta(days=5)

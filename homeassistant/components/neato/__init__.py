@@ -1,5 +1,4 @@
 """Support for Neato botvac connected vacuum cleaners."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -9,9 +8,10 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_TOKEN
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from . import api, config_flow
@@ -42,7 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = ["camera", "vacuum", "switch", "sensor"]
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Neato component."""
     hass.data[NEATO_DOMAIN] = {}
 
@@ -66,7 +66,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up config entry."""
     if CONF_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed
@@ -91,22 +91,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     hass.data[NEATO_LOGIN] = hub
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigType) -> bool:
     """Unload config entry."""
-    unload_functions = (
-        hass.config_entries.async_forward_entry_unload(entry, platform)
-        for platform in PLATFORMS
-    )
-
-    unload_ok = all(await asyncio.gather(*unload_functions))
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[NEATO_DOMAIN].pop(entry.entry_id)
 
@@ -116,9 +108,9 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool
 class NeatoHub:
     """A My Neato hub wrapper class."""
 
-    def __init__(self, hass: HomeAssistantType, neato: Account):
+    def __init__(self, hass: HomeAssistant, neato: Account):
         """Initialize the Neato hub."""
-        self._hass: HomeAssistantType = hass
+        self._hass = hass
         self.my_neato: Account = neato
 
     @Throttle(timedelta(minutes=1))

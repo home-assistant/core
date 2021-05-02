@@ -8,13 +8,14 @@ from __future__ import annotations
 
 import asyncio
 import binascii
+from collections.abc import Iterator
 from dataclasses import dataclass
 import functools
 import itertools
 import logging
 from random import uniform
 import re
-from typing import Any, Callable, Iterator
+from typing import Any, Callable
 
 import voluptuous as vol
 import zigpy.exceptions
@@ -30,7 +31,6 @@ from .const import (
     CUSTOM_CONFIGURATION,
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
-    ZHA_OPTIONS,
 )
 from .registries import BINDABLE_CLUSTERS
 from .typing import ZhaDeviceType, ZigpyClusterType
@@ -130,13 +130,25 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
 
 
 @callback
-def async_get_zha_config_value(config_entry, config_key, default):
+def async_get_zha_config_value(config_entry, section, config_key, default):
     """Get the value for the specified configuration from the zha config entry."""
     return (
         config_entry.options.get(CUSTOM_CONFIGURATION, {})
-        .get(ZHA_OPTIONS, {})
+        .get(section, {})
         .get(config_key, default)
     )
+
+
+def async_input_cluster_exists(hass, cluster_id):
+    """Determine if a device containing the specified in cluster is paired."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_devices = zha_gateway.devices.values()
+    for zha_device in zha_devices:
+        clusters_by_endpoint = zha_device.async_get_clusters()
+        for clusters in clusters_by_endpoint.values():
+            if cluster_id in clusters[CLUSTER_TYPE_IN]:
+                return True
+    return False
 
 
 async def async_get_zha_device(hass, device_id):

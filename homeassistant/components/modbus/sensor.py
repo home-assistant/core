@@ -4,10 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import struct
-from typing import Any
 
-from pymodbus.exceptions import ConnectionException, ModbusException
-from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -27,15 +24,13 @@ from homeassistant.const import (
     CONF_STRUCTURE,
     CONF_UNIT_OF_MEASUREMENT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import number
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
@@ -48,6 +43,11 @@ from .const import (
     CONF_REGISTERS,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
+    CONF_SWAP,
+    CONF_SWAP_BYTE,
+    CONF_SWAP_NONE,
+    CONF_SWAP_WORD,
+    CONF_SWAP_WORD_BYTE,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
@@ -61,25 +61,6 @@ from .const import (
 from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def number(value: Any) -> int | float:
-    """Coerce a value to number without losing precision."""
-    if isinstance(value, int):
-        return value
-
-    if isinstance(value, str):
-        try:
-            value = int(value)
-            return value
-        except (TypeError, ValueError):
-            pass
-
-    try:
-        value = float(value)
-        return value
-    except (TypeError, ValueError) as err:
-        raise vol.Invalid(f"invalid number {value}") from err
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -117,7 +98,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     async_add_entities,
     discovery_info: DiscoveryInfoType | None = None,
@@ -170,29 +151,40 @@ async def async_setup_platform(
             )
             continue
 
+        if CONF_REVERSE_ORDER in entry:
+            if entry[CONF_REVERSE_ORDER]:
+                entry[CONF_SWAP] = CONF_SWAP_WORD
+            else:
+                entry[CONF_SWAP] = CONF_SWAP_NONE
+            del entry[CONF_REVERSE_ORDER]
+        if entry.get(CONF_SWAP) != CONF_SWAP_NONE:
+            if entry[CONF_SWAP] == CONF_SWAP_BYTE:
+                regs_needed = 1
+            else:  # CONF_SWAP_WORD_BYTE, CONF_SWAP_WORD
+                regs_needed = 2
+            if (
+                entry[CONF_COUNT] < regs_needed
+                or (entry[CONF_COUNT] % regs_needed) != 0
+            ):
+                _LOGGER.error(
+                    "Error in sensor %s swap(%s) not possible due to count: %d",
+                    entry[CONF_NAME],
+                    entry[CONF_SWAP],
+                    entry[CONF_COUNT],
+                )
+                continue
         if CONF_HUB in entry:
             # from old config!
-            discovery_info[CONF_NAME] = entry[CONF_HUB]
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][entry[CONF_HUB]]
+        else:
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         if CONF_SCAN_INTERVAL not in entry:
             entry[CONF_SCAN_INTERVAL] = DEFAULT_SCAN_INTERVAL
-        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         sensors.append(
             ModbusRegisterSensor(
                 hub,
-                entry[CONF_NAME],
-                entry.get(CONF_SLAVE),
-                entry[CONF_ADDRESS],
-                entry[CONF_INPUT_TYPE],
-                entry.get(CONF_UNIT_OF_MEASUREMENT),
-                entry[CONF_COUNT],
-                entry[CONF_REVERSE_ORDER],
-                entry[CONF_SCALE],
-                entry[CONF_OFFSET],
+                entry,
                 structure,
-                entry[CONF_PRECISION],
-                entry[CONF_DATA_TYPE],
-                entry.get(CONF_DEVICE_CLASS),
-                entry[CONF_SCAN_INTERVAL],
             )
         )
 
@@ -207,39 +199,28 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
     def __init__(
         self,
         hub,
-        name,
-        slave,
-        register,
-        register_type,
-        unit_of_measurement,
-        count,
-        reverse_order,
-        scale,
-        offset,
+        entry,
         structure,
-        precision,
-        data_type,
-        device_class,
-        scan_interval,
     ):
         """Initialize the modbus register sensor."""
         self._hub = hub
-        self._name = name
+        self._name = entry[CONF_NAME]
+        slave = entry.get(CONF_SLAVE)
         self._slave = int(slave) if slave else None
-        self._register = int(register)
-        self._register_type = register_type
-        self._unit_of_measurement = unit_of_measurement
-        self._count = int(count)
-        self._reverse_order = reverse_order
-        self._scale = scale
-        self._offset = offset
-        self._precision = precision
+        self._register = int(entry[CONF_ADDRESS])
+        self._register_type = entry[CONF_INPUT_TYPE]
+        self._unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
+        self._count = int(entry[CONF_COUNT])
+        self._swap = entry[CONF_SWAP]
+        self._scale = entry[CONF_SCALE]
+        self._offset = entry[CONF_OFFSET]
+        self._precision = entry[CONF_PRECISION]
         self._structure = structure
-        self._data_type = data_type
-        self._device_class = device_class
+        self._data_type = entry[CONF_DATA_TYPE]
+        self._device_class = entry.get(CONF_DEVICE_CLASS)
         self._value = None
         self._available = True
-        self._scan_interval = timedelta(seconds=scan_interval)
+        self._scan_interval = timedelta(seconds=entry.get(CONF_SCAN_INTERVAL))
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -248,7 +229,7 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
             self._value = state.state
 
         async_track_time_interval(
-            self.hass, lambda arg: self._update(), self._scan_interval
+            self.hass, lambda arg: self.update(), self._scan_interval
         )
 
     @property
@@ -286,29 +267,37 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
         """Return True if entity is available."""
         return self._available
 
-    def _update(self):
-        """Update the state of the sensor."""
-        try:
-            if self._register_type == CALL_TYPE_REGISTER_INPUT:
-                result = self._hub.read_input_registers(
-                    self._slave, self._register, self._count
+    def _swap_registers(self, registers):
+        """Do swap as needed."""
+        if self._swap in [CONF_SWAP_BYTE, CONF_SWAP_WORD_BYTE]:
+            # convert [12][34] --> [21][43]
+            for i, register in enumerate(registers):
+                registers[i] = int.from_bytes(
+                    register.to_bytes(2, byteorder="little"),
+                    byteorder="big",
+                    signed=False,
                 )
-            else:
-                result = self._hub.read_holding_registers(
-                    self._slave, self._register, self._count
-                )
-        except ConnectionException:
-            self._available = False
-            return
-
-        if isinstance(result, (ModbusException, ExceptionResponse)):
-            self._available = False
-            return
-
-        registers = result.registers
-        if self._reverse_order:
+        if self._swap in [CONF_SWAP_WORD, CONF_SWAP_WORD_BYTE]:
+            # convert [12][34] ==> [34][12]
             registers.reverse()
+        return registers
 
+    def update(self):
+        """Update the state of the sensor."""
+        if self._register_type == CALL_TYPE_REGISTER_INPUT:
+            result = self._hub.read_input_registers(
+                self._slave, self._register, self._count
+            )
+        else:
+            result = self._hub.read_holding_registers(
+                self._slave, self._register, self._count
+            )
+        if result is None:
+            self._available = False
+            self.schedule_update_ha_state()
+            return
+
+        registers = self._swap_registers(result.registers)
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         if self._data_type == DATA_TYPE_STRING:
             self._value = byte_string.decode()
@@ -333,22 +322,16 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
                         v_result.append(f"{float(v_temp):.{self._precision}f}")
                 self._value = ",".join(map(str, v_result))
             else:
-                val = val[0]
-
                 # Apply scale and precision to floats and ints
-                if isinstance(val, (float, int)):
-                    val = self._scale * val + self._offset
+                val = self._scale * val[0] + self._offset
 
-                    # We could convert int to float, and the code would still work; however
-                    # we lose some precision, and unit tests will fail. Therefore, we do
-                    # the conversion only when it's absolutely necessary.
-                    if isinstance(val, int) and self._precision == 0:
-                        self._value = str(val)
-                    else:
-                        self._value = f"{float(val):.{self._precision}f}"
-                else:
-                    # Don't process remaining datatypes (bytes and booleans)
+                # We could convert int to float, and the code would still work; however
+                # we lose some precision, and unit tests will fail. Therefore, we do
+                # the conversion only when it's absolutely necessary.
+                if isinstance(val, int) and self._precision == 0:
                     self._value = str(val)
+                else:
+                    self._value = f"{float(val):.{self._precision}f}"
 
         self._available = True
         self.schedule_update_ha_state()

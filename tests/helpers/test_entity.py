@@ -575,7 +575,7 @@ async def test_warn_disabled(hass, caplog):
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
-        disabled_by="user",
+        disabled_by=entity_registry.DISABLED_USER,
     )
     mock_registry(hass, {"hello.world": entry})
 
@@ -616,7 +616,9 @@ async def test_disabled_in_entity_registry(hass):
     await ent.add_to_platform_finish()
     assert hass.states.get("hello.world") is not None
 
-    entry2 = registry.async_update_entity("hello.world", disabled_by="user")
+    entry2 = registry.async_update_entity(
+        "hello.world", disabled_by=entity_registry.DISABLED_USER
+    )
     await hass.async_block_till_done()
     assert entry2 != entry
     assert ent.registry_entry == entry2
@@ -772,3 +774,17 @@ async def test_get_supported_features_raises_on_unknown(hass):
     """Test get_supported_features raises on unknown entity_id."""
     with pytest.raises(HomeAssistantError):
         entity.get_supported_features(hass, "hello.world")
+
+
+async def test_float_conversion(hass):
+    """Test conversion of float state to string rounds."""
+    assert 2.4 + 1.2 != 3.6
+    with patch.object(entity.Entity, "state", PropertyMock(return_value=2.4 + 1.2)):
+        ent = entity.Entity()
+        ent.hass = hass
+        ent.entity_id = "hello.world"
+        ent.async_write_ha_state()
+
+    state = hass.states.get("hello.world")
+    assert state is not None
+    assert state.state == "3.6"

@@ -30,6 +30,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -109,9 +110,7 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
         """Initialize vizio options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(
-        self, user_input: dict[str, Any] = None
-    ) -> dict[str, Any]:
+    async def async_step_init(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Manage the vizio options."""
         if user_input is not None:
             if user_input.get(CONF_APPS_TO_INCLUDE_OR_EXCLUDE):
@@ -176,7 +175,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Vizio config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback
@@ -193,7 +191,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._data = None
         self._apps = {}
 
-    async def _create_entry(self, input_dict: dict[str, Any]) -> dict[str, Any]:
+    async def _create_entry(self, input_dict: dict[str, Any]) -> FlowResult:
         """Create vizio config entry."""
         # Remove extra keys that will not be used by entry setup
         input_dict.pop(CONF_APPS_TO_INCLUDE_OR_EXCLUDE, None)
@@ -204,9 +202,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=input_dict[CONF_NAME], data=input_dict)
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] = None
-    ) -> dict[str, Any]:
+    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -279,7 +275,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_import(self, import_config: dict[str, Any]) -> dict[str, Any]:
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Import a config entry from configuration.yaml."""
         # Check if new config entry matches any existing config entries
         for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -343,7 +339,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: DiscoveryInfoType | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
         # If host already has port, no need to add it again
         if ":" not in discovery_info[CONF_HOST]:
@@ -378,9 +374,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._must_show_form = True
         return await self.async_step_user(user_input=discovery_info)
 
-    async def async_step_pair_tv(
-        self, user_input: dict[str, Any] = None
-    ) -> dict[str, Any]:
+    async def async_step_pair_tv(self, user_input: dict[str, Any] = None) -> FlowResult:
         """
         Start pairing process for TV.
 
@@ -445,7 +439,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _pairing_complete(self, step_id: str) -> dict[str, Any]:
+    async def _pairing_complete(self, step_id: str) -> FlowResult:
         """Handle config flow completion."""
         if not self._must_show_form:
             return await self._create_entry(self._data)
@@ -459,7 +453,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pairing_complete(
         self, user_input: dict[str, Any] = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """
         Complete non-import sourced config flow.
 
@@ -469,7 +463,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pairing_complete_import(
         self, user_input: dict[str, Any] = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """
         Complete import sourced config flow.
 

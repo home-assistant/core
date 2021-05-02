@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Callable, Iterable
+from collections.abc import Iterable
+from typing import Callable
 
 from verisure import Error as VerisureError
 
@@ -10,7 +11,7 @@ from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE, STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import current_platform
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -80,7 +81,7 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
         return self.serial_number
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         area = self.coordinator.data["locks"][self.serial_number]["area"]
         return {

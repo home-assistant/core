@@ -10,7 +10,6 @@ from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import (
-    CONN_CLASS_LOCAL_PUSH,
     DISABLED_USER,
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
@@ -64,6 +63,54 @@ async def test_initialized_timeout(hass, client, connect_timeout):
     await hass.async_block_till_done()
 
     assert entry.state == ENTRY_STATE_SETUP_RETRY
+
+
+async def test_enabled_statistics(hass, client):
+    """Test that we enabled statistics if the entry is opted in."""
+    entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org", "data_collection_opted_in": True},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "zwave_js_server.model.driver.Driver.async_enable_statistics"
+    ) as mock_cmd:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_cmd.called
+
+
+async def test_disabled_statistics(hass, client):
+    """Test that we diisabled statistics if the entry is opted out."""
+    entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org", "data_collection_opted_in": False},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "zwave_js_server.model.driver.Driver.async_disable_statistics"
+    ) as mock_cmd:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_cmd.called
+
+
+async def test_noop_statistics(hass, client):
+    """Test that we don't make any statistics calls if user hasn't provided preference."""
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+
+    with patch(
+        "zwave_js_server.model.driver.Driver.async_enable_statistics"
+    ) as mock_cmd1, patch(
+        "zwave_js_server.model.driver.Driver.async_disable_statistics"
+    ) as mock_cmd2:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert not mock_cmd1.called
+        assert not mock_cmd2.called
 
 
 @pytest.mark.parametrize("error", [BaseZwaveJSServerError("Boom"), Exception("Boom")])
@@ -536,7 +583,6 @@ async def test_start_addon(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={"use_addon": True, "usb_path": device, "network_key": network_key},
     )
     entry.add_to_hass(hass)
@@ -568,7 +614,6 @@ async def test_install_addon(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={"use_addon": True, "usb_path": device, "network_key": network_key},
     )
     entry.add_to_hass(hass)
@@ -602,7 +647,6 @@ async def test_addon_info_failure(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={"use_addon": True, "usb_path": device, "network_key": network_key},
     )
     entry.add_to_hass(hass)
@@ -652,7 +696,6 @@ async def test_update_addon(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={
             "url": "ws://host1:3001",
             "use_addon": True,
@@ -694,7 +737,6 @@ async def test_stop_addon(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={
             "url": "ws://host1:3001",
             "use_addon": True,
@@ -725,7 +767,6 @@ async def test_remove_entry(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={"integration_created_addon": False},
     )
     entry.add_to_hass(hass)
@@ -741,7 +782,6 @@ async def test_remove_entry(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={"integration_created_addon": True},
     )
     entry.add_to_hass(hass)

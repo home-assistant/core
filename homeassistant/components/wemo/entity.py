@@ -2,15 +2,15 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Generator
 import contextlib
 import logging
-from typing import Any, Generator
 
 import async_timeout
 from pywemo import WeMoDevice
 from pywemo.exceptions import ActionException
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN as WEMO_DOMAIN
 
@@ -93,7 +93,7 @@ class WemoEntity(Entity):
 
         try:
             async with async_timeout.timeout(
-                self.platform.scan_interval.seconds - 0.1
+                self.platform.scan_interval.total_seconds() - 0.1
             ) as timeout:
                 await asyncio.shield(self._async_locked_update(True, timeout))
         except asyncio.TimeoutError:
@@ -126,7 +126,7 @@ class WemoSubscriptionEntity(WemoEntity):
         return self.wemo.serialnumber
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return {
             "name": self.name,

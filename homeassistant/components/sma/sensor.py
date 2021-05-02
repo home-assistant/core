@@ -1,8 +1,9 @@
 """SMA Solar Webconnect interface."""
 from __future__ import annotations
 
+from collections.abc import Coroutine
 import logging
-from typing import Any, Callable, Coroutine
+from typing import Any, Callable
 
 import pysma
 import voluptuous as vol
@@ -19,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -181,7 +183,7 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._config_entry_unique_id)},

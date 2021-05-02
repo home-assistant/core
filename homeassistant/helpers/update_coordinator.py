@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 from datetime import datetime, timedelta
 import logging
 from time import monotonic
-from typing import Any, Awaitable, Callable, Generic, TypeVar
+from typing import Callable, Generic, TypeVar
 import urllib.error
 
 import aiohttp
@@ -23,8 +24,6 @@ REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 T = TypeVar("T")
-
-# mypy: disallow-any-generics
 
 
 class UpdateFailed(Exception):
@@ -51,7 +50,12 @@ class DataUpdateCoordinator(Generic[T]):
         self.update_method = update_method
         self.update_interval = update_interval
 
-        self.data: T | None = None
+        # It's None before the first successful update.
+        # Components should call async_config_entry_first_refresh
+        # to make sure the first update was successful.
+        # Set type to just T to remove annoying checks that data is not None
+        # when it was already checked during setup.
+        self.data: T = None  # type: ignore[assignment]
 
         self._listeners: list[CALLBACK_TYPE] = []
         self._job = HassJob(self._handle_refresh_interval)
@@ -132,7 +136,7 @@ class DataUpdateCoordinator(Generic[T]):
         """
         await self._debounced_refresh.async_call()
 
-    async def _async_update_data(self) -> T | None:
+    async def _async_update_data(self) -> T:
         """Fetch the latest data from the source."""
         if self.update_method is None:
             raise NotImplementedError("Update method not implemented")
@@ -156,7 +160,7 @@ class DataUpdateCoordinator(Generic[T]):
         """Refresh data and log errors."""
         await self._async_refresh(log_failures=True)
 
-    async def _async_refresh(
+    async def _async_refresh(  # noqa: C901
         self,
         log_failures: bool = True,
         raise_on_auth_failed: bool = False,
@@ -288,10 +292,10 @@ class DataUpdateCoordinator(Generic[T]):
             self._unsub_refresh = None
 
 
-class CoordinatorEntity(entity.Entity):
+class CoordinatorEntity(Generic[T], entity.Entity):
     """A class for entities using DataUpdateCoordinator."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator[Any]) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator[T]) -> None:
         """Create the entity with a DataUpdateCoordinator."""
         self.coordinator = coordinator
 

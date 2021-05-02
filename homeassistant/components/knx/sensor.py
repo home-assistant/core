@@ -1,7 +1,8 @@
 """Support for KNX/IP sensors."""
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable
+from collections.abc import Iterable
+from typing import Any, Callable
 
 from xknx.devices import Sensor as XknxSensor
 
@@ -36,6 +37,7 @@ class KNXSensor(KnxEntity, SensorEntity):
         """Initialize of a KNX sensor."""
         self._device: XknxSensor
         super().__init__(device)
+        self._unique_id = f"{self._device.sensor_value.group_address_state}"
 
     @property
     def state(self) -> StateType:

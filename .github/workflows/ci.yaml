@@ -13,6 +13,7 @@ env:
   CACHE_VERSION: 1
   DEFAULT_PYTHON: 3.8
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
+  SQLALCHEMY_WARN_20: 1
 
 jobs:
   # Separate job to pre-populate the base dependency cache
@@ -739,4 +740,4 @@ jobs:
           coverage report --fail-under=94
           coverage xml
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1.3.2
+        uses: codecov/codecov-action@v1.4.1

@@ -1,7 +1,8 @@
 """Support for Verisure sensors."""
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable
+from collections.abc import Iterable
+from typing import Callable
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
@@ -11,7 +12,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_GIID, DEVICE_TYPE_NAME, DOMAIN
@@ -75,7 +76,7 @@ class VerisureThermometer(CoordinatorEntity, SensorEntity):
         return DEVICE_CLASS_TEMPERATURE
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         device_type = self.coordinator.data["climate"][self.serial_number].get(
             "deviceType"
@@ -139,7 +140,7 @@ class VerisureHygrometer(CoordinatorEntity, SensorEntity):
         return DEVICE_CLASS_HUMIDITY
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         device_type = self.coordinator.data["climate"][self.serial_number].get(
             "deviceType"
@@ -198,7 +199,7 @@ class VerisureMouseDetection(CoordinatorEntity, SensorEntity):
         return f"{self.serial_number}_mice"
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         area = self.coordinator.data["mice"][self.serial_number]["area"]
         return {

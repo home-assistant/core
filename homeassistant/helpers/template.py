@@ -5,6 +5,7 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
+from collections.abc import Generator, Iterable
 from contextlib import suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
@@ -16,7 +17,7 @@ from operator import attrgetter
 import random
 import re
 import sys
-from typing import Any, Callable, Generator, Iterable, cast
+from typing import Any, Callable, cast
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -215,7 +216,6 @@ class RenderInfo:
         self.exception: TemplateError | None = None
         self.all_states = False
         self.all_states_lifecycle = False
-        # pylint: disable=unsubscriptable-object  # for abc.Set, https://github.com/PyCQA/pylint/pull/4275
         self.domains: collections.abc.Set[str] = set()
         self.domains_lifecycle: collections.abc.Set[str] = set()
         self.entities: collections.abc.Set[str] = set()
@@ -857,6 +857,9 @@ def result_as_boolean(template_result: str | None) -> bool:
     False/0/None/'0'/'false'/'no'/'off'/'disable' are considered falsy
 
     """
+    if template_result is None:
+        return False
+
     try:
         # Import here, not at top-level to avoid circular import
         from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel

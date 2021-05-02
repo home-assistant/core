@@ -11,6 +11,7 @@
                 "data": {
                     "api_key": "API v\u00f5ti",
                     "destination": "Sihtkoht",
+                    "name": "Nimi",
                     "origin": "L\u00e4htekoht"
                 },
                 "description": "L\u00e4hte- ja sihtkoha m\u00e4\u00e4ramisel v\u00f5ib sisestada \u00fche v\u00f5i mitu eraldusm\u00e4rgiga eraldatud asukohta aadressi, laius- / pikkuskraadi koordinaatide v\u00f5i Google'i koha ID kujul. Asukoha m\u00e4\u00e4ramisel Google'i koha ID abil tuleb ID-le lisada eesliide \"place_id:\"."

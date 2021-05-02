@@ -9,8 +9,8 @@ from homeassistant.const import (
     VOLUME_LITERS,
 )
 
-from .common import OmniLogicEntity, OmniLogicUpdateCoordinator
-from .const import COORDINATOR, DOMAIN, PUMP_TYPES
+from .common import OmniLogicEntity, OmniLogicUpdateCoordinator, check_guard
+from .const import COORDINATOR, DEFAULT_PH_OFFSET, DOMAIN, PUMP_TYPES
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -29,18 +29,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         for entity_setting in entity_settings:
             for state_key, entity_class in entity_setting["entity_classes"].items():
-                if state_key not in item:
-                    continue
-
-                guard = False
-                for guard_condition in entity_setting["guard_condition"]:
-                    if guard_condition and all(
-                        item.get(guard_key) == guard_value
-                        for guard_key, guard_value in guard_condition.items()
-                    ):
-                        guard = True
-
-                if guard:
+                if check_guard(state_key, item, entity_setting):
                     continue
 
                 entity = entity_class(
@@ -136,13 +125,18 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
     def state(self):
         """Return the state for the pump speed sensor."""
 
-        pump_type = PUMP_TYPES[self.coordinator.data[self._item_id]["Filter-Type"]]
+        pump_type = PUMP_TYPES[
+            self.coordinator.data[self._item_id].get(
+                "Filter-Type", self.coordinator.data[self._item_id].get("Type", {})
+            )
+        ]
         pump_speed = self.coordinator.data[self._item_id][self._state_key]
 
         if pump_type == "VARIABLE":
             self._unit = PERCENTAGE
             state = pump_speed
         elif pump_type == "DUAL":
+            self._unit = ""
             if pump_speed == 0:
                 state = "off"
             elif pump_speed == self.coordinator.data[self._item_id].get(
@@ -200,6 +194,12 @@ class OmniLogicPHSensor(OmnilogicSensor):
 
         if ph_state == 0:
             ph_state = None
+        else:
+            ph_state = float(ph_state) + float(
+                self.coordinator.config_entry.options.get(
+                    "ph_offset", DEFAULT_PH_OFFSET
+                )
+            )
 
         return ph_state
 
@@ -234,7 +234,7 @@ class OmniLogicORPSensor(OmnilogicSensor):
     def state(self):
         """Return the state for the ORP sensor."""
 
-        orp_state = self.coordinator.data[self._item_id][self._state_key]
+        orp_state = int(self.coordinator.data[self._item_id][self._state_key])
 
         if orp_state == -1:
             orp_state = None

@@ -140,7 +140,9 @@ PLATFORM_SCHEMA = vol.All(
 
 
 @callback
-def _async_create_template_tracking_entities(async_add_entities, hass, definitions):
+def _async_create_template_tracking_entities(
+    async_add_entities, hass, definitions: list[dict], unique_id_prefix: str | None
+):
     """Create the template sensors."""
     sensors = []
 
@@ -157,6 +159,9 @@ def _async_create_template_tracking_entities(async_add_entities, hass, definitio
         device_class = entity_conf.get(CONF_DEVICE_CLASS)
         attribute_templates = entity_conf.get(CONF_ATTRIBUTES, {})
         unique_id = entity_conf.get(CONF_UNIQUE_ID)
+
+        if unique_id and unique_id_prefix:
+            unique_id = f"{unique_id_prefix}-{unique_id}"
 
         sensors.append(
             SensorTemplate(
@@ -184,6 +189,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             async_add_entities,
             hass,
             rewrite_legacy_to_modern_conf(config[CONF_SENSORS]),
+            None,
         )
         return
 
@@ -195,7 +201,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
 
     _async_create_template_tracking_entities(
-        async_add_entities, hass, discovery_info["entities"]
+        async_add_entities,
+        hass,
+        discovery_info["entities"],
+        discovery_info["unique_id"],
     )
 
 

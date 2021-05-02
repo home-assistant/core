@@ -1,14 +1,17 @@
 """Helpers for data entry flows for config entries."""
 from __future__ import annotations
 
+import logging
 from typing import Any, Awaitable, Callable, Union
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultDict
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.typing import UNDEFINED, DiscoveryInfoType, UndefinedType
 
 DiscoveryFunctionType = Callable[[], Union[Awaitable[bool], bool]]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class DiscoveryFlowHandler(config_entries.ConfigFlow):
@@ -21,17 +24,15 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         domain: str,
         title: str,
         discovery_function: DiscoveryFunctionType,
-        connection_class: str,
     ) -> None:
         """Initialize the discovery config flow."""
         self._domain = domain
         self._title = title
         self._discovery_function = discovery_function
-        self.CONNECTION_CLASS = connection_class  # pylint: disable=invalid-name
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -42,7 +43,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Confirm setup."""
         if user_input is None:
             self._set_confirm_only()
@@ -72,7 +73,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_discovery(
         self, discovery_info: DiscoveryInfoType
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle a flow initialized by discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -87,7 +88,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
     async_step_homekit = async_step_discovery
     async_step_dhcp = async_step_discovery
 
-    async def async_step_import(self, _: dict[str, Any] | None) -> FlowResultDict:
+    async def async_step_import(self, _: dict[str, Any] | None) -> FlowResult:
         """Handle a flow initialized by import."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -104,15 +105,29 @@ def register_discovery_flow(
     domain: str,
     title: str,
     discovery_function: DiscoveryFunctionType,
-    connection_class: str,
+    connection_class: str | UndefinedType = UNDEFINED,
 ) -> None:
     """Register flow for discovered integrations that not require auth."""
+    if connection_class is not UNDEFINED:
+        _LOGGER.warning(
+            (
+                "The %s (%s) integration is setting a connection_class"
+                " when calling the 'register_discovery_flow()' method in its"
+                " config flow. The connection class has been deprecated and will"
+                " be removed in a future release of Home Assistant."
+                " If '%s' is a custom integration, please contact the author"
+                " of that integration about this warning.",
+            ),
+            title,
+            domain,
+            domain,
+        )
 
     class DiscoveryFlow(DiscoveryFlowHandler):
         """Discovery flow handler."""
 
         def __init__(self) -> None:
-            super().__init__(domain, title, discovery_function, connection_class)
+            super().__init__(domain, title, discovery_function)
 
     config_entries.HANDLERS.register(domain)(DiscoveryFlow)
 
@@ -137,7 +152,7 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle a user initiated set up flow to create a webhook."""
         if not self._allow_multiple and self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")

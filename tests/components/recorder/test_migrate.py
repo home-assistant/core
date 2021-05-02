@@ -2,16 +2,17 @@
 # pylint: disable=protected-access
 import datetime
 import sqlite3
-from unittest.mock import Mock, PropertyMock, call, patch
+from unittest.mock import ANY, Mock, PropertyMock, call, patch
 
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.exc import (
     DatabaseError,
     InternalError,
     OperationalError,
     ProgrammingError,
 )
+from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
 from homeassistant.bootstrap import async_setup_component
@@ -64,7 +65,7 @@ async def test_schema_update_calls(hass):
     assert await recorder.async_migration_in_progress(hass) is False
     update.assert_has_calls(
         [
-            call(hass.data[DATA_INSTANCE].engine, version + 1, 0)
+            call(hass.data[DATA_INSTANCE].engine, ANY, version + 1, 0)
             for version in range(0, models.SCHEMA_VERSION)
         ]
     )
@@ -259,7 +260,7 @@ async def test_schema_migrate(hass):
 def test_invalid_update():
     """Test that an invalid new version raises an exception."""
     with pytest.raises(ValueError):
-        migration._apply_update(None, -1, 0)
+        migration._apply_update(Mock(), Mock(), -1, 0)
 
 
 @pytest.mark.parametrize(
@@ -273,28 +274,31 @@ def test_invalid_update():
 )
 def test_modify_column(engine_type, substr):
     """Test that modify column generates the expected query."""
+    connection = Mock()
     engine = Mock()
     engine.dialect.name = engine_type
-    migration._modify_columns(engine, "events", ["event_type VARCHAR(64)"])
+    migration._modify_columns(connection, engine, "events", ["event_type VARCHAR(64)"])
     if substr:
-        assert substr in engine.execute.call_args[0][0].text
+        assert substr in connection.execute.call_args[0][0].text
     else:
-        assert not engine.execute.called
+        assert not connection.execute.called
 
 
 def test_forgiving_add_column():
     """Test that add column will continue if column exists."""
     engine = create_engine("sqlite://", poolclass=StaticPool)
-    engine.execute("CREATE TABLE hello (id int)")
-    migration._add_columns(engine, "hello", ["context_id CHARACTER(36)"])
-    migration._add_columns(engine, "hello", ["context_id CHARACTER(36)"])
+    with Session(engine) as session:
+        session.execute(text("CREATE TABLE hello (id int)"))
+        migration._add_columns(session, "hello", ["context_id CHARACTER(36)"])
+        migration._add_columns(session, "hello", ["context_id CHARACTER(36)"])
 
 
 def test_forgiving_add_index():
     """Test that add index will continue if index exists."""
     engine = create_engine("sqlite://", poolclass=StaticPool)
     models.Base.metadata.create_all(engine)
-    migration._create_index(engine, "states", "ix_states_context_id")
+    with Session(engine) as session:
+        migration._create_index(session, "states", "ix_states_context_id")
 
 
 @pytest.mark.parametrize(

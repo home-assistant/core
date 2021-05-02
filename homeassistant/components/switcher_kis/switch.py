@@ -16,9 +16,9 @@ from aioswitcher.devices import SwitcherV2Device
 import voluptuous as vol
 
 from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchEntity
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType, ServiceCallType
 
 from . import (
     ATTR_AUTO_OFF_SET,
@@ -53,7 +53,7 @@ SERVICE_TURN_ON_WITH_TIMER_SCHEMA = {
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: dict,
     async_add_entities: Callable,
     discovery_info: dict,
@@ -62,7 +62,7 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    async def async_set_auto_off_service(entity, service_call: ServiceCallType) -> None:
+    async def async_set_auto_off_service(entity, service_call: ServiceCall) -> None:
         """Use for handling setting device auto-off service calls."""
         async with SwitcherV2Api(
             hass.loop,
@@ -74,7 +74,7 @@ async def async_setup_platform(
             await swapi.set_auto_shutdown(service_call.data[CONF_AUTO_OFF])
 
     async def async_turn_on_with_timer_service(
-        entity, service_call: ServiceCallType
+        entity, service_call: ServiceCall
     ) -> None:
         """Use for handling turning device on with a timer service calls."""
         async with SwitcherV2Api(

@@ -51,7 +51,7 @@ class AbortFlow(FlowError):
         self.description_placeholders = description_placeholders
 
 
-class FlowResultDict(TypedDict, total=False):
+class FlowResult(TypedDict, total=False):
     """Typed result dict."""
 
     version: int
@@ -72,6 +72,7 @@ class FlowResultDict(TypedDict, total=False):
     reason: str
     context: dict[str, Any]
     result: Any
+    last_step: bool | None
 
 
 class FlowManager(abc.ABC):
@@ -111,17 +112,15 @@ class FlowManager(abc.ABC):
 
     @abc.abstractmethod
     async def async_finish_flow(
-        self, flow: FlowHandler, result: FlowResultDict
-    ) -> FlowResultDict:
+        self, flow: FlowHandler, result: FlowResult
+    ) -> FlowResult:
         """Finish a config flow and add an entry."""
 
-    async def async_post_init(self, flow: FlowHandler, result: FlowResultDict) -> None:
+    async def async_post_init(self, flow: FlowHandler, result: FlowResult) -> None:
         """Entry has finished executing its first step asynchronously."""
 
     @callback
-    def async_progress(
-        self, include_uninitialized: bool = False
-    ) -> list[FlowResultDict]:
+    def async_progress(self, include_uninitialized: bool = False) -> list[FlowResult]:
         """Return the flows in progress."""
         return [
             {
@@ -136,7 +135,7 @@ class FlowManager(abc.ABC):
 
     async def async_init(
         self, handler: str, *, context: dict[str, Any] | None = None, data: Any = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Start a configuration flow."""
         if context is None:
             context = {}
@@ -164,7 +163,7 @@ class FlowManager(abc.ABC):
         handler: str,
         context: dict,
         data: Any,
-    ) -> tuple[FlowHandler, FlowResultDict]:
+    ) -> tuple[FlowHandler, FlowResult]:
         """Run the init in a task to allow it to be canceled at shutdown."""
         flow = await self.async_create_flow(handler, context=context, data=data)
         if not flow:
@@ -185,7 +184,7 @@ class FlowManager(abc.ABC):
 
     async def async_configure(
         self, flow_id: str, user_input: dict | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Continue a configuration flow."""
         flow = self._progress.get(flow_id)
 
@@ -242,7 +241,7 @@ class FlowManager(abc.ABC):
         step_id: str,
         user_input: dict | None,
         step_done: asyncio.Future | None = None,
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle a step of a flow."""
         method = f"async_step_{step_id}"
 
@@ -255,7 +254,7 @@ class FlowManager(abc.ABC):
             )
 
         try:
-            result: FlowResultDict = await getattr(flow, method)(user_input)
+            result: FlowResult = await getattr(flow, method)(user_input)
         except AbortFlow as err:
             result = _create_abort_data(
                 flow.flow_id, flow.handler, err.reason, err.description_placeholders
@@ -345,7 +344,8 @@ class FlowHandler:
         data_schema: vol.Schema = None,
         errors: dict[str, str] | None = None,
         description_placeholders: dict[str, Any] | None = None,
-    ) -> FlowResultDict:
+        last_step: bool | None = None,
+    ) -> FlowResult:
         """Return the definition of a form to gather user input."""
         return {
             "type": RESULT_TYPE_FORM,
@@ -355,6 +355,7 @@ class FlowHandler:
             "data_schema": data_schema,
             "errors": errors,
             "description_placeholders": description_placeholders,
+            "last_step": last_step,  # Display next or submit button in frontend
         }
 
     @callback
@@ -365,7 +366,7 @@ class FlowHandler:
         data: Mapping[str, Any],
         description: str | None = None,
         description_placeholders: dict | None = None,
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Finish config flow and create a config entry."""
         return {
             "version": self.VERSION,
@@ -381,7 +382,7 @@ class FlowHandler:
     @callback
     def async_abort(
         self, *, reason: str, description_placeholders: dict | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Abort the config flow."""
         return _create_abort_data(
             self.flow_id, self.handler, reason, description_placeholders
@@ -390,7 +391,7 @@ class FlowHandler:
     @callback
     def async_external_step(
         self, *, step_id: str, url: str, description_placeholders: dict | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Return the definition of an external step for the user to take."""
         return {
             "type": RESULT_TYPE_EXTERNAL_STEP,
@@ -402,7 +403,7 @@ class FlowHandler:
         }
 
     @callback
-    def async_external_step_done(self, *, next_step_id: str) -> FlowResultDict:
+    def async_external_step_done(self, *, next_step_id: str) -> FlowResult:
         """Return the definition of an external step for the user to take."""
         return {
             "type": RESULT_TYPE_EXTERNAL_STEP_DONE,
@@ -418,7 +419,7 @@ class FlowHandler:
         step_id: str,
         progress_action: str,
         description_placeholders: dict | None = None,
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Show a progress message to the user, without user input allowed."""
         return {
             "type": RESULT_TYPE_SHOW_PROGRESS,
@@ -430,7 +431,7 @@ class FlowHandler:
         }
 
     @callback
-    def async_show_progress_done(self, *, next_step_id: str) -> FlowResultDict:
+    def async_show_progress_done(self, *, next_step_id: str) -> FlowResult:
         """Mark the progress done."""
         return {
             "type": RESULT_TYPE_SHOW_PROGRESS_DONE,
@@ -446,7 +447,7 @@ def _create_abort_data(
     handler: str,
     reason: str,
     description_placeholders: dict | None = None,
-) -> FlowResultDict:
+) -> FlowResult:
     """Return the definition of an external step for the user to take."""
     return {
         "type": RESULT_TYPE_ABORT,

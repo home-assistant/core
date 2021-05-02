@@ -1,10 +1,11 @@
 """Support for Hyperion-NG remotes."""
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 import functools
 import logging
 from types import MappingProxyType
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any, Callable
 
 from hyperion import client, const
 
@@ -18,12 +19,12 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity import DeviceInfo
 import homeassistant.util.color as color_util
 
 from . import (
@@ -80,7 +81,7 @@ ICON_EXTERNAL_SOURCE = "mdi:television-ambient-light"
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
 ) -> bool:
     """Set up a Hyperion platform from config entry."""
 
@@ -147,7 +148,10 @@ class HyperionBaseLight(LightEntity):
 
         self._static_effect_list: list[str] = [KEY_EFFECT_SOLID]
         if self._support_external_effects:
-            self._static_effect_list += list(const.KEY_COMPONENTID_EXTERNAL_SOURCES)
+            self._static_effect_list += [
+                const.KEY_COMPONENTID_TO_NAME[component]
+                for component in const.KEY_COMPONENTID_EXTERNAL_SOURCES
+            ]
         self._effect_list: list[str] = self._static_effect_list[:]
 
         self._client_callbacks: Mapping[str, Callable[[dict[str, Any]], None]] = {
@@ -195,7 +199,11 @@ class HyperionBaseLight(LightEntity):
     def icon(self) -> str:
         """Return state specific icon."""
         if self.is_on:
-            if self.effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES:
+            if (
+                self.effect in const.KEY_COMPONENTID_FROM_NAME
+                and const.KEY_COMPONENTID_FROM_NAME[self.effect]
+                in const.KEY_COMPONENTID_EXTERNAL_SOURCES
+            ):
                 return ICON_EXTERNAL_SOURCE
             if self.effect != KEY_EFFECT_SOLID:
                 return ICON_EFFECT
@@ -227,7 +235,7 @@ class HyperionBaseLight(LightEntity):
         return self._unique_id
 
     @property
-    def device_info(self) -> dict[str, Any] | None:
+    def device_info(self) -> DeviceInfo:
         """Return device information."""
         return {
             "identifiers": {(DOMAIN, self._device_id)},
@@ -280,8 +288,21 @@ class HyperionBaseLight(LightEntity):
         if (
             effect
             and self._support_external_effects
-            and effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES
+            and (
+                effect in const.KEY_COMPONENTID_EXTERNAL_SOURCES
+                or effect in const.KEY_COMPONENTID_FROM_NAME
+            )
         ):
+            if effect in const.KEY_COMPONENTID_FROM_NAME:
+                component = const.KEY_COMPONENTID_FROM_NAME[effect]
+            else:
+                _LOGGER.warning(
+                    "Use of Hyperion effect '%s' is deprecated and will be removed "
+                    "in a future release. Please use '%s' instead",
+                    effect,
+                    const.KEY_COMPONENTID_TO_NAME[effect],
+                )
+                component = effect
 
             # Clear any color/effect.
             if not await self._client.async_send_clear(
@@ -295,7 +316,7 @@ class HyperionBaseLight(LightEntity):
                     **{
                         const.KEY_COMPONENTSTATE: {
                             const.KEY_COMPONENT: key,
-                            const.KEY_STATE: effect == key,
+                            const.KEY_STATE: component == key,
                         }
                     }
                 ):
@@ -371,8 +392,12 @@ class HyperionBaseLight(LightEntity):
             if (
                 self._support_external_effects
                 and componentid in const.KEY_COMPONENTID_EXTERNAL_SOURCES
+                and componentid in const.KEY_COMPONENTID_TO_NAME
             ):
-                self._set_internal_state(rgb_color=DEFAULT_COLOR, effect=componentid)
+                self._set_internal_state(
+                    rgb_color=DEFAULT_COLOR,
+                    effect=const.KEY_COMPONENTID_TO_NAME[componentid],
+                )
             elif componentid == const.KEY_COMPONENTID_EFFECT:
                 # Owner is the effect name.
                 # See: https://docs.hyperion-project.org/en/json/ServerInfo.html#priorities
@@ -594,9 +619,10 @@ class HyperionPriorityLight(HyperionBaseLight):
     @classmethod
     def _is_priority_entry_black(cls, priority: dict[str, Any] | None) -> bool:
         """Determine if a given priority entry is the color black."""
-        if not priority:
-            return False
-        if priority.get(const.KEY_COMPONENTID) == const.KEY_COMPONENTID_COLOR:
+        if (
+            priority
+            and priority.get(const.KEY_COMPONENTID) == const.KEY_COMPONENTID_COLOR
+        ):
             rgb_color = priority.get(const.KEY_VALUE, {}).get(const.KEY_RGB)
             if rgb_color is not None and tuple(rgb_color) == COLOR_BLACK:
                 return True

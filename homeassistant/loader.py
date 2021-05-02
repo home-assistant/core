@@ -23,6 +23,7 @@ from homeassistant.generated.dhcp import DHCP
 from homeassistant.generated.mqtt import MQTT
 from homeassistant.generated.ssdp import SSDP
 from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
+from homeassistant.util.async_ import gather_with_concurrency
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
@@ -128,13 +129,14 @@ async def _async_get_custom_components(
         get_sub_directories, custom_components.__path__
     )
 
-    integrations = await asyncio.gather(
+    integrations = await gather_with_concurrency(
+        MAX_LOAD_CONCURRENTLY,
         *(
             hass.async_add_executor_job(
                 Integration.resolve_from_root, hass, custom_components, comp.name
             )
             for comp in dirs
-        )
+        ),
     )
 
     return {
@@ -789,12 +791,12 @@ def custom_integration_warning(integration: Integration) -> None:
     _LOGGER.warning(CUSTOM_WARNING, integration.domain)
 
     if integration.manifest.get("version") is None:
-        _LOGGER.warning(
+        _LOGGER.error(
             CUSTOM_WARNING_VERSION_MISSING, integration.domain, integration.domain
         )
     else:
         if not validate_custom_integration_version(integration.manifest["version"]):
-            _LOGGER.warning(
+            _LOGGER.error(
                 CUSTOM_WARNING_VERSION_TYPE,
                 integration.manifest["version"],
                 integration.domain,

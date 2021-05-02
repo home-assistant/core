@@ -5,8 +5,9 @@ import voluptuous as vol
 
 from homeassistant.components.switch import DEVICE_CLASS_OUTLET, SwitchEntity
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from . import ATTR_DURATION, DOMAIN, GeniusZone
 
@@ -26,7 +27,7 @@ SET_SWITCH_OVERRIDE_SCHEMA = vol.Schema(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ) -> None:
     """Set up the Genius Hub switch entities."""
     if discovery_info is None:

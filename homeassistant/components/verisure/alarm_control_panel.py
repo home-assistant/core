@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Callable, Iterable
+from collections.abc import Iterable
+from typing import Callable
 
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
@@ -14,7 +15,7 @@ from homeassistant.components.alarm_control_panel.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ALARM_STATE_TO_HA, CONF_GIID, DOMAIN, LOGGER
@@ -49,7 +50,7 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
         return self.coordinator.entry.data[CONF_GIID]
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         return {
             "name": "Verisure Alarm",

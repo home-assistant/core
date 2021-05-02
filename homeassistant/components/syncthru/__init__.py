@@ -11,17 +11,19 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS = [BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN]
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up config entry."""
 
     session = aiohttp_client.async_get_clientsession(hass)
@@ -61,23 +63,18 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         name=printer.hostname(),
     )
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, SENSOR_DOMAIN)
-    )
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, BINARY_SENSOR_DOMAIN)
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the config entry."""
-    await hass.config_entries.async_forward_entry_unload(entry, SENSOR_DOMAIN)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     hass.data[DOMAIN].pop(entry.entry_id, None)
-    return True
+    return unload_ok
 
 
-def device_identifiers(printer: SyncThru) -> set[tuple[str, str]]:
+def device_identifiers(printer: SyncThru) -> set[tuple[str, ...]]:
     """Get device identifiers for device registry."""
     return {(DOMAIN, printer.serial_number())}
 

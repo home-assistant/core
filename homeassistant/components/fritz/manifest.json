@@ -1,8 +1,21 @@
 {
   "domain": "fritz",
-  "name": "AVM FRITZ!Box",
+  "name": "AVM FRITZ!Box Tools",
   "documentation": "https://www.home-assistant.io/integrations/fritz",
-  "requirements": ["fritzconnection==1.4.0"],
-  "codeowners": [],
+  "requirements": [
+    "fritzconnection==1.4.2",
+    "xmltodict==0.12.0"
+  ],
+  "codeowners": [
+    "@mammuth",
+    "@AaronDavidSchneider",
+    "@chemelli74"
+  ],
+  "config_flow": true,
+  "ssdp": [
+    {
+      "st": "urn:schemas-upnp-org:device:fritzbox:1"
+    }
+  ],
   "iot_class": "local_polling"
 }

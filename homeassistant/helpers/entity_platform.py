@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine, Iterable
 from contextvars import ContextVar
 from datetime import datetime, timedelta
 import logging
 from logging import Logger
 from types import ModuleType
-from typing import TYPE_CHECKING, Callable, Coroutine, Iterable
+from typing import TYPE_CHECKING, Callable
+
+from typing_extensions import Protocol
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -55,6 +58,15 @@ DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class AddEntitiesCallback(Protocol):
+    """Protocol type for EntityPlatform.add_entities callback."""
+
+    def __call__(
+        self, new_entities: Iterable[Entity], update_before_add: bool = False
+    ) -> None:
+        """Define add_entities type."""
 
 
 class EntityPlatform:
@@ -387,7 +399,7 @@ class EntityPlatform:
             self.scan_interval,
         )
 
-    async def _async_add_entity(  # type: ignore[no-untyped-def]
+    async def _async_add_entity(  # type: ignore[no-untyped-def]  # noqa: C901
         self, entity, update_before_add, entity_registry, device_registry
     ):
         """Add an entity to the platform."""

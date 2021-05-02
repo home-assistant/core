@@ -78,9 +78,14 @@ from .const import (
     CONF_STATUS_REGISTER_TYPE,
     CONF_STEP,
     CONF_STOPBITS,
+    CONF_SWAP,
+    CONF_SWAP_BYTE,
+    CONF_SWAP_NONE,
+    CONF_SWAP_WORD,
+    CONF_SWAP_WORD_BYTE,
     CONF_TARGET_TEMP,
-    CONF_VERIFY_REGISTER,
-    CONF_VERIFY_STATE,
+    CONF_VERIFY,
+    CONF_WRITE_TYPE,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
@@ -173,15 +178,24 @@ SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
         vol.Required(CONF_ADDRESS): cv.positive_int,
         vol.Optional(CONF_DEVICE_CLASS): SWITCH_DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
-            [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT, CALL_TYPE_COIL]
+        vol.Optional(CONF_WRITE_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+            [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_COIL]
         ),
         vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
         vol.Optional(CONF_COMMAND_ON, default=0x01): cv.positive_int,
-        vol.Optional(CONF_STATE_OFF): cv.positive_int,
-        vol.Optional(CONF_STATE_ON): cv.positive_int,
-        vol.Optional(CONF_VERIFY_REGISTER): cv.positive_int,
-        vol.Optional(CONF_VERIFY_STATE, default=True): cv.boolean,
+        vol.Optional(CONF_VERIFY): {
+            vol.Optional(CONF_ADDRESS): cv.positive_int,
+            vol.Optional(CONF_INPUT_TYPE): vol.In(
+                [
+                    CALL_TYPE_REGISTER_HOLDING,
+                    CALL_TYPE_DISCRETE,
+                    CALL_TYPE_REGISTER_INPUT,
+                    CALL_TYPE_COIL,
+                ]
+            ),
+            vol.Optional(CONF_STATE_OFF): cv.positive_int,
+            vol.Optional(CONF_STATE_ON): cv.positive_int,
+        },
     }
 )
 
@@ -204,7 +218,10 @@ SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
             [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
         ),
-        vol.Optional(CONF_REVERSE_ORDER, default=False): cv.boolean,
+        vol.Optional(CONF_REVERSE_ORDER): cv.boolean,
+        vol.Optional(CONF_SWAP, default=CONF_SWAP_NONE): vol.In(
+            [CONF_SWAP_NONE, CONF_SWAP_BYTE, CONF_SWAP_WORD, CONF_SWAP_WORD_BYTE]
+        ),
         vol.Optional(CONF_SCALE, default=1): number,
         vol.Optional(CONF_STRUCTURE): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,

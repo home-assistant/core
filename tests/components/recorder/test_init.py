@@ -1,9 +1,10 @@
 """The tests for the Recorder component."""
 # pylint: disable=protected-access
 from datetime import datetime, timedelta
+import sqlite3
 from unittest.mock import patch
 
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import (
@@ -24,6 +25,7 @@ from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import Events, RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     MATCH_ALL,
@@ -31,7 +33,6 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, callback
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
@@ -115,7 +116,7 @@ async def test_state_gets_saved_when_set_before_start_event(
 
 
 async def test_saving_state(
-    hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
     """Test saving and restoring a state."""
     instance = await async_setup_recorder_instance(hass)
@@ -138,7 +139,7 @@ async def test_saving_state(
 
 
 async def test_saving_many_states(
-    hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
     """Test we expire after many commits."""
     instance = await async_setup_recorder_instance(hass)
@@ -164,7 +165,7 @@ async def test_saving_many_states(
 
 
 async def test_saving_state_with_intermixed_time_changes(
-    hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
+    hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):
     """Test saving states with intermixed time changes."""
     instance = await async_setup_recorder_instance(hass)
@@ -263,6 +264,36 @@ def test_saving_state_with_sqlalchemy_exception(hass, hass_recorder, caplog):
     assert "Error executing query" not in caplog.text
     assert "Error saving events" not in caplog.text
     assert "SQLAlchemyError error processing event" not in caplog.text
+
+
+async def test_force_shutdown_with_queue_of_writes_that_generate_exceptions(
+    hass, async_setup_recorder_instance, caplog
+):
+    """Test forcing shutdown."""
+    instance = await async_setup_recorder_instance(hass)
+
+    entity_id = "test.recorder"
+    attributes = {"test_attr": 5, "test_attr_10": "nice"}
+
+    await async_wait_recording_done(hass, instance)
+
+    with patch.object(instance, "db_retry_wait", 0.2), patch.object(
+        instance.event_session,
+        "flush",
+        side_effect=OperationalError(
+            "insert the state", "fake params", "forced to fail"
+        ),
+    ):
+        for _ in range(100):
+            hass.states.async_set(entity_id, "on", attributes)
+            hass.states.async_set(entity_id, "off", attributes)
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+        await hass.async_block_till_done()
+
+    assert "Error executing query" in caplog.text
+    assert "Error saving events" not in caplog.text
 
 
 def test_saving_event(hass, hass_recorder):
@@ -855,6 +886,9 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
 
     hass.states.async_set("test.lost", "on", {})
 
+    sqlite3_exception = DatabaseError("statement", {}, [])
+    sqlite3_exception.__cause__ = sqlite3.DatabaseError()
+
     with patch.object(
         hass.data[DATA_INSTANCE].event_session,
         "close",
@@ -864,11 +898,16 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
         await hass.async_add_executor_job(corrupt_db_file, test_db_file)
         await async_wait_recording_done_without_instance(hass)
 
-        # This state will not be recorded because
-        # the database corruption will be discovered
-        # and we will have to rollback to recover
-        hass.states.async_set("test.one", "off", {})
-        await async_wait_recording_done_without_instance(hass)
+        with patch.object(
+            hass.data[DATA_INSTANCE].event_session,
+            "commit",
+            side_effect=[sqlite3_exception, None],
+        ):
+            # This state will not be recorded because
+            # the database corruption will be discovered
+            # and we will have to rollback to recover
+            hass.states.async_set("test.one", "off", {})
+            await async_wait_recording_done_without_instance(hass)
 
     assert "Unrecoverable sqlite3 database corruption detected" in caplog.text
     assert "The system will rename the corrupt database file" in caplog.text
@@ -892,3 +931,38 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     hass.stop()
+
+
+def test_entity_id_filter(hass_recorder):
+    """Test that entity ID filtering filters string and list."""
+    hass = hass_recorder(
+        {"include": {"domains": "hello"}, "exclude": {"domains": "hidden_domain"}}
+    )
+
+    for idx, data in enumerate(
+        (
+            {},
+            {"entity_id": "hello.world"},
+            {"entity_id": ["hello.world"]},
+            {"entity_id": ["hello.world", "hidden_domain.person"]},
+            {"entity_id": {"unexpected": "data"}},
+        )
+    ):
+        hass.bus.fire("hello", data)
+        wait_recording_done(hass)
+
+        with session_scope(hass=hass) as session:
+            db_events = list(session.query(Events).filter_by(event_type="hello"))
+            assert len(db_events) == idx + 1, data
+
+    for data in (
+        {"entity_id": "hidden_domain.person"},
+        {"entity_id": ["hidden_domain.person"]},
+    ):
+        hass.bus.fire("hello", data)
+        wait_recording_done(hass)
+
+        with session_scope(hass=hass) as session:
+            db_events = list(session.query(Events).filter_by(event_type="hello"))
+            # Keep referring idx + 1, as no new events are being added
+            assert len(db_events) == idx + 1, data

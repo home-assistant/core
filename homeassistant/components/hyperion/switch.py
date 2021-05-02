@@ -14,6 +14,7 @@ from hyperion.const import (
     KEY_COMPONENTID_GRABBER,
     KEY_COMPONENTID_LEDDEVICE,
     KEY_COMPONENTID_SMOOTHING,
+    KEY_COMPONENTID_TO_NAME,
     KEY_COMPONENTID_V4L,
     KEY_COMPONENTS,
     KEY_COMPONENTSTATE,
@@ -25,12 +26,12 @@ from hyperion.const import (
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import slugify
 
 from . import (
@@ -39,7 +40,6 @@ from . import (
     listen_for_instance_updates,
 )
 from .const import (
-    COMPONENT_TO_NAME,
     CONF_INSTANCE_CLIENTS,
     DOMAIN,
     HYPERION_MANUFACTURER_NAME,
@@ -67,7 +67,7 @@ def _component_to_unique_id(server_id: str, component: str, instance_num: int) -
         server_id,
         instance_num,
         slugify(
-            f"{TYPE_HYPERION_COMPONENT_SWITCH_BASE} {COMPONENT_TO_NAME[component]}"
+            f"{TYPE_HYPERION_COMPONENT_SWITCH_BASE} {KEY_COMPONENTID_TO_NAME[component]}"
         ),
     )
 
@@ -77,12 +77,12 @@ def _component_to_switch_name(component: str, instance_name: str) -> str:
     return (
         f"{instance_name} "
         f"{NAME_SUFFIX_HYPERION_COMPONENT_SWITCH} "
-        f"{COMPONENT_TO_NAME.get(component, component.capitalize())}"
+        f"{KEY_COMPONENTID_TO_NAME.get(component, component.capitalize())}"
     )
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
 ) -> bool:
     """Set up a Hyperion platform from config entry."""
     entry_data = hass.data[DOMAIN][config_entry.entry_id]
@@ -180,7 +180,7 @@ class HyperionComponentSwitch(SwitchEntity):
         return bool(self._client.has_loaded_state)
 
     @property
-    def device_info(self) -> dict[str, Any] | None:
+    def device_info(self) -> DeviceInfo:
         """Return device information."""
         return {
             "identifiers": {(DOMAIN, self._device_id)},

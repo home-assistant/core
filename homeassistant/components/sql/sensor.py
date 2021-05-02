@@ -151,7 +151,7 @@ class SQLSensor(SensorEntity):
                 self._state = None
                 return
 
-            for res in result:
+            for res in result.mappings():
                 _LOGGER.debug("result = %s", res.items())
                 data = res[self._column_name]
                 for key, value in res.items():

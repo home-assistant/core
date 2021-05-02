@@ -9,12 +9,10 @@ from homeassistant.helpers import entity_registry as er
 from .const import ATTR_APP_ID, ATTR_DEVICE_NAME, CONF_USER_ID, DOMAIN
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class MobileAppFlowHandler(config_entries.ConfigFlow):
+class MobileAppFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Mobile App config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""

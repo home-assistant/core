@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from contextvars import ContextVar
 import functools
 import logging
@@ -133,11 +133,11 @@ class ConfigEntry:
         "supports_unload",
         "system_options",
         "source",
-        "connection_class",
         "state",
         "disabled_by",
         "_setup_lock",
         "update_listeners",
+        "reason",
         "_async_cancel_retry_setup",
         "_on_unload",
     )
@@ -149,7 +149,6 @@ class ConfigEntry:
         title: str,
         data: Mapping[str, Any],
         source: str,
-        connection_class: str,
         system_options: dict,
         options: dict | None = None,
         unique_id: str | None = None,
@@ -182,9 +181,6 @@ class ConfigEntry:
         # Source of the configuration (user, discovery, cloud)
         self.source = source
 
-        # Connection class
-        self.connection_class = connection_class
-
         # State of the entry (LOADED, NOT_LOADED)
         self.state = state
 
@@ -201,6 +197,9 @@ class ConfigEntry:
         self.update_listeners: list[
             weakref.ReferenceType[UpdateListenerType] | weakref.WeakMethod
         ] = []
+
+        # Reason why config entry is in a failed state
+        self.reason: str | None = None
 
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
@@ -236,6 +235,7 @@ class ConfigEntry:
             )
             if self.domain == integration.domain:
                 self.state = ENTRY_STATE_SETUP_ERROR
+                self.reason = "Import error"
             return
 
         if self.domain == integration.domain:
@@ -249,12 +249,16 @@ class ConfigEntry:
                     err,
                 )
                 self.state = ENTRY_STATE_SETUP_ERROR
+                self.reason = "Import error"
                 return
 
             # Perform migration
             if not await self.async_migrate(hass):
                 self.state = ENTRY_STATE_MIGRATION_ERROR
+                self.reason = None
                 return
+
+        error_reason = None
 
         try:
             result = await component.async_setup_entry(hass, self)  # type: ignore
@@ -267,6 +271,7 @@ class ConfigEntry:
         except ConfigEntryAuthFailed as ex:
             message = str(ex)
             auth_base_message = "could not authenticate"
+            error_reason = message or auth_base_message
             auth_message = (
                 f"{auth_base_message}: {message}" if message else auth_base_message
             )
@@ -281,6 +286,7 @@ class ConfigEntry:
             result = False
         except ConfigEntryNotReady as ex:
             self.state = ENTRY_STATE_SETUP_RETRY
+            self.reason = str(ex) or None
             wait_time = 2 ** min(tries, 4) * 5
             tries += 1
             message = str(ex)
@@ -329,8 +335,10 @@ class ConfigEntry:
 
         if result:
             self.state = ENTRY_STATE_LOADED
+            self.reason = None
         else:
             self.state = ENTRY_STATE_SETUP_ERROR
+            self.reason = error_reason
 
     async def async_shutdown(self) -> None:
         """Call when Home Assistant is stopping."""
@@ -352,6 +360,7 @@ class ConfigEntry:
         """
         if self.source == SOURCE_IGNORE:
             self.state = ENTRY_STATE_NOT_LOADED
+            self.reason = None
             return True
 
         if integration is None:
@@ -363,6 +372,7 @@ class ConfigEntry:
                 # that has been renamed without removing the config
                 # entry.
                 self.state = ENTRY_STATE_NOT_LOADED
+                self.reason = None
                 return True
 
         component = integration.get_component()
@@ -375,6 +385,7 @@ class ConfigEntry:
                 self.async_cancel_retry_setup()
 
                 self.state = ENTRY_STATE_NOT_LOADED
+                self.reason = None
                 return True
 
         supports_unload = hasattr(component, "async_unload_entry")
@@ -382,6 +393,7 @@ class ConfigEntry:
         if not supports_unload:
             if integration.domain == self.domain:
                 self.state = ENTRY_STATE_FAILED_UNLOAD
+                self.reason = "Unload not supported"
             return False
 
         try:
@@ -392,6 +404,7 @@ class ConfigEntry:
             # Only adjust state if we unloaded the component
             if result and integration.domain == self.domain:
                 self.state = ENTRY_STATE_NOT_LOADED
+                self.reason = None
 
             self._async_process_on_unload()
 
@@ -402,6 +415,7 @@ class ConfigEntry:
             )
             if integration.domain == self.domain:
                 self.state = ENTRY_STATE_FAILED_UNLOAD
+                self.reason = "Unknown error"
             return False
 
     async def async_remove(self, hass: HomeAssistant) -> None:
@@ -502,7 +516,6 @@ class ConfigEntry:
             "options": dict(self.options),
             "system_options": self.system_options.as_dict(),
             "source": self.source,
-            "connection_class": self.connection_class,
             "unique_id": self.unique_id,
             "disabled_by": self.disabled_by,
         }
@@ -560,8 +573,8 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         self._hass_config = hass_config
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResultDict
-    ) -> data_entry_flow.FlowResultDict:
+        self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
+    ) -> data_entry_flow.FlowResult:
         """Finish a config flow and add an entry."""
         flow = cast(ConfigFlow, flow)
 
@@ -618,7 +631,6 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             options={},
             system_options={},
             source=flow.context["source"],
-            connection_class=flow.CONNECTION_CLASS,
             unique_id=flow.unique_id,
         )
 
@@ -669,7 +681,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         return flow
 
     async def async_post_init(
-        self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResultDict
+        self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
     ) -> None:
         """After a flow is initialised trigger new flow notifications."""
         source = flow.context["source"]
@@ -818,8 +830,6 @@ class ConfigEntries:
                 data=entry["data"],
                 source=entry["source"],
                 title=entry["title"],
-                # New in 0.79
-                connection_class=entry.get("connection_class", CONN_CLASS_UNKNOWN),
                 # New in 0.89
                 options=entry.get("options"),
                 # New in 0.98
@@ -980,6 +990,14 @@ class ConfigEntries:
 
         return True
 
+    @callback
+    def async_setup_platforms(
+        self, entry: ConfigEntry, platforms: Iterable[str]
+    ) -> None:
+        """Forward the setup of an entry to platforms."""
+        for platform in platforms:
+            self.hass.async_create_task(self.async_forward_entry_setup(entry, platform))
+
     async def async_forward_entry_setup(self, entry: ConfigEntry, domain: str) -> bool:
         """Forward the setup of an entry to a different component.
 
@@ -1001,6 +1019,19 @@ class ConfigEntries:
 
         await entry.async_setup(self.hass, integration=integration)
         return True
+
+    async def async_unload_platforms(
+        self, entry: ConfigEntry, platforms: Iterable[str]
+    ) -> bool:
+        """Forward the unloading of an entry to platforms."""
+        return all(
+            await asyncio.gather(
+                *[
+                    self.async_forward_entry_unload(entry, platform)
+                    for platform in platforms
+                ]
+            )
+        )
 
     async def async_forward_entry_unload(self, entry: ConfigEntry, domain: str) -> bool:
         """Forward the unloading of an entry to a different component."""
@@ -1150,7 +1181,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     @callback
     def _async_in_progress(
         self, include_uninitialized: bool = False
-    ) -> list[data_entry_flow.FlowResultDict]:
+    ) -> list[data_entry_flow.FlowResult]:
         """Return other in progress flows for current domain."""
         return [
             flw
@@ -1162,20 +1193,20 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     async def async_step_ignore(
         self, user_input: dict[str, Any]
-    ) -> data_entry_flow.FlowResultDict:
+    ) -> data_entry_flow.FlowResult:
         """Ignore this config flow."""
         await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
         return self.async_create_entry(title=user_input["title"], data={})
 
     async def async_step_unignore(
         self, user_input: dict[str, Any]
-    ) -> data_entry_flow.FlowResultDict:
+    ) -> data_entry_flow.FlowResult:
         """Rediscover a config entry by it's unique_id."""
         return self.async_abort(reason="not_implemented")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResultDict:
+    ) -> data_entry_flow.FlowResult:
         """Handle a flow initiated by the user."""
         return self.async_abort(reason="not_implemented")
 
@@ -1205,7 +1236,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     async def async_step_discovery(
         self, discovery_info: DiscoveryInfoType
-    ) -> data_entry_flow.FlowResultDict:
+    ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by discovery."""
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_user()
@@ -1213,7 +1244,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     @callback
     def async_abort(
         self, *, reason: str, description_placeholders: dict | None = None
-    ) -> data_entry_flow.FlowResultDict:
+    ) -> data_entry_flow.FlowResult:
         """Abort the config flow."""
         # Remove reauth notification if no reauth flows are in progress
         if self.source == SOURCE_REAUTH and not any(
@@ -1231,37 +1262,37 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     async def async_step_hassio(
         self, discovery_info: DiscoveryInfoType
-    ) -> data_entry_flow.FlowResultDict:
+    ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by HASS IO discovery."""
         return await self.async_step_discovery(discovery_info)
 
     async def async_step_homekit(
         self, discovery_info: DiscoveryInfoType
-    ) -> data_entry_flow.FlowResultDict:
+    ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by Homekit discovery."""
         return await self.async_step_discovery(discovery_info)
 
     async def async_step_mqtt(
         self, discovery_info: DiscoveryInfoType
-    ) -> data_entry_flow.FlowResultDict:
+    ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by MQTT discovery."""
         return await self.async_step_discovery(discovery_info)
 
     async def async_step_ssdp(
         self, discovery_info: DiscoveryInfoType
-    ) -> data_entry_flow.FlowResultDict:
+    ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by SSDP discovery."""
         return await self.async_step_discovery(discovery_info)
 
     async def async_step_zeroconf(
         self, discovery_info: DiscoveryInfoType
-    ) -> data_entry_flow.FlowResultDict:
+    ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by Zeroconf discovery."""
         return await self.async_step_discovery(discovery_info)
 
     async def async_step_dhcp(
         self, discovery_info: DiscoveryInfoType
-    ) -> data_entry_flow.FlowResultDict:
+    ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by DHCP discovery."""
         return await self.async_step_discovery(discovery_info)
 
@@ -1290,8 +1321,8 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         return cast(OptionsFlow, HANDLERS[entry.domain].async_get_options_flow(entry))
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResultDict
-    ) -> data_entry_flow.FlowResultDict:
+        self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
+    ) -> data_entry_flow.FlowResult:
         """Finish an options flow and update options for configuration entry.
 
         Flow.handler and entry_id is the same thing to map flow with entry.
