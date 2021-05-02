@@ -221,7 +221,7 @@ class FritzBoxBaseEntity:
     """Fritz host entity base class."""
 
     def __init__(
-        self, fritzbox_tools: FritzBoxTools, unique_id: str, device_name: str
+        self, fritzbox_tools: FritzBoxTools, device_name: str
     ) -> None:
         """Init device info class."""
         self._fritzbox_tools = fritzbox_tools
