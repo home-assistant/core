@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import NAMUpdateCoordinator
+from . import NAMDataUpdateCoordinator
 from .const import AIR_QUALITY_SENSORS, DEFAULT_NAME, DOMAIN
 
 PARALLEL_UPDATES = 1
@@ -33,7 +33,7 @@ async def async_setup_entry(
 class NAMAirQuality(CoordinatorEntity, AirQualityEntity):
     """Define an Nettigo Air Monitor air quality."""
 
-    def __init__(self, coordinator: NAMUpdateCoordinator, sensor_type: str) -> None:
+    def __init__(self, coordinator: NAMDataUpdateCoordinator, sensor_type: str) -> None:
         """Initialize."""
         super().__init__(coordinator)
         self.sensor_type = sensor_type
