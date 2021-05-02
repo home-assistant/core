@@ -285,11 +285,11 @@ async def test_discovery_by_homekit_and_zeroconf_same_time(hass):
         "homeassistant.components.rainmachine.config_flow.Client",
         return_value=_get_mock_client(),
     ):
-        result = await hass.config_entries.flow.async_init(
+        result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_HOMEKIT},
             data={"host": "192.168.1.100"},
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_in_progress"
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["reason"] == "already_in_progress"
