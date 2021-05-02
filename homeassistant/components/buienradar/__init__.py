@@ -23,8 +23,6 @@ from .const import (
 
 PLATFORMS = ["camera", "sensor", "weather"]
 
-DATA_LISTENER = "listener"
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -44,8 +42,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up buienradar from a config entry."""
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-    listener = entry.add_update_listener(async_update_options)
-    hass.data[DOMAIN][entry.entry_id] = {DATA_LISTENER: listener}
+    entry.async_on_unload(entry.add_update_listener(async_update_options))
     return True
 
 
@@ -53,7 +50,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][entry.entry_id][DATA_LISTENER]()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
@@ -102,8 +98,6 @@ def _import_configs(
         _try_update_unique_id(hass, configs[0], camera_config)
 
     for config in configs:
-        _LOGGER.debug("Importing Buienradar %s", config)
-
         data = {
             CONF_LATITUDE: config.get(CONF_LATITUDE, hass.config.latitude),
             CONF_LONGITUDE: config.get(CONF_LONGITUDE, hass.config.longitude),
