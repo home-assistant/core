@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import logging
 
-import voluptuous as vol
-
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -23,9 +21,7 @@ from .const import (
     DOMAIN,
 )
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
-
-PLATFORMS = ["weather", "camera", "sensor"]
+PLATFORMS = ["camera", "sensor", "weather"]
 
 DATA_LISTENER = "listener"
 
