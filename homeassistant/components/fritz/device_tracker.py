@@ -15,11 +15,11 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .common import FritzBoxHostEntity, FritzBoxTools
+from .common import FritzBoxTools
 from .const import DATA_FRITZ, DEFAULT_DEVICE_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,7 +73,7 @@ async def async_setup_entry(
     @callback
     def update_router():
         """Update the values of the router."""
-        _async_add_entities(router, async_add_entities, data_fritz, entry.title)
+        _async_add_entities(router, async_add_entities, data_fritz)
 
     async_dispatcher_connect(hass, router.signal_device_new, update_router)
 
@@ -81,7 +81,7 @@ async def async_setup_entry(
 
 
 @callback
-def _async_add_entities(router, async_add_entities, data_fritz, device_name):
+def _async_add_entities(router, async_add_entities, data_fritz):
     """Add new tracker entities from the router."""
 
     def _is_tracked(mac, device):
@@ -99,23 +99,21 @@ def _async_add_entities(router, async_add_entities, data_fritz, device_name):
         if device.ip_address == "" or _is_tracked(mac, device):
             continue
 
-        new_tracked.append(FritzBoxTracker(router, device, device_name))
+        new_tracked.append(FritzBoxTracker(router, device))
         data_fritz.tracked[router.unique_id].add(mac)
 
     if new_tracked:
         async_add_entities(new_tracked)
 
 
-class FritzBoxTracker(FritzBoxHostEntity, ScannerEntity):
+class FritzBoxTracker(ScannerEntity):
     """This class queries a FRITZ!Box router."""
 
-    def __init__(self, fritzbox_tools: FritzBoxTools, device, device_name):
+    def __init__(self, router: FritzBoxTools, device):
         """Initialize a FRITZ!Box device."""
-        self._fritzbox_tools = fritzbox_tools
+        self._router = router
         self._mac = device.mac_address
-        self._model = "FRITZ!Box Tracked device"
         self._name = device.hostname or DEFAULT_DEVICE_NAME
-        self._device_name = device_name
         self._active = False
         self._attrs: dict = {}
         super().__init__()
@@ -138,7 +136,7 @@ class FritzBoxTracker(FritzBoxHostEntity, ScannerEntity):
     @property
     def ip_address(self) -> str:
         """Return the primary ip address of the device."""
-        return self._fritzbox_tools.devices[self._mac].ip_address
+        return self._router.devices[self._mac].ip_address
 
     @property
     def mac_address(self) -> str:
@@ -148,12 +146,27 @@ class FritzBoxTracker(FritzBoxHostEntity, ScannerEntity):
     @property
     def hostname(self) -> str:
         """Return hostname of the device."""
-        return self._fritzbox_tools.devices[self._mac].hostname
+        return self._router.devices[self._mac].hostname
 
     @property
     def source_type(self) -> str:
         """Return tracker source type."""
         return SOURCE_TYPE_ROUTER
+
+    @property
+    def device_info(self):
+        """Return the device information."""
+        return {
+            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "AVM",
+            "model": "FRITZ!Box Tracked device",
+            "via_device": (
+                DOMAIN,
+                self._router.unique_id,
+            ),
+        }
 
     @property
     def should_poll(self) -> bool:
@@ -170,7 +183,7 @@ class FritzBoxTracker(FritzBoxHostEntity, ScannerEntity):
     @callback
     def async_process_update(self) -> None:
         """Update device."""
-        device = self._fritzbox_tools.devices[self._mac]
+        device = self._router.devices[self._mac]
         self._active = device.is_connected
 
         if device.last_activity:
@@ -190,7 +203,7 @@ class FritzBoxTracker(FritzBoxHostEntity, ScannerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                self._fritzbox_tools.signal_device_update,
+                self._router.signal_device_update,
                 self.async_on_demand_update,
             )
         )

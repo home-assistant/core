@@ -220,41 +220,28 @@ class FritzDevice:
         return self._last_activity
 
 
-class FritzBoxHostEntity:
+class FritzBoxBaseEntity:
     """Fritz host entity base class."""
 
     def __init__(self):
         """Init device info class."""
 
     @property
+    def mac_address(self) -> str:
+        """Return the mac address of the main device."""
+        return self._fritzbox_tools.mac  # pylint: disable=maybe-no-member
+
+    @property
     def device_info(self):
         """Return the device information."""
-        dev_info = {}
-        # pylint: disable=maybe-no-member
-        dev_info["connections"] = {
-            (CONNECTION_NETWORK_MAC, self.mac_address)
-        }  # pylint: disable=maybe-no-member
-        dev_info["identifiers"] = {
-            (DOMAIN, self.unique_id)
-        }  # pylint: disable=maybe-no-member
-        dev_info["manufacturer"] = "AVM"
-        if (
-            self.mac_address != self._fritzbox_tools.unique_id
-        ):  # pylint: disable=maybe-no-member
-            # Exclude model and via_device for router itself
-            dev_info["name"] = self._name
-            dev_info["model"] = self._model
-            dev_info["via_device"] = (
-                DOMAIN,
-                self._fritzbox_tools.unique_id,
-            )  # pylint: disable=maybe-no-member
-        else:
-            dev_info["name"] = self._device_name
-            dev_info[
-                "model"
-            ] = self._fritzbox_tools.model  # pylint: disable=maybe-no-member
-            dev_info[
-                "sw_version"
-            ] = self._fritzbox_tools.sw_version  # pylint: disable=maybe-no-member
 
-        return dev_info
+        return {
+            "connections": {(CONNECTION_NETWORK_MAC, self.mac_address)},
+            "identifiers": {
+                (DOMAIN, self.unique_id)
+            },  # pylint: disable=maybe-no-member
+            "name": self._device_name,  # pylint: disable=maybe-no-member
+            "manufacturer": "AVM",
+            "model": self._fritzbox_tools.model,  # pylint: disable=maybe-no-member
+            "sw_version": self._fritzbox_tools.sw_version,  # pylint: disable=maybe-no-member
+        }

@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .common import FritzBoxHostEntity
+from .common import FritzBoxBaseEntity
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,14 +30,13 @@ async def async_setup_entry(
         )
 
 
-class FritzBoxConnectivitySensor(FritzBoxHostEntity, BinarySensorEntity):
+class FritzBoxConnectivitySensor(FritzBoxBaseEntity, BinarySensorEntity):
     """Define FRITZ!Box connectivity class."""
 
     def __init__(self, fritzbox_tools, device_friendlyname: str):
         """Init FRITZ!Box connectivity class."""
         self._fritzbox_tools = fritzbox_tools
         self._unique_id = f"{self._fritzbox_tools.unique_id}-connectivity"
-        self._model = self._fritzbox_tools.model
         self._name = f"{device_friendlyname} Connectivity"
         self._device_name = device_friendlyname
         self._is_on = True
@@ -63,11 +62,6 @@ class FritzBoxConnectivitySensor(FritzBoxHostEntity, BinarySensorEntity):
     def unique_id(self):
         """Return unique id."""
         return self._unique_id
-
-    @property
-    def mac_address(self) -> str:
-        """Return the mac address of the main device."""
-        return self._fritzbox_tools.mac
 
     @property
     def available(self) -> bool:
