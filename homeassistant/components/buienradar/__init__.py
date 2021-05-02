@@ -91,14 +91,14 @@ def _import_configs(
 
     configs = weather_configs + sensor_configs
 
-    if len(configs) == 0 and camera_configs:
+    if not configs and camera_configs:
         config = {
             CONF_LATITUDE: hass.config.latitude,
             CONF_LONGITUDE: hass.config.longitude,
         }
         configs.append(config)
 
-    if len(configs) > 0:
+    if configs:
         _try_update_unique_id(hass, configs[0], camera_config)
 
     for config in configs:
