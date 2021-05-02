@@ -220,13 +220,18 @@ class FritzDevice:
 class FritzBoxBaseEntity:
     """Fritz host entity base class."""
 
-    def __init__(self):
+    def __init__(
+        self, fritzbox_tools: FritzBoxTools, unique_id: str, device_name: str
+    ) -> None:
         """Init device info class."""
+        self._fritzbox_tools = fritzbox_tools
+        self._unique_id = unique_id
+        self._device_name = device_name
 
     @property
     def mac_address(self) -> str:
         """Return the mac address of the main device."""
-        return self._fritzbox_tools.mac  # pylint: disable=maybe-no-member
+        return self._fritzbox_tools.mac
 
     @property
     def device_info(self):
@@ -234,11 +239,9 @@ class FritzBoxBaseEntity:
 
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self.mac_address)},
-            "identifiers": {
-                (DOMAIN, self.unique_id)  # pylint: disable=maybe-no-member
-            },
-            "name": self._device_name,  # pylint: disable=maybe-no-member
+            "identifiers": {(DOMAIN, self._unique_id)},
+            "name": self._device_name,
             "manufacturer": "AVM",
-            "model": self._fritzbox_tools.model,  # pylint: disable=maybe-no-member
-            "sw_version": self._fritzbox_tools.sw_version,  # pylint: disable=maybe-no-member
+            "model": self._fritzbox_tools.model,
+            "sw_version": self._fritzbox_tools.sw_version,
         }
