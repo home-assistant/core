@@ -1,19 +1,21 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect"
+        },
         "flow_title": "IamMeter {sn}",
         "step": {
             "user": {
-                "title": "Define your IamMeter connection",
                 "data": {
-                    "host": "[%key:common::config_flow::data::host%]",
-                    "port": "[%key:common::config_flow::data::port%]"
-                }
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "title": "Define your IamMeter connection"
             }
-        },
-        "error": {
-            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-        },
-        "abort": {"already_configured": "[%key:common::config_flow::abort::already_configured_device%]"}
+        }
     }
 }
