@@ -358,13 +358,27 @@ class Recorder(threading.Thread):
             self._event_listener = None
 
     @callback
-    def _async_event_filter(self, event):
+    def _async_event_filter(self, event) -> bool:
         """Filter events."""
         if event.event_type in self.exclude_t:
             return False
 
         entity_id = event.data.get(ATTR_ENTITY_ID)
-        return bool(entity_id is None or self.entity_filter(entity_id))
+
+        if entity_id is None:
+            return True
+
+        if isinstance(entity_id, str):
+            return self.entity_filter(entity_id)
+
+        if isinstance(entity_id, list):
+            for eid in entity_id:
+                if self.entity_filter(eid):
+                    return True
+            return False
+
+        # Unknown what it is.
+        return True
 
     def do_adhoc_purge(self, **kwargs):
         """Trigger an adhoc purge retaining keep_days worth of data."""
