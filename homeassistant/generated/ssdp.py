@@ -83,6 +83,17 @@ SSDP = {
             "manufacturer": "DIRECTV"
         }
     ],
+    "dlna_dmr": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3"
+        }
+    ],
     "fritz": [
         {
             "st": "urn:schemas-upnp-org:device:fritzbox:1"
