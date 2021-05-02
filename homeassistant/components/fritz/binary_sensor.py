@@ -41,7 +41,7 @@ class FritzBoxConnectivitySensor(FritzBoxBaseEntity, BinarySensorEntity):
         self._device_name = device_friendlyname
         self._is_on = True
         self._is_available = True
-        super().__init__(self._fritzbox_tools, self._unique_id, self._device_name)
+        super().__init__(fritzbox_tools, device_friendlyname)
 
     @property
     def name(self):
