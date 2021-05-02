@@ -133,7 +133,7 @@ class ModbusThermostat(ClimateEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         async_track_time_interval(
-            self.hass, lambda arg: self._update(), self._scan_interval
+            self.hass, lambda arg: self.update(), self._scan_interval
         )
 
     @property
@@ -214,14 +214,14 @@ class ModbusThermostat(ClimateEntity):
             self._target_temperature_register,
             register_value,
         )
-        self._update()
+        self.update()
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
-    def _update(self):
+    def update(self):
         """Update Target & Current Temperature."""
         self._target_temperature = self._read_register(
             CALL_TYPE_REGISTER_HOLDING, self._target_temperature_register

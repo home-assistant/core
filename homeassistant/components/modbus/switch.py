@@ -99,7 +99,7 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
 
         if self._verify_active:
             async_track_time_interval(
-                self.hass, lambda arg: self._update(), self._scan_interval
+                self.hass, lambda arg: self.update(), self._scan_interval
             )
 
     @property
@@ -132,7 +132,7 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         else:
             self._available = True
             if self._verify_active:
-                self._update()
+                self.update()
             else:
                 self._is_on = True
                 self.schedule_update_ha_state()
@@ -146,12 +146,12 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         else:
             self._available = True
             if self._verify_active:
-                self._update()
+                self.update()
             else:
                 self._is_on = False
                 self.schedule_update_ha_state()
 
-    def _update(self):
+    def update(self):
         """Update the entity state."""
         if not self._verify_active:
             return

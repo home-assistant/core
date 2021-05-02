@@ -229,7 +229,7 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
             self._value = state.state
 
         async_track_time_interval(
-            self.hass, lambda arg: self._update(), self._scan_interval
+            self.hass, lambda arg: self.update(), self._scan_interval
         )
 
     @property
@@ -282,7 +282,7 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
             registers.reverse()
         return registers
 
-    def _update(self):
+    def update(self):
         """Update the state of the sensor."""
         if self._register_type == CALL_TYPE_REGISTER_INPUT:
             result = self._hub.read_input_registers(
