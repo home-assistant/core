@@ -219,7 +219,7 @@ async def async_setup_entry(
 
     async_add_entities(entities)
 
-    data = BrData(hass, coordinates, timeframe, dev)
+    data = BrData(hass, coordinates, timeframe, entities)
     # schedule the first update in 1 minute from now:
     await data.schedule_update(1)
 
