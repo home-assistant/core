@@ -25,8 +25,6 @@ async def test_form(hass, test_connect):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.iammeter.async_setup", return_value=True
-    ), patch(
         "iammeter.real_time_api",
         return_value=RealTimeAPI(IamMeter(HOST, PORT, "MOCKUPSN")),
     ), patch(
