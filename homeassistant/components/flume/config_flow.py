@@ -1,5 +1,4 @@
 """Config flow for flume integration."""
-from functools import partial
 import logging
 
 from pyflume import FlumeAuth, FlumeDeviceList
@@ -33,38 +32,39 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
+def _validate_input(hass: core.HomeAssistant, data):
+    """Validate in the executor."""
+    flume_token_full_path = hass.config.path(
+        f"{BASE_TOKEN_FILENAME}-{data[CONF_USERNAME]}"
+    )
+    return FlumeDeviceList(
+        FlumeAuth(
+            data[CONF_USERNAME],
+            data[CONF_PASSWORD],
+            data[CONF_CLIENT_ID],
+            data[CONF_CLIENT_SECRET],
+            flume_token_file=flume_token_full_path,
+        )
+    )
+
+
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    username = data[CONF_USERNAME]
-    password = data[CONF_PASSWORD]
-    client_id = data[CONF_CLIENT_ID]
-    client_secret = data[CONF_CLIENT_SECRET]
-    flume_token_full_path = hass.config.path(f"{BASE_TOKEN_FILENAME}-{username}")
-
     try:
-        flume_auth = await hass.async_add_executor_job(
-            partial(
-                FlumeAuth,
-                username,
-                password,
-                client_id,
-                client_secret,
-                flume_token_file=flume_token_full_path,
-            )
-        )
-        flume_devices = await hass.async_add_executor_job(FlumeDeviceList, flume_auth)
+        flume_devices = await hass.async_add_executor_job(_validate_input, hass, data)
     except RequestException as err:
         raise CannotConnect from err
     except Exception as err:
+        _LOGGER.exception("Auth exception")
         raise InvalidAuth from err
     if not flume_devices or not flume_devices.device_list:
         raise CannotConnect
 
     # Return info that you want to store in the config entry.
-    return {"title": username}
+    return {"title": data[CONF_USERNAME]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -90,9 +90,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -119,9 +116,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
             else:
                 self.hass.config_entries.async_update_entry(
                     existing_entry, data=new_data
