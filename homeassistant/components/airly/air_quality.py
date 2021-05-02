@@ -12,6 +12,7 @@ from homeassistant.components.air_quality import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -100,7 +101,7 @@ class AirlyAirQuality(CoordinatorEntity, AirQualityEntity):
         return f"{self.coordinator.latitude}-{self.coordinator.longitude}"  # type: ignore[attr-defined]
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return {
             "identifiers": {
