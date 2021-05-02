@@ -42,7 +42,6 @@ async def async_setup_entry(
         entry.options.get(CONF_ZONE2, DEFAULT_ZONE2),
         entry.options.get(CONF_ZONE3, DEFAULT_ZONE3),
         lambda: get_async_client(hass),
-        entry.state,
     )
     try:
         await connect_denonavr.async_connect_receiver()
