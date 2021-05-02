@@ -27,6 +27,3 @@ async def test_smoke_test_setup_component(hass):
     for cond in CONDITIONS:
         state = hass.states.get(f"sensor.buienradar_{cond}")
         assert state.state == "unknown"
-
-    await hass.config_entries.async_unload(mock_entry.entry_id)
-    await hass.async_block_till_done()

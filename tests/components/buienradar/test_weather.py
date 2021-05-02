@@ -18,6 +18,3 @@ async def test_smoke_test_setup_component(hass):
 
     state = hass.states.get("weather.buienradar")
     assert state.state == "unknown"
-
-    await hass.config_entries.async_unload(mock_entry.entry_id)
-    await hass.async_block_till_done()

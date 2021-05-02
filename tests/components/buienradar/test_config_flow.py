@@ -107,6 +107,9 @@ async def test_options_flow(hass):
     )
     entry.add_to_hass(hass)
 
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == "form"
