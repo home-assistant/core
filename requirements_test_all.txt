@@ -288,7 +288,7 @@ dynalite_devices==0.1.46
 eebrightbox==0.0.4
 
 # homeassistant.components.elgato
-elgato==2.0.1
+elgato==2.1.0
 
 # homeassistant.components.elkm1
 elkm1-lib==0.8.10
