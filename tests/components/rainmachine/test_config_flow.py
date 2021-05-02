@@ -263,3 +263,33 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(hass, source
         CONF_ZONE_RUN_TIME: 600,
     }
     assert mock_setup_entry.called
+
+
+async def test_discovery_by_homekit_and_zeroconf_same_time(hass):
+    """Test the same controller gets discovered by two different methods."""
+
+    with patch(
+        "homeassistant.components.rainmachine.config_flow.Client",
+        return_value=_get_mock_client(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data={"host": "192.168.1.100"},
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.rainmachine.config_flow.Client",
+        return_value=_get_mock_client(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_HOMEKIT},
+            data={"host": "192.168.1.100"},
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_in_progress"
