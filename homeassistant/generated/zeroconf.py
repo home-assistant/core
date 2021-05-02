@@ -99,6 +99,10 @@ ZEROCONF = {
             "name": "rachio*"
         },
         {
+            "domain": "rainmachine",
+            "name": "rainmachine*"
+        },
+        {
             "domain": "shelly",
             "name": "shelly*"
         }
