@@ -1,6 +1,7 @@
 """Define tests for the OpenUV config flow."""
 from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
 from regenmaschine.errors import RainMachineError
 
 from homeassistant import config_entries, data_entry_flow
@@ -147,8 +148,11 @@ async def test_step_user(hass):
     assert mock_setup_entry.called
 
 
-async def test_step_zeroconf_ip_already_exists(hass):
-    """Test zeroconf with an ip that already exists."""
+@pytest.mark.parametrize(
+    "source", [config_entries.SOURCE_ZEROCONF, config_entries.SOURCE_HOMEKIT]
+)
+async def test_step_homekit_zeroconf_ip_already_exists(hass, source):
+    """Test homekit and zeroconf with an ip that already exists."""
     conf = {
         CONF_IP_ADDRESS: "192.168.1.100",
         CONF_PASSWORD: "password",
@@ -166,7 +170,7 @@ async def test_step_zeroconf_ip_already_exists(hass):
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
+            context={"source": source},
             data={"host": "192.168.1.100"},
         )
 
@@ -174,7 +178,10 @@ async def test_step_zeroconf_ip_already_exists(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_step_zeroconf_ip_change(hass):
+@pytest.mark.parametrize(
+    "source", [config_entries.SOURCE_ZEROCONF, config_entries.SOURCE_HOMEKIT]
+)
+async def test_step_homekit_zeroconf_ip_change(hass, source):
     """Test zeroconf with an ip change."""
     conf = {
         CONF_IP_ADDRESS: "192.168.1.100",
@@ -192,7 +199,7 @@ async def test_step_zeroconf_ip_change(hass):
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
+            context={"source": source},
             data={"host": "192.168.1.2"},
         )
 
@@ -201,8 +208,11 @@ async def test_step_zeroconf_ip_change(hass):
     assert entry.data[CONF_IP_ADDRESS] == "192.168.1.2"
 
 
-async def test_step_zeroconf_new_controller_when_some_exist(hass):
-    """Test zeroconf for a new controller when one already exists."""
+@pytest.mark.parametrize(
+    "source", [config_entries.SOURCE_ZEROCONF, config_entries.SOURCE_HOMEKIT]
+)
+async def test_step_homekit_zeroconf_new_controller_when_some_exist(hass, source):
+    """Test homekit and zeroconf for a new controller when one already exists."""
     existing_conf = {
         CONF_IP_ADDRESS: "192.168.1.3",
         CONF_PASSWORD: "password",
@@ -220,7 +230,7 @@ async def test_step_zeroconf_new_controller_when_some_exist(hass):
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
+            context={"source": source},
             data={"host": "192.168.1.100"},
         )
 
