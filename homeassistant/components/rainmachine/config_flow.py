@@ -62,6 +62,10 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if ip_address in entry.data[CONF_IP_ADDRESS]:
                 raise AbortFlow("already_configured")
 
+    async def async_step_homekit(self, discovery_info):
+        """Handle a flow initialized by homekit discovery."""
+        return await self.async_step_zeroconf(discovery_info)
+
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle discovery via zeroconf."""
         ip_address = discovery_info["host"]
@@ -82,7 +86,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     updates={CONF_IP_ADDRESS: ip_address}
                 )
 
-        # A new rain machine, we will change out the unique id
+        # A new rain machine: We will change out the unique id
         # for the mac address once we authenticate, however we want to
         # prevent multiple different rain machines on the same network
         # from being shown in discovery
