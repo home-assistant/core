@@ -10,21 +10,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.core import HomeAssistant, callback
 
 from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_TIMEOUT = 8
-
-
-@callback
-def iammeter_entries(hass: HomeAssistant):
-    """Return the hosts already configured."""
-    return {
-        entry.data[CONF_NAME] for entry in hass.config_entries.async_entries(DOMAIN)
-    }
 
 
 class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
