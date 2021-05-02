@@ -1,11 +1,10 @@
 """Support for the Nettigo Air Monitor air_quality service."""
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -66,7 +65,7 @@ class NAMAirQuality(CoordinatorEntity, AirQualityEntity):
         return f"{self.coordinator.unique_id}-{self.sensor_type}"
 
     @property
-    def device_info(self) -> Any:
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return self.coordinator.device_info
 

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import cast
 
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
@@ -19,6 +19,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_NAME, DEFAULT_UPDATE_INTERVAL, DOMAIN, MANUFACTURER
@@ -95,11 +96,11 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator):
         return self._unique_id
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "connections": {(CONNECTION_NETWORK_MAC, self._unique_id)},
+            "identifiers": {(DOMAIN, cast(str, self._unique_id))},
+            "connections": {(CONNECTION_NETWORK_MAC, cast(str, self._unique_id))},
             "name": DEFAULT_NAME,
             "sw_version": self.nam.software_version,
             "manufacturer": MANUFACTURER,
