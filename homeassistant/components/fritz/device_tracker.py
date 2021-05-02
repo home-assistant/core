@@ -73,7 +73,7 @@ async def async_setup_entry(
     @callback
     def update_router():
         """Update the values of the router."""
-        _async_add_entities(router, async_add_entities, data_fritz)
+        _async_add_entities(router, async_add_entities, data_fritz, entry.title)
 
     async_dispatcher_connect(hass, router.signal_device_new, update_router)
 
@@ -81,7 +81,7 @@ async def async_setup_entry(
 
 
 @callback
-def _async_add_entities(router, async_add_entities, data_fritz):
+def _async_add_entities(router, async_add_entities, data_fritz, device_name):
     """Add new tracker entities from the router."""
 
     def _is_tracked(mac, device):
@@ -99,7 +99,7 @@ def _async_add_entities(router, async_add_entities, data_fritz):
         if device.ip_address == "" or _is_tracked(mac, device):
             continue
 
-        new_tracked.append(FritzBoxTracker(router, device))
+        new_tracked.append(FritzBoxTracker(router, device, device_name))
         data_fritz.tracked[router.unique_id].add(mac)
 
     if new_tracked:
@@ -109,12 +109,13 @@ def _async_add_entities(router, async_add_entities, data_fritz):
 class FritzBoxTracker(FritzBoxHostEntity, ScannerEntity):
     """This class queries a FRITZ!Box router."""
 
-    def __init__(self, fritzbox_tools: FritzBoxTools, device):
+    def __init__(self, fritzbox_tools: FritzBoxTools, device, device_name):
         """Initialize a FRITZ!Box device."""
         self._fritzbox_tools = fritzbox_tools
         self._mac = device.mac_address
         self._model = "FRITZ!Box Tracked device"
         self._name = device.hostname or DEFAULT_DEVICE_NAME
+        self._device_name = device_name
         self._active = False
         self._attrs: dict = {}
         super().__init__()

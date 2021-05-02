@@ -81,7 +81,10 @@ class FritzBoxTools:
         self.fritzstatus = FritzStatus(fc=self.connection)
         info = self.connection.call_action("DeviceInfo:1", "GetInfo")
         if self._unique_id is None:
-            self._unique_id = info["NewSerialNumber"]
+            serial = info["NewSerialNumber"]
+            self._unique_id = ":".join(
+                [serial[i : i + 2] for i in range(0, len(serial), 2)]
+            )
 
         self.model = info.get("NewModelName")
         self.sw_version = info.get("NewSoftwareVersion")
@@ -235,17 +238,18 @@ class FritzBoxHostEntity:
             (DOMAIN, self.unique_id)
         }  # pylint: disable=maybe-no-member
         dev_info["manufacturer"] = "AVM"
-        dev_info["name"] = self._name
         if (
-            self.mac_address.replace(":", "") != self._fritzbox_tools.unique_id
+            self.mac_address != self._fritzbox_tools.unique_id
         ):  # pylint: disable=maybe-no-member
             # Exclude model and via_device for router itself
+            dev_info["name"] = self._name
             dev_info["model"] = self._model
             dev_info["via_device"] = (
                 DOMAIN,
                 self._fritzbox_tools.unique_id,
             )  # pylint: disable=maybe-no-member
         else:
+            dev_info["name"] = self._device_name
             dev_info[
                 "model"
             ] = self._fritzbox_tools.model  # pylint: disable=maybe-no-member

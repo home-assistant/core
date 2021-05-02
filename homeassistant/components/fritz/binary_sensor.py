@@ -39,9 +39,9 @@ class FritzBoxConnectivitySensor(FritzBoxHostEntity, BinarySensorEntity):
         self._unique_id = f"{self._fritzbox_tools.unique_id}-connectivity"
         self._model = self._fritzbox_tools.model
         self._name = f"{device_friendlyname} Connectivity"
+        self._device_name = device_friendlyname
         self._is_on = True
         self._is_available = True
-        self._attributes: dict = {}
         super().__init__()
 
     @property
@@ -73,11 +73,6 @@ class FritzBoxConnectivitySensor(FritzBoxHostEntity, BinarySensorEntity):
     def available(self) -> bool:
         """Return availability."""
         return self._is_available
-
-    @property
-    def device_state_attributes(self) -> dict:
-        """Return device attributes."""
-        return self._attributes
 
     def update(self) -> None:
         """Update data."""
