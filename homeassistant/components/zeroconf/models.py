@@ -22,14 +22,10 @@ class HaAsyncZeroconf(AsyncZeroconf):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Wrap AsyncZeroconf."""
         self.zeroconf = HaZeroconf(*args, **kwargs)
-        self.loop = asyncio.get_event_loop()
+        self.loop = asyncio.get_running_loop()
 
     async def async_close(self) -> None:
         """Fake method to avoid integrations closing it."""
-
-    async def ha_async_close(self) -> None:
-        """Home Assistant async_close."""
-        await self.loop.run_in_executor(None, self.zeroconf.ha_close)
 
 
 class HaServiceBrowser(ServiceBrowser):
