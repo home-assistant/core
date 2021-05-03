@@ -92,7 +92,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for key in supp_output_tray:
         entities.append(SyncThruOutputTraySensor(coordinator, name, key))
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class SyncThruSensor(CoordinatorEntity, SensorEntity):

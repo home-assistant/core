@@ -42,7 +42,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         SyncThruProblemSensor(coordinator, name),
     ]
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class SyncThruBinarySensor(CoordinatorEntity, BinarySensorEntity):
