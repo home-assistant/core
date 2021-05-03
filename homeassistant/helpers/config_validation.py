@@ -862,17 +862,19 @@ ENTITY_SERVICE_FIELDS = {
 
 def make_entity_service_schema(
     schema: dict, *, extra: int = vol.PREVENT_EXTRA
-) -> vol.All:
+) -> vol.Schema:
     """Create an entity service schema."""
-    return vol.All(
-        vol.Schema(
-            {
-                **schema,
-                **ENTITY_SERVICE_FIELDS,
-            },
-            extra=extra,
-        ),
-        has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
+    return vol.Schema(
+        vol.All(
+            vol.Schema(
+                {
+                    **schema,
+                    **ENTITY_SERVICE_FIELDS,
+                },
+                extra=extra,
+            ),
+            has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
+        )
     )
 
 

@@ -8,9 +8,10 @@ from datetime import datetime, timedelta
 import logging
 from logging import Logger
 from types import ModuleType
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from typing_extensions import Protocol
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -625,7 +626,13 @@ class EntityPlatform:
         )
 
     @callback
-    def async_register_entity_service(self, name, schema, func, required_features=None):  # type: ignore[no-untyped-def]
+    def async_register_entity_service(
+        self,
+        name: str,
+        schema: dict | vol.Schema,
+        func: str | Callable[..., Any],
+        required_features: Iterable[int] | None = None,
+    ) -> None:
         """Register an entity service.
 
         Services will automatically be shared by all platforms of the same domain.
