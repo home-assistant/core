@@ -15,7 +15,7 @@
                     "port": "Port",
                     "username": "Username"
                 },
-                "description": "Please enter the connection information of your MQTT broker."
+                "description": "Please enter the connection information of your MQTT broker and select if MQTT discovery should be enabled (recommended). If discovery is enabled, Home Assistant will automatically discover devices and entities which publish their configuration on the MQTT broker. If discovery is disabled, all configuration must be done manually."
             },
             "hassio_confirm": {
                 "data": {
@@ -62,7 +62,8 @@
                     "port": "Port",
                     "username": "Username"
                 },
-                "description": "Please enter the connection information of your MQTT broker."
+                "description": "Please enter the connection information of your MQTT broker.",
+                "title": "Broker options"
             },
             "options": {
                 "data": {
@@ -78,7 +79,8 @@
                     "will_retain": "Will message retain",
                     "will_topic": "Will message topic"
                 },
-                "description": "Please select MQTT options."
+                "description": "### Discovery \n If discovery is enabled (recommended), Home Assistant will automatically discover devices and entities which publish their configuration on the MQTT broker. If discovery is disabled, all configuration must be done manually. \n ### Birth message\n The birth message will be sent each time Home Assistant (re)connects to the MQTT broker. \n ### Will message \n The will message will be sent each time Home Assistant loses it's connection to the broker, both in case of a clean (e.g. Home Assistant shutting down) and in case of an unclean (e.g. Home Assistant crashing or losing its network connection) disconnect.",
+                "title": "MQTT options"
             }
         }
     }
