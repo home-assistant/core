@@ -68,7 +68,7 @@ class SIAHub:
             account = acc[CONF_ACCOUNT]
             device_registry.async_get_or_create(
                 config_entry_id=self._entry.entry_id,
-                identifiers={(DOMAIN, self._port, account)},
+                identifiers={(DOMAIN, f"{self._port}_{account}")},
                 name=f"{self._port} - {account}",
             )
         self._entry.async_on_unload(

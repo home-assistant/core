@@ -1,6 +1,7 @@
 """Module for SIA Alarm Control Panels."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from typing import Any, Callable
@@ -261,10 +262,10 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         return 0
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> Mapping[str, Any] | None:
         """Return the device_info."""
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
-            "via_device": (DOMAIN, self._port, self._account),
+            "via_device": (DOMAIN, f"{self._port}_{self._account}"),
         }
