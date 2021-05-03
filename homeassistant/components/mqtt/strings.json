@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "broker": {
-        "description": "Please enter the connection information of your MQTT broker and select if MQTT discovery should be enabled (recommended). If discovery is enabled, Home Assistant will automatically discover devices and entities which publish their configuration on the MQTT broker. If discovery is disabled, all configuration must be done manually.",
+        "description": "Please enter the connection information of your MQTT broker.",
         "data": {
           "broker": "Broker",
           "port": "[%key:common::config_flow::data::port%]",
