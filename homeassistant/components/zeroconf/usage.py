@@ -5,7 +5,6 @@ import logging
 from typing import Any
 
 import zeroconf
-from zeroconf import Zeroconf
 
 from homeassistant.helpers.frame import (
     MissingIntegrationFrame,
@@ -13,13 +12,15 @@ from homeassistant.helpers.frame import (
     report_integration,
 )
 
+from .models import HaZeroconf
+
 _LOGGER = logging.getLogger(__name__)
 
 
-def install_multiple_zeroconf_catcher(hass_zc: Zeroconf) -> None:
+def install_multiple_zeroconf_catcher(hass_zc: HaZeroconf) -> None:
     """Wrap the Zeroconf class to return the shared instance if multiple instances are detected."""
 
-    def new_zeroconf_new(self: zeroconf.Zeroconf, *k: Any, **kw: Any) -> Zeroconf:
+    def new_zeroconf_new(self: zeroconf.Zeroconf, *k: Any, **kw: Any) -> HaZeroconf:
         _report(
             "attempted to create another Zeroconf instance. Please use the shared Zeroconf via await homeassistant.components.zeroconf.async_get_instance(hass)",
         )
