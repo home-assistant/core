@@ -141,7 +141,9 @@ async def test_webhook_head(hass, mock_client):
     assert hooks[0][2].method == "HEAD"
 
 
-async def test_listing_webhook(hass, hass_ws_client, hass_access_token):
+async def test_listing_webhook(
+    hass, hass_ws_client, hass_access_token, enable_custom_integrations
+):
     """Test unregistering a webhook."""
     assert await async_setup_component(hass, "webhook", {})
     client = await hass_ws_client(hass, hass_access_token)

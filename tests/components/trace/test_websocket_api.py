@@ -108,6 +108,7 @@ async def test_get_trace(
     trigger,
     context_key,
     condition_results,
+    enable_custom_integrations,
 ):
     """Test tracing a script or automation."""
     id = 1
@@ -1227,7 +1228,9 @@ async def test_script_mode_2(hass, hass_ws_client, script_mode, script_execution
     assert trace["script_execution"] == "finished"
 
 
-async def test_trace_blueprint_automation(hass, hass_ws_client):
+async def test_trace_blueprint_automation(
+    hass, hass_ws_client, enable_custom_integrations
+):
     """Test trace of blueprint automation."""
     id = 1
 

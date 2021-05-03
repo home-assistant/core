@@ -143,9 +143,7 @@ def verify_uppercase(value: str):
 def verify_version(value: str):
     """Verify the version."""
     if not validate_custom_integration_version(value):
-        raise vol.Invalid(
-            f"'{value}' is not a valid version. This will cause a future version of Home Assistant to block this integration.",
-        )
+        raise vol.Invalid(f"'{value}' is not a valid version.")
     return value
 
 
@@ -221,10 +219,7 @@ def validate_version(integration: Integration):
     Will be removed when the version key is no longer optional for custom integrations.
     """
     if not integration.manifest.get("version"):
-        integration.add_error(
-            "manifest",
-            "No 'version' key in the manifest file. This will cause a future version of Home Assistant to block this integration.",
-        )
+        integration.add_error("manifest", "No 'version' key in the manifest file.")
         return
 
 
