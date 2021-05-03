@@ -192,6 +192,18 @@ HOBBYBOARD_EF = {
 # 7E sensors are special sensors by Embedded Data Systems
 
 EDS_SENSORS = {
+    "EDS0066": [
+        {
+            "path": "EDS0066/temperature",
+            "name": "Temperature",
+            "type": SENSOR_TYPE_TEMPERATURE,
+        },
+        {
+            "path": "EDS0066/pressure",
+            "name": "Pressure",
+            "type": SENSOR_TYPE_PRESSURE,
+        },
+    ],
     "EDS0068": [
         {
             "path": "EDS0068/temperature",
