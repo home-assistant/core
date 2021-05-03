@@ -7,7 +7,6 @@ from typing import Any, Callable
 from pysiaalarm import SIAEvent
 
 from homeassistant.components.alarm_control_panel import (
-    DOMAIN as ALARM_DOMAIN,
     ENTITY_ID_FORMAT as ALARM_ENTITY_ID_FORMAT,
     AlarmControlPanelEntity,
 )
@@ -34,15 +33,12 @@ from .const import (
     CONF_PING_INTERVAL,
     CONF_ZONES,
     DOMAIN,
+    SIA_ENTITY_ID_FORMAT,
     SIA_EVENT,
+    SIA_NAME_FORMAT,
+    SIA_UNIQUE_ID_FORMAT_ALARM,
 )
-from .utils import (
-    get_attr_from_sia_event,
-    get_entity_id,
-    get_name,
-    get_unavailability_interval,
-    get_unique_id,
-)
+from .utils import get_attr_from_sia_event, get_unavailability_interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,15 +105,12 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         self._ping_interval: int = self._account_data[CONF_PING_INTERVAL]
         self._port: int = self._entry.data[CONF_PORT]
 
-        self._unique_id: str = get_unique_id(
-            self._entry.entry_id, self._account, self._zone, ALARM_DOMAIN
+        self.entity_id: str = ALARM_ENTITY_ID_FORMAT.format(
+            SIA_ENTITY_ID_FORMAT.format(
+                self._port, self._account, self._zone, DEVICE_CLASS_ALARM
+            )
         )
-        self._entity_id: str = get_entity_id(
-            self._port, self._account, self._zone, DEVICE_CLASS_ALARM
-        )
-        self._name: str = get_name(
-            self._port, self._account, self._zone, DEVICE_CLASS_ALARM
-        )
+
         self._attr: dict[str, Any] = {
             CONF_PORT: self._port,
             CONF_ACCOUNT: self._account,
@@ -147,9 +140,9 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
                 listener=self.async_handle_event,
             )
         )
-        state = await self.async_get_last_state()
-        if state is not None:
-            self.state = state.state
+        last_state = await self.async_get_last_state()
+        if last_state is not None:
+            self.state = last_state.state
         if self.state == STATE_UNAVAILABLE:
             self._available = False
             return
@@ -214,17 +207,16 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
     @property
     def name(self) -> str:
         """Get Name."""
-        return self._name
+        return SIA_NAME_FORMAT.format(
+            self._port, self._account, self._zone, DEVICE_CLASS_ALARM
+        )
 
     @property
     def unique_id(self) -> str:
         """Get unique_id."""
-        return self._unique_id
-
-    @property
-    def entity_id(self) -> str:  # type: ignore
-        """Get entity_id."""
-        return ALARM_ENTITY_ID_FORMAT.format(self._entity_id)
+        return SIA_UNIQUE_ID_FORMAT_ALARM.format(
+            self._entry.entry_id, self._account, self._zone
+        )
 
     @property
     def available(self) -> bool:
