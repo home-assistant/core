@@ -64,7 +64,7 @@ MAX_CLIENT_SIZE: int = 1024 ** 2 * 16
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-
+SAVE_DELAY = 180
 
 HTTP_SCHEMA = vol.All(
     cv.deprecated(CONF_BASE_URL),
@@ -371,7 +371,7 @@ async def start_http_server_and_save_config(
             str(ip.network_address) for ip in conf[CONF_TRUSTED_PROXIES]
         ]
 
-    await store.async_save(conf)
+    store.async_delay_save(lambda: conf, SAVE_DELAY)
 
 
 current_request: ContextVar[web.Request | None] = ContextVar(
