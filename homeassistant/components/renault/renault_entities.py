@@ -1,11 +1,11 @@
 """Base classes for Renault entities."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import cast
 
 from renault_api.kamereon.models import KamereonVehicleCockpitData
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
@@ -24,7 +24,7 @@ class RenaultDataEntity(CoordinatorEntity, Entity):
         self._entity_type = entity_type
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         return self.vehicle.device_info
 

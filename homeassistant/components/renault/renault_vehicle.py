@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 from renault_api.kamereon import models
 from renault_api.renault_vehicle import RenaultVehicle
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN
 from .renault_coordinator import RenaultDataUpdateCoordinator
@@ -30,12 +30,12 @@ class RenaultVehicleProxy:
         self.hass = hass
         self._vehicle = vehicle
         self._details = details
-        self._device_info = {
-            "identifiers": {(DOMAIN, details.vin)},
+        self._device_info: DeviceInfo = {
+            "identifiers": {(DOMAIN, details.vin or "")},
             "manufacturer": (details.get_brand_label() or "").capitalize(),
             "model": (details.get_model_label() or "").capitalize(),
-            "name": details.registrationNumber,
-            "sw_version": details.get_model_code(),
+            "name": details.registrationNumber or "",
+            "sw_version": details.get_model_code() or "",
         }
         self.coordinators: dict[str, RenaultDataUpdateCoordinator] = {}
         self.hvac_target_temperature = 21
@@ -47,7 +47,7 @@ class RenaultVehicleProxy:
         return self._details
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         return self._device_info
 
