@@ -66,7 +66,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     unique_id = coordinator.data.info.serial_number
     async_add_entities([RokuMediaPlayer(unique_id, coordinator)], True)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_SEARCH,

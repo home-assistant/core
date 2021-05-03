@@ -210,7 +210,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     asyncio.create_task(_discovery())
 
     # Register entity services
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_CALL_METHOD,
         {
