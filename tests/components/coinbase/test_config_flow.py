@@ -15,6 +15,51 @@ from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 
 from tests.common import MockConfigEntry
 
+GOOD_CURRENCY = "BTC"
+GOOD_CURRENCY_2 = "USD"
+GOOD_EXCHNAGE_RATE = "BTC"
+GOOD_EXCHNAGE_RATE_2 = "ATOM"
+BAD_CURRENCY = "ETH"
+BAD_EXCHANGE_RATE = "ETH"
+
+
+def _mock_get_current_user():
+    """Return a simplified mock user."""
+    return {
+        "id": "123456-abcdef",
+        "name": "Test User",
+    }
+
+
+def _mock_get_accounts():
+    """Return a simplified list of mock accounts."""
+    return {
+        "data": [
+            {
+                "balance": {"amount": "0.00001", "currency": GOOD_CURRENCY},
+                "currency": "BTC",
+                "id": "123456789",
+                "name": "BTC Wallet",
+                "native_balance": {"amount": "100.12", "currency": GOOD_CURRENCY},
+            },
+            {
+                "balance": {"amount": "9.90", "currency": GOOD_CURRENCY_2},
+                "currency": "USD",
+                "id": "987654321",
+                "name": "USD Wallet",
+                "native_balance": {"amount": "9.90", "currency": GOOD_CURRENCY_2},
+            },
+        ]
+    }
+
+
+def _mock_get_exchange_rates():
+    """Return a heavily reduced mock list of exchange rates for testing."""
+    return {
+        "currency": "USD",
+        "rates": {GOOD_EXCHNAGE_RATE_2: "0.109", GOOD_EXCHNAGE_RATE: "0.00002"},
+    }
+
 
 async def test_form(hass):
     """Test we get the form."""
@@ -27,22 +72,13 @@ async def test_form(hass):
 
     with patch(
         "coinbase.wallet.client.Client.get_current_user",
-        return_value={"name": "Test User"},
+        return_value=_mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value={
-            "data": [
-                {
-                    "currency": "BTC",
-                },
-                {
-                    "currency": "USD",
-                },
-            ]
-        },
+        return_value=_mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value={"currency": "USD", "rates": {"ATOM": "0.109", "BTC": "0.00002"}},
+        return_value=_mock_get_exchange_rates(),
     ), patch(
         "homeassistant.components.coinbase.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -155,71 +191,26 @@ async def test_option_good_account_currency(hass):
 
     with patch(
         "coinbase.wallet.client.Client.get_current_user",
-        return_value={"name": "Test User", "id": "123456789"},
+        return_value=_mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value={
-            "data": [
-                {
-                    "currency": "BTC",
-                    "name": "BTC Wallet",
-                    "id": "abcd",
-                    "balance": {"amount": "1.00", "currency": "BTC"},
-                    "native_balance": {"amount": "0.01", "currency": "USD"},
-                },
-                {
-                    "currency": "USD",
-                    "name": "USD Wallet",
-                    "id": "efgh",
-                    "balance": {"amount": "9.90", "currency": "USD"},
-                    "native_balance": {"amount": "9.90", "currency": "USD"},
-                },
-            ]
-        },
+        return_value=_mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value={"currency": "USD", "rates": {"ATOM": "0.109", "BTC": "0.00002"}},
+        return_value=_mock_get_exchange_rates(),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         await hass.async_block_till_done()
-
-    with patch(
-        "coinbase.wallet.client.Client.get_current_user",
-        return_value={"name": "Test User"},
-    ), patch(
-        "coinbase.wallet.client.Client.get_accounts",
-        return_value={
-            "data": [
-                {
-                    "currency": "BTC",
-                    "name": "BTC Wallet",
-                    "id": "abcd",
-                    "balance": {"amount": "1.00", "currency": "BTC"},
-                    "native_balance": {"amount": "0.01", "currency": "USD"},
-                },
-                {
-                    "currency": "USD",
-                    "name": "USD Wallet",
-                    "id": "efgh",
-                    "balance": {"amount": "9.90", "currency": "USD"},
-                    "native_balance": {"amount": "9.90", "currency": "USD"},
-                },
-            ]
-        },
-    ), patch(
-        "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value={"currency": "USD", "rates": {"ATOM": "0.109", "BTC": "0.00002"}},
-    ):
-        result = await hass.config_entries.options.async_configure(
+        result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                CONF_CURRENCIES: ["BTC"],
+                CONF_CURRENCIES: [GOOD_EXCHNAGE_RATE],
                 CONF_EXCHANGE_RATES: [],
             },
         )
-    assert result["type"] == "create_entry"
+    assert result2["type"] == "create_entry"
 
 
 async def test_form_bad_account_currency(hass):
@@ -238,73 +229,28 @@ async def test_form_bad_account_currency(hass):
 
     with patch(
         "coinbase.wallet.client.Client.get_current_user",
-        return_value={"name": "Test User", "id": "123456789"},
+        return_value=_mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value={
-            "data": [
-                {
-                    "currency": "BTC",
-                    "name": "BTC Wallet",
-                    "id": "abcd",
-                    "balance": {"amount": "1.00", "currency": "BTC"},
-                    "native_balance": {"amount": "0.01", "currency": "USD"},
-                },
-                {
-                    "currency": "USD",
-                    "name": "USD Wallet",
-                    "id": "efgh",
-                    "balance": {"amount": "9.90", "currency": "USD"},
-                    "native_balance": {"amount": "9.90", "currency": "USD"},
-                },
-            ]
-        },
+        return_value=_mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value={"currency": "USD", "rates": {"ATOM": "0.109", "BTC": "0.00002"}},
+        return_value=_mock_get_exchange_rates(),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         await hass.async_block_till_done()
-
-    with patch(
-        "coinbase.wallet.client.Client.get_current_user",
-        return_value={"name": "Test User"},
-    ), patch(
-        "coinbase.wallet.client.Client.get_accounts",
-        return_value={
-            "data": [
-                {
-                    "currency": "BTC",
-                    "name": "BTC Wallet",
-                    "id": "abcd",
-                    "balance": {"amount": "1.00", "currency": "BTC"},
-                    "native_balance": {"amount": "0.01", "currency": "USD"},
-                },
-                {
-                    "currency": "USD",
-                    "name": "USD Wallet",
-                    "id": "efgh",
-                    "balance": {"amount": "9.90", "currency": "USD"},
-                    "native_balance": {"amount": "9.90", "currency": "USD"},
-                },
-            ]
-        },
-    ), patch(
-        "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value={"currency": "USD", "rates": {"ATOM": "0.109", "BTC": "0.00002"}},
-    ):
-        result = await hass.config_entries.options.async_configure(
+        result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                CONF_CURRENCIES: ["ETH"],
+                CONF_CURRENCIES: [BAD_CURRENCY],
                 CONF_EXCHANGE_RATES: [],
             },
         )
 
-    assert result["type"] == "form"
-    assert result["errors"] == {"base": "currency_unavaliable"}
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "currency_unavaliable"}
 
 
 async def test_option_good_exchange_rate(hass):
@@ -323,71 +269,26 @@ async def test_option_good_exchange_rate(hass):
 
     with patch(
         "coinbase.wallet.client.Client.get_current_user",
-        return_value={"name": "Test User", "id": "123456789"},
+        return_value=_mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value={
-            "data": [
-                {
-                    "currency": "BTC",
-                    "name": "BTC Wallet",
-                    "id": "abcd",
-                    "balance": {"amount": "1.00", "currency": "BTC"},
-                    "native_balance": {"amount": "0.01", "currency": "USD"},
-                },
-                {
-                    "currency": "USD",
-                    "name": "USD Wallet",
-                    "id": "efgh",
-                    "balance": {"amount": "9.90", "currency": "USD"},
-                    "native_balance": {"amount": "9.90", "currency": "USD"},
-                },
-            ]
-        },
+        return_value=_mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value={"currency": "USD", "rates": {"ATOM": "0.109", "BTC": "0.00002"}},
+        return_value=_mock_get_exchange_rates(),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         await hass.async_block_till_done()
-
-    with patch(
-        "coinbase.wallet.client.Client.get_current_user",
-        return_value={"name": "Test User"},
-    ), patch(
-        "coinbase.wallet.client.Client.get_accounts",
-        return_value={
-            "data": [
-                {
-                    "currency": "BTC",
-                    "name": "BTC Wallet",
-                    "id": "abcd",
-                    "balance": {"amount": "1.00", "currency": "BTC"},
-                    "native_balance": {"amount": "0.01", "currency": "USD"},
-                },
-                {
-                    "currency": "USD",
-                    "name": "USD Wallet",
-                    "id": "efgh",
-                    "balance": {"amount": "9.90", "currency": "USD"},
-                    "native_balance": {"amount": "9.90", "currency": "USD"},
-                },
-            ]
-        },
-    ), patch(
-        "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value={"currency": "USD", "rates": {"ATOM": "0.109", "BTC": "0.00002"}},
-    ):
-        result = await hass.config_entries.options.async_configure(
+        result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
                 CONF_CURRENCIES: [],
-                CONF_EXCHANGE_RATES: ["BTC"],
+                CONF_EXCHANGE_RATES: [GOOD_EXCHNAGE_RATE],
             },
         )
-    assert result["type"] == "create_entry"
+    assert result2["type"] == "create_entry"
 
 
 async def test_form_bad_exchange_rate(hass):
@@ -406,72 +307,27 @@ async def test_form_bad_exchange_rate(hass):
 
     with patch(
         "coinbase.wallet.client.Client.get_current_user",
-        return_value={"name": "Test User", "id": "123456789"},
+        return_value=_mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value={
-            "data": [
-                {
-                    "currency": "BTC",
-                    "name": "BTC Wallet",
-                    "id": "abcd",
-                    "balance": {"amount": "1.00", "currency": "BTC"},
-                    "native_balance": {"amount": "0.01", "currency": "USD"},
-                },
-                {
-                    "currency": "USD",
-                    "name": "USD Wallet",
-                    "id": "efgh",
-                    "balance": {"amount": "9.90", "currency": "USD"},
-                    "native_balance": {"amount": "9.90", "currency": "USD"},
-                },
-            ]
-        },
+        return_value=_mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value={"currency": "USD", "rates": {"ATOM": "0.109", "BTC": "0.00002"}},
+        return_value=_mock_get_exchange_rates(),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         await hass.async_block_till_done()
-
-    with patch(
-        "coinbase.wallet.client.Client.get_current_user",
-        return_value={"name": "Test User"},
-    ), patch(
-        "coinbase.wallet.client.Client.get_accounts",
-        return_value={
-            "data": [
-                {
-                    "currency": "BTC",
-                    "name": "BTC Wallet",
-                    "id": "abcd",
-                    "balance": {"amount": "1.00", "currency": "BTC"},
-                    "native_balance": {"amount": "0.01", "currency": "USD"},
-                },
-                {
-                    "currency": "USD",
-                    "name": "USD Wallet",
-                    "id": "efgh",
-                    "balance": {"amount": "9.90", "currency": "USD"},
-                    "native_balance": {"amount": "9.90", "currency": "USD"},
-                },
-            ]
-        },
-    ), patch(
-        "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value={"currency": "USD", "rates": {"ATOM": "0.109", "BTC": "0.00002"}},
-    ):
-        result = await hass.config_entries.options.async_configure(
+        result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
                 CONF_CURRENCIES: [],
-                CONF_EXCHANGE_RATES: ["ETH"],
+                CONF_EXCHANGE_RATES: [BAD_EXCHANGE_RATE],
             },
         )
-    assert result["type"] == "form"
-    assert result["errors"] == {"base": "exchange_rate_unavaliable"}
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "exchange_rate_unavaliable"}
 
 
 async def test_option_catch_all_exception(hass):
@@ -490,30 +346,13 @@ async def test_option_catch_all_exception(hass):
 
     with patch(
         "coinbase.wallet.client.Client.get_current_user",
-        return_value={"name": "Test User", "id": "123456789"},
+        return_value=_mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value={
-            "data": [
-                {
-                    "currency": "BTC",
-                    "name": "BTC Wallet",
-                    "id": "abcd",
-                    "balance": {"amount": "1.00", "currency": "BTC"},
-                    "native_balance": {"amount": "0.01", "currency": "USD"},
-                },
-                {
-                    "currency": "USD",
-                    "name": "USD Wallet",
-                    "id": "efgh",
-                    "balance": {"amount": "9.90", "currency": "USD"},
-                    "native_balance": {"amount": "9.90", "currency": "USD"},
-                },
-            ]
-        },
+        return_value=_mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value={"currency": "USD", "rates": {"ATOM": "0.109", "BTC": "0.00002"}},
+        return_value=_mock_get_exchange_rates(),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -546,22 +385,13 @@ async def test_yaml_import(hass):
     }
     with patch(
         "coinbase.wallet.client.Client.get_current_user",
-        return_value={"name": "Test User"},
+        return_value=_mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value={
-            "data": [
-                {
-                    "currency": "BTC",
-                },
-                {
-                    "currency": "USD",
-                },
-            ]
-        },
+        return_value=_mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value={"currency": "USD", "rates": {"ATOM": "0.109", "BTC": "0.00002"}},
+        return_value=_mock_get_exchange_rates(),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
