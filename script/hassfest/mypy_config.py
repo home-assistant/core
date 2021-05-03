@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import configparser
 import io
+import os
+from pathlib import Path
 from typing import Final
 
 from .model import Config, Integration
@@ -24,7 +26,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.atag.*",
     "homeassistant.components.aurora.*",
     "homeassistant.components.awair.*",
-    "homeassistant.components.axis.*",
     "homeassistant.components.azure_devops.*",
     "homeassistant.components.azure_event_hub.*",
     "homeassistant.components.blueprint.*",
@@ -54,7 +55,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.dynalite.*",
     "homeassistant.components.eafm.*",
     "homeassistant.components.edl21.*",
-    "homeassistant.components.elgato.*",
     "homeassistant.components.elkm1.*",
     "homeassistant.components.emonitor.*",
     "homeassistant.components.enphase_envoy.*",
@@ -104,7 +104,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.humidifier.*",
     "homeassistant.components.iaqualink.*",
     "homeassistant.components.icloud.*",
-    "homeassistant.components.ihc.*",
     "homeassistant.components.image.*",
     "homeassistant.components.incomfort.*",
     "homeassistant.components.influxdb.*",
@@ -193,7 +192,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.sentry.*",
     "homeassistant.components.sesame.*",
     "homeassistant.components.sharkiq.*",
-    "homeassistant.components.shell_command.*",
     "homeassistant.components.shelly.*",
     "homeassistant.components.sma.*",
     "homeassistant.components.smart_meter_texas.*",
@@ -321,6 +319,22 @@ def generate_and_validate(config: Config) -> str:
         if module in ignored_modules_set:
             config.add_error("mypy_config", f"Module '{module}' is in ignored list")
 
+    # Validate that all modules exist.
+    all_modules = strict_modules + IGNORED_MODULES
+    for module in all_modules:
+        if module.endswith(".*"):
+            module_path = Path(module[:-2].replace(".", os.path.sep))
+            if not module_path.is_dir():
+                config.add_error("mypy_config", f"Module '{module} is not a folder")
+        else:
+            module = module.replace(".", os.path.sep)
+            module_path = Path(f"{module}.py")
+            if module_path.is_file():
+                continue
+            module_path = Path(module) / "__init__.py"
+            if not module_path.is_file():
+                config.add_error("mypy_config", f"Module '{module} doesn't exist")
+
     mypy_config = configparser.ConfigParser()
 
     general_section = "mypy"
@@ -340,6 +354,12 @@ def generate_and_validate(config: Config) -> str:
     mypy_config.add_section(strict_section)
     for key in STRICT_SETTINGS:
         mypy_config.set(strict_section, key, "true")
+
+    # Disable strict checks for tests
+    tests_section = "mypy-tests.*"
+    mypy_config.add_section(tests_section)
+    for key in STRICT_SETTINGS:
+        mypy_config.set(tests_section, key, "false")
 
     ignored_section = "mypy-" + ",".join(IGNORED_MODULES)
     mypy_config.add_section(ignored_section)

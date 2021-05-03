@@ -41,7 +41,6 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle Tansmission config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback

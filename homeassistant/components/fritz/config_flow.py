@@ -5,7 +5,6 @@ from urllib.parse import urlparse
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_FRIENDLY_NAME,
@@ -28,12 +27,10 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class FritzBoxToolsFlowHandler(ConfigFlow):
+class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a FRITZ!Box Tools config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize FRITZ!Box Tools flow."""

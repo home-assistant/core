@@ -11,11 +11,7 @@ from motioneye_client.client import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    CONN_CLASS_LOCAL_POLL,
-    SOURCE_REAUTH,
-    ConfigFlow,
-)
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow
 from homeassistant.const import CONF_SOURCE, CONF_URL
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -36,7 +32,6 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for motionEye."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(
         self, user_input: ConfigType | None = None

@@ -14,7 +14,7 @@
                     "host": "Host",
                     "name": "Nome"
                 },
-                "description": "Innanzitutto, devi scaricare l'app Goal Zero: https://www.goalzero.com/product-features/yeti-app/\n\nSegui le istruzioni per connettere il tuo Yeti alla tua rete Wifi. Quindi ottieni l'ip host dal tuo router. Il DHCP deve essere configurato nelle impostazioni del router affinch\u00e9 assicuri che l'ip host non cambi. Fare riferimento al manuale utente del router.",
+                "description": "Innanzitutto, devi scaricare l'app Goal Zero: https://www.goalzero.com/product-features/yeti-app/ \n\nSegui le istruzioni per connettere il tuo Yeti alla tua rete Wifi. La prenotazione DHCP per il dispositivo deve essere configurata nelle impostazioni del router per assicurarsi che l'IP host non cambi. Fare riferimento al manuale utente del router.",
                 "title": "Goal Zero Yeti"
             }
         }

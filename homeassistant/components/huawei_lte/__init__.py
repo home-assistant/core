@@ -39,6 +39,7 @@ from homeassistant.const import (
     CONF_RECIPIENT,
     CONF_URL,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -48,7 +49,7 @@ from homeassistant.helpers import (
     discovery,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -162,7 +163,7 @@ class Router:
         return DEFAULT_DEVICE_NAME
 
     @property
-    def device_identifiers(self) -> set[tuple[str, str]]:
+    def device_identifiers(self) -> set[tuple[str, ...]]:
         """Get router identifiers for device registry."""
         try:
             return {(DOMAIN, self.data[KEY_DEVICE_INFORMATION]["SerialNumber"])}
@@ -442,6 +443,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         async_track_time_interval(hass, _update_router, SCAN_INTERVAL)
     )
 
+    # Clean up at end
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, router.cleanup)
+    )
+
     return True
 
 
@@ -594,7 +600,7 @@ class HuaweiLteBaseEntity(Entity):
         return False
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Get info for matching with parent router."""
         return {
             "identifiers": self.router.device_identifiers,

@@ -18,7 +18,6 @@ class TibberConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tibber integration."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_import(self, import_info):
         """Set the config entry up from yaml."""

@@ -6,6 +6,7 @@
         "flow_title": "WiLight: {name}",
         "step": {
             "confirm": {
+                "description": "M\u00f6chten Sie WiLight {name} einrichten? \n\n Es unterst\u00fctzt: {components}",
                 "title": "WiLight"
             }
         }

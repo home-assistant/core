@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 from wled import WLED, Device as WLEDDevice, WLEDConnectionError, WLEDError
 
@@ -14,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -165,7 +165,7 @@ class WLEDDeviceEntity(WLEDEntity):
     """Defines a WLED device entity."""
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this WLED device."""
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.data.info.mac_address)},

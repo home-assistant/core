@@ -5,7 +5,6 @@ from asyncio import run_coroutine_threadsafe
 import datetime as dt
 from datetime import timedelta
 import logging
-from typing import Any, Callable
 
 import requests
 from spotipy import Spotify, SpotifyException
@@ -54,7 +53,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp
 
 from .const import (
@@ -188,7 +188,7 @@ class UnknownMediaType(BrowseError):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Spotify based on a config entry."""
     spotify = SpotifyMediaPlayer(
@@ -272,7 +272,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         return self._id
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         if self._me is not None:
             model = self._me["product"]

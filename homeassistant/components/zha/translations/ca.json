@@ -33,6 +33,19 @@
             }
         }
     },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "Codi necessari per activar accions",
+            "alarm_failed_tries": "Nombre d'intents de codi erronis consecutius per disparar una alarma",
+            "alarm_master_code": "Codi mestre per als panells de control d'alarma",
+            "title": "Opcions del panell de control d'alarma"
+        },
+        "zha_options": {
+            "default_light_transition": "Temps de transici\u00f3 predeterminat (segons)",
+            "enable_identify_on_join": "Activa l'efecte d'identificaci\u00f3 quan els dispositius s'uneixin a la xarxa",
+            "title": "Opcions globals"
+        }
+    },
     "device_automation": {
         "action_type": {
             "squawk": "Squawk",

@@ -9,6 +9,10 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "reauth_confirm": {
+                "description": "Die SmartTub-Integration muss Ihr Konto neu authentifizieren",
+                "title": "Integration erneut authentifizieren"
+            },
             "user": {
                 "data": {
                     "email": "E-Mail",

@@ -7,13 +7,10 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_INPUT,
     CONF_COILS,
     CONF_INPUT_TYPE,
-    CONF_REGISTER,
-    CONF_REGISTER_TYPE,
-    CONF_REGISTERS,
     CONF_STATE_OFF,
     CONF_STATE_ON,
-    CONF_VERIFY_REGISTER,
-    CONF_VERIFY_STATE,
+    CONF_VERIFY,
+    CONF_WRITE_TYPE,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -28,130 +25,48 @@ from homeassistant.const import (
     STATE_ON,
 )
 
-from .conftest import base_config_test, base_test
+from .conftest import ReadResult, base_config_test, base_test, prepare_service_update
 
 
 @pytest.mark.parametrize(
-    "array_type, do_config",
+    "do_config",
     [
-        (
-            None,
-            {
-                CONF_ADDRESS: 1234,
-            },
-        ),
-        (
-            None,
-            {
-                CONF_ADDRESS: 1234,
-                CONF_INPUT_TYPE: CALL_TYPE_COIL,
-            },
-        ),
-        (
-            None,
-            {
-                CONF_ADDRESS: 1234,
-                CONF_SLAVE: 1,
-                CONF_STATE_OFF: 0,
-                CONF_STATE_ON: 1,
-                CONF_VERIFY_REGISTER: 1235,
-                CONF_VERIFY_STATE: False,
-                CONF_COMMAND_OFF: 0x00,
-                CONF_COMMAND_ON: 0x01,
-                CONF_DEVICE_CLASS: "switch",
+        {
+            CONF_ADDRESS: 1234,
+        },
+        {
+            CONF_ADDRESS: 1234,
+            CONF_WRITE_TYPE: CALL_TYPE_COIL,
+        },
+        {
+            CONF_ADDRESS: 1234,
+            CONF_SLAVE: 1,
+            CONF_COMMAND_OFF: 0x00,
+            CONF_COMMAND_ON: 0x01,
+            CONF_DEVICE_CLASS: "switch",
+            CONF_VERIFY: {
                 CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
-            },
-        ),
-        (
-            None,
-            {
-                CONF_ADDRESS: 1234,
-                CONF_SLAVE: 1,
+                CONF_ADDRESS: 1235,
                 CONF_STATE_OFF: 0,
                 CONF_STATE_ON: 1,
-                CONF_VERIFY_REGISTER: 1235,
-                CONF_VERIFY_STATE: True,
-                CONF_COMMAND_OFF: 0x00,
-                CONF_COMMAND_ON: 0x01,
-                CONF_DEVICE_CLASS: "switch",
+            },
+        },
+        {
+            CONF_ADDRESS: 1234,
+            CONF_SLAVE: 1,
+            CONF_COMMAND_OFF: 0x00,
+            CONF_COMMAND_ON: 0x01,
+            CONF_DEVICE_CLASS: "switch",
+            CONF_VERIFY: {
                 CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
-            },
-        ),
-        (
-            None,
-            {
-                CONF_ADDRESS: 1234,
-                CONF_INPUT_TYPE: CALL_TYPE_COIL,
-                CONF_SLAVE: 1,
-                CONF_DEVICE_CLASS: "switch",
-                CONF_INPUT_TYPE: CALL_TYPE_COIL,
-            },
-        ),
-        (
-            CONF_REGISTERS,
-            {
-                CONF_REGISTER: 1234,
-                CONF_COMMAND_OFF: 0x00,
-                CONF_COMMAND_ON: 0x01,
-            },
-        ),
-        (
-            CONF_REGISTERS,
-            {
-                CONF_REGISTER: 1234,
-                CONF_COMMAND_OFF: 0x00,
-                CONF_COMMAND_ON: 0x01,
-            },
-        ),
-        (
-            CONF_COILS,
-            {
-                CALL_TYPE_COIL: 1234,
-                CONF_SLAVE: 1,
-            },
-        ),
-        (
-            CONF_REGISTERS,
-            {
-                CONF_REGISTER: 1234,
-                CONF_COMMAND_OFF: 0x00,
-                CONF_COMMAND_ON: 0x01,
-                CONF_SLAVE: 1,
+                CONF_ADDRESS: 1235,
                 CONF_STATE_OFF: 0,
                 CONF_STATE_ON: 1,
-                CONF_VERIFY_REGISTER: 1235,
-                CONF_COMMAND_OFF: 0x00,
-                CONF_COMMAND_ON: 0x01,
-                CONF_VERIFY_STATE: True,
-                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_INPUT,
             },
-        ),
-        (
-            CONF_REGISTERS,
-            {
-                CONF_REGISTER: 1234,
-                CONF_COMMAND_OFF: 0x00,
-                CONF_COMMAND_ON: 0x01,
-                CONF_SLAVE: 1,
-                CONF_STATE_OFF: 0,
-                CONF_STATE_ON: 1,
-                CONF_VERIFY_REGISTER: 1235,
-                CONF_COMMAND_OFF: 0x00,
-                CONF_COMMAND_ON: 0x01,
-                CONF_VERIFY_STATE: True,
-                CONF_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
-            },
-        ),
-        (
-            CONF_COILS,
-            {
-                CALL_TYPE_COIL: 1234,
-                CONF_SLAVE: 1,
-            },
-        ),
+        },
     ],
 )
-async def test_config_switch(hass, array_type, do_config):
+async def test_config_switch(hass, do_config):
     """Run test for switch."""
     device_name = "test_switch"
 
@@ -166,8 +81,8 @@ async def test_config_switch(hass, array_type, do_config):
         device_name,
         SWITCH_DOMAIN,
         CONF_SWITCHES,
-        array_type,
-        method_discovery=(array_type is None),
+        None,
+        method_discovery=True,
     )
 
 
@@ -204,7 +119,8 @@ async def test_coil_switch(hass, regs, expected):
         {
             CONF_NAME: switch_name,
             CONF_ADDRESS: 1234,
-            CONF_INPUT_TYPE: CALL_TYPE_COIL,
+            CONF_WRITE_TYPE: CALL_TYPE_COIL,
+            CONF_VERIFY: {},
         },
         switch_name,
         SWITCH_DOMAIN,
@@ -250,18 +166,19 @@ async def test_register_switch(hass, regs, expected):
         hass,
         {
             CONF_NAME: switch_name,
-            CONF_REGISTER: 1234,
+            CONF_ADDRESS: 1234,
             CONF_SLAVE: 1,
             CONF_COMMAND_OFF: 0x00,
             CONF_COMMAND_ON: 0x01,
+            CONF_VERIFY: {},
         },
         switch_name,
         SWITCH_DOMAIN,
         CONF_SWITCHES,
-        CONF_REGISTERS,
+        None,
         regs,
         expected,
-        method_discovery=False,
+        method_discovery=True,
         scan_interval=5,
     )
     assert state == expected
@@ -278,10 +195,6 @@ async def test_register_switch(hass, regs, expected):
             [0x04],
             STATE_OFF,
         ),
-        (
-            [0xFF],
-            STATE_OFF,
-        ),
     ],
 )
 async def test_register_state_switch(hass, regs, expected):
@@ -291,18 +204,49 @@ async def test_register_state_switch(hass, regs, expected):
         hass,
         {
             CONF_NAME: switch_name,
-            CONF_REGISTER: 1234,
+            CONF_ADDRESS: 1234,
             CONF_SLAVE: 1,
             CONF_COMMAND_OFF: 0x04,
             CONF_COMMAND_ON: 0x40,
+            CONF_VERIFY: {},
         },
         switch_name,
         SWITCH_DOMAIN,
         CONF_SWITCHES,
-        CONF_REGISTERS,
+        None,
         regs,
         expected,
-        method_discovery=False,
+        method_discovery=True,
         scan_interval=5,
     )
     assert state == expected
+
+
+async def test_service_switch_update(hass, mock_pymodbus):
+    """Run test for service homeassistant.update_entity."""
+
+    entity_id = "switch.test"
+    config = {
+        CONF_SWITCHES: [
+            {
+                CONF_NAME: "test",
+                CONF_ADDRESS: 1234,
+                CONF_WRITE_TYPE: CALL_TYPE_COIL,
+                CONF_VERIFY: {},
+            }
+        ]
+    }
+    mock_pymodbus.read_coils.return_value = ReadResult([0x01])
+    await prepare_service_update(
+        hass,
+        config,
+    )
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+    )
+    assert hass.states.get(entity_id).state == STATE_ON
+    mock_pymodbus.read_coils.return_value = ReadResult([0x00])
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF

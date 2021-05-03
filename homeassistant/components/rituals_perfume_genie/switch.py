@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTES, COORDINATORS, DEVICES, DOMAIN, HUB
+from .const import ATTRIBUTES, COORDINATORS, DEVICES, DOMAIN
 from .entity import DiffuserEntity
 
 FAN = "fanc"
@@ -40,7 +40,7 @@ class DiffuserSwitch(SwitchEntity, DiffuserEntity):
     def __init__(self, diffuser: Diffuser, coordinator: CoordinatorEntity) -> None:
         """Initialize the diffuser switch."""
         super().__init__(diffuser, coordinator, "")
-        self._is_on = self.coordinator.data[HUB][ATTRIBUTES][FAN] == ON_STATE
+        self._is_on = self._diffuser.is_on
 
     @property
     def icon(self) -> str:
@@ -51,8 +51,8 @@ class DiffuserSwitch(SwitchEntity, DiffuserEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attributes = {
-            "fan_speed": self.coordinator.data[HUB][ATTRIBUTES][SPEED],
-            "room_size": self.coordinator.data[HUB][ATTRIBUTES][ROOM],
+            "fan_speed": self._diffuser.hub_data[ATTRIBUTES][SPEED],
+            "room_size": self._diffuser.hub_data[ATTRIBUTES][ROOM],
         }
         return attributes
 
@@ -76,5 +76,5 @@ class DiffuserSwitch(SwitchEntity, DiffuserEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._is_on = self.coordinator.data[HUB][ATTRIBUTES][FAN] == ON_STATE
+        self._is_on = self._diffuser.is_on
         self.async_write_ha_state()

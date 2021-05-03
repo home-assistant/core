@@ -4,13 +4,9 @@ from __future__ import annotations
 import voluptuous as vol
 from wled import WLED, WLEDConnectionError
 
-from homeassistant.config_entries import (
-    CONN_CLASS_LOCAL_POLL,
-    SOURCE_ZEROCONF,
-    ConfigFlow,
-)
+from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
@@ -21,17 +17,14 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a WLED config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
-    async def async_step_user(
-        self, user_input: ConfigType | None = None
-    ) -> FlowResultDict:
+    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
         """Handle a flow initiated by the user."""
         return await self._handle_config_flow(user_input)
 
     async def async_step_zeroconf(
         self, discovery_info: ConfigType | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
         if discovery_info is None:
             return self.async_abort(reason="cannot_connect")
@@ -54,13 +47,13 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(
         self, user_input: ConfigType = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle a flow initiated by zeroconf."""
         return await self._handle_config_flow(user_input)
 
     async def _handle_config_flow(
         self, user_input: ConfigType | None = None, prepare: bool = False
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Config flow handler for WLED."""
         source = self.context.get("source")
 
@@ -101,7 +94,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             data={CONF_HOST: user_input[CONF_HOST], CONF_MAC: user_input[CONF_MAC]},
         )
 
-    def _show_setup_form(self, errors: dict | None = None) -> FlowResultDict:
+    def _show_setup_form(self, errors: dict | None = None) -> FlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -109,7 +102,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    def _show_confirm_dialog(self, errors: dict | None = None) -> FlowResultDict:
+    def _show_confirm_dialog(self, errors: dict | None = None) -> FlowResult:
         """Show the confirm dialog to the user."""
         name = self.context.get(CONF_NAME)
         return self.async_show_form(
