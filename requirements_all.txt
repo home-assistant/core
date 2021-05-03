@@ -918,7 +918,7 @@ magicseaweed==1.0.3
 matrix-client==0.3.2
 
 # homeassistant.components.maxcube
-maxcube-api==0.4.2
+maxcube-api==0.4.3
 
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
