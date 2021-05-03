@@ -689,7 +689,8 @@ current_platform: ContextVar[EntityPlatform | None] = ContextVar(
 )
 
 
-def get_current_platform() -> EntityPlatform:
+@callback
+def async_get_current_platform() -> EntityPlatform:
     """Get the current platform from context."""
     platform = current_platform.get()
     if platform is None:
