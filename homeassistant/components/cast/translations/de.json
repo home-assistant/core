@@ -27,7 +27,9 @@
         "step": {
             "options": {
                 "data": {
-                    "known_hosts": "Optionale Liste bekannter Hosts, wenn die mDNS-Erkennung nicht funktioniert."
+                    "ignore_cec": "Optionale Liste, die an pychromecast.IGNORE_CEC \u00fcbergeben wird.",
+                    "known_hosts": "Optionale Liste bekannter Hosts, wenn die mDNS-Erkennung nicht funktioniert.",
+                    "uuid": "Optionale Liste der UUIDs. Casts, die nicht aufgef\u00fchrt sind, werden nicht hinzugef\u00fcgt."
                 },
                 "description": "Bitte die Google Cast-Konfiguration eingeben."
             }

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits eingerichtet"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
@@ -11,20 +11,12 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
+                    "country_code": "L\u00e4ndercode",
                     "password": "Passwort",
                     "username": "Benutzername"
                 }
             }
         }
     },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "reverse": "Umgekehrte Schalterlogik (NC verwenden)"
-                }
-            }
-        }
-    }
+    "title": "Picnic"
 }

@@ -3,6 +3,9 @@
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
+        "error": {
+            "invalid_place_or_service_id": "Ung\u00fcltige Orts- oder Service-ID"
+        },
         "step": {
             "user": {
                 "data": {
@@ -15,6 +18,9 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "friendly_name": "Verwenden Sie freundliche Namen f\u00fcr Pickup-Typen (wenn m\u00f6glich)"
+                },
                 "title": "Recollect Waste konfigurieren"
             }
         }

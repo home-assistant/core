@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dieses Land ist bereits konfiguriert."
+            "already_configured": "Dieses Land ist bereits konfiguriert.",
+            "cannot_connect": "Verbinden fehlgeschlagen"
         },
         "step": {
             "user": {
