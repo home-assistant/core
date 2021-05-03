@@ -17,7 +17,7 @@ def entities(hass):
     yield platform.ENTITIES
 
 
-async def test_methods(hass, entities):
+async def test_methods(hass, entities, enable_custom_integrations):
     """Test is_on, turn_on, turn_off methods."""
     switch_1, switch_2, switch_3 = entities
     assert await async_setup_component(

@@ -41,7 +41,7 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_conditions(hass, device_reg, entity_reg):
+async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integrations):
     """Test we get the expected conditions from a binary_sensor."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -100,7 +100,7 @@ async def test_get_condition_capabilities(hass, device_reg, entity_reg):
         assert capabilities == expected_capabilities
 
 
-async def test_if_state(hass, calls):
+async def test_if_state(hass, calls, enable_custom_integrations):
     """Test for turn_on and turn_off conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 
@@ -173,7 +173,7 @@ async def test_if_state(hass, calls):
     assert calls[1].data["some"] == "is_off event - test_event2"
 
 
-async def test_if_fires_on_for_condition(hass, calls):
+async def test_if_fires_on_for_condition(hass, calls, enable_custom_integrations):
     """Test for firing if condition is on with delay."""
     point1 = dt_util.utcnow()
     point2 = point1 + timedelta(seconds=10)

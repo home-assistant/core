@@ -41,7 +41,7 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_triggers(hass, device_reg, entity_reg):
+async def test_get_triggers(hass, device_reg, entity_reg, enable_custom_integrations):
     """Test we get the expected triggers from a binary_sensor."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -100,7 +100,7 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
         assert capabilities == expected_capabilities
 
 
-async def test_if_fires_on_state_change(hass, calls):
+async def test_if_fires_on_state_change(hass, calls, enable_custom_integrations):
     """Test for on and off triggers firing."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -184,7 +184,9 @@ async def test_if_fires_on_state_change(hass, calls):
     )
 
 
-async def test_if_fires_on_state_change_with_for(hass, calls):
+async def test_if_fires_on_state_change_with_for(
+    hass, calls, enable_custom_integrations
+):
     """Test for triggers firing with delay."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 

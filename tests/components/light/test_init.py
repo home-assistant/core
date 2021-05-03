@@ -106,7 +106,7 @@ async def test_methods(hass):
     assert call.data[light.ATTR_TRANSITION] == "transition_val"
 
 
-async def test_services(hass, mock_light_profiles):
+async def test_services(hass, mock_light_profiles, enable_custom_integrations):
     """Test the provided services."""
     platform = getattr(hass.components, "test.light")
 
@@ -491,7 +491,12 @@ async def test_services(hass, mock_light_profiles):
     ),
 )
 async def test_light_profiles(
-    hass, mock_light_profiles, profile_name, expected_data, last_call
+    hass,
+    mock_light_profiles,
+    profile_name,
+    expected_data,
+    last_call,
+    enable_custom_integrations,
 ):
     """Test light profiles."""
     platform = getattr(hass.components, "test.light")
@@ -535,7 +540,9 @@ async def test_light_profiles(
     assert data == expected_data
 
 
-async def test_default_profiles_group(hass, mock_light_profiles):
+async def test_default_profiles_group(
+    hass, mock_light_profiles, enable_custom_integrations
+):
     """Test default turn-on light profile for all lights."""
     platform = getattr(hass.components, "test.light")
     platform.init()
@@ -611,7 +618,11 @@ async def test_default_profiles_group(hass, mock_light_profiles):
     ),
 )
 async def test_default_profiles_light(
-    hass, mock_light_profiles, extra_call_params, expected_params
+    hass,
+    mock_light_profiles,
+    extra_call_params,
+    expected_params,
+    enable_custom_integrations,
 ):
     """Test default turn-on light profile for a specific light."""
     platform = getattr(hass.components, "test.light")
