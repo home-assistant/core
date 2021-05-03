@@ -1,7 +1,6 @@
 """Config flow to configure the AIS SUPLA MQTT component."""
 
 import logging
-import os
 
 import aiohttp
 import voluptuous as vol
@@ -48,7 +47,7 @@ class AuthorizationCallbackView(HomeAssistantView):
 class SuplaMqttFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """SUPLA MQTT config flow."""
 
-    VERSION = 2
+    VERSION = 3
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
