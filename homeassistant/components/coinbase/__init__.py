@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Dict, List
 
 from coinbase.wallet.client import Client
 from coinbase.wallet.error import AuthenticationError
@@ -65,7 +66,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Do a one-time handle of options from YAML
     if entry.source == SOURCE_IMPORT and entry.options == {}:
-        import_options = {CONF_CURRENCIES: [], CONF_EXCHANGE_RATES: []}
+        import_options: Dict[str, List[str]] = {
+            CONF_CURRENCIES: [],
+            CONF_EXCHANGE_RATES: [],
+        }
         if CONF_CURRENCIES in entry.data:
             import_options[CONF_CURRENCIES] = entry.data[CONF_CURRENCIES]
         if CONF_EXCHANGE_RATES in entry.data:
