@@ -7,8 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 
-from .const import CONF_STATION_CODE
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import CONF_STATION_CODE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +16,6 @@ class MeteoclimaticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Meteoclimatic config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""

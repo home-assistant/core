@@ -8,5 +8,6 @@
   ],
   "codeowners": [
     "@adrianmo"
-  ]
+  ],
+  "iot_class": "cloud_polling"
 }
