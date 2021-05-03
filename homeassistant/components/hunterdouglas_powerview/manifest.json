@@ -8,5 +8,11 @@
   "homekit": {
     "models": ["PowerView"]
   },
+  "dhcp": [
+    {
+      "hostname": "hunter*",
+      "macaddress": "002674*"
+    }
+  ],
   "iot_class": "local_polling"
 }
