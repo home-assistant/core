@@ -216,6 +216,8 @@ async def async_check_can_reach_url(
         return "ok"
     except aiohttp.ClientError:
         data = {"type": "failed", "error": "unreachable"}
-        if more_info is not None:
-            data["more_info"] = more_info
-        return data
+    except asyncio.TimeoutError:
+        data = {"type": "failed", "error": "timeout"}
+    if more_info is not None:
+        data["more_info"] = more_info
+    return data
