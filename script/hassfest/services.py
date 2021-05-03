@@ -69,7 +69,7 @@ def validate_services(integration: Integration):
     has_services = grep_dir(
         integration.path,
         "**/*.py",
-        r"(hass\.services\.(register|async_register))|async_register_entity_service",
+        r"(hass\.services\.(register|async_register))|async_register_entity_service|async_register_admin_service",
     )
 
     if not has_services:
