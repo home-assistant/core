@@ -110,11 +110,11 @@ async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZero
 
     install_multiple_zeroconf_catcher(aio_zc.zeroconf)
 
-    async def _async_stop_zeroconf(_event: Event) -> None:
+    def _stop_zeroconf(_event: Event) -> None:
         """Stop Zeroconf."""
-        await aio_zc.ha_async_close()
+        aio_zc.zeroconf.ha_close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_zeroconf)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_zeroconf)
     hass.data[DOMAIN] = aio_zc
 
     return aio_zc
