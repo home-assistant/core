@@ -1,4 +1,6 @@
 """Constants used by Home Assistant components."""
+from typing import Final
+
 MAJOR_VERSION = 2021
 MINOR_VERSION = 6
 PATCH_VERSION = "0.dev0"
@@ -289,7 +291,7 @@ ATTR_SERVICE_DATA = "service_data"
 ATTR_ID = "id"
 
 # Name
-ATTR_NAME = "name"
+ATTR_NAME: Final = "name"
 
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID = "entity_id"
@@ -305,6 +307,8 @@ ATTR_FRIENDLY_NAME = "friendly_name"
 
 # A picture to represent entity
 ATTR_ENTITY_PICTURE = "entity_picture"
+
+ATTR_IDENTIFIERS: Final = "identifiers"
 
 # Icon to use in the frontend
 ATTR_ICON = "icon"
@@ -322,6 +326,10 @@ ATTR_VOLTAGE = "voltage"
 ATTR_LOCATION = "location"
 
 ATTR_MODE = "mode"
+
+ATTR_MANUFACTURER: Final = "manufacturer"
+ATTR_MODEL: Final = "model"
+ATTR_SW_VERSION: Final = "sw_version"
 
 ATTR_BATTERY_CHARGING = "battery_charging"
 ATTR_BATTERY_LEVEL = "battery_level"
