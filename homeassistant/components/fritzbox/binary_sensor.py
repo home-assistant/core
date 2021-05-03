@@ -20,7 +20,7 @@ from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Fritzbox binary sensor from ConfigEntry."""
+    """Set up the FRITZ!SmartHome binary sensor from ConfigEntry."""
     entities = []
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
@@ -45,7 +45,7 @@ async def async_setup_entry(
 
 
 class FritzboxBinarySensor(FritzBoxEntity, BinarySensorEntity):
-    """Representation of a binary Fritzbox device."""
+    """Representation of a binary FRITZ!SmartHome device."""
 
     @property
     def is_on(self):

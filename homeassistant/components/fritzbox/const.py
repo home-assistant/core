@@ -1,4 +1,4 @@
-"""Constants for the AVM Fritz!Box integration."""
+"""Constants for the AVM FRITZ!SmartHome integration."""
 import logging
 
 ATTR_STATE_BATTERY_LOW = "battery_low"
