@@ -70,7 +70,7 @@ async def async_setup_entry(
     device = HarmonyRemote(data, default_activity, delay_secs, harmony_conf_file)
     async_add_entities([device])
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_SYNC,

@@ -44,7 +44,7 @@ async def async_setup_platform(
     )
 
     # Register custom services
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SVC_SET_SWITCH_OVERRIDE,
