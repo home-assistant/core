@@ -12,11 +12,11 @@ from python_rako.model import ChannelStatusMessage, SceneStatusMessage, StatusMe
 
 from homeassistant.core import HomeAssistant
 
-from . import RakoDomainEntryData
 from .const import DOMAIN
 from .util import create_unique_id
 
 if TYPE_CHECKING:
+    from . import RakoDomainEntryData
     from .light import RakoLight
 
 _LOGGER = logging.getLogger(__name__)

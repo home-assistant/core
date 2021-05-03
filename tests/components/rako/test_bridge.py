@@ -7,12 +7,7 @@ from unittest.mock import patch
 import pytest
 from python_rako import RAKO_BRIDGE_DEFAULT_PORT
 
-from homeassistant.components.rako import (
-    DATA_RAKO_BRIDGE_CLIENT,
-    DATA_RAKO_LIGHT_MAP,
-    DATA_RAKO_LISTENER_TASK,
-    DOMAIN,
-)
+from homeassistant.components.rako import DOMAIN, RakoDomainEntryData
 from homeassistant.components.rako.bridge import RakoBridge
 
 from . import MOCK_ENTITY_ID, MOCK_HOST
@@ -22,13 +17,14 @@ from . import MOCK_ENTITY_ID, MOCK_HOST
 def rako_bridge(hass):
     """Bridge fixture."""
     hass.data[DOMAIN] = {}
-    bridge = RakoBridge(MOCK_HOST, RAKO_BRIDGE_DEFAULT_PORT, MOCK_ENTITY_ID, hass)
-    hass.data[DOMAIN][MOCK_ENTITY_ID] = {
-        DATA_RAKO_BRIDGE_CLIENT: bridge,
-        DATA_RAKO_LIGHT_MAP: {},
-        DATA_RAKO_LISTENER_TASK: None,
+    rako_bridge = RakoBridge(MOCK_HOST, RAKO_BRIDGE_DEFAULT_PORT, MOCK_ENTITY_ID, hass)
+    rako_domain_entry_data: RakoDomainEntryData = {
+        "rako_bridge_client": rako_bridge,
+        "rako_light_map": {},
+        "rako_listener_task": None,
     }
-    return bridge
+    hass.data[DOMAIN][MOCK_ENTITY_ID] = rako_domain_entry_data
+    return rako_bridge
 
 
 async def test_add_remove_lights(rako_bridge):

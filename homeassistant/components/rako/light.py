@@ -19,11 +19,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from . import RakoDomainEntryData
 from .const import DOMAIN
 from .util import create_unique_id
 
 if TYPE_CHECKING:
+    from . import RakoDomainEntryData
     from .bridge import RakoBridge
 
 _LOGGER = logging.getLogger(__name__)
