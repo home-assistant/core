@@ -63,15 +63,15 @@ def _async_migrate_unique_id(
         if individual_colors_config is None:
             continue
         try:
-            ga_red_switch = entity_config[LightSchema.CONF_INDIVIDUAL_COLORS][
-                LightSchema.CONF_RED
-            ][KNX_ADDRESS][0]
-            ga_green_switch = entity_config[LightSchema.CONF_INDIVIDUAL_COLORS][
-                LightSchema.CONF_GREEN
-            ][KNX_ADDRESS][0]
-            ga_blue_switch = entity_config[LightSchema.CONF_INDIVIDUAL_COLORS][
-                LightSchema.CONF_BLUE
-            ][KNX_ADDRESS][0]
+            ga_red_switch = individual_colors_config[LightSchema.CONF_RED][KNX_ADDRESS][
+                0
+            ]
+            ga_green_switch = individual_colors_config[LightSchema.CONF_GREEN][
+                KNX_ADDRESS
+            ][0]
+            ga_blue_switch = individual_colors_config[LightSchema.CONF_BLUE][
+                KNX_ADDRESS
+            ][0]
         except KeyError:
             continue
         # normalize group address strings
@@ -79,9 +79,7 @@ def _async_migrate_unique_id(
         ga_green_switch = parse_device_group_address(ga_green_switch)
         ga_blue_switch = parse_device_group_address(ga_blue_switch)
         # white config is optional so it has to be checked for `None` extra
-        white_config = entity_config[LightSchema.CONF_INDIVIDUAL_COLORS].get(
-            LightSchema.CONF_WHITE
-        )
+        white_config = individual_colors_config.get(LightSchema.CONF_WHITE)
         white_switch = (
             white_config.get(KNX_ADDRESS) if white_config is not None else None
         )
@@ -102,24 +100,22 @@ def _async_migrate_unique_id(
             continue
 
         ga_red_brightness = parse_device_group_address(
-            entity_config[LightSchema.CONF_INDIVIDUAL_COLORS][LightSchema.CONF_RED][
+            individual_colors_config[LightSchema.CONF_RED][
                 LightSchema.CONF_BRIGHTNESS_ADDRESS
             ][0]
         )
         ga_green_brightness = parse_device_group_address(
-            entity_config[LightSchema.CONF_INDIVIDUAL_COLORS][LightSchema.CONF_GREEN][
+            individual_colors_config[LightSchema.CONF_GREEN][
                 LightSchema.CONF_BRIGHTNESS_ADDRESS
             ][0]
         )
         ga_blue_brightness = parse_device_group_address(
-            entity_config[LightSchema.CONF_INDIVIDUAL_COLORS][LightSchema.CONF_BLUE][
+            individual_colors_config[LightSchema.CONF_BLUE][
                 LightSchema.CONF_BRIGHTNESS_ADDRESS
             ][0]
         )
 
-        new_uid = (
-            f"{ga_red_brightness}_" f"{ga_green_brightness}_" f"{ga_blue_brightness}"
-        )
+        new_uid = f"{ga_red_brightness}_{ga_green_brightness}_{ga_blue_brightness}"
         entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
 
 
