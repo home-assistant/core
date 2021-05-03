@@ -11,6 +11,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Any, Callable
 
 from typing_extensions import Protocol
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -628,7 +629,7 @@ class EntityPlatform:
     def async_register_entity_service(
         self,
         name: str,
-        schema: dict,
+        schema: dict | vol.Schema,
         func: str | Callable[..., Any],
         required_features: Iterable[int] | None = None,
     ) -> None:
@@ -640,7 +641,7 @@ class EntityPlatform:
             return
 
         if isinstance(schema, dict):
-            service_schema = cv.make_entity_service_schema(schema)
+            schema = cv.make_entity_service_schema(schema)
 
         async def handle_service(call: ServiceCall) -> None:
             """Handle the service."""
@@ -657,7 +658,7 @@ class EntityPlatform:
             )
 
         self.hass.services.async_register(
-            self.platform_name, name, handle_service, service_schema
+            self.platform_name, name, handle_service, schema
         )
 
     async def _update_entity_states(self, now: datetime) -> None:
