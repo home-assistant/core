@@ -9,10 +9,15 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "link": {
+                "description": "Sie m\u00fcssen den Home Assistant in Roon autorisieren. Nachdem Sie auf \"Submit\" geklickt haben, gehen Sie zur Roon Core-Anwendung, \u00f6ffnen Sie die Einstellungen und aktivieren Sie HomeAssistant auf der Registerkarte \"Extensions\".",
+                "title": "HomeAssistant in Roon autorisieren"
+            },
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Roon-Server konnte nicht gefunden werden, bitte geben Sie den Hostnamen oder die IP ein."
             }
         }
     }
