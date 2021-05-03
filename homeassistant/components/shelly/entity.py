@@ -7,7 +7,6 @@ from typing import Any, Callable
 
 import aioshelly
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers import (
     device_registry,
@@ -38,7 +37,7 @@ async def async_setup_entry_attribute_entities(
         )
     else:
         await async_restore_block_attribute_entities(
-            hass, config_entry, async_add_entities, wrapper, sensor_class
+            hass, config_entry, async_add_entities, wrapper, sensors, sensor_class
         )
 
 
@@ -80,7 +79,7 @@ async def async_setup_block_attribute_entities(
 
 
 async def async_restore_block_attribute_entities(
-    hass, config_entry, async_add_entities, wrapper, sensor_class
+    hass, config_entry, async_add_entities, wrapper, sensors, sensor_class
 ):
     """Restore block attributes entities."""
     entities = []
@@ -104,7 +103,9 @@ async def async_restore_block_attribute_entities(
             device_class=entry.device_class,
         )
 
-        entities.append(sensor_class(wrapper, None, attribute, description, entry))
+        entities.append(
+            sensor_class(wrapper, None, attribute, description, entry, sensors)
+        )
 
     if not entities:
         return
@@ -162,7 +163,7 @@ class RestAttributeDescription:
     name: str
     icon: str | None = None
     unit: str | None = None
-    value: Callable[[dict, Any], Any] = None
+    value: Callable[[dict, Any], Any] | None = None
     device_class: str | None = None
     default_enabled: bool = True
     extra_state_attributes: Callable[[dict], dict | None] | None = None
@@ -238,8 +239,8 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
         if callable(unit):
             unit = unit(block.info(attribute))
 
-        self._unit = unit
-        self._unique_id = f"{super().unique_id}-{self.attribute}"
+        self._unit: None | str | Callable[[dict], str] = unit
+        self._unique_id: None | str = f"{super().unique_id}-{self.attribute}"
         self._name = get_entity_name(wrapper.device, block, self.description.name)
 
     @property
@@ -359,7 +360,7 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
         return f"{self.wrapper.mac}-{self.attribute}"
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict | None:
         """Return the state attributes."""
         if self.description.extra_state_attributes is None:
             return None
@@ -377,9 +378,11 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
         block: aioshelly.Block,
         attribute: str,
         description: BlockAttributeDescription,
-        entry: ConfigEntry | None = None,
+        entry: entity_registry.RegistryEntry | None = None,
+        sensors: set | None = None,
     ) -> None:
         """Initialize the sleeping sensor."""
+        self.sensors = sensors
         self.last_state = None
         self.wrapper = wrapper
         self.attribute = attribute
@@ -395,7 +398,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
             self._name = get_entity_name(
                 self.wrapper.device, block, self.description.name
             )
-        else:
+        elif entry is not None:
             self._unique_id = entry.unique_id
             self._name = entry.original_name
 
@@ -411,7 +414,11 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
     @callback
     def _update_callback(self):
         """Handle device update."""
-        if self.block is not None or not self.wrapper.device.initialized:
+        if (
+            self.block is not None
+            or not self.wrapper.device.initialized
+            or self.sensors is None
+        ):
             super()._update_callback()
             return
 
@@ -425,7 +432,13 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
                 if sensor_id != entity_sensor:
                     continue
 
+                description = self.sensors.get((block.type, sensor_id))
+                if description is None:
+                    continue
+
                 self.block = block
+                self.description = description
+
                 _LOGGER.debug("Entity %s attached to block", self.name)
                 super()._update_callback()
                 return
