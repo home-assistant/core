@@ -1,5 +1,4 @@
 """Provide configuration end points for Scenes."""
-from collections import OrderedDict
 import uuid
 
 from homeassistant.components.scene import DOMAIN, PLATFORM_SCHEMA
@@ -48,24 +47,9 @@ class EditSceneConfigView(EditIdBasedConfigView):
 
     def _write_value(self, hass, data, config_key, new_value):
         """Set value."""
-        index = None
-        for index, cur_value in enumerate(data):
-            # When people copy paste their scenes to the config file,
-            # they sometimes forget to add IDs. Fix it here.
-            if CONF_ID not in cur_value:
-                cur_value[CONF_ID] = uuid.uuid4().hex
-
-            elif cur_value[CONF_ID] == config_key:
-                break
-        else:
-            cur_value = {}
-            cur_value[CONF_ID] = config_key
-            index = len(data)
-            data.append(cur_value)
-
         # Iterate through some keys that we want to have ordered in the output
-        updated_value = OrderedDict()
-        for key in ("id", "name", "entities"):
+        updated_value = {CONF_ID: config_key}
+        for key in ("name", "entities"):
             if key in new_value:
                 updated_value[key] = new_value[key]
 
@@ -73,4 +57,16 @@ class EditSceneConfigView(EditIdBasedConfigView):
         # supporting more fields in the future.
         updated_value.update(new_value)
 
-        data[index] = updated_value
+        updated = False
+        for index, cur_value in enumerate(data):
+            # When people copy paste their scenes to the config file,
+            # they sometimes forget to add IDs. Fix it here.
+            if CONF_ID not in cur_value:
+                cur_value[CONF_ID] = uuid.uuid4().hex
+
+            elif cur_value[CONF_ID] == config_key:
+                data[index] = updated_value
+                updated = True
+
+        if not updated:
+            data.append(updated_value)
