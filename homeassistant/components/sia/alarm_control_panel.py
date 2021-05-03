@@ -1,7 +1,6 @@
 """Module for SIA Alarm Control Panels."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from typing import Any, Callable
@@ -25,6 +24,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
@@ -262,7 +262,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         return 0
 
     @property
-    def device_info(self) -> Mapping[str, Any] | None:
+    def device_info(self) -> DeviceInfo:
         """Return the device_info."""
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
