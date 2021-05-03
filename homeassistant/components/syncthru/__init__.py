@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     printer = SyncThru(entry.data[CONF_URL], session)
 
-    async def async_update_data():
+    async def async_update_data() -> SyncThru:
         """Fetch data from the printer."""
         try:
             async with async_timeout.timeout(10):
@@ -76,12 +76,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def device_identifiers(printer):
+def device_identifiers(printer: SyncThru) -> set[tuple[str, ...]] | None:
     """Get device identifiers for device registry."""
-    return {(DOMAIN, printer.serial_number())}
+    serial = printer.serial_number()
+    if serial is None:
+        return None
+    return {(DOMAIN, serial)}
 
 
-def device_connections(printer: SyncThru):
+def device_connections(printer: SyncThru) -> set[tuple[str, str]]:
     """Get device connections for device registry."""
     connections = set()
     try:
