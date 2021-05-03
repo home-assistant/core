@@ -12,7 +12,8 @@ from python_rako.model import ChannelStatusMessage, SceneStatusMessage, StatusMe
 
 from homeassistant.core import HomeAssistant
 
-from .const import DATA_RAKO_LIGHT_MAP, DATA_RAKO_LISTENER_TASK, DOMAIN
+from . import RakoDomainEntryData
+from .const import DOMAIN
 from .util import create_unique_id
 
 if TYPE_CHECKING:
@@ -32,15 +33,24 @@ class RakoBridge(Bridge):
 
     @property
     def _light_map(self) -> dict[str, RakoLight]:
-        return self.hass.data[DOMAIN][self.entry_id][DATA_RAKO_LIGHT_MAP]
+        rako_domain_entry_data: RakoDomainEntryData = self.hass.data[DOMAIN][
+            self.entry_id
+        ]
+        return rako_domain_entry_data["rako_light_map"]
 
     @property
-    def _listener_task(self) -> Task:
-        return self.hass.data[DOMAIN][self.entry_id][DATA_RAKO_LISTENER_TASK]
+    def _listener_task(self) -> Task | None:
+        rako_domain_entry_data: RakoDomainEntryData = self.hass.data[DOMAIN][
+            self.entry_id
+        ]
+        return rako_domain_entry_data["rako_listener_task"]
 
     @_listener_task.setter
     def _listener_task(self, task: Task) -> None:
-        self.hass.data[DOMAIN][self.entry_id][DATA_RAKO_LISTENER_TASK] = task
+        rako_domain_entry_data: RakoDomainEntryData = self.hass.data[DOMAIN][
+            self.entry_id
+        ]
+        rako_domain_entry_data["rako_listener_task"] = task
 
     def get_listening_light(self, light_unique_id: str) -> RakoLight | None:
         """Return the Light, if listening."""
@@ -59,17 +69,17 @@ class RakoBridge(Bridge):
     async def listen_for_state_updates(self) -> None:
         """Background task to listen for state updates."""
         self._listener_task: Task = asyncio.create_task(
-            listen_for_state_updates(self), name=DATA_RAKO_LISTENER_TASK
+            listen_for_state_updates(self), name=f"{self.entry_id}_rako_listener_task"
         )
 
     async def stop_listening_for_state_updates(self) -> None:
         """Background task to stop listening for state updates."""
-        listener_task = self._listener_task
-        listener_task.cancel()
-        try:
-            await listener_task
-        except asyncio.CancelledError:
-            pass
+        if listener_task := self._listener_task:
+            listener_task.cancel()
+            try:
+                await listener_task
+            except asyncio.CancelledError:
+                pass
 
     async def register_for_state_updates(self, light: RakoLight) -> None:
         """Register a light to listen for state updates."""

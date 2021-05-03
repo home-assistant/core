@@ -1142,7 +1142,7 @@ python-twitch-client==0.6.0
 python_awair==0.2.1
 
 # homeassistant.components.rako
-python_rako==0.0.9
+python_rako==0.0.11
 
 # homeassistant.components.tile
 pytile==5.2.4

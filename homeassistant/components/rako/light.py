@@ -19,7 +19,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import DATA_RAKO_BRIDGE_CLIENT, DOMAIN
+from . import RakoDomainEntryData
+from .const import DOMAIN
 from .util import create_unique_id
 
 if TYPE_CHECKING:
@@ -34,7 +35,8 @@ async def async_setup_entry(
     async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up the config entry."""
-    bridge = hass.data[DOMAIN][entry.entry_id][DATA_RAKO_BRIDGE_CLIENT]
+    rako_domain_entry_data: RakoDomainEntryData = hass.data[DOMAIN][entry.entry_id]
+    bridge = rako_domain_entry_data["rako_bridge_client"]
 
     hass_lights: list[Entity] = []
     session = async_get_clientsession(hass)
@@ -132,7 +134,7 @@ class RakoRoomLight(RakoLight):
     def __init__(self, bridge: RakoBridge, light: python_rako.RoomLight):
         """Initialize a RakoLight."""
         super().__init__(bridge, light)
-        self._light = light
+        self._light: python_rako.RoomLight = light
 
     def _init_get_brightness_from_cache(self) -> int:
         scene_of_room = self.bridge.scene_cache.get(self._light.room_id, 0)
@@ -168,7 +170,7 @@ class RakoChannelLight(RakoLight):
     def __init__(self, bridge: RakoBridge, light: python_rako.ChannelLight):
         """Initialize a RakoLight."""
         super().__init__(bridge, light)
-        self._light = light
+        self._light: python_rako.ChannelLight = light
 
     def _init_get_brightness_from_cache(self) -> int:
         scene_of_room = self.bridge.scene_cache.get(self._light.room_id, 0)

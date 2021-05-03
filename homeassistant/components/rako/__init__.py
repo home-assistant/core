@@ -1,7 +1,9 @@
 """The Rako integration."""
 from __future__ import annotations
 
+from asyncio import Task
 import logging
+from typing import TypedDict
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -9,20 +11,24 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .bridge import RakoBridge
-from .const import (
-    DATA_RAKO_BRIDGE_CLIENT,
-    DATA_RAKO_LIGHT_MAP,
-    DATA_RAKO_LISTENER_TASK,
-    DOMAIN,
-)
+from .const import DOMAIN
+from .light import RakoLight
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class RakoDomainEntryData(TypedDict):
+    """A single Rako config entry's data."""
+
+    rako_bridge_client: RakoBridge
+    rako_light_map: dict[str, RakoLight]
+    rako_listener_task: Task | None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Rako from a config entry."""
 
-    bridge = RakoBridge(
+    rako_bridge = RakoBridge(
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
         entry.entry_id,
@@ -30,11 +36,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_RAKO_BRIDGE_CLIENT: bridge,
-        DATA_RAKO_LIGHT_MAP: {},
-        DATA_RAKO_LISTENER_TASK: None,
+    rako_domain_entry_data: RakoDomainEntryData = {
+        "rako_bridge_client": rako_bridge,
+        "rako_light_map": {},
+        "rako_listener_task": None,
     }
+    hass.data[DOMAIN][entry.entry_id] = rako_domain_entry_data
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, LIGHT_DOMAIN)
