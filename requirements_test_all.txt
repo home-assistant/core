@@ -490,7 +490,7 @@ logi_circle==0.2.2
 luftdaten==0.6.4
 
 # homeassistant.components.maxcube
-maxcube-api==0.4.2
+maxcube-api==0.4.3
 
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
