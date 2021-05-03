@@ -4,7 +4,6 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.switch import DEVICE_CLASS_OUTLET, SwitchEntity
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.typing import ConfigType
@@ -15,15 +14,12 @@ GH_ON_OFF_ZONE = "on / off"
 
 SVC_SET_SWITCH_OVERRIDE = "set_switch_override"
 
-SET_SWITCH_OVERRIDE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Optional(ATTR_DURATION): vol.All(
-            cv.time_period,
-            vol.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
-        ),
-    }
-)
+SET_SWITCH_OVERRIDE_SCHEMA = {
+    vol.Optional(ATTR_DURATION): vol.All(
+        cv.time_period,
+        vol.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
+    ),
+}
 
 
 async def async_setup_platform(
