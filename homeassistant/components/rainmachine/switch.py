@@ -113,7 +113,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up RainMachine switches based on a config entry."""
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     alter_program_schema = {vol.Required(CONF_PROGRAM_ID): cv.positive_int}
     alter_zone_schema = {vol.Required(CONF_ZONE_ID): cv.positive_int}

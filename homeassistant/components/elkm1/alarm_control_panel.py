@@ -65,7 +65,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     create_elk_entities(elk_data, elk.areas, "area", ElkArea, entities)
     async_add_entities(entities, True)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_ALARM_ARM_VACATION,

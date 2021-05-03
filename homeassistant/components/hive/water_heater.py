@@ -53,7 +53,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             entities.append(HiveWaterHeater(hive, dev))
     async_add_entities(entities, True)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_BOOST_HOT_WATER,
