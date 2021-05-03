@@ -17,7 +17,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.entity_platform import current_platform
+from homeassistant.helpers.entity_platform import async_get_current_platform
 
 from .const import DATA_ELGATO_CLIENT, DOMAIN, SERVICE_IDENTIFY
 
@@ -37,11 +37,8 @@ async def async_setup_entry(
     info = await elgato.info()
     async_add_entities([ElgatoLight(elgato, info)], True)
 
-    platform = current_platform.get()
-    if not platform:
-        return
-
-    platform.async_register_entity_service(  # type: ignore[no-untyped-call]
+    platform = async_get_current_platform()
+    platform.async_register_entity_service(
         SERVICE_IDENTIFY,
         {},
         ElgatoLight.async_identify.__name__,
