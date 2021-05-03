@@ -254,7 +254,12 @@ async def async_setup(hass, config):
         hass.bus.async_fire(EVENT_AUTOMATION_RELOADED, context=service_call.context)
 
     async_register_admin_service(
-        hass, DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
+        hass,
+        DOMAIN,
+        SERVICE_RELOAD,
+        reload_service_handler,
+        schema=vol.Schema({}),
+        queued=True,
     )
 
     return True

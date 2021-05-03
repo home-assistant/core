@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Collection, Coroutine, Iterable, Mapping
+from contextlib import AsyncExitStack
 import datetime
 import enum
 import functools
@@ -1227,17 +1228,18 @@ class StateMachine:
 class Service:
     """Representation of a callable service."""
 
-    __slots__ = ["job", "schema"]
+    __slots__ = ["job", "schema", "lock"]
 
     def __init__(
         self,
         func: Callable,
         schema: vol.Schema | None,
-        context: Context | None = None,
+        queued: bool,
     ) -> None:
         """Initialize a service."""
         self.job = HassJob(func)
         self.schema = schema
+        self.lock = asyncio.Lock() if queued else None
 
 
 class ServiceCall:
@@ -1303,6 +1305,7 @@ class ServiceRegistry:
         service: str,
         service_func: Callable,
         schema: vol.Schema | None = None,
+        queued: bool = False,
     ) -> None:
         """
         Register a service.
@@ -1310,7 +1313,13 @@ class ServiceRegistry:
         Schema is called to coerce and validate the service data.
         """
         run_callback_threadsafe(
-            self._hass.loop, self.async_register, domain, service, service_func, schema
+            self._hass.loop,
+            self.async_register,
+            domain,
+            service,
+            service_func,
+            schema,
+            queued,
         ).result()
 
     @callback
@@ -1320,6 +1329,7 @@ class ServiceRegistry:
         service: str,
         service_func: Callable,
         schema: vol.Schema | None = None,
+        queued: bool = False,
     ) -> None:
         """
         Register a service.
@@ -1330,7 +1340,7 @@ class ServiceRegistry:
         """
         domain = domain.lower()
         service = service.lower()
-        service_obj = Service(service_func, schema)
+        service_obj = Service(service_func, schema, queued)
 
         if domain in self._services:
             self._services[domain][service] = service_obj
@@ -1512,12 +1522,17 @@ class ServiceRegistry:
         self, handler: Service, service_call: ServiceCall
     ) -> None:
         """Execute a service."""
-        if handler.job.job_type == HassJobType.Coroutinefunction:
-            await handler.job.target(service_call)
-        elif handler.job.job_type == HassJobType.Callback:
-            handler.job.target(service_call)
-        else:
-            await self._hass.async_add_executor_job(handler.job.target, service_call)
+        async with AsyncExitStack() as stack:
+            if handler.lock:
+                await stack.enter_async_context(handler.lock)
+            if handler.job.job_type == HassJobType.Coroutinefunction:
+                await handler.job.target(service_call)
+            elif handler.job.job_type == HassJobType.Callback:
+                handler.job.target(service_call)
+            else:
+                await self._hass.async_add_executor_job(
+                    handler.job.target, service_call
+                )
 
 
 class Config:

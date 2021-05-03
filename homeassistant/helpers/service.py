@@ -711,6 +711,7 @@ def async_register_admin_service(
     service: str,
     service_func: Callable[[ServiceCall], Awaitable | None],
     schema: vol.Schema = vol.Schema({}, extra=vol.PREVENT_EXTRA),
+    queued: bool = False,
 ) -> None:
     """Register a service that requires admin access."""
 
@@ -727,7 +728,7 @@ def async_register_admin_service(
         if result is not None:
             await result
 
-    hass.services.async_register(domain, service, admin_handler, schema)
+    hass.services.async_register(domain, service, admin_handler, schema, queued)
 
 
 @bind_hass
