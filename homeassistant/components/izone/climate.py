@@ -97,7 +97,7 @@ async def async_setup_entry(
     # connect to register any further components
     async_dispatcher_connect(hass, DISPATCH_CONTROLLER_DISCOVERED, init_controller)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         IZONE_SERVICE_AIRFLOW_MIN,
         IZONE_SERVICE_AIRFLOW_SCHEMA,
