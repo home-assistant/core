@@ -19,6 +19,7 @@
                 "title": "W\u00e4hle die Domains aus, die aufgenommen werden sollen"
             },
             "pairing": {
+                "description": "Um die Kopplung abzuschlie\u00dfen, folgen Sie den Anweisungen in \"Benachrichtigungen\" unter \"HomeKit-Kopplung\".",
                 "title": "HomeKit verbinden"
             },
             "user": {
@@ -54,6 +55,7 @@
                     "entities": "Entit\u00e4ten",
                     "mode": "Modus"
                 },
+                "description": "W\u00e4hlen Sie die einzubeziehenden Entit\u00e4ten aus. Im Zubeh\u00f6rmodus wird nur eine einzelne Entit\u00e4t eingeschlossen. Im Bridge-Include-Modus werden alle Entit\u00e4ten in der Dom\u00e4ne eingeschlossen, sofern nicht bestimmte Entit\u00e4ten ausgew\u00e4hlt sind. Im Bridge-Exclude-Modus werden alle Entit\u00e4ten in der Dom\u00e4ne eingeschlossen, au\u00dfer den ausgeschlossenen Entit\u00e4ten. F\u00fcr eine optimale Leistung wird f\u00fcr jeden TV-Media-Player, jede aktivit\u00e4tsbasierte Fernbedienung, jedes Schloss und jede Kamera ein separates HomeKit-Zubeh\u00f6r erstellt.",
                 "title": "W\u00e4hle die Entit\u00e4ten aus, die aufgenommen werden sollen"
             },
             "init": {

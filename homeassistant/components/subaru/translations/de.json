@@ -24,7 +24,19 @@
                     "password": "Passwort",
                     "username": "Benutzername"
                 },
-                "description": "Bitte gib deine MySubaru-Anmeldedaten ein\nHINWEIS: Die Ersteinrichtung kann bis zu 30 Sekunden dauern"
+                "description": "Bitte gib deine MySubaru-Anmeldedaten ein\nHINWEIS: Die Ersteinrichtung kann bis zu 30 Sekunden dauern",
+                "title": "Subaru Starlink Konfiguration"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_enabled": "Aktivieren Sie die Fahrzeugabfrage"
+                },
+                "description": "Wenn diese Option aktiviert ist, sendet die Fahrzeugabfrage alle 2 Stunden einen Fernbefehl an Ihr Fahrzeug, um neue Sensordaten zu erhalten. Ohne Fahrzeugabfrage werden neue Sensordaten nur empfangen, wenn das Fahrzeug automatisch Daten sendet (normalerweise nach dem Abstellen des Motors).",
+                "title": "Subaru Starlink Optionen"
             }
         }
     }

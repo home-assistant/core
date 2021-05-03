@@ -3,12 +3,16 @@
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
+        "create_entry": {
+            "default": "Erfolgreich mit AlarmDecoder verbunden."
+        },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "protocol": {
                 "data": {
+                    "device_baudrate": "Ger\u00e4te-Baudrate",
                     "device_path": "Ger\u00e4tepfad",
                     "host": "Host",
                     "port": "Port"
