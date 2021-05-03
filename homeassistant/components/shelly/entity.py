@@ -400,7 +400,7 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEnti
             )
         elif entry is not None:
             self._unique_id = entry.unique_id
-            self._name = str(entry.original_name)
+            self._name = entry.original_name
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
