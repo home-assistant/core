@@ -24,7 +24,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     def __init__(self):
-        """Store an AugustGateway()."""
+        """Start a myq config flow."""
         self._reauth_unique_id = None
 
     async def _async_validate_input(self, username, password):
