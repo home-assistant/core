@@ -7,6 +7,7 @@
             "already_paired": "Dieses Zubeh\u00f6r ist bereits mit einem anderen Ger\u00e4t gekoppelt. Setze das Zubeh\u00f6r zur\u00fcck und versuche es erneut.",
             "ignored_model": "Die Unterst\u00fctzung von HomeKit f\u00fcr dieses Modell ist blockiert, da eine vollst\u00e4ndige native Integration verf\u00fcgbar ist.",
             "invalid_config_entry": "Dieses Ger\u00e4t wird als bereit zum Koppeln angezeigt, es gibt jedoch bereits einen widerspr\u00fcchlichen Konfigurationseintrag in Home Assistant, der zuerst entfernt werden muss.",
+            "invalid_properties": "Ung\u00fcltige Eigenschaften vom Ger\u00e4t gemeldet.",
             "no_devices": "Keine ungekoppelten Ger\u00e4te gefunden"
         },
         "error": {
@@ -19,9 +20,11 @@
         "flow_title": "HomeKit-Zubeh\u00f6r: {name}",
         "step": {
             "busy_error": {
+                "description": "Brechen Sie das Pairing auf allen Controllern ab oder versuchen Sie, das Ger\u00e4t neu zu starten, und fahren Sie dann fort, das Pairing fortzusetzen.",
                 "title": "Das Ger\u00e4t wird bereits mit einem anderen Controller gekoppelt"
             },
             "max_tries_error": {
+                "description": "Das Ger\u00e4t hat mehr als 100 erfolglose Authentifizierungsversuche erhalten. Versuchen Sie, das Ger\u00e4t neu zu starten, und fahren Sie dann fort, die Kopplung fortzusetzen.",
                 "title": "Maximale Authentifizierungsversuche \u00fcberschritten"
             },
             "pair": {
