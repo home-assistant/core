@@ -1,7 +1,6 @@
 """The sia hub."""
 from __future__ import annotations
 
-from collections.abc import Awaitable
 import logging
 from typing import Any
 
@@ -45,7 +44,7 @@ class SIAHub:
         self.sia_accounts: list[SIAAccount] | None = None
         self.sia_client: SIAClient = None
 
-    async def async_setup_hub(self):
+    async def async_setup_hub(self) -> None:
         """Add a device to the device_registry, register shutdown listener, load reactions."""
         self.sia_accounts = [
             SIAAccount(
@@ -76,11 +75,11 @@ class SIAHub:
             self._hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.async_shutdown)
         )
 
-    async def async_shutdown(self, _: Event = None):
+    async def async_shutdown(self, _: Event = None) -> None:
         """Shutdown the SIA server."""
         await self.sia_client.stop()  # type: ignore
 
-    async def async_create_and_fire_event(self, event: SIAEvent) -> Awaitable[None]:
+    async def async_create_and_fire_event(self, event: SIAEvent) -> None:  # type: ignore
         """Create a event on HA's bus, with the data from the SIAEvent.
 
         The created event is handled by default for only a small subset for each platform (there are about 320 SIA Codes defined, only 22 of those are used in the alarm_control_panel), a user can choose to build other automation or even entities on the same event for SIA codes not handled by the built-in platforms.
@@ -97,4 +96,3 @@ class SIAHub:
             event_data=event.to_dict(encode_json=True),
             origin=EventOrigin.remote,
         )
-        return None

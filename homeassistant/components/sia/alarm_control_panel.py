@@ -125,7 +125,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         self._state: StateType = None
         self._old_state: StateType = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Once the panel is added, see if it was there before and pull in that state."""
         self._ping_interval = get_ping_interval(self._ping_interval_int)
         self._attr[CONF_PING_INTERVAL] = self.ping_interval
@@ -154,7 +154,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         self.async_write_ha_state()
         self.setup_sia_alarm()
 
-    def setup_sia_alarm(self):
+    def setup_sia_alarm(self) -> None:
         """Run the setup of the alarm control panel."""
         self._async_track_unavailable()
         self.async_on_remove(
@@ -171,7 +171,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         if self._remove_unavailability_tracker:
             self._remove_unavailability_tracker()
 
-    async def async_handle_event(self, event: Event):
+    async def async_handle_event(self, event: Event) -> None:
         """Listen to events for this port and account and update states.
 
         If the port and account combo receives any message it means it is online and can therefore be set to available.
