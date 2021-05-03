@@ -1,80 +1,146 @@
 # Describes the format for available fan services
 set_speed:
-  description: Sets fan speed.
+  name: Set speed
+  description: Set fan speed.
+  target:
   fields:
-    entity_id:
-      description: Name(s) of the entities to set
-      example: "fan.living_room"
     speed:
-      description: Speed setting
+      name: Speed
+      description: Speed setting.
+      required: true
       example: "low"
+      selector:
+        text:
 
 set_preset_mode:
+  name: Set preset mode
   description: Set preset mode for a fan device.
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: "fan.kitchen"
     preset_mode:
-      description: New value of preset mode
+      name: Preset mode
+      description: New value of preset mode.
+      required: true
       example: "auto"
+      selector:
+        text:
 
 set_percentage:
-  description: Sets fan speed percentage.
+  name: Set speed percentage
+  description: Set fan speed percentage.
+  target:
   fields:
-    entity_id:
-      description: Name(s) of the entities to set
-      example: "fan.living_room"
     percentage:
-      description: Percentage speed setting
+      name: Percentage
+      description: Percentage speed setting.
+      required: true
       example: 25
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: slider
 
 turn_on:
-  description: Turns fan on.
+  name: Turn on
+  description: Turn fan on.
+  target:
   fields:
-    entity_id:
-      description: Names(s) of the entities to turn on
-      example: "fan.living_room"
     speed:
-      description: Speed setting
+      name: Speed
+      description: Speed setting.
       example: "high"
     percentage:
-      description: Percentage speed setting
+      name: Percentage
+      description: Percentage speed setting.
       example: 75
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: slider
     preset_mode:
-      description: Preset mode setting
+      name: Preset mode
+      description: Preset mode setting.
       example: "auto"
+      selector:
+        text:
 
 turn_off:
-  description: Turns fan off.
-  fields:
-    entity_id:
-      description: Names(s) of the entities to turn off
-      example: "fan.living_room"
+  name: Turn off
+  description: Turn fan off.
+  target:
 
 oscillate:
-  description: Oscillates the fan.
+  name: Oscillate
+  description: Oscillate the fan.
+  target:
   fields:
-    entity_id:
-      description: Name(s) of the entities to oscillate
-      example: "fan.desk_fan"
     oscillating:
-      description: Flag to turn on/off oscillation
+      name: Oscillating
+      description: Flag to turn on/off oscillation.
+      required: true
       example: true
+      selector:
+        boolean:
 
 toggle:
+  name: Toggle
   description: Toggle the fan on/off.
-  fields:
-    entity_id:
-      description: Name(s) of the entities to toggle
-      example: "fan.living_room"
+  target:
 
 set_direction:
+  name: Set direction
   description: Set the fan rotation.
+  target:
   fields:
-    entity_id:
-      description: Name(s) of the entities to set
-      example: "fan.living_room"
     direction:
-      description: The direction to rotate. Either 'forward' or 'reverse'
+      name: Direction
+      description: The direction to rotate.
+      required: true
       example: "forward"
+      selector:
+        select:
+          options:
+            - "forward"
+            - "reverse"
+
+increase_speed:
+  name: Increase speed
+  description: Increase the speed of the fan by one speed or a percentage_step.
+  target:
+  fields:
+    percentage_step:
+      advanced: true
+      required: false
+      description: Increase speed by a percentage.
+      example: 50
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: slider
+
+decrease_speed:
+  name: Decrease speed
+  description: Decrease the speed of the fan by one speed or a percentage_step.
+  target:
+  fields:
+    percentage_step:
+      advanced: true
+      required: false
+      description: Decrease speed by a percentage.
+      example: 50
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: slider

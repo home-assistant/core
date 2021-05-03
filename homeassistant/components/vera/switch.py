@@ -1,5 +1,7 @@
 """Support for Vera switches."""
-from typing import Any, Callable, List, Optional
+from __future__ import annotations
+
+from typing import Any, Callable
 
 import pyvera as veraApi
 
@@ -20,7 +22,7 @@ from .common import ControllerData, get_controller_data
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up the sensor config entry."""
     controller_data = get_controller_data(hass, entry)
@@ -57,7 +59,7 @@ class VeraSwitch(VeraDevice[veraApi.VeraSwitch], SwitchEntity):
         self.schedule_update_ha_state()
 
     @property
-    def current_power_w(self) -> Optional[float]:
+    def current_power_w(self) -> float | None:
         """Return the current power usage in W."""
         power = self.vera_device.power
         if power:
@@ -70,4 +72,5 @@ class VeraSwitch(VeraDevice[veraApi.VeraSwitch], SwitchEntity):
 
     def update(self) -> None:
         """Update device state."""
+        super().update()
         self._state = self.vera_device.is_switched_on()

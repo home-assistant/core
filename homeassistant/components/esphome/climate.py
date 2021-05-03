@@ -1,5 +1,5 @@
 """Support for ESPHome climate devices."""
-from typing import List, Optional
+from __future__ import annotations
 
 from aioesphomeapi import (
     ClimateAction,
@@ -134,7 +134,7 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
         return super()._static_info
 
     @property
-    def _state(self) -> Optional[ClimateState]:
+    def _state(self) -> ClimateState | None:
         return super()._state
 
     @property
@@ -153,7 +153,7 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
         return TEMP_CELSIUS
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of available operation modes."""
         return [
             _climate_modes.from_esphome(mode)
@@ -217,12 +217,12 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
     # pylint: disable=invalid-overridden-method
 
     @esphome_state_property
-    def hvac_mode(self) -> Optional[str]:
+    def hvac_mode(self) -> str | None:
         """Return current operation ie. heat, cool, idle."""
         return _climate_modes.from_esphome(self._state.mode)
 
     @esphome_state_property
-    def hvac_action(self) -> Optional[str]:
+    def hvac_action(self) -> str | None:
         """Return current action."""
         # HA has no support feature field for hvac_action
         if not self._static_info.supports_action:
@@ -245,22 +245,22 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
         return _swing_modes.from_esphome(self._state.swing_mode)
 
     @esphome_state_property
-    def current_temperature(self) -> Optional[float]:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._state.current_temperature
 
     @esphome_state_property
-    def target_temperature(self) -> Optional[float]:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._state.target_temperature
 
     @esphome_state_property
-    def target_temperature_low(self) -> Optional[float]:
+    def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         return self._state.target_temperature_low
 
     @esphome_state_property
-    def target_temperature_high(self) -> Optional[float]:
+    def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         return self._state.target_temperature_high
 

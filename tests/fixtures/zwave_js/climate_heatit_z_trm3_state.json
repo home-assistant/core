@@ -6,16 +6,10 @@
     "status": 4,
     "ready": true,
     "deviceClass": {
-        "basic": "Routing Slave",
-        "generic": "Thermostat",
-        "specific": "Thermostat General V2",
-        "mandatorySupportedCCs": [
-            "Basic",
-            "Manufacturer Specific",
-            "Thermostat Mode",
-            "Thermostat Setpoint",
-            "Version"
-        ],
+        "basic": {"key": 4, "label":"Routing Slave"},
+        "generic": {"key": 8, "label":"Thermostat"},
+        "specific": {"key": 6, "label":"Thermostat General V2"},
+        "mandatorySupportedCCs": [],
         "mandatoryControlCCs": []
     },
     "isListening": true,
@@ -116,6 +110,7 @@
             "userIcon": 3329
         }
     ],
+    "commandClasses": [],
     "values": [
         {
             "endpoint": 0,
@@ -842,6 +837,7 @@
             "commandClassName": "Thermostat Setpoint",
             "property": "setpoint",
             "propertyName": "setpoint",
+            "propertyKey": 1,
             "propertyKeyName": "Heating",
             "ccVersion": 3,
             "metadata": {

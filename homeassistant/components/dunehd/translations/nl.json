@@ -12,7 +12,9 @@
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Stel Dune HD integratie in. Als u problemen heeft met de configuratie ga dan naar: https://www.home-assistant.io/integrations/dunehd \n\nZorg ervoor dat uw speler is ingeschakeld.",
+                "title": "Dune HD"
             }
         }
     }

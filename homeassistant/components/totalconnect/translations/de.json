@@ -1,12 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto wurde bereits konfiguriert"
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
-            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "usercode": "Der Benutzercode ist an dieser Stelle f\u00fcr diesen Benutzer nicht g\u00fcltig"
         },
         "step": {
+            "locations": {
+                "data": {
+                    "location": "Standort"
+                },
+                "description": "Geben Sie den Benutzercode f\u00fcr diesen Benutzer an dieser Stelle ein",
+                "title": "Standort-Benutzercodes"
+            },
+            "reauth_confirm": {
+                "description": "Total Connect muss dein Konto neu authentifizieren",
+                "title": "Integration erneut authentifizieren"
+            },
             "user": {
                 "data": {
                     "password": "Passwort",

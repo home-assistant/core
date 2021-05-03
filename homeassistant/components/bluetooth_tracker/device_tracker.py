@@ -1,10 +1,10 @@
 """Tracking for bluetooth devices."""
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import List, Optional, Set, Tuple
 
-# pylint: disable=import-error
-import bluetooth
+import bluetooth  # pylint: disable=import-error
 from bt_proximity import BluetoothRSSI
 import voluptuous as vol
 
@@ -21,9 +21,9 @@ from homeassistant.components.device_tracker.legacy import (
     async_load_config,
 )
 from homeassistant.const import CONF_DEVICE_ID
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN, SERVICE_UPDATE
 
@@ -51,7 +51,7 @@ def is_bluetooth_device(device) -> bool:
     return device.mac and device.mac[:3].upper() == BT_PREFIX
 
 
-def discover_devices(device_id: int) -> List[Tuple[str, str]]:
+def discover_devices(device_id: int) -> list[tuple[str, str]]:
     """Discover Bluetooth devices."""
     result = bluetooth.discover_devices(
         duration=8,
@@ -65,7 +65,7 @@ def discover_devices(device_id: int) -> List[Tuple[str, str]]:
 
 
 async def see_device(
-    hass: HomeAssistantType, async_see, mac: str, device_name: str, rssi=None
+    hass: HomeAssistant, async_see, mac: str, device_name: str, rssi=None
 ) -> None:
     """Mark a device as seen."""
     attributes = {}
@@ -80,7 +80,7 @@ async def see_device(
     )
 
 
-async def get_tracking_devices(hass: HomeAssistantType) -> Tuple[Set[str], Set[str]]:
+async def get_tracking_devices(hass: HomeAssistant) -> tuple[set[str], set[str]]:
     """
     Load all known devices.
 
@@ -91,24 +91,24 @@ async def get_tracking_devices(hass: HomeAssistantType) -> Tuple[Set[str], Set[s
     devices = await async_load_config(yaml_path, hass, 0)
     bluetooth_devices = [device for device in devices if is_bluetooth_device(device)]
 
-    devices_to_track: Set[str] = {
+    devices_to_track: set[str] = {
         device.mac[3:] for device in bluetooth_devices if device.track
     }
-    devices_to_not_track: Set[str] = {
+    devices_to_not_track: set[str] = {
         device.mac[3:] for device in bluetooth_devices if not device.track
     }
 
     return devices_to_track, devices_to_not_track
 
 
-def lookup_name(mac: str) -> Optional[str]:
+def lookup_name(mac: str) -> str | None:
     """Lookup a Bluetooth device name."""
     _LOGGER.debug("Scanning %s", mac)
     return bluetooth.lookup_name(mac, timeout=5)
 
 
 async def async_setup_scanner(
-    hass: HomeAssistantType, config: dict, async_see, discovery_info=None
+    hass: HomeAssistant, config: dict, async_see, discovery_info=None
 ):
     """Set up the Bluetooth Scanner."""
     device_id: int = config[CONF_DEVICE_ID]

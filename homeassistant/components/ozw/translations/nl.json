@@ -1,8 +1,41 @@
 {
     "config": {
         "abort": {
-            "mqtt_required": "De [%%] integratie is niet ingesteld",
+            "addon_info_failed": "Mislukt om OpenZWave add-on info te krijgen.",
+            "addon_install_failed": "De installatie van de OpenZWave add-on is mislukt.",
+            "addon_set_config_failed": "Mislukt om OpenZWave configuratie in te stellen.",
+            "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "mqtt_required": "De MQTT-integratie is niet ingesteld",
             "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
+        },
+        "error": {
+            "addon_start_failed": "Het starten van de OpenZWave-add-on is mislukt. Controleer de configuratie."
+        },
+        "progress": {
+            "install_addon": "Wacht even terwijl de installatie van de OpenZWave add-on wordt voltooid. Dit kan enkele minuten duren."
+        },
+        "step": {
+            "hassio_confirm": {
+                "title": "OpenZWave integratie instellen met de OpenZWave add-on"
+            },
+            "install_addon": {
+                "title": "De OpenZWave add-on installatie is gestart"
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Gebruik de OpenZWave Supervisor add-on"
+                },
+                "description": "Wilt u de OpenZWave Supervisor add-on gebruiken?",
+                "title": "Selecteer een verbindingsmethode"
+            },
+            "start_addon": {
+                "data": {
+                    "network_key": "Netwerksleutel",
+                    "usb_path": "USB-apparaatpad"
+                },
+                "title": "Voer de OpenZWave add-on configuratie in"
+            }
         }
     }
 }

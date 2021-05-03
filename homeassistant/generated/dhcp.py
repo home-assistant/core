@@ -17,6 +17,11 @@ DHCP = [
         "macaddress": "B8B7F1*"
     },
     {
+        "domain": "august",
+        "hostname": "august*",
+        "macaddress": "E076D0*"
+    },
+    {
         "domain": "axis",
         "hostname": "axis-00408c*",
         "macaddress": "00408C*"
@@ -32,6 +37,32 @@ DHCP = [
         "macaddress": "B8A44F*"
     },
     {
+        "domain": "blink",
+        "hostname": "blink*",
+        "macaddress": "B85F98*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "34EA34*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "24DFA7*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "A043B0*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "B4430D*"
+    },
+    {
+        "domain": "emonitor",
+        "hostname": "emonitor*",
+        "macaddress": "0090C2*"
+    },
+    {
         "domain": "flume",
         "hostname": "flume-gw-*",
         "macaddress": "ECFABC*"
@@ -42,19 +73,28 @@ DHCP = [
         "macaddress": "B4E62D*"
     },
     {
-        "domain": "lyric",
-        "hostname": "lyric-*",
-        "macaddress": "48A2E6"
+        "domain": "hunterdouglas_powerview",
+        "hostname": "hunter*",
+        "macaddress": "002674*"
     },
     {
         "domain": "lyric",
         "hostname": "lyric-*",
-        "macaddress": "B82CA0"
+        "macaddress": "48A2E6*"
     },
     {
         "domain": "lyric",
         "hostname": "lyric-*",
-        "macaddress": "00D02D"
+        "macaddress": "B82CA0*"
+    },
+    {
+        "domain": "lyric",
+        "hostname": "lyric-*",
+        "macaddress": "00D02D*"
+    },
+    {
+        "domain": "myq",
+        "macaddress": "645299*"
     },
     {
         "domain": "nest",
@@ -69,6 +109,10 @@ DHCP = [
         "domain": "nuheat",
         "hostname": "nuheat",
         "macaddress": "002338*"
+    },
+    {
+        "domain": "nuki",
+        "hostname": "nuki_bridge_*"
     },
     {
         "domain": "powerwall",
@@ -106,6 +150,16 @@ DHCP = [
         "macaddress": "501479*"
     },
     {
+        "domain": "roomba",
+        "hostname": "roomba-*",
+        "macaddress": "80A589*"
+    },
+    {
+        "domain": "screenlogic",
+        "hostname": "pentair: *",
+        "macaddress": "00C033*"
+    },
+    {
         "domain": "sense",
         "hostname": "sense-*",
         "macaddress": "009D6B*"
@@ -131,6 +185,10 @@ DHCP = [
         "macaddress": "000420*"
     },
     {
+        "domain": "tado",
+        "hostname": "tado*"
+    },
+    {
         "domain": "tesla",
         "hostname": "tesla_*",
         "macaddress": "4CFCAA*"
@@ -149,5 +207,33 @@ DHCP = [
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "508A06*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "7CF666*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "10D561*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "D4A651*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "68572D*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "1869D8*"
+    },
+    {
+        "domain": "verisure",
+        "macaddress": "0023C1*"
     }
 ]

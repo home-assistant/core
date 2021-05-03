@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "invalid_response": "Ung\u00fcltige Antwort vom Ger\u00e4t",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
@@ -14,6 +15,7 @@
                     "host": "Host",
                     "password": "Passwort",
                     "port": "Port",
+                    "rtsp_port": "RTSP-Port",
                     "username": "Benutzername"
                 }
             }

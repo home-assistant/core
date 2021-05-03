@@ -1,8 +1,8 @@
 """Support for Google Nest SDM Cameras."""
+from __future__ import annotations
 
 import datetime
 import logging
-from typing import Optional
 
 from google_nest_sdm.camera_traits import (
     CameraEventImageTrait,
@@ -16,9 +16,9 @@ from haffmpeg.tools import IMAGE_JPEG
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import async_get_image
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
 from .const import DATA_SUBSCRIBER, DOMAIN
@@ -31,7 +31,7 @@ STREAM_EXPIRATION_BUFFER = datetime.timedelta(seconds=30)
 
 
 async def async_setup_sdm_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the cameras."""
 
@@ -74,7 +74,7 @@ class NestCamera(Camera):
         return False
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         # The API "name" field is a unique device identifier.
         return f"{self._device.name}-camera"
@@ -145,7 +145,13 @@ class NestCamera(Camera):
             _LOGGER.debug("Failed to extend stream: %s", err)
             # Next attempt to catch a url will get a new one
             self._stream = None
+            if self.stream:
+                self.stream.stop()
+                self.stream = None
             return
+        # Update the stream worker with the latest valid url
+        if self.stream:
+            self.stream.update_source(self._stream.rtsp_stream_url)
         self._schedule_stream_refresh()
 
     async def async_will_remove_from_hass(self):

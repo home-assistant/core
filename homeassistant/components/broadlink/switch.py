@@ -109,7 +109,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Broadlink switch."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
 
-    if device.api.type in {"RM2", "RM4"}:
+    if device.api.type in {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"}:
         platform_data = hass.data[DOMAIN].platforms.get(SWITCH_DOMAIN, {})
         user_defined_switches = platform_data.get(device.api.mac, {})
         switches = [
@@ -119,11 +119,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     elif device.api.type == "SP1":
         switches = [BroadlinkSP1Switch(device)]
 
-    elif device.api.type == "SP2":
+    elif device.api.type in {"SP2", "SP2S", "SP3", "SP3S", "SP4", "SP4B"}:
         switches = [BroadlinkSP2Switch(device)]
-
-    elif device.api.type in {"SP4", "SP4B"}:
-        switches = [BroadlinkSP4Switch(device)]
 
     elif device.api.type == "BG1":
         switches = [BroadlinkBG1Slot(device, slot) for slot in range(1, 3)]
@@ -143,7 +140,6 @@ class BroadlinkSwitch(SwitchEntity, RestoreEntity, ABC):
         self._command_on = command_on
         self._command_off = command_off
         self._coordinator = device.update_manager.coordinator
-        self._device_class = None
         self._state = None
 
     @property
@@ -174,7 +170,7 @@ class BroadlinkSwitch(SwitchEntity, RestoreEntity, ABC):
     @property
     def device_class(self):
         """Return device class."""
-        return self._device_class
+        return DEVICE_CLASS_SWITCH
 
     @property
     def device_info(self):
@@ -254,7 +250,6 @@ class BroadlinkSP1Switch(BroadlinkSwitch):
     def __init__(self, device):
         """Initialize the switch."""
         super().__init__(device, 1, 0)
-        self._device_class = DEVICE_CLASS_OUTLET
 
     @property
     def unique_id(self):
@@ -277,10 +272,8 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
     def __init__(self, device, *args, **kwargs):
         """Initialize the switch."""
         super().__init__(device, *args, **kwargs)
-        self._state = self._coordinator.data["state"]
-        self._load_power = self._coordinator.data["load_power"]
-        if device.api.model == "SC1":
-            self._device_class = DEVICE_CLASS_SWITCH
+        self._state = self._coordinator.data["pwr"]
+        self._load_power = self._coordinator.data.get("power")
 
     @property
     def assumed_state(self):
@@ -296,29 +289,8 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
     def update_data(self):
         """Update data."""
         if self._coordinator.last_update_success:
-            self._state = self._coordinator.data["state"]
-            self._load_power = self._coordinator.data["load_power"]
-        self.async_write_ha_state()
-
-
-class BroadlinkSP4Switch(BroadlinkSP1Switch):
-    """Representation of a Broadlink SP4 switch."""
-
-    def __init__(self, device, *args, **kwargs):
-        """Initialize the switch."""
-        super().__init__(device, *args, **kwargs)
-        self._state = self._coordinator.data["pwr"]
-
-    @property
-    def assumed_state(self):
-        """Return True if unable to access real state of the switch."""
-        return False
-
-    @callback
-    def update_data(self):
-        """Update data."""
-        if self._coordinator.last_update_success:
             self._state = self._coordinator.data["pwr"]
+            self._load_power = self._coordinator.data.get("power")
         self.async_write_ha_state()
 
 
@@ -330,7 +302,6 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
         super().__init__(device, 1, 0)
         self._slot = slot
         self._state = self._coordinator.data[f"s{slot}"]
-        self._device_class = DEVICE_CLASS_OUTLET
 
     @property
     def unique_id(self):
@@ -374,7 +345,6 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
         super().__init__(device, 1, 0)
         self._slot = slot
         self._state = self._coordinator.data[f"pwr{slot}"]
-        self._device_class = DEVICE_CLASS_OUTLET
 
     @property
     def unique_id(self):
@@ -390,6 +360,11 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
     def assumed_state(self):
         """Return True if unable to access real state of the switch."""
         return False
+
+    @property
+    def device_class(self):
+        """Return device class."""
+        return DEVICE_CLASS_OUTLET
 
     @callback
     def update_data(self):

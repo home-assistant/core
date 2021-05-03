@@ -1,6 +1,5 @@
 """Support for the Tuya climate devices."""
 from datetime import timedelta
-import logging
 
 from homeassistant.components.climate import (
     DOMAIN as SENSOR_DOMAIN,
@@ -34,7 +33,9 @@ from .const import (
     CONF_CURR_TEMP_DIVIDER,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
+    CONF_SET_TEMP_DIVIDED,
     CONF_TEMP_DIVIDER,
+    CONF_TEMP_STEP_OVERRIDE,
     DOMAIN,
     SIGNAL_CONFIG_ENTITY,
     TUYA_DATA,
@@ -55,8 +56,6 @@ HA_STATE_TO_TUYA = {
 TUYA_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_TUYA.items()}
 
 FAN_MODES = {FAN_LOW, FAN_MEDIUM, FAN_HIGH}
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -106,6 +105,8 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         self.operations = [HVAC_MODE_OFF]
         self._has_operation = False
         self._def_hvac_mode = HVAC_MODE_AUTO
+        self._set_temp_divided = True
+        self._temp_step_override = None
         self._min_temp = None
         self._max_temp = None
 
@@ -120,6 +121,8 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
             self._tuya.set_unit("FAHRENHEIT" if unit == TEMP_FAHRENHEIT else "CELSIUS")
         self._tuya.temp_divider = config.get(CONF_TEMP_DIVIDER, 0)
         self._tuya.curr_temp_divider = config.get(CONF_CURR_TEMP_DIVIDER, 0)
+        self._set_temp_divided = config.get(CONF_SET_TEMP_DIVIDED, True)
+        self._temp_step_override = config.get(CONF_TEMP_STEP_OVERRIDE)
         min_temp = config.get(CONF_MIN_TEMP, 0)
         max_temp = config.get(CONF_MAX_TEMP, 0)
         if min_temp >= max_temp:
@@ -192,6 +195,8 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
+        if self._temp_step_override:
+            return self._temp_step_override
         return self._tuya.target_temperature_step()
 
     @property
@@ -207,7 +212,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         if ATTR_TEMPERATURE in kwargs:
-            self._tuya.set_temperature(kwargs[ATTR_TEMPERATURE])
+            self._tuya.set_temperature(kwargs[ATTR_TEMPERATURE], self._set_temp_divided)
 
     def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""

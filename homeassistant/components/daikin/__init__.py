@@ -10,22 +10,20 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_HOSTS, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
-from .const import CONF_UUID, KEY_MAC, TIMEOUT
+from .const import CONF_UUID, DOMAIN, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "daikin"
 
 PARALLEL_UPDATES = 0
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-COMPONENT_TYPES = ["climate", "sensor", "switch"]
+PLATFORMS = ["climate", "sensor", "switch"]
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
@@ -65,7 +63,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Establish connection with Daikin."""
     conf = entry.data
     # For backwards compat, set unique ID
@@ -83,25 +81,18 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     if not daikin_api:
         return False
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: daikin_api})
-    for component in COMPONENT_TYPES:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    await asyncio.wait(
-        [
-            hass.config_entries.async_forward_entry_unload(config_entry, component)
-            for component in COMPONENT_TYPES
-        ]
-    )
-    hass.data[DOMAIN].pop(config_entry.entry_id)
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN)
-    return True
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
+    return unload_ok
 
 
 async def daikin_api_setup(hass, host, key, uuid, password):

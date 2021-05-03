@@ -21,7 +21,10 @@
             "init": {
                 "data": {
                     "floor_temperature": "Boden-Temperatur",
-                    "precision": "Genauigkeit"
+                    "precision": "Genauigkeit",
+                    "read_precision": "Pr\u00e4zision abfragen",
+                    "set_precision": "Pr\u00e4zision einstellen",
+                    "temporary_override_mode": "Tempor\u00e4rer Sollwert\u00fcbersteuerungsmodus"
                 },
                 "description": "Optionen f\u00fcr das OpenTherm Gateway"
             }

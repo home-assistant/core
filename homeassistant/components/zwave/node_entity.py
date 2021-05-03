@@ -95,7 +95,7 @@ class ZWaveBaseEntity(Entity):
         """Remove this entity and add it back."""
 
         async def _async_remove_and_add():
-            await self.async_remove()
+            await self.async_remove(force_remove=True)
             self.entity_id = None
             await self.platform.async_add_entities([self])
 
@@ -104,7 +104,7 @@ class ZWaveBaseEntity(Entity):
 
     async def node_removed(self):
         """Call when a node is removed from the Z-Wave network."""
-        await self.async_remove()
+        await self.async_remove(force_remove=True)
 
         registry = await async_get_registry(self.hass)
         if self.entity_id not in registry.entities:
@@ -118,7 +118,6 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
     def __init__(self, node, network):
         """Initialize node."""
-        # pylint: disable=import-error
         super().__init__()
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
@@ -352,7 +351,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attrs = {
             ATTR_NODE_ID: self.node_id,

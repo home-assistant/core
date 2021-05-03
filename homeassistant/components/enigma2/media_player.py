@@ -251,7 +251,7 @@ class Enigma2Device(MediaPlayerEntity):
         self.e2_box.update()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes.
 
         isRecording:        Is the box currently recording.

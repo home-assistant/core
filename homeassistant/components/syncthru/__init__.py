@@ -1,32 +1,29 @@
 """The syncthru component."""
+from __future__ import annotations
 
 import logging
-from typing import Set, Tuple
 
 from pysyncthru import SyncThru
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Set up."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
+PLATFORMS = [SENSOR_DOMAIN]
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up config entry."""
 
     session = aiohttp_client.async_get_clientsession(hass)
+    hass.data.setdefault(DOMAIN, {})
     printer = hass.data[DOMAIN][entry.entry_id] = SyncThru(
         entry.data[CONF_URL], session
     )
@@ -52,25 +49,23 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         name=printer.hostname(),
     )
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, SENSOR_DOMAIN)
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the config entry."""
-    await hass.config_entries.async_forward_entry_unload(entry, SENSOR_DOMAIN)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     hass.data[DOMAIN].pop(entry.entry_id, None)
-    return True
+    return unload_ok
 
 
-def device_identifiers(printer: SyncThru) -> Set[Tuple[str, str]]:
+def device_identifiers(printer: SyncThru) -> set[tuple[str, ...]]:
     """Get device identifiers for device registry."""
     return {(DOMAIN, printer.serial_number())}
 
 
-def device_connections(printer: SyncThru) -> Set[Tuple[str, str]]:
+def device_connections(printer: SyncThru) -> set[tuple[str, str]]:
     """Get device connections for device registry."""
     connections = set()
     try:

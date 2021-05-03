@@ -1,56 +1,67 @@
 """Support for LCN sensors."""
+
 import pypck
 
-from homeassistant.const import CONF_ADDRESS, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR, SensorEntity
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_DOMAIN,
+    CONF_ENTITIES,
+    CONF_SOURCE,
+    CONF_UNIT_OF_MEASUREMENT,
+)
 
 from . import LcnEntity
 from .const import (
-    CONF_CONNECTIONS,
-    CONF_SOURCE,
-    DATA_LCN,
+    CONF_DOMAIN_DATA,
     LED_PORTS,
     S0_INPUTS,
     SETPOINTS,
     THRESHOLDS,
     VARIABLES,
 )
-from .helpers import get_connection
+from .helpers import get_device_connection
 
 
-async def async_setup_platform(
-    hass, hass_config, async_add_entities, discovery_info=None
-):
-    """Set up the LCN sensor platform."""
-    if discovery_info is None:
-        return
+def create_lcn_sensor_entity(hass, entity_config, config_entry):
+    """Set up an entity for this domain."""
+    device_connection = get_device_connection(
+        hass, tuple(entity_config[CONF_ADDRESS]), config_entry
+    )
 
-    devices = []
-    for config in discovery_info:
-        address, connection_id = config[CONF_ADDRESS]
-        addr = pypck.lcn_addr.LcnAddr(*address)
-        connections = hass.data[DATA_LCN][CONF_CONNECTIONS]
-        connection = get_connection(connections, connection_id)
-        device_connection = connection.get_address_conn(addr)
-
-        if config[CONF_SOURCE] in VARIABLES + SETPOINTS + THRESHOLDS + S0_INPUTS:
-            device = LcnVariableSensor(config, device_connection)
-        else:  # in LED_PORTS + LOGICOP_PORTS
-            device = LcnLedLogicSensor(config, device_connection)
-
-        devices.append(device)
-
-    async_add_entities(devices)
+    if (
+        entity_config[CONF_DOMAIN_DATA][CONF_SOURCE]
+        in VARIABLES + SETPOINTS + THRESHOLDS + S0_INPUTS
+    ):
+        return LcnVariableSensor(
+            entity_config, config_entry.entry_id, device_connection
+        )
+    # in LED_PORTS + LOGICOP_PORTS
+    return LcnLedLogicSensor(entity_config, config_entry.entry_id, device_connection)
 
 
-class LcnVariableSensor(LcnEntity):
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up LCN switch entities from a config entry."""
+    entities = []
+
+    for entity_config in config_entry.data[CONF_ENTITIES]:
+        if entity_config[CONF_DOMAIN] == DOMAIN_SENSOR:
+            entities.append(create_lcn_sensor_entity(hass, entity_config, config_entry))
+
+    async_add_entities(entities)
+
+
+class LcnVariableSensor(LcnEntity, SensorEntity):
     """Representation of a LCN sensor for variables."""
 
-    def __init__(self, config, device_connection):
+    def __init__(self, config, entry_id, device_connection):
         """Initialize the LCN sensor."""
-        super().__init__(config, device_connection)
+        super().__init__(config, entry_id, device_connection)
 
-        self.variable = pypck.lcn_defs.Var[config[CONF_SOURCE]]
-        self.unit = pypck.lcn_defs.VarUnit.parse(config[CONF_UNIT_OF_MEASUREMENT])
+        self.variable = pypck.lcn_defs.Var[config[CONF_DOMAIN_DATA][CONF_SOURCE]]
+        self.unit = pypck.lcn_defs.VarUnit.parse(
+            config[CONF_DOMAIN_DATA][CONF_UNIT_OF_MEASUREMENT]
+        )
 
         self._value = None
 
@@ -59,6 +70,12 @@ class LcnVariableSensor(LcnEntity):
         await super().async_added_to_hass()
         if not self.device_connection.is_group:
             await self.device_connection.activate_status_request_handler(self.variable)
+
+    async def async_will_remove_from_hass(self):
+        """Run when entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+        if not self.device_connection.is_group:
+            await self.device_connection.cancel_status_request_handler(self.variable)
 
     @property
     def state(self):
@@ -82,17 +99,19 @@ class LcnVariableSensor(LcnEntity):
         self.async_write_ha_state()
 
 
-class LcnLedLogicSensor(LcnEntity):
+class LcnLedLogicSensor(LcnEntity, SensorEntity):
     """Representation of a LCN sensor for leds and logicops."""
 
-    def __init__(self, config, device_connection):
+    def __init__(self, config, entry_id, device_connection):
         """Initialize the LCN sensor."""
-        super().__init__(config, device_connection)
+        super().__init__(config, entry_id, device_connection)
 
-        if config[CONF_SOURCE] in LED_PORTS:
-            self.source = pypck.lcn_defs.LedPort[config[CONF_SOURCE]]
+        if config[CONF_DOMAIN_DATA][CONF_SOURCE] in LED_PORTS:
+            self.source = pypck.lcn_defs.LedPort[config[CONF_DOMAIN_DATA][CONF_SOURCE]]
         else:
-            self.source = pypck.lcn_defs.LogicOpPort[config[CONF_SOURCE]]
+            self.source = pypck.lcn_defs.LogicOpPort[
+                config[CONF_DOMAIN_DATA][CONF_SOURCE]
+            ]
 
         self._value = None
 
@@ -101,6 +120,12 @@ class LcnLedLogicSensor(LcnEntity):
         await super().async_added_to_hass()
         if not self.device_connection.is_group:
             await self.device_connection.activate_status_request_handler(self.source)
+
+    async def async_will_remove_from_hass(self):
+        """Run when entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+        if not self.device_connection.is_group:
+            await self.device_connection.cancel_status_request_handler(self.source)
 
     @property
     def state(self):

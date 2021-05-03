@@ -203,6 +203,7 @@ async def test_templates_with_entities(hass, calls):
                             "preset_mode_template": "{{ states('input_select.preset_mode') }}",
                             "oscillating_template": "{{ states('input_select.osc') }}",
                             "direction_template": "{{ states('input_select.direction') }}",
+                            "speed_count": "3",
                             "set_percentage": {
                                 "service": "script.fans_set_speed",
                                 "data_template": {"percentage": "{{ percentage }}"},
@@ -245,6 +246,10 @@ async def test_templates_with_entities(hass, calls):
     await hass.async_block_till_done()
     _verify(hass, STATE_ON, None, 0, True, DIRECTION_FORWARD, None)
 
+    hass.states.async_set(_STATE_INPUT_BOOLEAN, False)
+    await hass.async_block_till_done()
+    _verify(hass, STATE_OFF, None, 0, True, DIRECTION_FORWARD, None)
+
 
 async def test_templates_with_entities_and_invalid_percentage(hass, calls):
     """Test templates with values from other entities."""
@@ -273,7 +278,7 @@ async def test_templates_with_entities_and_invalid_percentage(hass, calls):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    _verify(hass, STATE_OFF, SPEED_OFF, 0, None, None, None)
+    _verify(hass, STATE_ON, SPEED_OFF, 0, None, None, None)
 
     hass.states.async_set("sensor.percentage", "33")
     await hass.async_block_till_done()
@@ -298,7 +303,7 @@ async def test_templates_with_entities_and_invalid_percentage(hass, calls):
     hass.states.async_set("sensor.percentage", "0")
     await hass.async_block_till_done()
 
-    _verify(hass, STATE_OFF, SPEED_OFF, 0, None, None, None)
+    _verify(hass, STATE_ON, SPEED_OFF, 0, None, None, None)
 
 
 async def test_templates_with_entities_and_preset_modes(hass, calls):
@@ -648,6 +653,82 @@ async def test_set_percentage(hass, calls):
     _verify(hass, STATE_ON, SPEED_MEDIUM, 50, None, None, None)
 
 
+async def test_increase_decrease_speed(hass, calls):
+    """Test set valid increase and decrease speed."""
+    await _register_components(hass, speed_count=3)
+
+    # Turn on fan
+    await common.async_turn_on(hass, _TEST_FAN)
+
+    # Set fan's percentage speed to 100
+    await common.async_set_percentage(hass, _TEST_FAN, 100)
+
+    # verify
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 100
+
+    _verify(hass, STATE_ON, SPEED_HIGH, 100, None, None, None)
+
+    # Set fan's percentage speed to 66
+    await common.async_decrease_speed(hass, _TEST_FAN)
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 66
+
+    _verify(hass, STATE_ON, SPEED_MEDIUM, 66, None, None, None)
+
+    # Set fan's percentage speed to 33
+    await common.async_decrease_speed(hass, _TEST_FAN)
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 33
+
+    _verify(hass, STATE_ON, SPEED_LOW, 33, None, None, None)
+
+    # Set fan's percentage speed to 0
+    await common.async_decrease_speed(hass, _TEST_FAN)
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 0
+
+    _verify(hass, STATE_OFF, SPEED_OFF, 0, None, None, None)
+
+    # Set fan's percentage speed to 33
+    await common.async_increase_speed(hass, _TEST_FAN)
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 33
+
+    _verify(hass, STATE_ON, SPEED_LOW, 33, None, None, None)
+
+
+async def test_increase_decrease_speed_default_speed_count(hass, calls):
+    """Test set valid increase and decrease speed."""
+    await _register_components(
+        hass,
+    )
+
+    # Turn on fan
+    await common.async_turn_on(hass, _TEST_FAN)
+
+    # Set fan's percentage speed to 100
+    await common.async_set_percentage(hass, _TEST_FAN, 100)
+
+    # verify
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 100
+
+    _verify(hass, STATE_ON, SPEED_HIGH, 100, None, None, None)
+
+    # Set fan's percentage speed to 99
+    await common.async_decrease_speed(hass, _TEST_FAN)
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 99
+
+    _verify(hass, STATE_ON, SPEED_HIGH, 99, None, None, None)
+
+    # Set fan's percentage speed to 98
+    await common.async_decrease_speed(hass, _TEST_FAN)
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 98
+
+    _verify(hass, STATE_ON, SPEED_HIGH, 98, None, None, None)
+
+    for _ in range(32):
+        await common.async_decrease_speed(hass, _TEST_FAN)
+    assert int(float(hass.states.get(_PERCENTAGE_INPUT_NUMBER).state)) == 66
+
+    _verify(hass, STATE_ON, SPEED_MEDIUM, 66, None, None, None)
+
+
 async def test_set_invalid_speed_from_initial_stage(hass, calls):
     """Test set invalid speed when fan is in initial state."""
     await _register_components(hass)
@@ -881,7 +962,9 @@ def _verify(
     assert attributes.get(ATTR_PRESET_MODE) == expected_preset_mode
 
 
-async def _register_components(hass, speed_list=None, preset_modes=None):
+async def _register_components(
+    hass, speed_list=None, preset_modes=None, speed_count=None
+):
     """Register basic components for testing."""
     with assert_setup_component(1, "input_boolean"):
         assert await setup.async_setup_component(
@@ -1006,6 +1089,9 @@ async def _register_components(hass, speed_list=None, preset_modes=None):
         if preset_modes:
             test_fan_config["preset_modes"] = preset_modes
 
+        if speed_count:
+            test_fan_config["speed_count"] = speed_count
+
         assert await setup.async_setup_component(
             hass,
             "fan",
@@ -1060,3 +1146,217 @@ async def test_unique_id(hass):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
+
+
+@pytest.mark.parametrize(
+    "speed_count, percentage_step", [(0, 1), (100, 1), (3, 100 / 3)]
+)
+async def test_implemented_percentage(hass, speed_count, percentage_step):
+    """Test a fan that implements percentage."""
+    await setup.async_setup_component(
+        hass,
+        "fan",
+        {
+            "fan": {
+                "platform": "template",
+                "fans": {
+                    "mechanical_ventilation": {
+                        "friendly_name": "Mechanische ventilatie",
+                        "unique_id": "a2fd2e38-674b-4b47-b5ef-cc2362211a72",
+                        "value_template": "{{ states('light.mv_snelheid') }}",
+                        "percentage_template": "{{ (state_attr('light.mv_snelheid','brightness') | int / 255 * 100) | int }}",
+                        "turn_on": [
+                            {
+                                "service": "switch.turn_off",
+                                "target": {
+                                    "entity_id": "switch.mv_automatisch",
+                                },
+                            },
+                            {
+                                "service": "light.turn_on",
+                                "target": {
+                                    "entity_id": "light.mv_snelheid",
+                                },
+                                "data": {"brightness_pct": 40},
+                            },
+                        ],
+                        "turn_off": [
+                            {
+                                "service": "light.turn_off",
+                                "target": {
+                                    "entity_id": "light.mv_snelheid",
+                                },
+                            },
+                            {
+                                "service": "switch.turn_on",
+                                "target": {
+                                    "entity_id": "switch.mv_automatisch",
+                                },
+                            },
+                        ],
+                        "set_percentage": [
+                            {
+                                "service": "light.turn_on",
+                                "target": {
+                                    "entity_id": "light.mv_snelheid",
+                                },
+                                "data": {"brightness_pct": "{{ percentage }}"},
+                            }
+                        ],
+                        "speed_count": speed_count,
+                    },
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    state = hass.states.get("fan.mechanical_ventilation")
+    attributes = state.attributes
+    assert attributes["percentage_step"] == percentage_step
+
+
+async def test_implemented_preset_mode(hass):
+    """Test a fan that implements preset_mode."""
+    await setup.async_setup_component(
+        hass,
+        "fan",
+        {
+            "fan": {
+                "platform": "template",
+                "fans": {
+                    "mechanical_ventilation": {
+                        "friendly_name": "Mechanische ventilatie",
+                        "unique_id": "a2fd2e38-674b-4b47-b5ef-cc2362211a72",
+                        "value_template": "{{ states('light.mv_snelheid') }}",
+                        "preset_mode_template": "{{ 'any' }}",
+                        "preset_modes": ["any"],
+                        "set_preset_mode": [
+                            {
+                                "service": "light.turn_on",
+                                "target": {
+                                    "entity_id": "light.mv_snelheid",
+                                },
+                                "data": {"brightness_pct": "{{ percentage }}"},
+                            }
+                        ],
+                        "turn_on": [
+                            {
+                                "service": "switch.turn_off",
+                                "target": {
+                                    "entity_id": "switch.mv_automatisch",
+                                },
+                            },
+                            {
+                                "service": "light.turn_on",
+                                "target": {
+                                    "entity_id": "light.mv_snelheid",
+                                },
+                                "data": {"brightness_pct": 40},
+                            },
+                        ],
+                        "turn_off": [
+                            {
+                                "service": "light.turn_off",
+                                "target": {
+                                    "entity_id": "light.mv_snelheid",
+                                },
+                            },
+                            {
+                                "service": "switch.turn_on",
+                                "target": {
+                                    "entity_id": "switch.mv_automatisch",
+                                },
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    state = hass.states.get("fan.mechanical_ventilation")
+    attributes = state.attributes
+    assert attributes["percentage"] is None
+
+
+async def test_implemented_speed(hass):
+    """Test a fan that implements speed."""
+    await setup.async_setup_component(
+        hass,
+        "fan",
+        {
+            "fan": {
+                "platform": "template",
+                "fans": {
+                    "mechanical_ventilation": {
+                        "friendly_name": "Mechanische ventilatie",
+                        "unique_id": "a2fd2e38-674b-4b47-b5ef-cc2362211a72",
+                        "value_template": "{{ states('light.mv_snelheid') }}",
+                        "speed_template": "{{ 'fast' }}",
+                        "speeds": ["slow", "fast"],
+                        "set_preset_mode": [
+                            {
+                                "service": "light.turn_on",
+                                "target": {
+                                    "entity_id": "light.mv_snelheid",
+                                },
+                                "data": {"brightness_pct": "{{ percentage }}"},
+                            }
+                        ],
+                        "turn_on": [
+                            {
+                                "service": "switch.turn_off",
+                                "target": {
+                                    "entity_id": "switch.mv_automatisch",
+                                },
+                            },
+                            {
+                                "service": "light.turn_on",
+                                "target": {
+                                    "entity_id": "light.mv_snelheid",
+                                },
+                                "data": {"brightness_pct": 40},
+                            },
+                        ],
+                        "turn_off": [
+                            {
+                                "service": "light.turn_off",
+                                "target": {
+                                    "entity_id": "light.mv_snelheid",
+                                },
+                            },
+                            {
+                                "service": "switch.turn_on",
+                                "target": {
+                                    "entity_id": "switch.mv_automatisch",
+                                },
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    state = hass.states.get("fan.mechanical_ventilation")
+    attributes = state.attributes
+    assert attributes["percentage"] == 100
+    assert attributes["speed"] == "fast"

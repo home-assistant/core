@@ -1,6 +1,7 @@
 """Tests for the Bond fan device."""
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import Optional
 
 from bond_api import Action, DeviceType, Direction
 
@@ -18,6 +19,7 @@ from homeassistant.components.fan import (
     SPEED_OFF,
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
@@ -43,8 +45,8 @@ def ceiling_fan(name: str):
 async def turn_fan_on(
     hass: core.HomeAssistant,
     fan_id: str,
-    speed: Optional[str] = None,
-    percentage: Optional[int] = None,
+    speed: str | None = None,
+    percentage: int | None = None,
 ) -> None:
     """Turn the fan on at the specified speed."""
     service_data = {ATTR_ENTITY_ID: fan_id}
@@ -71,7 +73,7 @@ async def test_entity_registry(hass: core.HomeAssistant):
         bond_device_id="test-device-id",
     )
 
-    registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    registry: EntityRegistry = er.async_get(hass)
     entity = registry.entities["fan.name_1"]
     assert entity.unique_id == "test-hub-id_test-device-id"
 

@@ -1,7 +1,9 @@
 """Support for Synology DSM sensors."""
-from datetime import timedelta
-from typing import Dict
+from __future__ import annotations
 
+from datetime import timedelta
+
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DISKS,
@@ -11,13 +13,15 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.temperature import display_temp
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import utcnow
 
-from . import SynoApi, SynologyDSMDeviceEntity, SynologyDSMDispatcherEntity
+from . import SynoApi, SynologyDSMBaseEntity, SynologyDSMDeviceEntity
 from .const import (
     CONF_VOLUMES,
+    COORDINATOR_CENTRAL,
     DOMAIN,
     ENTITY_UNIT_LOAD,
     INFORMATION_SENSORS,
@@ -30,14 +34,18 @@ from .const import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the Synology NAS Sensor."""
 
-    api = hass.data[DOMAIN][entry.unique_id][SYNO_API]
+    data = hass.data[DOMAIN][entry.unique_id]
+    api = data[SYNO_API]
+    coordinator = data[COORDINATOR_CENTRAL]
 
     entities = [
-        SynoDSMUtilSensor(api, sensor_type, UTILISATION_SENSORS[sensor_type])
+        SynoDSMUtilSensor(
+            api, sensor_type, UTILISATION_SENSORS[sensor_type], coordinator
+        )
         for sensor_type in UTILISATION_SENSORS
     ]
 
@@ -46,7 +54,11 @@ async def async_setup_entry(
         for volume in entry.data.get(CONF_VOLUMES, api.storage.volumes_ids):
             entities += [
                 SynoDSMStorageSensor(
-                    api, sensor_type, STORAGE_VOL_SENSORS[sensor_type], volume
+                    api,
+                    sensor_type,
+                    STORAGE_VOL_SENSORS[sensor_type],
+                    coordinator,
+                    volume,
                 )
                 for sensor_type in STORAGE_VOL_SENSORS
             ]
@@ -56,20 +68,37 @@ async def async_setup_entry(
         for disk in entry.data.get(CONF_DISKS, api.storage.disks_ids):
             entities += [
                 SynoDSMStorageSensor(
-                    api, sensor_type, STORAGE_DISK_SENSORS[sensor_type], disk
+                    api,
+                    sensor_type,
+                    STORAGE_DISK_SENSORS[sensor_type],
+                    coordinator,
+                    disk,
                 )
                 for sensor_type in STORAGE_DISK_SENSORS
             ]
 
     entities += [
-        SynoDSMInfoSensor(api, sensor_type, INFORMATION_SENSORS[sensor_type])
+        SynoDSMInfoSensor(
+            api, sensor_type, INFORMATION_SENSORS[sensor_type], coordinator
+        )
         for sensor_type in INFORMATION_SENSORS
     ]
 
     async_add_entities(entities)
 
 
-class SynoDSMUtilSensor(SynologyDSMDispatcherEntity):
+class SynoDSMSensor(SynologyDSMBaseEntity):
+    """Mixin for sensor specific attributes."""
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit the value is expressed in."""
+        if self.entity_type in TEMP_SENSORS_KEYS:
+            return self.hass.config.units.temperature_unit
+        return self._unit
+
+
+class SynoDSMUtilSensor(SynoDSMSensor, SensorEntity):
     """Representation a Synology Utilisation sensor."""
 
     @property
@@ -101,7 +130,7 @@ class SynoDSMUtilSensor(SynologyDSMDispatcherEntity):
         return bool(self._api.utilisation)
 
 
-class SynoDSMStorageSensor(SynologyDSMDeviceEntity):
+class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SynoDSMSensor, SensorEntity):
     """Representation a Synology Storage sensor."""
 
     @property
@@ -122,12 +151,18 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity):
         return attr
 
 
-class SynoDSMInfoSensor(SynologyDSMDispatcherEntity):
+class SynoDSMInfoSensor(SynoDSMSensor, SensorEntity):
     """Representation a Synology information sensor."""
 
-    def __init__(self, api: SynoApi, entity_type: str, entity_info: Dict[str, str]):
+    def __init__(
+        self,
+        api: SynoApi,
+        entity_type: str,
+        entity_info: dict[str, str],
+        coordinator: DataUpdateCoordinator,
+    ):
         """Initialize the Synology SynoDSMInfoSensor entity."""
-        super().__init__(api, entity_type, entity_info)
+        super().__init__(api, entity_type, entity_info, coordinator)
         self._previous_uptime = None
         self._last_boot = None
 

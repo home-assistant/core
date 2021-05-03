@@ -1,6 +1,7 @@
 """Authentication for HTTP component."""
 import logging
 import secrets
+from urllib.parse import unquote
 
 from aiohttp import hdrs
 from aiohttp.web import middleware
@@ -30,11 +31,16 @@ def async_sign_path(hass, refresh_token_id, path, expiration):
 
     now = dt_util.utcnow()
     encoded = jwt.encode(
-        {"iss": refresh_token_id, "path": path, "iat": now, "exp": now + expiration},
+        {
+            "iss": refresh_token_id,
+            "path": unquote(path),
+            "iat": now,
+            "exp": now + expiration,
+        },
         secret,
         algorithm="HS256",
     )
-    return f"{path}?{SIGN_QUERY_PARAM}=" f"{encoded.decode()}"
+    return f"{path}?{SIGN_QUERY_PARAM}={encoded.decode()}"
 
 
 @callback

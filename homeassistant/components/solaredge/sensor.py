@@ -1,16 +1,21 @@
 """Support for SolarEdge Monitoring API."""
+from __future__ import annotations
+
 from abc import abstractmethod
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import logging
+from typing import Any
 
 from requests.exceptions import ConnectTimeout, HTTPError
-import solaredge
+from solaredge import Solaredge
 from stringcase import snakecase
 
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, DEVICE_CLASS_BATTERY, DEVICE_CLASS_POWER
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -30,10 +35,14 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add an solarEdge entry."""
     # Add the needed sensors to hass
-    api = solaredge.Solaredge(entry.data[CONF_API_KEY])
+    api = Solaredge(entry.data[CONF_API_KEY])
 
     # Check if api can be reached and site is active
     try:
@@ -69,7 +78,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SolarEdgeSensorFactory:
     """Factory which creates sensors based on the sensor_key."""
 
-    def __init__(self, hass, platform_name, site_id, api):
+    def __init__(
+        self, hass: HomeAssistant, platform_name: str, site_id: str, api: Solaredge
+    ) -> None:
         """Initialize the factory."""
         self.platform_name = platform_name
 
@@ -81,7 +92,12 @@ class SolarEdgeSensorFactory:
 
         self.all_services = (details, overview, inventory, flow, energy)
 
-        self.services = {"site_details": (SolarEdgeDetailsSensor, details)}
+        self.services: dict[
+            str,
+            tuple[
+                type[SolarEdgeSensor | SolarEdgeOverviewSensor], SolarEdgeDataService
+            ],
+        ] = {"site_details": (SolarEdgeDetailsSensor, details)}
 
         for key in [
             "lifetime_energy",
@@ -110,17 +126,19 @@ class SolarEdgeSensorFactory:
         ]:
             self.services[key] = (SolarEdgeEnergyDetailsSensor, energy)
 
-    def create_sensor(self, sensor_key):
+    def create_sensor(self, sensor_key: str) -> SolarEdgeSensor:
         """Create and return a sensor based on the sensor_key."""
         sensor_class, service = self.services[sensor_key]
 
         return sensor_class(self.platform_name, sensor_key, service)
 
 
-class SolarEdgeSensor(CoordinatorEntity, Entity):
+class SolarEdgeSensor(CoordinatorEntity, SensorEntity):
     """Abstract class for a solaredge sensor."""
 
-    def __init__(self, platform_name, sensor_key, data_service):
+    def __init__(
+        self, platform_name: str, sensor_key: str, data_service: SolarEdgeDataService
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(data_service.coordinator)
         self.platform_name = platform_name
@@ -128,17 +146,17 @@ class SolarEdgeSensor(CoordinatorEntity, Entity):
         self.data_service = data_service
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         return SENSOR_TYPES[self.sensor_key][2]
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name."""
-        return "{} ({})".format(self.platform_name, SENSOR_TYPES[self.sensor_key][1])
+        return f"{self.platform_name} ({SENSOR_TYPES[self.sensor_key][1]})"
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the sensor icon."""
         return SENSOR_TYPES[self.sensor_key][3]
 
@@ -146,14 +164,16 @@ class SolarEdgeSensor(CoordinatorEntity, Entity):
 class SolarEdgeOverviewSensor(SolarEdgeSensor):
     """Representation of an SolarEdge Monitoring API overview sensor."""
 
-    def __init__(self, platform_name, sensor_key, data_service):
+    def __init__(
+        self, platform_name: str, sensor_key: str, data_service: SolarEdgeDataService
+    ) -> None:
         """Initialize the overview sensor."""
         super().__init__(platform_name, sensor_key, data_service)
 
         self._json_key = SENSOR_TYPES[self.sensor_key][0]
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the sensor."""
         return self.data_service.data.get(self._json_key)
 
@@ -162,12 +182,12 @@ class SolarEdgeDetailsSensor(SolarEdgeSensor):
     """Representation of an SolarEdge Monitoring API details sensor."""
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self.data_service.attributes
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the sensor."""
         return self.data_service.data
 
@@ -182,12 +202,12 @@ class SolarEdgeInventorySensor(SolarEdgeSensor):
         self._json_key = SENSOR_TYPES[self.sensor_key][0]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self.data_service.attributes.get(self._json_key)
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the sensor."""
         return self.data_service.data.get(self._json_key)
 
@@ -202,17 +222,17 @@ class SolarEdgeEnergyDetailsSensor(SolarEdgeSensor):
         self._json_key = SENSOR_TYPES[self.sensor_key][0]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self.data_service.attributes.get(self._json_key)
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the sensor."""
         return self.data_service.data.get(self._json_key)
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         return self.data_service.unit
 
@@ -220,29 +240,31 @@ class SolarEdgeEnergyDetailsSensor(SolarEdgeSensor):
 class SolarEdgePowerFlowSensor(SolarEdgeSensor):
     """Representation of an SolarEdge Monitoring API power flow sensor."""
 
-    def __init__(self, platform_name, sensor_key, data_service):
+    def __init__(
+        self, platform_name: str, sensor_key: str, data_service: SolarEdgeDataService
+    ) -> None:
         """Initialize the power flow sensor."""
         super().__init__(platform_name, sensor_key, data_service)
 
         self._json_key = SENSOR_TYPES[self.sensor_key][0]
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Device Class."""
         return DEVICE_CLASS_POWER
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self.data_service.attributes.get(self._json_key)
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the sensor."""
         return self.data_service.data.get(self._json_key)
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         return self.data_service.unit
 
@@ -250,19 +272,21 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensor):
 class SolarEdgeStorageLevelSensor(SolarEdgeSensor):
     """Representation of an SolarEdge Monitoring API storage level sensor."""
 
-    def __init__(self, platform_name, sensor_key, data_service):
+    def __init__(
+        self, platform_name: str, sensor_key: str, data_service: SolarEdgeDataService
+    ) -> None:
         """Initialize the storage level sensor."""
         super().__init__(platform_name, sensor_key, data_service)
 
         self._json_key = SENSOR_TYPES[self.sensor_key][0]
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the device_class of the device."""
         return DEVICE_CLASS_BATTERY
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the sensor."""
         attr = self.data_service.attributes.get(self._json_key)
         if attr and "soc" in attr:
@@ -273,7 +297,7 @@ class SolarEdgeStorageLevelSensor(SolarEdgeSensor):
 class SolarEdgeDataService:
     """Get and update the latest data."""
 
-    def __init__(self, hass, api, site_id):
+    def __init__(self, hass: HomeAssistant, api: Solaredge, site_id: str) -> None:
         """Initialize the data object."""
         self.api = api
         self.site_id = site_id
@@ -285,7 +309,7 @@ class SolarEdgeDataService:
         self.coordinator = None
 
     @callback
-    def async_setup(self):
+    def async_setup(self) -> None:
         """Coordinator creation."""
         self.coordinator = DataUpdateCoordinator(
             self.hass,
@@ -297,14 +321,14 @@ class SolarEdgeDataService:
 
     @property
     @abstractmethod
-    def update_interval(self):
+    def update_interval(self) -> timedelta:
         """Update interval."""
 
     @abstractmethod
-    def update(self):
+    def update(self) -> None:
         """Update data in executor."""
 
-    async def async_update_data(self):
+    async def async_update_data(self) -> None:
         """Update data."""
         await self.hass.async_add_executor_job(self.update)
 
@@ -313,11 +337,11 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
     """Get and update the latest overview data."""
 
     @property
-    def update_interval(self):
+    def update_interval(self) -> timedelta:
         """Update interval."""
         return OVERVIEW_UPDATE_DELAY
 
-    def update(self):
+    def update(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         try:
             data = self.api.get_overview(self.site_id)
@@ -342,18 +366,18 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
 class SolarEdgeDetailsDataService(SolarEdgeDataService):
     """Get and update the latest details data."""
 
-    def __init__(self, hass, api, site_id):
+    def __init__(self, hass: HomeAssistant, api: Solaredge, site_id: str) -> None:
         """Initialize the details data service."""
         super().__init__(hass, api, site_id)
 
         self.data = None
 
     @property
-    def update_interval(self):
+    def update_interval(self) -> timedelta:
         """Update interval."""
         return DETAILS_UPDATE_DELAY
 
-    def update(self):
+    def update(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
 
         try:
@@ -389,11 +413,11 @@ class SolarEdgeInventoryDataService(SolarEdgeDataService):
     """Get and update the latest inventory data."""
 
     @property
-    def update_interval(self):
+    def update_interval(self) -> timedelta:
         """Update interval."""
         return INVENTORY_UPDATE_DELAY
 
-    def update(self):
+    def update(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         try:
             data = self.api.get_inventory(self.site_id)
@@ -414,18 +438,18 @@ class SolarEdgeInventoryDataService(SolarEdgeDataService):
 class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
     """Get and update the latest power flow data."""
 
-    def __init__(self, hass, api, site_id):
+    def __init__(self, hass: HomeAssistant, api: Solaredge, site_id: str) -> None:
         """Initialize the power flow data service."""
         super().__init__(hass, api, site_id)
 
         self.unit = None
 
     @property
-    def update_interval(self):
+    def update_interval(self) -> timedelta:
         """Update interval."""
         return ENERGY_DETAILS_DELAY
 
-    def update(self):
+    def update(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         try:
             now = datetime.now()
@@ -475,18 +499,18 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
 class SolarEdgePowerFlowDataService(SolarEdgeDataService):
     """Get and update the latest power flow data."""
 
-    def __init__(self, hass, api, site_id):
+    def __init__(self, hass: HomeAssistant, api: Solaredge, site_id: str) -> None:
         """Initialize the power flow data service."""
         super().__init__(hass, api, site_id)
 
         self.unit = None
 
     @property
-    def update_interval(self):
+    def update_interval(self) -> timedelta:
         """Update interval."""
         return POWER_FLOW_UPDATE_DELAY
 
-    def update(self):
+    def update(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
         try:
             data = self.api.get_current_power_flow(self.site_id)

@@ -1,17 +1,19 @@
 """Test the init file of Twilio."""
-from unittest.mock import patch
-
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import twilio
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import callback
 
 
 async def test_config_flow_registers_webhook(hass, aiohttp_client):
     """Test setting up Twilio and sending webhook."""
-    with patch("homeassistant.util.get_local_ip", return_value="example.com"):
-        result = await hass.config_entries.flow.async_init(
-            "twilio", context={"source": "user"}
-        )
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://example.local:8123"},
+    )
+    result = await hass.config_entries.flow.async_init(
+        "twilio", context={"source": config_entries.SOURCE_USER}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM, result
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})

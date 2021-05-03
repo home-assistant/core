@@ -1,9 +1,9 @@
 """Support for Home Assistant iOS app sensors."""
 from homeassistant.components import ios
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from .const import DOMAIN
@@ -32,7 +32,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(dev, True)
 
 
-class IOSSensor(Entity):
+class IOSSensor(SensorEntity):
     """Representation of an iOS sensor."""
 
     def __init__(self, sensor_type, device_name, device):
@@ -88,7 +88,7 @@ class IOSSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         device = self._device[ios.ATTR_DEVICE]
         device_battery = self._device[ios.ATTR_BATTERY]

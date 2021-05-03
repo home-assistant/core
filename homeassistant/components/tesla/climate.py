@@ -1,6 +1,7 @@
 """Support for Tesla HVAC system."""
+from __future__ import annotations
+
 import logging
-from typing import List, Optional
 
 from teslajsonpy.exceptions import UnknownPresetMode
 
@@ -103,7 +104,7 @@ class TeslaThermostat(TeslaDevice, ClimateEntity):
             _LOGGER.error("%s", ex.message)
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp.
 
         Requires SUPPORT_PRESET_MODE.
@@ -111,7 +112,7 @@ class TeslaThermostat(TeslaDevice, ClimateEntity):
         return self.tesla_device.preset_mode
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
+    def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes.
 
         Requires SUPPORT_PRESET_MODE.

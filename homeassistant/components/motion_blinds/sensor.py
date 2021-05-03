@@ -1,20 +1,16 @@
 """Support for Motion Blinds sensors."""
-import logging
-
 from motionblinds import BlindType
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY
-
-_LOGGER = logging.getLogger(__name__)
+from .const import ATTR_AVAILABLE, DOMAIN, KEY_COORDINATOR, KEY_GATEWAY
 
 ATTR_BATTERY_VOLTAGE = "battery_voltage"
 TYPE_BLIND = "blind"
@@ -43,7 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class MotionBatterySensor(CoordinatorEntity, Entity):
+class MotionBatterySensor(CoordinatorEntity, SensorEntity):
     """
     Representation of a Motion Battery Sensor.
 
@@ -74,7 +70,13 @@ class MotionBatterySensor(CoordinatorEntity, Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._blind.available
+        if self.coordinator.data is None:
+            return False
+
+        if not self.coordinator.data[KEY_GATEWAY][ATTR_AVAILABLE]:
+            return False
+
+        return self.coordinator.data[self._blind.mac][ATTR_AVAILABLE]
 
     @property
     def unit_of_measurement(self):
@@ -92,7 +94,7 @@ class MotionBatterySensor(CoordinatorEntity, Entity):
         return self._blind.battery_level
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {ATTR_BATTERY_VOLTAGE: self._blind.battery_voltage}
 
@@ -138,7 +140,7 @@ class MotionTDBUBatterySensor(MotionBatterySensor):
         return self._blind.battery_level[self._motor[0]]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         attributes = {}
         if self._blind.battery_voltage is not None:
@@ -148,7 +150,7 @@ class MotionTDBUBatterySensor(MotionBatterySensor):
         return attributes
 
 
-class MotionSignalStrengthSensor(CoordinatorEntity, Entity):
+class MotionSignalStrengthSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Motion Signal Strength Sensor."""
 
     def __init__(self, coordinator, device, device_type):
@@ -178,7 +180,17 @@ class MotionSignalStrengthSensor(CoordinatorEntity, Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._device.available
+        if self.coordinator.data is None:
+            return False
+
+        gateway_available = self.coordinator.data[KEY_GATEWAY][ATTR_AVAILABLE]
+        if self._device_type == TYPE_GATEWAY:
+            return gateway_available
+
+        return (
+            gateway_available
+            and self.coordinator.data[self._device.mac][ATTR_AVAILABLE]
+        )
 
     @property
     def unit_of_measurement(self):

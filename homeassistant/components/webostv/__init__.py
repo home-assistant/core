@@ -1,25 +1,17 @@
 """Support for LG webOS Smart TV."""
 import asyncio
+from contextlib import suppress
+import json
 import logging
+import os
 
 from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
+from sqlitedict import SqliteDict
 import voluptuous as vol
 from websockets.exceptions import ConnectionClosed
 
-from homeassistant.components.webostv.const import (
-    ATTR_BUTTON,
-    ATTR_COMMAND,
-    ATTR_PAYLOAD,
-    CONF_ON_ACTION,
-    CONF_SOURCES,
-    DEFAULT_NAME,
-    DOMAIN,
-    SERVICE_BUTTON,
-    SERVICE_COMMAND,
-    SERVICE_SELECT_SOUND_OUTPUT,
-    WEBOSTV_CONFIG_FILE,
-)
 from homeassistant.const import (
+    ATTR_COMMAND,
     ATTR_ENTITY_ID,
     CONF_CUSTOMIZE,
     CONF_HOST,
@@ -30,7 +22,19 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import ATTR_SOUND_OUTPUT
+from .const import (
+    ATTR_BUTTON,
+    ATTR_PAYLOAD,
+    ATTR_SOUND_OUTPUT,
+    CONF_ON_ACTION,
+    CONF_SOURCES,
+    DEFAULT_NAME,
+    DOMAIN,
+    SERVICE_BUTTON,
+    SERVICE_COMMAND,
+    SERVICE_SELECT_SOUND_OUTPUT,
+    WEBOSTV_CONFIG_FILE,
+)
 
 CUSTOMIZE_SCHEMA = vol.Schema(
     {vol.Optional(CONF_SOURCES, default=[]): vol.All(cv.ensure_list, [cv.string])}
@@ -101,13 +105,41 @@ async def async_setup(hass, config):
     return True
 
 
+def convert_client_keys(config_file):
+    """In case the config file contains JSON, convert it to a Sqlite config file."""
+    # Return early if config file is non-existing
+    if not os.path.isfile(config_file):
+        return
+
+    # Try to parse the file as being JSON
+    with open(config_file) as json_file:
+        try:
+            json_conf = json.load(json_file)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            json_conf = None
+
+    # If the file contains JSON, convert it to an Sqlite DB
+    if json_conf:
+        _LOGGER.warning("LG webOS TV client-key file is being migrated to Sqlite!")
+
+        # Clean the JSON file
+        os.remove(config_file)
+
+        # Write the data to the Sqlite DB
+        with SqliteDict(config_file) as conf:
+            for host, key in json_conf.items():
+                conf[host] = key
+            conf.commit()
+
+
 async def async_setup_tv(hass, config, conf):
     """Set up a LG WebOS TV based on host parameter."""
 
     host = conf[CONF_HOST]
     config_file = hass.config.path(WEBOSTV_CONFIG_FILE)
+    await hass.async_add_executor_job(convert_client_keys, config_file)
 
-    client = WebOsClient(host, config_file)
+    client = await WebOsClient.create(host, config_file)
     hass.data[DOMAIN][host] = {"client": client}
 
     if client.is_registered():
@@ -119,9 +151,7 @@ async def async_setup_tv(hass, config, conf):
 
 async def async_connect(client):
     """Attempt a connection, but fail gracefully if tv is off for example."""
-    try:
-        await client.connect()
-    except (
+    with suppress(
         OSError,
         ConnectionClosed,
         ConnectionRefusedError,
@@ -130,7 +160,7 @@ async def async_connect(client):
         PyLGTVPairException,
         PyLGTVCmdException,
     ):
-        pass
+        await client.connect()
 
 
 async def async_setup_tv_finalize(hass, config, conf, client):

@@ -1,0 +1,35 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_api_key": "Vale API v\u00f5ti",
+            "rate_limited": "Hetkel on p\u00e4ringud piiratud, proovi hiljem uuesti.",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API v\u00f5ti",
+                    "api_version": "API versioon",
+                    "latitude": "Laiuskraad",
+                    "longitude": "Pikkuskraad",
+                    "name": "Nimi"
+                },
+                "description": "Kui [%key:component::climacell::config::step::user::d ata::latitude%] ja [%key:component::climacell::config::step::user::d ata::longitude%] andmed pole sisestatud kasutatakse Home Assistanti vaikev\u00e4\u00e4rtusi. Olem luuakse iga prognoosit\u00fc\u00fcbi jaoks kuid vaikimisi lubatakse ainult need, mille valid."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "forecast_types": "Prognoosi t\u00fc\u00fcp (t\u00fc\u00fcbid)",
+                    "timestep": "Minuteid NowCasti prognooside vahel"
+                },
+                "description": "Kui otsustad lubada \"nowcast\" prognoosi\u00fcksuse, saad seadistada minutite arvu iga prognoosi vahel. Esitatavate prognooside arv s\u00f5ltub prognooside vahel valitud minutite arvust.",
+                "title": "V\u00e4rskenda ClimaCell suvandeid"
+            }
+        }
+    },
+    "title": "ClimaCell"
+}

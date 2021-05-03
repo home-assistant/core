@@ -1,6 +1,8 @@
 """Representation of Z-Wave locks."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any
 
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
@@ -21,6 +23,7 @@ from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
@@ -28,7 +31,7 @@ from .entity import ZWaveBaseEntity
 
 LOGGER = logging.getLogger(__name__)
 
-STATE_TO_ZWAVE_MAP: Dict[int, Dict[str, Union[int, bool]]] = {
+STATE_TO_ZWAVE_MAP: dict[int, dict[str, int | bool]] = {
     CommandClass.DOOR_LOCK: {
         STATE_UNLOCKED: DoorLockMode.UNSECURED,
         STATE_LOCKED: DoorLockMode.SECURED,
@@ -44,7 +47,9 @@ SERVICE_CLEAR_LOCK_USERCODE = "clear_lock_usercode"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave lock from config entry."""
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
@@ -52,7 +57,7 @@ async def async_setup_entry(
     @callback
     def async_add_lock(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Lock."""
-        entities: List[ZWaveBaseEntity] = []
+        entities: list[ZWaveBaseEntity] = []
         entities.append(ZWaveLock(config_entry, client, info))
 
         async_add_entities(entities)
@@ -88,7 +93,7 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
     """Representation of a Z-Wave lock."""
 
     @property
-    def is_locked(self) -> Optional[bool]:
+    def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
         if self.info.primary_value.value is None:
             # guard missing value
@@ -100,7 +105,7 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
         ) == int(self.info.primary_value.value)
 
     async def _set_lock_state(
-        self, target_state: str, **kwargs: Dict[str, Any]
+        self, target_state: str, **kwargs: dict[str, Any]
     ) -> None:
         """Set the lock state."""
         target_value: ZwaveValue = self.get_zwave_value(
@@ -112,11 +117,11 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
                 STATE_TO_ZWAVE_MAP[self.info.primary_value.command_class][target_state],
             )
 
-    async def async_lock(self, **kwargs: Dict[str, Any]) -> None:
+    async def async_lock(self, **kwargs: dict[str, Any]) -> None:
         """Lock the lock."""
         await self._set_lock_state(STATE_LOCKED)
 
-    async def async_unlock(self, **kwargs: Dict[str, Any]) -> None:
+    async def async_unlock(self, **kwargs: dict[str, Any]) -> None:
         """Unlock the lock."""
         await self._set_lock_state(STATE_UNLOCKED)
 

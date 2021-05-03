@@ -7,7 +7,7 @@
         },
         "condition_type": {
             "is_off": "{entity_name} \u5df2\u5173\u95ed",
-            "is_on": "{entity_name} \u5df2\u5f00\u542f"
+            "is_on": "{entity_name} \u5df2\u6253\u5f00"
         },
         "trigger_type": {
             "turned_off": "{entity_name} \u88ab\u5173\u95ed",

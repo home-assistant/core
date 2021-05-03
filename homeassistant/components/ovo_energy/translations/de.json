@@ -10,13 +10,16 @@
             "reauth": {
                 "data": {
                     "password": "Passwort"
-                }
+                },
+                "description": "Die Authentifizierung f\u00fcr OVO Energy ist fehlgeschlagen. Bitte geben Sie Ihre aktuellen Anmeldedaten ein.",
+                "title": "Erneute Authentifizierung"
             },
             "user": {
                 "data": {
                     "password": "Passwort",
                     "username": "Benutzername"
                 },
+                "description": "Richte eine OVO Energy-Instanz ein, um auf deinen Energieverbrauch zuzugreifen.",
                 "title": "Ovo Energy Account hinzuf\u00fcgen"
             }
         }

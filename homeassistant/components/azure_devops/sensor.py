@@ -1,7 +1,8 @@
 """Support for Azure DevOps sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import List
 
 from aioazuredevops.builds import DevOpsBuild
 from aioazuredevops.client import DevOpsClient
@@ -16,9 +17,10 @@ from homeassistant.components.azure_devops.const import (
     DATA_PROJECT,
     DOMAIN,
 )
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +31,7 @@ BUILDS_QUERY = "?queryOrder=queueTimeDescending&maxBuildsPerDefinition=1"
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up Azure DevOps sensor based on a config entry."""
     instance_key = f"{DOMAIN}_{entry.data[CONF_ORG]}_{entry.data[CONF_PROJECT]}"
@@ -39,7 +41,7 @@ async def async_setup_entry(
     sensors = []
 
     try:
-        builds: List[DevOpsBuild] = await client.get_builds(
+        builds: list[DevOpsBuild] = await client.get_builds(
             organization, project, BUILDS_QUERY
         )
     except aiohttp.ClientError as exception:
@@ -54,7 +56,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class AzureDevOpsSensor(AzureDevOpsDeviceEntity):
+class AzureDevOpsSensor(AzureDevOpsDeviceEntity, SensorEntity):
     """Defines a Azure DevOps sensor."""
 
     def __init__(
@@ -92,7 +94,7 @@ class AzureDevOpsSensor(AzureDevOpsDeviceEntity):
         return self._state
 
     @property
-    def device_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
         return self._attributes
 

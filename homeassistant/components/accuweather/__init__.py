@@ -1,5 +1,4 @@
 """The AccuWeather component."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -8,8 +7,6 @@ from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
 
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import Config, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -26,12 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor", "weather"]
 
 
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-    """Set up configured AccuWeather."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass, config_entry) -> bool:
     """Set up AccuWeather as config entry."""
     api_key = config_entry.data[CONF_API_KEY]
@@ -45,35 +36,24 @@ async def async_setup_entry(hass, config_entry) -> bool:
     coordinator = AccuWeatherDataUpdateCoordinator(
         hass, websession, api_key, location_key, forecast
     )
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     undo_listener = config_entry.add_update_listener(update_listener)
 
-    hass.data[DOMAIN][config_entry.entry_id] = {
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
         COORDINATOR: coordinator,
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
 
     hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()

@@ -20,19 +20,37 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import async_extract_referenced_entity_ids
+from homeassistant.helpers import config_validation as cv, recorder
+from homeassistant.helpers.service import (
+    async_extract_config_entry_ids,
+    async_extract_referenced_entity_ids,
+)
+
+ATTR_ENTRY_ID = "entry_id"
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = ha.DOMAIN
 SERVICE_RELOAD_CORE_CONFIG = "reload_core_config"
+SERVICE_RELOAD_CONFIG_ENTRY = "reload_config_entry"
 SERVICE_CHECK_CONFIG = "check_config"
 SERVICE_UPDATE_ENTITY = "update_entity"
 SERVICE_SET_LOCATION = "set_location"
 SCHEMA_UPDATE_ENTITY = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
+SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
+    vol.Schema(
+        {
+            vol.Optional(ATTR_ENTRY_ID): str,
+            **cv.ENTITY_SERVICE_FIELDS,
+        },
+    ),
+    cv.has_at_least_one_key(ATTR_ENTRY_ID, *cv.ENTITY_SERVICE_FIELDS),
+)
 
 
-async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
+SHUTDOWN_SERVICES = (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
+
+
+async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:  # noqa: C901
     """Set up general services related to Home Assistant."""
 
     async def async_handle_turn_service(service):
@@ -43,7 +61,8 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
         # Generic turn on/off method requires entity id
         if not all_referenced:
             _LOGGER.error(
-                "homeassistant.%s cannot be called without a target", service.service
+                "The service homeassistant.%s cannot be called without a target",
+                service.service,
             )
             return
 
@@ -109,26 +128,41 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
 
     async def async_handle_core_service(call):
         """Service handler for handling core services."""
+        if (
+            call.service in SHUTDOWN_SERVICES
+            and await recorder.async_migration_in_progress(hass)
+        ):
+            _LOGGER.error(
+                "The system cannot %s while a database upgrade in progress",
+                call.service,
+            )
+            raise HomeAssistantError(
+                f"The system cannot {call.service} while a database upgrade in progress."
+            )
+
         if call.service == SERVICE_HOMEASSISTANT_STOP:
-            hass.async_create_task(hass.async_stop())
+            asyncio.create_task(hass.async_stop())
             return
 
-        try:
-            errors = await conf_util.async_check_ha_config_file(hass)
-        except HomeAssistantError:
-            return
+        errors = await conf_util.async_check_ha_config_file(hass)
 
         if errors:
-            _LOGGER.error(errors)
+            _LOGGER.error(
+                "The system cannot %s because the configuration is not valid: %s",
+                call.service,
+                errors,
+            )
             hass.components.persistent_notification.async_create(
                 "Config error. See [the logs](/config/logs) for details.",
                 "Config validating",
                 f"{ha.DOMAIN}.check_config",
             )
-            return
+            raise HomeAssistantError(
+                f"The system cannot {call.service} because the configuration is not valid: {errors}"
+            )
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
-            hass.async_create_task(hass.async_stop(RESTART_EXIT_CODE))
+            asyncio.create_task(hass.async_stop(RESTART_EXIT_CODE))
 
     async def async_handle_update_service(call):
         """Service handler for updating an entity."""
@@ -201,6 +235,28 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
         SERVICE_SET_LOCATION,
         async_set_location,
         vol.Schema({ATTR_LATITUDE: cv.latitude, ATTR_LONGITUDE: cv.longitude}),
+    )
+
+    async def async_handle_reload_config_entry(call):
+        """Service handler for reloading a config entry."""
+        reload_entries = set()
+        if ATTR_ENTRY_ID in call.data:
+            reload_entries.add(call.data[ATTR_ENTRY_ID])
+        reload_entries.update(await async_extract_config_entry_ids(hass, call))
+        if not reload_entries:
+            raise ValueError("There were no matching config entries to reload")
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_reload(config_entry_id)
+                for config_entry_id in reload_entries
+            ]
+        )
+
+    hass.helpers.service.async_register_admin_service(
+        ha.DOMAIN,
+        SERVICE_RELOAD_CONFIG_ENTRY,
+        async_handle_reload_config_entry,
+        schema=SCHEMA_RELOAD_CONFIG_ENTRY,
     )
 
     return True

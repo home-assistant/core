@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Echec de connection",
             "invalid_auth": "Authentification invalide",
+            "invalid_response": "R\u00e9ponse invalide de l\u2019appareil",
             "unknown": "Erreur inattendue"
         },
         "step": {
@@ -14,6 +15,7 @@
                     "host": "H\u00f4te",
                     "password": "Mot de passe",
                     "port": "Port",
+                    "rtsp_port": "Port RTSP",
                     "stream": "Flux",
                     "username": "Nom d'utilisateur"
                 }

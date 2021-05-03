@@ -1,7 +1,6 @@
 """Test deCONZ component setup process."""
 
 import asyncio
-from copy import deepcopy
 from unittest.mock import patch
 
 from homeassistant.components.deconz import (
@@ -14,10 +13,9 @@ from homeassistant.components.deconz.const import (
     CONF_GROUP_ID_BASE,
     DOMAIN as DECONZ_DOMAIN,
 )
-from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
@@ -58,59 +56,63 @@ async def test_setup_entry_no_available_bridge(hass):
     assert not hass.data[DECONZ_DOMAIN]
 
 
-async def test_setup_entry_successful(hass):
+async def test_setup_entry_successful(hass, aioclient_mock):
     """Test setup entry is successful."""
-    config_entry = await setup_deconz_integration(hass)
-    gateway = get_gateway_from_config_entry(hass, config_entry)
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
     assert hass.data[DECONZ_DOMAIN]
-    assert gateway.bridgeid in hass.data[DECONZ_DOMAIN]
-    assert hass.data[DECONZ_DOMAIN][gateway.bridgeid].master
+    assert config_entry.unique_id in hass.data[DECONZ_DOMAIN]
+    assert hass.data[DECONZ_DOMAIN][config_entry.unique_id].master
 
 
-async def test_setup_entry_multiple_gateways(hass):
+async def test_setup_entry_multiple_gateways(hass, aioclient_mock):
     """Test setup entry is successful with multiple gateways."""
-    config_entry = await setup_deconz_integration(hass)
-    gateway = get_gateway_from_config_entry(hass, config_entry)
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
+    aioclient_mock.clear_requests()
 
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    data["config"]["bridgeid"] = "01234E56789B"
-    config_entry2 = await setup_deconz_integration(
-        hass, get_state_response=data, entry_id="2", unique_id="01234E56789B"
-    )
-    gateway2 = get_gateway_from_config_entry(hass, config_entry2)
+    data = {"config": {"bridgeid": "01234E56789B"}}
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry2 = await setup_deconz_integration(
+            hass,
+            aioclient_mock,
+            entry_id="2",
+            unique_id="01234E56789B",
+        )
 
     assert len(hass.data[DECONZ_DOMAIN]) == 2
-    assert hass.data[DECONZ_DOMAIN][gateway.bridgeid].master
-    assert not hass.data[DECONZ_DOMAIN][gateway2.bridgeid].master
+    assert hass.data[DECONZ_DOMAIN][config_entry.unique_id].master
+    assert not hass.data[DECONZ_DOMAIN][config_entry2.unique_id].master
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass, aioclient_mock):
     """Test being able to unload an entry."""
-    config_entry = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
     assert hass.data[DECONZ_DOMAIN]
 
     assert await async_unload_entry(hass, config_entry)
     assert not hass.data[DECONZ_DOMAIN]
 
 
-async def test_unload_entry_multiple_gateways(hass):
+async def test_unload_entry_multiple_gateways(hass, aioclient_mock):
     """Test being able to unload an entry and master gateway gets moved."""
-    config_entry = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
+    aioclient_mock.clear_requests()
 
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    data["config"]["bridgeid"] = "01234E56789B"
-    config_entry2 = await setup_deconz_integration(
-        hass, get_state_response=data, entry_id="2", unique_id="01234E56789B"
-    )
-    gateway2 = get_gateway_from_config_entry(hass, config_entry2)
+    data = {"config": {"bridgeid": "01234E56789B"}}
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry2 = await setup_deconz_integration(
+            hass,
+            aioclient_mock,
+            entry_id="2",
+            unique_id="01234E56789B",
+        )
 
     assert len(hass.data[DECONZ_DOMAIN]) == 2
 
     assert await async_unload_entry(hass, config_entry)
 
     assert len(hass.data[DECONZ_DOMAIN]) == 1
-    assert hass.data[DECONZ_DOMAIN][gateway2.bridgeid].master
+    assert hass.data[DECONZ_DOMAIN][config_entry2.unique_id].master
 
 
 async def test_update_group_unique_id(hass):
@@ -128,7 +130,7 @@ async def test_update_group_unique_id(hass):
         },
     )
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
     # Create entity entry to migrate to new unique ID
     registry.async_get_or_create(
         LIGHT_DOMAIN,
@@ -149,12 +151,8 @@ async def test_update_group_unique_id(hass):
     await async_update_group_unique_id(hass, entry)
 
     assert entry.data == {CONF_API_KEY: "1", CONF_HOST: "2", CONF_PORT: "3"}
-
-    old_entity = registry.async_get(f"{LIGHT_DOMAIN}.old")
-    assert old_entity.unique_id == f"{new_unique_id}-OLD"
-
-    new_entity = registry.async_get(f"{LIGHT_DOMAIN}.new")
-    assert new_entity.unique_id == f"{new_unique_id}-NEW"
+    assert registry.async_get(f"{LIGHT_DOMAIN}.old").unique_id == f"{new_unique_id}-OLD"
+    assert registry.async_get(f"{LIGHT_DOMAIN}.new").unique_id == f"{new_unique_id}-NEW"
 
 
 async def test_update_group_unique_id_no_legacy_group_id(hass):
@@ -167,7 +165,7 @@ async def test_update_group_unique_id_no_legacy_group_id(hass):
         data={},
     )
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
     # Create entity entry to migrate to new unique ID
     registry.async_get_or_create(
         LIGHT_DOMAIN,
@@ -179,5 +177,4 @@ async def test_update_group_unique_id_no_legacy_group_id(hass):
 
     await async_update_group_unique_id(hass, entry)
 
-    old_entity = registry.async_get(f"{LIGHT_DOMAIN}.old")
-    assert old_entity.unique_id == f"{old_unique_id}-OLD"
+    assert registry.async_get(f"{LIGHT_DOMAIN}.old").unique_id == f"{old_unique_id}-OLD"

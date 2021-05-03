@@ -5,6 +5,7 @@
             "disk_total": "Speicherplatz gesamt",
             "disk_used": "Speicherplatz genutzt",
             "docker_version": "Docker-Version",
+            "healthy": "Gesund",
             "host_os": "Host-Betriebssystem",
             "installed_addons": "Installierte Add-ons",
             "supervisor_api": "Supervisor-API",
@@ -14,5 +15,5 @@
             "version_api": "Versions-API"
         }
     },
-    "title": "Hass.io"
+    "title": "Home Assistant Supervisor"
 }

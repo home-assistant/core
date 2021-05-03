@@ -4,7 +4,6 @@ DOMAIN = "webostv"
 DEFAULT_NAME = "LG webOS Smart TV"
 
 ATTR_BUTTON = "button"
-ATTR_COMMAND = "command"
 ATTR_PAYLOAD = "payload"
 ATTR_SOUND_OUTPUT = "sound_output"
 

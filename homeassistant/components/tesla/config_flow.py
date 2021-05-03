@@ -1,7 +1,9 @@
 """Tesla Config Flow."""
 import logging
 
+import httpx
 from teslajsonpy import Controller as TeslaAPI, TeslaException
+from teslajsonpy.exceptions import IncompleteCredentials
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -14,9 +16,11 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.httpx_client import SERVER_SOFTWARE, USER_AGENT
 
 from .const import (
+    CONF_EXPIRATION,
     CONF_WAKE_ON_START,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_WAKE_ON_START,
@@ -26,22 +30,16 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
-)
-
-
-@callback
-def configured_instances(hass):
-    """Return a set of configured Tesla instances."""
-    return {entry.title for entry in hass.config_entries.async_entries(DOMAIN)}
-
 
 class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tesla."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+
+    def __init__(self):
+        """Initialize the tesla flow."""
+        self.username = None
+        self.reauth = False
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
@@ -49,46 +47,68 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
+        errors = {}
 
-        if not user_input:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=DATA_SCHEMA,
-                errors={},
-                description_placeholders={},
-            )
+        if user_input is not None:
+            existing_entry = self._async_entry_for_username(user_input[CONF_USERNAME])
+            if existing_entry and not self.reauth:
+                return self.async_abort(reason="already_configured")
 
-        if user_input[CONF_USERNAME] in configured_instances(self.hass):
-            return self.async_show_form(
-                step_id="user",
-                data_schema=DATA_SCHEMA,
-                errors={CONF_USERNAME: "already_configured"},
-                description_placeholders={},
-            )
+            try:
+                info = await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
 
-        try:
-            info = await validate_input(self.hass, user_input)
-        except CannotConnect:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=DATA_SCHEMA,
-                errors={"base": "cannot_connect"},
-                description_placeholders={},
-            )
-        except InvalidAuth:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=DATA_SCHEMA,
-                errors={"base": "invalid_auth"},
-                description_placeholders={},
-            )
-        return self.async_create_entry(title=user_input[CONF_USERNAME], data=info)
+            if not errors:
+                if existing_entry:
+                    self.hass.config_entries.async_update_entry(
+                        existing_entry, data=info
+                    )
+                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                    return self.async_abort(reason="reauth_successful")
+
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME], data=info
+                )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self._async_schema(),
+            errors=errors,
+            description_placeholders={},
+        )
+
+    async def async_step_reauth(self, data):
+        """Handle configuration by re-auth."""
+        self.username = data[CONF_USERNAME]
+        self.reauth = True
+        return await self.async_step_user()
 
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
+
+    @callback
+    def _async_schema(self):
+        """Fetch schema with defaults."""
+        return vol.Schema(
+            {
+                vol.Required(CONF_USERNAME, default=self.username): str,
+                vol.Required(CONF_PASSWORD): str,
+            }
+        )
+
+    @callback
+    def _async_entry_for_username(self, username):
+        """Find an existing entry for a username."""
+        for entry in self._async_current_entries():
+            if entry.data.get(CONF_USERNAME) == username:
+                return entry
+        return None
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
@@ -129,23 +149,32 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
 
     config = {}
-    websession = aiohttp_client.async_get_clientsession(hass)
+    async_client = httpx.AsyncClient(headers={USER_AGENT: SERVER_SOFTWARE})
+
     try:
         controller = TeslaAPI(
-            websession,
+            async_client,
             email=data[CONF_USERNAME],
             password=data[CONF_PASSWORD],
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
-        (config[CONF_TOKEN], config[CONF_ACCESS_TOKEN]) = await controller.connect(
-            test_login=True
-        )
+        result = await controller.connect(test_login=True)
+        config[CONF_TOKEN] = result["refresh_token"]
+        config[CONF_ACCESS_TOKEN] = result["access_token"]
+        config[CONF_EXPIRATION] = result[CONF_EXPIRATION]
+        config[CONF_USERNAME] = data[CONF_USERNAME]
+        config[CONF_PASSWORD] = data[CONF_PASSWORD]
+    except IncompleteCredentials as ex:
+        _LOGGER.error("Authentication error: %s %s", ex.message, ex)
+        raise InvalidAuth() from ex
     except TeslaException as ex:
         if ex.code == HTTP_UNAUTHORIZED:
             _LOGGER.error("Invalid credentials: %s", ex)
             raise InvalidAuth() from ex
         _LOGGER.error("Unable to communicate with Tesla API: %s", ex)
         raise CannotConnect() from ex
+    finally:
+        await async_client.aclose()
     _LOGGER.debug("Credentials successfully connected to the Tesla API")
     return config
 

@@ -1,28 +1,20 @@
 """Support the UPB PIM."""
-import asyncio
 
 import upb_lib
 
-from homeassistant.const import CONF_FILE_PATH, CONF_HOST
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import ATTR_COMMAND, CONF_FILE_PATH, CONF_HOST
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ADDRESS,
     ATTR_BRIGHTNESS_PCT,
-    ATTR_COMMAND,
     ATTR_RATE,
     DOMAIN,
     EVENT_UPB_SCENE_CHANGED,
 )
 
-UPB_PLATFORMS = ["light", "scene"]
-
-
-async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
-    """Set up the UPB platform."""
-    return True
+PLATFORMS = ["light", "scene"]
 
 
 async def async_setup_entry(hass, config_entry):
@@ -36,10 +28,7 @@ async def async_setup_entry(hass, config_entry):
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {"upb": upb}
 
-    for component in UPB_PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     def _element_changed(element, changeset):
         change = changeset.get("last_change")
@@ -67,21 +56,13 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload the config_entry."""
-
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in UPB_PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
-
     if unload_ok:
         upb = hass.data[DOMAIN][config_entry.entry_id]["upb"]
         upb.disconnect()
         hass.data[DOMAIN].pop(config_entry.entry_id)
-
     return unload_ok
 
 
@@ -111,7 +92,7 @@ class UpbEntity(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the default attributes of the element."""
         return self._element.as_dict()
 

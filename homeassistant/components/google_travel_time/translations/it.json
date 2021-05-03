@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Chiave API",
+                    "destination": "Destinazione",
+                    "name": "Nome",
+                    "origin": "Origine"
+                },
+                "description": "Quando specifichi l'origine e la destinazione, puoi fornire una o pi\u00f9 posizioni separate dal carattere barra verticale, sotto forma di un indirizzo, coordinate di latitudine/longitudine o un ID luogo di Google. Quando si specifica la posizione utilizzando un ID luogo di Google, l'ID deve essere preceduto da \"place_id:\"."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid": "Evitare",
+                    "language": "Lingua",
+                    "mode": "Modalit\u00e0 di viaggio",
+                    "time": "Ora",
+                    "time_type": "Tipo di ora",
+                    "transit_mode": "Modalit\u00e0 di transito",
+                    "transit_routing_preference": "Preferenza percorso di transito",
+                    "units": "Unit\u00e0"
+                },
+                "description": "Facoltativamente, \u00e8 possibile specificare un orario di partenza o un orario di arrivo. Se si specifica un orario di partenza, \u00e8 possibile inserire \"now\", un timestamp Unix o una stringa di 24 ore come \"08: 00: 00\". Se si specifica un'ora di arrivo, \u00e8 possibile utilizzare un timestamp Unix o una stringa di 24 ore come \"08: 00: 00\""
+            }
+        }
+    },
+    "title": "Tempo di viaggio di Google Maps"
+}

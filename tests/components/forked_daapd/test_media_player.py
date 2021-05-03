@@ -54,7 +54,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
 )
-from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -284,7 +284,6 @@ def config_entry_fixture():
         options={CONF_TTS_PAUSE_TIME: 0},
         system_options={},
         source=SOURCE_USER,
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         entry_id=1,
     )
 
@@ -345,12 +344,12 @@ async def mock_api_object_fixture(hass, config_entry, get_request_return_values)
 
 
 async def test_unload_config_entry(hass, config_entry, mock_api_object):
-    """Test the player is removed when the config entry is unloaded."""
+    """Test the player is set unavailable when the config entry is unloaded."""
     assert hass.states.get(TEST_MASTER_ENTITY_NAME)
     assert hass.states.get(TEST_ZONE_ENTITY_NAMES[0])
     await config_entry.async_unload(hass)
-    assert not hass.states.get(TEST_MASTER_ENTITY_NAME)
-    assert not hass.states.get(TEST_ZONE_ENTITY_NAMES[0])
+    assert hass.states.get(TEST_MASTER_ENTITY_NAME).state == STATE_UNAVAILABLE
+    assert hass.states.get(TEST_ZONE_ENTITY_NAMES[0]).state == STATE_UNAVAILABLE
 
 
 def test_master_state(hass, mock_api_object):

@@ -1,23 +1,21 @@
 """Config flow for Awair."""
-
-from typing import Optional
+from __future__ import annotations
 
 from python_awair import Awair
 from python_awair.exceptions import AuthError, AwairError
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
+from .const import DOMAIN, LOGGER
 
 
 class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Awair."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
     async def async_step_import(self, conf: dict):
         """Import a configuration from config.yaml."""
@@ -36,7 +34,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             data={CONF_ACCESS_TOKEN: conf[CONF_ACCESS_TOKEN]},
         )
 
-    async def async_step_user(self, user_input: Optional[dict] = None):
+    async def async_step_user(self, user_input: dict | None = None):
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -61,7 +59,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, user_input: Optional[dict] = None):
+    async def async_step_reauth(self, user_input: dict | None = None):
         """Handle re-auth if token invalid."""
         errors = {}
 
@@ -70,13 +68,9 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             _, error = await self._check_connection(access_token)
 
             if error is None:
-                for entry in self._async_current_entries():
-                    if entry.unique_id == self.unique_id:
-                        self.hass.config_entries.async_update_entry(
-                            entry, data=user_input
-                        )
-
-                        return self.async_abort(reason="reauth_successful")
+                entry = await self.async_set_unique_id(self.unique_id)
+                self.hass.config_entries.async_update_entry(entry, data=user_input)
+                return self.async_abort(reason="reauth_successful")
 
             if error != "invalid_access_token":
                 return self.async_abort(reason=error)

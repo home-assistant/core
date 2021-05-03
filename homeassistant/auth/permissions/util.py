@@ -1,6 +1,8 @@
 """Helpers to deal with permissions."""
+from __future__ import annotations
+
 from functools import wraps
-from typing import Callable, Dict, List, Optional, cast
+from typing import Callable, Dict, Optional, cast
 
 from .const import SUBCAT_ALL
 from .models import PermissionLookup
@@ -45,7 +47,7 @@ def compile_policy(
 
     assert isinstance(policy, dict)
 
-    funcs: List[Callable[[str, str], Optional[bool]]] = []
+    funcs: list[Callable[[str, str], bool | None]] = []
 
     for key, lookup_func in subcategories.items():
         lookup_value = policy.get(key)
@@ -80,10 +82,10 @@ def compile_policy(
 
 def _gen_dict_test_func(
     perm_lookup: PermissionLookup, lookup_func: LookupFunc, lookup_dict: SubCategoryDict
-) -> Callable[[str, str], Optional[bool]]:
+) -> Callable[[str, str], bool | None]:
     """Generate a lookup function."""
 
-    def test_value(object_id: str, key: str) -> Optional[bool]:
+    def test_value(object_id: str, key: str) -> bool | None:
         """Test if permission is allowed based on the keys."""
         schema: ValueType = lookup_func(perm_lookup, lookup_dict, object_id)
 

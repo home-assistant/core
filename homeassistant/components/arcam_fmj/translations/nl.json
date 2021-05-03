@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
             "cannot_connect": "Kan geen verbinding maken"
         },
         "error": {

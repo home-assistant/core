@@ -1,7 +1,8 @@
 """Update the IP addresses of your Cloudflare DNS records."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Dict
 
 from pycfdns import CloudflareUpdater
 from pycfdns.exceptions import (
@@ -51,7 +52,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the component."""
     hass.data.setdefault(DOMAIN, {})
 

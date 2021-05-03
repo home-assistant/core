@@ -1,7 +1,8 @@
 """Test slack notifications."""
+from __future__ import annotations
+
 import copy
 import logging
-from typing import List
 from unittest.mock import AsyncMock, Mock, patch
 
 from _pytest.logging import LogCaptureFixture
@@ -21,7 +22,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_USERNAME,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 MODULE_PATH = "homeassistant.components.slack.notify"
@@ -39,14 +40,14 @@ DEFAULT_CONFIG = {
 }
 
 
-def filter_log_records(caplog: LogCaptureFixture) -> List[logging.LogRecord]:
+def filter_log_records(caplog: LogCaptureFixture) -> list[logging.LogRecord]:
     """Filter all unrelated log records."""
     return [
         rec for rec in caplog.records if rec.name.endswith(f"{DOMAIN}.{notify.DOMAIN}")
     ]
 
 
-async def test_setup(hass: HomeAssistantType, caplog: LogCaptureFixture):
+async def test_setup(hass: HomeAssistant, caplog: LogCaptureFixture):
     """Test setup slack notify."""
     config = DEFAULT_CONFIG
 
@@ -67,7 +68,7 @@ async def test_setup(hass: HomeAssistantType, caplog: LogCaptureFixture):
         client.auth_test.assert_called_once_with()
 
 
-async def test_setup_clientError(hass: HomeAssistantType, caplog: LogCaptureFixture):
+async def test_setup_clientError(hass: HomeAssistant, caplog: LogCaptureFixture):
     """Test setup slack notify with aiohttp.ClientError exception."""
     config = copy.deepcopy(DEFAULT_CONFIG)
     config[notify.DOMAIN][0].update({CONF_USERNAME: "user", CONF_ICON: "icon"})
@@ -88,7 +89,7 @@ async def test_setup_clientError(hass: HomeAssistantType, caplog: LogCaptureFixt
         assert aiohttp.ClientError.__qualname__ in record.message
 
 
-async def test_setup_slackApiError(hass: HomeAssistantType, caplog: LogCaptureFixture):
+async def test_setup_slackApiError(hass: HomeAssistant, caplog: LogCaptureFixture):
     """Test setup slack notify with SlackApiError exception."""
     config = DEFAULT_CONFIG
 

@@ -1,18 +1,25 @@
 """Connect to a MySensors gateway via pymysensors API."""
+from __future__ import annotations
+
 import asyncio
+from functools import partial
 import logging
-from typing import Callable, Dict, List, Optional, Tuple, Type, Union
+from typing import Callable
 
 from mysensors import BaseAsyncGateway
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.mqtt import valid_publish_topic, valid_subscribe_topic
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_OPTIMISTIC
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_DEVICES,
@@ -28,20 +35,23 @@ from .const import (
     CONF_TOPIC_OUT_PREFIX,
     CONF_VERSION,
     DOMAIN,
+    MYSENSORS_DISCOVERY,
     MYSENSORS_GATEWAYS,
     MYSENSORS_ON_UNLOAD,
-    SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT,
+    PLATFORMS_WITH_ENTRY_SUPPORT,
     DevId,
-    GatewayId,
     SensorType,
 )
 from .device import MySensorsDevice, MySensorsEntity, get_mysensors_devices
 from .gateway import finish_setup, get_mysensors_gateway, gw_stop, setup_gateway
+from .helpers import on_unload
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DEBUG = "debug"
 CONF_NODE_NAME = "name"
+
+DATA_HASS_CONFIG = "hass_config"
 
 DEFAULT_BAUD_RATE = 115200
 DEFAULT_TCP_PORT = 5003
@@ -132,8 +142,10 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the MySensors component."""
+    hass.data[DOMAIN] = {DATA_HASS_CONFIG: config}
+
     if DOMAIN not in config or bool(hass.config_entries.async_entries(DOMAIN)):
         return True
 
@@ -170,7 +182,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an instance of the MySensors integration.
 
     Every instance has a connection to exactly one Gateway.
@@ -181,18 +193,38 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         _LOGGER.error("Gateway setup failed for %s", entry.data)
         return False
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-
     if MYSENSORS_GATEWAYS not in hass.data[DOMAIN]:
         hass.data[DOMAIN][MYSENSORS_GATEWAYS] = {}
     hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id] = gateway
 
-    async def finish():
+    # Connect notify discovery as that integration doesn't support entry forwarding.
+    # Allow loading device tracker platform via discovery
+    # until refactor to config entry is done.
+
+    for platform in (DEVICE_TRACKER_DOMAIN, NOTIFY_DOMAIN):
+        load_discovery_platform = partial(
+            async_load_platform,
+            hass,
+            platform,
+            DOMAIN,
+            hass_config=hass.data[DOMAIN][DATA_HASS_CONFIG],
+        )
+
+        await on_unload(
+            hass,
+            entry.entry_id,
+            async_dispatcher_connect(
+                hass,
+                MYSENSORS_DISCOVERY.format(entry.entry_id, platform),
+                load_discovery_platform,
+            ),
+        )
+
+    async def finish() -> None:
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT
+                for platform in PLATFORMS_WITH_ENTRY_SUPPORT
             ]
         )
         await finish_setup(hass, entry, gateway)
@@ -202,18 +234,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Remove an instance of the MySensors integration."""
 
     gateway = get_mysensors_gateway(hass, entry.entry_id)
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, PLATFORMS_WITH_ENTRY_SUPPORT
     )
     if not unload_ok:
         return False
@@ -223,40 +250,25 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
         for fnct in hass.data[DOMAIN][key]:
             fnct()
 
+        hass.data[DOMAIN].pop(key)
+
     del hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id]
 
     await gw_stop(hass, entry, gateway)
     return True
 
 
-async def on_unload(
-    hass: HomeAssistantType, entry: Union[ConfigEntry, GatewayId], fnct: Callable
-) -> None:
-    """Register a callback to be called when entry is unloaded.
-
-    This function is used by platforms to cleanup after themselves
-    """
-    if isinstance(entry, GatewayId):
-        uniqueid = entry
-    else:
-        uniqueid = entry.entry_id
-    key = MYSENSORS_ON_UNLOAD.format(uniqueid)
-    if key not in hass.data[DOMAIN]:
-        hass.data[DOMAIN][key] = []
-    hass.data[DOMAIN][key].append(fnct)
-
-
 @callback
 def setup_mysensors_platform(
-    hass,
+    hass: HomeAssistant,
     domain: str,  # hass platform name
-    discovery_info: Optional[Dict[str, List[DevId]]],
-    device_class: Union[Type[MySensorsDevice], Dict[SensorType, Type[MySensorsEntity]]],
-    device_args: Optional[
-        Tuple
-    ] = None,  # extra arguments that will be given to the entity constructor
-    async_add_entities: Callable = None,
-) -> Optional[List[MySensorsDevice]]:
+    discovery_info: dict[str, list[DevId]],
+    device_class: type[MySensorsDevice] | dict[SensorType, type[MySensorsEntity]],
+    device_args: (
+        None | tuple
+    ) = None,  # extra arguments that will be given to the entity constructor
+    async_add_entities: Callable | None = None,
+) -> list[MySensorsDevice] | None:
     """Set up a MySensors platform.
 
     Sets up a bunch of instances of a single platform that is supported by this integration.
@@ -264,17 +276,12 @@ def setup_mysensors_platform(
     The function is also given a class.
     A new instance of the class is created for every device id, and the device id is given to the constructor of the class
     """
-    # Only act if called via MySensors by discovery event.
-    # Otherwise gateway is not set up.
-    if not discovery_info:
-        _LOGGER.debug("Skipping setup due to no discovery info")
-        return None
     if device_args is None:
         device_args = ()
-    new_devices: List[MySensorsDevice] = []
-    new_dev_ids: List[DevId] = discovery_info[ATTR_DEVICES]
+    new_devices: list[MySensorsDevice] = []
+    new_dev_ids: list[DevId] = discovery_info[ATTR_DEVICES]
     for dev_id in new_dev_ids:
-        devices: Dict[DevId, MySensorsDevice] = get_mysensors_devices(hass, domain)
+        devices: dict[DevId, MySensorsDevice] = get_mysensors_devices(hass, domain)
         if dev_id in devices:
             _LOGGER.debug(
                 "Skipping setup of %s for platform %s as it already exists",
@@ -283,7 +290,7 @@ def setup_mysensors_platform(
             )
             continue
         gateway_id, node_id, child_id, value_type = dev_id
-        gateway: Optional[BaseAsyncGateway] = get_mysensors_gateway(hass, gateway_id)
+        gateway: BaseAsyncGateway | None = get_mysensors_gateway(hass, gateway_id)
         if not gateway:
             _LOGGER.warning("Skipping setup of %s, no gateway found", dev_id)
             continue

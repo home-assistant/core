@@ -4,5 +4,16 @@
             "turn_off": "Schakel {entity_name} uit",
             "turn_on": "Schakel {entity_name} in"
         }
+    },
+    "state": {
+        "_": {
+            "eco": "Eco",
+            "electric": "Elektriciteit",
+            "gas": "Gas",
+            "heat_pump": "Warmtepomp",
+            "high_demand": "Hoge vraag",
+            "off": "Uit",
+            "performance": "Prestaties"
+        }
     }
 }

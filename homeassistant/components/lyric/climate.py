@@ -1,7 +1,8 @@
 """Support for Honeywell Lyric climate platform."""
+from __future__ import annotations
+
 import logging
-from time import gmtime, strftime, time
-from typing import List, Optional
+from time import localtime, strftime, time
 
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
@@ -11,6 +12,10 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
@@ -20,10 +25,10 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import LyricDeviceEntity
@@ -40,6 +45,10 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+
+LYRIC_HVAC_ACTION_OFF = "EquipmentOff"
+LYRIC_HVAC_ACTION_HEAT = "Heat"
+LYRIC_HVAC_ACTION_COOL = "Cool"
 
 LYRIC_HVAC_MODE_OFF = "Off"
 LYRIC_HVAC_MODE_HEAT = "Heat"
@@ -60,6 +69,12 @@ HVAC_MODES = {
     LYRIC_HVAC_MODE_HEAT_COOL: HVAC_MODE_HEAT_COOL,
 }
 
+HVAC_ACTIONS = {
+    LYRIC_HVAC_ACTION_OFF: CURRENT_HVAC_OFF,
+    LYRIC_HVAC_ACTION_HEAT: CURRENT_HVAC_HEAT,
+    LYRIC_HVAC_ACTION_COOL: CURRENT_HVAC_COOL,
+}
+
 SERVICE_HOLD_TIME = "set_hold_time"
 ATTR_TIME_PERIOD = "time_period"
 
@@ -67,13 +82,13 @@ SCHEMA_HOLD_TIME = {
     vol.Required(ATTR_TIME_PERIOD, default="01:00:00"): vol.All(
         cv.time_period,
         cv.positive_timedelta,
-        lambda td: strftime("%H:%M:%S", gmtime(time() + td.total_seconds())),
+        lambda td: strftime("%H:%M:%S", localtime(time() + td.total_seconds())),
     )
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the Honeywell Lyric climate platform based on a config entry."""
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -148,9 +163,17 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         return self._temperature_unit
 
     @property
-    def current_temperature(self) -> Optional[float]:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.device.indoorTemperature
+
+    @property
+    def hvac_action(self) -> str:
+        """Return the current hvac action."""
+        action = HVAC_ACTIONS.get(self.device.operationStatus.mode, None)
+        if action == CURRENT_HVAC_OFF and self.hvac_mode != HVAC_MODE_OFF:
+            action = CURRENT_HVAC_IDLE
+        return action
 
     @property
     def hvac_mode(self) -> str:
@@ -158,12 +181,12 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         return HVAC_MODES[self.device.changeableValues.mode]
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """List of available hvac modes."""
         return self._hvac_modes
 
     @property
-    def target_temperature(self) -> Optional[float]:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         device = self.device
         if not device.hasDualSetpointStatus:
@@ -171,7 +194,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         return None
 
     @property
-    def target_temperature_low(self) -> Optional[float]:
+    def target_temperature_low(self) -> float | None:
         """Return the upper bound temperature we try to reach."""
         device = self.device
         if device.hasDualSetpointStatus:
@@ -179,7 +202,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         return None
 
     @property
-    def target_temperature_high(self) -> Optional[float]:
+    def target_temperature_high(self) -> float | None:
         """Return the upper bound temperature we try to reach."""
         device = self.device
         if device.hasDualSetpointStatus:
@@ -187,12 +210,12 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         return None
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return current preset mode."""
         return self.device.changeableValues.thermostatSetpointStatus
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
+    def preset_modes(self) -> list[str] | None:
         """Return preset modes."""
         return [
             PRESET_NO_HOLD,
@@ -225,19 +248,27 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
         device = self.device
         if device.hasDualSetpointStatus:
-            if target_temp_low is not None and target_temp_high is not None:
-                temp = (target_temp_low, target_temp_high)
-            else:
+            if target_temp_low is None or target_temp_high is None:
                 raise HomeAssistantError(
                     "Could not find target_temp_low and/or target_temp_high in arguments"
                 )
+            _LOGGER.debug("Set temperature: %s - %s", target_temp_low, target_temp_high)
+            try:
+                await self._update_thermostat(
+                    self.location,
+                    device,
+                    coolSetpoint=target_temp_low,
+                    heatSetpoint=target_temp_high,
+                )
+            except LYRIC_EXCEPTIONS as exception:
+                _LOGGER.error(exception)
         else:
             temp = kwargs.get(ATTR_TEMPERATURE)
-        _LOGGER.debug("Set temperature: %s", temp)
-        try:
-            await self._update_thermostat(self.location, device, heatSetpoint=temp)
-        except LYRIC_EXCEPTIONS as exception:
-            _LOGGER.error(exception)
+            _LOGGER.debug("Set temperature: %s", temp)
+            try:
+                await self._update_thermostat(self.location, device, heatSetpoint=temp)
+            except LYRIC_EXCEPTIONS as exception:
+                _LOGGER.error(exception)
         await self.coordinator.async_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:

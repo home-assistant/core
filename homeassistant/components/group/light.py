@@ -1,8 +1,11 @@
 """This platform allows several lights to be grouped into one light."""
+from __future__ import annotations
+
 import asyncio
 from collections import Counter
+from collections.abc import Iterator
 import itertools
-from typing import Any, Callable, Iterator, List, Optional, Tuple, cast
+from typing import Any, Callable, cast
 
 import voluptuous as vol
 
@@ -35,10 +38,10 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import CoreState, State
+from homeassistant.core import CoreState, HomeAssistant, State
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import color as color_util
 
 from . import GroupEntity
@@ -67,7 +70,7 @@ SUPPORT_GROUP_LIGHT = (
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ) -> None:
     """Initialize light.group platform."""
     async_add_entities(
@@ -78,21 +81,21 @@ async def async_setup_platform(
 class LightGroup(GroupEntity, light.LightEntity):
     """Representation of a light group."""
 
-    def __init__(self, name: str, entity_ids: List[str]) -> None:
+    def __init__(self, name: str, entity_ids: list[str]) -> None:
         """Initialize a light group."""
         self._name = name
         self._entity_ids = entity_ids
         self._is_on = False
         self._available = False
         self._icon = "mdi:lightbulb-group"
-        self._brightness: Optional[int] = None
-        self._hs_color: Optional[Tuple[float, float]] = None
-        self._color_temp: Optional[int] = None
-        self._min_mireds: Optional[int] = 154
-        self._max_mireds: Optional[int] = 500
-        self._white_value: Optional[int] = None
-        self._effect_list: Optional[List[str]] = None
-        self._effect: Optional[str] = None
+        self._brightness: int | None = None
+        self._hs_color: tuple[float, float] | None = None
+        self._color_temp: int | None = None
+        self._min_mireds: int = 154
+        self._max_mireds: int = 500
+        self._white_value: int | None = None
+        self._effect_list: list[str] | None = None
+        self._effect: str | None = None
         self._supported_features: int = 0
 
     async def async_added_to_hass(self) -> None:
@@ -103,7 +106,6 @@ class LightGroup(GroupEntity, light.LightEntity):
             self.async_set_context(event.context)
             await self.async_defer_or_update_ha_state()
 
-        assert self.hass
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass, self._entity_ids, async_state_changed_listener
@@ -137,42 +139,42 @@ class LightGroup(GroupEntity, light.LightEntity):
         return self._icon
 
     @property
-    def brightness(self) -> Optional[int]:
+    def brightness(self) -> int | None:
         """Return the brightness of this light group between 0..255."""
         return self._brightness
 
     @property
-    def hs_color(self) -> Optional[Tuple[float, float]]:
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the HS color value [float, float]."""
         return self._hs_color
 
     @property
-    def color_temp(self) -> Optional[int]:
+    def color_temp(self) -> int | None:
         """Return the CT color value in mireds."""
         return self._color_temp
 
     @property
-    def min_mireds(self) -> Optional[int]:
+    def min_mireds(self) -> int:
         """Return the coldest color_temp that this light group supports."""
         return self._min_mireds
 
     @property
-    def max_mireds(self) -> Optional[int]:
+    def max_mireds(self) -> int:
         """Return the warmest color_temp that this light group supports."""
         return self._max_mireds
 
     @property
-    def white_value(self) -> Optional[int]:
+    def white_value(self) -> int | None:
         """Return the white value of this light group between 0..255."""
         return self._white_value
 
     @property
-    def effect_list(self) -> Optional[List[str]]:
+    def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         return self._effect_list
 
     @property
-    def effect(self) -> Optional[str]:
+    def effect(self) -> str | None:
         """Return the current effect."""
         return self._effect
 
@@ -187,7 +189,7 @@ class LightGroup(GroupEntity, light.LightEntity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes for the light group."""
         return {ATTR_ENTITY_ID: self._entity_ids}
 
@@ -289,7 +291,7 @@ class LightGroup(GroupEntity, light.LightEntity):
     async def async_update(self):
         """Query all members and determine the light group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
-        states: List[State] = list(filter(None, all_states))
+        states: list[State] = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
 
         self._is_on = len(on_states) > 0
@@ -332,7 +334,7 @@ class LightGroup(GroupEntity, light.LightEntity):
         self._supported_features &= SUPPORT_GROUP_LIGHT
 
 
-def _find_state_attributes(states: List[State], key: str) -> Iterator[Any]:
+def _find_state_attributes(states: list[State], key: str) -> Iterator[Any]:
     """Find attributes with matching key from states."""
     for state in states:
         value = state.attributes.get(key)
@@ -351,9 +353,9 @@ def _mean_tuple(*args):
 
 
 def _reduce_attribute(
-    states: List[State],
+    states: list[State],
     key: str,
-    default: Optional[Any] = None,
+    default: Any | None = None,
     reduce: Callable[..., Any] = _mean_int,
 ) -> Any:
     """Find the first attribute matching key from states.

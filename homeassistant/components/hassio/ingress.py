@@ -1,9 +1,10 @@
 """Hass.io Add-on ingress service."""
+from __future__ import annotations
+
 import asyncio
 from ipaddress import ip_address
 import logging
 import os
-from typing import Dict, Union
 
 import aiohttp
 from aiohttp import hdrs, web
@@ -11,8 +12,7 @@ from aiohttp.web_exceptions import HTTPBadGateway
 from multidict import CIMultiDict
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import callback
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant, callback
 
 from .const import X_HASSIO, X_INGRESS_PATH
 
@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_setup_ingress_view(hass: HomeAssistantType, host: str):
+def async_setup_ingress_view(hass: HomeAssistant, host: str):
     """Auth setup."""
     websession = hass.helpers.aiohttp_client.async_get_clientsession()
 
@@ -46,7 +46,7 @@ class HassIOIngress(HomeAssistantView):
 
     async def _handle(
         self, request: web.Request, token: str, path: str
-    ) -> Union[web.Response, web.StreamResponse, web.WebSocketResponse]:
+    ) -> web.Response | web.StreamResponse | web.WebSocketResponse:
         """Route data to Hass.io ingress service."""
         try:
             # Websocket
@@ -114,7 +114,7 @@ class HassIOIngress(HomeAssistantView):
 
     async def _handle_request(
         self, request: web.Request, token: str, path: str
-    ) -> Union[web.Response, web.StreamResponse]:
+    ) -> web.Response | web.StreamResponse:
         """Ingress route for request."""
         url = self._create_url(token, path)
         data = await request.read()
@@ -159,9 +159,7 @@ class HassIOIngress(HomeAssistantView):
             return response
 
 
-def _init_header(
-    request: web.Request, token: str
-) -> Union[CIMultiDict, Dict[str, str]]:
+def _init_header(request: web.Request, token: str) -> CIMultiDict | dict[str, str]:
     """Create initial header."""
     headers = {}
 
@@ -208,7 +206,7 @@ def _init_header(
     return headers
 
 
-def _response_header(response: aiohttp.ClientResponse) -> Dict[str, str]:
+def _response_header(response: aiohttp.ClientResponse) -> dict[str, str]:
     """Create response header."""
     headers = {}
 

@@ -108,7 +108,7 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverEntity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
         obstruction_detected = self.service.value(
             CharacteristicsTypes.OBSTRUCTION_DETECTED
@@ -235,7 +235,7 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
             )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
         obstruction_detected = self.service.value(
             CharacteristicsTypes.OBSTRUCTION_DETECTED

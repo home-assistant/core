@@ -1,10 +1,16 @@
 {
     "config": {
         "abort": {
+            "addon_info_failed": "Fehler beim Abrufen von OpenZWave Add-on Informationen.",
+            "addon_install_failed": "Installation des OpenZWave Add-ons fehlgeschlagen.",
+            "addon_set_config_failed": "Setzen der OpenZWave Konfiguration fehlgeschlagen.",
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "mqtt_required": "Die MQTT-Integration ist nicht eingerichtet",
             "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+        },
+        "error": {
+            "addon_start_failed": "Fehler beim Starten des OpenZWave Add-ons. \u00dcberpr\u00fcfe die Konfiguration."
         },
         "progress": {
             "install_addon": "Bitte warten, bis die Installation des OpenZWave-Add-Ons abgeschlossen ist. Dies kann einige Minuten dauern."
@@ -17,13 +23,18 @@
                 "title": "Die Installation des OpenZWave-Add-On wurde gestartet"
             },
             "on_supervisor": {
+                "data": {
+                    "use_addon": "Verwende das OpenZWave Supervisor Add-on"
+                },
+                "description": "M\u00f6chtest du das OpenZWave Supervisor Add-on verwenden?",
                 "title": "Verbindungstyp ausw\u00e4hlen"
             },
             "start_addon": {
                 "data": {
                     "network_key": "Netzwerk-Schl\u00fcssel",
                     "usb_path": "USB-Ger\u00e4te-Pfad"
-                }
+                },
+                "title": "Gib die Konfiguration des OpenZWave Add-ons ein"
             }
         }
     }

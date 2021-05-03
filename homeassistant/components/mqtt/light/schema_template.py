@@ -21,10 +21,9 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import (
-    CONF_DEVICE,
     CONF_NAME,
     CONF_OPTIMISTIC,
-    CONF_UNIQUE_ID,
+    CONF_STATE_TEMPLATE,
     STATE_OFF,
     STATE_ON,
 )
@@ -36,12 +35,7 @@ import homeassistant.util.color as color_util
 from .. import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, subscription
 from ... import mqtt
 from ..debug_info import log_messages
-from ..mixins import (
-    MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-    MQTT_JSON_ATTRS_SCHEMA,
-    MqttEntity,
-)
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +56,6 @@ CONF_GREEN_TEMPLATE = "green_template"
 CONF_MAX_MIREDS = "max_mireds"
 CONF_MIN_MIREDS = "min_mireds"
 CONF_RED_TEMPLATE = "red_template"
-CONF_STATE_TEMPLATE = "state_template"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 
 PLATFORM_SCHEMA_TEMPLATE = (
@@ -73,7 +66,6 @@ PLATFORM_SCHEMA_TEMPLATE = (
             vol.Optional(CONF_COLOR_TEMP_TEMPLATE): cv.template,
             vol.Required(CONF_COMMAND_OFF_TEMPLATE): cv.template,
             vol.Required(CONF_COMMAND_ON_TEMPLATE): cv.template,
-            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_EFFECT_TEMPLATE): cv.template,
             vol.Optional(CONF_GREEN_TEMPLATE): cv.template,
@@ -83,12 +75,10 @@ PLATFORM_SCHEMA_TEMPLATE = (
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_RED_TEMPLATE): cv.template,
             vol.Optional(CONF_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
         }
     )
-    .extend(MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
+    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
@@ -127,8 +117,6 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        self._config = config
-
         self._topics = {
             key: config.get(key) for key in (CONF_STATE_TOPIC, CONF_COMMAND_TOPIC)
         }
@@ -154,7 +142,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             or self._templates[CONF_STATE_TEMPLATE] is None
         )
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self):  # noqa: C901
         """(Re)Subscribe to topics."""
         for tpl in self._templates.values():
             if tpl is not None:
@@ -300,11 +288,6 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         return self._white_value
 
     @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._config[CONF_NAME]
-
-    @property
     def is_on(self):
         """Return True if entity is on."""
         return self._state
@@ -383,7 +366,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             values["flash"] = kwargs.get(ATTR_FLASH)
 
         if ATTR_TRANSITION in kwargs:
-            values["transition"] = int(kwargs[ATTR_TRANSITION])
+            values["transition"] = kwargs[ATTR_TRANSITION]
 
         mqtt.async_publish(
             self.hass,
@@ -408,7 +391,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             self._state = False
 
         if ATTR_TRANSITION in kwargs:
-            values["transition"] = int(kwargs[ATTR_TRANSITION])
+            values["transition"] = kwargs[ATTR_TRANSITION]
 
         mqtt.async_publish(
             self.hass,
@@ -434,7 +417,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             and self._templates[CONF_GREEN_TEMPLATE] is not None
             and self._templates[CONF_BLUE_TEMPLATE] is not None
         ):
-            features = features | SUPPORT_COLOR
+            features = features | SUPPORT_COLOR | SUPPORT_BRIGHTNESS
         if self._config.get(CONF_EFFECT_LIST) is not None:
             features = features | SUPPORT_EFFECT
         if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:

@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_api_key": "\u00c9rv\u00e9nytelen API kulcs",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API kulcs",
+                    "api_version": "API Verzi\u00f3",
+                    "latitude": "Sz\u00e9less\u00e9g",
+                    "longitude": "Hossz\u00fas\u00e1g",
+                    "name": "N\u00e9v"
+                },
+                "description": "Ha a Sz\u00e9less\u00e9g \u00e9s Hossz\u00fas\u00e1g nincs megadva, akkor a Home Assistant konfigur\u00e1ci\u00f3j\u00e1ban l\u00e9v\u0151 alap\u00e9rtelmezett \u00e9rt\u00e9keket fogjuk haszn\u00e1lni. Minden el\u0151rejelz\u00e9si t\u00edpushoz l\u00e9trej\u00f6n egy entit\u00e1s, de alap\u00e9rtelmez\u00e9s szerint csak az \u00e1ltalad kiv\u00e1lasztottak lesznek enged\u00e9lyezve."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Friss\u00edtse a ClimaCell be\u00e1ll\u00edt\u00e1sokat"
+            }
+        }
+    },
+    "title": "ClimaCell"
+}

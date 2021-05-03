@@ -93,7 +93,7 @@ async def test_co2_sensor(mock_function):
     assert sensor.state == 1000
     assert sensor.unit_of_measurement == CONCENTRATION_PARTS_PER_MILLION
     assert sensor.should_poll
-    assert sensor.device_state_attributes == {"temperature": 24}
+    assert sensor.extra_state_attributes == {"temperature": 24}
 
 
 @patch("pmsensor.co2sensor.read_mh_z19_with_temperature", return_value=(1000, 24))
@@ -107,7 +107,7 @@ async def test_temperature_sensor(mock_function):
     assert sensor.state == 24
     assert sensor.unit_of_measurement == TEMP_CELSIUS
     assert sensor.should_poll
-    assert sensor.device_state_attributes == {"co2_concentration": 1000}
+    assert sensor.extra_state_attributes == {"co2_concentration": 1000}
 
 
 @patch("pmsensor.co2sensor.read_mh_z19_with_temperature", return_value=(1000, 24))

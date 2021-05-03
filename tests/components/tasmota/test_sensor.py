@@ -17,6 +17,7 @@ from homeassistant import config_entries
 from homeassistant.components import sensor
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
 from .test_common import (
@@ -226,7 +227,7 @@ async def test_indexed_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
 @pytest.mark.parametrize("status_sensor_disabled", [False])
 async def test_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     """Test state update via MQTT."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
 
     # Pre-enable the status sensor
     entity_reg.async_get_or_create(
@@ -275,11 +276,17 @@ async def test_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     state = hass.states.get("sensor.tasmota_status")
     assert state.state == "20.0"
 
+    # Test force update flag
+    entity = hass.data["entity_components"]["sensor"].get_entity(
+        "sensor.tasmota_status"
+    )
+    assert entity.force_update
+
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])
 async def test_single_shot_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     """Test state update via MQTT."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
 
     # Pre-enable the status sensor
     entity_reg.async_get_or_create(
@@ -363,7 +370,7 @@ async def test_restart_time_status_sensor_state_via_mqtt(
     hass, mqtt_mock, setup_tasmota
 ):
     """Test state update via MQTT."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
 
     # Pre-enable the status sensor
     entity_reg.async_get_or_create(
@@ -439,9 +446,9 @@ async def test_attributes(hass, mqtt_mock, setup_tasmota):
     assert state.attributes.get("unit_of_measurement") == "°C"
 
     state = hass.states.get("sensor.tasmota_beer_CarbonDioxide")
-    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("device_class") == "carbon_dioxide"
     assert state.attributes.get("friendly_name") == "Tasmota Beer CarbonDioxide"
-    assert state.attributes.get("icon") == "mdi:molecule-co2"
+    assert state.attributes.get("icon") is None
     assert state.attributes.get("unit_of_measurement") == "ppm"
 
 
@@ -509,16 +516,16 @@ async def test_indexed_sensor_attributes(hass, mqtt_mock, setup_tasmota):
     assert state.attributes.get("unit_of_measurement") == "°C"
 
     state = hass.states.get("sensor.tasmota_dummy2_carbondioxide_1")
-    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("device_class") == "carbon_dioxide"
     assert state.attributes.get("friendly_name") == "Tasmota Dummy2 CarbonDioxide 1"
-    assert state.attributes.get("icon") == "mdi:molecule-co2"
+    assert state.attributes.get("icon") is None
     assert state.attributes.get("unit_of_measurement") == "ppm"
 
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])
 async def test_enable_status_sensor(hass, mqtt_mock, setup_tasmota):
     """Test enabling status sensor."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
 
     config = copy.deepcopy(DEFAULT_CONFIG)
     mac = config["mac"]
@@ -535,7 +542,7 @@ async def test_enable_status_sensor(hass, mqtt_mock, setup_tasmota):
     assert state is None
     entry = entity_reg.async_get("sensor.tasmota_signal")
     assert entry.disabled
-    assert entry.disabled_by == "integration"
+    assert entry.disabled_by == er.DISABLED_INTEGRATION
 
     # Enable the status sensor
     updated_entry = entity_reg.async_update_entity(

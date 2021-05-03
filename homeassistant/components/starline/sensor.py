@@ -1,5 +1,5 @@
 """Reads vehicle status from StarLine API."""
-from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE
+from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, SensorEntity
 from homeassistant.const import (
     LENGTH_KILOMETERS,
     PERCENTAGE,
@@ -7,7 +7,6 @@ from homeassistant.const import (
     VOLT,
     VOLUME_LITERS,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level, icon_for_signal_level
 
 from .account import StarlineAccount, StarlineDevice
@@ -38,7 +37,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class StarlineSensor(StarlineEntity, Entity):
+class StarlineSensor(StarlineEntity, SensorEntity):
     """Representation of a StarLine sensor."""
 
     def __init__(
@@ -109,7 +108,7 @@ class StarlineSensor(StarlineEntity, Entity):
         return self._device_class
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self._key == "balance":
             return self._account.balance_attrs(self._device)

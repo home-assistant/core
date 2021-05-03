@@ -3,6 +3,7 @@ from aioshelly import Block
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    DEVICE_CLASS_SHUTTER,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
@@ -74,6 +75,11 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
     def supported_features(self):
         """Flag supported features."""
         return self._supported_features
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of the device."""
+        return DEVICE_CLASS_SHUTTER
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""

@@ -1,13 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "missing_data": "\u7f3a\u5c11\u8cc7\u6599\uff1a\u8acb\u7a0d\u5f8c\u91cd\u8a66\u6216\u4f7f\u7528\u5176\u4ed6\u8a2d\u5b9a",
-            "otp_failed": "\u5169\u6b65\u9a5f\u9a57\u8b49\u5931\u6557\uff0c\u8acb\u91cd\u65b0\u53d6\u5f97\u4ee3\u78bc\u5f8c\u91cd\u8a66",
+            "otp_failed": "\u96d9\u91cd\u8a8d\u8b49\u5931\u6557\uff0c\u8acb\u91cd\u65b0\u53d6\u5f97\u4ee3\u78bc\u5f8c\u91cd\u8a66",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "flow_title": "\u7fa4\u6689 DSM {name} ({host})",
@@ -16,7 +16,7 @@
                 "data": {
                     "otp_code": "\u4ee3\u78bc"
                 },
-                "title": "Synology DSM\uff1a\u96d9\u91cd\u9a57\u8b49"
+                "title": "Synology DSM\uff1a\u96d9\u91cd\u8a8d\u8b49"
             },
             "link": {
                 "data": {

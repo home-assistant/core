@@ -1,5 +1,7 @@
 """Support for Canary alarm."""
-from typing import Callable, List
+from __future__ import annotations
+
+from typing import Callable
 
 from canary.api import LOCATION_MODE_AWAY, LOCATION_MODE_HOME, LOCATION_MODE_NIGHT
 
@@ -16,8 +18,8 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_COORDINATOR, DOMAIN
@@ -25,9 +27,9 @@ from .coordinator import CanaryDataUpdateCoordinator
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up Canary alarm control panels based on a config entry."""
     coordinator: CanaryDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
@@ -87,7 +89,7 @@ class CanaryAlarm(CoordinatorEntity, AlarmControlPanelEntity):
         return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {"private": self.location.is_private}
 

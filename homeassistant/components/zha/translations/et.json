@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus"
         },
+        "flow_title": "ZHA: {name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -30,6 +31,19 @@
                 "description": "Vali Zigbee raadio jadaport",
                 "title": ""
             }
+        }
+    },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "Valvestamise kood",
+            "alarm_failed_tries": "Mitu j\u00e4rjestikust eba\u00f5nnestunud koodi sisestamist h\u00e4ire k\u00e4ivitamiseks",
+            "alarm_master_code": "Valvekeskuse juhtpaneel(ide) \u00fclemkood",
+            "title": "Valvekeskuse juhtpaneeli s\u00e4tted"
+        },
+        "zha_options": {
+            "default_light_transition": "Heleduse vaike\u00fclemineku aeg (sekundites)",
+            "enable_identify_on_join": "Luba tuvastamine kui seadmed liituvad v\u00f5rguga",
+            "title": "\u00dcldised valikud"
         }
     },
     "device_automation": {

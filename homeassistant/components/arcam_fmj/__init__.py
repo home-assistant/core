@@ -1,5 +1,6 @@
 """Arcam component."""
 import asyncio
+from contextlib import suppress
 import logging
 
 from arcam.fmj import ConnectionFailed
@@ -8,8 +9,9 @@ import async_timeout
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
@@ -25,16 +27,16 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
+PLATFORMS = ["media_player"]
+
 
 async def _await_cancel(task):
     task.cancel()
-    try:
+    with suppress(asyncio.CancelledError):
         await task
-    except asyncio.CancelledError:
-        pass
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType):
     """Set up the component."""
     hass.data[DOMAIN_DATA_ENTRIES] = {}
     hass.data[DOMAIN_DATA_TASKS] = {}
@@ -49,7 +51,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: config_entries.ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry):
     """Set up config entry."""
     entries = hass.data[DOMAIN_DATA_ENTRIES]
     tasks = hass.data[DOMAIN_DATA_TASKS]
@@ -60,23 +62,21 @@ async def async_setup_entry(hass: HomeAssistantType, entry: config_entries.Confi
     task = asyncio.create_task(_run_client(hass, client, DEFAULT_SCAN_INTERVAL))
     tasks[entry.entry_id] = task
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "media_player")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Cleanup before removing config entry."""
-    await hass.config_entries.async_forward_entry_unload(entry, "media_player")
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     task = hass.data[DOMAIN_DATA_TASKS].pop(entry.entry_id)
     await _await_cancel(task)
 
     hass.data[DOMAIN_DATA_ENTRIES].pop(entry.entry_id)
 
-    return True
+    return unload_ok
 
 
 async def _run_client(hass, client, interval):

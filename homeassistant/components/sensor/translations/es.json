@@ -2,6 +2,8 @@
     "device_automation": {
         "condition_type": {
             "is_battery_level": "Nivel de bater\u00eda actual de {entity_name}",
+            "is_carbon_dioxide": "Nivel actual de concentraci\u00f3n de di\u00f3xido de carbono {entity_name}",
+            "is_carbon_monoxide": "Nivel actual de concentraci\u00f3n de mon\u00f3xido de carbono {entity_name}",
             "is_current": "Corriente actual de {entity_name}",
             "is_energy": "Energ\u00eda actual de {entity_name}",
             "is_humidity": "Humedad actual de {entity_name}",
@@ -17,6 +19,8 @@
         },
         "trigger_type": {
             "battery_level": "Cambios de nivel de bater\u00eda de {entity_name}",
+            "carbon_dioxide": "{entity_name} cambios en la concentraci\u00f3n de di\u00f3xido de carbono",
+            "carbon_monoxide": "{entity_name} cambios en la concentraci\u00f3n de mon\u00f3xido de carbono",
             "current": "Cambio de corriente en {entity_name}",
             "energy": "Cambio de energ\u00eda en {entity_name}",
             "humidity": "Cambios de humedad de {entity_name}",

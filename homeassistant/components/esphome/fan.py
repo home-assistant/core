@@ -1,5 +1,7 @@
 """Support for ESPHome fans."""
-from typing import Optional
+from __future__ import annotations
+
+import math
 
 from aioesphomeapi import FanDirection, FanInfo, FanSpeed, FanState
 
@@ -12,10 +14,12 @@ from homeassistant.components.fan import (
     FanEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
 )
 
 from . import (
@@ -29,7 +33,7 @@ ORDERED_NAMED_FAN_SPEEDS = [FanSpeed.LOW, FanSpeed.MEDIUM, FanSpeed.HIGH]
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up ESPHome fans based on a config entry."""
     await platform_async_setup_entry(
@@ -59,8 +63,13 @@ class EsphomeFan(EsphomeEntity, FanEntity):
         return super()._static_info
 
     @property
-    def _state(self) -> Optional[FanState]:
+    def _state(self) -> FanState | None:
         return super()._state
+
+    @property
+    def _supports_speed_levels(self) -> bool:
+        api_version = self._client.api_version
+        return api_version.major == 1 and api_version.minor > 3
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
@@ -70,17 +79,24 @@ class EsphomeFan(EsphomeEntity, FanEntity):
 
         data = {"key": self._static_info.key, "state": True}
         if percentage is not None:
-            named_speed = percentage_to_ordered_list_item(
-                ORDERED_NAMED_FAN_SPEEDS, percentage
-            )
-            data["speed"] = named_speed
+            if self._supports_speed_levels:
+                data["speed_level"] = math.ceil(
+                    percentage_to_ranged_value(
+                        (1, self._static_info.supported_speed_levels), percentage
+                    )
+                )
+            else:
+                named_speed = percentage_to_ordered_list_item(
+                    ORDERED_NAMED_FAN_SPEEDS, percentage
+                )
+                data["speed"] = named_speed
         await self._client.fan_command(**data)
 
     async def async_turn_on(
         self,
-        speed: Optional[str] = None,
-        percentage: Optional[int] = None,
-        preset_mode: Optional[str] = None,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
         **kwargs,
     ) -> None:
         """Turn on the fan."""
@@ -106,18 +122,31 @@ class EsphomeFan(EsphomeEntity, FanEntity):
     # pylint: disable=invalid-overridden-method
 
     @esphome_state_property
-    def is_on(self) -> Optional[bool]:
+    def is_on(self) -> bool | None:
         """Return true if the entity is on."""
         return self._state.state
 
     @esphome_state_property
-    def percentage(self) -> Optional[str]:
+    def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if not self._static_info.supports_speed:
             return None
-        return ordered_list_item_to_percentage(
-            ORDERED_NAMED_FAN_SPEEDS, self._state.speed
+
+        if not self._supports_speed_levels:
+            return ordered_list_item_to_percentage(
+                ORDERED_NAMED_FAN_SPEEDS, self._state.speed
+            )
+
+        return ranged_value_to_percentage(
+            (1, self._static_info.supported_speed_levels), self._state.speed_level
         )
+
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        if not self._supports_speed_levels:
+            return len(ORDERED_NAMED_FAN_SPEEDS)
+        return self._static_info.supported_speed_levels
 
     @esphome_state_property
     def oscillating(self) -> None:

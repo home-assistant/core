@@ -1,13 +1,13 @@
 """Xbox friends binary sensors."""
+from __future__ import annotations
+
 from functools import partial
-from typing import Dict, List
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_registry import (
     async_get_registry as async_get_entity_registry,
 )
-from homeassistant.helpers.typing import HomeAssistantType
 
 from . import XboxUpdateCoordinator
 from .base_sensor import XboxBaseSensorEntity
@@ -16,7 +16,7 @@ from .const import DOMAIN
 PRESENCE_ATTRIBUTES = ["online", "in_party", "in_game", "in_multiplayer"]
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
     """Set up Xbox Live friends."""
     coordinator: XboxUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id][
         "coordinator"
@@ -44,7 +44,7 @@ class XboxBinarySensorEntity(XboxBaseSensorEntity, BinarySensorEntity):
 @callback
 def async_update_friends(
     coordinator: XboxUpdateCoordinator,
-    current: Dict[str, List[XboxBinarySensorEntity]],
+    current: dict[str, list[XboxBinarySensorEntity]],
     async_add_entities,
 ) -> None:
     """Update friends."""
@@ -73,7 +73,7 @@ def async_update_friends(
 async def async_remove_entities(
     xuid: str,
     coordinator: XboxUpdateCoordinator,
-    current: Dict[str, XboxBinarySensorEntity],
+    current: dict[str, XboxBinarySensorEntity],
 ) -> None:
     """Remove friend sensors from Home Assistant."""
     registry = await async_get_entity_registry(coordinator.hass)

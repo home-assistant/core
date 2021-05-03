@@ -1,0 +1,35 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_api_key": "Cl\u00e9 API invalide",
+            "rate_limited": "Nombre maximal de tentatives de connexion d\u00e9pass\u00e9, veuillez r\u00e9essayer ult\u00e9rieurement",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Cl\u00e9 d'API",
+                    "api_version": "Version de l'API",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "name": "Nom"
+                },
+                "description": "Si Latitude et Longitude ne sont pas fournis, les valeurs par d\u00e9faut de la configuration de Home Assistant seront utilis\u00e9es. Une entit\u00e9 sera cr\u00e9\u00e9e pour chaque type de pr\u00e9vision, mais seules celles que vous s\u00e9lectionnez seront activ\u00e9es par d\u00e9faut."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "forecast_types": "Type(s) de pr\u00e9vision",
+                    "timestep": "Min. Entre les pr\u00e9visions NowCast"
+                },
+                "description": "Si vous choisissez d'activer l'entit\u00e9 de pr\u00e9vision \u00abnowcast\u00bb, vous pouvez configurer le nombre de minutes entre chaque pr\u00e9vision. Le nombre de pr\u00e9visions fournies d\u00e9pend du nombre de minutes choisies entre les pr\u00e9visions.",
+                "title": "Mettre \u00e0 jour les options de ClimaCell"
+            }
+        }
+    },
+    "title": "ClimaCell"
+}

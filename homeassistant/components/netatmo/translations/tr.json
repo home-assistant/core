@@ -4,6 +4,22 @@
             "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "uzakta",
+            "hg": "donma korumas\u0131",
+            "schedule": "Zamanlama"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} bir alarm alg\u0131lad\u0131",
+            "animal": "{entity_name} bir hayvan tespit etti",
+            "cancel_set_point": "{entity_name} zamanlamas\u0131na devam etti",
+            "human": "{entity_name} bir insan alg\u0131lad\u0131",
+            "movement": "{entity_name} hareket alg\u0131lad\u0131",
+            "turned_off": "{entity_name} kapat\u0131ld\u0131",
+            "turned_on": "{entity_name} a\u00e7\u0131ld\u0131"
+        }
+    },
     "options": {
         "step": {
             "public_weather": {

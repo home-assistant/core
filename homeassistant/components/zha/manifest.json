@@ -4,16 +4,24 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zha",
   "requirements": [
-    "bellows==0.21.0",
+    "bellows==0.24.0",
     "pyserial==3.5",
     "pyserial-asyncio==0.5",
-    "zha-quirks==0.0.53",
+    "zha-quirks==0.0.57",
     "zigpy-cc==0.5.2",
-    "zigpy-deconz==0.11.1",
-    "zigpy==0.32.0",
+    "zigpy-deconz==0.12.0",
+    "zigpy==0.33.0",
     "zigpy-xbee==0.13.0",
     "zigpy-zigate==0.7.3",
-    "zigpy-znp==0.3.0"
+    "zigpy-znp==0.4.0"
   ],
-  "codeowners": ["@dmulcahey", "@adminiuga"]
+  "codeowners": ["@dmulcahey", "@adminiuga"],
+  "zeroconf": [
+    {
+      "type": "_esphomelib._tcp.local.",
+      "name": "tube*"
+    }
+  ],
+  "after_dependencies": ["zeroconf"],
+  "iot_class": "local_polling"
 }

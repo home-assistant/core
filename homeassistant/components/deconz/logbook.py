@@ -1,13 +1,19 @@
 """Describe deCONZ logbook events."""
+from __future__ import annotations
 
-from typing import Callable, Optional
+from typing import Callable
 
 from homeassistant.const import ATTR_DEVICE_ID, CONF_EVENT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import Event
 
 from .const import CONF_GESTURE, DOMAIN as DECONZ_DOMAIN
-from .deconz_event import CONF_DECONZ_EVENT, DeconzEvent
+from .deconz_event import (
+    CONF_DECONZ_ALARM_EVENT,
+    CONF_DECONZ_EVENT,
+    DeconzAlarmEvent,
+    DeconzEvent,
+)
 from .device_trigger import (
     CONF_BOTH_BUTTONS,
     CONF_BOTTOM_BUTTONS,
@@ -123,9 +129,23 @@ def async_describe_events(
     """Describe logbook events."""
 
     @callback
+    def async_describe_deconz_alarm_event(event: Event) -> dict:
+        """Describe deCONZ logbook alarm event."""
+        deconz_alarm_event: DeconzAlarmEvent | None = _get_deconz_event_from_device_id(
+            hass, event.data[ATTR_DEVICE_ID]
+        )
+
+        data = event.data[CONF_EVENT]
+
+        return {
+            "name": f"{deconz_alarm_event.device.name}",
+            "message": f"fired event '{data}'.",
+        }
+
+    @callback
     def async_describe_deconz_event(event: Event) -> dict:
         """Describe deCONZ logbook event."""
-        deconz_event: Optional[DeconzEvent] = _get_deconz_event_from_device_id(
+        deconz_event: DeconzEvent | None = _get_deconz_event_from_device_id(
             hass, event.data[ATTR_DEVICE_ID]
         )
 
@@ -164,4 +184,7 @@ def async_describe_events(
             "message": f"'{ACTIONS[action]}' event for '{INTERFACES[interface]}' was fired.",
         }
 
+    async_describe_event(
+        DECONZ_DOMAIN, CONF_DECONZ_ALARM_EVENT, async_describe_deconz_alarm_event
+    )
     async_describe_event(DECONZ_DOMAIN, CONF_DECONZ_EVENT, async_describe_deconz_event)

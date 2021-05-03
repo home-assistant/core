@@ -59,7 +59,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     """Handle a UniFi config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback
@@ -123,8 +122,9 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
                 return await self.async_step_site()
 
-        host = self.config.get(CONF_HOST)
-        if not host and await async_discover_unifi(self.hass):
+        if not (host := self.config.get(CONF_HOST, "")) and await async_discover_unifi(
+            self.hass
+        ):
             host = "unifi"
 
         data = self.reauth_schema or {
@@ -191,11 +191,13 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, config_entry: dict):
+    async def async_step_reauth(self, data: dict):
         """Trigger a reauthentication flow."""
+        config_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
         self.reauth_config_entry = config_entry
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_HOST: config_entry.data[CONF_HOST],
             CONF_SITE_ID: config_entry.title,
@@ -229,7 +231,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         await self.async_set_unique_id(mac_address)
         self._abort_if_unique_id_configured(updates=self.config)
 
-        # pylint: disable=no-member
         self.context["title_placeholders"] = {
             CONF_HOST: self.config[CONF_HOST],
             CONF_SITE_ID: DEFAULT_SITE_ID,
@@ -320,7 +321,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                 if "name" in wlan
             }
         )
-        ssid_filter = {ssid: ssid for ssid in sorted(list(ssids))}
+        ssid_filter = {ssid: ssid for ssid in sorted(ssids)}
 
         return self.async_show_form(
             step_id="device_tracker",

@@ -25,5 +25,10 @@
                 "title": "L\u00e4nka Nest-konto"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "R\u00f6relse uppt\u00e4ckt"
+        }
     }
 }

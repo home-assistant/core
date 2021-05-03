@@ -21,6 +21,7 @@
         "step": {
             "init": {
                 "data": {
+                    "ph_offset": "D\u00e9calage pH (positif ou n\u00e9gatif)",
                     "polling_interval": "Intervalle d'interrogation (en secondes)"
                 }
             }

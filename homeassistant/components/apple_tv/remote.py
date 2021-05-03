@@ -1,8 +1,14 @@
 """Remote control support for Apple TV."""
 
+import asyncio
 import logging
 
-from homeassistant.components.remote import RemoteEntity
+from homeassistant.components.remote import (
+    ATTR_DELAY_SECS,
+    ATTR_NUM_REPEATS,
+    DEFAULT_DELAY_SECS,
+    RemoteEntity,
+)
 from homeassistant.const import CONF_NAME
 
 from . import AppleTVEntity
@@ -43,12 +49,19 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
 
     async def async_send_command(self, command, **kwargs):
         """Send a command to one device."""
+        num_repeats = kwargs[ATTR_NUM_REPEATS]
+        delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
+
         if not self.is_on:
             _LOGGER.error("Unable to send commands, not connected to %s", self._name)
             return
 
-        for single_command in command:
-            if not hasattr(self.atv.remote_control, single_command):
-                continue
+        for _ in range(num_repeats):
+            for single_command in command:
+                attr_value = getattr(self.atv.remote_control, single_command, None)
+                if not attr_value:
+                    raise ValueError("Command not found. Exiting sequence")
 
-            await getattr(self.atv.remote_control, single_command)()
+                _LOGGER.info("Sending command %s", single_command)
+                await attr_value()
+                await asyncio.sleep(delay)

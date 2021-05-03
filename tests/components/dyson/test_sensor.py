@@ -1,5 +1,6 @@
 """Test the Dyson sensor(s) component."""
-from typing import List, Type
+from __future__ import annotations
+
 from unittest.mock import patch
 
 from libpurecool.dyson_pure_cool import DysonPureCool
@@ -16,7 +17,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 from .common import (
@@ -79,7 +80,7 @@ def _async_assign_values(
 
 
 @callback
-def async_get_device(spec: Type[DysonPureCoolLink], combi=False) -> DysonPureCoolLink:
+def async_get_device(spec: type[DysonPureCoolLink], combi=False) -> DysonPureCoolLink:
     """Return a device of the given type."""
     device = async_get_basic_device(spec)
     _async_assign_values(device, combi=combi)
@@ -113,19 +114,19 @@ def _async_get_entity_id(sensor_type: str) -> str:
     indirect=["device"],
 )
 async def test_sensors(
-    hass: HomeAssistant, device: DysonPureCoolLink, sensors: List[str]
+    hass: HomeAssistant, device: DysonPureCoolLink, sensors: list[str]
 ) -> None:
     """Test the sensors."""
     # Temperature is given by the device in kelvin
     # Make sure no other sensors are set up
     assert len(hass.states.async_all()) == len(sensors)
 
-    er = await entity_registry.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     for sensor in sensors:
         entity_id = _async_get_entity_id(sensor)
 
         # Test unique id
-        assert er.async_get(entity_id).unique_id == f"{SERIAL}-{sensor}"
+        assert entity_registry.async_get(entity_id).unique_id == f"{SERIAL}-{sensor}"
 
         # Test state
         state = hass.states.get(entity_id)
@@ -168,8 +169,8 @@ async def test_temperature(
     device = async_get_device(DysonPureCoolLink)
     with patch(f"{BASE_PATH}.DysonAccount.login", return_value=True), patch(
         f"{BASE_PATH}.DysonAccount.devices", return_value=[device]
-    ), patch(f"{BASE_PATH}.DYSON_PLATFORMS", [PLATFORM_DOMAIN]):
-        # DYSON_PLATFORMS is patched so that only the platform being tested is set up
+    ), patch(f"{BASE_PATH}.PLATFORMS", [PLATFORM_DOMAIN]):
+        # PLATFORMS is patched so that only the platform being tested is set up
         await async_setup_component(
             hass,
             DOMAIN,

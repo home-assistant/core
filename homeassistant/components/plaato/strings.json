@@ -23,7 +23,7 @@
       }
     },
     "error": {
-      "invalid_webhook_device": "You have selected a device that doesn't not support sending data to a webhook. It is only available for the Airlock",
+      "invalid_webhook_device": "You have selected a device that does not support sending data to a webhook. It is only available for the Airlock",
       "no_auth_token": "You need to add an auth token",
       "no_api_method": "You need to add an auth token or select webhook"
     },

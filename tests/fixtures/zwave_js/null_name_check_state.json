@@ -1,0 +1,414 @@
+{
+	"nodeId": 10,
+	"index": 0,
+	"installerIcon": 3328,
+	"userIcon": 3328,
+	"status": 4,
+	"ready": true,
+	"isListening": true,
+	"isFrequentListening": false,
+	"isRouting": true,
+	"maxBaudRate": 40000,
+	"isSecure": false,
+	"version": 4,
+	"isBeaming": true,
+	"manufacturerId": 277,
+	"productId": 1,
+	"productType": 272,
+	"firmwareVersion": "2.17",
+	"zwavePlusVersion": 1,
+	"nodeType": 0,
+	"roleType": 1,
+	"neighbors": [],
+	"endpointCountIsDynamic": false,
+	"endpointsHaveIdenticalCapabilities": false,
+	"individualEndpointCount": 4,
+	"aggregatedEndpointCount": 0,
+	"interviewAttempts": 1,
+	"interviewStage": 7,
+	"endpoints": [
+		{
+			"nodeId": 10,
+			"index": 0,
+			"installerIcon": 3328,
+			"userIcon": 3328
+		},
+		{
+			"nodeId": 10,
+			"index": 1
+		},
+		{
+			"nodeId": 10,
+			"index": 2
+		},
+		{
+			"nodeId": 10,
+			"index": 3
+		},
+		{
+			"nodeId": 10,
+			"index": 4
+		}
+	],
+	"values": [
+		{
+			"endpoint": 0,
+			"commandClass": 49,
+			"commandClassName": "Multilevel Sensor",
+			"property": "Air temperature",
+			"propertyName": "Air temperature",
+			"ccVersion": 7,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"unit": "\u00b0C",
+				"label": "Air temperature",
+				"ccSpecific": {
+					"sensorType": 1,
+					"scale": 0
+				}
+			},
+			"value": 2.9
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 49,
+			"commandClassName": "Multilevel Sensor",
+			"property": "Humidity",
+			"propertyName": "Humidity",
+			"ccVersion": 7,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"unit": "%",
+				"label": "Humidity",
+				"ccSpecific": {
+					"sensorType": 5,
+					"scale": 0
+				}
+			},
+			"value": 8
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 114,
+			"commandClassName": "Manufacturer Specific",
+			"property": "manufacturerId",
+			"propertyName": "manufacturerId",
+			"ccVersion": 2,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"min": 0,
+				"max": 65535,
+				"label": "Manufacturer ID"
+			},
+			"value": 277
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 114,
+			"commandClassName": "Manufacturer Specific",
+			"property": "productType",
+			"propertyName": "productType",
+			"ccVersion": 2,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"min": 0,
+				"max": 65535,
+				"label": "Product type"
+			},
+			"value": 272
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 114,
+			"commandClassName": "Manufacturer Specific",
+			"property": "productId",
+			"propertyName": "productId",
+			"ccVersion": 2,
+			"metadata": {
+				"type": "number",
+				"readable": true,
+				"writeable": false,
+				"min": 0,
+				"max": 65535,
+				"label": "Product ID"
+			},
+			"value": 1
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 134,
+			"commandClassName": "Version",
+			"property": "libraryType",
+			"propertyName": "libraryType",
+			"ccVersion": 2,
+			"metadata": {
+				"type": "any",
+				"readable": true,
+				"writeable": false,
+				"label": "Library type"
+			},
+			"value": 3
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 134,
+			"commandClassName": "Version",
+			"property": "protocolVersion",
+			"propertyName": "protocolVersion",
+			"ccVersion": 2,
+			"metadata": {
+				"type": "any",
+				"readable": true,
+				"writeable": false,
+				"label": "Z-Wave protocol version"
+			},
+			"value": "4.38"
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 134,
+			"commandClassName": "Version",
+			"property": "firmwareVersions",
+			"propertyName": "firmwareVersions",
+			"ccVersion": 2,
+			"metadata": {
+				"type": "any",
+				"readable": true,
+				"writeable": false,
+				"label": "Z-Wave chip firmware versions"
+			},
+			"value": ["2.17"]
+		},
+		{
+			"endpoint": 0,
+			"commandClass": 134,
+			"commandClassName": "Version",
+			"property": "hardwareVersion",
+			"propertyName": "hardwareVersion",
+			"ccVersion": 2,
+			"metadata": {
+				"type": "any",
+				"readable": true,
+				"writeable": false,
+				"label": "Z-Wave chip hardware version"
+			}
+		},
+		{
+			"endpoint": 1,
+			"commandClass": 37,
+			"commandClassName": "Binary Switch",
+			"property": "currentValue",
+			"propertyName": "currentValue",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "boolean",
+				"readable": true,
+				"writeable": false,
+				"label": "Current value"
+			},
+			"value": false
+		},
+		{
+			"endpoint": 1,
+			"commandClass": 37,
+			"commandClassName": "Binary Switch",
+			"property": "targetValue",
+			"propertyName": "targetValue",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "boolean",
+				"readable": true,
+				"writeable": true,
+				"label": "Target value"
+			},
+			"value": false
+		},
+		{
+			"endpoint": 2,
+			"commandClass": 37,
+			"commandClassName": "Binary Switch",
+			"property": "currentValue",
+			"propertyName": "currentValue",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "boolean",
+				"readable": true,
+				"writeable": false,
+				"label": "Current value"
+			},
+			"value": false
+		},
+		{
+			"endpoint": 2,
+			"commandClass": 37,
+			"commandClassName": "Binary Switch",
+			"property": "targetValue",
+			"propertyName": "targetValue",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "boolean",
+				"readable": true,
+				"writeable": true,
+				"label": "Target value"
+			},
+			"value": false
+		},
+		{
+			"endpoint": 3,
+			"commandClass": 37,
+			"commandClassName": "Binary Switch",
+			"property": "currentValue",
+			"propertyName": "currentValue",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "boolean",
+				"readable": true,
+				"writeable": false,
+				"label": "Current value"
+			},
+			"value": false
+		},
+		{
+			"endpoint": 3,
+			"commandClass": 37,
+			"commandClassName": "Binary Switch",
+			"property": "targetValue",
+			"propertyName": "targetValue",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "boolean",
+				"readable": true,
+				"writeable": true,
+				"label": "Target value"
+			}
+		},
+		{
+			"endpoint": 4,
+			"commandClass": 37,
+			"commandClassName": "Binary Switch",
+			"property": "currentValue",
+			"propertyName": "currentValue",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "boolean",
+				"readable": true,
+				"writeable": false,
+				"label": "Current value"
+			},
+			"value": true
+		},
+		{
+			"endpoint": 4,
+			"commandClass": 37,
+			"commandClassName": "Binary Switch",
+			"property": "targetValue",
+			"propertyName": "targetValue",
+			"ccVersion": 1,
+			"metadata": {
+				"type": "boolean",
+				"readable": true,
+				"writeable": true,
+				"label": "Target value"
+			},
+			"value": true
+		}
+	],
+	"deviceClass": {
+		"basic": {
+			"key": 4,
+			"label": "Routing Slave"
+		},
+		"generic": {
+			"key": 33,
+			"label": "Multilevel Sensor"
+		},
+		"specific": {
+			"key": 1,
+			"label": "Routing Multilevel Sensor"
+		},
+		"mandatorySupportedCCs": [32, 49],
+		"mandatoryControlledCCs": []
+	},
+	"commandClasses": [
+		{
+			"id": 37,
+			"name": "Binary Switch",
+			"version": 1,
+			"isSecure": false
+		},
+		{
+			"id": 49,
+			"name": "Multilevel Sensor",
+			"version": 7,
+			"isSecure": false
+		},
+		{
+			"id": 89,
+			"name": "Association Group Information",
+			"version": 1,
+			"isSecure": false
+		},
+		{
+			"id": 90,
+			"name": "Device Reset Locally",
+			"version": 1,
+			"isSecure": false
+		},
+		{
+			"id": 94,
+			"name": "Z-Wave Plus Info",
+			"version": 2,
+			"isSecure": false
+		},
+		{
+			"id": 96,
+			"name": "Multi Channel",
+			"version": 4,
+			"isSecure": false
+		},
+		{
+			"id": 112,
+			"name": "Configuration",
+			"version": 1,
+			"isSecure": false
+		},
+		{
+			"id": 114,
+			"name": "Manufacturer Specific",
+			"version": 2,
+			"isSecure": false
+		},
+		{
+			"id": 122,
+			"name": "Firmware Update Meta Data",
+			"version": 3,
+			"isSecure": false
+		},
+		{
+			"id": 133,
+			"name": "Association",
+			"version": 2,
+			"isSecure": false
+		},
+		{
+			"id": 134,
+			"name": "Version",
+			"version": 2,
+			"isSecure": false
+		},
+		{
+			"id": 142,
+			"name": "Multi Channel Association",
+			"version": 3,
+			"isSecure": false
+		}
+	]
+}

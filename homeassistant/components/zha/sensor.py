@@ -1,28 +1,35 @@
 """Sensors on Zigbee Home Automation networks."""
+from __future__ import annotations
+
 import functools
 import numbers
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     DOMAIN,
+    SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType, StateType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .core import discovery
 from .core.const import (
@@ -66,7 +73,9 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation sensor from config entry."""
     entities_to_create = hass.data[DATA_ZHA][DOMAIN]
@@ -84,21 +93,21 @@ async def async_setup_entry(
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
 
-class Sensor(ZhaEntity):
+class Sensor(ZhaEntity, SensorEntity):
     """Base ZHA sensor."""
 
-    SENSOR_ATTR: Optional[Union[int, str]] = None
+    SENSOR_ATTR: int | str | None = None
     _decimals: int = 1
-    _device_class: Optional[str] = None
+    _device_class: str | None = None
     _divisor: int = 1
     _multiplier: int = 1
-    _unit: Optional[str] = None
+    _unit: str | None = None
 
     def __init__(
         self,
         unique_id: str,
         zha_device: ZhaDeviceType,
-        channels: List[ChannelType],
+        channels: list[ChannelType],
         **kwargs,
     ):
         """Init this sensor."""
@@ -118,7 +127,7 @@ class Sensor(ZhaEntity):
         return self._device_class
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity."""
         return self._unit
 
@@ -136,7 +145,7 @@ class Sensor(ZhaEntity):
         """Handle state update from channel."""
         self.async_write_ha_state()
 
-    def formatter(self, value: int) -> Union[int, float]:
+    def formatter(self, value: int) -> int | float:
         """Numeric pass-through formatter."""
         if self._decimals > 0:
             return round(
@@ -175,7 +184,7 @@ class Battery(Sensor):
         return value
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device state attrs for battery sensors."""
         state_attrs = {}
         battery_size = self._channel.cluster.get("battery_size")
@@ -186,7 +195,7 @@ class Battery(Sensor):
             state_attrs["battery_quantity"] = battery_quantity
         battery_voltage = self._channel.cluster.get("battery_voltage")
         if battery_voltage is not None:
-            state_attrs["battery_voltage"] = round(battery_voltage / 10, 1)
+            state_attrs["battery_voltage"] = round(battery_voltage / 10, 2)
         return state_attrs
 
 
@@ -203,7 +212,7 @@ class ElectricalMeasurement(Sensor):
         """Return True if HA needs to poll for state changes."""
         return True
 
-    def formatter(self, value: int) -> Union[int, float]:
+    def formatter(self, value: int) -> int | float:
         """Return 'normalized' value."""
         value = value * self._channel.multiplier / self._channel.divisor
         if value < 100 and self._channel.divisor > 1:
@@ -249,7 +258,7 @@ class SmartEnergyMetering(Sensor):
     SENSOR_ATTR = "instantaneous_demand"
     _device_class = DEVICE_CLASS_POWER
 
-    def formatter(self, value: int) -> Union[int, float]:
+    def formatter(self, value: int) -> int | float:
         """Pass through channel formatter."""
         return self._channel.formatter_function(value)
 
@@ -277,3 +286,25 @@ class Temperature(Sensor):
     _device_class = DEVICE_CLASS_TEMPERATURE
     _divisor = 100
     _unit = TEMP_CELSIUS
+
+
+@STRICT_MATCH(channel_names="carbon_dioxide_concentration")
+class CarbonDioxideConcentration(Sensor):
+    """Carbon Dioxide Concentration sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _device_class = DEVICE_CLASS_CO2
+    _decimals = 0
+    _multiplier = 1e6
+    _unit = CONCENTRATION_PARTS_PER_MILLION
+
+
+@STRICT_MATCH(channel_names="carbon_monoxide_concentration")
+class CarbonMonoxideConcentration(Sensor):
+    """Carbon Monoxide Concentration sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _device_class = DEVICE_CLASS_CO
+    _decimals = 0
+    _multiplier = 1e6
+    _unit = CONCENTRATION_PARTS_PER_MILLION

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ez a nyomtat\u00f3 m\u00e1r konfigur\u00e1lva van.",
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "unsupported_model": "Ez a nyomtat\u00f3modell nem t\u00e1mogatott."
         },
         "error": {

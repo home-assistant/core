@@ -11,12 +11,43 @@ import requests
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import update_coordinator
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
+
+KNOWN_ERRORS = [
+    (asyncio.TimeoutError, asyncio.TimeoutError, "Timeout fetching test data"),
+    (
+        requests.exceptions.Timeout,
+        requests.exceptions.Timeout,
+        "Timeout fetching test data",
+    ),
+    (
+        urllib.error.URLError("timed out"),
+        urllib.error.URLError,
+        "Timeout fetching test data",
+    ),
+    (aiohttp.ClientError, aiohttp.ClientError, "Error requesting test data"),
+    (
+        requests.exceptions.RequestException,
+        requests.exceptions.RequestException,
+        "Error requesting test data",
+    ),
+    (
+        urllib.error.URLError("something"),
+        urllib.error.URLError,
+        "Error requesting test data",
+    ),
+    (
+        update_coordinator.UpdateFailed,
+        update_coordinator.UpdateFailed,
+        "Error fetching test data",
+    ),
+]
 
 
 def get_crd(hass, update_interval):
@@ -113,15 +144,7 @@ async def test_request_refresh_no_auto_update(crd_without_update_interval):
 
 @pytest.mark.parametrize(
     "err_msg",
-    [
-        (asyncio.TimeoutError, "Timeout fetching test data"),
-        (requests.exceptions.Timeout, "Timeout fetching test data"),
-        (urllib.error.URLError("timed out"), "Timeout fetching test data"),
-        (aiohttp.ClientError, "Error requesting test data"),
-        (requests.exceptions.RequestException, "Error requesting test data"),
-        (urllib.error.URLError("something"), "Error requesting test data"),
-        (update_coordinator.UpdateFailed, "Error fetching test data"),
-    ],
+    KNOWN_ERRORS,
 )
 async def test_refresh_known_errors(err_msg, crd, caplog):
     """Test raising known errors."""
@@ -131,7 +154,8 @@ async def test_refresh_known_errors(err_msg, crd, caplog):
 
     assert crd.data is None
     assert crd.last_update_success is False
-    assert err_msg[1] in caplog.text
+    assert isinstance(crd.last_exception, err_msg[1])
+    assert err_msg[2] in caplog.text
 
 
 async def test_refresh_fail_unknown(crd, caplog):
@@ -310,3 +334,40 @@ async def test_stop_refresh_on_ha_stop(hass, crd):
     async_fire_time_changed(hass, utcnow() + update_interval)
     await hass.async_block_till_done()
     assert crd.data == 1
+
+    # Ensure we can still manually refresh after stop
+    await crd.async_refresh()
+    assert crd.data == 2
+
+    # ...and that the manual refresh doesn't setup another scheduled refresh
+    async_fire_time_changed(hass, utcnow() + update_interval)
+    await hass.async_block_till_done()
+    assert crd.data == 2
+
+
+@pytest.mark.parametrize(
+    "err_msg",
+    KNOWN_ERRORS,
+)
+async def test_async_config_entry_first_refresh_failure(err_msg, crd, caplog):
+    """Test async_config_entry_first_refresh raises ConfigEntryNotReady on failure.
+
+    Verify we do not log the exception since raising ConfigEntryNotReady
+    will be caught by config_entries.async_setup which will log it with
+    a decreasing level of logging once the first message is logged.
+    """
+    crd.update_method = AsyncMock(side_effect=err_msg[0])
+
+    with pytest.raises(ConfigEntryNotReady):
+        await crd.async_config_entry_first_refresh()
+
+    assert crd.last_update_success is False
+    assert isinstance(crd.last_exception, err_msg[1])
+    assert err_msg[2] not in caplog.text
+
+
+async def test_async_config_entry_first_refresh_success(crd, caplog):
+    """Test first refresh successfully."""
+    await crd.async_config_entry_first_refresh()
+
+    assert crd.last_update_success is True

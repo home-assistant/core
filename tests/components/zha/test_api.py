@@ -28,7 +28,6 @@ from homeassistant.components.zha.core.const import (
     ATTR_IEEE,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
-    ATTR_NAME,
     ATTR_NEIGHBORS,
     ATTR_QUIRK_APPLIED,
     CLUSTER_TYPE_IN,
@@ -38,6 +37,7 @@ from homeassistant.components.zha.core.const import (
     GROUP_IDS,
     GROUP_NAME,
 )
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import Context
 
 from .conftest import FIXTURE_GRP_ID, FIXTURE_GRP_NAME

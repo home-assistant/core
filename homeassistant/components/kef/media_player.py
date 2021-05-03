@@ -395,7 +395,7 @@ class KefMediaPlayer(MediaPlayerEntity):
         self._update_dsp_task_remover = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the DSP settings of the KEF device."""
         return self._dsp or {}
 

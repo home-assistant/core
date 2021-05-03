@@ -14,8 +14,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from .const import BASE_TOKEN_FILENAME
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import BASE_TOKEN_FILENAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +71,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for flume."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

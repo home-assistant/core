@@ -60,7 +60,7 @@ class RiscoBinarySensor(BinarySensorEntity, RiscoEntity):
         return binary_sensor_unique_id(self._risco, self._zone_id)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {"zone_id": self._zone_id, "bypassed": self._zone.bypassed}
 

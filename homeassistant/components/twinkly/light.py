@@ -1,8 +1,8 @@
 """The Twinkly light component."""
+from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Dict, Optional
 
 from aiohttp import ClientError
 
@@ -12,7 +12,8 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     ATTR_HOST,
@@ -30,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Setups an entity from a config entry (UI config flow)."""
 
@@ -45,7 +46,7 @@ class TwinklyLight(LightEntity):
     def __init__(
         self,
         conf: ConfigEntry,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
     ):
         """Initialize a TwinklyLight entity."""
         self._id = conf.data[CONF_ENTRY_ID]
@@ -84,7 +85,7 @@ class TwinklyLight(LightEntity):
         return self._is_available
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Id of the device."""
         return self._id
 
@@ -104,7 +105,7 @@ class TwinklyLight(LightEntity):
         return "mdi:string-lights"
 
     @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
+    def device_info(self) -> DeviceInfo | None:
         """Get device specific attributes."""
         return (
             {
@@ -123,12 +124,12 @@ class TwinklyLight(LightEntity):
         return self._is_on
 
     @property
-    def brightness(self) -> Optional[int]:
+    def brightness(self) -> int | None:
         """Return the brightness of the light."""
         return self._brightness
 
     @property
-    def state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return device specific state attributes."""
 
         attributes = self._attributes

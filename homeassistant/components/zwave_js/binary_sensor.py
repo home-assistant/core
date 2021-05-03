@@ -1,7 +1,8 @@
 """Representation of Z-Wave binary sensors."""
+from __future__ import annotations
 
 import logging
-from typing import Callable, List, Optional, TypedDict
+from typing import TypedDict
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
@@ -24,6 +25,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
@@ -56,14 +58,14 @@ class NotificationSensorMapping(TypedDict, total=False):
     """Represent a notification sensor mapping dict type."""
 
     type: int  # required
-    states: List[str]
+    states: list[str]
     device_class: str
     enabled: bool
 
 
 # Mappings for Notification sensors
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/notifications.json
-NOTIFICATION_SENSOR_MAPPINGS: List[NotificationSensorMapping] = [
+NOTIFICATION_SENSOR_MAPPINGS: list[NotificationSensorMapping] = [
     {
         # NotificationType 1: Smoke Alarm - State Id's 1 and 2 - Smoke detected
         "type": NOTIFICATION_SMOKE_ALARM,
@@ -201,13 +203,13 @@ class PropertySensorMapping(TypedDict, total=False):
     """Represent a property sensor mapping dict type."""
 
     property_name: str  # required
-    on_states: List[str]  # required
+    on_states: list[str]  # required
     device_class: str
     enabled: bool
 
 
 # Mappings for property sensors
-PROPERTY_SENSOR_MAPPINGS: List[PropertySensorMapping] = [
+PROPERTY_SENSOR_MAPPINGS: list[PropertySensorMapping] = [
     {
         "property_name": PROPERTY_DOOR_STATUS,
         "on_states": ["open"],
@@ -218,7 +220,9 @@ PROPERTY_SENSOR_MAPPINGS: List[PropertySensorMapping] = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave binary sensor from config entry."""
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
@@ -226,7 +230,7 @@ async def async_setup_entry(
     @callback
     def async_add_binary_sensor(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Binary Sensor."""
-        entities: List[BinarySensorEntity] = []
+        entities: list[BinarySensorEntity] = []
 
         if info.platform_hint == "notification":
             # Get all sensors from Notification CC states
@@ -268,12 +272,14 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         self._name = self.generate_name(include_value_name=True)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return if the sensor is on or off."""
+        if self.info.primary_value.value is None:
+            return None
         return bool(self.info.primary_value.value)
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return device class."""
         if self.info.primary_value.command_class == CommandClass.BATTERY:
             return DEVICE_CLASS_BATTERY
@@ -282,12 +288,12 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        if self.info.primary_value.command_class == CommandClass.SENSOR_BINARY:
-            # Legacy binary sensors are phased out (replaced by notification sensors)
-            # Disable by default to not confuse users
-            if self.info.node.device_class.generic != "Binary Sensor":
-                return False
-        return True
+        # Legacy binary sensors are phased out (replaced by notification sensors)
+        # Disable by default to not confuse users
+        return bool(
+            self.info.primary_value.command_class != CommandClass.SENSOR_BINARY
+            or self.info.node.device_class.generic.key == 0x20
+        )
 
 
 class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
@@ -312,12 +318,14 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         self._mapping_info = self._get_sensor_mapping()
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return if the sensor is on or off."""
+        if self.info.primary_value.value is None:
+            return None
         return int(self.info.primary_value.value) == int(self.state_key)
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return device class."""
         return self._mapping_info.get("device_class")
 
@@ -361,12 +369,14 @@ class ZWavePropertyBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         self._name = self.generate_name(include_value_name=True)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return if the sensor is on or off."""
+        if self.info.primary_value.value is None:
+            return None
         return self.info.primary_value.value in self._mapping_info["on_states"]
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return device class."""
         return self._mapping_info.get("device_class")
 

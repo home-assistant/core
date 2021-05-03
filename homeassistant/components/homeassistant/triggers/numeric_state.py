@@ -73,17 +73,22 @@ async def async_attach_trigger(
     template.attach(hass, time_delta)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     unsub_track_same = {}
-    entities_triggered = set()
+    armed_entities = set()
     period: dict = {}
     attribute = config.get(CONF_ATTRIBUTE)
     job = HassJob(action)
+
+    trigger_id = automation_info.get("trigger_id") if automation_info else None
+    _variables = {}
+    if automation_info:
+        _variables = automation_info.get("variables") or {}
 
     if value_template is not None:
         value_template.hass = hass
 
     def variables(entity_id):
         """Return a dict with trigger variables."""
-        return {
+        trigger_info = {
             "trigger": {
                 "platform": "numeric_state",
                 "entity_id": entity_id,
@@ -92,16 +97,26 @@ async def async_attach_trigger(
                 "attribute": attribute,
             }
         }
+        return {**_variables, **trigger_info}
 
     @callback
     def check_numeric_state(entity_id, from_s, to_s):
-        """Return True if criteria are now met."""
-        if to_s is None:
-            return False
-
+        """Return whether the criteria are met, raise ConditionError if unknown."""
         return condition.async_numeric_state(
             hass, to_s, below, above, value_template, variables(entity_id), attribute
         )
+
+    # Each entity that starts outside the range is already armed (ready to fire).
+    for entity_id in entity_ids:
+        try:
+            if not check_numeric_state(entity_id, None, entity_id):
+                armed_entities.add(entity_id)
+        except exceptions.ConditionError as ex:
+            _LOGGER.warning(
+                "Error initializing '%s' trigger: %s",
+                automation_info["name"],
+                ex,
+            )
 
     @callback
     def state_automation_listener(event):
@@ -125,17 +140,33 @@ async def async_attach_trigger(
                         "to_state": to_s,
                         "for": time_delta if not time_delta else period[entity_id],
                         "description": f"numeric state of {entity_id}",
+                        "id": trigger_id,
                     }
                 },
                 to_s.context,
             )
 
-        matching = check_numeric_state(entity_id, from_s, to_s)
+        @callback
+        def check_numeric_state_no_raise(entity_id, from_s, to_s):
+            """Return True if the criteria are now met, False otherwise."""
+            try:
+                return check_numeric_state(entity_id, from_s, to_s)
+            except exceptions.ConditionError:
+                # This is an internal same-state listener so we just drop the
+                # error. The same error will be reached and logged by the
+                # primary async_track_state_change_event() listener.
+                return False
+
+        try:
+            matching = check_numeric_state(entity_id, from_s, to_s)
+        except exceptions.ConditionError as ex:
+            _LOGGER.warning("Error in '%s' trigger: %s", automation_info["name"], ex)
+            return
 
         if not matching:
-            entities_triggered.discard(entity_id)
-        elif entity_id not in entities_triggered:
-            entities_triggered.add(entity_id)
+            armed_entities.add(entity_id)
+        elif entity_id in armed_entities:
+            armed_entities.discard(entity_id)
 
             if time_delta:
                 try:
@@ -148,7 +179,6 @@ async def async_attach_trigger(
                         automation_info["name"],
                         ex,
                     )
-                    entities_triggered.discard(entity_id)
                     return
 
                 unsub_track_same[entity_id] = async_track_same_state(
@@ -156,7 +186,7 @@ async def async_attach_trigger(
                     period[entity_id],
                     call_action,
                     entity_ids=entity_id,
-                    async_check_same_func=check_numeric_state,
+                    async_check_same_func=check_numeric_state_no_raise,
                 )
             else:
                 call_action()

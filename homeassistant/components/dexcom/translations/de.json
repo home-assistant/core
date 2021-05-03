@@ -12,8 +12,11 @@
             "user": {
                 "data": {
                     "password": "Passwort",
+                    "server": "Server",
                     "username": "Benutzername"
-                }
+                },
+                "description": "Anmeldedaten f\u00fcr Dexcom Share eingeben",
+                "title": "Dexcom-Integration einrichten"
             }
         }
     },

@@ -115,6 +115,19 @@ async def test_ensure_config_exists_uses_existing_config(hass):
     assert content == ""
 
 
+async def test_ensure_existing_files_is_not_overwritten(hass):
+    """Test that calling async_create_default_config does not overwrite existing files."""
+    create_file(SECRET_PATH)
+
+    await config_util.async_create_default_config(hass)
+
+    with open(SECRET_PATH) as fp:
+        content = fp.read()
+
+    # File created with create_file are empty
+    assert content == ""
+
+
 def test_load_yaml_config_converts_empty_files_to_dict():
     """Test that loading an empty file returns an empty dict."""
     create_file(YAML_PATH)
@@ -780,7 +793,6 @@ async def test_merge_id_schema(hass):
     types = {
         "panel_custom": "list",
         "group": "dict",
-        "script": "dict",
         "input_boolean": "dict",
         "shell_command": "dict",
         "qwikswitch": "dict",
@@ -1087,6 +1099,26 @@ async def test_component_config_exceptions(hass, caplog):
         "Error importing config platform test_domain: ModuleNotFoundError: No module named 'not_installed_something'"
         in caplog.text
     )
+
+    # get_component raising
+    caplog.clear()
+    assert (
+        await config_util.async_process_component_config(
+            hass,
+            {"test_domain": {}},
+            integration=Mock(
+                pkg_path="homeassistant.components.test_domain",
+                domain="test_domain",
+                get_component=Mock(
+                    side_effect=FileNotFoundError(
+                        "No such file or directory: b'liblibc.a'"
+                    )
+                ),
+            ),
+        )
+        is None
+    )
+    assert "Unable to import test_domain: No such file or directory" in caplog.text
 
 
 @pytest.mark.parametrize(

@@ -1,5 +1,5 @@
 """Support for deCONZ climate devices."""
-from typing import Optional
+from __future__ import annotations
 
 from pydeconz.sensor import Thermostat
 
@@ -26,7 +26,7 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import ATTR_OFFSET, ATTR_VALVE, NEW_SENSOR
+from .const import ATTR_LOCKED, ATTR_OFFSET, ATTR_VALVE, NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
@@ -97,7 +97,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if entities:
             async_add_entities(entities)
 
-    gateway.listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass, gateway.async_signal_new_device(NEW_SENSOR), async_add_climate
         )
@@ -195,7 +195,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     # Preset control
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return preset mode."""
         return DECONZ_TO_PRESET_MODE.get(self._device.preset)
 
@@ -244,7 +244,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         return TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the thermostat."""
         attr = {}
 
@@ -253,5 +253,8 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
 
         if self._device.valve is not None:
             attr[ATTR_VALVE] = self._device.valve
+
+        if self._device.locked is not None:
+            attr[ATTR_LOCKED] = self._device.locked
 
         return attr

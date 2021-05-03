@@ -31,6 +31,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
+    CONF_DEVICE_TOKEN,
     CONF_VOLUMES,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
@@ -38,8 +39,8 @@ from .const import (
     DEFAULT_TIMEOUT,
     DEFAULT_USE_SSL,
     DEFAULT_VERIFY_SSL,
+    DOMAIN,
 )
-from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +79,6 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @staticmethod
     @callback
@@ -180,7 +180,7 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_MAC: api.network.macs,
         }
         if otp_code:
-            config_data["device_token"] = api.device_token
+            config_data[CONF_DEVICE_TOKEN] = api.device_token
         if user_input.get(CONF_DISKS):
             config_data[CONF_DISKS] = user_input[CONF_DISKS]
         if user_input.get(CONF_VOLUMES):
@@ -208,7 +208,6 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NAME: friendly_name,
             CONF_HOST: parsed_url.hostname,
         }
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = self.discovered_conf
         return await self.async_step_user()
 

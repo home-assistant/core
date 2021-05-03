@@ -1,0 +1,61 @@
+{
+    "config": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Z-Wave JS \uc560\ub4dc\uc628\uc758 \uac80\uc0c9 \uc815\ubcf4\ub97c \uac00\uc838\uc624\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
+            "addon_info_failed": "Z-Wave JS \uc560\ub4dc\uc628\uc758 \uc815\ubcf4\ub97c \uac00\uc838\uc624\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
+            "addon_install_failed": "Z-Wave JS \uc560\ub4dc\uc628\uc744 \uc124\uce58\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
+            "addon_missing_discovery_info": "Z-Wave JS \uc560\ub4dc\uc628\uc758 \uac80\uc0c9 \uc815\ubcf4\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.",
+            "addon_set_config_failed": "Z-Wave JS \uad6c\uc131\uc744 \uc124\uc815\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
+            "addon_start_failed": "Z-Wave JS \uc560\ub4dc\uc628\uc744 \uc2dc\uc791\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "already_in_progress": "\uae30\uae30 \uad6c\uc131\uc774 \uc774\ubbf8 \uc9c4\ud589 \uc911\uc785\ub2c8\ub2e4",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "addon_start_failed": "Z-Wave JS \uc560\ub4dc\uc628\uc744 \uc2dc\uc791\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \uad6c\uc131 \ub0b4\uc6a9\uc744 \ud655\uc778\ud574\uc8fc\uc138\uc694.",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_ws_url": "\uc6f9 \uc18c\ucf13 URL \uc8fc\uc18c\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "progress": {
+            "install_addon": "Z-Wave JS \uc560\ub4dc\uc628\uc758 \uc124\uce58\uac00 \uc644\ub8cc\ub418\ub294 \ub3d9\uc548 \uc7a0\uc2dc \uae30\ub2e4\ub824\uc8fc\uc138\uc694. \uba87 \ubd84 \uc815\ub3c4 \uac78\ub9b4 \uc218 \uc788\uc2b5\ub2c8\ub2e4.",
+            "start_addon": "Z-Wave JS \uc560\ub4dc\uc628 \uc2dc\uc791\uc774 \uc644\ub8cc\ub418\ub294 \ub3d9\uc548 \uc7a0\uc2dc \uae30\ub2e4\ub824\uc8fc\uc138\uc694. \uba87 \ucd08 \uc815\ub3c4 \uac78\ub9b4 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "network_key": "\ub124\ud2b8\uc6cc\ud06c \ud0a4",
+                    "usb_path": "USB \uc7a5\uce58 \uacbd\ub85c"
+                },
+                "title": "Z-Wave JS \uc560\ub4dc\uc628\uc758 \uad6c\uc131\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694"
+            },
+            "hassio_confirm": {
+                "title": "Z-Wave JS \uc560\ub4dc\uc628\uc73c\ub85c Z-Wave JS \ud1b5\ud569 \uad6c\uc131\uc694\uc18c \uc124\uc815\ud558\uae30"
+            },
+            "install_addon": {
+                "title": "Z-Wave JS \uc560\ub4dc\uc628 \uc124\uce58\uac00 \uc2dc\uc791\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL \uc8fc\uc18c"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Z-Wave JS Supervisor \uc560\ub4dc\uc628\uc744 \uc0ac\uc6a9\ud558\uae30"
+                },
+                "description": "Z-Wave JS Supervisor \uc560\ub4dc\uc628\uc744 \uc0ac\uc6a9\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
+                "title": "\uc5f0\uacb0 \ubc29\ubc95 \uc120\ud0dd\ud558\uae30"
+            },
+            "start_addon": {
+                "title": "Z-Wave JS \uc560\ub4dc\uc628\uc774 \uc2dc\uc791\ud558\ub294 \uc911\uc785\ub2c8\ub2e4."
+            },
+            "user": {
+                "data": {
+                    "url": "URL \uc8fc\uc18c"
+                }
+            }
+        }
+    },
+    "title": "Z-Wave JS"
+}

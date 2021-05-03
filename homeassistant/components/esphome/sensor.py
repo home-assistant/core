@@ -1,17 +1,23 @@
 """Support for esphome sensors."""
+from __future__ import annotations
+
 import math
-from typing import Optional
 
 from aioesphomeapi import SensorInfo, SensorState, TextSensorInfo, TextSensorState
+import voluptuous as vol
 
+from homeassistant.components.sensor import DEVICE_CLASSES, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as cv
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
 
+ICON_SCHEMA = vol.Schema(cv.icon)
+
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up esphome sensors based on a config entry."""
     await platform_async_setup_entry(
@@ -38,7 +44,7 @@ async def async_setup_entry(
 # pylint: disable=invalid-overridden-method
 
 
-class EsphomeSensor(EsphomeEntity):
+class EsphomeSensor(EsphomeEntity, SensorEntity):
     """A sensor implementation for esphome."""
 
     @property
@@ -46,13 +52,15 @@ class EsphomeSensor(EsphomeEntity):
         return super()._static_info
 
     @property
-    def _state(self) -> Optional[SensorState]:
+    def _state(self) -> SensorState | None:
         return super()._state
 
     @property
     def icon(self) -> str:
         """Return the icon."""
-        return self._static_info.icon
+        if not self._static_info.icon or self._static_info.device_class:
+            return None
+        return ICON_SCHEMA(self._static_info.icon)
 
     @property
     def force_update(self) -> bool:
@@ -60,7 +68,7 @@ class EsphomeSensor(EsphomeEntity):
         return self._static_info.force_update
 
     @esphome_state_property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the state of the entity."""
         if math.isnan(self._state.state):
             return None
@@ -71,18 +79,27 @@ class EsphomeSensor(EsphomeEntity):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit the value is expressed in."""
+        if not self._static_info.unit_of_measurement:
+            return None
         return self._static_info.unit_of_measurement
 
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        if self._static_info.device_class not in DEVICE_CLASSES:
+            return None
+        return self._static_info.device_class
 
-class EsphomeTextSensor(EsphomeEntity):
+
+class EsphomeTextSensor(EsphomeEntity, SensorEntity):
     """A text sensor implementation for ESPHome."""
 
     @property
-    def _static_info(self) -> "TextSensorInfo":
+    def _static_info(self) -> TextSensorInfo:
         return super()._static_info
 
     @property
-    def _state(self) -> Optional["TextSensorState"]:
+    def _state(self) -> TextSensorState | None:
         return super()._state
 
     @property
@@ -91,7 +108,7 @@ class EsphomeTextSensor(EsphomeEntity):
         return self._static_info.icon
 
     @esphome_state_property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the state of the entity."""
         if self._state.missing_state:
             return None

@@ -1,6 +1,7 @@
 """Generate dhcp file."""
+from __future__ import annotations
+
 import json
-from typing import Dict, List
 
 from .model import Config, Integration
 
@@ -16,7 +17,7 @@ DHCP = {}
 """.strip()
 
 
-def generate_and_validate(integrations: List[Dict[str, str]]):
+def generate_and_validate(integrations: list[dict[str, str]]):
     """Validate and generate dhcp data."""
     match_list = []
 
@@ -37,7 +38,7 @@ def generate_and_validate(integrations: List[Dict[str, str]]):
     return BASE.format(json.dumps(match_list, indent=4))
 
 
-def validate(integrations: Dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config):
     """Validate dhcp file."""
     dhcp_path = config.root / "homeassistant/generated/dhcp.py"
     config.cache["dhcp"] = content = generate_and_validate(integrations)
@@ -56,7 +57,7 @@ def validate(integrations: Dict[str, Integration], config: Config):
         return
 
 
-def generate(integrations: Dict[str, Integration], config: Config):
+def generate(integrations: dict[str, Integration], config: Config):
     """Generate dhcp file."""
     dhcp_path = config.root / "homeassistant/generated/dhcp.py"
     with open(str(dhcp_path), "w") as fp:

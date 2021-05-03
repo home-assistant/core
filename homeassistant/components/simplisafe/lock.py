@@ -55,6 +55,9 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
             LOGGER.error('Error while locking "%s": %s', self._lock.name, err)
             return
 
+        self._is_locked = True
+        self.async_write_ha_state()
+
     async def async_unlock(self, **kwargs):
         """Unlock the lock."""
         try:
@@ -62,6 +65,9 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
         except SimplipyError as err:
             LOGGER.error('Error while unlocking "%s": %s', self._lock.name, err)
             return
+
+        self._is_locked = False
+        self.async_write_ha_state()
 
     @callback
     def async_update_from_rest_api(self):

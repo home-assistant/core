@@ -1,78 +1,99 @@
 """Support for Verisure Smartplugs."""
+from __future__ import annotations
+
+from collections.abc import Iterable
 from time import monotonic
+from typing import Callable
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CONF_SMARTPLUGS, HUB as hub
+from .const import CONF_GIID, DOMAIN
+from .coordinator import VerisureDataUpdateCoordinator
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Verisure switch platform."""
-    if not int(hub.config.get(CONF_SMARTPLUGS, 1)):
-        return False
-
-    hub.update_overview()
-    switches = []
-    switches.extend(
-        [
-            VerisureSmartplug(device_label)
-            for device_label in hub.get("$.smartPlugs[*].deviceLabel")
-        ]
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[Iterable[Entity]], None],
+) -> None:
+    """Set up Verisure alarm control panel from a config entry."""
+    coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        VerisureSmartplug(coordinator, serial_number)
+        for serial_number in coordinator.data["smart_plugs"]
     )
-    add_entities(switches)
 
 
-class VerisureSmartplug(SwitchEntity):
+class VerisureSmartplug(CoordinatorEntity, SwitchEntity):
     """Representation of a Verisure smartplug."""
 
-    def __init__(self, device_id):
+    coordinator: VerisureDataUpdateCoordinator
+
+    def __init__(
+        self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
+    ) -> None:
         """Initialize the Verisure device."""
-        self._device_label = device_id
+        super().__init__(coordinator)
+        self.serial_number = serial_number
         self._change_timestamp = 0
         self._state = False
 
     @property
-    def name(self):
-        """Return the name or location of the smartplug."""
-        return hub.get_first(
-            "$.smartPlugs[?(@.deviceLabel == '%s')].area", self._device_label
-        )
+    def name(self) -> str:
+        """Return the name of this entity."""
+        return self.coordinator.data["smart_plugs"][self.serial_number]["area"]
 
     @property
-    def is_on(self):
+    def unique_id(self) -> str:
+        """Return the unique ID for this entity."""
+        return self.serial_number
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information about this entity."""
+        area = self.coordinator.data["smart_plugs"][self.serial_number]["area"]
+        return {
+            "name": area,
+            "suggested_area": area,
+            "manufacturer": "Verisure",
+            "model": "SmartPlug",
+            "identifiers": {(DOMAIN, self.serial_number)},
+            "via_device": (DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+        }
+
+    @property
+    def is_on(self) -> bool:
         """Return true if on."""
         if monotonic() - self._change_timestamp < 10:
             return self._state
         self._state = (
-            hub.get_first(
-                "$.smartPlugs[?(@.deviceLabel == '%s')].currentState",
-                self._device_label,
-            )
+            self.coordinator.data["smart_plugs"][self.serial_number]["currentState"]
             == "ON"
         )
         return self._state
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return (
-            hub.get_first("$.smartPlugs[?(@.deviceLabel == '%s')]", self._device_label)
-            is not None
+            super().available
+            and self.serial_number in self.coordinator.data["smart_plugs"]
         )
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs) -> None:
         """Set smartplug status on."""
-        hub.session.set_smartplug_state(self._device_label, True)
+        self.coordinator.verisure.set_smartplug_state(self.serial_number, True)
         self._state = True
         self._change_timestamp = monotonic()
+        self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs) -> None:
         """Set smartplug status off."""
-        hub.session.set_smartplug_state(self._device_label, False)
+        self.coordinator.verisure.set_smartplug_state(self.serial_number, False)
         self._state = False
         self._change_timestamp = monotonic()
-
-    # pylint: disable=no-self-use
-    def update(self):
-        """Get the latest date of the smartplug."""
-        hub.update_overview()
+        self.schedule_update_ha_state()

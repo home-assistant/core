@@ -1,15 +1,19 @@
 """The Tesla Powerwall integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
 import requests
-from tesla_powerwall import MissingAttributeError, Powerwall, PowerwallUnreachableError
+from tesla_powerwall import (
+    AccessDeniedError,
+    MissingAttributeError,
+    Powerwall,
+    PowerwallUnreachableError,
+)
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -36,13 +40,6 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 PLATFORMS = ["binary_sensor", "sensor"]
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Tesla Powerwall component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
 
 
 async def _migrate_old_unique_ids(hass, entry_id, powerwall_data):
@@ -91,13 +88,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     entry_id = entry.entry_id
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(entry_id, {})
     http_session = requests.Session()
+
+    password = entry.data.get(CONF_PASSWORD)
     power_wall = Powerwall(entry.data[CONF_IP_ADDRESS], http_session=http_session)
     try:
-        await hass.async_add_executor_job(power_wall.detect_and_pin_version)
-        await hass.async_add_executor_job(_fetch_powerwall_data, power_wall)
-        powerwall_data = await hass.async_add_executor_job(call_base_info, power_wall)
+        powerwall_data = await hass.async_add_executor_job(
+            _login_and_fetch_base_info, power_wall, password
+        )
     except PowerwallUnreachableError as err:
         http_session.close()
         raise ConfigEntryNotReady from err
@@ -105,6 +105,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         http_session.close()
         await _async_handle_api_changed_error(hass, err)
         return False
+    except AccessDeniedError as err:
+        _LOGGER.debug("Authentication failed", exc_info=err)
+        http_session.close()
+        raise ConfigEntryAuthFailed from err
 
     await _migrate_old_unique_ids(hass, entry_id, powerwall_data)
 
@@ -112,21 +116,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         """Fetch data from API endpoint."""
         # Check if we had an error before
         _LOGGER.debug("Checking if update failed")
-        if not hass.data[DOMAIN][entry.entry_id][POWERWALL_API_CHANGED]:
-            _LOGGER.debug("Updating data")
-            try:
-                return await hass.async_add_executor_job(
-                    _fetch_powerwall_data, power_wall
-                )
-            except PowerwallUnreachableError as err:
-                raise UpdateFailed("Unable to fetch data from powerwall") from err
-            except MissingAttributeError as err:
-                await _async_handle_api_changed_error(hass, err)
-                hass.data[DOMAIN][entry.entry_id][POWERWALL_API_CHANGED] = True
-                # Returns the cached data. This data can also be None
-                return hass.data[DOMAIN][entry.entry_id][POWERWALL_COORDINATOR].data
-        else:
+        if hass.data[DOMAIN][entry.entry_id][POWERWALL_API_CHANGED]:
             return hass.data[DOMAIN][entry.entry_id][POWERWALL_COORDINATOR].data
+
+        _LOGGER.debug("Updating data")
+        try:
+            return await _async_update_powerwall_data(hass, entry, power_wall)
+        except AccessDeniedError as err:
+            if password is None:
+                raise ConfigEntryAuthFailed from err
+
+            # If the session expired, relogin, and try again
+            try:
+                await hass.async_add_executor_job(power_wall.login, "", password)
+                return await _async_update_powerwall_data(hass, entry, power_wall)
+            except AccessDeniedError as ex:
+                raise ConfigEntryAuthFailed from ex
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -146,14 +151,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         }
     )
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
+
+
+async def _async_update_powerwall_data(
+    hass: HomeAssistant, entry: ConfigEntry, power_wall: Powerwall
+):
+    """Fetch updated powerwall data."""
+    try:
+        return await hass.async_add_executor_job(_fetch_powerwall_data, power_wall)
+    except PowerwallUnreachableError as err:
+        raise UpdateFailed("Unable to fetch data from powerwall") from err
+    except MissingAttributeError as err:
+        await _async_handle_api_changed_error(hass, err)
+        hass.data[DOMAIN][entry.entry_id][POWERWALL_API_CHANGED] = True
+        # Returns the cached data. This data can also be None
+        return hass.data[DOMAIN][entry.entry_id][POWERWALL_COORDINATOR].data
+
+
+def _login_and_fetch_base_info(power_wall: Powerwall, password: str):
+    """Login to the powerwall and fetch the base info."""
+    if password is not None:
+        power_wall.login("", password)
+    power_wall.detect_and_pin_version()
+    return call_base_info(power_wall)
 
 
 def call_base_info(power_wall):
@@ -181,14 +206,7 @@ def _fetch_powerwall_data(power_wall):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     hass.data[DOMAIN][entry.entry_id][POWERWALL_HTTP_SESSION].close()
 

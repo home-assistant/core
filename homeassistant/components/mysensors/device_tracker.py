@@ -3,15 +3,18 @@ from homeassistant.components import mysensors
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.components.mysensors import DevId, on_unload
 from homeassistant.components.mysensors.const import ATTR_GATEWAY_ID, GatewayId
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
 
 
 async def async_setup_scanner(
-    hass: HomeAssistantType, config, async_see, discovery_info=None
+    hass: HomeAssistant, config, async_see, discovery_info=None
 ):
     """Set up the MySensors device scanner."""
+    if not discovery_info:
+        return False
+
     new_devices = mysensors.setup_mysensors_platform(
         hass,
         DOMAIN,
@@ -50,7 +53,7 @@ async def async_setup_scanner(
 class MySensorsDeviceScanner(mysensors.device.MySensorsDevice):
     """Represent a MySensors scanner."""
 
-    def __init__(self, hass: HomeAssistantType, async_see, *args):
+    def __init__(self, hass: HomeAssistant, async_see, *args):
         """Set up instance."""
         super().__init__(*args)
         self.async_see = async_see
@@ -69,5 +72,5 @@ class MySensorsDeviceScanner(mysensors.device.MySensorsDevice):
             host_name=self.name,
             gps=(latitude, longitude),
             battery=node.battery_level,
-            attributes=self.device_state_attributes,
+            attributes=self.extra_state_attributes,
         )

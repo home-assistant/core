@@ -1,9 +1,7 @@
 name: Report an issue with Home Assistant Core
-about: Report an issue with Home Assistant Core.
-title: ""
-issue_body: true
-inputs:
-  - type: description
+description: Report an issue with Home Assistant Core.
+body:
+  - type: markdown
     attributes:
       value: |
         This issue form is for reporting bugs only!
@@ -12,53 +10,56 @@ inputs:
 
         [fr]: https://community.home-assistant.io/c/feature-requests
   - type: textarea
+    validations:
+      required: true
     attributes:
       label: The problem
-      required: true
       description: >-
         Describe the issue you are experiencing here to communicate to the
         maintainers. Tell us what you were trying to do and what happened.
 
         Provide a clear and concise description of what the problem is.
-  - type: description
+  - type: markdown
     attributes:
       value: |
         ## Environment
   - type: input
+    id: version
+    validations:
+      required: true
     attributes:
       label: What is version of Home Assistant Core has the issue?
-      required: true
       placeholder: core-
       description: >
         Can be found in the Configuration panel -> Info.
   - type: input
     attributes:
       label: What was the last working version of Home Assistant Core?
-      required: false
       placeholder: core-
       description: >
         If known, otherwise leave blank.
   - type: dropdown
+    validations:
+      required: true
     attributes:
       label: What type of installation are you running?
-      required: true
       description: >
         If you don't know, you can find it in: Configuration panel -> Info.
-      choices:
+      options:
         - Home Assistant OS
         - Home Assistant Container
         - Home Assistant Supervised
         - Home Assistant Core
   - type: input
+    id: integration_name
     attributes:
       label: Integration causing the issue
-      required: false
       description: >
         The name of the integration, for example, Automation or Philips Hue.
   - type: input
+    id: integration_link
     attributes:
       label: Link to integration documentation on our website
-      required: false
       placeholder: "https://www.home-assistant.io/integrations/..."
       description: |
         Providing a link [to the documentation][docs] help us categorizing the
@@ -66,39 +67,26 @@ inputs:
 
         [docs]: https://www.home-assistant.io/integrations
 
-  - type: description
+  - type: markdown
     attributes:
       value: |
         # Details
   - type: textarea
     attributes:
       label: Example YAML snippet
-      required: false
       description: |
         If this issue has an example piece of YAML that can help reproducing this problem, please provide.
         This can be an piece of YAML from, e.g., an automation, script, scene or configuration.
-      value: |
-        ```yaml
-        # Put your YAML below this line
-
-        ```
+      render: yaml
   - type: textarea
     attributes:
       label: Anything in the logs that might be useful for us?
       description: For example, error message, or stack traces.
-      required: false
-      value: |
-        ```txt
-        # Put your logs below this line
-
-        ```
-  - type: description
+      render: txt
+  - type: textarea
     attributes:
-      value: |
-        ## Additional information
-  - type: description
-    attributes:
-      value: >
+      label: Additional information
+      description: >
         If you have any additional information for us, use the field below.
         Please note, you can attach screenshots or screen recordings here, by
         dragging and dropping files in the field below.

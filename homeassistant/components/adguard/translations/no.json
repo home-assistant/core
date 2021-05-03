@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert",
             "existing_instance_updated": "Oppdatert eksisterende konfigurasjon.",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
@@ -9,8 +10,8 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Vil du konfigurere Home Assistant til \u00e5 koble til AdGuard Home gitt av Hass.io-tillegg {addon}?",
-                "title": "AdGuard Home via Hass.io-tillegg"
+                "description": "Vil du konfigurere Home Assistant til \u00e5 koble til AdGuard Home levert av tillegget: {addon} ?",
+                "title": "AdGuard Home via Home Assistant-tillegg"
             },
             "user": {
                 "data": {

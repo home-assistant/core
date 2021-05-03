@@ -1,8 +1,11 @@
 """Auth providers for Home Assistant."""
+from __future__ import annotations
+
+from collections.abc import Mapping
 import importlib
 import logging
 import types
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -10,6 +13,7 @@ from voluptuous.humanize import humanize_error
 from homeassistant import data_entry_flow, requirements
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
@@ -40,7 +44,7 @@ class AuthProvider:
     DEFAULT_TITLE = "Unnamed auth provider"
 
     def __init__(
-        self, hass: HomeAssistant, store: AuthStore, config: Dict[str, Any]
+        self, hass: HomeAssistant, store: AuthStore, config: dict[str, Any]
     ) -> None:
         """Initialize an auth provider."""
         self.hass = hass
@@ -48,7 +52,7 @@ class AuthProvider:
         self.config = config
 
     @property
-    def id(self) -> Optional[str]:
+    def id(self) -> str | None:
         """Return id of the auth provider.
 
         Optional, can be None.
@@ -70,7 +74,7 @@ class AuthProvider:
         """Return whether multi-factor auth supported by the auth provider."""
         return True
 
-    async def async_credentials(self) -> List[Credentials]:
+    async def async_credentials(self) -> list[Credentials]:
         """Return all credentials of this provider."""
         users = await self.store.async_get_users()
         return [
@@ -84,7 +88,7 @@ class AuthProvider:
         ]
 
     @callback
-    def async_create_credentials(self, data: Dict[str, str]) -> Credentials:
+    def async_create_credentials(self, data: dict[str, str]) -> Credentials:
         """Create credentials."""
         return Credentials(
             auth_provider_type=self.type, auth_provider_id=self.id, data=data
@@ -92,7 +96,7 @@ class AuthProvider:
 
     # Implement by extending class
 
-    async def async_login_flow(self, context: Optional[Dict]) -> "LoginFlow":
+    async def async_login_flow(self, context: dict | None) -> LoginFlow:
         """Return the data flow for logging in with auth provider.
 
         Auth provider should extend LoginFlow and return an instance.
@@ -100,7 +104,7 @@ class AuthProvider:
         raise NotImplementedError
 
     async def async_get_or_create_credentials(
-        self, flow_result: Dict[str, str]
+        self, flow_result: Mapping[str, str]
     ) -> Credentials:
         """Get credentials based on the flow result."""
         raise NotImplementedError
@@ -119,7 +123,7 @@ class AuthProvider:
 
     @callback
     def async_validate_refresh_token(
-        self, refresh_token: RefreshToken, remote_ip: Optional[str] = None
+        self, refresh_token: RefreshToken, remote_ip: str | None = None
     ) -> None:
         """Verify a refresh token is still valid.
 
@@ -129,7 +133,7 @@ class AuthProvider:
 
 
 async def auth_provider_from_config(
-    hass: HomeAssistant, store: AuthStore, config: Dict[str, Any]
+    hass: HomeAssistant, store: AuthStore, config: dict[str, Any]
 ) -> AuthProvider:
     """Initialize an auth provider from a config."""
     provider_name = config[CONF_TYPE]
@@ -186,17 +190,17 @@ class LoginFlow(data_entry_flow.FlowHandler):
     def __init__(self, auth_provider: AuthProvider) -> None:
         """Initialize the login flow."""
         self._auth_provider = auth_provider
-        self._auth_module_id: Optional[str] = None
+        self._auth_module_id: str | None = None
         self._auth_manager = auth_provider.hass.auth
-        self.available_mfa_modules: Dict[str, str] = {}
+        self.available_mfa_modules: dict[str, str] = {}
         self.created_at = dt_util.utcnow()
         self.invalid_mfa_times = 0
-        self.user: Optional[User] = None
-        self.credential: Optional[Credentials] = None
+        self.user: User | None = None
+        self.credential: Credentials | None = None
 
     async def async_step_init(
-        self, user_input: Optional[Dict[str, str]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Handle the first step of login flow.
 
         Return self.async_show_form(step_id='init') if user_input is None.
@@ -205,8 +209,8 @@ class LoginFlow(data_entry_flow.FlowHandler):
         raise NotImplementedError
 
     async def async_step_select_mfa_module(
-        self, user_input: Optional[Dict[str, str]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Handle the step of select mfa module."""
         errors = {}
 
@@ -230,8 +234,8 @@ class LoginFlow(data_entry_flow.FlowHandler):
         )
 
     async def async_step_mfa(
-        self, user_input: Optional[Dict[str, str]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Handle the step of mfa validation."""
         assert self.credential
         assert self.user
@@ -271,7 +275,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
             if not errors:
                 return await self.async_finish(self.credential)
 
-        description_placeholders: Dict[str, Optional[str]] = {
+        description_placeholders: dict[str, str | None] = {
             "mfa_module_name": auth_module.name,
             "mfa_module_id": auth_module.id,
         }
@@ -283,6 +287,6 @@ class LoginFlow(data_entry_flow.FlowHandler):
             errors=errors,
         )
 
-    async def async_finish(self, flow_result: Any) -> Dict:
+    async def async_finish(self, flow_result: Any) -> FlowResult:
         """Handle the pass of login flow."""
         return self.async_create_entry(title=self._auth_provider.name, data=flow_result)

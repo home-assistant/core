@@ -10,12 +10,7 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
-from .const import (  # pylint: disable=unused-import
-    CONF_THRESHOLD,
-    DEFAULT_NAME,
-    DEFAULT_THRESHOLD,
-    DOMAIN,
-)
+from .const import CONF_THRESHOLD, DEFAULT_NAME, DEFAULT_THRESHOLD, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +19,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NOAA Aurora Integration."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @staticmethod
     @callback

@@ -21,8 +21,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up TotalConnect alarm panels based on a config entry."""
@@ -44,14 +42,20 @@ class TotalConnectAlarm(alarm.AlarmControlPanelEntity):
         """Initialize the TotalConnect status."""
         self._name = name
         self._location_id = location_id
+        self._unique_id = str(location_id)
         self._client = client
         self._state = None
-        self._device_state_attributes = {}
+        self._extra_state_attributes = {}
 
     @property
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id."""
+        return self._unique_id
 
     @property
     def state(self):
@@ -64,9 +68,9 @@ class TotalConnectAlarm(alarm.AlarmControlPanelEntity):
         return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
-        return self._device_state_attributes
+        return self._extra_state_attributes
 
     def update(self):
         """Return the state of the device."""
@@ -111,7 +115,7 @@ class TotalConnectAlarm(alarm.AlarmControlPanelEntity):
             state = None
 
         self._state = state
-        self._device_state_attributes = attr
+        self._extra_state_attributes = attr
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""

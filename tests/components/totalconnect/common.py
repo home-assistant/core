@@ -3,14 +3,16 @@ from unittest.mock import patch
 
 from total_connect_client import TotalConnectClient
 
-from homeassistant.components.totalconnect import DOMAIN
+from homeassistant.components.totalconnect.const import CONF_USERCODES, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
+LOCATION_ID = "123456"
+
 LOCATION_INFO_BASIC_NORMAL = {
-    "LocationID": "123456",
+    "LocationID": LOCATION_ID,
     "LocationName": "test",
     "SecurityDeviceID": "987654",
     "PhotoURL": "http://www.example.com/some/path/to/file.jpg",
@@ -29,12 +31,18 @@ USER = {
 }
 
 RESPONSE_AUTHENTICATE = {
-    "ResultCode": 0,
+    "ResultCode": TotalConnectClient.TotalConnectClient.SUCCESS,
     "SessionID": 1,
     "Locations": LOCATIONS,
     "ModuleFlags": MODULE_FLAGS,
     "UserInfo": USER,
 }
+
+RESPONSE_AUTHENTICATE_FAILED = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.BAD_USER_OR_PASSWORD,
+    "ResultData": "test bad authentication",
+}
+
 
 PARTITION_DISARMED = {
     "PartitionID": "1",
@@ -101,6 +109,32 @@ RESPONSE_DISARM_FAILURE = {
     "ResultCode": TotalConnectClient.TotalConnectClient.COMMAND_FAILED,
     "ResultData": "Command Failed",
 }
+RESPONSE_USER_CODE_INVALID = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.USER_CODE_INVALID,
+    "ResultData": "testing user code invalid",
+}
+RESPONSE_SUCCESS = {"ResultCode": TotalConnectClient.TotalConnectClient.SUCCESS}
+
+USERNAME = "username@me.com"
+PASSWORD = "password"
+USERCODES = {123456: "7890"}
+CONFIG_DATA = {
+    CONF_USERNAME: USERNAME,
+    CONF_PASSWORD: PASSWORD,
+    CONF_USERCODES: USERCODES,
+}
+CONFIG_DATA_NO_USERCODES = {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+
+
+USERNAME = "username@me.com"
+PASSWORD = "password"
+USERCODES = {123456: "7890"}
+CONFIG_DATA = {
+    CONF_USERNAME: USERNAME,
+    CONF_PASSWORD: PASSWORD,
+    CONF_USERCODES: USERCODES,
+}
+CONFIG_DATA_NO_USERCODES = {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
 
 
 async def setup_platform(hass, platform):
@@ -108,7 +142,7 @@ async def setup_platform(hass, platform):
     # first set up a config entry and add it to hass
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_USERNAME: "user@email.com", CONF_PASSWORD: "password"},
+        data=CONFIG_DATA,
     )
     mock_entry.add_to_hass(hass)
 

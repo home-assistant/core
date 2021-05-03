@@ -1,6 +1,5 @@
 """Test Hue init with multiple bridges."""
-
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohue.groups import Groups
 from aiohue.lights import Lights
@@ -8,10 +7,11 @@ from aiohue.scenes import Scenes
 from aiohue.sensors import Sensors
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components import hue
 from homeassistant.components.hue import sensor_base as hue_sensor_base
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
 async def setup_component(hass):
@@ -109,10 +109,9 @@ async def test_hue_activate_scene_zero_responds(
 async def setup_bridge(hass, mock_bridge, config_entry):
     """Load the Hue light platform with the provided bridge."""
     mock_bridge.config_entry = config_entry
-    hass.data[hue.DOMAIN][config_entry.entry_id] = mock_bridge
-    await hass.config_entries.async_forward_entry_setup(config_entry, "light")
-    # To flush out the service call to update the group
-    await hass.async_block_till_done()
+    config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.hue.HueBridge", return_value=mock_bridge):
+        await hass.config_entries.async_setup(config_entry.entry_id)
 
 
 @pytest.fixture
@@ -129,14 +128,9 @@ def mock_config_entry2(hass):
 
 def create_config_entry():
     """Mock a config entry."""
-    return config_entries.ConfigEntry(
-        1,
-        hue.DOMAIN,
-        "Mock Title",
-        {"host": "mock-host"},
-        "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
-        system_options={},
+    return MockConfigEntry(
+        domain=hue.DOMAIN,
+        data={"host": "mock-host"},
     )
 
 
@@ -163,6 +157,7 @@ def create_mock_bridge(hass):
         api=Mock(),
         reset_jobs=[],
         spec=hue.HueBridge,
+        async_setup=AsyncMock(return_value=True),
     )
     bridge.sensor_manager = hue_sensor_base.SensorManager(bridge)
     bridge.mock_requests = []

@@ -193,6 +193,19 @@ DEMO_DEVICES = [
         "willReportState": False,
     },
     {
+        "id": "media_player.kitchen",
+        "name": {"name": "Kitchen"},
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Volume",
+            "action.devices.traits.Modes",
+            "action.devices.traits.TransportControl",
+            "action.devices.traits.MediaState",
+        ],
+        "type": "action.devices.types.SETTOP",
+        "willReportState": False,
+    },
+    {
         "id": "media_player.living_room",
         "name": {"name": "Living Room"},
         "traits": [
@@ -276,7 +289,15 @@ DEMO_DEVICES = [
         "type": "action.devices.types.THERMOSTAT",
         "willReportState": False,
         "attributes": {
-            "availableThermostatModes": "off,heat,cool,heatcool,auto,dry,fan-only",
+            "availableThermostatModes": [
+                "off",
+                "heat",
+                "cool",
+                "heatcool",
+                "auto",
+                "dry",
+                "fan-only",
+            ],
             "thermostatTemperatureUnit": "C",
         },
     },
@@ -357,6 +378,28 @@ DEMO_DEVICES = [
         "name": {"name": "Alarm"},
         "traits": ["action.devices.traits.ArmDisarm"],
         "type": "action.devices.types.SECURITYSYSTEM",
+        "willReportState": False,
+    },
+    {
+        "id": "light.living_room_rgbww_lights",
+        "name": {"name": "Living Room RGBWW Lights"},
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Brightness",
+            "action.devices.traits.ColorSetting",
+        ],
+        "type": "action.devices.types.LIGHT",
+        "willReportState": False,
+    },
+    {
+        "id": "light.office_rgbw_lights",
+        "name": {"name": "Office RGBW Lights"},
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Brightness",
+            "action.devices.traits.ColorSetting",
+        ],
+        "type": "action.devices.types.LIGHT",
         "willReportState": False,
     },
 ]

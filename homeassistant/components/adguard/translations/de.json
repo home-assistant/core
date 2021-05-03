@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Der Dienst ist bereits konfiguriert",
             "existing_instance_updated": "Bestehende Konfiguration wurde aktualisiert.",
             "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
@@ -9,8 +10,8 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass eine Verbindung mit AdGuard Home als Hass.io-Add-On hergestellt wird: {addon}?",
-                "title": "AdGuard Home \u00fcber das Hass.io Add-on"
+                "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass eine Verbindung mit AdGuard Home als Supervisor-Add-On hergestellt wird: {addon}?",
+                "title": "AdGuard Home \u00fcber das Supervisor Add-on"
             },
             "user": {
                 "data": {

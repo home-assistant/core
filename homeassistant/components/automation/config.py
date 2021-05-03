@@ -1,5 +1,6 @@
 """Config validation helper for the automation integration."""
 import asyncio
+from contextlib import suppress
 
 import voluptuous as vol
 
@@ -7,8 +8,15 @@ from homeassistant.components import blueprint
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
+from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
 from homeassistant.config import async_log_exception, config_without_domain
-from homeassistant.const import CONF_ALIAS, CONF_CONDITION, CONF_ID, CONF_VARIABLES
+from homeassistant.const import (
+    CONF_ALIAS,
+    CONF_CONDITION,
+    CONF_DESCRIPTION,
+    CONF_ID,
+    CONF_VARIABLES,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, config_validation as cv, script
 from homeassistant.helpers.condition import async_validate_condition_config
@@ -17,10 +25,11 @@ from homeassistant.loader import IntegrationNotFound
 
 from .const import (
     CONF_ACTION,
-    CONF_DESCRIPTION,
     CONF_HIDE_ENTITY,
     CONF_INITIAL_STATE,
+    CONF_TRACE,
     CONF_TRIGGER,
+    CONF_TRIGGER_VARIABLES,
     DOMAIN,
 )
 from .helpers import async_get_blueprints
@@ -38,11 +47,13 @@ PLATFORM_SCHEMA = vol.All(
             CONF_ID: str,
             CONF_ALIAS: cv.string,
             vol.Optional(CONF_DESCRIPTION): cv.string,
+            vol.Optional(CONF_TRACE, default={}): TRACE_CONFIG_SCHEMA,
             vol.Optional(CONF_INITIAL_STATE): cv.boolean,
             vol.Optional(CONF_HIDE_ENTITY): cv.boolean,
             vol.Required(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
             vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
             vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+            vol.Optional(CONF_TRIGGER_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
             vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
         },
         script.SCRIPT_MODE_SINGLE,
@@ -77,8 +88,18 @@ async def async_validate_config_item(hass, config, full_config=None):
     return config
 
 
+class AutomationConfig(dict):
+    """Dummy class to allow adding attributes."""
+
+    raw_config = None
+
+
 async def _try_async_validate_config_item(hass, config, full_config=None):
     """Validate config item."""
+    raw_config = None
+    with suppress(ValueError):
+        raw_config = dict(config)
+
     try:
         config = await async_validate_config_item(hass, config, full_config)
     except (
@@ -90,6 +111,11 @@ async def _try_async_validate_config_item(hass, config, full_config=None):
         async_log_exception(ex, DOMAIN, full_config or config, hass)
         return None
 
+    if isinstance(config, blueprint.BlueprintInputs):
+        return config
+
+    config = AutomationConfig(config)
+    config.raw_config = raw_config
     return config
 
 

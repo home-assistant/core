@@ -7,12 +7,15 @@
             "accessory_mode": {
                 "data": {
                     "entity_id": "Entidad"
-                }
+                },
+                "description": "Elija la entidad que desea incluir. En el modo accesorio, s\u00f3lo se incluye una \u00fanica entidad.",
+                "title": "Seleccione la entidad a incluir"
             },
             "bridge_mode": {
                 "data": {
                     "include_domains": "Dominios a incluir"
                 },
+                "description": "Elija los dominios que se van a incluir. Se incluir\u00e1n todas las entidades admitidas en el dominio.",
                 "title": "Selecciona los dominios a incluir"
             },
             "pairing": {

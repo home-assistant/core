@@ -1,3 +1,8 @@
 {
+    "device_automation": {
+        "action_type": {
+            "set_value": "Establecer valor para {entity_name}"
+        }
+    },
     "title": "N\u00famero"
 }

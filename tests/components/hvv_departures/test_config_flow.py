@@ -11,7 +11,7 @@ from homeassistant.components.hvv_departures.const import (
     CONF_STATION,
     DOMAIN,
 )
-from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_OFFSET, CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry, load_fixture
@@ -38,8 +38,6 @@ async def test_user_flow(hass):
     ), patch(
         "homeassistant.components.hvv_departures.hub.GTI.stationInformation",
         return_value=FIXTURE_STATION_INFORMATION,
-    ), patch(
-        "homeassistant.components.hvv_departures.async_setup", return_value=True
     ), patch(
         "homeassistant.components.hvv_departures.async_setup_entry",
         return_value=True,
@@ -101,8 +99,6 @@ async def test_user_flow_no_results(hass):
     ), patch(
         "homeassistant.components.hvv_departures.hub.GTI.checkName",
         return_value={"returnCode": "OK", "results": []},
-    ), patch(
-        "homeassistant.components.hvv_departures.async_setup", return_value=True
     ), patch(
         "homeassistant.components.hvv_departures.async_setup_entry",
         return_value=True,
@@ -259,8 +255,7 @@ async def test_options_flow(hass):
         domain=DOMAIN,
         title="Wartenau",
         data=FIXTURE_CONFIG_ENTRY,
-        source="user",
-        connection_class=CONN_CLASS_CLOUD_POLL,
+        source=SOURCE_USER,
         system_options={"disable_new_entities": False},
         options=FIXTURE_OPTIONS,
         unique_id="1234",
@@ -310,8 +305,7 @@ async def test_options_flow_invalid_auth(hass):
         domain=DOMAIN,
         title="Wartenau",
         data=FIXTURE_CONFIG_ENTRY,
-        source="user",
-        connection_class=CONN_CLASS_CLOUD_POLL,
+        source=SOURCE_USER,
         system_options={"disable_new_entities": False},
         options=FIXTURE_OPTIONS,
         unique_id="1234",
@@ -351,8 +345,7 @@ async def test_options_flow_cannot_connect(hass):
         domain=DOMAIN,
         title="Wartenau",
         data=FIXTURE_CONFIG_ENTRY,
-        source="user",
-        connection_class=CONN_CLASS_CLOUD_POLL,
+        source=SOURCE_USER,
         system_options={"disable_new_entities": False},
         options=FIXTURE_OPTIONS,
         unique_id="1234",

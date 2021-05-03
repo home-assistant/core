@@ -4,9 +4,34 @@
             "no_devices_found": "No se encontraron dispositivos en la red",
             "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
+        "error": {
+            "invalid_known_hosts": "Los hosts conocidos deben ser una lista de hosts separados por comas."
+        },
         "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "Lista opcional de hosts conocidos si el descubrimiento mDNS no funciona."
+                },
+                "description": "Introduce la configuraci\u00f3n de Google Cast.",
+                "title": "Google Cast"
+            },
             "confirm": {
                 "description": "\u00bfQuieres iniciar la configuraci\u00f3n?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "Los hosts conocidos deben ser una lista de hosts separados por comas."
+        },
+        "step": {
+            "options": {
+                "data": {
+                    "ignore_cec": "Lista opcional que se pasar\u00e1 a pychromecast.IGNORE_CEC.",
+                    "known_hosts": "Lista opcional de hosts conocidos si el descubrimiento mDNS no funciona.",
+                    "uuid": "Lista opcional de UUIDs. Los cast que no aparezcan en la lista no se a\u00f1adir\u00e1n."
+                },
+                "description": "Introduce la configuraci\u00f3n de Google Cast."
             }
         }
     }

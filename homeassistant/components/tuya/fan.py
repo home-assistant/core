@@ -1,4 +1,6 @@
 """Support for Tuya fans."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from homeassistant.components.fan import (
@@ -10,6 +12,10 @@ from homeassistant.components.fan import (
 )
 from homeassistant.const import CONF_PLATFORM, STATE_OFF
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.percentage import (
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
+)
 
 from . import TuyaDevice
 from .const import DOMAIN, TUYA_DATA, TUYA_DISCOVERY_NEW
@@ -61,27 +67,21 @@ class TuyaFanDevice(TuyaDevice, FanEntity):
         """Init Tuya fan device."""
         super().__init__(tuya, platform)
         self.entity_id = ENTITY_ID_FORMAT.format(tuya.object_id())
-        self.speeds = [STATE_OFF]
+        self.speeds = []
 
     async def async_added_to_hass(self):
         """Create fan list when add to hass."""
         await super().async_added_to_hass()
         self.speeds.extend(self._tuya.speed_list())
 
-    def set_speed(self, speed: str) -> None:
-        """Set the speed of the fan."""
-        if speed == STATE_OFF:
+    def set_percentage(self, percentage: int) -> None:
+        """Set the speed percentage of the fan."""
+        if percentage == 0:
             self.turn_off()
         else:
-            self._tuya.set_speed(speed)
+            tuya_speed = percentage_to_ordered_list_item(self.speeds, percentage)
+            self._tuya.set_speed(tuya_speed)
 
-    #
-    # The fan entity model has changed to use percentages and preset_modes
-    # instead of speeds.
-    #
-    # Please review
-    # https://developers.home-assistant.io/docs/core/entity/fan/
-    #
     def turn_on(
         self,
         speed: str = None,
@@ -90,8 +90,8 @@ class TuyaFanDevice(TuyaDevice, FanEntity):
         **kwargs,
     ) -> None:
         """Turn on the fan."""
-        if speed is not None:
-            self.set_speed(speed)
+        if percentage is not None:
+            self.set_percentage(percentage)
         else:
             self._tuya.turn_on()
 
@@ -102,6 +102,13 @@ class TuyaFanDevice(TuyaDevice, FanEntity):
     def oscillate(self, oscillating) -> None:
         """Oscillate the fan."""
         self._tuya.oscillate(oscillating)
+
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        if self.speeds is None:
+            return super().speed_count
+        return len(self.speeds)
 
     @property
     def oscillating(self):
@@ -118,16 +125,13 @@ class TuyaFanDevice(TuyaDevice, FanEntity):
         return self._tuya.state()
 
     @property
-    def speed(self) -> str:
+    def percentage(self) -> int | None:
         """Return the current speed."""
-        if self.is_on:
-            return self._tuya.speed()
-        return STATE_OFF
-
-    @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return self.speeds
+        if not self.is_on:
+            return 0
+        if self.speeds is None:
+            return None
+        return ordered_list_item_to_percentage(self.speeds, self._tuya.speed())
 
     @property
     def supported_features(self) -> int:

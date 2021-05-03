@@ -1,5 +1,4 @@
 """Support for the Abode Security System."""
-from asyncio import gather
 from copy import deepcopy
 from functools import partial
 
@@ -9,17 +8,18 @@ import abodepy.helpers.timeline as TIMELINE
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DATE,
+    ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     ATTR_TIME,
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
@@ -32,7 +32,6 @@ SERVICE_SETTINGS = "change_setting"
 SERVICE_CAPTURE_IMAGE = "capture_image"
 SERVICE_TRIGGER_AUTOMATION = "trigger_automation"
 
-ATTR_DEVICE_ID = "device_id"
 ATTR_DEVICE_NAME = "device_name"
 ATTR_DEVICE_TYPE = "device_type"
 ATTR_EVENT_CODE = "event_code"
@@ -66,7 +65,7 @@ CAPTURE_IMAGE_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
 AUTOMATION_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
-ABODE_PLATFORMS = [
+PLATFORMS = [
     "alarm_control_panel",
     "binary_sensor",
     "lock",
@@ -124,24 +123,14 @@ async def async_setup_entry(hass, config_entry):
         )
 
     except AbodeAuthenticationException as ex:
-        LOGGER.error("Invalid credentials: %s", ex)
-        await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH},
-            data=config_entry.data,
-        )
-        return False
+        raise ConfigEntryAuthFailed(f"Invalid credentials: {ex}") from ex
 
     except (AbodeException, ConnectTimeout, HTTPError) as ex:
-        LOGGER.error("Unable to connect to Abode: %s", ex)
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(f"Unable to connect to Abode: {ex}") from ex
 
     hass.data[DOMAIN] = AbodeSystem(abode, polling)
 
-    for platform in ABODE_PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     await setup_hass_events(hass)
     await hass.async_add_executor_job(setup_hass_services, hass)
@@ -156,14 +145,9 @@ async def async_unload_entry(hass, config_entry):
     hass.services.async_remove(DOMAIN, SERVICE_CAPTURE_IMAGE)
     hass.services.async_remove(DOMAIN, SERVICE_TRIGGER_AUTOMATION)
 
-    tasks = []
-
-    for platform in ABODE_PLATFORMS:
-        tasks.append(
-            hass.config_entries.async_forward_entry_unload(config_entry, platform)
-        )
-
-    await gather(*tasks)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
 
     await hass.async_add_executor_job(hass.data[DOMAIN].abode.events.stop)
     await hass.async_add_executor_job(hass.data[DOMAIN].abode.logout)
@@ -171,7 +155,7 @@ async def async_unload_entry(hass, config_entry):
     hass.data[DOMAIN].logout_listener()
     hass.data.pop(DOMAIN)
 
-    return True
+    return unload_ok
 
 
 def setup_hass_services(hass):
@@ -363,7 +347,7 @@ class AbodeDevice(AbodeEntity):
         return self._device.name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
@@ -411,7 +395,7 @@ class AbodeAutomation(AbodeEntity):
         return self._automation.name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION, "type": "CUE automation"}
 

@@ -1,68 +1,60 @@
 """Config flow to configure the WLED integration."""
-from typing import Any, Dict, Optional
+from __future__ import annotations
 
 import voluptuous as vol
 from wled import WLED, WLEDConnectionError
 
-from homeassistant.config_entries import (
-    CONN_CLASS_LOCAL_POLL,
-    SOURCE_ZEROCONF,
-    ConfigFlow,
-)
+from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 
 class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a WLED config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
-    async def async_step_user(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
+    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
         """Handle a flow initiated by the user."""
         return await self._handle_config_flow(user_input)
 
     async def async_step_zeroconf(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
+        self, discovery_info: ConfigType | None = None
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
-        if user_input is None:
+        if discovery_info is None:
             return self.async_abort(reason="cannot_connect")
 
         # Hostname is format: wled-livingroom.local.
-        host = user_input["hostname"].rstrip(".")
+        host = discovery_info["hostname"].rstrip(".")
         name, _ = host.rsplit(".")
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
             {
-                CONF_HOST: user_input["host"],
+                CONF_HOST: discovery_info["host"],
                 CONF_NAME: name,
-                CONF_MAC: user_input["properties"].get(CONF_MAC),
+                CONF_MAC: discovery_info["properties"].get(CONF_MAC),
                 "title_placeholders": {"name": name},
             }
         )
 
         # Prepare configuration flow
-        return await self._handle_config_flow(user_input, True)
+        return await self._handle_config_flow(discovery_info, True)
 
     async def async_step_zeroconf_confirm(
         self, user_input: ConfigType = None
-    ) -> Dict[str, Any]:
+    ) -> FlowResult:
         """Handle a flow initiated by zeroconf."""
         return await self._handle_config_flow(user_input)
 
     async def _handle_config_flow(
-        self, user_input: Optional[ConfigType] = None, prepare: bool = False
-    ) -> Dict[str, Any]:
+        self, user_input: ConfigType | None = None, prepare: bool = False
+    ) -> FlowResult:
         """Config flow handler for WLED."""
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         source = self.context.get("source")
 
         # Request user input, unless we are preparing discovery flow
@@ -72,7 +64,6 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_setup_form()
 
         if source == SOURCE_ZEROCONF:
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             user_input[CONF_HOST] = self.context.get(CONF_HOST)
             user_input[CONF_MAC] = self.context.get(CONF_MAC)
 
@@ -93,7 +84,6 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
 
         title = user_input[CONF_HOST]
         if source == SOURCE_ZEROCONF:
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             title = self.context.get(CONF_NAME)
 
         if prepare:
@@ -104,7 +94,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             data={CONF_HOST: user_input[CONF_HOST], CONF_MAC: user_input[CONF_MAC]},
         )
 
-    def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
+    def _show_setup_form(self, errors: dict | None = None) -> FlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -112,9 +102,8 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    def _show_confirm_dialog(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
+    def _show_confirm_dialog(self, errors: dict | None = None) -> FlowResult:
         """Show the confirm dialog to the user."""
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         name = self.context.get(CONF_NAME)
         return self.async_show_form(
             step_id="zeroconf_confirm",

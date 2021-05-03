@@ -6,9 +6,10 @@ from meteofrance_api.helpers import (
     readeable_phenomenoms_dict,
 )
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -38,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the Meteo-France sensor platform."""
     coordinator_forecast = hass.data[DOMAIN][entry.entry_id][COORDINATOR_FORECAST]
@@ -74,7 +75,7 @@ async def async_setup_entry(
     )
 
 
-class MeteoFranceSensor(CoordinatorEntity):
+class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Meteo-France sensor."""
 
     def __init__(self, sensor_type: str, coordinator: DataUpdateCoordinator):
@@ -154,7 +155,7 @@ class MeteoFranceSensor(CoordinatorEntity):
         return SENSOR_TYPES[self._type][ENTITY_ENABLE]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
@@ -177,7 +178,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         reference_dt = self.coordinator.data.forecast[0]["dt"]
         return {
@@ -193,7 +194,6 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
 class MeteoFranceAlertSensor(MeteoFranceSensor):
     """Representation of a Meteo-France alert sensor."""
 
-    # pylint: disable=super-init-not-called
     def __init__(self, sensor_type: str, coordinator: DataUpdateCoordinator):
         """Initialize the Meteo-France sensor."""
         super().__init__(sensor_type, coordinator)
@@ -209,7 +209,7 @@ class MeteoFranceAlertSensor(MeteoFranceSensor):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             **readeable_phenomenoms_dict(self.coordinator.data.phenomenons_max_colors),

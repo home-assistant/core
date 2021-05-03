@@ -1,15 +1,15 @@
 """Support for MQTT scenes."""
 import functools
-import logging
 
 import voluptuous as vol
 
 from homeassistant.components import scene
 from homeassistant.components.scene import Scene
 from homeassistant.const import CONF_ICON, CONF_NAME, CONF_PAYLOAD_ON, CONF_UNIQUE_ID
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from . import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, DOMAIN, PLATFORMS
 from .. import mqtt
@@ -19,8 +19,6 @@ from .mixins import (
     MqttDiscoveryUpdate,
     async_setup_entry_helper,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT Scene"
 DEFAULT_RETAIN = False
@@ -38,7 +36,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT scene through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
@@ -47,7 +45,6 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT scene dynamically through MQTT discovery."""
-
     setup = functools.partial(
         _async_setup_entity, async_add_entities, config_entry=config_entry
     )

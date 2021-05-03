@@ -1,9 +1,9 @@
 """Support for Envisalink sensors (shows panel info)."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from . import (
     CONF_PARTITIONNAME,
@@ -37,7 +37,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
 
-class EnvisalinkSensor(EnvisalinkDevice, Entity):
+class EnvisalinkSensor(EnvisalinkDevice, SensorEntity):
     """Representation of an Envisalink keypad."""
 
     def __init__(self, hass, partition_name, partition_number, info, controller):
@@ -66,7 +66,7 @@ class EnvisalinkSensor(EnvisalinkDevice, Entity):
         return self._info["status"]["alpha"]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._info["status"]
 

@@ -1,6 +1,7 @@
 """Support for interface with a Gree climate systems."""
+from __future__ import annotations
+
 import logging
-from typing import List
 
 from greeclimate.device import (
     FanSpeed,
@@ -42,11 +43,15 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    COORDINATOR,
+    COORDINATORS,
+    DISPATCH_DEVICE_DISCOVERED,
+    DISPATCHERS,
     DOMAIN,
     FAN_MEDIUM_HIGH,
     FAN_MEDIUM_LOW,
@@ -96,11 +101,17 @@ SUPPORTED_FEATURES = (
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Gree HVAC device from a config entry."""
-    async_add_entities(
-        [
-            GreeClimateEntity(coordinator)
-            for coordinator in hass.data[DOMAIN][COORDINATOR]
-        ]
+
+    @callback
+    def init_device(coordinator):
+        """Register the device."""
+        async_add_entities([GreeClimateEntity(coordinator)])
+
+    for coordinator in hass.data[DOMAIN][COORDINATORS]:
+        init_device(coordinator)
+
+    hass.data[DOMAIN][DISPATCHERS].append(
+        async_dispatcher_connect(hass, DISPATCH_DEVICE_DISCOVERED, init_device)
     )
 
 
@@ -234,7 +245,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the HVAC modes support by the device."""
         modes = [*HVAC_MODES_REVERSE]
         modes.append(HVAC_MODE_OFF)
@@ -282,7 +293,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def preset_modes(self) -> List[str]:
+    def preset_modes(self) -> list[str]:
         """Return the preset modes support by the device."""
         return PRESET_MODES
 
@@ -302,7 +313,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def fan_modes(self) -> List[str]:
+    def fan_modes(self) -> list[str]:
         """Return the fan modes support by the device."""
         return [*FAN_MODES_REVERSE]
 
@@ -342,7 +353,7 @@ class GreeClimateEntity(CoordinatorEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def swing_modes(self) -> List[str]:
+    def swing_modes(self) -> list[str]:
         """Return the swing modes currently supported for this device."""
         return SWING_MODES
 

@@ -19,6 +19,8 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN
 
+PLATFORMS = [DEVICE_TRACKER]
+
 CONF_MOBILE_BEACONS = "mobile_beacons"
 
 CONFIG_SCHEMA = vol.Schema(
@@ -136,9 +138,7 @@ async def async_setup_entry(hass, entry):
         DOMAIN, "Geofency", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, DEVICE_TRACKER)
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
@@ -146,8 +146,7 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     hass.data[DOMAIN]["unsub_device_tracker"].pop(entry.entry_id)()
-    await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

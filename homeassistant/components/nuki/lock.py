@@ -1,30 +1,27 @@
 """Nuki.io lock platform."""
 from abc import ABC, abstractmethod
-from datetime import timedelta
 import logging
 
-from pynuki import NukiBridge
-from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockEntity
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.helpers import config_validation as cv, entity_platform
 
-from .const import DEFAULT_PORT, DEFAULT_TIMEOUT
+from . import NukiEntity
+from .const import (
+    ATTR_BATTERY_CRITICAL,
+    ATTR_NUKI_ID,
+    ATTR_UNLATCH,
+    DATA_COORDINATOR,
+    DATA_LOCKS,
+    DATA_OPENERS,
+    DEFAULT_PORT,
+    DOMAIN as NUKI_DOMAIN,
+    ERROR_STATES,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_BATTERY_CRITICAL = "battery_critical"
-ATTR_NUKI_ID = "nuki_id"
-ATTR_UNLATCH = "unlatch"
-
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=5)
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
-
-NUKI_DATA = "nuki"
-
-ERROR_STATES = (0, 254, 255)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -42,25 +39,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Nuki lock platform."""
-    config = config_entry.data
+    data = hass.data[NUKI_DOMAIN][entry.entry_id]
+    coordinator = data[DATA_COORDINATOR]
 
-    def get_entities():
-        bridge = NukiBridge(
-            config[CONF_HOST],
-            config[CONF_TOKEN],
-            config[CONF_PORT],
-            True,
-            DEFAULT_TIMEOUT,
-        )
-
-        entities = [NukiLockEntity(lock) for lock in bridge.locks]
-        entities.extend([NukiOpenerEntity(opener) for opener in bridge.openers])
-        return entities
-
-    entities = await hass.async_add_executor_job(get_entities)
-
+    entities = [NukiLockEntity(coordinator, lock) for lock in data[DATA_LOCKS]]
+    entities.extend(
+        [NukiOpenerEntity(coordinator, opener) for opener in data[DATA_OPENERS]]
+    )
     async_add_entities(entities)
 
     platform = entity_platform.current_platform.get()
@@ -75,13 +62,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class NukiDeviceEntity(LockEntity, ABC):
+class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
     """Representation of a Nuki device."""
-
-    def __init__(self, nuki_device):
-        """Initialize the lock."""
-        self._nuki_device = nuki_device
-        self._available = nuki_device.state not in ERROR_STATES
 
     @property
     def name(self):
@@ -99,7 +81,7 @@ class NukiDeviceEntity(LockEntity, ABC):
         """Return true if lock is locked."""
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         data = {
             ATTR_BATTERY_CRITICAL: self._nuki_device.battery_critical,
@@ -115,22 +97,7 @@ class NukiDeviceEntity(LockEntity, ABC):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._available
-
-    def update(self):
-        """Update the nuki lock properties."""
-        for level in (False, True):
-            try:
-                self._nuki_device.update(aggressive=level)
-            except RequestException:
-                _LOGGER.warning("Network issues detect with %s", self.name)
-                self._available = False
-                continue
-
-            # If in error state, we force an update and repoll data
-            self._available = self._nuki_device.state not in ERROR_STATES
-            if self._available:
-                break
+        return super().available and self._nuki_device.state not in ERROR_STATES
 
     @abstractmethod
     def lock(self, **kwargs):

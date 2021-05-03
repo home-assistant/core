@@ -1,9 +1,10 @@
 """Validate integration translation files."""
+from __future__ import annotations
+
 from functools import partial
 from itertools import chain
 import json
 import re
-from typing import Dict
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -141,6 +142,12 @@ def gen_strings_schema(config: Config, integration: Integration):
             vol.Optional("system_health"): {
                 vol.Optional("info"): {str: cv.string_with_no_html}
             },
+            vol.Optional("config_panel"): cv.schema_with_slug_keys(
+                cv.schema_with_slug_keys(
+                    cv.string_with_no_html, slug_validator=lowercase_validator
+                ),
+                slug_validator=vol.Any("_", cv.slug),
+            ),
         }
     )
 
@@ -295,7 +302,7 @@ def validate_translation_file(config: Config, integration: Integration, all_stri
             )
 
 
-def validate(integrations: Dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config):
     """Handle JSON files inside integrations."""
     if config.specific_integrations:
         all_strings = None

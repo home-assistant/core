@@ -6,15 +6,12 @@ import pywilight
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
-    ATTR_SPEED,
+    ATTR_PERCENTAGE,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_DIRECTION,
-    SERVICE_SET_SPEED,
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
+    SERVICE_SET_PERCENTAGE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -23,7 +20,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import (
     HOST,
@@ -58,7 +56,7 @@ def mock_dummy_device_from_host_light_fan():
 
 
 async def test_loading_light_fan(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     dummy_device_from_host_light_fan,
 ) -> None:
     """Test the WiLight configuration entry loading."""
@@ -67,7 +65,7 @@ async def test_loading_light_fan(
     assert entry
     assert entry.unique_id == WILIGHT_ID
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     # First segment of the strip
     state = hass.states.get("fan.wl000000000099_2")
@@ -80,7 +78,7 @@ async def test_loading_light_fan(
 
 
 async def test_on_off_fan_state(
-    hass: HomeAssistantType, dummy_device_from_host_light_fan
+    hass: HomeAssistant, dummy_device_from_host_light_fan
 ) -> None:
     """Test the change of state of the fan switches."""
     await setup_integration(hass)
@@ -102,7 +100,7 @@ async def test_on_off_fan_state(
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_SPEED: SPEED_LOW, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
+        {ATTR_PERCENTAGE: 30, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
         blocking=True,
     )
 
@@ -110,7 +108,7 @@ async def test_on_off_fan_state(
     state = hass.states.get("fan.wl000000000099_2")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_SPEED) == SPEED_LOW
+    assert state.attributes.get(ATTR_PERCENTAGE) == 33
 
     # Turn off
     await hass.services.async_call(
@@ -127,7 +125,7 @@ async def test_on_off_fan_state(
 
 
 async def test_speed_fan_state(
-    hass: HomeAssistantType, dummy_device_from_host_light_fan
+    hass: HomeAssistant, dummy_device_from_host_light_fan
 ) -> None:
     """Test the change of speed of the fan switches."""
     await setup_integration(hass)
@@ -135,45 +133,45 @@ async def test_speed_fan_state(
     # Set speed Low
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_SPEED,
-        {ATTR_SPEED: SPEED_LOW, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_PERCENTAGE: 30, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
         blocking=True,
     )
 
     await hass.async_block_till_done()
     state = hass.states.get("fan.wl000000000099_2")
     assert state
-    assert state.attributes.get(ATTR_SPEED) == SPEED_LOW
+    assert state.attributes.get(ATTR_PERCENTAGE) == 33
 
     # Set speed Medium
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_SPEED,
-        {ATTR_SPEED: SPEED_MEDIUM, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_PERCENTAGE: 50, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
         blocking=True,
     )
 
     await hass.async_block_till_done()
     state = hass.states.get("fan.wl000000000099_2")
     assert state
-    assert state.attributes.get(ATTR_SPEED) == SPEED_MEDIUM
+    assert state.attributes.get(ATTR_PERCENTAGE) == 66
 
     # Set speed High
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_SPEED,
-        {ATTR_SPEED: SPEED_HIGH, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_PERCENTAGE: 90, ATTR_ENTITY_ID: "fan.wl000000000099_2"},
         blocking=True,
     )
 
     await hass.async_block_till_done()
     state = hass.states.get("fan.wl000000000099_2")
     assert state
-    assert state.attributes.get(ATTR_SPEED) == SPEED_HIGH
+    assert state.attributes.get(ATTR_PERCENTAGE) == 100
 
 
 async def test_direction_fan_state(
-    hass: HomeAssistantType, dummy_device_from_host_light_fan
+    hass: HomeAssistant, dummy_device_from_host_light_fan
 ) -> None:
     """Test the change of direction of the fan switches."""
     await setup_integration(hass)

@@ -1,4 +1,6 @@
 """Test HomeKit util module."""
+from unittest.mock import Mock
+
 import pytest
 import voluptuous as vol
 
@@ -22,6 +24,7 @@ from homeassistant.components.homekit.const import (
     TYPE_VALVE,
 )
 from homeassistant.components.homekit.util import (
+    accessory_friendly_name,
     async_find_next_available_port,
     cleanup_name_for_homekit,
     convert_to_float,
@@ -30,6 +33,7 @@ from homeassistant.components.homekit.util import (
     format_sw_version,
     port_is_available,
     show_setup_message,
+    state_needs_accessory_mode,
     temperature_to_homekit,
     temperature_to_states,
     validate_entity_config as vec,
@@ -284,3 +288,20 @@ async def test_format_sw_version():
     assert format_sw_version("56.0-76060") == "56.0.76060"
     assert format_sw_version(3.6) == "3.6"
     assert format_sw_version("unknown") is None
+
+
+async def test_accessory_friendly_name():
+    """Test we provide a helpful friendly name."""
+
+    accessory = Mock()
+    accessory.display_name = "same"
+    assert accessory_friendly_name("Same", accessory) == "Same"
+    assert accessory_friendly_name("hass title", accessory) == "hass title (same)"
+    accessory.display_name = "Hass title 123"
+    assert accessory_friendly_name("hass title", accessory) == "Hass title 123"
+
+
+async def test_lock_state_needs_accessory_mode(hass):
+    """Test that locks are setup as accessories."""
+    hass.states.async_set("lock.mine", "locked")
+    assert state_needs_accessory_mode(hass.states.get("lock.mine")) is True

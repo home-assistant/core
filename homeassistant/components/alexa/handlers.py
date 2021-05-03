@@ -54,7 +54,6 @@ from .const import (
     API_THERMOSTAT_MODES,
     API_THERMOSTAT_MODES_CUSTOM,
     API_THERMOSTAT_PRESETS,
-    PERCENTAGE_FAN_MAP,
     Cause,
     Inputs,
 )
@@ -360,17 +359,9 @@ async def async_api_set_percentage(hass, config, directive, context):
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_SPEED
-        speed = "off"
-
+        service = fan.SERVICE_SET_PERCENTAGE
         percentage = int(directive.payload["percentage"])
-        if percentage <= 33:
-            speed = "low"
-        elif percentage <= 66:
-            speed = "medium"
-        elif percentage <= 100:
-            speed = "high"
-        data[fan.ATTR_SPEED] = speed
+        data[fan.ATTR_PERCENTAGE] = percentage
 
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context
@@ -388,22 +379,12 @@ async def async_api_adjust_percentage(hass, config, directive, context):
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_SPEED
-        speed = entity.attributes.get(fan.ATTR_SPEED)
-        current = PERCENTAGE_FAN_MAP.get(speed, 100)
+        service = fan.SERVICE_SET_PERCENTAGE
+        current = entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
 
         # set percentage
-        percentage = max(0, percentage_delta + current)
-        speed = "off"
-
-        if percentage <= 33:
-            speed = "low"
-        elif percentage <= 66:
-            speed = "medium"
-        elif percentage <= 100:
-            speed = "high"
-
-        data[fan.ATTR_SPEED] = speed
+        percentage = min(100, max(0, percentage_delta + current))
+        data[fan.ATTR_PERCENTAGE] = percentage
 
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context
@@ -672,10 +653,9 @@ def temperature_from_object(hass, temp_obj, interval=False):
 
     if temp_obj["scale"] == "FAHRENHEIT":
         from_unit = TEMP_FAHRENHEIT
-    elif temp_obj["scale"] == "KELVIN":
+    elif temp_obj["scale"] == "KELVIN" and not interval:
         # convert to Celsius if absolute temperature
-        if not interval:
-            temp -= 273.15
+        temp -= 273.15
 
     return convert_temperature(temp, from_unit, to_unit, interval)
 
@@ -854,18 +834,9 @@ async def async_api_set_power_level(hass, config, directive, context):
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_SPEED
-        speed = "off"
-
+        service = fan.SERVICE_SET_PERCENTAGE
         percentage = int(directive.payload["powerLevel"])
-        if percentage <= 33:
-            speed = "low"
-        elif percentage <= 66:
-            speed = "medium"
-        else:
-            speed = "high"
-
-        data[fan.ATTR_SPEED] = speed
+        data[fan.ATTR_PERCENTAGE] = percentage
 
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context
@@ -883,22 +854,12 @@ async def async_api_adjust_power_level(hass, config, directive, context):
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_SPEED
-        speed = entity.attributes.get(fan.ATTR_SPEED)
-        current = PERCENTAGE_FAN_MAP.get(speed, 100)
+        service = fan.SERVICE_SET_PERCENTAGE
+        current = entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
 
         # set percentage
-        percentage = max(0, percentage_delta + current)
-        speed = "off"
-
-        if percentage <= 33:
-            speed = "low"
-        elif percentage <= 66:
-            speed = "medium"
-        else:
-            speed = "high"
-
-        data[fan.ATTR_SPEED] = speed
+        percentage = min(100, max(0, percentage_delta + current))
+        data[fan.ATTR_PERCENTAGE] = percentage
 
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context
@@ -1413,10 +1374,7 @@ async def async_api_seek(hass, config, directive, context):
         msg = f"{entity} did not return the current media position."
         raise AlexaVideoActionNotPermittedForContentError(msg)
 
-    seek_position = int(current_position) + int(position_delta / 1000)
-
-    if seek_position < 0:
-        seek_position = 0
+    seek_position = max(int(current_position) + int(position_delta / 1000), 0)
 
     media_duration = entity.attributes.get(media_player.ATTR_MEDIA_DURATION)
     if media_duration and 0 < int(media_duration) < seek_position:

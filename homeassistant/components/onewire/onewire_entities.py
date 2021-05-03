@@ -1,10 +1,12 @@
 """Support for 1-Wire entities."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pyownet import protocol
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
     SENSOR_TYPE_COUNT,
@@ -43,32 +45,27 @@ class OneWireBaseEntity(Entity):
         self._unique_id = unique_id or device_file
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the entity."""
         return self._name
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the class of this device."""
         return self._device_class
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         return {"device_file": self._device_file, "raw_value": self._value_raw}
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._unique_id
 
     @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
+    def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         return self._device_info
 
@@ -85,9 +82,9 @@ class OneWireProxyEntity(OneWireBaseEntity):
         self,
         device_id: str,
         device_name: str,
-        device_info: Dict[str, Any],
+        device_info: dict[str, Any],
         entity_path: str,
-        entity_specs: Dict[str, Any],
+        entity_specs: dict[str, Any],
         owproxy: protocol._Proxy,
     ):
         """Initialize the sensor."""

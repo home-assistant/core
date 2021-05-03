@@ -1,5 +1,4 @@
 """The Netatmo integration."""
-import asyncio
 import logging
 import secrets
 
@@ -43,7 +42,7 @@ from .const import (
     OAUTH2_TOKEN,
 )
 from .data_handler import NetatmoDataHandler
-from .webhook import handle_webhook
+from .webhook import async_handle_webhook
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,10 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await data_handler.async_setup()
     hass.data[DOMAIN][entry.entry_id][DATA_HANDLER] = data_handler
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def unregister_webhook(_):
         if CONF_WEBHOOK_ID not in entry.data:
@@ -157,18 +153,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
         try:
             webhook_register(
-                hass, DOMAIN, "Netatmo", entry.data[CONF_WEBHOOK_ID], handle_webhook
+                hass,
+                DOMAIN,
+                "Netatmo",
+                entry.data[CONF_WEBHOOK_ID],
+                async_handle_webhook,
             )
 
             async def handle_event(event):
                 """Handle webhook events."""
                 if event["data"]["push_type"] == "webhook_activation":
                     if activation_listener is not None:
-                        _LOGGER.debug("sub called")
                         activation_listener()
 
                     if activation_timeout is not None:
-                        _LOGGER.debug("Unsub called")
                         activation_timeout()
 
             activation_listener = async_dispatcher_connect(
@@ -186,7 +184,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except pyatmo.ApiError as err:
             _LOGGER.error("Error during webhook registration - %s", err)
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
+        entry.async_on_unload(
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
+        )
 
     if hass.state == CoreState.running:
         await register_webhook(None)
@@ -205,18 +205,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         await hass.async_add_executor_job(
             hass.data[DOMAIN][entry.entry_id][AUTH].dropwebhook
         )
-        _LOGGER.info("Unregister Netatmo webhook.")
+        _LOGGER.info("Unregister Netatmo webhook")
 
     await hass.data[DOMAIN][entry.entry_id][DATA_HANDLER].async_cleanup()
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
