@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Iterable
 from contextlib import suppress
 import fnmatch
-from functools import partial
 import ipaddress
 from ipaddress import ip_address
 import logging
@@ -22,6 +21,7 @@ from zeroconf import (
     ServiceStateChange,
     Zeroconf,
 )
+from zeroconf.asyncio import AsyncZeroconf
 
 from homeassistant import config_entries, util
 from homeassistant.const import (
@@ -33,11 +33,10 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.singleton import singleton
 from homeassistant.loader import async_get_homekit, async_get_zeroconf
 from homeassistant.util.network import is_loopback
 
-from .models import HaServiceBrowser, HaZeroconf
+from .models import HaServiceBrowser
 from .usage import install_multiple_zeroconf_catcher
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,26 +91,35 @@ class HaServiceInfo(TypedDict):
     properties: dict[str, Any]
 
 
-@singleton(DOMAIN)
-async def async_get_instance(hass: HomeAssistant) -> HaZeroconf:
+async def async_get_instance(hass: HomeAssistant) -> Zeroconf:
+    """Zeroconf instance to be shared with other integrations that use it."""
+    aio_zc = hass.data.get(DOMAIN, await _async_get_instance(hass))
+    return cast(Zeroconf, aio_zc.zeroconf)
+
+
+async def async_get_async_instance(hass: HomeAssistant) -> AsyncZeroconf:
     """Zeroconf instance to be shared with other integrations that use it."""
     return await _async_get_instance(hass)
 
 
-async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaZeroconf:
+async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> AsyncZeroconf:
+    if DOMAIN in hass.data:
+        return hass.data[DOMAIN]
+
     logging.getLogger("zeroconf").setLevel(logging.NOTSET)
 
-    zeroconf = await hass.async_add_executor_job(partial(HaZeroconf, **zcargs))
+    aio_zc = AsyncZeroconf(**zcargs)
 
-    install_multiple_zeroconf_catcher(zeroconf)
+    install_multiple_zeroconf_catcher(aio_zc.zeroconf)
 
-    def _stop_zeroconf(_event: Event) -> None:
+    async def _async_stop_zeroconf(_event: Event) -> None:
         """Stop Zeroconf."""
-        zeroconf.ha_close()
+        await aio_zc.async_close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_zeroconf)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_zeroconf)
+    hass.data[DOMAIN] = aio_zc
 
-    return zeroconf
+    return aio_zc
 
 
 def _get_ip_route(dst_ip: str) -> Any:
@@ -171,7 +179,8 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     if not zc_config.get(CONF_IPV6, DEFAULT_IPV6):
         zc_args["ip_version"] = IPVersion.V4Only
 
-    zeroconf = hass.data[DOMAIN] = await _async_get_instance(hass, **zc_args)
+    aio_zc = await _async_get_instance(hass, **zc_args)
+    zeroconf = aio_zc.zeroconf
 
     async def _async_zeroconf_hass_start(_event: Event) -> None:
         """Expose Home Assistant on zeroconf when it starts.
@@ -179,9 +188,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         Wait till started or otherwise HTTP is not up and running.
         """
         uuid = await hass.helpers.instance_id.async_get()
-        await hass.async_add_executor_job(
-            _register_hass_zc_service, hass, zeroconf, uuid
-        )
+        await _async_register_hass_zc_service(hass, aio_zc, uuid)
 
     async def _async_zeroconf_hass_started(_event: Event) -> None:
         """Start the service browser."""
@@ -196,8 +203,8 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
 
 
-def _register_hass_zc_service(
-    hass: HomeAssistant, zeroconf: HaZeroconf, uuid: str
+async def _async_register_hass_zc_service(
+    hass: HomeAssistant, aio_zc: AsyncZeroconf, uuid: str
 ) -> None:
     # Get instance UUID
     valid_location_name = _truncate_location_name_to_valid(hass.config.location_name)
@@ -244,7 +251,7 @@ def _register_hass_zc_service(
 
     _LOGGER.info("Starting Zeroconf broadcast")
     try:
-        zeroconf.register_service(info)
+        await aio_zc.async_register_service(info)
     except NonUniqueNameException:
         _LOGGER.error(
             "Home Assistant instance with identical name present in the local network"
@@ -252,7 +259,7 @@ def _register_hass_zc_service(
 
 
 async def _async_start_zeroconf_browser(
-    hass: HomeAssistant, zeroconf: HaZeroconf
+    hass: HomeAssistant, zeroconf: Zeroconf
 ) -> None:
     """Start the zeroconf browser."""
 
