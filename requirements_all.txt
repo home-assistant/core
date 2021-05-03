@@ -1679,7 +1679,7 @@ pyrepetier==3.0.5
 pyrisco==0.3.1
 
 # homeassistant.components.rituals_perfume_genie
-pyrituals==0.0.2
+pyrituals==0.0.3
 
 # homeassistant.components.zeroconf
 pyroute2==0.5.18
@@ -2027,7 +2027,7 @@ rxv==0.6.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws==1.6.0
+samsungtvws[websocket]==1.6.0
 
 # homeassistant.components.satel_integra
 satel_integra==0.3.4
@@ -2376,7 +2376,7 @@ yalesmartalarmclient==0.1.6
 yalexs==1.1.11
 
 # homeassistant.components.yeelight
-yeelight==0.6.1
+yeelight==0.6.2
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10

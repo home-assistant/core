@@ -50,6 +50,8 @@
     },
     "options": {
         "error": {
+            "bad_birth": "Ung\u00fcltiges Birth Thema.",
+            "bad_will": "Ung\u00fcltiges will Thema.",
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
@@ -64,6 +66,7 @@
             },
             "options": {
                 "data": {
+                    "birth_payload": "Nutzdaten der Birth Nachricht",
                     "discovery": "Erkennung aktivieren",
                     "will_enable": "Letzten Willen aktivieren"
                 },

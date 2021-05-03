@@ -20,6 +20,9 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "zone_run_time": "Standard-Zonenlaufzeit (in Sekunden)"
+                },
                 "title": "RainMachine konfigurieren"
             }
         }
