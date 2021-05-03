@@ -288,14 +288,14 @@ class Integration:
                 _LOGGER.error(
                     "Error parsing manifest.json file at %s: %s", manifest_path, err
                 )
+                continue
 
-            else:
-                return cls(
-                    hass,
-                    f"{root_module.__name__}.{domain}",
-                    manifest_path.parent,
-                    manifest,
-                )
+            return cls(
+                hass,
+                f"{root_module.__name__}.{domain}",
+                manifest_path.parent,
+                manifest,
+            )
 
         return None
 
