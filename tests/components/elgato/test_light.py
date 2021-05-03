@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from elgato import ElgatoError
 
+from homeassistant.components.elgato.const import DOMAIN, SERVICE_IDENTIFY
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -106,3 +107,50 @@ async def test_light_unavailable(
         await hass.async_block_till_done()
         state = hass.states.get("light.frenck")
         assert state.state == STATE_UNAVAILABLE
+
+
+async def test_light_identify(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test identifying an Elgato Light."""
+    await init_integration(hass, aioclient_mock)
+
+    with patch(
+        "homeassistant.components.elgato.light.Elgato.identify",
+        return_value=mock_coro(),
+    ) as mock_identify:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_IDENTIFY,
+            {
+                ATTR_ENTITY_ID: "light.frenck",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        assert len(mock_identify.mock_calls) == 1
+        mock_identify.assert_called_with()
+
+
+async def test_light_identify_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+) -> None:
+    """Test error occurred during identifying an Elgato Light."""
+    await init_integration(hass, aioclient_mock)
+
+    with patch(
+        "homeassistant.components.elgato.light.Elgato.identify",
+        side_effect=ElgatoError,
+    ) as mock_identify:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_IDENTIFY,
+            {
+                ATTR_ENTITY_ID: "light.frenck",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        assert len(mock_identify.mock_calls) == 1
+
+    assert "An error occurred while identifying the Elgato Light" in caplog.text
