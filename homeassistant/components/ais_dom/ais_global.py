@@ -321,7 +321,7 @@ def save_ais_mqtt_connection_settings(mqtt_bridge_settings=None):
         conf_file.write("# AIS Config file for mosquitto on gate\n")
         conf_file.write("listener 1883 0.0.0.0\n")
         conf_file.write("allow_anonymous true\n")
-        conf_file.write("include_mqtt " + conf_d + "\n")
+        conf_file.write("include_dir " + conf_d + "\n")
         if not os.path.exists(conf_d):
             os.makedirs(conf_d, exist_ok=True)
 
@@ -332,7 +332,7 @@ def save_ais_mqtt_connection_settings(mqtt_bridge_settings=None):
             ) as conf_bridge_file:
                 conf_bridge_file.write("\n")
                 conf_bridge_file.write(
-                    "# MQTT bridge connection"
+                    "# MQTT bridge connection "
                     + mqtt_bridge_settings["file_config_name"]
                     + "\n"
                 )
