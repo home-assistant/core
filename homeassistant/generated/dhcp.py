@@ -73,6 +73,11 @@ DHCP = [
         "macaddress": "B4E62D*"
     },
     {
+        "domain": "hunterdouglas_powerview",
+        "hostname": "hunter*",
+        "macaddress": "002674*"
+    },
+    {
         "domain": "lyric",
         "hostname": "lyric-*",
         "macaddress": "48A2E6*"
