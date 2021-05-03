@@ -17,6 +17,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 
 from .common import (
+    LOCATION_ID,
     RESPONSE_ARM_FAILURE,
     RESPONSE_ARM_SUCCESS,
     RESPONSE_ARMED_AWAY,
@@ -44,6 +45,11 @@ async def test_attributes(hass):
         assert state.state == STATE_ALARM_DISARMED
         mock_request.assert_called_once()
         assert state.attributes.get(ATTR_FRIENDLY_NAME) == "test"
+
+        entity_registry = await hass.helpers.entity_registry.async_get_registry()
+        entry = entity_registry.async_get(ENTITY_ID)
+        # TotalConnect alarm device unique_id is the location_id
+        assert entry.unique_id == LOCATION_ID
 
 
 async def test_arm_home_success(hass):
