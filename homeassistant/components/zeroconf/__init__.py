@@ -21,7 +21,6 @@ from zeroconf import (
     ServiceStateChange,
     Zeroconf,
 )
-from zeroconf.asyncio import AsyncZeroconf
 
 from homeassistant import config_entries, util
 from homeassistant.const import (
@@ -36,7 +35,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.loader import async_get_homekit, async_get_zeroconf
 from homeassistant.util.network import is_loopback
 
-from .models import HaServiceBrowser
+from .models import HaAsyncZeroconf, HaServiceBrowser, HaZeroconf
 from .usage import install_multiple_zeroconf_catcher
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,44 +90,29 @@ class HaServiceInfo(TypedDict):
     properties: dict[str, Any]
 
 
-async def async_get_instance(hass: HomeAssistant) -> Zeroconf:
+async def async_get_instance(hass: HomeAssistant) -> HaZeroconf:
     """Zeroconf instance to be shared with other integrations that use it."""
-    aio_zc = hass.data.get(DOMAIN, await _async_get_instance(hass))
-    return cast(Zeroconf, aio_zc.zeroconf)
+    return (await _async_get_instance(hass)).zeroconf
 
 
-async def async_get_async_instance(hass: HomeAssistant) -> AsyncZeroconf:
+async def async_get_async_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
     """Zeroconf instance to be shared with other integrations that use it."""
     return await _async_get_instance(hass)
 
 
-async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> AsyncZeroconf:
+async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZeroconf:
     if DOMAIN in hass.data:
-        return hass.data[DOMAIN]
+        return cast(HaAsyncZeroconf, hass.data[DOMAIN])
 
     logging.getLogger("zeroconf").setLevel(logging.NOTSET)
 
-    aio_zc = AsyncZeroconf(**zcargs)
+    aio_zc = HaAsyncZeroconf(**zcargs)
 
     install_multiple_zeroconf_catcher(aio_zc.zeroconf)
 
-    original_close = aio_zc.zeroconf.close
-    original_async_close = aio_zc.async_close
-
-    def _mock_close(*_: Any) -> None:
-        pass
-
-    async def _mock_async_close(*_: Any) -> None:
-        pass
-
-    aio_zc.zeroconf.close = _mock_close
-    aio_zc.async_close = _mock_async_close
-
     async def _async_stop_zeroconf(_event: Event) -> None:
         """Stop Zeroconf."""
-        aio_zc.async_close = original_async_close
-        aio_zc.zeroconf.close = original_close
-        await aio_zc.async_close()
+        await aio_zc.ha_async_close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_zeroconf)
     hass.data[DOMAIN] = aio_zc
@@ -218,7 +202,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 
 async def _async_register_hass_zc_service(
-    hass: HomeAssistant, aio_zc: AsyncZeroconf, uuid: str
+    hass: HomeAssistant, aio_zc: HaAsyncZeroconf, uuid: str
 ) -> None:
     # Get instance UUID
     valid_location_name = _truncate_location_name_to_valid(hass.config.location_name)
