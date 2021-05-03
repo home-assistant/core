@@ -51,7 +51,7 @@ async def async_setup_entry(
 
 
 class ElgatoLight(LightEntity):
-    """Defines a Elgato Light."""
+    """Defines an Elgato Light."""
 
     def __init__(self, elgato: Elgato, info: Info, settings: Settings) -> None:
         """Initialize Elgato Light."""
