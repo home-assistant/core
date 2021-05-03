@@ -134,7 +134,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.metoffice.*",
     "homeassistant.components.minecraft_server.*",
     "homeassistant.components.mobile_app.*",
-    "homeassistant.components.modbus.*",
     "homeassistant.components.motion_blinds.*",
     "homeassistant.components.motioneye.*",
     "homeassistant.components.mqtt.*",
