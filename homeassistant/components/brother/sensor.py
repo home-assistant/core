@@ -13,16 +13,15 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import BrotherDataUpdateCoordinator
 from .const import (
+    ATTR_COUNTER,
     ATTR_MANUFACTURER,
+    ATTR_REMAINING_PAGES,
     ATTR_UPTIME,
     ATTRS_MAP,
     DATA_CONFIG_ENTRY,
     DOMAIN,
     SENSOR_TYPES,
 )
-
-ATTR_COUNTER = "counter"
-ATTR_REMAINING_PAGES = "remaining_pages"
 
 
 async def async_setup_entry(
