@@ -96,7 +96,7 @@ CORE_STORAGE_VERSION = 1
 DOMAIN = "homeassistant"
 
 # How long to wait to log tasks that are blocking
-BLOCK_LOG_TIMEOUT = 60
+BLOCK_LOG_TIMEOUT = 1
 
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
