@@ -240,7 +240,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.wemo.*",
     "homeassistant.components.wink.*",
     "homeassistant.components.withings.*",
-    "homeassistant.components.wled.*",
     "homeassistant.components.wunderground.*",
     "homeassistant.components.xbox.*",
     "homeassistant.components.xiaomi_aqara.*",

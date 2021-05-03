@@ -74,7 +74,7 @@ class WLEDSensor(WLEDDeviceEntity, SensorEntity):
         return f"{self.coordinator.data.info.mac_address}_{self._key}"
 
     @property
-    def unit_of_measurement(self) -> str:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
