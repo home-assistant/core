@@ -175,7 +175,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             # Priority 3: default interface
             interfaces = [{}]
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     lifx_manager = LIFXManager(hass, platform, async_add_entities)
     hass.data[DATA_LIFX_MANAGER] = lifx_manager
 

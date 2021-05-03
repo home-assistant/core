@@ -120,7 +120,7 @@ async def async_setup_entry(
     entity = VizioDevice(config_entry, device, name, device_class, apps_coordinator)
 
     async_add_entities([entity], update_before_add=True)
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_UPDATE_SETTING, UPDATE_SETTING_SCHEMA, "async_update_setting"
     )

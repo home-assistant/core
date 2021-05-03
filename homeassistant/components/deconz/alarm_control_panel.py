@@ -63,7 +63,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     @callback
     def async_add_alarm_control_panel(sensors=gateway.api.sensors.values()) -> None:

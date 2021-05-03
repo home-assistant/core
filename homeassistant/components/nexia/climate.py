@@ -108,7 +108,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     nexia_home = nexia_data[NEXIA_DEVICE]
     coordinator = nexia_data[UPDATE_COORDINATOR]
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_SET_HUMIDIFY_SETPOINT,

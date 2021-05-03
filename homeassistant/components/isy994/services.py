@@ -405,7 +405,7 @@ def async_unload_services(hass: HomeAssistant):
 @callback
 def async_setup_light_services(hass: HomeAssistant):
     """Create device-specific services for the ISY Integration."""
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_SET_ON_LEVEL, SERVICE_SET_VALUE_SCHEMA, SERVICE_SET_ON_LEVEL
