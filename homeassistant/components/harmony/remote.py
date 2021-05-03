@@ -15,7 +15,6 @@ from homeassistant.components.remote import (
     SUPPORT_ACTIVITY,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
@@ -44,14 +43,9 @@ PARALLEL_UPDATES = 0
 
 ATTR_CHANNEL = "channel"
 
-HARMONY_SYNC_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
-
-HARMONY_CHANGE_CHANNEL_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_CHANNEL): cv.positive_int,
-    }
-)
+HARMONY_CHANGE_CHANNEL_SCHEMA = {
+    vol.Required(ATTR_CHANNEL): cv.positive_int,
+}
 
 
 async def async_setup_entry(
@@ -74,7 +68,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_SYNC,
-        HARMONY_SYNC_SCHEMA,
+        {},
         "sync",
     )
     platform.async_register_entity_service(
