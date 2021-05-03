@@ -1116,7 +1116,7 @@ smart-meter-texas==0.4.0
 smarthab==0.21
 
 # homeassistant.components.smhi
-smhi-pkg==1.0.13
+smhi-pkg==1.0.15
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
