@@ -113,14 +113,20 @@ async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> AsyncZeroco
     install_multiple_zeroconf_catcher(aio_zc.zeroconf)
 
     original_close = aio_zc.zeroconf.close
+    original_async_close = aio_zc.async_close
 
     def _mock_close(*_: Any) -> None:
         pass
 
+    async def _mock_async_close(*_: Any) -> None:
+        pass
+
     aio_zc.zeroconf.close = _mock_close
+    aio_zc.async_close = _mock_async_close
 
     async def _async_stop_zeroconf(_event: Event) -> None:
         """Stop Zeroconf."""
+        aio_zc.async_close = original_async_close
         aio_zc.zeroconf.close = original_close
         await aio_zc.async_close()
 
