@@ -192,7 +192,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.sentry.*",
     "homeassistant.components.sesame.*",
     "homeassistant.components.sharkiq.*",
-    "homeassistant.components.shell_command.*",
     "homeassistant.components.shelly.*",
     "homeassistant.components.sma.*",
     "homeassistant.components.smart_meter_texas.*",
