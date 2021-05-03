@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Set
 import logging
 import time
 from typing import TYPE_CHECKING, Any, NamedTuple, cast
@@ -329,7 +330,7 @@ class DeviceRegistry:
         model: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         name_by_user: str | None | UndefinedType = UNDEFINED,
-        new_identifiers: set[tuple[str, ...]] | UndefinedType = UNDEFINED,
+        new_identifiers: Set[tuple[str, ...]] | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
         via_device_id: str | None | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
@@ -360,8 +361,8 @@ class DeviceRegistry:
         add_config_entry_id: str | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
         merge_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
-        merge_identifiers: set[tuple[str, ...]] | UndefinedType = UNDEFINED,
-        new_identifiers: set[tuple[str, ...]] | UndefinedType = UNDEFINED,
+        merge_identifiers: Set[tuple[str, ...]] | UndefinedType = UNDEFINED,
+        new_identifiers: Set[tuple[str, ...]] | UndefinedType = UNDEFINED,
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
@@ -415,7 +416,7 @@ class DeviceRegistry:
         ):
             old_value = getattr(old, attr_name)
             # If not undefined, check if `value` contains new items.
-            if setvalue is not UNDEFINED and not setvalue.issubset(old_value):
+            if setvalue is not UNDEFINED and setvalue & old_value != setvalue:
                 changes[attr_name] = old_value | setvalue
 
         if new_identifiers is not UNDEFINED:
