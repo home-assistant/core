@@ -14,3 +14,6 @@ ATTR_ON = "on"
 ATTR_SOFTWARE_VERSION = "sw_version"
 
 CONF_SERIAL_NUMBER = "serial_number"
+
+# Services
+SERVICE_IDENTIFY = "identify"
