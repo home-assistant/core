@@ -350,10 +350,11 @@ def generate_and_validate(config: Config) -> str:
     for key in STRICT_SETTINGS:
         mypy_config.set(components_section, key, "false")
 
-    strict_section = "mypy-" + ",".join(strict_modules)
-    mypy_config.add_section(strict_section)
-    for key in STRICT_SETTINGS:
-        mypy_config.set(strict_section, key, "true")
+    for strict_module in strict_modules:
+        strict_section = f"mypy-{strict_module}"
+        mypy_config.add_section(strict_section)
+        for key in STRICT_SETTINGS:
+            mypy_config.set(strict_section, key, "true")
 
     # Disable strict checks for tests
     tests_section = "mypy-tests.*"
@@ -361,9 +362,10 @@ def generate_and_validate(config: Config) -> str:
     for key in STRICT_SETTINGS:
         mypy_config.set(tests_section, key, "false")
 
-    ignored_section = "mypy-" + ",".join(IGNORED_MODULES)
-    mypy_config.add_section(ignored_section)
-    mypy_config.set(ignored_section, "ignore_errors", "true")
+    for ignored_module in IGNORED_MODULES:
+        ignored_section = f"mypy-{ignored_module}"
+        mypy_config.add_section(ignored_section)
+        mypy_config.set(ignored_section, "ignore_errors", "true")
 
     with io.StringIO() as fp:
         mypy_config.write(fp)
