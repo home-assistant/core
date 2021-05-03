@@ -38,7 +38,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except ValueError as value_error:
             # if an exception is thrown, printer does not support syncthru
             raise UpdateFailed(
-                f"Configured printer at {printer.url} does not respond. Please make sure it supports SyncThru and check your configuration."
+                f"Configured printer at {printer.url} does not respond. "
+                "Please make sure it supports SyncThru and check your configuration."
             ) from value_error
         else:
             if printer.is_unknown_state():
