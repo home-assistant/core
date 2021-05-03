@@ -34,12 +34,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -63,21 +58,13 @@ from .util import percent_conv
 SERVICE_SET_AIRCLEANER_MODE = "set_aircleaner_mode"
 SERVICE_SET_HUMIDIFY_SETPOINT = "set_humidify_setpoint"
 
-SET_AIRCLEANER_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_AIRCLEANER_MODE): cv.string,
-    }
-)
+SET_AIRCLEANER_SCHEMA = {
+    vol.Required(ATTR_AIRCLEANER_MODE): cv.string,
+}
 
-SET_HUMIDITY_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_HUMIDITY): vol.All(
-            vol.Coerce(int), vol.Range(min=35, max=65)
-        ),
-    }
-)
+SET_HUMIDITY_SCHEMA = {
+    vol.Required(ATTR_HUMIDITY): vol.All(vol.Coerce(int), vol.Range(min=35, max=65)),
+}
 
 
 #
