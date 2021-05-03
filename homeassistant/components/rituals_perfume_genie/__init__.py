@@ -1,5 +1,4 @@
 """The Rituals Perfume Genie integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -12,7 +11,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import ACCOUNT_HASH, COORDINATORS, DEVICES, DOMAIN, HUB, HUBLOT
+from .const import ACCOUNT_HASH, COORDINATORS, DEVICES, DOMAIN, HUBLOT
 
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
@@ -40,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     }
 
     for device in account_devices:
-        hublot = device.data[HUB][HUBLOT]
+        hublot = device.hub_data[HUBLOT]
 
         coordinator = RitualsPerufmeGenieDataUpdateCoordinator(hass, device)
         await coordinator.async_refresh()
@@ -48,24 +47,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN][entry.entry_id][DEVICES][hublot] = device
         hass.data[DOMAIN][entry.entry_id][COORDINATORS][hublot] = coordinator
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
@@ -81,11 +70,10 @@ class RitualsPerufmeGenieDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{DOMAIN}-{device.data[HUB][HUBLOT]}",
+            name=f"{DOMAIN}-{device.hub_data[HUBLOT]}",
             update_interval=UPDATE_INTERVAL,
         )
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> None:
         """Fetch data from Rituals."""
         await self._device.update_data()
-        return self._device.data

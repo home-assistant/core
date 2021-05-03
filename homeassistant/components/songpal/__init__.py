@@ -19,6 +19,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = ["media_player"]
+
 
 async def async_setup(hass: HomeAssistant, config: OrderedDict) -> bool:
     """Set up songpal environment."""
@@ -38,12 +40,10 @@ async def async_setup(hass: HomeAssistant, config: OrderedDict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up songpal media player."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "media_player")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload songpal media player."""
-    return await hass.config_entries.async_forward_entry_unload(entry, "media_player")
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

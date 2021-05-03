@@ -11,6 +11,7 @@
                 "data": {
                     "api_key": "common::config_flow::data::api_key",
                     "destination": "Destination",
+                    "name": "Nom",
                     "origin": "Origine"
                 },
                 "description": "Lorsque vous sp\u00e9cifiez l'origine et la destination, vous pouvez fournir un ou plusieurs emplacements s\u00e9par\u00e9s par le caract\u00e8re de tuyau, sous la forme d'une adresse, de coordonn\u00e9es de latitude / longitude ou d'un identifiant de lieu Google. Lorsque vous sp\u00e9cifiez l'emplacement \u00e0 l'aide d'un identifiant de lieu Google, l'identifiant doit \u00eatre pr\u00e9c\u00e9d\u00e9 de `place_id:`."

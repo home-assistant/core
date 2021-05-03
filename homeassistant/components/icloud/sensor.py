@@ -1,11 +1,14 @@
 """Support for iCloud sensors."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from .account import IcloudAccount, IcloudDevice
@@ -90,12 +93,12 @@ class IcloudDeviceBatterySensor(SensorEntity):
         )
 
     @property
-    def extra_state_attributes(self) -> dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return default attributes for the iCloud device entity."""
         return self._device.extra_state_attributes
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._device.unique_id)},

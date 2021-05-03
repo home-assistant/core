@@ -1,10 +1,8 @@
 """Support for WLED."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
 
 from wled import WLED, Device as WLEDDevice, WLEDConnectionError, WLEDError
 
@@ -15,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -52,10 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     # Set up all platforms for this device/entry.
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -64,15 +60,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload WLED config entry."""
 
     # Unload entities for this entry/device.
-    unload_ok = all(
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            )
-        )
-    )
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         del hass.data[DOMAIN][entry.entry_id]
 
@@ -177,7 +165,7 @@ class WLEDDeviceEntity(WLEDEntity):
     """Defines a WLED device entity."""
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this WLED device."""
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.data.info.mac_address)},

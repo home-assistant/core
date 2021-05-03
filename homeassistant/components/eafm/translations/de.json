@@ -7,7 +7,9 @@
             "user": {
                 "data": {
                     "station": "Station"
-                }
+                },
+                "description": "W\u00e4hlen Sie die Station aus, die Sie \u00fcberwachen m\u00f6chten",
+                "title": "Verfolgen Sie eine Hochwasser\u00fcberwachungsstation"
             }
         }
     }

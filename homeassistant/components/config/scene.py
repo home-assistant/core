@@ -66,13 +66,11 @@ class EditSceneConfigView(EditIdBasedConfigView):
         # Iterate through some keys that we want to have ordered in the output
         updated_value = OrderedDict()
         for key in ("id", "name", "entities"):
-            if key in cur_value:
-                updated_value[key] = cur_value[key]
             if key in new_value:
                 updated_value[key] = new_value[key]
 
         # We cover all current fields above, but just in case we start
         # supporting more fields in the future.
-        updated_value.update(cur_value)
         updated_value.update(new_value)
+
         data[index] = updated_value

@@ -23,8 +23,6 @@ async def test_formx(hass):
     with patch(
         "homeassistant.components.kostal_plenticore.config_flow.PlenticoreApiClient"
     ) as mock_api_class, patch(
-        "homeassistant.components.kostal_plenticore.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.kostal_plenticore.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -63,7 +61,6 @@ async def test_formx(hass):
         "password": "test-password",
     }
     await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

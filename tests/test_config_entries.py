@@ -257,14 +257,12 @@ async def test_remove_entry(hass, manager):
 
     async def mock_setup_entry(hass, entry):
         """Mock setting up entry."""
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, "light")
-        )
+        hass.config_entries.async_setup_platforms(entry, ["light"])
         return True
 
     async def mock_unload_entry(hass, entry):
         """Mock unloading an entry."""
-        result = await hass.config_entries.async_forward_entry_unload(entry, "light")
+        result = await hass.config_entries.async_unload_platforms(entry, ["light"])
         assert result
         return result
 
@@ -548,7 +546,6 @@ async def test_saving_and_loading(hass):
         """Test flow."""
 
         VERSION = 5
-        CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
         async def async_step_user(self, user_input=None):
             """Test user step."""
@@ -564,7 +561,6 @@ async def test_saving_and_loading(hass):
         """Test flow."""
 
         VERSION = 3
-        CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
         async def async_step_user(self, user_input=None):
             """Test user step."""
@@ -599,7 +595,6 @@ async def test_saving_and_loading(hass):
         assert orig.title == loaded.title
         assert orig.data == loaded.data
         assert orig.source == loaded.source
-        assert orig.connection_class == loaded.connection_class
         assert orig.unique_id == loaded.unique_id
 
 

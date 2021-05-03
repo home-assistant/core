@@ -20,7 +20,8 @@ async def test_async_setup_entry_hosts(hass, config_entry, config, soco):
     """Test static setup."""
     await setup_platform(hass, config_entry, config)
 
-    entity = hass.data[media_player.DATA_SONOS].entities[0]
+    entities = list(hass.data[media_player.DATA_SONOS].media_player_entities.values())
+    entity = entities[0]
     assert entity.soco == soco
 
 
@@ -28,7 +29,8 @@ async def test_async_setup_entry_discover(hass, config_entry, discover):
     """Test discovery setup."""
     await setup_platform(hass, config_entry, {})
 
-    entity = hass.data[media_player.DATA_SONOS].entities[0]
+    entities = list(hass.data[media_player.DATA_SONOS].media_player_entities.values())
+    entity = entities[0]
     assert entity.unique_id == "RINCON_test"
 
 
@@ -56,7 +58,7 @@ async def test_device_registry(hass, config_entry, config, soco):
     )
     assert reg_device.model == "Model Name"
     assert reg_device.sw_version == "49.2-64250"
-    assert reg_device.connections == {("mac", "00:11:22:33:44:55")}
+    assert reg_device.connections == {(dr.CONNECTION_NETWORK_MAC, "00:11:22:33:44:55")}
     assert reg_device.manufacturer == "Sonos"
     assert reg_device.suggested_area == "Zone A"
     assert reg_device.name == "Zone A"

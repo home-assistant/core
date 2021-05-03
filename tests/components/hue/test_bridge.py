@@ -166,7 +166,6 @@ async def test_hue_activate_scene(hass, mock_api):
         "Mock Title",
         {"host": "mock-host", "username": "mock-username"},
         "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
         system_options={},
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},
     )
@@ -201,7 +200,6 @@ async def test_hue_activate_scene_transition(hass, mock_api):
         "Mock Title",
         {"host": "mock-host", "username": "mock-username"},
         "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
         system_options={},
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},
     )
@@ -236,7 +234,6 @@ async def test_hue_activate_scene_group_not_found(hass, mock_api):
         "Mock Title",
         {"host": "mock-host", "username": "mock-username"},
         "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
         system_options={},
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},
     )
@@ -266,7 +263,6 @@ async def test_hue_activate_scene_scene_not_found(hass, mock_api):
         "Mock Title",
         {"host": "mock-host", "username": "mock-username"},
         "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
         system_options={},
         options={CONF_ALLOW_HUE_GROUPS: True, CONF_ALLOW_UNREACHABLE: False},
     )

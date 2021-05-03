@@ -12,7 +12,7 @@ from pycfdns.exceptions import (
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
-from homeassistant.config_entries import CONN_CLASS_CLOUD_PUSH, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -84,7 +84,6 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Cloudflare."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_CLOUD_PUSH
 
     def __init__(self):
         """Initialize the Cloudflare config flow."""

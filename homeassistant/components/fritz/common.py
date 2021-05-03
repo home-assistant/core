@@ -1,8 +1,10 @@
 """Support for AVM FRITZ!Box classes."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 # pylint: disable=import-error
 from fritzconnection import FritzConnection
@@ -48,7 +50,7 @@ class FritzBoxTools:
         """Initialize FritzboxTools class."""
         self._cancel_scan = None
         self._device_info = None
-        self._devices: Dict[str, Any] = {}
+        self._devices: dict[str, Any] = {}
         self._unique_id = None
         self.connection = None
         self.fritzhosts = None
@@ -65,7 +67,6 @@ class FritzBoxTools:
 
     def setup(self):
         """Set up FritzboxTools class."""
-
         self.connection = FritzConnection(
             address=self.host,
             port=self.port,
@@ -93,7 +94,7 @@ class FritzBoxTools:
         )
 
     @callback
-    async def async_unload(self):
+    def async_unload(self):
         """Unload FritzboxTools class."""
         _LOGGER.debug("Unloading FRITZ!Box router integration")
         if self._cancel_scan is not None:
@@ -116,7 +117,7 @@ class FritzBoxTools:
         return self._device_info
 
     @property
-    def devices(self) -> Dict[str, Any]:
+    def devices(self) -> dict[str, Any]:
         """Return devices."""
         return self._devices
 
@@ -134,9 +135,8 @@ class FritzBoxTools:
         """Retrieve latest information from the FRITZ!Box."""
         return self.fritzhosts.get_hosts_info()
 
-    def scan_devices(self, now: Optional[datetime] = None) -> None:
+    def scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new devices and return a list of found device ids."""
-
         _LOGGER.debug("Checking devices for FRITZ!Box router %s", self.host)
 
         new_device = False
@@ -182,6 +182,14 @@ class FritzBoxTools:
             dev_info["sw_version"] = dev_sw_ver
 
         return dev_info
+
+
+class FritzData:
+    """Storage class for platform global data."""
+
+    def __init__(self) -> None:
+        """Initialize the data."""
+        self.tracked = {}
 
 
 class FritzDevice:

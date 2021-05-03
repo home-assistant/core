@@ -12,6 +12,7 @@ from synology_dsm.exceptions import (
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SynoApi, SynologyDSMBaseEntity
@@ -80,7 +81,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         return self.coordinator.data["cameras"][self._camera_id]
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
             "identifiers": {

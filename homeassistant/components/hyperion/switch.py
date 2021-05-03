@@ -31,6 +31,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import slugify
 
 from . import (
@@ -179,7 +180,7 @@ class HyperionComponentSwitch(SwitchEntity):
         return bool(self._client.has_loaded_state)
 
     @property
-    def device_info(self) -> dict[str, Any] | None:
+    def device_info(self) -> DeviceInfo:
         """Return device information."""
         return {
             "identifiers": {(DOMAIN, self._device_id)},

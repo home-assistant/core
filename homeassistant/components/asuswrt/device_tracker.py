@@ -1,12 +1,15 @@
 """Support for ASUSWRT routers."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DATA_ASUSWRT, DOMAIN
 from .router import AsusWrtRouter
@@ -78,7 +81,7 @@ class AsusWrtDevice(ScannerEntity):
         return SOURCE_TYPE_ROUTER
 
     @property
-    def extra_state_attributes(self) -> dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the attributes."""
         attrs = {}
         if self._device.last_activity:
@@ -103,7 +106,7 @@ class AsusWrtDevice(ScannerEntity):
         return self._device.mac
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         data = {
             "connections": {(CONNECTION_NETWORK_MAC, self._device.mac)},

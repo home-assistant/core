@@ -155,6 +155,7 @@ async def test_validate_input_returns_data(hass):
     """Test we handle the MAC address being resolved or not."""
     mock_data = {"host": "testadmin.vilfo.com", "access_token": "test-token"}
     mock_data_with_ip = {"host": "192.168.0.1", "access_token": "test-token"}
+    mock_data_with_ipv6 = {"host": "2001:db8::1428:57ab", "access_token": "test-token"}
     mock_mac = "FF-00-00-00-00-00"
 
     with patch("vilfo.Client.ping", return_value=None), patch(
@@ -178,6 +179,9 @@ async def test_validate_input_returns_data(hass):
         result3 = await hass.components.vilfo.config_flow.validate_input(
             hass, data=mock_data_with_ip
         )
+        result4 = await hass.components.vilfo.config_flow.validate_input(
+            hass, data=mock_data_with_ipv6
+        )
 
     assert result2["title"] == mock_data["host"]
     assert result2[CONF_HOST] == mock_data["host"]
@@ -188,3 +192,8 @@ async def test_validate_input_returns_data(hass):
     assert result3[CONF_HOST] == mock_data_with_ip["host"]
     assert result3[CONF_MAC] == mock_mac
     assert result3[CONF_ID] == mock_mac
+
+    assert result4["title"] == mock_data_with_ipv6["host"]
+    assert result4[CONF_HOST] == mock_data_with_ipv6["host"]
+    assert result4[CONF_MAC] == mock_mac
+    assert result4[CONF_ID] == mock_mac

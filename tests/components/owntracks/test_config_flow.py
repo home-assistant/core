@@ -154,8 +154,8 @@ async def test_unload(hass):
     assert entry.data["webhook_id"] in hass.data["webhook"]
 
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_unload",
-        return_value=None,
+        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        return_value=True,
     ) as mock_unload:
         assert await hass.config_entries.async_unload(entry.entry_id)
 

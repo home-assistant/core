@@ -17,6 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(hours=12)
 
+PLATFORMS = ["sensor"]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Load the saved entities."""
@@ -32,15 +34,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=f"{host}:{port}")
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    return await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime]):

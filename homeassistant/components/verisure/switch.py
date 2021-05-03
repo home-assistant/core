@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from time import monotonic
-from typing import Any, Callable
+from typing import Callable
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_GIID, DOMAIN
@@ -53,7 +53,7 @@ class VerisureSmartplug(CoordinatorEntity, SwitchEntity):
         return self.serial_number
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         area = self.coordinator.data["smart_plugs"][self.serial_number]["area"]
         return {
@@ -89,9 +89,11 @@ class VerisureSmartplug(CoordinatorEntity, SwitchEntity):
         self.coordinator.verisure.set_smartplug_state(self.serial_number, True)
         self._state = True
         self._change_timestamp = monotonic()
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs) -> None:
         """Set smartplug status off."""
         self.coordinator.verisure.set_smartplug_state(self.serial_number, False)
         self._state = False
         self._change_timestamp = monotonic()
+        self.schedule_update_ha_state()

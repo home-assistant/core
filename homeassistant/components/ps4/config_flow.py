@@ -31,12 +31,10 @@ PORT_MSG = {UDP_PORT: "port_987_bind_error", TCP_PORT: "port_997_bind_error"}
 PIN_LENGTH = 8
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class PlayStation4FlowHandler(config_entries.ConfigFlow):
+class PlayStation4FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a PlayStation 4 config flow."""
 
     VERSION = CONFIG_ENTRY_VERSION
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the config flow."""
