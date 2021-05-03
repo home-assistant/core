@@ -767,4 +767,4 @@ def validate_custom_integration_version(integration: Integration) -> None:
             integration.domain,
             integration.version,
         )
-        raise IntegrationNotFound(integration.domain)
+        raise IntegrationNotFound(integration.domain) from None
