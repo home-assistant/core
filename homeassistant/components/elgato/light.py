@@ -159,3 +159,4 @@ class ElgatoLight(LightEntity):
             await self.elgato.identify()
         except ElgatoError:
             _LOGGER.exception("An error occurred while identifying the Elgato Light")
+            self._state = None
