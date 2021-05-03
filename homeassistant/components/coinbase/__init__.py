@@ -1,8 +1,9 @@
 """The Coinbase integration."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Dict, List
 
 from coinbase.wallet.client import Client
 from coinbase.wallet.error import AuthenticationError
@@ -66,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Do a one-time handle of options from YAML
     if entry.source == SOURCE_IMPORT and entry.options == {}:
-        import_options: Dict[str, List[str]] = {
+        import_options: dict[str, list[str]] = {
             CONF_CURRENCIES: [],
             CONF_EXCHANGE_RATES: [],
         }
