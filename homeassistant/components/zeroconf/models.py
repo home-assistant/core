@@ -1,6 +1,10 @@
 """Models for Zeroconf."""
 
+import asyncio
+from typing import Any
+
 from zeroconf import DNSPointer, DNSRecord, ServiceBrowser, Zeroconf
+from zeroconf.asyncio import AsyncZeroconf
 
 
 class HaZeroconf(Zeroconf):
@@ -10,6 +14,19 @@ class HaZeroconf(Zeroconf):
         """Fake method to avoid integrations closing it."""
 
     ha_close = Zeroconf.close
+
+
+class HaAsyncZeroconf(AsyncZeroconf):
+    """Home Assistant version of AsyncZeroconf."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Wrap AsyncZeroconf."""
+        self.zeroconf = HaZeroconf(*args, **kwargs)
+        self.loop = asyncio.get_event_loop()
+
+    async def ha_async_close(self, *args: Any, **kwargs: Any) -> None:
+        """Home Assistant async_close."""
+        await self.loop.run_in_executor(None, self.zeroconf.ha_close)
 
 
 class HaServiceBrowser(ServiceBrowser):
