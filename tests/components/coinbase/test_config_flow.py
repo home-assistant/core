@@ -13,52 +13,15 @@ from homeassistant.components.coinbase.const import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 
+from .common import (
+    init_mock_coinbase,
+    mock_get_accounts,
+    mock_get_current_user,
+    mock_get_exchange_rates,
+)
+from .const import BAD_CURRENCY, BAD_EXCHANGE_RATE, GOOD_CURRENCY, GOOD_EXCHNAGE_RATE
+
 from tests.common import MockConfigEntry
-
-GOOD_CURRENCY = "BTC"
-GOOD_CURRENCY_2 = "USD"
-GOOD_EXCHNAGE_RATE = "BTC"
-GOOD_EXCHNAGE_RATE_2 = "ATOM"
-BAD_CURRENCY = "ETH"
-BAD_EXCHANGE_RATE = "ETH"
-
-
-def _mock_get_current_user():
-    """Return a simplified mock user."""
-    return {
-        "id": "123456-abcdef",
-        "name": "Test User",
-    }
-
-
-def _mock_get_accounts():
-    """Return a simplified list of mock accounts."""
-    return {
-        "data": [
-            {
-                "balance": {"amount": "0.00001", "currency": GOOD_CURRENCY},
-                "currency": "BTC",
-                "id": "123456789",
-                "name": "BTC Wallet",
-                "native_balance": {"amount": "100.12", "currency": GOOD_CURRENCY},
-            },
-            {
-                "balance": {"amount": "9.90", "currency": GOOD_CURRENCY_2},
-                "currency": "USD",
-                "id": "987654321",
-                "name": "USD Wallet",
-                "native_balance": {"amount": "9.90", "currency": GOOD_CURRENCY_2},
-            },
-        ]
-    }
-
-
-def _mock_get_exchange_rates():
-    """Return a heavily reduced mock list of exchange rates for testing."""
-    return {
-        "currency": "USD",
-        "rates": {GOOD_EXCHNAGE_RATE_2: "0.109", GOOD_EXCHNAGE_RATE: "0.00002"},
-    }
 
 
 async def test_form(hass):
@@ -72,13 +35,13 @@ async def test_form(hass):
 
     with patch(
         "coinbase.wallet.client.Client.get_current_user",
-        return_value=_mock_get_current_user(),
+        return_value=mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value=_mock_get_accounts(),
+        return_value=mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value=_mock_get_exchange_rates(),
+        return_value=mock_get_exchange_rates(),
     ), patch(
         "homeassistant.components.coinbase.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -177,36 +140,23 @@ async def test_form_catch_all_exception(hass):
 
 async def test_option_good_account_currency(hass):
     """Test we handle a good wallet currency option."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="abcde12345",
-        title="Test User",
-        data={CONF_API_KEY: "123456", CONF_API_TOKEN: "AbCDeF"},
-        options={
-            CONF_CURRENCIES: [],
-            CONF_EXCHANGE_RATES: [],
-        },
-    )
-    config_entry.add_to_hass(hass)
-
     with patch(
         "coinbase.wallet.client.Client.get_current_user",
-        return_value=_mock_get_current_user(),
+        return_value=mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value=_mock_get_accounts(),
+        return_value=mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value=_mock_get_exchange_rates(),
+        return_value=mock_get_exchange_rates(),
     ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        config_entry = await init_mock_coinbase(hass)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         await hass.async_block_till_done()
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                CONF_CURRENCIES: [GOOD_EXCHNAGE_RATE],
+                CONF_CURRENCIES: [GOOD_CURRENCY],
                 CONF_EXCHANGE_RATES: [],
             },
         )
@@ -215,30 +165,17 @@ async def test_option_good_account_currency(hass):
 
 async def test_form_bad_account_currency(hass):
     """Test we handle a bad currency option."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="abcde12345",
-        title="Test User",
-        data={CONF_API_KEY: "123456", CONF_API_TOKEN: "AbCDeF"},
-        options={
-            CONF_CURRENCIES: [],
-            CONF_EXCHANGE_RATES: [],
-        },
-    )
-    config_entry.add_to_hass(hass)
-
     with patch(
         "coinbase.wallet.client.Client.get_current_user",
-        return_value=_mock_get_current_user(),
+        return_value=mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value=_mock_get_accounts(),
+        return_value=mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value=_mock_get_exchange_rates(),
+        return_value=mock_get_exchange_rates(),
     ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        config_entry = await init_mock_coinbase(hass)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         await hass.async_block_till_done()
         result2 = await hass.config_entries.options.async_configure(
@@ -269,13 +206,13 @@ async def test_option_good_exchange_rate(hass):
 
     with patch(
         "coinbase.wallet.client.Client.get_current_user",
-        return_value=_mock_get_current_user(),
+        return_value=mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value=_mock_get_accounts(),
+        return_value=mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value=_mock_get_exchange_rates(),
+        return_value=mock_get_exchange_rates(),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -292,31 +229,18 @@ async def test_option_good_exchange_rate(hass):
 
 
 async def test_form_bad_exchange_rate(hass):
-    """Test we handle a bad currency option."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="abcde12345",
-        title="Test User",
-        data={CONF_API_KEY: "123456", CONF_API_TOKEN: "AbCDeF"},
-        options={
-            CONF_CURRENCIES: [],
-            CONF_EXCHANGE_RATES: [],
-        },
-    )
-    config_entry.add_to_hass(hass)
-
+    """Test we handle a bad exchange rate."""
     with patch(
         "coinbase.wallet.client.Client.get_current_user",
-        return_value=_mock_get_current_user(),
+        return_value=mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value=_mock_get_accounts(),
+        return_value=mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value=_mock_get_exchange_rates(),
+        return_value=mock_get_exchange_rates(),
     ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        config_entry = await init_mock_coinbase(hass)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         await hass.async_block_till_done()
         result2 = await hass.config_entries.options.async_configure(
@@ -332,30 +256,17 @@ async def test_form_bad_exchange_rate(hass):
 
 async def test_option_catch_all_exception(hass):
     """Test we handle an unknown exception in the option flow."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="abcde12345",
-        title="Test User",
-        data={CONF_API_KEY: "123456", CONF_API_TOKEN: "AbCDeF"},
-        options={
-            CONF_CURRENCIES: [],
-            CONF_EXCHANGE_RATES: [],
-        },
-    )
-    config_entry.add_to_hass(hass)
-
     with patch(
         "coinbase.wallet.client.Client.get_current_user",
-        return_value=_mock_get_current_user(),
+        return_value=mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value=_mock_get_accounts(),
+        return_value=mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value=_mock_get_exchange_rates(),
+        return_value=mock_get_exchange_rates(),
     ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+        config_entry = await init_mock_coinbase(hass)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -385,13 +296,13 @@ async def test_yaml_import(hass):
     }
     with patch(
         "coinbase.wallet.client.Client.get_current_user",
-        return_value=_mock_get_current_user(),
+        return_value=mock_get_current_user(),
     ), patch(
         "coinbase.wallet.client.Client.get_accounts",
-        return_value=_mock_get_accounts(),
+        return_value=mock_get_accounts(),
     ), patch(
         "coinbase.wallet.client.Client.get_exchange_rates",
-        return_value=_mock_get_exchange_rates(),
+        return_value=mock_get_exchange_rates(),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf

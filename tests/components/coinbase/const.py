@@ -1,0 +1,8 @@
+"""Constants for testing the Coinbase integration."""
+
+GOOD_CURRENCY = "BTC"
+GOOD_CURRENCY_2 = "USD"
+GOOD_EXCHNAGE_RATE = "BTC"
+GOOD_EXCHNAGE_RATE_2 = "ATOM"
+BAD_CURRENCY = "ETH"
+BAD_EXCHANGE_RATE = "ETH"
