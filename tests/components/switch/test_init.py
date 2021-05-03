@@ -49,7 +49,9 @@ async def test_methods(hass, entities, enable_custom_integrations):
     assert switch.is_on(hass, switch_3.entity_id)
 
 
-async def test_switch_context(hass, entities, hass_admin_user):
+async def test_switch_context(
+    hass, entities, hass_admin_user, enable_custom_integrations
+):
     """Test that switch context works."""
     assert await async_setup_component(hass, "switch", {"switch": {"platform": "test"}})
 

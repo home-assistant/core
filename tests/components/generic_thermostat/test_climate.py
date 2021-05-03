@@ -125,7 +125,7 @@ async def test_heater_input_boolean(hass, setup_comp_1):
     assert hass.states.get(heater_switch).state == STATE_ON
 
 
-async def test_heater_switch(hass, setup_comp_1):
+async def test_heater_switch(hass, setup_comp_1, enable_custom_integrations):
     """Test heater switching test switch."""
     platform = getattr(hass.components, "test.switch")
     platform.init()

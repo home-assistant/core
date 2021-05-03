@@ -43,11 +43,7 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_conditions(
-    hass,
-    device_reg,
-    entity_reg,
-):
+async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integrations):
     """Test we get the expected conditions from a cover."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
