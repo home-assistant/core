@@ -108,53 +108,77 @@ class CastOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Google Cast options."""
 
     def __init__(self, config_entry):
-        """Initialize MQTT options flow."""
+        """Initialize Google Cast options flow."""
         self.config_entry = config_entry
-        self.broker_config = {}
-        self.options = dict(config_entry.options)
+        self.updated_config = {}
 
     async def async_step_init(self, user_input=None):
-        """Manage the Cast options."""
-        return await self.async_step_options()
+        """Manage the Google Cast options."""
+        return await self.async_step_basic_options()
 
-    async def async_step_options(self, user_input=None):
-        """Manage the MQTT options."""
+    async def async_step_basic_options(self, user_input=None):
+        """Manage the Google Cast options."""
         errors = {}
         current_config = self.config_entry.data
         if user_input is not None:
-            bad_cec, ignore_cec = _string_to_list(
-                user_input.get(CONF_IGNORE_CEC, ""), IGNORE_CEC_SCHEMA
-            )
             bad_hosts, known_hosts = _string_to_list(
                 user_input.get(CONF_KNOWN_HOSTS, ""), KNOWN_HOSTS_SCHEMA
             )
-            bad_uuid, wanted_uuid = _string_to_list(
-                user_input.get(CONF_UUID, ""), WANTED_UUID_SCHEMA
-            )
 
-            if not bad_cec and not bad_hosts and not bad_uuid:
-                updated_config = dict(current_config)
-                updated_config[CONF_IGNORE_CEC] = ignore_cec
-                updated_config[CONF_KNOWN_HOSTS] = known_hosts
-                updated_config[CONF_UUID] = wanted_uuid
+            if not bad_hosts:
+                self.updated_config = dict(current_config)
+                self.updated_config[CONF_KNOWN_HOSTS] = known_hosts
+
+                if self.show_advanced_options:
+                    return await self.async_step_advanced_options()
+
                 self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=updated_config
+                    self.config_entry, data=self.updated_config
                 )
                 return self.async_create_entry(title="", data=None)
 
         fields = {}
         suggested_value = _list_to_string(current_config.get(CONF_KNOWN_HOSTS))
         _add_with_suggestion(fields, CONF_KNOWN_HOSTS, suggested_value)
-        if self.show_advanced_options:
-            suggested_value = _list_to_string(current_config.get(CONF_UUID))
-            _add_with_suggestion(fields, CONF_UUID, suggested_value)
-            suggested_value = _list_to_string(current_config.get(CONF_IGNORE_CEC))
-            _add_with_suggestion(fields, CONF_IGNORE_CEC, suggested_value)
 
         return self.async_show_form(
-            step_id="options",
+            step_id="basic_options",
             data_schema=vol.Schema(fields),
             errors=errors,
+            last_step=not self.show_advanced_options,
+        )
+
+    async def async_step_advanced_options(self, user_input=None):
+        """Manage the Google Cast options."""
+        errors = {}
+        if user_input is not None:
+            bad_cec, ignore_cec = _string_to_list(
+                user_input.get(CONF_IGNORE_CEC, ""), IGNORE_CEC_SCHEMA
+            )
+            bad_uuid, wanted_uuid = _string_to_list(
+                user_input.get(CONF_UUID, ""), WANTED_UUID_SCHEMA
+            )
+
+            if not bad_cec and not bad_uuid:
+                self.updated_config[CONF_IGNORE_CEC] = ignore_cec
+                self.updated_config[CONF_UUID] = wanted_uuid
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, data=self.updated_config
+                )
+                return self.async_create_entry(title="", data=None)
+
+        fields = {}
+        current_config = self.config_entry.data
+        suggested_value = _list_to_string(current_config.get(CONF_UUID))
+        _add_with_suggestion(fields, CONF_UUID, suggested_value)
+        suggested_value = _list_to_string(current_config.get(CONF_IGNORE_CEC))
+        _add_with_suggestion(fields, CONF_IGNORE_CEC, suggested_value)
+
+        return self.async_show_form(
+            step_id="advanced_options",
+            data_schema=vol.Schema(fields),
+            errors=errors,
+            last_step=True,
         )
 
 

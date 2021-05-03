@@ -5,10 +5,10 @@
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       },
       "config": {
-        "title": "Google Cast",
-        "description": "Please enter the Google Cast configuration.",
+        "title": "Google Cast configuration",
+        "description": "### Known Hosts \n A comma-separated list of hostnames or IP-addresses of cast devices, use if mDNS discovery is not working.",
         "data": {
-          "known_hosts": "Optional list of known hosts if mDNS discovery is not working."
+          "known_hosts": "Known hosts"
         }
       }
     },
@@ -21,12 +21,19 @@
   },
   "options": {
     "step": {
-      "options": {
-        "description": "Please enter the Google Cast configuration.",
+      "basic_options": {
+        "title": "Google Cast configuration",
+        "description": "### Known Hosts \n A comma-separated list of hostnames or IP-addresses of cast devices, use if mDNS discovery is not working.",
         "data": {
-          "ignore_cec": "Optional list which will be passed to pychromecast.IGNORE_CEC.",
-          "known_hosts": "Optional list of known hosts if mDNS discovery is not working.",
-          "uuid": "Optional list of UUIDs. Casts not listed will not be added."
+          "known_hosts": "Known hosts"
+        }
+      },
+      "advanced_options": {
+        "title": "Advanced Google Cast configuration",
+        "description": "### Allowed UUIDs\n A comma-separated list of UUIDs of Cast devices to add to Home Assistant. **Use only if you don’t want to add all available cast devices.** \n ### Ignore CEC \n A comma-separated list of Chromecasts that should ignore CEC data for determining the active input. This will be will be passed to pychromecast.IGNORE_CEC. [See the upstream documentation for more information](https://github.com/balloob/pychromecast#ignoring-cec-data).",
+        "data": {
+          "ignore_cec": "Ignore CEC",
+          "uuid": "Allowed UUIDs"
         }
       }
     },
