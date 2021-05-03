@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import logging
 from logging import Logger
 from types import ModuleType
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from typing_extensions import Protocol
 
@@ -625,7 +625,13 @@ class EntityPlatform:
         )
 
     @callback
-    def async_register_entity_service(self, name, schema, func, required_features=None):  # type: ignore[no-untyped-def]
+    def async_register_entity_service(
+        self,
+        name: str,
+        schema: dict,
+        func: str | Callable[..., Any],
+        required_features: Iterable[int] | None = None,
+    ) -> None:
         """Register an entity service.
 
         Services will automatically be shared by all platforms of the same domain.
@@ -634,7 +640,7 @@ class EntityPlatform:
             return
 
         if isinstance(schema, dict):
-            schema = cv.make_entity_service_schema(schema)
+            service_schema = cv.make_entity_service_schema(schema)
 
         async def handle_service(call: ServiceCall) -> None:
             """Handle the service."""
@@ -651,7 +657,7 @@ class EntityPlatform:
             )
 
         self.hass.services.async_register(
-            self.platform_name, name, handle_service, schema
+            self.platform_name, name, handle_service, service_schema
         )
 
     async def _update_entity_states(self, now: datetime) -> None:
