@@ -17,6 +17,17 @@ from .util import session_scope
 _LOGGER = logging.getLogger(__name__)
 
 
+def raise_if_exception_missing_str(ex, match_substrs):
+    """Raise an exception if the exception and cause do not contain the match substrs."""
+    lower_ex_strs = [str(ex).lower(), str(ex.__cause__).lower()]
+    for str_sub in match_substrs:
+        for exc_str in lower_ex_strs:
+            if exc_str and str_sub in exc_str:
+                return
+
+    raise ex
+
+
 def get_schema_version(instance):
     """Get the schema version."""
     with session_scope(session=instance.get_session()) as session:
@@ -80,11 +91,7 @@ def _create_index(connection, table_name, index_name):
     try:
         index.create(connection)
     except (InternalError, ProgrammingError, OperationalError) as err:
-        lower_err_str = str(err).lower()
-
-        if "already exists" not in lower_err_str and "duplicate" not in lower_err_str:
-            raise
-
+        raise_if_exception_missing_str(err, ["already exists", "duplicate"])
         _LOGGER.warning(
             "Index %s already exists on %s, continuing", index_name, table_name
         )
@@ -199,9 +206,7 @@ def _add_columns(connection, table_name, columns_def):
                 )
             )
         except (InternalError, OperationalError) as err:
-            if "duplicate" not in str(err).lower():
-                raise
-
+            raise_if_exception_missing_str(err, ["duplicate"])
             _LOGGER.warning(
                 "Column %s already exists on %s, continuing",
                 column_def.split(" ")[1],
