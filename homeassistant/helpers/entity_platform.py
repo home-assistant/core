@@ -697,6 +697,15 @@ current_platform: ContextVar[EntityPlatform | None] = ContextVar(
 
 
 @callback
+def async_get_current_platform() -> EntityPlatform:
+    """Get the current platform from context."""
+    platform = current_platform.get()
+    if platform is None:
+        raise RuntimeError("Cannot get non-set current platform")
+    return platform
+
+
+@callback
 def async_get_platforms(
     hass: HomeAssistant, integration_name: str
 ) -> list[EntityPlatform]:
