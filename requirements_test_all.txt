@@ -202,7 +202,7 @@ azure-eventhub==5.1.0
 base36==0.1.1
 
 # homeassistant.components.zha
-bellows==0.23.1
+bellows==0.24.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.7.15
@@ -962,7 +962,7 @@ pysmartthings==0.7.6
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.43
+pysonos==0.0.44
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -1104,7 +1104,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.6.9
+simplisafe-python==9.6.10
 
 # homeassistant.components.slack
 slackclient==2.5.0
@@ -1183,7 +1183,7 @@ tellduslive==0.10.11
 tesla-powerwall==0.3.5
 
 # homeassistant.components.tesla
-teslajsonpy==0.11.5
+teslajsonpy==0.18.3
 
 # homeassistant.components.toon
 toonapi==0.2.0
@@ -1264,7 +1264,7 @@ xmltodict==0.12.0
 yalexs==1.1.11
 
 # homeassistant.components.yeelight
-yeelight==0.6.1
+yeelight==0.6.2
 
 # homeassistant.components.onvif
 zeep[async]==4.0.0

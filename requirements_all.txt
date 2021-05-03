@@ -346,7 +346,7 @@ beautifulsoup4==4.9.3
 # beewi_smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.23.1
+bellows==0.24.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.7.15
@@ -1744,7 +1744,7 @@ pysnmp==4.4.12
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.43
+pysonos==0.0.44
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -2073,7 +2073,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.6.9
+simplisafe-python==9.6.10
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.0
@@ -2226,7 +2226,7 @@ temperusb==1.5.3
 tesla-powerwall==0.3.5
 
 # homeassistant.components.tesla
-teslajsonpy==0.11.5
+teslajsonpy==0.18.3
 
 # homeassistant.components.tensorflow
 # tf-models-official==2.3.0
@@ -2379,7 +2379,7 @@ yalesmartalarmclient==0.1.6
 yalexs==1.1.11
 
 # homeassistant.components.yeelight
-yeelight==0.6.1
+yeelight==0.6.2
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10
