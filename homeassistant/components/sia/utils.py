@@ -17,37 +17,32 @@ from .const import (
     EVENT_ZONE,
     HUB_SENSOR_NAME,
     HUB_ZONE,
+    PING_INTERVAL_MARGIN,
 )
 
 
-def get_id_and_name(
-    port: int, account: str, entity_type: str, zone: int = 0
-) -> tuple[str, str]:
+def get_unavailability_interval(ping: int) -> float:
+    """Return the interval to the next unavailability check."""
+    return timedelta(minutes=ping, seconds=PING_INTERVAL_MARGIN).total_seconds()
+
+
+def get_name(port: int, account: str, zone: int, entity_type: str) -> str:
     """Give back a entity_id and name according to the variables."""
     if zone == HUB_ZONE:
-        return (
-            get_id(port, account, zone, entity_type),
-            f"{port} - {account} - {'Last Heartbeat' if entity_type == DEVICE_CLASS_TIMESTAMP else 'Power'}",
-        )
-
-    return (
-        get_id(port, account, zone, entity_type),
-        f"{port} - {account} - zone {zone} - {entity_type}",
-    )
+        return f"{port} - {account} - {'Last Heartbeat' if entity_type == DEVICE_CLASS_TIMESTAMP else 'Power'}"
+    return f"{port} - {account} - zone {zone} - {entity_type}"
 
 
-def get_ping_interval(ping: int) -> timedelta:
-    """Return the ping interval as timedelta."""
-    return timedelta(minutes=ping)
-
-
-def get_id(port: int, account: str, zone: int, entity_type: str) -> str:
-    """Give back a unique_id according to the variables, defaults to the hub sensor entity_id."""
+def get_entity_id(port: int, account: str, zone: int, entity_type: str) -> str:
+    """Give back a entity_id according to the variables."""
     if zone == HUB_ZONE:
-        if entity_type == DEVICE_CLASS_TIMESTAMP:
-            return f"{port}_{account}_{HUB_SENSOR_NAME}"
-        return f"{port}_{account}_{entity_type}"
+        return f"{port}_{account}_{HUB_SENSOR_NAME if entity_type == DEVICE_CLASS_TIMESTAMP else entity_type}"
     return f"{port}_{account}_{zone}_{entity_type}"
+
+
+def get_unique_id(entry_id: str, account: str, zone: int, domain: str) -> str:
+    """Return the unique id."""
+    return f"{entry_id}_{account}_{zone}_{domain}"
 
 
 def get_attr_from_sia_event(event: SIAEvent) -> dict[str, Any]:

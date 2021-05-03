@@ -1,5 +1,4 @@
 """Constants for the sia integration."""
-from datetime import timedelta
 
 CONF_ACCOUNT = "account"
 CONF_ACCOUNTS = "accounts"
@@ -14,7 +13,7 @@ TITLE = "SIA Alarm on port {}"
 SIA_EVENT = "sia_event_{}_{}"
 HUB_SENSOR_NAME = "last_heartbeat"
 HUB_ZONE = 0
-PING_INTERVAL_MARGIN = timedelta(seconds=30)
+PING_INTERVAL_MARGIN = 30
 
 EVENT_CODE = "last_code"
 EVENT_ACCOUNT = "account"

@@ -86,10 +86,10 @@ class SIAHub:
 
         """
         _LOGGER.debug(
-            "Adding event to bus for code %s for account %s and port %s",
+            "Adding event to bus for code %s for port %s and account %s",
             event.code,
-            event.account,
             self._port,
+            event.account,
         )
         self._hass.bus.async_fire(
             event_type=SIA_EVENT.format(self._port, event.account),
