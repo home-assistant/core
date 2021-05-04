@@ -2,7 +2,10 @@
 
 DOMAIN = "fritz"
 
-PLATFORMS = ["binary_sensor", "device_tracker"]
+PLATFORMS = ["binary_sensor", "device_tracker", "sensor"]
+
+SENSOR_UPTIME = "Uptime"
+SENSOR_EXTERNAL_IP = "External IP"
 
 DATA_FRITZ = "fritz_data"
 
