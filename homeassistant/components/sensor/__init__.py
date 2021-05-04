@@ -63,8 +63,10 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 # The state represents a measurement in present time
 STATE_CLASS_MEASUREMENT = "measurement"
+# The state class is unknown
+STATE_CLASS_UNKNOWN = None
 
-STATE_CLASSES = [STATE_CLASS_MEASUREMENT]
+STATE_CLASSES = [STATE_CLASS_MEASUREMENT, STATE_CLASS_UNKNOWN]
 
 STATE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(STATE_CLASSES))
 
