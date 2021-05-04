@@ -48,6 +48,13 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up buienradar camera platform."""
+    _LOGGER.warning(
+        "Platform configuration is deprecated, will be removed in a future release"
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:

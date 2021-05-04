@@ -207,6 +207,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up buienradar sensor platform."""
+    _LOGGER.warning(
+        "Platform configuration is deprecated, will be removed in a future release"
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
