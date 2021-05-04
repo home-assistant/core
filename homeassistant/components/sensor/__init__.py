@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import cast
+from typing import Any, Mapping, cast
 
 import voluptuous as vol
 
@@ -34,6 +34,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_STATE_CLASS = "state_class"
 
 DOMAIN = "sensor"
 
@@ -96,3 +98,10 @@ class SensorEntity(Entity):
     def state_class(self) -> str | None:
         """Return the state class of this entity, from STATE_CLASSES, if any."""
         return None
+
+    @property
+    def capability_attributes(self) -> Mapping[str, Any] | None:
+        """Return the capability attributes."""
+        attrs = {ATTR_STATE_CLASS: self.state_class}
+
+        return attrs
