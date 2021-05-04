@@ -11,8 +11,8 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import RitualsDataUpdateCoordinator
 from .const import COORDINATORS, DEVICES, DOMAIN
 from .entity import DiffuserEntity
 
@@ -38,7 +38,9 @@ async def async_setup_entry(
 class DiffuserBatteryChargingBinarySensor(DiffuserEntity, BinarySensorEntity):
     """Representation of a diffuser battery charging binary sensor."""
 
-    def __init__(self, diffuser: Diffuser, coordinator: CoordinatorEntity) -> None:
+    def __init__(
+        self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
+    ) -> None:
         """Initialize the battery charging binary sensor."""
         super().__init__(diffuser, coordinator, CHARGING_SUFFIX)
 
