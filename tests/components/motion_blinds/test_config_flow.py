@@ -257,7 +257,7 @@ async def test_config_flow_discovery_fail(hass):
 
 
 async def test_config_flow_interface(hass):
-    """Succesfull flow manually initialized by the user with interface specified."""
+    """Successful flow manually initialized by the user with interface specified."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
