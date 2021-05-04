@@ -13,7 +13,7 @@
     "zigpy==0.33.0",
     "zigpy-xbee==0.13.0",
     "zigpy-zigate==0.7.3",
-    "zigpy-znp==0.4.0"
+    "zigpy-znp==0.5.1"
   ],
   "codeowners": ["@dmulcahey", "@adminiuga"],
   "zeroconf": [
