@@ -116,6 +116,7 @@ async def test_config_flow_manual_host_success(hass):
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_API_KEY: TEST_API_KEY,
+        const.CONF_INTERFACE: const.DEFAULT_INTERFACE,
     }
 
 
@@ -148,6 +149,7 @@ async def test_config_flow_discovery_1_success(hass):
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_API_KEY: TEST_API_KEY,
+        const.CONF_INTERFACE: const.DEFAULT_INTERFACE,
     }
 
 
@@ -197,6 +199,7 @@ async def test_config_flow_discovery_2_success(hass):
     assert result["data"] == {
         CONF_HOST: TEST_HOST2,
         CONF_API_KEY: TEST_API_KEY,
+        const.CONF_INTERFACE: const.DEFAULT_INTERFACE,
     }
 
 
@@ -285,6 +288,7 @@ async def test_config_flow_interface(hass):
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_API_KEY: TEST_API_KEY,
+        const.CONF_INTERFACE: TEST_HOST_HA,
     }
 
 
