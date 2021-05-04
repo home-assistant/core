@@ -1,8 +1,6 @@
 """Home Assistant Switcher Component Switch platform."""
 from __future__ import annotations
 
-from typing import Callable
-
 from aioswitcher.api import SwitcherV2Api
 from aioswitcher.api.messages import SwitcherV2ControlResponseMSG
 from aioswitcher.consts import (
@@ -19,6 +17,7 @@ from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchEntity
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import (
     ATTR_AUTO_OFF_SET,
@@ -55,7 +54,7 @@ SERVICE_TURN_ON_WITH_TIMER_SCHEMA = {
 async def async_setup_platform(
     hass: HomeAssistant,
     config: dict,
-    async_add_entities: Callable,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: dict,
 ) -> None:
     """Set up the switcher platform for the switch component."""
