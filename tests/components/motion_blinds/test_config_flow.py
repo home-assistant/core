@@ -104,7 +104,7 @@ async def test_config_flow_manual_host_success(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "connect"
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -136,7 +136,7 @@ async def test_config_flow_discovery_1_success(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "connect"
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -185,7 +185,7 @@ async def test_config_flow_discovery_2_success(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "connect"
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -217,7 +217,7 @@ async def test_config_flow_connection_error(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "connect"
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.motion_blinds.gateway.MotionGateway.GetDeviceList",
@@ -273,7 +273,7 @@ async def test_config_flow_interface(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "connect"
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -305,7 +305,7 @@ async def test_config_flow_invalid_interface(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "connect"
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.motion_blinds.config_flow.MotionMulticast.Start_listen",
