@@ -104,7 +104,7 @@ class ModbusBinarySensor(BinarySensorEntity):
         self._hub = hub
         self._hass = hass
         self._name = entry[CONF_NAME]
-        self._slave = entry.get(CONF_SLAVE, None)
+        self._slave = entry.get(CONF_SLAVE)
         self._address = int(entry[CONF_ADDRESS])
         self._device_class = entry.get(CONF_DEVICE_CLASS)
         self._input_type = entry[CONF_INPUT_TYPE]
