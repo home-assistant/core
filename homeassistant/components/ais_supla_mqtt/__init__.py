@@ -1,6 +1,7 @@
 """Support for AIS SUPLA MQTT"""
 import asyncio
 import logging
+import os
 
 from homeassistant.components.ais_dom import ais_global
 from homeassistant.config_entries import ConfigEntry
@@ -23,13 +24,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = entry
 
     # after reload from app the the async_unload_entry is called
-    # check if we still have bridge definition
-    include_mqtt_dir = (
-        "include_mqtt /data/data/pl.sviete.dom/files/home/AIS/.dom/mqtt_conf.d"
-    )
-    conf_file = open("/data/data/pl.sviete.dom/files/usr/etc/mosquitto/mosquitto.conf")
-    if include_mqtt_dir not in conf_file:
-        _LOGGER.info("Connection bridge not exists in mosquitto.conf, reload")
+    # check if we still have bridge definition in file
+    if not os.path.isfile(
+        "/data/data/pl.sviete.dom/files/home/AIS/.dom/mqtt_conf.d/supla.conf"
+    ):
+        _LOGGER.info("Connection bridge not exists in mosquitto.conf, recreate")
         mqtt_broker_settings = entry.data.copy()
         mqtt_broker_settings["file_config_name"] = "supla.conf"
         ais_global.save_ais_mqtt_connection_settings(mqtt_broker_settings)

@@ -361,6 +361,9 @@ def save_ais_mqtt_connection_settings(mqtt_bridge_settings=None):
                 conf_bridge_file.write(
                     "bridge_cafile /data/data/pl.sviete.dom/files/usr/etc/tls/cert.pem\n"
                 )
+        else:
+            # clear the config by removing file
+            os.remove(conf_d + "/" + mqtt_bridge_settings["file_config_name"])
 
 
 set_global_my_ip(None)
