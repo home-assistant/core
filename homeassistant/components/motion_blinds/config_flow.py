@@ -123,7 +123,7 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             # check socket interface
             if multicast_interface != DEFAULT_INTERFACE:
-                motion_multicast = MotionMulticast(interface = multicast_interface)
+                motion_multicast = MotionMulticast(interface=multicast_interface)
                 try:
                     motion_multicast.Start_listen()
                     motion_multicast.Stop_listen()
