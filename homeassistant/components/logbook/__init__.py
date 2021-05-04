@@ -647,7 +647,7 @@ def _augment_data_with_context(
         return
 
     attr_entity_id = event_data.get(ATTR_ENTITY_ID)
-    if not attr_entity_id or (
+    if not isinstance(attr_entity_id, str) or (
         event_type in SCRIPT_AUTOMATION_EVENTS and attr_entity_id == entity_id
     ):
         return
