@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from asyncio import Task
 import logging
-from typing import TYPE_CHECKING
 
 from python_rako.bridge import Bridge
 from python_rako.helpers import convert_to_brightness, get_dg_listener
@@ -13,11 +12,9 @@ from python_rako.model import ChannelStatusMessage, SceneStatusMessage, StatusMe
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
+from .light import RakoLight
+from .model import RakoDomainEntryData
 from .util import create_unique_id
-
-if TYPE_CHECKING:
-    from . import RakoDomainEntryData
-    from .light import RakoLight
 
 _LOGGER = logging.getLogger(__name__)
 

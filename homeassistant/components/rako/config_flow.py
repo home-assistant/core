@@ -11,7 +11,7 @@ from python_rako.exceptions import RakoBridgeError
 from python_rako.model import BridgeInfo
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -24,7 +24,6 @@ class RakoConfigFlow(ConfigFlow, domain=DOMAIN):
     """RakoConfigFlow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

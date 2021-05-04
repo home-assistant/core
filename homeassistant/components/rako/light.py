@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 import python_rako
 from python_rako.exceptions import RakoBridgeError
@@ -18,13 +18,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .util import create_unique_id
 
 if TYPE_CHECKING:
-    from . import RakoDomainEntryData
     from .bridge import RakoBridge
+    from .model import RakoDomainEntryData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the config entry."""
     rako_domain_entry_data: RakoDomainEntryData = hass.data[DOMAIN][entry.entry_id]

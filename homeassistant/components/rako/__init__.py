@@ -1,9 +1,7 @@
 """The Rako integration."""
 from __future__ import annotations
 
-from asyncio import Task
 import logging
-from typing import TypedDict
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -12,17 +10,9 @@ from homeassistant.core import HomeAssistant
 
 from .bridge import RakoBridge
 from .const import DOMAIN
-from .light import RakoLight
+from .model import RakoDomainEntryData
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class RakoDomainEntryData(TypedDict):
-    """A single Rako config entry's data."""
-
-    rako_bridge_client: RakoBridge
-    rako_light_map: dict[str, RakoLight]
-    rako_listener_task: Task | None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
