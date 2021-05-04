@@ -1,11 +1,14 @@
 """Config flow to configure Motion Blinds using their WLAN API."""
+from socket import gaierror
+
 from motionblinds import MotionDiscovery
+from motionblinds.motion_blinds import MotionCommunication
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 
-from .const import DEFAULT_GATEWAY_NAME, DOMAIN
+from .const import CONF_INTERFACE, DEFAULT_GATEWAY_NAME, DEFAULT_INTERFACE, DOMAIN
 from .gateway import ConnectMotionGateway
 
 CONFIG_SCHEMA = vol.Schema(
@@ -17,6 +20,7 @@ CONFIG_SCHEMA = vol.Schema(
 CONFIG_SETTINGS = vol.Schema(
     {
         vol.Required(CONF_API_KEY): vol.All(str, vol.Length(min=16, max=16)),
+        vol.Optional(CONF_INTERFACE, default=DEFAULT_INTERFACE): str,
     }
 )
 
@@ -70,9 +74,21 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_connect(self, user_input=None):
         """Connect to the Motion Gateway."""
+        errors = {}
         if user_input is not None:
             key = user_input[CONF_API_KEY]
-
+            interface = user_input[CONF_INTERFACE]
+            
+            # check socket interface
+            if interface!=DEFAULT_INTERFACE:
+                motion_com = MotionCommunication
+                try:
+                    sock = motion_com._create_mcast_socket(interface)
+                    sock.close()
+                except gaierror:
+                    errors[CONF_INTERFACE] = "invalid_interface"
+                    return self.async_show_form(step_id="connect", data_schema=CONFIG_SETTINGS, errors=errors)
+            
             connect_gateway_class = ConnectMotionGateway(self.hass, multicast=None)
             if not await connect_gateway_class.async_connect_gateway(self._host, key):
                 return self.async_abort(reason="connection_error")
@@ -85,7 +101,7 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(
                 title=DEFAULT_GATEWAY_NAME,
-                data={CONF_HOST: self._host, CONF_API_KEY: key},
+                data={CONF_HOST: self._host, CONF_API_KEY: key, CONF_INTERFACE: interface},
             )
 
-        return self.async_show_form(step_id="connect", data_schema=CONFIG_SETTINGS)
+        return self.async_show_form(step_id="connect", data_schema=CONFIG_SETTINGS, errors=errors)

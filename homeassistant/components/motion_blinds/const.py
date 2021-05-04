@@ -5,6 +5,9 @@ DEFAULT_GATEWAY_NAME = "Motion Blinds Gateway"
 
 PLATFORMS = ["cover", "sensor"]
 
+CONF_INTERFACE = "interface"
+DEFAULT_INTERFACE = "any"
+
 KEY_GATEWAY = "gateway"
 KEY_COORDINATOR = "coordinator"
 KEY_MULTICAST_LISTENER = "multicast_listener"

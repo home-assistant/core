@@ -14,6 +14,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     ATTR_AVAILABLE,
+    CONF_INTERFACE,
+    DEFAULT_INTERFACE,
     DOMAIN,
     KEY_COORDINATOR,
     KEY_GATEWAY,
@@ -106,10 +108,11 @@ async def async_setup_entry(
     hass.data.setdefault(DOMAIN, {})
     host = entry.data[CONF_HOST]
     key = entry.data[CONF_API_KEY]
+    multicast_interface = entry.data.get(CONF_INTERFACE, DEFAULT_INTERFACE)
 
     # Create multicast Listener
     if KEY_MULTICAST_LISTENER not in hass.data[DOMAIN]:
-        multicast = MotionMulticast()
+        multicast = MotionMulticast(interface = multicast_interface)
         hass.data[DOMAIN][KEY_MULTICAST_LISTENER] = multicast
         # start listening for local pushes (only once)
         await hass.async_add_executor_job(multicast.Start_listen)
