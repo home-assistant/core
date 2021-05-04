@@ -76,9 +76,12 @@ def motion_blinds_connect_fixture():
         "homeassistant.components.motion_blinds.config_flow.MotionDiscovery.discover",
         return_value=TEST_DISCOVERY_1,
     ), patch(
-        "homeassistant.components.motion_blinds.config_flow.MotionCommunication._create_mcast_socket",
-        return_value=Mock(),
+        "homeassistant.components.motion_blinds.config_flow.MotionMulticast.Start_listen",
+        return_value=True,
     ), patch(
+        "homeassistant.components.motion_blinds.config_flow.MotionMulticast.Stop_listen",
+        return_value=True,
+    , patch(
         "homeassistant.components.motion_blinds.async_setup_entry", return_value=True
     ):
         yield
@@ -305,7 +308,7 @@ async def test_config_flow_invalid_interface(hass):
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.motion_blinds.config_flow.MotionCommunication._create_mcast_socket",
+        "homeassistant.components.motion_blinds.config_flow.MotionMulticast.Start_listen",
         side_effect=socket.gaierror,
     ):
         result = await hass.config_entries.flow.async_configure(
