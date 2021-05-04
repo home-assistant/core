@@ -5,7 +5,6 @@ import logging
 import aiosyncthing
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_URL
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -29,9 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Syncthing sensors."""
-
-    url = config_entry.data[CONF_URL]
-    syncthing = hass.data[DOMAIN][entry.entry_id]
+    syncthing = hass.data[DOMAIN][config_entry.entry_id]
 
     try:
         config = await syncthing.system.config()
