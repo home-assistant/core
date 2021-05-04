@@ -181,6 +181,7 @@ async def async_setup_platform(
         sensors.append(
             ModbusRegisterSensor(
                 hub,
+                hass,
                 entry,
                 structure,
             )
@@ -197,11 +198,13 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
     def __init__(
         self,
         hub,
+        hass,
         entry,
         structure,
     ):
         """Initialize the modbus register sensor."""
         self._hub = hub
+        self._hass = hass
         self._name = entry[CONF_NAME]
         slave = entry.get(CONF_SLAVE)
         self._slave = int(slave) if slave else None
@@ -227,7 +230,7 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
             self._value = state.state
 
         async_track_time_interval(
-            self.hass, lambda arg: self.update(), self._scan_interval
+            self._hass, lambda arg: self.update(), self._scan_interval
         )
 
     @property

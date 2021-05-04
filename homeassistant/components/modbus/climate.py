@@ -93,7 +93,7 @@ async def async_setup_platform(
             continue
 
         entity[CONF_STRUCTURE] = structure
-        entities.append(ModbusThermostat(hub, entity))
+        entities.append(ModbusThermostat(hub, hass, entity))
 
     async_add_entities(entities)
 
@@ -104,10 +104,12 @@ class ModbusThermostat(ClimateEntity):
     def __init__(
         self,
         hub: ModbusHub,
+        hass: HomeAssistant,
         config: dict[str, Any],
     ):
         """Initialize the modbus thermostat."""
         self._hub: ModbusHub = hub
+        self._hass: HomeAssistant = hass
         self._name = config[CONF_NAME]
         self._slave = config.get(CONF_SLAVE)
         self._target_temperature_register = config[CONF_TARGET_TEMP]
@@ -133,7 +135,7 @@ class ModbusThermostat(ClimateEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         async_track_time_interval(
-            self.hass, lambda arg: self.update(), self._scan_interval
+            self._hass, lambda arg: self.update(), self._scan_interval
         )
 
     @property

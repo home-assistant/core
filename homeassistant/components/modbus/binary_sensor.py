@@ -94,6 +94,7 @@ async def async_setup_platform(
         sensors.append(
             ModbusBinarySensor(
                 hub,
+                hass,
                 entry[CONF_NAME],
                 entry.get(CONF_SLAVE),
                 entry[CONF_ADDRESS],
@@ -110,10 +111,11 @@ class ModbusBinarySensor(BinarySensorEntity):
     """Modbus binary sensor."""
 
     def __init__(
-        self, hub, name, slave, address, device_class, input_type, scan_interval
+        self, hub, hass, name, slave, address, device_class, input_type, scan_interval
     ):
         """Initialize the Modbus binary sensor."""
         self._hub = hub
+        self._hass = hass
         self._name = name
         self._slave = int(slave) if slave else None
         self._address = int(address)
@@ -126,7 +128,7 @@ class ModbusBinarySensor(BinarySensorEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         async_track_time_interval(
-            self.hass, lambda arg: self.update(), self._scan_interval
+            self._hass, lambda arg: self.update(), self._scan_interval
         )
 
     @property

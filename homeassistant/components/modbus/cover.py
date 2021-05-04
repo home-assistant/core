@@ -54,7 +54,7 @@ async def async_setup_platform(
     covers = []
     for cover in discovery_info[CONF_COVERS]:
         hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
-        covers.append(ModbusCover(hub, cover))
+        covers.append(ModbusCover(hub, hass, cover))
 
     async_add_entities(covers)
 
@@ -65,10 +65,12 @@ class ModbusCover(CoverEntity, RestoreEntity):
     def __init__(
         self,
         hub: ModbusHub,
+        hass: HomeAssistant,
         config: dict[str, Any],
     ):
         """Initialize the modbus cover."""
         self._hub: ModbusHub = hub
+        self._hass: HomeAssistant = hass
         self._coil = config.get(CALL_TYPE_COIL)
         self._device_class = config.get(CONF_DEVICE_CLASS)
         self._name = config[CONF_NAME]
@@ -107,7 +109,7 @@ class ModbusCover(CoverEntity, RestoreEntity):
             self._value = state.state
 
         async_track_time_interval(
-            self.hass, lambda arg: self.update(), self._scan_interval
+            self._hass, lambda arg: self.update(), self._scan_interval
         )
 
     @property
