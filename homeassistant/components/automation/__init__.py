@@ -1,7 +1,6 @@
 """Allow to set up simple automation rules via the config file."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any, Awaitable, Callable, Dict, cast
 
@@ -55,7 +54,10 @@ from homeassistant.helpers.script import (
     Script,
 )
 from homeassistant.helpers.script_variables import ScriptVariables
-from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.service import (
+    ReloadServiceHelper,
+    async_register_admin_service,
+)
 from homeassistant.helpers.trace import (
     TraceElement,
     script_execution_set,
@@ -245,20 +247,23 @@ async def async_setup(hass, config):
         "async_turn_off",
     )
 
-    reload_lock = asyncio.Lock()
-
     async def reload_service_handler(service_call):
         """Remove all automations and load new ones from config."""
-        async with reload_lock:
-            conf = await component.async_prepare_reload()
-            if conf is None:
-                return
-            async_get_blueprints(hass).async_reset_cache()
-            await _async_process_config(hass, conf, component)
-            hass.bus.async_fire(EVENT_AUTOMATION_RELOADED, context=service_call.context)
+        conf = await component.async_prepare_reload()
+        if conf is None:
+            return
+        async_get_blueprints(hass).async_reset_cache()
+        await _async_process_config(hass, conf, component)
+        hass.bus.async_fire(EVENT_AUTOMATION_RELOADED, context=service_call.context)
+
+    reload_helper = ReloadServiceHelper(reload_service_handler)
 
     async_register_admin_service(
-        hass, DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
+        hass,
+        DOMAIN,
+        SERVICE_RELOAD,
+        reload_helper.execute_service,
+        schema=vol.Schema({}),
     )
 
     return True
