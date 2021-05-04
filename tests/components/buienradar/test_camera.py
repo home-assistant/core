@@ -11,7 +11,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     HTTP_INTERNAL_SERVER_ERROR,
 )
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers.entity_registry import async_get
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
@@ -31,7 +31,7 @@ def radar_map_url(country_code: str = "NL") -> str:
 
 
 async def _setup_config_entry(hass, entry):
-    entity_registry = await async_get_registry(hass)
+    entity_registry = async_get(hass)
     entity_registry.async_get_or_create(
         domain="camera",
         platform="buienradar",

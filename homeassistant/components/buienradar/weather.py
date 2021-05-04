@@ -11,6 +11,7 @@ from buienradar.constants import (
     WINDAZIMUTH,
     WINDSPEED,
 )
+import voluptuous as vol
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
@@ -34,11 +35,13 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
+    PLATFORM_SCHEMA,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 # Reuse data and API logic from the sensor implementation
@@ -46,6 +49,8 @@ from .const import DEFAULT_TIMEFRAME, DOMAIN
 from .util import BrData
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_FORECAST = "forecast"
 
 DATA_CONDITION = "buienradar_condition"
 
@@ -70,6 +75,15 @@ CONDITION_CLASSES = {
     ATTR_CONDITION_WINDY_VARIANT: (),
     ATTR_CONDITION_EXCEPTIONAL: (),
 }
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_LATITUDE): cv.latitude,
+        vol.Optional(CONF_LONGITUDE): cv.longitude,
+        vol.Optional(CONF_FORECAST, default=True): cv.boolean,
+    }
+)
 
 
 async def async_setup_entry(

@@ -18,13 +18,15 @@ from buienradar.constants import (
     WINDGUST,
     WINDSPEED,
 )
+import voluptuous as vol
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
+    CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     DEGREE,
     IRRADIATION_WATTS_PER_SQUARE_METER,
@@ -37,6 +39,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -184,6 +187,24 @@ SENSOR_TYPES = {
     "symbol_4d": ["Symbol 4d", None, None],
     "symbol_5d": ["Symbol 5d", None, None],
 }
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(
+            CONF_MONITORED_CONDITIONS, default=["symbol", "temperature"]
+        ): vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES.keys())]),
+        vol.Inclusive(
+            CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
+        ): cv.latitude,
+        vol.Inclusive(
+            CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
+        ): cv.longitude,
+        vol.Optional(CONF_TIMEFRAME, default=DEFAULT_TIMEFRAME): vol.All(
+            vol.Coerce(int), vol.Range(min=5, max=120)
+        ),
+        vol.Optional(CONF_NAME, default="br"): cv.string,
+    }
+)
 
 
 async def async_setup_entry(
