@@ -59,10 +59,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
     hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
 
     conf = config.get(DOMAIN)
-    if conf is None:
-        conf = COAP_SCHEMA({})
-
-    hass.data[DOMAIN][CONF_COAP_PORT] = conf[CONF_COAP_PORT]
+    if conf is not None:
+        hass.data[DOMAIN][CONF_COAP_PORT] = conf[CONF_COAP_PORT]
 
     return True
 
