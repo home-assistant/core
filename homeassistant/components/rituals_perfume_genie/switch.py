@@ -8,8 +8,8 @@ from pyrituals import Diffuser
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import RitualsDataUpdateCoordinator
 from .const import ATTRIBUTES, COORDINATORS, DEVICES, DOMAIN
 from .entity import DiffuserEntity
 
@@ -37,7 +37,9 @@ async def async_setup_entry(
 class DiffuserSwitch(SwitchEntity, DiffuserEntity):
     """Representation of a diffuser switch."""
 
-    def __init__(self, diffuser: Diffuser, coordinator: CoordinatorEntity) -> None:
+    def __init__(
+        self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
+    ) -> None:
         """Initialize the diffuser switch."""
         super().__init__(diffuser, coordinator, "")
         self._is_on = self._diffuser.is_on
