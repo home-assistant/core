@@ -64,8 +64,6 @@ async def _async_get_configured_fritz_tools(hass, data):
 async def async_unload_services(hass):
     """Unload services for Fritz integration."""
 
-    _LOGGER.warning("Simone: unloading services...")
-
     if not hass.data.get(FRITZ_SERVICES):
         return
 

@@ -159,12 +159,12 @@ class FritzBoxTools:
 
     def service_reconnect_fritzbox(self) -> None:
         """Define service reconnect."""
-        _LOGGER.info("Reconnecting the FRITZ!Box.")
+        _LOGGER.info("Reconnecting FRITZ!Box router")
         self.hass.async_add_executor_job(self.connection.reconnect)
 
     def service_reboot_fritzbox(self) -> None:
         """Define service reboot."""
-        _LOGGER.info("Rebooting the FRITZ!Box.")
+        _LOGGER.info("Rebooting FRITZ!Box router")
         self.hass.async_add_executor_job(
             self.connection.call_action, "DeviceConfig1", "Reboot"
         )
