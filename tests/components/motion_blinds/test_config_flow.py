@@ -5,8 +5,8 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.motion_blinds.config_flow import DEFAULT_GATEWAY_NAME
 from homeassistant.components.motion_blinds import const
+from homeassistant.components.motion_blinds.config_flow import DEFAULT_GATEWAY_NAME
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 
 from tests.common import MockConfigEntry
