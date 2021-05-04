@@ -7,6 +7,7 @@ from typing import Any
 import uuid
 
 from jellyfin_apiclient_python import Jellyfin, JellyfinClient
+from jellyfin_apiclient_python.api import API
 from jellyfin_apiclient_python.connection_manager import (
     CONNECTION_STATE,
     ConnectionManager,
@@ -41,8 +42,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a user defined configuration."""
-        await self.async_set_unique_id(DOMAIN)
-
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
@@ -50,7 +49,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await validate_input(self.hass, user_input)
+                client = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -59,12 +58,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
                 _LOGGER.exception(ex)
             else:
+                await self.set_id(client.jellyfin)
+
                 title = str(user_input.get(CONF_URL))
                 return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def set_id(self, api: API) -> None:
+        """Set the unique userid from a Jellyfin server."""
+        settings: dict[str, Any] = await self.hass.async_add_executor_job(
+            api.get_user_settings
+        )
+        userid: str = settings["Id"]
+        await self.async_set_unique_id(userid)
+        self._abort_if_unique_id_configured()
 
 
 async def validate_input(

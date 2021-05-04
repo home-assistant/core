@@ -16,6 +16,7 @@ PASSWORD = "test-password"
 
 MOCK_SUCCESFUL_CONNECTION_STATE = {"State": CONNECTION_STATE["ServerSignIn"]}
 MOCK_SUCCESFUL_LOGIN_RESPONSE = {"AccessToken": "Test"}
+MOCK_USER_SETTINGS = {"Id": "123"}
 
 
 async def test_abort_if_existing_entry(hass: HomeAssistant):
@@ -47,7 +48,10 @@ async def test_form(hass: HomeAssistant):
     ) as mock_login, patch(
         "homeassistant.components.jellyfin.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.jellyfin.config_flow.API.get_user_settings",
+        return_value=MOCK_USER_SETTINGS,
+    ) as mock_set_id:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -69,6 +73,7 @@ async def test_form(hass: HomeAssistant):
     assert len(mock_connect.mock_calls) == 1
     assert len(mock_login.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_set_id.mock_calls) == 1
 
 
 async def test_form_cannot_connect(hass: HomeAssistant):
