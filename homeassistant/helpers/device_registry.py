@@ -56,7 +56,7 @@ class DeviceEntry:
 
     config_entries: set[str] = attr.ib(converter=set, factory=set)
     connections: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
-    identifiers: set[tuple[str, ...]] = attr.ib(converter=set, factory=set)
+    identifiers: Set[tuple[str, ...]] = attr.ib(converter=set, factory=set)
     manufacturer: str | None = attr.ib(default=None)
     model: str | None = attr.ib(default=None)
     name: str | None = attr.ib(default=None)
@@ -93,7 +93,7 @@ class DeletedDeviceEntry:
 
     config_entries: set[str] = attr.ib()
     connections: set[tuple[str, str]] = attr.ib()
-    identifiers: set[tuple[str, ...]] = attr.ib()
+    identifiers: Set[tuple[str, ...]] = attr.ib()
     id: str = attr.ib()
     orphaned_timestamp: float | None = attr.ib()
 
@@ -101,7 +101,7 @@ class DeletedDeviceEntry:
         self,
         config_entry_id: str,
         connections: set[tuple[str, str]],
-        identifiers: set[tuple[str, ...]],
+        identifiers: Set[tuple[str, ...]],
     ) -> DeviceEntry:
         """Create DeviceEntry from DeletedDeviceEntry."""
         return DeviceEntry(
@@ -136,7 +136,7 @@ def format_mac(mac: str) -> str:
 
 def _async_get_device_id_from_index(
     devices_index: _DeviceIndex,
-    identifiers: set[tuple[str, ...]],
+    identifiers: Set[tuple[str, ...]],
     connections: set[tuple[str, str]] | None,
 ) -> str | None:
     """Check if device has previously been registered."""
@@ -173,7 +173,7 @@ class DeviceRegistry:
     @callback
     def async_get_device(
         self,
-        identifiers: set[tuple[str, ...]],
+        identifiers: Set[tuple[str, ...]],
         connections: set[tuple[str, str]] | None = None,
     ) -> DeviceEntry | None:
         """Check if device is registered."""
@@ -186,7 +186,7 @@ class DeviceRegistry:
 
     def _async_get_deleted_device(
         self,
-        identifiers: set[tuple[str, ...]],
+        identifiers: Set[tuple[str, ...]],
         connections: set[tuple[str, str]] | None,
     ) -> DeletedDeviceEntry | None:
         """Check if device is deleted."""
@@ -246,7 +246,7 @@ class DeviceRegistry:
         *,
         config_entry_id: str,
         connections: set[tuple[str, str]] | None = None,
-        identifiers: set[tuple[str, ...]] | None = None,
+        identifiers: Set[tuple[str, ...]] | None = None,
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
