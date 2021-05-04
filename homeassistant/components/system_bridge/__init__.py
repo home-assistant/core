@@ -113,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def handle_send_command(call):
         """Handle the send_command service call."""
         device_registry = await hass.helpers.device_registry.async_get_registry()
-        device_entry = device_registry.async_get(call.data.get(CONF_BRIDGE))
+        device_entry = device_registry.async_get(call.data[CONF_BRIDGE])
 
         command = call.data[CONF_COMMAND]
         arguments = shlex.split(call.data.get(CONF_ARGUMENTS, ""))
@@ -145,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def handle_open(call):
         """Handle the open service call."""
         device_registry = await hass.helpers.device_registry.async_get_registry()
-        device_entry = device_registry.async_get(call.data.get(CONF_BRIDGE))
+        device_entry = device_registry.async_get(call.data[CONF_BRIDGE])
 
         path = call.data[CONF_PATH]
 

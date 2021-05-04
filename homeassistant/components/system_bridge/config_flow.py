@@ -114,7 +114,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle getting the api-key for authentication."""
         if self._input:
             user_input = {**self._input, **(user_input or {})}
-        if user_input is None or user_input.get(CONF_API_KEY, None) is None:
+        if user_input is None or user_input.get(CONF_API_KEY) is None:
             return self.async_show_form(
                 step_id="authenticate",
                 data_schema=STEP_AUTHENTICATE_DATA_SCHEMA,
@@ -140,8 +140,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        host = discovery_info["properties"].get("ip", None)
-        uuid = discovery_info["properties"].get("uuid", None)
+        host = discovery_info["properties"].get("ip")
+        uuid = discovery_info["properties"].get("uuid")
 
         if host is None or uuid is None:
             raise AbortFlow("unknown")
@@ -153,7 +153,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = host
         self._input = {
             CONF_HOST: host,
-            CONF_PORT: discovery_info["properties"].get("port", None),
+            CONF_PORT: discovery_info["properties"].get("port"),
         }
 
         return await self.async_step_authenticate(self._input)
@@ -162,8 +162,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Perform reauth upon an API authentication error."""
         if (
             user_input is not None
-            and user_input.get(CONF_HOST, None) is not None
-            and user_input.get(CONF_PORT, None) is not None
+            and user_input.get(CONF_HOST) is not None
+            and user_input.get(CONF_PORT) is not None
         ):
             self._name = user_input[CONF_HOST]
             self._input = {
