@@ -8,7 +8,14 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 
-from .const import CONF_INTERFACE, DEFAULT_GATEWAY_NAME, DEFAULT_INTERFACE, DOMAIN
+from .const import (
+    CONF_INTERFACE,
+    CONF_WAIT_FOR_PUSH,
+    DEFAULT_GATEWAY_NAME,
+    DEFAULT_INTERFACE,
+    DEFAULT_WAIT_FOR_PUSH,
+    DOMAIN,
+)
 from .gateway import ConnectMotionGateway
 
 CONFIG_SCHEMA = vol.Schema(
@@ -25,6 +32,33 @@ CONFIG_SETTINGS = vol.Schema(
 )
 
 
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Options for the component."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        """Init object."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        errors = {}
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        settings_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_WAIT_FOR_PUSH,
+                    default=self.config_entry.options.get(CONF_WAIT_FOR_PUSH, DEFAULT_WAIT_FOR_PUSH),
+                ): bool,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="init", data_schema=settings_schema, errors=errors
+        )
+
+
 class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Motion Blinds config flow."""
 
@@ -34,6 +68,12 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the Motion Blinds flow."""
         self._host = None
         self._ips = []
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry) -> OptionsFlowHandler:
+        """Get the options flow."""
+        return OptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""

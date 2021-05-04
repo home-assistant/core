@@ -5,7 +5,9 @@ DEFAULT_GATEWAY_NAME = "Motion Blinds Gateway"
 
 PLATFORMS = ["cover", "sensor"]
 
+CONF_WAIT_FOR_PUSH = "wait_for_push"
 CONF_INTERFACE = "interface"
+DEFAULT_WAIT_FOR_PUSH = True
 DEFAULT_INTERFACE = "any"
 
 KEY_GATEWAY = "gateway"
