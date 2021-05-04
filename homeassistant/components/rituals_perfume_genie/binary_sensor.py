@@ -9,10 +9,10 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
     BinarySensorEntity,
 )
-from homeassistant.components.rituals_perfume_genie import RitualsDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
+from . import RitualsDataUpdateCoordinator
 from .const import COORDINATORS, DEVICES, DOMAIN
 from .entity import DiffuserEntity
 

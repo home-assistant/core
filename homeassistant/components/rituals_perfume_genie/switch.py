@@ -5,11 +5,11 @@ from typing import Any, Callable
 
 from pyrituals import Diffuser
 
-from homeassistant.components.rituals_perfume_genie import RitualsDataUpdateCoordinator
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
+from . import RitualsDataUpdateCoordinator
 from .const import ATTRIBUTES, COORDINATORS, DEVICES, DOMAIN
 from .entity import DiffuserEntity
 

@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from pyrituals import Diffuser
 
-from homeassistant.components.rituals_perfume_genie import RitualsDataUpdateCoordinator
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import RitualsDataUpdateCoordinator
 from .const import ATTRIBUTES, DOMAIN, HUBLOT, SENSORS
 
 MANUFACTURER = "Rituals Cosmetics"

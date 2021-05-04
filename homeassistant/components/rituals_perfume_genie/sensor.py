@@ -5,7 +5,6 @@ from typing import Callable
 
 from pyrituals import Diffuser
 
-from homeassistant.components.rituals_perfume_genie import RitualsDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -14,6 +13,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from . import RitualsDataUpdateCoordinator
 from .const import COORDINATORS, DEVICES, DOMAIN, ID, SENSORS
 from .entity import DiffuserEntity
 
