@@ -112,15 +112,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def handle_send_command(call):
         """Handle the send_command service call."""
-        device_registry = await hass.helpers.device_registry.async_get_registry()
-        device_entry = device_registry.async_get(call.data[CONF_BRIDGE])
+        device_registry = dr.async_get(hass)
+        device_id = call.data[CONF_BRIDGE]
+        device_entry = device_registry.async_get(device_id)
+        if device_entry is None:
+            _LOGGER.warning("Missing device: %s", device_id)
+            return
 
         command = call.data[CONF_COMMAND]
         arguments = shlex.split(call.data.get(CONF_ARGUMENTS, ""))
 
-        coordinator: DataUpdateCoordinator = hass.data[DOMAIN][
-            next(iter(device_entry.config_entries))
-        ]
+        entry_id = next(
+            entry.entry_id
+            for entry in hass.config_entries.async_entries(DOMAIN)
+            if entry.entry_id in device_entry.config_entries
+        )
+        coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry_id]
         bridge: Bridge = coordinator.data
 
         _LOGGER.debug(
@@ -144,14 +151,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def handle_open(call):
         """Handle the open service call."""
-        device_registry = await hass.helpers.device_registry.async_get_registry()
-        device_entry = device_registry.async_get(call.data[CONF_BRIDGE])
+        device_registry = dr.async_get(hass)
+        device_id = call.data[CONF_BRIDGE]
+        device_entry = device_registry.async_get(device_id)
+        if device_entry is None:
+            _LOGGER.warning("Missing device: %s", device_id)
+            return
 
         path = call.data[CONF_PATH]
 
-        coordinator: DataUpdateCoordinator = hass.data[DOMAIN][
-            next(iter(device_entry.config_entries))
-        ]
+        entry_id = next(
+            entry.entry_id
+            for entry in hass.config_entries.async_entries(DOMAIN)
+            if entry.entry_id in device_entry.config_entries
+        )
+        coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry_id]
         bridge: Bridge = coordinator.data
 
         _LOGGER.debug("Open payload: %s", {CONF_PATH: path})
