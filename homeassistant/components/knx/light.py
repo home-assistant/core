@@ -1,8 +1,7 @@
 """Support for KNX/IP lights."""
 from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from xknx.devices import Light as XknxLight
 from xknx.telegram.address import parse_device_group_address
@@ -21,7 +20,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
@@ -33,7 +32,7 @@ from .schema import LightSchema
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: Callable[[Iterable[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up lights for KNX platform."""
