@@ -5,7 +5,6 @@ import logging
 import aiosyncthing
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_URL
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -29,28 +28,27 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Syncthing sensors."""
-
-    url = config_entry.data[CONF_URL]
-    syncthing = hass.data[DOMAIN][url]
+    syncthing = hass.data[DOMAIN][config_entry.entry_id]
 
     try:
         config = await syncthing.system.config()
         version = await syncthing.system.version()
-        server_id = syncthing.server_id
-        entities = [
-            FolderSensor(
-                syncthing,
-                server_id,
-                folder["id"],
-                folder["label"],
-                version["version"],
-            )
-            for folder in config["folders"]
-        ]
-
-        async_add_entities(entities)
     except aiosyncthing.exceptions.SyncthingError as exception:
         raise PlatformNotReady from exception
+
+    server_id = syncthing.server_id
+    entities = [
+        FolderSensor(
+            syncthing,
+            server_id,
+            folder["id"],
+            folder["label"],
+            version["version"],
+        )
+        for folder in config["folders"]
+    ]
+
+    async_add_entities(entities)
 
 
 class FolderSensor(SensorEntity):
@@ -104,7 +102,7 @@ class FolderSensor(SensorEntity):
     @property
     def unique_id(self):
         """Return the unique id of the entity."""
-        return f"{DOMAIN}-{self._short_server_id}-{self._folder_id}"
+        return f"{self._short_server_id}-{self._folder_id}"
 
     @property
     def state(self):
@@ -179,7 +177,7 @@ class FolderSensor(SensorEntity):
         """Handle entity which will be added."""
 
         @callback
-        async def handle_folder_summary(event):
+        def handle_folder_summary(event):
             if self._state is not None:
                 self._state = self._filter_state(event["data"]["summary"])
                 self.async_write_ha_state()
@@ -192,7 +190,8 @@ class FolderSensor(SensorEntity):
             )
         )
 
-        async def handle_state_changed(event):
+        @callback
+        def handle_state_changed(event):
             if self._state is not None:
                 self._state["state"] = event["data"]["to"]
                 self.async_write_ha_state()
@@ -205,7 +204,8 @@ class FolderSensor(SensorEntity):
             )
         )
 
-        async def handle_folder_paused(event):
+        @callback
+        def handle_folder_paused(event):
             if self._state is not None:
                 self._state["state"] = "paused"
                 self.async_write_ha_state()
@@ -218,7 +218,8 @@ class FolderSensor(SensorEntity):
             )
         )
 
-        async def handle_server_unavailable():
+        @callback
+        def handle_server_unavailable():
             self._state = None
             self.unsubscribe()
             self.async_write_ha_state()

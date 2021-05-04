@@ -27,6 +27,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
@@ -73,7 +74,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
             self._simple_heating = self._first_radiator_thermostat
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return {
             "identifiers": {(HMIPC_DOMAIN, self._device.id)},

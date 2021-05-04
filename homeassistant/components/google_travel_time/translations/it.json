@@ -11,6 +11,7 @@
                 "data": {
                     "api_key": "Chiave API",
                     "destination": "Destinazione",
+                    "name": "Nome",
                     "origin": "Origine"
                 },
                 "description": "Quando specifichi l'origine e la destinazione, puoi fornire una o pi\u00f9 posizioni separate dal carattere barra verticale, sotto forma di un indirizzo, coordinate di latitudine/longitudine o un ID luogo di Google. Quando si specifica la posizione utilizzando un ID luogo di Google, l'ID deve essere preceduto da \"place_id:\"."

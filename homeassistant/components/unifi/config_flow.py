@@ -299,6 +299,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                     ): cv.multi_select(clients_to_block),
                 }
             ),
+            last_step=True,
         )
 
     async def async_step_device_tracker(self, user_input=None):
@@ -354,6 +355,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                     ): bool,
                 }
             ),
+            last_step=False,
         )
 
     async def async_step_client_control(self, user_input=None):
@@ -391,6 +393,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                 }
             ),
             errors=errors,
+            last_step=False,
         )
 
     async def async_step_statistics_sensors(self, user_input=None):
@@ -413,6 +416,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                     ): bool,
                 }
             ),
+            last_step=True,
         )
 
     async def _update_options(self):

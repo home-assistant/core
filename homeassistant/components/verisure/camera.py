@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 import errno
 import os
-from typing import Any, Callable
+from typing import Callable
 
 from verisure import Error as VerisureError
 
@@ -12,8 +12,8 @@ from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import current_platform
+from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity_platform import async_get_current_platform
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_GIID, DOMAIN, LOGGER, SERVICE_CAPTURE_SMARTCAM
@@ -28,7 +28,7 @@ async def async_setup_entry(
     """Set up Verisure sensors based on a config entry."""
     coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    platform = current_platform.get()
+    platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_CAPTURE_SMARTCAM,
         {},
@@ -73,7 +73,7 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
         return self.serial_number
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         area = self.coordinator.data["cameras"][self.serial_number]["area"]
         return {

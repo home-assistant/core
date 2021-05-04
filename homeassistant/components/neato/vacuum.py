@@ -87,7 +87,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     _LOGGER.debug("Adding vacuums %s", dev)
     async_add_entities(dev, True)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     assert platform is not None
 
     platform.async_register_entity_service(

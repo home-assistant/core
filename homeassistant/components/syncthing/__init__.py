@@ -29,7 +29,7 @@ PLATFORMS = ["sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up syncthing from a config entry."""
     data = entry.data
 
@@ -49,42 +49,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except aiosyncthing.exceptions.SyncthingError as exception:
         await client.close()
         raise ConfigEntryNotReady from exception
-    else:
-        server_id = status["myID"]
 
-        syncthing = SyncthingClient(hass, client, server_id)
+    server_id = status["myID"]
 
-        syncthing.subscribe()
+    syncthing = SyncthingClient(hass, client, server_id)
+    syncthing.subscribe()
+    hass.data[DOMAIN][entry.entry_id] = syncthing
 
-        hass.data[DOMAIN][url] = syncthing
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-        for component in PLATFORMS:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, component)
-            )
+    async def cancel_listen_task(_):
+        await syncthing.unsubscribe()
 
-        async def cancel_listen_task(_):
-            await syncthing.unsubscribe()
-
+    entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cancel_listen_task)
-
-        return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
     )
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        url = entry.data[CONF_URL]
-        await hass.data[DOMAIN][url].unsubscribe()
-        hass.data[DOMAIN].pop(url)
+        syncthing = hass.data[DOMAIN].pop(entry.entry_id)
+        await syncthing.unsubscribe()
 
     return unload_ok
 
@@ -144,7 +133,7 @@ class SyncthingClient:
                     )
                     server_was_unavailable = False
             else:
-                await asyncio.sleep(RECONNECT_INTERVAL.seconds)
+                await asyncio.sleep(RECONNECT_INTERVAL.total_seconds())
                 continue
             try:
                 async for event in events.listen():
@@ -168,12 +157,12 @@ class SyncthingClient:
                 _LOGGER.info(
                     "The syncthing server '%s' is not available. Sleeping %i seconds and retrying",
                     self._client.url,
-                    RECONNECT_INTERVAL.seconds,
+                    RECONNECT_INTERVAL.total_seconds(),
                 )
                 async_dispatcher_send(
                     self._hass, f"{SERVER_UNAVAILABLE}-{self._server_id}"
                 )
-                await asyncio.sleep(RECONNECT_INTERVAL.seconds)
+                await asyncio.sleep(RECONNECT_INTERVAL.total_seconds())
                 server_was_unavailable = True
                 continue
 

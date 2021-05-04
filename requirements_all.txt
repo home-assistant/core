@@ -533,7 +533,7 @@ ecoaliface==0.4.0
 eebrightbox==0.0.4
 
 # homeassistant.components.elgato
-elgato==2.0.1
+elgato==2.1.0
 
 # homeassistant.components.eliqonline
 eliqonline==1.2.2
@@ -765,7 +765,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210430.0
+home-assistant-frontend==20210503.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -921,7 +921,7 @@ magicseaweed==1.0.3
 matrix-client==0.3.2
 
 # homeassistant.components.maxcube
-maxcube-api==0.4.2
+maxcube-api==0.4.3
 
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
@@ -1253,7 +1253,7 @@ pyRFXtrx==0.26.1
 # pySwitchmate==0.4.6
 
 # homeassistant.components.tibber
-pyTibber==0.16.2
+pyTibber==0.16.3
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1679,7 +1679,7 @@ pyrepetier==3.0.5
 pyrisco==0.3.1
 
 # homeassistant.components.rituals_perfume_genie
-pyrituals==0.0.2
+pyrituals==0.0.3
 
 # homeassistant.components.zeroconf
 pyroute2==0.5.18
@@ -1723,7 +1723,7 @@ pyskyqhub==0.1.3
 pysma==0.4.3
 
 # homeassistant.components.smappee
-pysmappee==0.2.24
+pysmappee==0.2.25
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.3
@@ -1744,7 +1744,7 @@ pysnmp==4.4.12
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.43
+pysonos==0.0.44
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -1759,7 +1759,7 @@ pystiebeleltron==0.0.1.dev2
 pysuez==0.1.19
 
 # homeassistant.components.syncthru
-pysyncthru==0.7.0
+pysyncthru==0.7.3
 
 # homeassistant.components.tankerkoenig
 pytankerkoenig==0.0.6
@@ -2073,7 +2073,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.6.9
+simplisafe-python==9.6.10
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.0
@@ -2105,7 +2105,7 @@ smarthab==0.21
 # smbus-cffi==0.5.1
 
 # homeassistant.components.smhi
-smhi-pkg==1.0.13
+smhi-pkg==1.0.15
 
 # homeassistant.components.snapcast
 snapcast==2.1.3
@@ -2226,7 +2226,7 @@ temperusb==1.5.3
 tesla-powerwall==0.3.5
 
 # homeassistant.components.tesla
-teslajsonpy==0.11.5
+teslajsonpy==0.18.3
 
 # homeassistant.components.tensorflow
 # tf-models-official==2.3.0
@@ -2379,7 +2379,7 @@ yalesmartalarmclient==0.1.6
 yalexs==1.1.11
 
 # homeassistant.components.yeelight
-yeelight==0.6.1
+yeelight==0.6.2
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10

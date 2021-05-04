@@ -1,4 +1,6 @@
 """Config flow to configure the FRITZ!Box Tools integration."""
+from __future__ import annotations
+
 import logging
 from urllib.parse import urlparse
 
@@ -65,7 +67,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return None
 
-    async def async_check_configured_entry(self) -> ConfigEntry:
+    async def async_check_configured_entry(self) -> ConfigEntry | None:
         """Check if entry is configured."""
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_HOST] == self._host:
@@ -170,7 +172,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._password = user_input[CONF_PASSWORD]
 
         if not (error := await self.fritz_tools_init()):
-            self._name = self.fritz_tools.device_info["model"]
+            self._name = self.fritz_tools.model
 
             if await self.async_check_configured_entry():
                 error = "already_configured"

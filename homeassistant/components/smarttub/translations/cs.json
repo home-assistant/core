@@ -9,6 +9,9 @@
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
+            "reauth_confirm": {
+                "title": "Znovu ov\u011b\u0159it integraci"
+            },
             "user": {
                 "data": {
                     "email": "E-mail",

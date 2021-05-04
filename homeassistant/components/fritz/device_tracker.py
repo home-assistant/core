@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import voluptuous as vol
 
@@ -116,7 +115,7 @@ class FritzBoxTracker(ScannerEntity):
         self._mac = device.mac_address
         self._name = device.hostname or DEFAULT_DEVICE_NAME
         self._active = False
-        self._attrs = {}
+        self._attrs: dict = {}
 
     @property
     def is_connected(self):
@@ -154,7 +153,7 @@ class FritzBoxTracker(ScannerEntity):
         return SOURCE_TYPE_ROUTER
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self):
         """Return the device information."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
@@ -162,6 +161,10 @@ class FritzBoxTracker(ScannerEntity):
             "name": self.name,
             "manufacturer": "AVM",
             "model": "FRITZ!Box Tracked device",
+            "via_device": (
+                DOMAIN,
+                self._router.unique_id,
+            ),
         }
 
     @property

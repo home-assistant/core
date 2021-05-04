@@ -291,7 +291,7 @@ dynalite_devices==0.1.46
 eebrightbox==0.0.4
 
 # homeassistant.components.elgato
-elgato==2.0.1
+elgato==2.1.0
 
 # homeassistant.components.elkm1
 elkm1-lib==0.8.10
@@ -426,7 +426,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210430.0
+home-assistant-frontend==20210503.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -493,7 +493,7 @@ logi_circle==0.2.2
 luftdaten==0.6.4
 
 # homeassistant.components.maxcube
-maxcube-api==0.4.2
+maxcube-api==0.4.3
 
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
@@ -681,7 +681,7 @@ pyMetno==0.8.3
 pyRFXtrx==0.26.1
 
 # homeassistant.components.tibber
-pyTibber==0.16.2
+pyTibber==0.16.3
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.4
@@ -927,7 +927,7 @@ pyqwikswitch==0.93
 pyrisco==0.3.1
 
 # homeassistant.components.rituals_perfume_genie
-pyrituals==0.0.2
+pyrituals==0.0.3
 
 # homeassistant.components.zeroconf
 pyroute2==0.5.18
@@ -950,7 +950,7 @@ pysignalclirestapi==0.3.4
 pysma==0.4.3
 
 # homeassistant.components.smappee
-pysmappee==0.2.24
+pysmappee==0.2.25
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.3
@@ -962,7 +962,7 @@ pysmartthings==0.7.6
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.43
+pysonos==0.0.44
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -971,7 +971,7 @@ pyspcwebgw==0.4.0
 pysqueezebox==0.5.5
 
 # homeassistant.components.syncthru
-pysyncthru==0.7.0
+pysyncthru==0.7.3
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.11
@@ -1104,7 +1104,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.6.9
+simplisafe-python==9.6.10
 
 # homeassistant.components.slack
 slackclient==2.5.0
@@ -1119,7 +1119,7 @@ smart-meter-texas==0.4.0
 smarthab==0.21
 
 # homeassistant.components.smhi
-smhi-pkg==1.0.13
+smhi-pkg==1.0.15
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -1183,7 +1183,7 @@ tellduslive==0.10.11
 tesla-powerwall==0.3.5
 
 # homeassistant.components.tesla
-teslajsonpy==0.11.5
+teslajsonpy==0.18.3
 
 # homeassistant.components.toon
 toonapi==0.2.0
@@ -1264,7 +1264,7 @@ xmltodict==0.12.0
 yalexs==1.1.11
 
 # homeassistant.components.yeelight
-yeelight==0.6.1
+yeelight==0.6.2
 
 # homeassistant.components.onvif
 zeep[async]==4.0.0

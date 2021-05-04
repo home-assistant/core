@@ -15,10 +15,18 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity_platform import async_get_current_platform
 
-from .const import DATA_ELGATO_CLIENT, DOMAIN
+from .const import DATA_ELGATO_CLIENT, DOMAIN, SERVICE_IDENTIFY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +43,13 @@ async def async_setup_entry(
     elgato: Elgato = hass.data[DOMAIN][entry.entry_id][DATA_ELGATO_CLIENT]
     info = await elgato.info()
     async_add_entities([ElgatoLight(elgato, info)], True)
+
+    platform = async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_IDENTIFY,
+        {},
+        ElgatoLight.async_identify.__name__,
+    )
 
 
 class ElgatoLight(LightEntity):
@@ -138,9 +153,17 @@ class ElgatoLight(LightEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this Elgato Key Light."""
         return {
-            "identifiers": {(DOMAIN, self._info.serial_number)},
-            "name": self._info.product_name,
-            "manufacturer": "Elgato",
-            "model": self._info.product_name,
-            "sw_version": f"{self._info.firmware_version} ({self._info.firmware_build_number})",
+            ATTR_IDENTIFIERS: {(DOMAIN, self._info.serial_number)},
+            ATTR_NAME: self._info.product_name,
+            ATTR_MANUFACTURER: "Elgato",
+            ATTR_MODEL: self._info.product_name,
+            ATTR_SW_VERSION: f"{self._info.firmware_version} ({self._info.firmware_build_number})",
         }
+
+    async def async_identify(self) -> None:
+        """Identify the light, will make it blink."""
+        try:
+            await self.elgato.identify()
+        except ElgatoError:
+            _LOGGER.exception("An error occurred while identifying the Elgato Light")
+            self._state = None

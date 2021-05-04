@@ -12,6 +12,7 @@
                     "ip_address": "IP Adresse",
                     "port": "Port"
                 },
+                "description": "Anschluss an die API Ihres Advantage Air Wandtabletts.",
                 "title": "Verbinden"
             }
         }

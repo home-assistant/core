@@ -330,6 +330,7 @@ omit =
     homeassistant/components/freebox/sensor.py
     homeassistant/components/freebox/switch.py
     homeassistant/components/fritz/__init__.py
+    homeassistant/components/fritz/binary_sensor.py
     homeassistant/components/fritz/common.py
     homeassistant/components/fritz/const.py
     homeassistant/components/fritz/device_tracker.py
@@ -656,6 +657,7 @@ omit =
     homeassistant/components/mystrom/binary_sensor.py
     homeassistant/components/mystrom/light.py
     homeassistant/components/mystrom/switch.py
+    homeassistant/components/myq/__init__.py
     homeassistant/components/n26/*
     homeassistant/components/nad/media_player.py
     homeassistant/components/nanoleaf/light.py
@@ -967,6 +969,8 @@ omit =
     homeassistant/components/switchmate/switch.py
     homeassistant/components/syncthing/__init__.py
     homeassistant/components/syncthing/sensor.py
+    homeassistant/components/syncthru/__init__.py
+    homeassistant/components/syncthru/binary_sensor.py
     homeassistant/components/syncthru/sensor.py
     homeassistant/components/synology_chat/notify.py
     homeassistant/components/synology_dsm/__init__.py
