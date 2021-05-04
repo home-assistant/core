@@ -29,9 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         "/data/data/pl.sviete.dom/files/home/AIS/.dom/mqtt_conf.d/supla.conf"
     ):
         _LOGGER.info("Connection bridge not exists in mosquitto.conf, recreate")
-        mqtt_broker_settings = entry.data.copy()
-        mqtt_broker_settings["file_config_name"] = "supla.conf"
-        ais_global.save_ais_mqtt_connection_settings(mqtt_broker_settings)
+        ais_global.save_ais_mqtt_connection_settings("supla.conf", entry.data)
         # restart mqtt broker
         await hass.services.async_call(
             "ais_shell_command", "restart_pm2_service", {"service": "mqtt"}
@@ -51,9 +49,7 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
 
     if config_entry.version < 3:
         # save mqtt configuration add bridge definition
-        mqtt_broker_settings = config_entry.data.copy()
-        mqtt_broker_settings["file_config_name"] = "supla.conf"
-        ais_global.save_ais_mqtt_connection_settings(mqtt_broker_settings)
+        ais_global.save_ais_mqtt_connection_settings("supla.conf", config_entry.data)
 
         # restart mqtt broker
         await hass.services.async_call(
@@ -69,7 +65,7 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     # remove mqtt bridge settings
-    ais_global.save_ais_mqtt_connection_settings(None)
+    ais_global.save_ais_mqtt_connection_settings("supla.conf", None)
 
     # restart mqtt broker
     await hass.services.async_call(

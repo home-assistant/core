@@ -312,7 +312,7 @@ def has_front_clock():
 
 
 # save ais mqtt connection settings
-def save_ais_mqtt_connection_settings(mqtt_bridge_settings=None):
+def save_ais_mqtt_connection_settings(config_file_name, mqtt_bridge_settings=None):
     with open(
         "/data/data/pl.sviete.dom/files/usr/etc/mosquitto/mosquitto.conf", "w"
     ) as conf_file:
@@ -327,14 +327,10 @@ def save_ais_mqtt_connection_settings(mqtt_bridge_settings=None):
 
         if mqtt_bridge_settings is not None:
             # 2. MQTT bridge connection settings
-            with open(
-                conf_d + "/" + mqtt_bridge_settings["file_config_name"], "w"
-            ) as conf_bridge_file:
+            with open(conf_d + "/" + config_file_name, "w") as conf_bridge_file:
                 conf_bridge_file.write("\n")
                 conf_bridge_file.write(
-                    "# MQTT bridge connection "
-                    + mqtt_bridge_settings["file_config_name"]
-                    + "\n"
+                    "# MQTT bridge connection " + config_file_name + "\n"
                 )
                 conf_bridge_file.write(
                     "connection bridge-" + get_sercure_android_id_dom() + "\n"
@@ -363,7 +359,7 @@ def save_ais_mqtt_connection_settings(mqtt_bridge_settings=None):
                 )
         else:
             # clear the config by removing file
-            os.remove(conf_d + "/" + mqtt_bridge_settings["file_config_name"])
+            os.remove(conf_d + "/" + config_file_name)
 
 
 set_global_my_ip(None)
