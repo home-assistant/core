@@ -12,6 +12,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
@@ -46,6 +47,7 @@ SUPPORT_LGTV = (
     | SUPPORT_TURN_OFF
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_PLAY
+    | SUPPORT_PLAY_MEDIA
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -85,6 +87,7 @@ class LgTVDevice(MediaPlayerEntity):
         # Assume that the TV is in Play mode
         self._playing = True
         self._volume = 0
+        self._channel_id = None
         self._channel_name = ""
         self._program_name = ""
         self._state = None
@@ -116,8 +119,11 @@ class LgTVDevice(MediaPlayerEntity):
                 channel_info = client.query_data("cur_channel")
                 if channel_info:
                     channel_info = channel_info[0]
+                    self._channel_id = channel_info.find("major")
                     self._channel_name = channel_info.find("chname").text
                     self._program_name = channel_info.find("progName").text
+                    if self._channel_id is not None:
+                        self._channel_id = int(self._channel_id.text)
                     if self._channel_name is None:
                         self._channel_name = channel_info.find("inputSourceName").text
                     if self._program_name is None:
@@ -171,6 +177,11 @@ class LgTVDevice(MediaPlayerEntity):
     def source_list(self):
         """List of available input sources."""
         return self._source_names
+
+    @property
+    def media_content_id(self):
+        """Content id of current playing media."""
+        return self._channel_id
 
     @property
     def media_content_type(self):
@@ -252,3 +263,12 @@ class LgTVDevice(MediaPlayerEntity):
     def media_previous_track(self):
         """Send the previous track command."""
         self.send_command(37)
+
+    def play_media(self, media_type, media_id, **kwargs):
+        """Tune to channel."""
+        if media_type == MEDIA_TYPE_CHANNEL:
+            for name, channel in self._sources.items():
+                channel_id = channel.find("major")
+                if channel_id is not None and int(channel_id.text) == int(media_id):
+                    self.select_source(name)
+                    break
