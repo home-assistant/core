@@ -145,7 +145,7 @@ class ElgatoLight(LightEntity):
         try:
             await self.elgato.light(on=False)
         except ElgatoError:
-            _LOGGER.exception("An error occurred while updating the Elgato Light")
+            _LOGGER.error("An error occurred while updating the Elgato Light")
             self._state = None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -182,7 +182,7 @@ class ElgatoLight(LightEntity):
                 temperature=temperature,
             )
         except ElgatoError:
-            _LOGGER.exception("An error occurred while updating the Elgato Light")
+            _LOGGER.error("An error occurred while updating the Elgato Light")
             self._state = None
 
     async def async_update(self) -> None:
