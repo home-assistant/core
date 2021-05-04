@@ -60,6 +60,16 @@ class ElgatoLight(LightEntity):
         self._state: State | None = None
         self.elgato = elgato
 
+        self._min_mired = 143
+        self._max_mired = 344
+        self._supported_color_modes = {COLOR_MODE_COLOR_TEMP}
+
+        # Elgato Light supporting color, have a different temperature range
+        if settings.power_on_hue is not None:
+            self._supported_color_modes = {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
+            self._min_mired = 153
+            self._max_mired = 285
+
     @property
     def name(self) -> str:
         """Return the name of the entity."""
@@ -91,29 +101,18 @@ class ElgatoLight(LightEntity):
     @property
     def min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports."""
-        # Elgato lights with color capabilities have a different lowest value
-        if self._settings.power_on_hue is not None:
-            return 153
-        return 143
+        return self._min_mired
 
     @property
     def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
         # Elgato lights with color capabilities have a different highest value
-        if self._settings.power_on_hue is not None:
-            return 285
-        return 344
+        return self._max_mired
 
     @property
     def supported_color_modes(self) -> set[str]:
         """Flag supported color modes."""
-        modes = [COLOR_MODE_COLOR_TEMP]
-
-        # Check if the light is capable of doing colors
-        if self._settings.power_on_hue is not None:
-            modes += [COLOR_MODE_HS]
-
-        return set(modes)
+        return self._supported_color_modes
 
     @property
     def color_mode(self) -> str | None:
