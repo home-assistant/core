@@ -21,6 +21,7 @@ from buienradar.constants import (
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_LATITUDE,
@@ -37,11 +38,12 @@ from homeassistant.const import (
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_TIMEFRAME
+from .const import CONF_TIMEFRAME, DEFAULT_TIMEFRAME
 from .util import BrData
 
 _LOGGER = logging.getLogger(__name__)
@@ -186,8 +188,6 @@ SENSOR_TYPES = {
     "symbol_5d": ["Symbol 5d", None, None],
 }
 
-CONF_TIMEFRAME = "timeframe"
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(
@@ -208,14 +208,29 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up buienradar sensor platform."""
+    _LOGGER.warning(
+        "Platform configuration is deprecated, will be removed in a future release"
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Create the buienradar sensor."""
+    config = entry.data
+    options = entry.options
+
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    timeframe = config[CONF_TIMEFRAME]
+
+    timeframe = options.get(
+        CONF_TIMEFRAME, config.get(CONF_TIMEFRAME, DEFAULT_TIMEFRAME)
+    )
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return False
+        return
 
     coordinates = {CONF_LATITUDE: float(latitude), CONF_LONGITUDE: float(longitude)}
 
@@ -225,12 +240,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         timeframe,
     )
 
-    dev = []
-    for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(BrSensor(sensor_type, config.get(CONF_NAME), coordinates))
-    async_add_entities(dev)
+    entities = [
+        BrSensor(sensor_type, config.get(CONF_NAME, "Buienradar"), coordinates)
+        for sensor_type in SENSOR_TYPES
+    ]
 
-    data = BrData(hass, coordinates, timeframe, dev)
+    async_add_entities(entities)
+
+    data = BrData(hass, coordinates, timeframe, entities)
     # schedule the first update in 1 minute from now:
     await data.schedule_update(1)
 
@@ -380,7 +397,7 @@ class BrSensor(SensorEntity):
             self._state = nested.get(self.type[len(PRECIPITATION_FORECAST) + 1 :])
             return True
 
-        if self.type == WINDSPEED or self.type == WINDGUST:
+        if self.type in [WINDSPEED, WINDGUST]:
             # hass wants windspeeds in km/h not m/s, so convert:
             self._state = data.get(self.type)
             if self._state is not None:
@@ -463,3 +480,8 @@ class BrSensor(SensorEntity):
     def force_update(self):
         """Return true for continuous sensors, false for discrete sensors."""
         return self._force_update
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return False
