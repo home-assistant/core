@@ -254,7 +254,7 @@ class FolderSensor(SensorEntity):
 
     def _filter_state(self, state):
         # Select only needed state attributes
-        state = {key: state[key] for key in state & self.STATE_ATTRIBUTES}
+        state = {key: state[key] for key in state.keys() & self.STATE_ATTRIBUTES}
 
         # A workaround, for some reason, state of paused folders is an empty string
         if state["state"] == "":
