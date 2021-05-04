@@ -11,6 +11,7 @@
                 "data": {
                     "api_key": "API-n\u00f8kkel",
                     "destination": "Destinasjon",
+                    "name": "Navn",
                     "origin": "Opprinnelse"
                 },
                 "description": "N\u00e5r du spesifiserer opprinnelse og destinasjon, kan du oppgi en eller flere steder atskilt med r\u00f8rtegnet, i form av en adresse, breddegrad / lengdegradskoordinat eller en Google-sted-ID. N\u00e5r du spesifiserer stedet ved hjelp av en Google-sted-ID, m\u00e5 ID-en v\u00e6re foran \"place_id:`."
