@@ -1,12 +1,8 @@
 """Support for Blink system camera."""
 import logging
 
-import voluptuous as vol
-
 from homeassistant.components.camera import Camera
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
 
 from .const import DEFAULT_BRAND, DOMAIN, SERVICE_TRIGGER
 
@@ -15,23 +11,18 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_VIDEO_CLIP = "video"
 ATTR_IMAGE = "image"
 
-SERVICE_TRIGGER_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids})
-
 
 async def async_setup_entry(hass, config, async_add_entities):
     """Set up a Blink Camera."""
     data = hass.data[DOMAIN][config.entry_id]
-    entities = []
-    for name, camera in data.cameras.items():
-        entities.append(BlinkCamera(data, name, camera))
+    entities = [
+        BlinkCamera(data, name, camera) for name, camera in data.cameras.items()
+    ]
 
     async_add_entities(entities)
 
     platform = entity_platform.current_platform.get()
-
-    platform.async_register_entity_service(
-        SERVICE_TRIGGER, SERVICE_TRIGGER_SCHEMA, "trigger_camera"
-    )
+    platform.async_register_entity_service(SERVICE_TRIGGER, {}, "trigger_camera")
 
 
 class BlinkCamera(Camera):
