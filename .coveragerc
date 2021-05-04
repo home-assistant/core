@@ -340,6 +340,7 @@ omit =
     homeassistant/components/freebox/sensor.py
     homeassistant/components/freebox/switch.py
     homeassistant/components/fritz/__init__.py
+    homeassistant/components/fritz/binary_sensor.py
     homeassistant/components/fritz/common.py
     homeassistant/components/fritz/const.py
     homeassistant/components/fritz/device_tracker.py
@@ -977,6 +978,8 @@ omit =
     homeassistant/components/switchbot/switch.py
     homeassistant/components/switcher_kis/switch.py
     homeassistant/components/switchmate/switch.py
+    homeassistant/components/syncthru/__init__.py
+    homeassistant/components/syncthru/binary_sensor.py
     homeassistant/components/syncthru/sensor.py
     homeassistant/components/synology_chat/notify.py
     homeassistant/components/synology_dsm/__init__.py

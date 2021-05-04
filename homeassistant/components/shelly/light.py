@@ -1,7 +1,11 @@
 """Light for Shelly."""
 from __future__ import annotations
 
+import asyncio
+import logging
+
 from aioshelly import Block
+import async_timeout
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -24,6 +28,7 @@ from homeassistant.util.color import (
 
 from . import ShellyDeviceWrapper
 from .const import (
+    AIOSHELLY_DEVICE_TIMEOUT_SEC,
     COAP,
     DATA_CONFIG_ENTRY,
     DOMAIN,
@@ -33,6 +38,8 @@ from .const import (
 )
 from .entity import ShellyBlockEntity
 from .utils import async_remove_shelly_entity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -199,7 +206,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on light."""
         if self.block.type == "relay":
-            self.control_result = await self.block.set_state(turn="on")
+            self.control_result = await self.set_state(turn="on")
             self.async_write_ha_state()
             return
 
@@ -233,16 +240,36 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
                 ATTR_RGBW_COLOR
             ]
 
-        if set_mode and self.mode != set_mode:
-            self.mode_result = await self.wrapper.device.switch_light_mode(set_mode)
+        if await self.set_light_mode(set_mode):
+            self.control_result = await self.set_state(**params)
 
-        self.control_result = await self.block.set_state(**params)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off light."""
-        self.control_result = await self.block.set_state(turn="off")
+        self.control_result = await self.set_state(turn="off")
         self.async_write_ha_state()
+
+    async def set_light_mode(self, set_mode):
+        """Change device mode color/white if mode has changed."""
+        if set_mode is None or self.mode == set_mode:
+            return True
+
+        _LOGGER.debug("Setting light mode for entity %s, mode: %s", self.name, set_mode)
+        try:
+            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
+                self.mode_result = await self.wrapper.device.switch_light_mode(set_mode)
+        except (asyncio.TimeoutError, OSError) as err:
+            _LOGGER.error(
+                "Setting light mode for entity %s failed, state: %s, error: %s",
+                self.name,
+                set_mode,
+                repr(err),
+            )
+            self.wrapper.last_update_success = False
+            return False
+
+        return True
 
     @callback
     def _update_callback(self):

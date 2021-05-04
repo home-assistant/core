@@ -5,7 +5,7 @@ import asyncio
 import collections
 from collections import OrderedDict
 from contextlib import contextmanager
-from datetime import timedelta
+from datetime import datetime, timedelta
 import functools as ft
 from io import StringIO
 import json
@@ -44,7 +44,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import BLOCK_LOG_TIMEOUT, State
+from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant, State
 from homeassistant.helpers import (
     area_registry,
     device_registry,
@@ -361,7 +361,9 @@ fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 
 
 @ha.callback
-def async_fire_time_changed(hass, datetime_, fire_all=False):
+def async_fire_time_changed(
+    hass: HomeAssistant, datetime_: datetime, fire_all: bool = False
+) -> None:
     """Fire a time changes event."""
     hass.bus.async_fire(EVENT_TIME_CHANGED, {"now": date_util.as_utc(datetime_)})
 
