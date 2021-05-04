@@ -872,9 +872,6 @@ libsoundtouch==0.8
 # homeassistant.components.life360
 life360==4.1.1
 
-# homeassistant.components.lifx_legacy
-liffylights==0.9.4
-
 # homeassistant.components.osramlightify
 lightify==1.0.7.3
 
