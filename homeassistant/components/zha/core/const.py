@@ -168,6 +168,7 @@ DEBUG_COMP_BELLOWS = "bellows"
 DEBUG_COMP_ZHA = "homeassistant.components.zha"
 DEBUG_COMP_ZIGPY = "zigpy"
 DEBUG_COMP_ZIGPY_CC = "zigpy_cc"
+DEBUG_COMP_ZIGPY_ZNP = "zigpy_znp"
 DEBUG_COMP_ZIGPY_DECONZ = "zigpy_deconz"
 DEBUG_COMP_ZIGPY_XBEE = "zigpy_xbee"
 DEBUG_COMP_ZIGPY_ZIGATE = "zigpy_zigate"
@@ -178,6 +179,7 @@ DEBUG_LEVELS = {
     DEBUG_COMP_ZHA: logging.DEBUG,
     DEBUG_COMP_ZIGPY: logging.DEBUG,
     DEBUG_COMP_ZIGPY_CC: logging.DEBUG,
+    DEBUG_COMP_ZIGPY_ZNP: logging.DEBUG,
     DEBUG_COMP_ZIGPY_DECONZ: logging.DEBUG,
     DEBUG_COMP_ZIGPY_XBEE: logging.DEBUG,
     DEBUG_COMP_ZIGPY_ZIGATE: logging.DEBUG,
