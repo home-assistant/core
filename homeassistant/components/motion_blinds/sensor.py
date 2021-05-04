@@ -40,9 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class MotionBatterySensor(CoordinatorEntity, SensorEntity):
-    """
-    Representation of a Motion Battery Sensor.
-    """
+    """Representation of a Motion Battery Sensor."""
 
     def __init__(self, coordinator, blind):
         """Initialize the Motion Battery Sensor."""
@@ -108,9 +106,7 @@ class MotionBatterySensor(CoordinatorEntity, SensorEntity):
 
 
 class MotionTDBUBatterySensor(MotionBatterySensor):
-    """
-    Representation of a Motion Battery Sensor for a Top Down Bottom Up blind.
-    """
+    """Representation of a Motion Battery Sensor for a Top Down Bottom Up blind."""
 
     def __init__(self, coordinator, blind, motor):
         """Initialize the Motion Battery Sensor."""

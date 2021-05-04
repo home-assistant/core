@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_HOST
+from homeassistant.core import callback
 
 from .const import (
     CONF_INTERFACE,
@@ -49,7 +50,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             {
                 vol.Optional(
                     CONF_WAIT_FOR_PUSH,
-                    default=self.config_entry.options.get(CONF_WAIT_FOR_PUSH, DEFAULT_WAIT_FOR_PUSH),
+                    default=self.config_entry.options.get(
+                        CONF_WAIT_FOR_PUSH, DEFAULT_WAIT_FOR_PUSH
+                    ),
                 ): bool,
             }
         )
@@ -118,17 +121,19 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             key = user_input[CONF_API_KEY]
             interface = user_input[CONF_INTERFACE]
-            
+
             # check socket interface
-            if interface!=DEFAULT_INTERFACE:
+            if interface != DEFAULT_INTERFACE:
                 motion_com = MotionCommunication
                 try:
                     sock = motion_com._create_mcast_socket(interface)
                     sock.close()
                 except gaierror:
                     errors[CONF_INTERFACE] = "invalid_interface"
-                    return self.async_show_form(step_id="connect", data_schema=CONFIG_SETTINGS, errors=errors)
-            
+                    return self.async_show_form(
+                        step_id="connect", data_schema=CONFIG_SETTINGS, errors=errors
+                    )
+
             connect_gateway_class = ConnectMotionGateway(self.hass, multicast=None)
             if not await connect_gateway_class.async_connect_gateway(self._host, key):
                 return self.async_abort(reason="connection_error")
@@ -141,7 +146,13 @@ class MotionBlindsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             return self.async_create_entry(
                 title=DEFAULT_GATEWAY_NAME,
-                data={CONF_HOST: self._host, CONF_API_KEY: key, CONF_INTERFACE: interface},
+                data={
+                    CONF_HOST: self._host,
+                    CONF_API_KEY: key,
+                    CONF_INTERFACE: interface,
+                },
             )
 
-        return self.async_show_form(step_id="connect", data_schema=CONFIG_SETTINGS, errors=errors)
+        return self.async_show_form(
+            step_id="connect", data_schema=CONFIG_SETTINGS, errors=errors
+        )
