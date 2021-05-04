@@ -797,9 +797,9 @@ class ReloadServiceHelper:
     async def execute_service(self, service_call: ServiceCall) -> None:
         """Execute the service.
 
-        If a previous reload if currently in progress, wait for it to finish first.
-        Once the previous reload is finished, one of the waiting tasks will be assigned to
-        execute the reload, the others will wait for the reload to finish.
+        If a previous reload task if currently in progress, wait for it to finish first.
+        Once the previous reload task has finished, one of the waiting tasks will be
+        assigned to execute the reload, the others will wait for the reload to finish.
         """
 
         do_reload = False
