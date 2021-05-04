@@ -229,7 +229,7 @@ async def test_reauth_authorization_error(
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "reauth"
+    assert result["step_id"] == "authenticate"
 
     aioclient_mock.get(f"{FIXTURE_BASE_URL}/network", exc=BridgeAuthenticationException)
     aioclient_mock.get(f"{FIXTURE_BASE_URL}/os", exc=BridgeAuthenticationException)
@@ -241,7 +241,7 @@ async def test_reauth_authorization_error(
     await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["step_id"] == "reauth"
+    assert result2["step_id"] == "authenticate"
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -254,7 +254,7 @@ async def test_reauth_connection_error(
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "reauth"
+    assert result["step_id"] == "authenticate"
 
     aioclient_mock.get(f"{FIXTURE_BASE_URL}/os", exc=ClientConnectionError)
     aioclient_mock.get(f"{FIXTURE_BASE_URL}/network", exc=ClientConnectionError)
@@ -266,7 +266,7 @@ async def test_reauth_connection_error(
     await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["step_id"] == "reauth"
+    assert result2["step_id"] == "authenticate"
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -284,7 +284,7 @@ async def test_reauth_flow(
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "reauth"
+    assert result["step_id"] == "authenticate"
 
     aioclient_mock.get(f"{FIXTURE_BASE_URL}/os", json=FIXTURE_OS)
     aioclient_mock.get(f"{FIXTURE_BASE_URL}/network", json=FIXTURE_NETWORK)
@@ -317,7 +317,7 @@ async def test_zeroconf_flow(
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert not result["errors"]
 
     aioclient_mock.get(f"{FIXTURE_ZEROCONF_BASE_URL}/os", json=FIXTURE_OS)
     aioclient_mock.get(f"{FIXTURE_ZEROCONF_BASE_URL}/network", json=FIXTURE_NETWORK)
@@ -350,7 +350,7 @@ async def test_zeroconf_cannot_connect(
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert not result["errors"]
 
     aioclient_mock.get(f"{FIXTURE_ZEROCONF_BASE_URL}/os", exc=ClientConnectionError)
     aioclient_mock.get(
