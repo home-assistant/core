@@ -171,6 +171,7 @@ async def test_sensor_update(gogogate2api_mock, hass: HomeAssistant) -> None:
         "door_id": 1,
         "friendly_name": "Door1 battery",
         "sensor_id": "ABCD",
+        "state_class": None,
     }
     temp_attributes = {
         "device_class": "temperature",
@@ -178,6 +179,7 @@ async def test_sensor_update(gogogate2api_mock, hass: HomeAssistant) -> None:
         "friendly_name": "Door1 temperature",
         "sensor_id": "ABCD",
         "unit_of_measurement": "°C",
+        "state_class": None,
     }
 
     api = MagicMock(GogoGate2Api)
@@ -245,6 +247,7 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
         "door_id": 1,
         "friendly_name": "Door1 battery",
         "sensor_id": "ABCD",
+        "state_class": None,
     }
     temp_attributes = {
         "device_class": "temperature",
@@ -252,6 +255,7 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
         "friendly_name": "Door1 temperature",
         "sensor_id": "ABCD",
         "unit_of_measurement": "°C",
+        "state_class": None,
     }
 
     sensor_response = _mocked_ismartgate_sensor_response(35, -4.0)

@@ -410,7 +410,11 @@ async def test_update_with_json_attrs_no_data(hass, caplog):
 
     state = hass.states.get("sensor.foo")
     assert state.state == STATE_UNKNOWN
-    assert state.attributes == {"unit_of_measurement": "MB", "friendly_name": "foo"}
+    assert state.attributes == {
+        "unit_of_measurement": "MB",
+        "friendly_name": "foo",
+        "state_class": None,
+    }
     assert "Empty reply" in caplog.text
 
 
@@ -445,7 +449,11 @@ async def test_update_with_json_attrs_not_dict(hass, caplog):
 
     state = hass.states.get("sensor.foo")
     assert state.state == ""
-    assert state.attributes == {"unit_of_measurement": "MB", "friendly_name": "foo"}
+    assert state.attributes == {
+        "unit_of_measurement": "MB",
+        "friendly_name": "foo",
+        "state_class": None,
+    }
     assert "not a dictionary or list" in caplog.text
 
 
@@ -481,7 +489,11 @@ async def test_update_with_json_attrs_bad_JSON(hass, caplog):
 
     state = hass.states.get("sensor.foo")
     assert state.state == STATE_UNKNOWN
-    assert state.attributes == {"unit_of_measurement": "MB", "friendly_name": "foo"}
+    assert state.attributes == {
+        "unit_of_measurement": "MB",
+        "friendly_name": "foo",
+        "state_class": None,
+    }
     assert "Erroneous JSON" in caplog.text
 
 
