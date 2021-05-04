@@ -13,7 +13,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.typing import ConfigType
 
 from .common import FritzBoxTools, FritzData
 from .const import DATA_FRITZ, DOMAIN, PLATFORMS
@@ -59,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigType) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload FRITZ!Box Tools config entry."""
     fritzbox: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
     fritzbox.async_unload()

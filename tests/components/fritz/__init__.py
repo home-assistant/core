@@ -49,7 +49,7 @@ class FritzConnectionMock:  # pylint: disable=too-few-public-methods
             "NewBytesReceived": 12045,
         },
         ("DeviceInfo:1", "GetInfo"): {
-            "NewSerialNumber": 1234,
+            "NewSerialNumber": "abcdefgh",
             "NewName": "TheName",
             "NewModelName": "FRITZ!Box 7490",
         },
