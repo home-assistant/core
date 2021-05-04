@@ -92,16 +92,19 @@ RECONFIGURE_NOTIFICATION_ID = "config_entry_reconfigure"
 
 EVENT_FLOW_DISCOVERED = "config_entry_discovered"
 
+DISABLED_USER = "user"
+
+RELOAD_AFTER_UPDATE_DELAY = 30
+
+# Deprecated: Connection classes
+# These aren't used anymore since 2021.6.0
+# Mainly here not to break custom integrations.
 CONN_CLASS_CLOUD_PUSH = "cloud_push"
 CONN_CLASS_CLOUD_POLL = "cloud_poll"
 CONN_CLASS_LOCAL_PUSH = "local_push"
 CONN_CLASS_LOCAL_POLL = "local_poll"
 CONN_CLASS_ASSUMED = "assumed"
 CONN_CLASS_UNKNOWN = "unknown"
-
-DISABLED_USER = "user"
-
-RELOAD_AFTER_UPDATE_DELAY = 30
 
 
 class ConfigError(HomeAssistantError):
@@ -1067,8 +1070,6 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         super().__init_subclass__(**kwargs)  # type: ignore
         if domain is not None:
             HANDLERS.register(domain)(cls)
-
-    CONNECTION_CLASS = CONN_CLASS_UNKNOWN
 
     @property
     def unique_id(self) -> str | None:
