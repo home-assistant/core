@@ -1759,7 +1759,7 @@ pystiebeleltron==0.0.1.dev2
 pysuez==0.1.19
 
 # homeassistant.components.syncthru
-pysyncthru==0.7.0
+pysyncthru==0.7.3
 
 # homeassistant.components.tankerkoenig
 pytankerkoenig==0.0.6
