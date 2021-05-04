@@ -124,18 +124,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        if user_input:
-            info, errors = await self._async_validate_or_error(user_input)
-            if not errors:
-                await self.async_set_unique_id(
-                    info["mac_addr"], raise_on_progress=False
-                )
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=info["title"], data=user_input)
-        return await self.async_step_user(user_input)
-
     async def _async_validate_or_error(self, user_input):
         """Validate doorbird or error."""
         errors = {}
