@@ -8,10 +8,12 @@ from typing import Any
 
 # pylint: disable=import-error
 from fritzconnection import FritzConnection
+from fritzconnection.core.exceptions import FritzActionError, FritzServiceError
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
 
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -22,6 +24,8 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_USERNAME,
     DOMAIN,
+    SERVICE_REBOOT,
+    SERVICE_RECONNECT,
     TRACKER_SCAN_INTERVAL,
 )
 
@@ -157,17 +161,22 @@ class FritzBoxTools:
         if new_device:
             async_dispatcher_send(self.hass, self.signal_device_new)
 
-    def service_reconnect_fritzbox(self) -> None:
-        """Define service reconnect."""
-        _LOGGER.info("Reconnecting FRITZ!Box router")
-        self.hass.async_add_executor_job(self.connection.reconnect)
-
-    def service_reboot_fritzbox(self) -> None:
-        """Define service reboot."""
-        _LOGGER.info("Rebooting FRITZ!Box router")
-        self.hass.async_add_executor_job(
-            self.connection.call_action, "DeviceConfig1", "Reboot"
-        )
+    async def service_fritzbox(self, service: str) -> None:
+        """Define FRITZ!Box services."""
+        _LOGGER.debug("FRITZ!Box router: %s", service)
+        try:
+            if service == SERVICE_REBOOT:
+                await self.hass.async_add_executor_job(
+                    self.connection.call_action, "DeviceConfig1", "Reboot"
+                )
+            elif service == SERVICE_RECONNECT:
+                await self.hass.async_add_executor_job(
+                    self.connection.call_action,
+                    "WANIPConn1",
+                    "ForceTermination",
+                )
+        except (FritzServiceError, FritzActionError) as ex:
+            raise HomeAssistantError("Service not supported") from ex
 
 
 class FritzData:

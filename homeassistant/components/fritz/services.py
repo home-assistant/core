@@ -22,12 +22,7 @@ async def async_setup_services(hass):
         fritz_tools = await _async_get_configured_fritz_tools(hass, service_call.data)
 
         _LOGGER.debug("Executing service %s", service_call.service)
-
-        if service_call.service == SERVICE_REBOOT:
-            fritz_tools.service_reboot_fritzbox()
-
-        if service_call.service == SERVICE_RECONNECT:
-            fritz_tools.service_reconnect_fritzbox()
+        await fritz_tools.service_fritzbox(service_call.service)
 
     for service in [SERVICE_REBOOT, SERVICE_RECONNECT]:
         hass.services.async_register(DOMAIN, service, async_call_fritz_service)
