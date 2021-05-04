@@ -5,8 +5,8 @@
       "user": {
         "data": {
           "title": "Setup Syncthing integration",
-          "url": "URL",
-          "verify_ssl": "Verify SSL",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "token": "Token"
         }
       }
