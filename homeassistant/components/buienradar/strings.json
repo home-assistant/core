@@ -1,0 +1,29 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "country_code": "Country code of the country to display camera images.",
+          "delta": "Time interval in seconds between camera image updates",
+          "timeframe": "Minutes to look ahead for precipitation forecast"
+        }
+      }
+    }
+  }
+}
