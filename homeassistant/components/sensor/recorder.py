@@ -8,6 +8,7 @@ import statistics
 from homeassistant.components import history
 from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
+from homeassistant.util.async_ import run_callback_threadsafe
 
 from . import DOMAIN
 
@@ -41,17 +42,20 @@ def _is_number(s: str) -> bool:
     return s.replace(".", "", 1).isdigit()
 
 
-async def async_compile_statistics(
+def compile_statistics(
     hass: HomeAssistant, start: datetime.datetime, end: datetime.datetime
 ) -> dict:
-    """Compile statistics for all entities during start-end."""
+    """Compile statistics for all entities during start-end.
+
+    Note: This will query the database and must not be run in the event loop
+    """
     result: dict = {}
 
-    entities = _get_entities(hass)
+    entities = run_callback_threadsafe(hass.loop, _get_entities, hass).result()
 
     # Get history between start and end
-    history_list = await hass.async_add_executor_job(
-        history.get_significant_states, hass, start, end, [i[0] for i in entities]
+    history_list = history.get_significant_states(  # type: ignore
+        hass, start, end, [i[0] for i in entities]
     )
 
     for entity_id, device_class in entities:

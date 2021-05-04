@@ -1,7 +1,6 @@
 """Statistics helper."""
 from __future__ import annotations
 
-import asyncio
 from datetime import date, datetime, timedelta
 import logging
 from typing import TYPE_CHECKING
@@ -53,17 +52,17 @@ def _compile_statistics(instance: Recorder, period: str, start: datetime.datetim
         start,
         end,
     )
+    platform_stats = []
+    for domain, platform in instance.hass.data[DOMAIN].items():
+        if not hasattr(platform, "compile_statistics"):
+            continue
+        platform_stats.append(platform.compile_statistics(instance.hass, start, end))
+        _LOGGER.debug(
+            "Statistics for %s during %s-%s: %s", domain, start, end, platform_stats[-1]
+        )
+
     with session_scope(session=instance.get_session()) as session:  # type: ignore
-        for domain, platform in instance.hass.data[DOMAIN].items():
-            if not hasattr(platform, "async_compile_statistics"):
-                continue
-            stats = asyncio.run_coroutine_threadsafe(
-                platform.async_compile_statistics(instance.hass, start, end),
-                instance.hass.loop,
-            ).result()
-            _LOGGER.debug(
-                "Statistics for %s during %s-%s: %s", domain, start, end, stats
-            )
+        for stats in platform_stats:
             for entity_id, stat in stats.items():
                 session.add(Statistics.from_stats(entity_id, period, start, end, stat))
 
