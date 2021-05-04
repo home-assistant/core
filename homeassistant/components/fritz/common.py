@@ -157,6 +157,18 @@ class FritzBoxTools:
         if new_device:
             async_dispatcher_send(self.hass, self.signal_device_new)
 
+    def service_reconnect_fritzbox(self) -> None:
+        """Define service reconnect."""
+        _LOGGER.info("Reconnecting the FRITZ!Box.")
+        self.hass.async_add_executor_job(self.connection.reconnect)
+
+    def service_reboot_fritzbox(self) -> None:
+        """Define service reboot."""
+        _LOGGER.info("Rebooting the FRITZ!Box.")
+        self.hass.async_add_executor_job(
+            self.connection.call_action, "DeviceConfig1", "Reboot"
+        )
+
 
 class FritzData:
     """Storage class for platform global data."""
