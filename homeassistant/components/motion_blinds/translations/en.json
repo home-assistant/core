@@ -35,5 +35,16 @@
                 "title": "Motion Blinds"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Motion Blinds",
+                "description": "Specify optional settings",
+                "data": {
+                    "wait_for_push": "Wait for multicast push on update"
+                }
+            }
+        }
     }
 }

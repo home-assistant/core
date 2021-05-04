@@ -33,6 +33,17 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "connection_error": "[%key:common::config_flow::error::cannot_connect%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Motion Blinds",
+        "description": "Specify optional settings",
+        "data": {
+          "wait_for_push": "Wait for multicast push on update"
+        }
+      }
+    }
   }
 }
 
