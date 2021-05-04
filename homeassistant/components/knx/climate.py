@@ -68,7 +68,24 @@ def _async_migrate_unique_id(
         ga_target_temperature_state = parse_device_group_address(
             entity_config[ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS][0]
         )
-        new_uid = f"{ga_temperature_state}_{ga_target_temperature_state}"
+        target_temp = entity_config.get(ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS)
+        ga_target_temperature = (
+            parse_device_group_address(target_temp[0])
+            if target_temp is not None
+            else None
+        )
+        setpoint_shift = entity_config.get(ClimateSchema.CONF_SETPOINT_SHIFT_ADDRESS)
+        ga_setpoint_shift = (
+            parse_device_group_address(setpoint_shift[0])
+            if setpoint_shift is not None
+            else None
+        )
+        new_uid = (
+            f"{ga_temperature_state}_"
+            f"{ga_target_temperature_state}_"
+            f"{ga_target_temperature}_"
+            f"{ga_setpoint_shift}"
+        )
         entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
 
 
@@ -81,7 +98,9 @@ class KNXClimate(KnxEntity, ClimateEntity):
         super().__init__(device)
         self._unique_id = (
             f"{device.temperature.group_address_state}_"
-            f"{device.target_temperature.group_address_state}"
+            f"{device.target_temperature.group_address_state}_"
+            f"{device.target_temperature.group_address}_"
+            f"{device._setpoint_shift.group_address}"  # pylint: disable=protected-access
         )
         self._unit_of_measurement = TEMP_CELSIUS
 
