@@ -488,7 +488,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Update information about currently playing media."""
         variables = event and event.variables
 
-        if variables:
+        if variables and "transport_state" in variables:
+            # If the transport has an error then transport_state will
+            # not be set
             new_status = variables["transport_state"]
         else:
             transport_info = self.soco.get_current_transport_info()
