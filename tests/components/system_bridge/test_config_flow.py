@@ -220,7 +220,7 @@ async def test_form_cannot_connect(
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknow_errpr(
+async def test_form_unknow_error(
     hass, aiohttp_client, aioclient_mock, current_request_with_host
 ) -> None:
     """Test we handle unknown error."""
