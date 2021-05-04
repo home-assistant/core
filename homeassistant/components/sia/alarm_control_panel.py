@@ -101,9 +101,9 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         self._account_data: dict[str, Any] = account_data
         self._zone: int = zone
 
+        self._port: int = self._entry.data[CONF_PORT]
         self._account: str = self._account_data[CONF_ACCOUNT]
         self._ping_interval: int = self._account_data[CONF_PING_INTERVAL]
-        self._port: int = self._entry.data[CONF_PORT]
 
         self.entity_id: str = ALARM_ENTITY_ID_FORMAT.format(
             SIA_ENTITY_ID_FORMAT.format(
@@ -121,7 +121,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         self._available: bool = True
         self._state: StateType = None
         self._old_state: StateType = None
-        self._remove_availability_tracker: CALLBACK_TYPE | None = None
+        self._cancel_availability_tracker: CALLBACK_TYPE | None = None
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass.
@@ -146,15 +146,15 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         if self.state == STATE_UNAVAILABLE:
             self._available = False
             return
-        self._remove_availability_tracker = self.async_create_availability_tracker()
+        self._cancel_availability_tracker = self.async_create_availability_tracker()
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
 
         Overridden from Entity.
         """
-        if self._remove_availability_tracker:
-            self._remove_availability_tracker()
+        if self._cancel_availability_tracker:
+            self._cancel_availability_tracker()
 
     async def async_handle_event(self, event: Event) -> None:
         """Listen to events for this port and account and update states.
@@ -172,10 +172,10 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
 
     @callback
     def async_reset_availability_tracker(self) -> None:
-        """Reset availability tracker by removing the current and creating a new one."""
-        if self._remove_availability_tracker:
-            self._remove_availability_tracker()
-        self._remove_availability_tracker = self.async_create_availability_tracker()
+        """Reset availability tracker by cancelling the current and creating a new one."""
+        if self._cancel_availability_tracker:
+            self._cancel_availability_tracker()
+        self._cancel_availability_tracker = self.async_create_availability_tracker()
 
     @callback
     def async_create_availability_tracker(self) -> CALLBACK_TYPE:
@@ -198,11 +198,12 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         return self._state
 
     @state.setter
-    def state(self, state: str) -> None:
+    def state(self, state: str | None) -> None:
         """Set state."""
-        temp = self._old_state if state == PREVIOUS_STATE else state
-        self._old_state = self._state
-        self._state = temp
+        if state is not None:
+            self._state, self._old_state = (
+                self._old_state if state == PREVIOUS_STATE else state
+            ), self._state
 
     @property
     def name(self) -> str:
