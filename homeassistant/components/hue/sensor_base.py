@@ -6,7 +6,7 @@ from aiohue import AiohueException, Unauthorized
 from aiohue.sensors import TYPE_ZLL_PRESENCE
 import async_timeout
 
-from homeassistant.components.sensor import STATE_CLASS_LATEST
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
 from homeassistant.core import callback
 from homeassistant.helpers import debounce, entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -181,7 +181,7 @@ class GenericHueSensor(GenericHueDevice, entity.Entity):
     @property
     def state_class(self):
         """Return the state class of this entity, from STATE_CLASSES, if any."""
-        return STATE_CLASS_LATEST
+        return STATE_CLASS_MEASUREMENT
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""

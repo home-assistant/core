@@ -59,9 +59,10 @@ DEVICE_CLASSES = [
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
-STATE_CLASS_LATEST = "latest"  # The state represents the state in present time
+# The state represents a measurement in present time
+STATE_CLASS_MEASUREMENT = "measurement"
 
-STATE_CLASSES = [STATE_CLASS_LATEST]
+STATE_CLASSES = [STATE_CLASS_MEASUREMENT]
 
 STATE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(STATE_CLASSES))
 
