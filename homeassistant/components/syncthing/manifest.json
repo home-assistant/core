@@ -1,6 +1,6 @@
 {
   "domain": "syncthing",
-  "name": "syncthing",
+  "name": "Syncthing",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/syncthing",
   "requirements": ["aiosyncthing==0.5.1"],

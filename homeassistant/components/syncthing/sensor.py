@@ -180,7 +180,6 @@ class FolderSensor(SensorEntity):
         """Handle entity which will be added."""
 
         @callback
-        @callback
         def handle_folder_summary(event):
             if self._state is not None:
                 self._state = self._filter_state(event["data"]["summary"])
