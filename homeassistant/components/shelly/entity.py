@@ -1,11 +1,13 @@
 """Shelly entity helper."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 import logging
 from typing import Any, Callable
 
 import aioshelly
+import async_timeout
 
 from homeassistant.core import callback
 from homeassistant.helpers import (
@@ -17,7 +19,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import ShellyDeviceRestWrapper, ShellyDeviceWrapper
-from .const import COAP, DATA_CONFIG_ENTRY, DOMAIN, REST
+from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, COAP, DATA_CONFIG_ENTRY, DOMAIN, REST
 from .utils import async_remove_shelly_entity, get_entity_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -217,6 +219,22 @@ class ShellyBlockEntity(entity.Entity):
     def _update_callback(self):
         """Handle device update."""
         self.async_write_ha_state()
+
+    async def set_state(self, **kwargs):
+        """Set block state (HTTP request)."""
+        _LOGGER.debug("Setting state for entity %s, state: %s", self.name, kwargs)
+        try:
+            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
+                return await self.block.set_state(**kwargs)
+        except (asyncio.TimeoutError, OSError) as err:
+            _LOGGER.error(
+                "Setting state for entity %s failed, state: %s, error: %s",
+                self.name,
+                kwargs,
+                repr(err),
+            )
+            self.wrapper.last_update_success = False
+            return None
 
 
 class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
