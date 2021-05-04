@@ -15,9 +15,9 @@ import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN
 
@@ -33,7 +33,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, str]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -70,11 +70,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize flow."""
         self._name: str | None = None
-        self._input: dict[str, Any] | None = {}
+        self._input: dict[str, Any] = {}
+        self._reauth = False
 
     async def _async_get_info(
-        self, user_input=None
-    ) -> tuple[dict[str, str] | None, dict[str, str] | None]:
+        self, user_input: dict[str, Any]
+    ) -> tuple[dict[str, str], dict[str, str] | None]:
         errors = {}
 
         try:
@@ -87,11 +88,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return None, info
+            return errors, info
 
         return errors, None
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -99,7 +102,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         errors, info = await self._async_get_info(user_input)
-        if errors is None and info is not None:
+        if not errors and info is not None:
             # Check if already configured
             await self.async_set_unique_id(info["uuid"], raise_on_progress=False)
             self._abort_if_unique_id_configured(updates={CONF_HOST: info["hostname"]})
@@ -110,24 +113,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_authenticate(self, user_input=None) -> FlowResult:
+    async def async_step_authenticate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle getting the api-key for authentication."""
-        if self._input:
-            user_input = {**self._input, **(user_input or {})}
-        if user_input is None or user_input.get(CONF_API_KEY) is None:
-            return self.async_show_form(
-                step_id="authenticate",
-                data_schema=STEP_AUTHENTICATE_DATA_SCHEMA,
-                description_placeholders={"name": self._name},
-            )
+        errors: dict[str, str] = {}
 
-        errors, info = await self._async_get_info(user_input)
-        if errors is None and info is not None:
-            # Check if already configured
-            await self.async_set_unique_id(info["uuid"])
-            self._abort_if_unique_id_configured(updates={CONF_HOST: info["hostname"]})
+        if user_input is not None:
+            user_input = {**self._input, **user_input}
+            errors, info = await self._async_get_info(user_input)
+            if not errors and info is not None:
+                # Check if already configured
+                existing_entry = await self.async_set_unique_id(info["uuid"])
 
-            return self.async_create_entry(title=info["hostname"], data=user_input)
+                if self._reauth and existing_entry:
+                    self.hass.config_entries.async_update_entry(
+                        existing_entry, data=user_input
+                    )
+                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                    return self.async_abort(reason="reauth_successful")
+
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: info["hostname"]}
+                )
+
+                return self.async_create_entry(title=info["hostname"], data=user_input)
 
         return self.async_show_form(
             step_id="authenticate",
@@ -144,7 +154,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         uuid = discovery_info["properties"].get("uuid")
 
         if host is None or uuid is None:
-            raise AbortFlow("unknown")
+            return self.async_abort(reason="unknown")
 
         # Check if already configured
         await self.async_set_unique_id(uuid)
@@ -156,40 +166,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PORT: discovery_info["properties"].get("port"),
         }
 
-        return await self.async_step_authenticate(self._input)
+        return await self.async_step_authenticate()
 
-    async def async_step_reauth(self, user_input=None) -> FlowResult:
+    async def async_step_reauth(self, entry_data: ConfigType) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        if (
-            user_input is not None
-            and user_input.get(CONF_HOST) is not None
-            and user_input.get(CONF_PORT) is not None
-        ):
-            self._name = user_input[CONF_HOST]
-            self._input = {
-                CONF_HOST: user_input[CONF_HOST],
-                CONF_PORT: user_input[CONF_PORT],
-            }
-
-        if self._input:
-            user_input = {**self._input, **(user_input or {})}
-
-        errors, info = await self._async_get_info(user_input)
-        if errors is None and info is not None:
-            existing_entry = await self.async_set_unique_id(info["uuid"])
-            if existing_entry:
-                self.hass.config_entries.async_update_entry(
-                    existing_entry, data=user_input
-                )
-                await self.hass.config_entries.async_reload(existing_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
-
-        return self.async_show_form(
-            step_id="reauth",
-            data_schema=STEP_AUTHENTICATE_DATA_SCHEMA,
-            description_placeholders={"name": self._name},
-            errors=errors,
-        )
+        self._name = entry_data[CONF_HOST]
+        self._input = {
+            CONF_HOST: entry_data[CONF_HOST],
+            CONF_PORT: entry_data[CONF_PORT],
+        }
+        self._reauth = True
+        return await self.async_step_authenticate()
 
 
 class CannotConnect(exceptions.HomeAssistantError):
