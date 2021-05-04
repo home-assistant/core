@@ -9,7 +9,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_COUNTRY, DOMAIN  # pylint:disable=unused-import
+from .const import CONF_COUNTRY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

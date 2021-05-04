@@ -24,8 +24,6 @@ async def test_form(hass):
             "country": "PT",
         },
     ), patch(
-        "homeassistant.components.prosegur.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.prosegur.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -47,7 +45,6 @@ async def test_form(hass):
         "password": "test-password",
         "country": "PT",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
