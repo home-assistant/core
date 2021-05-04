@@ -1,8 +1,6 @@
 """Support for Rituals Perfume Genie binary sensors."""
 from __future__ import annotations
 
-from typing import Callable
-
 from pyrituals import Diffuser
 
 from homeassistant.components.binary_sensor import (
@@ -11,6 +9,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RitualsDataUpdateCoordinator
 from .const import COORDINATORS, DEVICES, DOMAIN
@@ -21,7 +20,9 @@ BATTERY_CHARGING_ID = 21
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the diffuser binary sensors."""
     diffusers = hass.data[DOMAIN][config_entry.entry_id][DEVICES]

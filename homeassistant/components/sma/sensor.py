@@ -1,9 +1,8 @@
 """SMA Solar Webconnect interface."""
 from __future__ import annotations
 
-from collections.abc import Coroutine
 import logging
-from typing import Any, Callable
+from typing import Any
 
 import pysma
 import voluptuous as vol
@@ -118,7 +117,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[], Coroutine],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up SMA sensors."""
     sma_data = hass.data[DOMAIN][config_entry.entry_id]
