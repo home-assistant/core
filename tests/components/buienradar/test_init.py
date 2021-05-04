@@ -3,7 +3,13 @@ from unittest.mock import patch
 
 from homeassistant.components.buienradar import async_setup
 from homeassistant.components.buienradar.const import DOMAIN
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers.entity_registry import async_get_registry
+
+from tests.common import MockConfigEntry
+
+TEST_LATITUDE = 51.5288504
+TEST_LONGITUDE = 5.4002156
 
 
 async def test_import_all(hass):
@@ -89,3 +95,26 @@ async def test_import_camera(hass):
     assert entity_id
     entity = entity_registry.async_get(entity_id)
     assert entity.original_name == "test_name"
+
+
+async def test_load_unload(hass):
+    """Test options flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_LATITUDE: TEST_LATITUDE,
+            CONF_LONGITUDE: TEST_LONGITUDE,
+        },
+        unique_id=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state == "loaded"
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state == "not_loaded"
