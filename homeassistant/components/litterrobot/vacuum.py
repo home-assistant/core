@@ -1,7 +1,7 @@
 """Support for Litter-Robot "Vacuum"."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any
 
 from pylitterbot.enums import LitterBoxStatus
 from pylitterbot.robot import VALID_WAIT_TIMES
@@ -23,7 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import LitterRobotControlEntity
@@ -42,7 +42,7 @@ SERVICE_SET_WAIT_TIME = "set_wait_time"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]

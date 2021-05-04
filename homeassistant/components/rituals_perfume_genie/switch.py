@@ -1,13 +1,14 @@
 """Support for Rituals Perfume Genie switches."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any
 
 from pyrituals import Diffuser
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RitualsDataUpdateCoordinator
 from .const import ATTRIBUTES, COORDINATORS, DEVICES, DOMAIN
@@ -21,7 +22,9 @@ ON_STATE = "1"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the diffuser switch."""
     diffusers = hass.data[DOMAIN][config_entry.entry_id][DEVICES]

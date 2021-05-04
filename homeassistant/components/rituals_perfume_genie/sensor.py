@@ -1,8 +1,6 @@
 """Support for Rituals Perfume Genie sensors."""
 from __future__ import annotations
 
-from typing import Callable
-
 from pyrituals import Diffuser
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,6 +10,7 @@ from homeassistant.const import (
     PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RitualsDataUpdateCoordinator
 from .const import COORDINATORS, DEVICES, DOMAIN, ID, SENSORS
@@ -35,7 +34,9 @@ ATTR_SIGNAL_STRENGTH = "signal_strength"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the diffuser sensors."""
     diffusers = hass.data[DOMAIN][config_entry.entry_id][DEVICES]
