@@ -212,7 +212,6 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     DOMAIN = ""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_UNKNOWN
 
     def __init__(self) -> None:
         """Instantiate config flow."""
