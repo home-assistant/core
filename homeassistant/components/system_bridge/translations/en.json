@@ -8,18 +8,11 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
-            "invalid_host": "Invalid hostname or IP address",
             "unknown": "Unexpected error"
         },
         "flow_title": "System Bridge: {name}",
         "step": {
             "authenticate": {
-                "data": {
-                    "api_key": "API Key"
-                },
-                "description": "Please enter the API Key you set in your configuration for {name}."
-            },
-            "reauth": {
                 "data": {
                     "api_key": "API Key"
                 },

@@ -14,12 +14,6 @@
         },
         "description": "Please enter the API Key you set in your configuration for {name}."
       },
-      "reauth": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "description": "Please enter the API Key you set in your configuration for {name}."
-      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
@@ -32,7 +26,6 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }
