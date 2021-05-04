@@ -81,7 +81,7 @@ def motion_blinds_connect_fixture():
     ), patch(
         "homeassistant.components.motion_blinds.config_flow.MotionMulticast.Stop_listen",
         return_value=True,
-    , patch(
+    ), patch(
         "homeassistant.components.motion_blinds.async_setup_entry", return_value=True
     ):
         yield
