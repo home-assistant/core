@@ -1,4 +1,4 @@
-"""Support for AVM Fritz!Box smarthome temperature sensor only devices."""
+"""Support for AVM FRITZ!SmartHome temperature sensor only devices."""
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -25,7 +25,7 @@ from .const import (
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Fritzbox smarthome sensor from ConfigEntry."""
+    """Set up the FRITZ!SmartHome sensor from ConfigEntry."""
     entities = []
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
@@ -66,7 +66,7 @@ async def async_setup_entry(
 
 
 class FritzBoxBatterySensor(FritzBoxEntity, SensorEntity):
-    """The entity class for Fritzbox sensors."""
+    """The entity class for FRITZ!SmartHome sensors."""
 
     @property
     def state(self):
@@ -75,7 +75,7 @@ class FritzBoxBatterySensor(FritzBoxEntity, SensorEntity):
 
 
 class FritzBoxTempSensor(FritzBoxEntity, SensorEntity):
-    """The entity class for Fritzbox temperature sensors."""
+    """The entity class for FRITZ!SmartHome temperature sensors."""
 
     @property
     def state(self):

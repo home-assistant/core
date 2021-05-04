@@ -423,7 +423,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210430.0
+home-assistant-frontend==20210503.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -490,7 +490,7 @@ logi_circle==0.2.2
 luftdaten==0.6.4
 
 # homeassistant.components.maxcube
-maxcube-api==0.4.2
+maxcube-api==0.4.3
 
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
@@ -678,7 +678,7 @@ pyMetno==0.8.3
 pyRFXtrx==0.26.1
 
 # homeassistant.components.tibber
-pyTibber==0.16.2
+pyTibber==0.16.3
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.4
@@ -950,7 +950,7 @@ pysignalclirestapi==0.3.4
 pysma==0.4.3
 
 # homeassistant.components.smappee
-pysmappee==0.2.24
+pysmappee==0.2.25
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.3
@@ -1119,7 +1119,7 @@ smart-meter-texas==0.4.0
 smarthab==0.21
 
 # homeassistant.components.smhi
-smhi-pkg==1.0.13
+smhi-pkg==1.0.15
 
 # homeassistant.components.solaredge
 solaredge==0.0.2

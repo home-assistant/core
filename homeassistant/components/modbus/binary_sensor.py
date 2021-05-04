@@ -35,7 +35,6 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     MODBUS_DOMAIN,
 )
-from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,14 +83,12 @@ async def async_setup_platform(
             CONF_NAME: "no name",
             CONF_BINARY_SENSORS: config[CONF_INPUTS],
         }
-        config = None
 
     for entry in discovery_info[CONF_BINARY_SENSORS]:
         if CONF_HUB in entry:
-            # from old config!
-            hub: ModbusHub = hass.data[MODBUS_DOMAIN][entry[CONF_HUB]]
+            hub = hass.data[MODBUS_DOMAIN][entry[CONF_HUB]]
         else:
-            hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+            hub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         if CONF_SCAN_INTERVAL not in entry:
             entry[CONF_SCAN_INTERVAL] = DEFAULT_SCAN_INTERVAL
         sensors.append(

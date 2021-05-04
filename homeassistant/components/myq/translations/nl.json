@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service is al geconfigureerd"
+            "already_configured": "Service is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -9,6 +10,13 @@
             "unknown": "Onverwachte fout"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Wachtwoord"
+                },
+                "description": "Het wachtwoord voor {username} is niet meer geldig.",
+                "title": "Verifieer uw MyQ account opnieuw"
+            },
             "user": {
                 "data": {
                     "password": "Wachtwoord",
