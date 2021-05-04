@@ -35,12 +35,16 @@ from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
     convert_include_exclude_filter,
 )
-from homeassistant.helpers.event import async_track_time_interval, track_time_change
+from homeassistant.helpers.event import (
+    async_track_time_change,
+    async_track_time_interval,
+)
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 
 from . import history, migration, purge, statistics
@@ -520,6 +524,22 @@ class Recorder(threading.Thread):
         start = statistics.get_start_time("hourly")
         self.queue.put(StatisticsTask("hourly", start))
 
+    def _async_setup_periodic_tasks(self):
+        """Prepare periodic tasks."""
+        if self.auto_purge:
+            # Purge every night at 4:12am
+            async_track_time_change(
+                self.hass, self.async_purge, hour=4, minute=12, second=0
+            )
+        # Compile daily statistics every night at 12:12am
+        async_track_time_change(
+            self.hass, self.async_daily_statistics, hour=12, minute=12, second=0
+        )
+        # Compile hourly statistics every hour at *:12
+        async_track_time_change(
+            self.hass, self.async_hourly_statistics, hour=12, minute=12, second=0
+        )
+
     def run(self):
         """Start processing events to save."""
         shutdown_task = object()
@@ -568,18 +588,8 @@ class Recorder(threading.Thread):
                 self._shutdown()
                 return
 
-        # Start periodic purge
-        if self.auto_purge:
-            # Compile daily statistics every night at 12:12am
-            track_time_change(
-                self.hass, self.async_daily_statistics, hour=12, minute=12, second=0
-            )
-            # Compile hourly statistics every hour at *:12
-            track_time_change(
-                self.hass, self.async_hourly_statistics, hour=12, minute=12, second=0
-            )
-            # Purge every night at 4:12am
-            track_time_change(self.hass, self.async_purge, hour=4, minute=12, second=0)
+        # Start periodic tasks
+        run_callback_threadsafe(self.hass.loop, self._async_setup_periodic_tasks)
 
         _LOGGER.debug("Recorder processing the queue")
         self.hass.add_job(self._async_recorder_ready)
