@@ -500,10 +500,10 @@ def _generate_events_query(session):
 def _generate_events_query_without_states(session):
     return session.query(
         *EVENT_COLUMNS,
-        literal(None).label("state"),
-        literal(None).label("entity_id"),
-        literal(None).label("domain"),
-        literal(None).label("attributes"),
+        literal(value=None, type_=sqlalchemy.String).label("state"),
+        literal(value=None, type_=sqlalchemy.String).label("entity_id"),
+        literal(value=None, type_=sqlalchemy.String).label("domain"),
+        literal(value=None, type_=sqlalchemy.Text).label("attributes"),
     )
 
 
