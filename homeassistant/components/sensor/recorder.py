@@ -8,7 +8,6 @@ import statistics
 from homeassistant.components import history
 from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
-from homeassistant.util.async_ import run_callback_threadsafe
 
 from . import DOMAIN
 
@@ -21,17 +20,14 @@ DEVICE_CLASS_STATISTICS = {"temperature": {"mean", "min", "max"}}
 
 def _get_entities(hass: HomeAssistant) -> list[tuple[str, str]]:
     """Get (entity_id, device_class) of all sensors for which to compile statistics."""
-    all_sensors = hass.states.async_entity_ids(DOMAIN)
+    all_sensors = hass.states.all(DOMAIN)
     entity_ids = []
 
-    for entity_id in all_sensors:
-        state = hass.states.get(entity_id)
-        if not state:
-            continue
+    for state in all_sensors:
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         if not device_class or device_class not in DEVICE_CLASSES:
             continue
-        entity_ids.append((entity_id, device_class))
+        entity_ids.append((state.entity_id, device_class))
     return entity_ids
 
 
@@ -51,7 +47,7 @@ def compile_statistics(
     """
     result: dict = {}
 
-    entities = run_callback_threadsafe(hass.loop, _get_entities, hass).result()
+    entities = _get_entities(hass)
 
     # Get history between start and end
     history_list = history.get_significant_states(  # type: ignore

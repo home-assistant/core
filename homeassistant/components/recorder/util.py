@@ -288,7 +288,10 @@ def end_incomplete_runs(session, start_time):
 def try_database_job(
     instance: Recorder, description: str, job: callable, *args, **kwargs
 ):
-    """Try to execute a database job."""
+    """Try to execute a database job.
+
+    The job should return True if it finished, and False if it needs to be rescheduled.
+    """
     try:
         return job(*args, **kwargs)
     except OperationalError as err:
@@ -300,8 +303,10 @@ def try_database_job(
                 "%s; %s not completed, retrying", err.orig.args[1], description
             )
             time.sleep(instance.db_retry_wait)
+            # Failed with retriable error
             return False
 
         _LOGGER.warning("Error executing %s: %s", description, err)
 
-    return False
+    # Failed with permanent error
+    return True

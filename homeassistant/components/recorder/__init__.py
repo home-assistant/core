@@ -44,7 +44,6 @@ from homeassistant.helpers.integration_platform import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 
 from . import history, migration, purge, statistics
@@ -504,7 +503,8 @@ class Recorder(threading.Thread):
 
     @callback
     def _async_recorder_ready(self):
-        """Mark recorder ready."""
+        """Finish start and mark recorder ready."""
+        self._async_setup_periodic_tasks()
         self.async_recorder_ready.set()
 
     @callback
@@ -587,9 +587,6 @@ class Recorder(threading.Thread):
                 )
                 self._shutdown()
                 return
-
-        # Start periodic tasks
-        run_callback_threadsafe(self.hass.loop, self._async_setup_periodic_tasks)
 
         _LOGGER.debug("Recorder processing the queue")
         self.hass.add_job(self._async_recorder_ready)
