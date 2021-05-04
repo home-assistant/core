@@ -7,6 +7,7 @@ from datetime import timedelta
 import logging
 import os
 import time
+from typing import TYPE_CHECKING
 
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.session import Session
@@ -24,6 +25,9 @@ from .models import (
     process_timestamp,
 )
 
+if TYPE_CHECKING:
+    from . import Recorder
+
 _LOGGER = logging.getLogger(__name__)
 
 RETRIES = 3
@@ -34,6 +38,12 @@ SQLITE3_POSTFIXES = ["", "-wal", "-shm"]
 # before we no longer consider startup to be a "restart" and we
 # should do a check on the sqlite3 database.
 MAX_RESTART_TIME = timedelta(minutes=10)
+
+# Retry when one of the following MySQL errors occurred:
+RETRYABLE_MYSQL_ERRORS = (1205, 1206, 1213)
+# 1205: Lock wait timeout exceeded; try restarting transaction
+# 1206: The total number of locks exceeds the lock table size
+# 1213: Deadlock found when trying to get lock; try restarting transaction
 
 
 @contextmanager
@@ -273,3 +283,25 @@ def end_incomplete_runs(session, start_time):
             "Ended unfinished session (id=%s from %s)", run.run_id, run.start
         )
         session.add(run)
+
+
+def try_database_job(
+    instance: Recorder, description: str, job: callable, *args, **kwargs
+):
+    """Try to execute a database job."""
+    try:
+        return job(*args, **kwargs)
+    except OperationalError as err:
+        if (
+            instance.engine.dialect.name == "mysql"
+            and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
+        ):
+            _LOGGER.info(
+                "%s; %s not completed, retrying", err.orig.args[1], description
+            )
+            time.sleep(instance.db_retry_wait)
+            return False
+
+        _LOGGER.warning("Error executing %s: %s", description, err)
+
+    return False
