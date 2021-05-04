@@ -4,13 +4,16 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.motion_blinds.config_flow import DEFAULT_GATEWAY_NAME
-from homeassistant.components.motion_blinds.const import DOMAIN
+from homeassistant.components.motion_blinds import const
 from homeassistant.const import CONF_API_KEY, CONF_HOST
+
+from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
 TEST_HOST2 = "5.6.7.8"
+TEST_HOST_HA = "9.10.11.12"
 TEST_API_KEY = "12ab345c-d67e-8f"
 TEST_MAC = "ab:cd:ef:gh"
 TEST_MAC2 = "ij:kl:mn:op"
@@ -73,6 +76,9 @@ def motion_blinds_connect_fixture():
         "homeassistant.components.motion_blinds.config_flow.MotionDiscovery.discover",
         return_value=TEST_DISCOVERY_1,
     ), patch(
+        "homeassistant.components.motion_blinds.config_flow.MotionCommunication._create_mcast_socket",
+        return_value=Mock(),
+    ), patch(
         "homeassistant.components.motion_blinds.async_setup_entry", return_value=True
     ):
         yield
@@ -81,7 +87,7 @@ def motion_blinds_connect_fixture():
 async def test_config_flow_manual_host_success(hass):
     """Successful flow manually initialized by the user."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "form"
@@ -113,7 +119,7 @@ async def test_config_flow_manual_host_success(hass):
 async def test_config_flow_discovery_1_success(hass):
     """Successful flow with 1 gateway discovered."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "form"
@@ -145,7 +151,7 @@ async def test_config_flow_discovery_1_success(hass):
 async def test_config_flow_discovery_2_success(hass):
     """Successful flow with 2 gateway discovered."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "form"
@@ -194,7 +200,7 @@ async def test_config_flow_discovery_2_success(hass):
 async def test_config_flow_connection_error(hass):
     """Failed flow manually initialized by the user with connection timeout."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "form"
@@ -226,7 +232,7 @@ async def test_config_flow_connection_error(hass):
 async def test_config_flow_discovery_fail(hass):
     """Failed flow with no gateways discovered."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "form"
@@ -245,3 +251,100 @@ async def test_config_flow_discovery_fail(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "discovery_error"}
+
+
+async def test_config_flow_interface(hass):
+    """Succesfull flow manually initialized by the user with interface specified."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: TEST_HOST},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "connect"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: TEST_API_KEY, const.CONF_INTERFACE: TEST_HOST_HA},
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == DEFAULT_GATEWAY_NAME
+    assert result["data"] == {
+        CONF_HOST: TEST_HOST,
+        CONF_API_KEY: TEST_API_KEY,
+    }
+
+
+async def test_config_flow_invalid_interface(hass):
+    """Failed flow manually initialized by the user with invalid interface."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: TEST_HOST},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "connect"
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.motion_blinds.config_flow.MotionCommunication._create_mcast_socket",
+        side_effect=socket.gaierror,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: TEST_API_KEY, const.CONF_INTERFACE: "invalid_interface"},
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "connect"
+    assert result["errors"] == {const.CONF_INTERFACE: "invalid_interface"}
+
+
+async def test_options_flow(hass):
+    """Test specifying non default settings using options flow."""
+    config_entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id=TEST_MAC,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_API_KEY: TEST_API_KEY,
+        },
+        title=DEFAULT_GATEWAY_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={const.CONF_WAIT_FOR_PUSH: False},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {
+        const.CONF_WAIT_FOR_PUSH: False,
+    }
