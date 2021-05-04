@@ -51,9 +51,6 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION = 1
 
-# No config schema - only configuration entry
-CONFIG_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the esphome component."""
