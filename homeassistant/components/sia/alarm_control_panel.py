@@ -198,12 +198,12 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         return self._state
 
     @state.setter
-    def state(self, state: str | None) -> None:
+    def state(self, state: StateType) -> None:
         """Set state."""
         if state is not None:
-            self._state, self._old_state = (
-                self._old_state if state == PREVIOUS_STATE else state
-            ), self._state
+            if state == PREVIOUS_STATE:
+                state = self._old_state
+            self._state, self._old_state = state, self._state
 
     @property
     def name(self) -> str:
