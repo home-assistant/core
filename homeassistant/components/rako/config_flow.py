@@ -24,6 +24,7 @@ class RakoConfigFlow(ConfigFlow, domain=DOMAIN):
     """RakoConfigFlow."""
 
     VERSION = 1
+    rako_timeout = 3.0
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -32,7 +33,9 @@ class RakoConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             host = None
             try:
-                host = await asyncio.wait_for(discover_bridge(), timeout=3.0)
+                host = await asyncio.wait_for(
+                    discover_bridge(), timeout=self.rako_timeout
+                )
             except asyncio.TimeoutError:
                 pass
 
@@ -80,4 +83,6 @@ class RakoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _get_bridge_info(self, host: str, port: int) -> BridgeInfo:
         session = async_get_clientsession(self.hass)
         bridge = Bridge(host, port)
-        return await asyncio.wait_for(bridge.get_info(session), timeout=3.0)
+        return await asyncio.wait_for(
+            bridge.get_info(session), timeout=self.rako_timeout
+        )

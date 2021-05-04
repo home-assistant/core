@@ -18,6 +18,7 @@ from . import MOCK_HOST
 def rako_flow(hass):
     """Init a configuration flow."""
     flow = config_flow.RakoConfigFlow()
+    flow.rako_timeout = 0.5
     flow.hass = hass
     flow.context = {}
     return flow
@@ -80,6 +81,7 @@ async def test_user_config_flow_bad_ip(hass, rako_flow):
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
         assert result["errors"][CONF_BASE] == "cannot_connect"
+        hass
 
 
 async def test_user_config_flow_good_ip(hass, rako_flow):
