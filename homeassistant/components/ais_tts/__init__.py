@@ -102,7 +102,7 @@ async def async_setup(hass, config):
             data.async_update(item["id"], {"name": name, "complete": True})
 
     async def play_item_service(call):
-        """Play the item """
+        """Play the item"""
         item_no = 0
         if "item" in call.data:
             item_no = call.data.get("item")
@@ -134,6 +134,18 @@ async def async_setup(hass, config):
         sidebar_icon="mdi:bullhorn-outline",
         update=True,
     )
+    # remove all panels
+    hass.components.frontend.async_remove_panel("lovelace")
+    hass.components.frontend.async_remove_panel("lovelace-dom")
+    hass.components.frontend.async_remove_panel("aisaudio")
+    hass.components.frontend.async_remove_panel("media-browser")
+    hass.components.frontend.async_remove_panel("map")
+    panel_history = "history" in hass.data.get(hass.components.frontend.DATA_PANELS, {})
+    panel_logbook = "logbook" in hass.data.get(hass.components.frontend.DATA_PANELS, {})
+    if panel_history:
+        hass.components.frontend.async_remove_panel("history")
+    if panel_logbook:
+        hass.components.frontend.async_remove_panel("logbook")
 
     hass.components.websocket_api.async_register_command(
         WS_TYPE_AISTTS_ITEMS, websocket_handle_items, SCHEMA_WEBSOCKET_ITEMS
