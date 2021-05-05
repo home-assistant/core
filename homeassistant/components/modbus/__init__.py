@@ -183,19 +183,23 @@ SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         ),
         vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
         vol.Optional(CONF_COMMAND_ON, default=0x01): cv.positive_int,
-        vol.Optional(CONF_VERIFY): {
-            vol.Optional(CONF_ADDRESS): cv.positive_int,
-            vol.Optional(CONF_INPUT_TYPE): vol.In(
-                [
-                    CALL_TYPE_REGISTER_HOLDING,
-                    CALL_TYPE_DISCRETE,
-                    CALL_TYPE_REGISTER_INPUT,
-                    CALL_TYPE_COIL,
-                ]
-            ),
-            vol.Optional(CONF_STATE_OFF): cv.positive_int,
-            vol.Optional(CONF_STATE_ON): cv.positive_int,
-        },
+        vol.Optional(CONF_VERIFY): vol.Any(
+            {
+                vol.Optional(CONF_ADDRESS): cv.positive_int,
+                vol.Optional(CONF_INPUT_TYPE): vol.In(
+                    [
+                        CALL_TYPE_REGISTER_HOLDING,
+                        CALL_TYPE_DISCRETE,
+                        CALL_TYPE_REGISTER_INPUT,
+                        CALL_TYPE_COIL,
+                    ]
+                ),
+                vol.Optional(CONF_STATE_OFF): cv.positive_int,
+                vol.Optional(CONF_STATE_ON): cv.positive_int,
+                vol.Optional("allow_empty_verify", default=0): cv.positive_int,
+            },
+            None,
+        ),
     }
 )
 
