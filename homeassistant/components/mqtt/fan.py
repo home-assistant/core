@@ -374,16 +374,18 @@ class MqttFan(MqttEntity, FanEntity):
                 )
             except ValueError:
                 _LOGGER.warning(
-                    "'%s' received on topic %s is not a valid speed within the speed range",
+                    "'%s' received on topic %s. '%s' is not a valid speed within the speed range",
                     msg.payload,
                     msg.topic,
+                    numeric_val_str,
                 )
                 return
             if percentage < 0 or percentage > 100:
                 _LOGGER.warning(
-                    "'%s' received on topic %s is not a valid speed within the speed range",
+                    "'%s' received on topic %s. '%s' is not a valid speed within the speed range",
                     msg.payload,
                     msg.topic,
+                    numeric_val_str,
                 )
                 return
             self._percentage = percentage
@@ -407,9 +409,10 @@ class MqttFan(MqttEntity, FanEntity):
                 return
             if preset_mode not in self.preset_modes:
                 _LOGGER.warning(
-                    "'%s' received on topic %s is not a valid preset mode",
+                    "'%s' received on topic %s. '%s' is not a valid preset mode",
                     msg.payload,
                     msg.topic,
+                    preset_mode,
                 )
                 return
 
@@ -445,9 +448,10 @@ class MqttFan(MqttEntity, FanEntity):
                 self._speed = speed
             else:
                 _LOGGER.warning(
-                    "'%s' received on topic %s is not a valid speed",
+                    "'%s' received on topic %s. '%s' is not a valid speed",
                     msg.payload,
                     msg.topic,
+                    speed,
                 )
                 return
 
