@@ -143,9 +143,14 @@ class TasmotaLight(
 
                 rgb = attributes["color"]
                 # Tasmota's RGB color is adjusted for brightness, compensate
-                red_compensated = clamp(round(rgb[0] / self._brightness * 255))
-                green_compensated = clamp(round(rgb[1] / self._brightness * 255))
-                blue_compensated = clamp(round(rgb[2] / self._brightness * 255))
+                if self._brightness > 0:
+                    red_compensated = clamp(round(rgb[0] / self._brightness * 255))
+                    green_compensated = clamp(round(rgb[1] / self._brightness * 255))
+                    blue_compensated = clamp(round(rgb[2] / self._brightness * 255))
+                else:
+                    red_compensated = 0
+                    green_compensated = 0
+                    blue_compensated = 0
                 self._rgb = [red_compensated, green_compensated, blue_compensated]
             if "color_temp" in attributes:
                 self._color_temp = attributes["color_temp"]
@@ -212,6 +217,13 @@ class TasmotaLight(
         return [*self._rgb, self._white_value]
 
     @property
+    def force_update(self):
+        """Force update."""
+        if self.color_mode == COLOR_MODE_RGBW:
+            return True
+        return False
+
+    @property
     def is_on(self):
         """Return true if device is on."""
         return self._state
@@ -239,9 +251,9 @@ class TasmotaLight(
         if ATTR_RGBW_COLOR in kwargs and COLOR_MODE_RGBW in supported_color_modes:
             rgbw = kwargs[ATTR_RGBW_COLOR]
             # Tasmota does not support direct RGBW control, the light must be set to
-            # either white mode or color mode. Set the mode according to max of rgb
-            # and white channels
-            if max(rgbw[0:3]) > rgbw[3]:
+            # either white mode or color mode. Set the mode to white if white channel
+            # is on, and to color otheruse
+            if rgbw[3] == 0:
                 attributes["color"] = [rgbw[0], rgbw[1], rgbw[2]]
             else:
                 white_value_normalized = rgbw[3] / DEFAULT_BRIGHTNESS_MAX
