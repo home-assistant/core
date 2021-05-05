@@ -222,21 +222,17 @@ class Statistics(Base):  # type: ignore
     entity_id = Column(String(255))
     period = Column(Enum(*STATISTIC_PERIODS))
     start = Column(DATETIME_TYPE, index=True)
-    end = Column(DATETIME_TYPE, index=True)  # Remove, enough with start time + period?
     mean = Column(Float())
-    median = Column(Float())
     min = Column(Float())
     max = Column(Float())
-    sum = Column(Float())
 
     @staticmethod
-    def from_stats(entity_id, period, start, end, stats):
+    def from_stats(entity_id, period, start, stats):
         """Create object from a statistics."""
         return Statistics(
             entity_id=entity_id,
             period=period,
             start=start,
-            end=end,
             **stats,
         )
 

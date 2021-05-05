@@ -64,6 +64,6 @@ def _compile_statistics(instance: Recorder, period: str, start: datetime.datetim
     with session_scope(session=instance.get_session()) as session:  # type: ignore
         for stats in platform_stats:
             for entity_id, stat in stats.items():
-                session.add(Statistics.from_stats(entity_id, period, start, end, stat))
+                session.add(Statistics.from_stats(entity_id, period, start, stat))
 
     return True
