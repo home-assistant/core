@@ -151,14 +151,14 @@ def create_mock_motioneye_config_entry(
     options: dict[str, Any] | None = None,
 ) -> ConfigEntry:
     """Add a test config entry."""
-    config_entry: MockConfigEntry = MockConfigEntry(  # type: ignore[no-untyped-call]
+    config_entry: MockConfigEntry = MockConfigEntry(
         entry_id=TEST_CONFIG_ENTRY_ID,
         domain=DOMAIN,
         data=data or {CONF_URL: TEST_URL},
         title=f"{TEST_URL}",
         options=options or {},
     )
-    config_entry.add_to_hass(hass)  # type: ignore[no-untyped-call]
+    config_entry.add_to_hass(hass)
     return config_entry
 
 

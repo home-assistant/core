@@ -235,7 +235,7 @@ async def test_get_still_image_from_camera(
     # It won't actually get a stream from the dummy handler, so just catch
     # the expected exception, then verify the right handler was called.
     with pytest.raises(HomeAssistantError):
-        await async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=None)  # type: ignore[no-untyped-call]
+        await async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=None)
     assert image_handler.called
 
 
@@ -269,7 +269,7 @@ async def test_get_stream_from_camera(aiohttp_server: Any, hass: HomeAssistant) 
     # It won't actually get a stream from the dummy handler, so just catch
     # the expected exception, then verify the right handler was called.
     with pytest.raises(HTTPBadGateway):
-        await async_get_mjpeg_stream(hass, None, TEST_CAMERA_ENTITY_ID)  # type: ignore[no-untyped-call]
+        await async_get_mjpeg_stream(hass, None, TEST_CAMERA_ENTITY_ID)
     assert stream_handler.called
 
 

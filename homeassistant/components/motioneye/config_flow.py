@@ -11,9 +11,7 @@ from motioneye_client.client import (
 )
 import voluptuous as vol
 
-
 from homeassistant.config_entries import (
-    CONN_CLASS_LOCAL_POLL,
     SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
@@ -181,13 +179,13 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
     @staticmethod
-    @callback  # type: ignore[misc]
+    @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> MotionEyeOptionsFlow:
         """Get the Hyperion Options flow."""
         return MotionEyeOptionsFlow(config_entry)
 
 
-class MotionEyeOptionsFlow(OptionsFlow):  # type: ignore[misc]
+class MotionEyeOptionsFlow(OptionsFlow):
     """motionEye options flow."""
 
     def __init__(self, config_entry: ConfigEntry):
@@ -196,7 +194,7 @@ class MotionEyeOptionsFlow(OptionsFlow):  # type: ignore[misc]
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

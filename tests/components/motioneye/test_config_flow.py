@@ -302,11 +302,11 @@ async def test_duplicate(hass: HomeAssistant) -> None:
     }
 
     # Add an existing entry with the same URL.
-    existing_entry: MockConfigEntry = MockConfigEntry(  # type: ignore[no-untyped-call]
+    existing_entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
         data=config_data,
     )
-    existing_entry.add_to_hass(hass)  # type: ignore[no-untyped-call]
+    existing_entry.add_to_hass(hass)
 
     # Now do the usual config entry process, and verify it is rejected.
     create_mock_motioneye_config_entry(hass, data=config_data)

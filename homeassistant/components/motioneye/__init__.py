@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Callable, cast
+from typing import Any, Callable
 
 from aiohttp import web
 from motioneye_client.client import (
@@ -412,15 +412,12 @@ class MotionEyeView(HomeAssistantView):
         device = device_registry.async_get(device_id)
 
         if not device:
-            return cast(
-                web.Response,
-                self.json_message(
-                    f"Device not found: {device_id}",
-                    status_code=HTTP_NOT_FOUND,
-                ),
+            return self.json_message(
+                f"Device not found: {device_id}",
+                status_code=HTTP_NOT_FOUND,
             )
         await self._fire_event(hass, event, device, request.query)
-        return cast(web.Response, self.json_message({}))
+        return self.json({})
 
     async def _fire_event(
         self,
