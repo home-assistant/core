@@ -557,7 +557,6 @@ omit =
     homeassistant/components/life360/*
     homeassistant/components/lifx/*
     homeassistant/components/lifx_cloud/scene.py
-    homeassistant/components/lifx_legacy/light.py
     homeassistant/components/lightwave/*
     homeassistant/components/limitlessled/light.py
     homeassistant/components/linksys_smart/device_tracker.py

@@ -423,7 +423,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210503.0
+home-assistant-frontend==20210504.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -487,7 +487,7 @@ libsoundtouch==0.8
 logi_circle==0.2.2
 
 # homeassistant.components.luftdaten
-luftdaten==0.6.4
+luftdaten==0.6.5
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -514,7 +514,7 @@ minio==4.0.9
 motionblinds==0.4.10
 
 # homeassistant.components.motioneye
-motioneye-client==0.3.2
+motioneye-client==0.3.6
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
@@ -1288,7 +1288,7 @@ zigpy-xbee==0.13.0
 zigpy-zigate==0.7.3
 
 # homeassistant.components.zha
-zigpy-znp==0.4.0
+zigpy-znp==0.5.1
 
 # homeassistant.components.zha
 zigpy==0.33.0

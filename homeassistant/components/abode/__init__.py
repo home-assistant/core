@@ -45,15 +45,19 @@ ATTR_EVENT_BY = "event_by"
 ATTR_VALUE = "value"
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_POLLING, default=False): cv.boolean,
-            }
-        )
-    },
+    vol.All(
+        # Deprecated in Home Assistant 2021.6
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Optional(CONF_POLLING, default=False): cv.boolean,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
