@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.homeassistant import (
-    DOMAIN as HA_DOMAIN,
     SERVICE_CHECK_CONFIG,
     SHUTDOWN_SERVICES,
 )
@@ -500,7 +499,7 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:  # noqa: C90
             hass.components.persistent_notification.async_create(
                 "Config error. See [the logs](/config/logs) for details.",
                 "Config validating",
-                f"{HA_DOMAIN}.check_config",
+                f"{HASS_DOMAIN}.check_config",
             )
             raise HomeAssistantError(
                 f"The system cannot {call.service} because the configuration is not valid: {errors}"
