@@ -31,6 +31,28 @@ MOCK_OWPROXY_DEVICES = {
         ],
         SENSOR_DOMAIN: [],
     },
+    "05.111111111111": {
+        "inject_reads": [
+            b"DS2405",  # read device type
+        ],
+        "device_info": {
+            "identifiers": {(DOMAIN, "05.111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "DS2405",
+            "name": "05.111111111111",
+        },
+        SWITCH_DOMAIN: [
+            {
+                "entity_id": "switch.05_111111111111_pio",
+                "unique_id": "/05.111111111111/PIO",
+                "injected_value": b"    1",
+                "result": STATE_ON,
+                "unit": None,
+                "class": None,
+                "disabled": True,
+            },
+        ],
+    },
     "10.111111111111": {
         "inject_reads": [
             b"DS18S20",  # read device type
