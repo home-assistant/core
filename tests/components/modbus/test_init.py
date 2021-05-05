@@ -569,11 +569,11 @@ async def test_delay(hass, mock_pymodbus):
     assert not mock_pymodbus.write_registers.called
 
     # 2 times fire_changed is needed to secure "normal" update is called.
-    now = now + timedelta(seconds=30)
+    now = now + timedelta(seconds=6)
     with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
-    now = now + timedelta(seconds=30)
+    now = now + timedelta(seconds=10)
     with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
