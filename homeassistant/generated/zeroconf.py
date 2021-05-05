@@ -172,6 +172,11 @@ ZEROCONF = {
             "name": "smappee50*"
         }
     ],
+    "_system-bridge._udp.local.": [
+        {
+            "domain": "system_bridge"
+        }
+    ],
     "_touch-able._tcp.local.": [
         {
             "domain": "apple_tv"
