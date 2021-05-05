@@ -143,6 +143,38 @@ async def test_rm_pro_sensor_update(hass):
     assert sensors_and_states == {(f"{device.name} Temperature", "25.8")}
 
 
+async def test_rm_pro_filter_crazy_temperature(hass):
+    """Test we filter a crazy temperature variation.
+
+    Firmware issue. See https://github.com/home-assistant/core/issues/42100.
+    """
+    device = get_device("Office")
+    mock_api = device.get_mock_api()
+    mock_api.check_sensors.return_value = {"temperature": 22.9}
+
+    device_registry = mock_device_registry(hass)
+    entity_registry = mock_registry(hass)
+
+    mock_api, mock_entry = await device.setup_entry(hass, mock_api=mock_api)
+
+    device_entry = device_registry.async_get_device({(DOMAIN, mock_entry.unique_id)})
+    entries = async_entries_for_device(entity_registry, device_entry.id)
+    sensors = {entry for entry in entries if entry.domain == SENSOR_DOMAIN}
+    assert len(sensors) == 1
+
+    mock_api.check_sensors.return_value = {"temperature": -7}
+    await hass.helpers.entity_component.async_update_entity(
+        next(iter(sensors)).entity_id
+    )
+    assert mock_api.check_sensors.call_count == 2
+
+    sensors_and_states = {
+        (sensor.original_name, hass.states.get(sensor.entity_id).state)
+        for sensor in sensors
+    }
+    assert sensors_and_states == {(f"{device.name} Temperature", "22.9")}
+
+
 async def test_rm_mini3_no_sensor(hass):
     """Test we do not set up sensors for RM mini 3."""
     device = get_device("Entrance")
