@@ -24,13 +24,13 @@ class OneWireBaseEntity(Entity):
 
     def __init__(
         self,
-        name,
-        device_file,
+        name: str,
+        device_file: str,
         entity_type: str,
-        entity_name: str = None,
-        device_info: DeviceInfo | None = None,
-        default_disabled: bool = False,
-        unique_id: str = None,
+        entity_name: str,
+        device_info: DeviceInfo,
+        default_disabled: bool,
+        unique_id: str,
     ):
         """Initialize the entity."""
         self._name = f"{name} {entity_name or entity_type.capitalize()}"
@@ -39,10 +39,10 @@ class OneWireBaseEntity(Entity):
         self._device_class = SENSOR_TYPES[entity_type][1]
         self._unit_of_measurement = SENSOR_TYPES[entity_type][0]
         self._device_info = device_info
-        self._state = None
-        self._value_raw = None
+        self._state: int | bool | float | None = None
+        self._value_raw: float | None = None
         self._default_disabled = default_disabled
-        self._unique_id = unique_id or device_file
+        self._unique_id = unique_id
 
     @property
     def name(self) -> str | None:
@@ -99,31 +99,30 @@ class OneWireProxyEntity(OneWireBaseEntity):
         )
         self._owproxy = owproxy
 
-    def _read_value_ownet(self):
+    def _read_value_ownet(self) -> str:
         """Read a value from the owserver."""
-        return self._owproxy.read(self._device_file).decode().lstrip()
+        read_bytes: bytes = self._owproxy.read(self._device_file)
+        return read_bytes.decode().lstrip()
 
-    def _write_value_ownet(self, value: bytes):
+    def _write_value_ownet(self, value: bytes) -> None:
         """Write a value to the owserver."""
-        return self._owproxy.write(self._device_file, value)
+        self._owproxy.write(self._device_file, value)
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the device."""
-        value = None
         try:
             self._value_raw = float(self._read_value_ownet())
         except protocol.Error as exc:
             _LOGGER.error("Owserver failure in read(), got: %s", exc)
+            self._state = None
         else:
             if self._entity_type == SENSOR_TYPE_COUNT:
-                value = int(self._value_raw)
+                self._state = int(self._value_raw)
             elif self._entity_type in [
                 SENSOR_TYPE_SENSED,
                 SWITCH_TYPE_LATCH,
                 SWITCH_TYPE_PIO,
             ]:
-                value = int(self._value_raw) == 1
+                self._state = int(self._value_raw) == 1
             else:
-                value = round(self._value_raw, 1)
-
-        self._state = value
+                self._state = round(self._value_raw, 1)

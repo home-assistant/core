@@ -30,6 +30,7 @@ homeassistant.components.media_player.*
 homeassistant.components.nam.*
 homeassistant.components.notify.*
 homeassistant.components.number.*
+homeassistant.components.onewire.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.proximity.*
 homeassistant.components.recorder.purge

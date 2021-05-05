@@ -1,4 +1,6 @@
 """Hub for communication with 1-Wire server or mount_dir."""
+from __future__ import annotations
+
 import os
 
 from pi1wire import Pi1Wire
@@ -23,10 +25,10 @@ class OneWireHub:
     def __init__(self, hass: HomeAssistant):
         """Initialize."""
         self.hass = hass
-        self.type: str = None
-        self.pi1proxy: Pi1Wire = None
-        self.owproxy: protocol._Proxy = None
-        self.devices = None
+        self.type: str | None = None
+        self.pi1proxy: Pi1Wire | None = None
+        self.owproxy: protocol._Proxy | None = None
+        self.devices: list | None = None
 
     async def connect(self, host: str, port: int) -> None:
         """Connect to the owserver host."""
@@ -54,10 +56,11 @@ class OneWireHub:
             await self.connect(host, port)
         await self.discover_devices()
 
-    async def discover_devices(self):
+    async def discover_devices(self) -> None:
         """Discover all devices."""
         if self.devices is None:
             if self.type == CONF_TYPE_SYSBUS:
+                assert self.pi1proxy
                 self.devices = await self.hass.async_add_executor_job(
                     self.pi1proxy.find_all_sensors
                 )
@@ -65,11 +68,11 @@ class OneWireHub:
                 self.devices = await self.hass.async_add_executor_job(
                     self._discover_devices_owserver
                 )
-        return self.devices
 
-    def _discover_devices_owserver(self, path="/"):
+    def _discover_devices_owserver(self, path: str = "/") -> list:
         """Discover all owserver devices."""
         devices = []
+        assert self.owproxy
         for device_path in self.owproxy.dir(path):
             device_family = self.owproxy.read(f"{device_path}family").decode()
             device_type = self.owproxy.read(f"{device_path}type").decode()

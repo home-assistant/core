@@ -4,14 +4,19 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+from types import MappingProxyType
+from typing import Any
 
-from pi1wire import InvalidCRCException, UnsupportResponseException
+from pi1wire import InvalidCRCException, OneWireInterface, UnsupportResponseException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
@@ -225,7 +230,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_sensor_types(device_sub_type):
+def get_sensor_types(device_sub_type: str) -> dict[str, Any]:
     """Return the proper info array for the device type."""
     if "HobbyBoard" in device_sub_type:
         return HOBBYBOARD_EF
@@ -234,7 +239,12 @@ def get_sensor_types(device_sub_type):
     return DEVICE_SENSORS
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: None = None,
+) -> None:
     """Old way of setting up 1-Wire platform."""
     _LOGGER.warning(
         "Loading 1-Wire via platform setup is deprecated. "
@@ -253,7 +263,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up 1-Wire platform."""
     onewirehub = hass.data[DOMAIN][config_entry.entry_id]
     entities = await hass.async_add_executor_job(
@@ -262,9 +276,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-def get_entities(onewirehub: OneWireHub, config):
+def get_entities(
+    onewirehub: OneWireHub, config: MappingProxyType[str, Any]
+) -> list[OneWireBaseEntity]:
     """Get a list of entities."""
-    entities = []
+    if not onewirehub.devices:
+        return []
+
+    entities: list[OneWireBaseEntity] = []
     device_names = {}
     if CONF_NAMES in config and isinstance(config[CONF_NAMES], dict):
         device_names = config[CONF_NAMES]
@@ -272,6 +291,7 @@ def get_entities(onewirehub: OneWireHub, config):
     conf_type = config[CONF_TYPE]
     # We have an owserver on a remote(or local) host/port
     if conf_type == CONF_TYPE_OWSERVER:
+        assert onewirehub.owproxy
         for device in onewirehub.devices:
             family = device["family"]
             device_type = device["type"]
@@ -292,7 +312,7 @@ def get_entities(onewirehub: OneWireHub, config):
                     device_id,
                 )
                 continue
-            device_info = {
+            device_info: DeviceInfo = {
                 "identifiers": {(DOMAIN, device_id)},
                 "manufacturer": "Maxim Integrated",
                 "model": device_type,
@@ -384,9 +404,23 @@ class OneWireProxySensor(OneWireProxyEntity, OneWireSensor):
 class OneWireDirectSensor(OneWireSensor):
     """Implementation of a 1-Wire sensor directly connected to RPI GPIO."""
 
-    def __init__(self, name, device_file, device_info, owsensor):
+    def __init__(
+        self,
+        name: str,
+        device_file: str,
+        device_info: DeviceInfo,
+        owsensor: OneWireInterface,
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(name, device_file, "temperature", "Temperature", device_info)
+        super().__init__(
+            name,
+            device_file,
+            "temperature",
+            "Temperature",
+            device_info,
+            False,
+            device_file,
+        )
         self._owsensor = owsensor
 
     @property
@@ -394,7 +428,7 @@ class OneWireDirectSensor(OneWireSensor):
         """Return the state of the entity."""
         return self._state
 
-    async def get_temperature(self):
+    async def get_temperature(self) -> float:
         """Get the latest data from the device."""
         attempts = 1
         while True:
@@ -414,16 +448,15 @@ class OneWireDirectSensor(OneWireSensor):
                 if attempts > 10:
                     raise
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from the device."""
-        value = None
         try:
             self._value_raw = await self.get_temperature()
-            value = round(float(self._value_raw), 1)
+            self._state = round(self._value_raw, 1)
         except (
             FileNotFoundError,
             InvalidCRCException,
             UnsupportResponseException,
         ) as ex:
             _LOGGER.warning("Cannot read from sensor %s: %s", self._device_file, ex)
-        self._state = value
+            self._state = None
