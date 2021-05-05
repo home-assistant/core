@@ -132,6 +132,7 @@ class ModbusHub:
 
         # generic configuration
         self._client = None
+        self._cancel_listener = None
         self._in_error = False
         self._lock = threading.Lock()
         self._config_name = client_config[CONF_NAME]
@@ -207,14 +208,20 @@ class ModbusHub:
 
         # Start counting down to allow modbus requests.
         if self._config_delay:
-            async_call_later(hass, self._config_delay, self.end_delay)
+            self._cancel_listener = async_call_later(
+                hass, self._config_delay, self.end_delay
+            )
 
     def end_delay(self, args):
         """End startup delay."""
+        self._cancel_call_later = None
         self._config_delay = 0
 
     def close(self):
         """Disconnect client."""
+        if self._cancel_listener:
+            self._cancel_listener()
+            self._cancel_listener = None
         with self._lock:
             try:
                 if self._client:
