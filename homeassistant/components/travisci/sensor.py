@@ -105,7 +105,7 @@ class TravisCISensor(SensorEntity):
         self._user = user
         self._branch = branch
         self._state = None
-        self._name = "{} {}".format(self._repo_name, SENSOR_TYPES[self._sensor_type][0])
+        self._name = f"{self._repo_name} {SENSOR_TYPES[self._sensor_type][0]}"
 
     @property
     def name(self):

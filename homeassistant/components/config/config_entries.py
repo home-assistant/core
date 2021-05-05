@@ -311,7 +311,7 @@ async def config_entry_update(hass, connection, msg):
         "type": "config_entries/disable",
         "entry_id": str,
         # We only allow setting disabled_by user via API.
-        "disabled_by": vol.Any("user", None),
+        "disabled_by": vol.Any(config_entries.DISABLED_USER, None),
     }
 )
 async def config_entry_disable(hass, connection, msg):
@@ -390,4 +390,5 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "supports_options": supports_options,
         "supports_unload": entry.supports_unload,
         "disabled_by": entry.disabled_by,
+        "reason": entry.reason,
     }

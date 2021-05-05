@@ -3,7 +3,11 @@ import asyncio
 import cProfile
 from datetime import timedelta
 import logging
+import reprlib
+import sys
+import threading
 import time
+import traceback
 
 from guppy import hpy
 import objgraph
@@ -11,11 +15,11 @@ from pyprof2calltree import convert
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -24,6 +28,9 @@ SERVICE_MEMORY = "memory"
 SERVICE_START_LOG_OBJECTS = "start_log_objects"
 SERVICE_STOP_LOG_OBJECTS = "stop_log_objects"
 SERVICE_DUMP_LOG_OBJECTS = "dump_log_objects"
+SERVICE_LOG_THREAD_FRAMES = "log_thread_frames"
+SERVICE_LOG_EVENT_LOOP_SCHEDULED = "log_event_loop_scheduled"
+
 
 SERVICES = (
     SERVICE_START,
@@ -31,27 +38,21 @@ SERVICES = (
     SERVICE_START_LOG_OBJECTS,
     SERVICE_STOP_LOG_OBJECTS,
     SERVICE_DUMP_LOG_OBJECTS,
+    SERVICE_LOG_THREAD_FRAMES,
+    SERVICE_LOG_EVENT_LOOP_SCHEDULED,
 )
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 CONF_SECONDS = "seconds"
-CONF_SCAN_INTERVAL = "scan_interval"
-CONF_TYPE = "type"
 
 LOG_INTERVAL_SUB = "log_interval_subscription"
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the profiler component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Profiler from a config entry."""
-
     lock = asyncio.Lock()
     domain_data = hass.data[DOMAIN] = {}
 
@@ -99,6 +100,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             notification_id="profile_object_dump",
         )
 
+    async def _async_dump_thread_frames(call: ServiceCall) -> None:
+        """Log all thread frames."""
+        frames = sys._current_frames()  # pylint: disable=protected-access
+        main_thread = threading.main_thread()
+        for thread in threading.enumerate():
+            if thread == main_thread:
+                continue
+            _LOGGER.critical(
+                "Thread [%s]: %s",
+                thread.name,
+                "".join(traceback.format_stack(frames.get(thread.ident))).strip(),
+            )
+
+    async def _async_dump_scheduled(call: ServiceCall) -> None:
+        """Log all scheduled in the event loop."""
+        arepr = reprlib.aRepr
+        original_maxstring = arepr.maxstring
+        original_maxother = arepr.maxother
+        arepr.maxstring = 300
+        arepr.maxother = 300
+        try:
+            for handle in hass.loop._scheduled:  # pylint: disable=protected-access
+                if not handle.cancelled():
+                    _LOGGER.critical("Scheduled: %s", handle)
+        finally:
+            arepr.max_string = original_maxstring
+            arepr.max_other = original_maxother
+
     async_register_admin_service(
         hass,
         DOMAIN,
@@ -138,7 +167,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         DOMAIN,
         SERVICE_STOP_LOG_OBJECTS,
         _async_stop_log_objects,
-        schema=vol.Schema({}),
     )
 
     async_register_admin_service(
@@ -147,6 +175,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         SERVICE_DUMP_LOG_OBJECTS,
         _dump_log_objects,
         schema=vol.Schema({vol.Required(CONF_TYPE): str}),
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_LOG_THREAD_FRAMES,
+        _async_dump_thread_frames,
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_LOG_EVENT_LOOP_SCHEDULED,
+        _async_dump_scheduled,
     )
 
     return True

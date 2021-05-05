@@ -5,6 +5,7 @@ from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 from onvif.exceptions import ONVIFError
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, DATA_FFMPEG
@@ -175,9 +176,10 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         uri_no_auth = await self.device.async_get_stream_uri(self.profile)
-        self._stream_uri = uri_no_auth.replace(
-            "rtsp://", f"rtsp://{self.device.username}:{self.device.password}@", 1
-        )
+        url = URL(uri_no_auth)
+        url = url.with_user(self.device.username)
+        url = url.with_password(self.device.password)
+        self._stream_uri = str(url)
 
     async def async_perform_ptz(
         self,

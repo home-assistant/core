@@ -4,7 +4,7 @@ from __future__ import annotations
 from bisect import bisect
 import logging
 import re
-from typing import Callable, NamedTuple, Pattern
+from typing import Callable, NamedTuple
 
 import attr
 
@@ -23,8 +23,9 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TIME_SECONDS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType, StateType
+from homeassistant.helpers.typing import StateType
 
 from . import HuaweiLteBaseEntity
 from .const import (
@@ -52,8 +53,8 @@ class SensorMeta(NamedTuple):
     icon: str | Callable[[StateType], str] | None = None
     unit: str | None = None
     enabled_default: bool = False
-    include: Pattern[str] | None = None
-    exclude: Pattern[str] | None = None
+    include: re.Pattern[str] | None = None
+    exclude: re.Pattern[str] | None = None
     formatter: Callable[[str], tuple[StateType, str | None]] | None = None
 
 
@@ -68,7 +69,9 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
         name="WAN IPv6 address", icon="mdi:ip"
     ),
     (KEY_DEVICE_SIGNAL, "band"): SensorMeta(name="Band"),
-    (KEY_DEVICE_SIGNAL, "cell_id"): SensorMeta(name="Cell ID"),
+    (KEY_DEVICE_SIGNAL, "cell_id"): SensorMeta(
+        name="Cell ID", icon="mdi:transmission-tower"
+    ),
     (KEY_DEVICE_SIGNAL, "dl_mcs"): SensorMeta(name="Downlink MCS"),
     (KEY_DEVICE_SIGNAL, "dlbandwidth"): SensorMeta(
         name="Downlink bandwidth",
@@ -101,8 +104,13 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
     (KEY_DEVICE_SIGNAL, "mode"): SensorMeta(
         name="Mode",
         formatter=lambda x: ({"0": "2G", "2": "3G", "7": "4G"}.get(x, "Unknown"), None),
+        icon=lambda x: (
+            {"2G": "mdi:signal-2g", "3G": "mdi:signal-3g", "4G": "mdi:signal-4g"}.get(
+                str(x), "mdi:signal"
+            )
+        ),
     ),
-    (KEY_DEVICE_SIGNAL, "pci"): SensorMeta(name="PCI"),
+    (KEY_DEVICE_SIGNAL, "pci"): SensorMeta(name="PCI", icon="mdi:transmission-tower"),
     (KEY_DEVICE_SIGNAL, "rsrq"): SensorMeta(
         name="RSRQ",
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
@@ -172,6 +180,23 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
             "mdi:signal-cellular-2",
             "mdi:signal-cellular-3",
         )[bisect((-20, -10, -6), x if x is not None else -1000)],
+    ),
+    (KEY_DEVICE_SIGNAL, "transmode"): SensorMeta(name="Transmission mode"),
+    (KEY_DEVICE_SIGNAL, "cqi0"): SensorMeta(
+        name="CQI 0",
+        icon="mdi:speedometer",
+    ),
+    (KEY_DEVICE_SIGNAL, "cqi1"): SensorMeta(
+        name="CQI 1",
+        icon="mdi:speedometer",
+    ),
+    (KEY_DEVICE_SIGNAL, "ltedlfreq"): SensorMeta(
+        name="Downlink frequency",
+        formatter=lambda x: (round(int(x) / 10), "MHz"),
+    ),
+    (KEY_DEVICE_SIGNAL, "lteulfreq"): SensorMeta(
+        name="Uplink frequency",
+        formatter=lambda x: (round(int(x) / 10), "MHz"),
     ),
     KEY_MONITORING_CHECK_NOTIFICATIONS: SensorMeta(
         exclude=re.compile(
@@ -329,7 +354,7 @@ SENSOR_META: dict[str | tuple[str, str], SensorMeta] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
@@ -337,11 +362,9 @@ async def async_setup_entry(
     router = hass.data[DOMAIN].routers[config_entry.data[CONF_URL]]
     sensors: list[Entity] = []
     for key in SENSOR_KEYS:
-        items = router.data.get(key)
-        if not items:
+        if not (items := router.data.get(key)):
             continue
-        key_meta = SENSOR_META.get(key)
-        if key_meta:
+        if key_meta := SENSOR_META.get(key):
             if key_meta.include:
                 items = filter(key_meta.include.search, items)
             if key_meta.exclude:
@@ -361,10 +384,9 @@ def format_default(value: StateType) -> tuple[StateType, str | None]:
     unit = None
     if value is not None:
         # Clean up value and infer unit, e.g. -71dBm, 15 dB
-        match = re.match(
+        if match := re.match(
             r"([>=<]*)(?P<value>.+?)\s*(?P<unit>[a-zA-Z]+)\s*$", str(value)
-        )
-        if match:
+        ):
             try:
                 value = float(match.group("value"))
                 unit = match.group("unit")

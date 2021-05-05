@@ -3,5 +3,6 @@
   "name": "PCAL9535A I/O Expander",
   "documentation": "https://www.home-assistant.io/integrations/pcal9535a",
   "requirements": ["pcal9535a==0.7"],
-  "codeowners": ["@Shulyaka"]
+  "codeowners": ["@Shulyaka"],
+  "iot_class": "local_polling"
 }

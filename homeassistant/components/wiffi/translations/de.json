@@ -8,7 +8,8 @@
             "user": {
                 "data": {
                     "port": "Server Port"
-                }
+                },
+                "title": "TCP-Server f\u00fcr WIFFI-Ger\u00e4te einrichten"
             }
         }
     },

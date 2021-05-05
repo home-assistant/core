@@ -10,6 +10,7 @@
             "user": {
                 "data": {
                     "api_key": "Clau API",
+                    "api_version": "Versi\u00f3 de l'API",
                     "latitude": "Latitud",
                     "longitude": "Longitud",
                     "name": "Nom"

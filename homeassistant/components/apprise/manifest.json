@@ -3,5 +3,6 @@
   "name": "Apprise",
   "documentation": "https://www.home-assistant.io/integrations/apprise",
   "requirements": ["apprise==0.8.9"],
-  "codeowners": ["@caronc"]
+  "codeowners": ["@caronc"],
+  "iot_class": "cloud_push"
 }

@@ -1,7 +1,7 @@
 """Config flow for ScreenLogic."""
 import logging
 
-from screenlogicpy import ScreenLogicError, discover
+from screenlogicpy import ScreenLogicError, discovery
 from screenlogicpy.const import SL_GATEWAY_IP, SL_GATEWAY_NAME, SL_GATEWAY_PORT
 from screenlogicpy.requests import login
 import voluptuous as vol
@@ -27,7 +27,7 @@ async def async_discover_gateways_by_unique_id(hass):
     """Discover gateways and return a dict of them by unique id."""
     discovered_gateways = {}
     try:
-        hosts = await hass.async_add_executor_job(discover)
+        hosts = await discovery.async_discover()
         _LOGGER.debug("Discovered hosts: %s", hosts)
     except ScreenLogicError as ex:
         _LOGGER.debug(ex)
@@ -89,15 +89,15 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovered_gateways = await async_discover_gateways_by_unique_id(self.hass)
         return await self.async_step_gateway_select()
 
-    async def async_step_dhcp(self, dhcp_discovery):
+    async def async_step_dhcp(self, discovery_info):
         """Handle dhcp discovery."""
-        mac = _extract_mac_from_name(dhcp_discovery[HOSTNAME])
+        mac = _extract_mac_from_name(discovery_info[HOSTNAME])
         await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured(
-            updates={CONF_IP_ADDRESS: dhcp_discovery[IP_ADDRESS]}
+            updates={CONF_IP_ADDRESS: discovery_info[IP_ADDRESS]}
         )
-        self.discovered_ip = dhcp_discovery[IP_ADDRESS]
-        self.context["title_placeholders"] = {"name": dhcp_discovery[HOSTNAME]}
+        self.discovered_ip = discovery_info[IP_ADDRESS]
+        self.context["title_placeholders"] = {"name": discovery_info[HOSTNAME]}
         return await self.async_step_gateway_entry()
 
     async def async_step_gateway_select(self, user_input=None):

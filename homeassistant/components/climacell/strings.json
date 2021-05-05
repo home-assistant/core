@@ -7,6 +7,7 @@
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_version": "API Version",
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]"
         }
@@ -25,8 +26,7 @@
         "title": "Update [%key:component::climacell::title%] Options",
         "description": "If you choose to enable the `nowcast` forecast entity, you can configure the number of minutes between each forecast. The number of forecasts provided depends on the number of minutes chosen between forecasts.",
         "data": {
-          "timestep": "Min. Between NowCast Forecasts",
-          "forecast_types": "Forecast Type(s)"
+          "timestep": "Min. Between NowCast Forecasts"
         }
       }
     }

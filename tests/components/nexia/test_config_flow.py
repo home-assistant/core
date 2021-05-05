@@ -24,8 +24,6 @@ async def test_form(hass):
         "homeassistant.components.nexia.config_flow.NexiaHome.login",
         side_effect=MagicMock(),
     ), patch(
-        "homeassistant.components.nexia.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.nexia.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -41,7 +39,6 @@ async def test_form(hass):
         CONF_USERNAME: "username",
         CONF_PASSWORD: "password",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

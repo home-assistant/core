@@ -1,5 +1,5 @@
 """Support for tracking the moon phases."""
-from astral import Astral
+from astral import moon
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -48,7 +48,6 @@ class MoonSensor(SensorEntity):
         """Initialize the moon sensor."""
         self._name = name
         self._state = None
-        self._astral = Astral()
 
     @property
     def name(self):
@@ -87,4 +86,4 @@ class MoonSensor(SensorEntity):
     async def async_update(self):
         """Get the time and updates the states."""
         today = dt_util.as_local(dt_util.utcnow()).date()
-        self._state = self._astral.moon_phase(today)
+        self._state = moon.phase(today)
