@@ -88,13 +88,6 @@ def _get_mock_cfupdate(
     return client
 
 
-def _patch_async_setup(return_value=True):
-    return patch(
-        "homeassistant.components.cloudflare.async_setup",
-        return_value=return_value,
-    )
-
-
 def _patch_async_setup_entry(return_value=True):
     return patch(
         "homeassistant.components.cloudflare.async_setup_entry",
