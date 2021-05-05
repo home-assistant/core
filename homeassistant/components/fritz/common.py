@@ -8,7 +8,11 @@ from typing import Any
 
 # pylint: disable=import-error
 from fritzconnection import FritzConnection
-from fritzconnection.core.exceptions import FritzActionError, FritzServiceError
+from fritzconnection.core.exceptions import (
+    FritzActionError,
+    FritzConnectionException,
+    FritzServiceError,
+)
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
 
@@ -176,6 +180,8 @@ class FritzBoxTools:
                     "ForceTermination",
                 )
         except (FritzServiceError, FritzActionError) as ex:
+            raise HomeAssistantError("Service or parameter unknown") from ex
+        except FritzConnectionException as ex:
             raise HomeAssistantError("Service not supported") from ex
 
 
