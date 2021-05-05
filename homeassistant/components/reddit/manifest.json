@@ -2,6 +2,7 @@
   "domain": "reddit",
   "name": "Reddit",
   "documentation": "https://www.home-assistant.io/integrations/reddit",
-  "requirements": ["praw==7.1.2"],
-  "codeowners": []
+  "requirements": ["praw==7.1.4"],
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

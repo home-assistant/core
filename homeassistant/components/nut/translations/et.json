@@ -33,6 +33,10 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "\u00dchendus nurjus",
+            "unknown": "Tundmatu viga"
+        },
         "step": {
             "init": {
                 "data": {

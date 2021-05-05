@@ -11,17 +11,16 @@ and everything else custom is for the old api.  When configured with the
 new api via NestFlowHandler.register_sdm_api, the custom methods just
 invoke the AbstractOAuth2FlowHandler methods.
 """
+from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
 import logging
 import os
-from typing import Dict
 
 import async_timeout
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -65,7 +64,6 @@ class UnexpectedStateError(HomeAssistantError):
     """Raised when the config flow is invoked in a 'should not happen' case."""
 
 
-@config_entries.HANDLERS.register(DOMAIN)
 class NestFlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
@@ -73,7 +71,6 @@ class NestFlowHandler(
 
     DOMAIN = DOMAIN
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     def __init__(self):
         """Initialize NestFlowHandler."""
@@ -98,7 +95,7 @@ class NestFlowHandler(
         return logging.getLogger(__name__)
 
     @property
-    def extra_authorize_data(self) -> Dict[str, str]:
+    def extra_authorize_data(self) -> dict[str, str]:
         """Extra data that needs to be appended to the authorize url."""
         return {
             "scope": " ".join(SDM_SCOPES),

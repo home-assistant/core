@@ -14,10 +14,10 @@
                 "data": {
                     "country_code": "Din landskode for kontoen din (f.eks. 1 for USA eller 86 for Kina)",
                     "password": "Passord",
-                    "platform": "Appen der kontoen din registreres",
+                    "platform": "Appen der kontoen din er registrert",
                     "username": "Brukernavn"
                 },
-                "description": "Skriv inn din Tuya-legitimasjon.",
+                "description": "Angi Tuya-legitimasjonen din.",
                 "title": ""
             }
         }
@@ -40,8 +40,10 @@
                     "max_temp": "Maks m\u00e5ltemperatur (bruk min og maks = 0 for standard)",
                     "min_kelvin": "Min fargetemperatur st\u00f8ttet i kelvin",
                     "min_temp": "Min m\u00e5ltemperatur (bruk min og maks = 0 for standard)",
+                    "set_temp_divided": "Bruk delt temperaturverdi for innstilt temperaturkommando",
                     "support_color": "Tving fargest\u00f8tte",
                     "temp_divider": "Deler temperaturverdier (0 = bruk standard)",
+                    "temp_step_override": "Trinn for m\u00e5ltemperatur",
                     "tuya_max_coltemp": "Maks fargetemperatur rapportert av enheten",
                     "unit_of_measurement": "Temperaturenhet som brukes av enheten"
                 },

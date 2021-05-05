@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+        },
+        "error": {
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "reauth_confirm": {
+                "description": "Die SmartTub-Integration muss Ihr Konto neu authentifizieren",
+                "title": "Integration erneut authentifizieren"
+            },
+            "user": {
+                "data": {
+                    "email": "E-Mail",
+                    "password": "Passwort"
+                },
+                "description": "Gib deine SmartTub E-Mail-Adresse und Passwort f\u00fcr die Anmeldung ein",
+                "title": "Anmeldung"
+            }
+        }
+    }
+}

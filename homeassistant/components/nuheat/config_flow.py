@@ -13,8 +13,7 @@ from homeassistant.const import (
     HTTP_INTERNAL_SERVER_ERROR,
 )
 
-from .const import CONF_SERIAL_NUMBER
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import CONF_SERIAL_NUMBER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +64,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NuHeat."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

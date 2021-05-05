@@ -21,7 +21,8 @@
     "step": {
       "init": {
         "data": {
-          "polling_interval": "Polling interval (in seconds)"
+          "polling_interval": "Polling interval (in seconds)",
+          "ph_offset": "pH offset (positive or negative)"
         }
       }
     }

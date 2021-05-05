@@ -74,14 +74,13 @@ class HitronCODADeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Return the name of the device with the given MAC address."""
-        name = next(
+        return next(
             (result.name for result in self.last_results if result.mac == device), None
         )
-        return name
 
     def _login(self):
         """Log in to the router. This is required for subsequent api calls."""
-        _LOGGER.info("Logging in to CODA...")
+        _LOGGER.info("Logging in to CODA")
 
         try:
             data = [("user", self._username), (self._type, self._password)]
@@ -101,12 +100,11 @@ class HitronCODADeviceScanner(DeviceScanner):
 
     def _update_info(self):
         """Get ARP from router."""
-        _LOGGER.info("Fetching...")
+        _LOGGER.info("Fetching")
 
-        if self._userid is None:
-            if not self._login():
-                _LOGGER.error("Could not obtain a user ID from the router")
-                return False
+        if self._userid is None and not self._login():
+            _LOGGER.error("Could not obtain a user ID from the router")
+            return False
         last_results = []
 
         # doing a request

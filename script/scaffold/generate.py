@@ -67,10 +67,10 @@ def _append(path: Path, text):
     path.write_text(path.read_text() + text)
 
 
-def _custom_tasks(template, info) -> None:
+def _custom_tasks(template, info: Info) -> None:
     """Handle custom tasks for templates."""
     if template == "integration":
-        changes = {"codeowners": [info.codeowner]}
+        changes = {"codeowners": [info.codeowner], "iot_class": info.iot_class}
 
         if info.requirement:
             changes["requirements"] = [info.requirement]
@@ -163,6 +163,9 @@ def _custom_tasks(template, info) -> None:
                     }
                 },
                 "abort": {
+                    "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+                    "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+                    "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
                     "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
                     "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
                     "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",

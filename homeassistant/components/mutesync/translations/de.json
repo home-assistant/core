@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindungsfehler",
+            "invalid_auth": "Aktivieren Sie die Authentifizierung in den Einstellungen von m\u00fctesync > Authentifizierung"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

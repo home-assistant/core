@@ -4,9 +4,34 @@
             "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
+        "error": {
+            "invalid_known_hosts": "Kjente verter m\u00e5 v\u00e6re en kommaseparert liste over verter."
+        },
         "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "Valgfri liste over kjente verter hvis mDNS-oppdagelse ikke fungerer."
+                },
+                "description": "Angi Google Cast-konfigurasjonen.",
+                "title": "Google Cast"
+            },
             "confirm": {
                 "description": "Vil du starte oppsettet?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "Kjente verter m\u00e5 v\u00e6re en kommaseparert liste over verter."
+        },
+        "step": {
+            "options": {
+                "data": {
+                    "ignore_cec": "Valgfri liste som sendes til pychromecast.IGNORE_CEC.",
+                    "known_hosts": "Valgfri liste over kjente verter hvis mDNS-oppdagelse ikke fungerer.",
+                    "uuid": "Valgfri liste over UUIDer. Medvirkende som ikke er oppf\u00f8rt, blir ikke lagt til."
+                },
+                "description": "Angi Google Cast-konfigurasjonen."
             }
         }
     }

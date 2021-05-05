@@ -38,6 +38,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_service(hass, config, discovery_info=None):
     """Get the GNTP notification service."""
+    _LOGGER.warning(
+        "The GNTP (Growl) integration has been deprecated and is going to be "
+        "removed in Home Assistant Core 2021.6. The Growl project has retired"
+    )
+
     logging.getLogger("gntp").setLevel(logging.ERROR)
 
     if config.get(CONF_APP_ICON) is None:

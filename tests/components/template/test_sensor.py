@@ -3,6 +3,8 @@ from asyncio import Event
 from datetime import timedelta
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.bootstrap import async_from_config_dict
 from homeassistant.components import sensor
 from homeassistant.const import (
@@ -13,8 +15,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import CoreState, callback
+from homeassistant.core import Context, CoreState, callback
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.template import Template
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 import homeassistant.util.dt as dt_util
@@ -22,7 +26,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import assert_setup_component, async_fire_time_changed
 
 
-async def test_template(hass):
+async def test_template_legacy(hass):
     """Test template."""
     with assert_setup_component(1, sensor.DOMAIN):
         assert await async_setup_component(
@@ -403,6 +407,7 @@ async def test_setup_valid_device_class(hass):
     assert "device_class" not in state.attributes
 
 
+@pytest.mark.parametrize("load_registries", [False])
 async def test_creating_sensor_loads_group(hass):
     """Test setting up template sensor loads group component first."""
     order = []
@@ -631,8 +636,12 @@ async def test_unique_id(hass):
     """Test unique_id option only creates one sensor per id."""
     await async_setup_component(
         hass,
-        sensor.DOMAIN,
+        "template",
         {
+            "template": {
+                "unique_id": "group-id",
+                "sensor": {"name": "top-level", "unique_id": "sensor-id", "state": "5"},
+            },
             "sensor": {
                 "platform": "template",
                 "sensors": {
@@ -645,7 +654,7 @@ async def test_unique_id(hass):
                         "value_template": "{{ false }}",
                     },
                 },
-            }
+            },
         },
     )
 
@@ -653,7 +662,19 @@ async def test_unique_id(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 2
+
+    ent_reg = entity_registry.async_get(hass)
+
+    assert len(ent_reg.entities) == 2
+    assert (
+        ent_reg.async_get_entity_id("sensor", "template", "group-id-sensor-id")
+        is not None
+    )
+    assert (
+        ent_reg.async_get_entity_id("sensor", "template", "not-so-unique-anymore")
+        is not None
+    )
 
 
 async def test_sun_renders_once_per_sensor(hass):
@@ -983,3 +1004,166 @@ async def test_duplicate_templates(hass):
     state = hass.states.get("sensor.test_template_sensor")
     assert state.attributes["friendly_name"] == "Def"
     assert state.state == "Def"
+
+
+async def test_trigger_entity(hass):
+    """Test trigger entity works."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {"invalid": "config"},
+                # Config after invalid should still be set up
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensors": {
+                        "hello": {
+                            "friendly_name": "Hello Name",
+                            "unique_id": "hello_name-id",
+                            "device_class": "battery",
+                            "unit_of_measurement": "%",
+                            "value_template": "{{ trigger.event.data.beer }}",
+                            "entity_picture_template": "{{ '/local/dogs.png' }}",
+                            "icon_template": "{{ 'mdi:pirate' }}",
+                            "attribute_templates": {
+                                "plus_one": "{{ trigger.event.data.beer + 1 }}"
+                            },
+                        },
+                    },
+                    "sensor": [
+                        {
+                            "name": "via list",
+                            "unique_id": "via_list-id",
+                            "device_class": "battery",
+                            "unit_of_measurement": "%",
+                            "state": "{{ trigger.event.data.beer + 1 }}",
+                            "picture": "{{ '/local/dogs.png' }}",
+                            "icon": "{{ 'mdi:pirate' }}",
+                            "attributes": {
+                                "plus_one": "{{ trigger.event.data.beer + 1 }}"
+                            },
+                        }
+                    ],
+                },
+                {
+                    "trigger": [],
+                    "sensors": {
+                        "bare_minimum": {
+                            "value_template": "{{ trigger.event.data.beer }}"
+                        },
+                    },
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.hello_name")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    state = hass.states.get("sensor.bare_minimum")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    context = Context()
+    hass.bus.async_fire("test_event", {"beer": 2}, context=context)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.hello_name")
+    assert state.state == "2"
+    assert state.attributes.get("device_class") == "battery"
+    assert state.attributes.get("icon") == "mdi:pirate"
+    assert state.attributes.get("entity_picture") == "/local/dogs.png"
+    assert state.attributes.get("plus_one") == 3
+    assert state.attributes.get("unit_of_measurement") == "%"
+    assert state.context is context
+
+    ent_reg = entity_registry.async_get(hass)
+    assert len(ent_reg.entities) == 2
+    assert (
+        ent_reg.entities["sensor.hello_name"].unique_id
+        == "listening-test-event-hello_name-id"
+    )
+    assert (
+        ent_reg.entities["sensor.via_list"].unique_id
+        == "listening-test-event-via_list-id"
+    )
+
+    state = hass.states.get("sensor.via_list")
+    assert state.state == "3"
+    assert state.attributes.get("device_class") == "battery"
+    assert state.attributes.get("icon") == "mdi:pirate"
+    assert state.attributes.get("entity_picture") == "/local/dogs.png"
+    assert state.attributes.get("plus_one") == 3
+    assert state.attributes.get("unit_of_measurement") == "%"
+    assert state.context is context
+
+
+async def test_trigger_entity_render_error(hass):
+    """Test trigger entity handles render error."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "sensors": {
+                    "hello": {
+                        "unique_id": "no-base-id",
+                        "friendly_name": "Hello",
+                        "value_template": "{{ non_existing + 1 }}",
+                    }
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.hello")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    context = Context()
+    hass.bus.async_fire("test_event", {"beer": 2}, context=context)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.hello")
+    assert state.state == STATE_UNAVAILABLE
+
+    ent_reg = entity_registry.async_get(hass)
+    assert len(ent_reg.entities) == 1
+    assert ent_reg.entities["sensor.hello"].unique_id == "no-base-id"
+
+
+async def test_trigger_not_allowed_platform_config(hass, caplog):
+    """Test we throw a helpful warning if a trigger is configured in platform config."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            "sensor": {
+                "platform": "template",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "sensors": {
+                    "test_template_sensor": {
+                        "value_template": "{{ states.sensor.test_state.state }}",
+                        "friendly_name_template": "{{ states.sensor.test_state.state }}",
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_template_sensor")
+    assert state is None
+    assert (
+        "You can only add triggers to template entities if they are defined under `template:`."
+        in caplog.text
+    )

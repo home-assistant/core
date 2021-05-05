@@ -1,6 +1,5 @@
 """Support for Legacy MQTT vacuum."""
 import json
-import logging
 
 import voluptuous as vol
 
@@ -18,12 +17,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_TURN_ON,
     VacuumEntity,
 )
-from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES,
-    CONF_DEVICE,
-    CONF_NAME,
-    CONF_UNIQUE_ID,
-)
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -31,15 +25,8 @@ from homeassistant.helpers.icon import icon_for_battery_level
 from .. import subscription
 from ... import mqtt
 from ..debug_info import log_messages
-from ..mixins import (
-    MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-    MQTT_JSON_ATTRS_SCHEMA,
-    MqttEntity,
-)
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
-
-_LOGGER = logging.getLogger(__name__)
 
 SERVICE_TO_STRING = {
     SUPPORT_TURN_ON: "turn_on",
@@ -120,7 +107,6 @@ PLATFORM_SCHEMA_LEGACY = (
             vol.Inclusive(CONF_CHARGING_TOPIC, "charging"): mqtt.valid_publish_topic,
             vol.Inclusive(CONF_CLEANING_TEMPLATE, "cleaning"): cv.template,
             vol.Inclusive(CONF_CLEANING_TOPIC, "cleaning"): mqtt.valid_publish_topic,
-            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Inclusive(CONF_DOCKED_TEMPLATE, "docked"): cv.template,
             vol.Inclusive(CONF_DOCKED_TOPIC, "docked"): mqtt.valid_publish_topic,
             vol.Inclusive(CONF_ERROR_TEMPLATE, "error"): cv.template,
@@ -155,13 +141,11 @@ PLATFORM_SCHEMA_LEGACY = (
             vol.Optional(
                 CONF_SUPPORTED_FEATURES, default=DEFAULT_SERVICE_STRINGS
             ): vol.All(cv.ensure_list, [vol.In(STRING_TO_SERVICE.keys())]),
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(mqtt.CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(mqtt.CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         }
     )
-    .extend(MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
+    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_VACUUM_SCHEMA.schema)
 )
 
@@ -195,7 +179,6 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         return PLATFORM_SCHEMA_LEGACY
 
     def _setup_from_config(self, config):
-        self._name = config[CONF_NAME]
         supported_feature_strings = config[CONF_SUPPORTED_FEATURES]
         self._supported_features = strings_to_services(
             supported_feature_strings, STRING_TO_SERVICE
@@ -342,11 +325,6 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         )
 
     @property
-    def name(self):
-        """Return the name of the vacuum."""
-        return self._name
-
-    @property
     def is_on(self):
         """Return true if vacuum is on."""
         return self._cleaning
@@ -377,7 +355,6 @@ class MqttVacuum(MqttEntity, VacuumEntity):
 
         No need to check SUPPORT_BATTERY, this won't be called if battery_level is None.
         """
-
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=self._charging
         )

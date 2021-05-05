@@ -1,6 +1,7 @@
 """Adapter to wrap the rachiopy api for home assistant."""
+from __future__ import annotations
+
 import logging
-from typing import Optional
 
 import voluptuous as vol
 
@@ -56,23 +57,65 @@ class RachioPerson:
         self._id = None
         self._controllers = []
 
-    def setup(self, hass):
-        """Rachio device setup."""
-        all_devices = []
+    async def async_setup(self, hass):
+        """Create rachio devices and services."""
+        await hass.async_add_executor_job(self._setup, hass)
         can_pause = False
-        response = self.rachio.person.info()
+        for rachio_iro in self._controllers:
+            # Generation 1 controllers don't support pause or resume
+            if rachio_iro.model.split("_")[0] != MODEL_GENERATION_1:
+                can_pause = True
+                break
+
+        if not can_pause:
+            return
+
+        all_devices = [rachio_iro.name for rachio_iro in self._controllers]
+
+        def pause_water(service):
+            """Service to pause watering on all or specific controllers."""
+            duration = service.data[ATTR_DURATION]
+            devices = service.data.get(ATTR_DEVICES, all_devices)
+            for iro in self._controllers:
+                if iro.name in devices:
+                    iro.pause_watering(duration)
+
+        def resume_water(service):
+            """Service to resume watering on all or specific controllers."""
+            devices = service.data.get(ATTR_DEVICES, all_devices)
+            for iro in self._controllers:
+                if iro.name in devices:
+                    iro.resume_watering()
+
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_PAUSE_WATERING,
+            pause_water,
+            schema=PAUSE_SERVICE_SCHEMA,
+        )
+
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_RESUME_WATERING,
+            resume_water,
+            schema=RESUME_SERVICE_SCHEMA,
+        )
+
+    def _setup(self, hass):
+        """Rachio device setup."""
+        rachio = self.rachio
+
+        response = rachio.person.info()
         assert int(response[0][KEY_STATUS]) == HTTP_OK, "API key error"
         self._id = response[1][KEY_ID]
 
         # Use user ID to get user data
-        data = self.rachio.person.get(self._id)
+        data = rachio.person.get(self._id)
         assert int(data[0][KEY_STATUS]) == HTTP_OK, "User ID error"
         self.username = data[1][KEY_USERNAME]
         devices = data[1][KEY_DEVICES]
         for controller in devices:
-            webhooks = self.rachio.notification.get_device_webhook(controller[KEY_ID])[
-                1
-            ]
+            webhooks = rachio.notification.get_device_webhook(controller[KEY_ID])[1]
             # The API does not provide a way to tell if a controller is shared
             # or if they are the owner. To work around this problem we fetch the webooks
             # before we setup the device so we can skip it instead of failing.
@@ -93,45 +136,11 @@ class RachioPerson:
                     )
                 continue
 
-            rachio_iro = RachioIro(hass, self.rachio, controller, webhooks)
+            rachio_iro = RachioIro(hass, rachio, controller, webhooks)
             rachio_iro.setup()
             self._controllers.append(rachio_iro)
-            all_devices.append(rachio_iro.name)
-            # Generation 1 controllers don't support pause or resume
-            if rachio_iro.model.split("_")[0] != MODEL_GENERATION_1:
-                can_pause = True
 
         _LOGGER.info('Using Rachio API as user "%s"', self.username)
-
-        def pause_water(service):
-            """Service to pause watering on all or specific controllers."""
-            duration = service.data[ATTR_DURATION]
-            devices = service.data.get(ATTR_DEVICES, all_devices)
-            for iro in self._controllers:
-                if iro.name in devices:
-                    iro.pause_watering(duration)
-
-        def resume_water(service):
-            """Service to resume watering on all or specific controllers."""
-            devices = service.data.get(ATTR_DEVICES, all_devices)
-            for iro in self._controllers:
-                if iro.name in devices:
-                    iro.resume_watering()
-
-        if can_pause:
-            hass.services.register(
-                DOMAIN,
-                SERVICE_PAUSE_WATERING,
-                pause_water,
-                schema=PAUSE_SERVICE_SCHEMA,
-            )
-
-            hass.services.register(
-                DOMAIN,
-                SERVICE_RESUME_WATERING,
-                resume_water,
-                schema=RESUME_SERVICE_SCHEMA,
-            )
 
     @property
     def user_id(self) -> str:
@@ -239,7 +248,7 @@ class RachioIro:
         # Only enabled zones
         return [z for z in self._zones if z[KEY_ENABLED]]
 
-    def get_zone(self, zone_id) -> Optional[dict]:
+    def get_zone(self, zone_id) -> dict | None:
         """Return the zone with the given ID."""
         for zone in self.list_zones(include_disabled=True):
             if zone[KEY_ID] == zone_id:

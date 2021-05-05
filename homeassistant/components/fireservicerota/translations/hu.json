@@ -1,9 +1,26 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt"
+        },
+        "create_entry": {
+            "default": "Sikeres hiteles\u00edt\u00e9s"
+        },
+        "error": {
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
+        },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Jelsz\u00f3"
+                }
+            },
             "user": {
                 "data": {
-                    "url": "Weboldal"
+                    "password": "Jelsz\u00f3",
+                    "url": "Weboldal",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
                 }
             }
         }

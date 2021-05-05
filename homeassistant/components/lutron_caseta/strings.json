@@ -7,7 +7,7 @@
         "description": "Couldn’t setup bridge (host: {host}) imported from configuration.yaml."
       },
       "user": {
-        "title": "Automaticlly connect to the bridge",
+        "title": "Automatically connect to the bridge",
         "description": "Enter the IP address of the device.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"

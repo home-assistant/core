@@ -1,8 +1,9 @@
 """UniFi Controller abstraction."""
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime, timedelta
 import ssl
-from typing import Optional
 
 from aiohttp import CookieJar
 import aiounifi
@@ -28,12 +29,19 @@ import async_timeout
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import CONF_HOST
+from homeassistant.components.unifi.switch import BLOCK_SWITCH, POE_SWITCH
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
@@ -41,7 +49,6 @@ from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
-    CONF_CONTROLLER,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
@@ -68,7 +75,7 @@ from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
-SUPPORTED_PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
+PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 
 CLIENT_CONNECTED = (
     WIRED_CLIENT_CONNECTED,
@@ -94,7 +101,6 @@ class UniFiController:
         self.progress = None
         self.wireless_clients = None
 
-        self.listeners = []
         self.site_id: str = ""
         self._site_name = None
         self._site_role = None
@@ -161,12 +167,12 @@ class UniFiController:
     @property
     def host(self):
         """Return the host of this controller."""
-        return self.config_entry.data[CONF_CONTROLLER][CONF_HOST]
+        return self.config_entry.data[CONF_HOST]
 
     @property
     def site(self):
         """Return the site of this config entry."""
-        return self.config_entry.data[CONF_CONTROLLER][CONF_SITE_ID]
+        return self.config_entry.data[CONF_SITE_ID]
 
     @property
     def site_name(self):
@@ -299,7 +305,12 @@ class UniFiController:
         try:
             self.api = await get_controller(
                 self.hass,
-                **self.config_entry.data[CONF_CONTROLLER],
+                host=self.config_entry.data[CONF_HOST],
+                username=self.config_entry.data[CONF_USERNAME],
+                password=self.config_entry.data[CONF_PASSWORD],
+                port=self.config_entry.data[CONF_PORT],
+                site=self.config_entry.data[CONF_SITE_ID],
+                verify_ssl=self.config_entry.data[CONF_VERIFY_SSL],
                 async_callback=self.async_unifi_signalling_callback,
             )
             await self.api.initialize()
@@ -310,15 +321,8 @@ class UniFiController:
         except CannotConnect as err:
             raise ConfigEntryNotReady from err
 
-        except AuthenticationRequired:
-            self.hass.async_create_task(
-                self.hass.config_entries.flow.async_init(
-                    UNIFI_DOMAIN,
-                    context={"source": SOURCE_REAUTH},
-                    data=self.config_entry,
-                )
-            )
-            return False
+        except AuthenticationRequired as err:
+            raise ConfigEntryAuthFailed from err
 
         for site in sites.values():
             if self.site == site["name"]:
@@ -328,20 +332,20 @@ class UniFiController:
 
         self._site_role = description[0]["site_role"]
 
-        # Restore clients that is not a part of active clients list.
+        # Restore clients that are not a part of active clients list.
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
-        for entity in entity_registry.entities.values():
-            if (
-                entity.config_entry_id != self.config_entry.entry_id
-                or "-" not in entity.unique_id
+        for entry in async_entries_for_config_entry(
+            entity_registry, self.config_entry.entry_id
+        ):
+            if entry.domain == TRACKER_DOMAIN:
+                mac = entry.unique_id.split("-", 1)[0]
+            elif entry.domain == SWITCH_DOMAIN and (
+                entry.unique_id.startswith(BLOCK_SWITCH)
+                or entry.unique_id.startswith(POE_SWITCH)
             ):
+                mac = entry.unique_id.split("-", 1)[1]
+            else:
                 continue
-
-            mac = ""
-            if entity.domain == TRACKER_DOMAIN:
-                mac = entity.unique_id.split("-", 1)[0]
-            elif entity.domain == SWITCH_DOMAIN:
-                mac = entity.unique_id.split("-", 1)[1]
 
             if mac in self.api.clients or mac not in self.api.clients_all:
                 continue
@@ -350,7 +354,7 @@ class UniFiController:
             self.api.clients.process_raw([client.raw])
             LOGGER.debug(
                 "Restore disconnected client %s (%s)",
-                entity.entity_id,
+                entry.entity_id,
                 client.mac,
             )
 
@@ -358,12 +362,7 @@ class UniFiController:
         self.wireless_clients = wireless_clients.get_data(self.config_entry)
         self.update_wireless_clients()
 
-        for platform in SUPPORTED_PLATFORMS:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, platform
-                )
-            )
+        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
         self.api.start_websocket()
 
@@ -377,7 +376,7 @@ class UniFiController:
 
     @callback
     def async_heartbeat(
-        self, unique_id: str, heartbeat_expire_time: Optional[datetime] = None
+        self, unique_id: str, heartbeat_expire_time: datetime | None = None
     ) -> None:
         """Signal when a device has fresh home state."""
         if heartbeat_expire_time is not None:
@@ -405,9 +404,8 @@ class UniFiController:
         If config entry is updated due to reauth flow
         the entry might already have been reset and thus is not available.
         """
-        if config_entry.entry_id not in hass.data[UNIFI_DOMAIN]:
+        if not (controller := hass.data[UNIFI_DOMAIN].get(config_entry.entry_id)):
             return
-        controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
         controller.load_config_entry_options()
         async_dispatcher_send(hass, controller.signal_options_update)
 
@@ -449,22 +447,12 @@ class UniFiController:
         """
         self.api.stop_websocket()
 
-        unload_ok = all(
-            await asyncio.gather(
-                *[
-                    self.hass.config_entries.async_forward_entry_unload(
-                        self.config_entry, platform
-                    )
-                    for platform in SUPPORTED_PLATFORMS
-                ]
-            )
+        unload_ok = await self.hass.config_entries.async_unload_platforms(
+            self.config_entry, PLATFORMS
         )
+
         if not unload_ok:
             return False
-
-        for unsub_dispatcher in self.listeners:
-            unsub_dispatcher()
-        self.listeners = []
 
         if self._cancel_heartbeat_check:
             self._cancel_heartbeat_check()

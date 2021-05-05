@@ -1,7 +1,8 @@
 """Support for Z-Wave climate devices."""
+from __future__ import annotations
+
 from enum import IntEnum
 import logging
-from typing import Optional, Tuple
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
 from homeassistant.components.climate.const import (
@@ -28,7 +29,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import DATA_UNSUBSCRIBE, DOMAIN
 from .entity import ZWaveDeviceEntity
@@ -155,13 +155,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-def convert_units(units):
-    """Return units as a farenheit or celsius constant."""
-    if units == "F":
-        return TEMP_FAHRENHEIT
-    return TEMP_CELSIUS
-
-
 class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     """Representation of a Z-Wave Climate device."""
 
@@ -207,18 +200,16 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return convert_units(self._current_mode_setpoint_values[0].units)
+        if self.values.temperature is not None and self.values.temperature.units == "F":
+            return TEMP_FAHRENHEIT
+        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
         if not self.values.temperature:
             return None
-        return convert_temperature(
-            self.values.temperature.value,
-            convert_units(self._current_mode_setpoint_values[0].units),
-            self.temperature_unit,
-        )
+        return self.values.temperature.value
 
     @property
     def hvac_action(self):
@@ -246,29 +237,17 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return convert_temperature(
-            self._current_mode_setpoint_values[0].value,
-            convert_units(self._current_mode_setpoint_values[0].units),
-            self.temperature_unit,
-        )
+        return self._current_mode_setpoint_values[0].value
 
     @property
-    def target_temperature_low(self) -> Optional[float]:
+    def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
-        return convert_temperature(
-            self._current_mode_setpoint_values[0].value,
-            convert_units(self._current_mode_setpoint_values[0].units),
-            self.temperature_unit,
-        )
+        return self._current_mode_setpoint_values[0].value
 
     @property
-    def target_temperature_high(self) -> Optional[float]:
+    def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
-        return convert_temperature(
-            self._current_mode_setpoint_values[1].value,
-            convert_units(self._current_mode_setpoint_values[1].units),
-            self.temperature_unit,
-        )
+        return self._current_mode_setpoint_values[1].value
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature.
@@ -284,29 +263,14 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             setpoint = self._current_mode_setpoint_values[0]
             target_temp = kwargs.get(ATTR_TEMPERATURE)
             if setpoint is not None and target_temp is not None:
-                target_temp = convert_temperature(
-                    target_temp,
-                    self.temperature_unit,
-                    convert_units(setpoint.units),
-                )
                 setpoint.send_value(target_temp)
         elif len(self._current_mode_setpoint_values) == 2:
             (setpoint_low, setpoint_high) = self._current_mode_setpoint_values
             target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
             target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             if setpoint_low is not None and target_temp_low is not None:
-                target_temp_low = convert_temperature(
-                    target_temp_low,
-                    self.temperature_unit,
-                    convert_units(setpoint_low.units),
-                )
                 setpoint_low.send_value(target_temp_low)
             if setpoint_high is not None and target_temp_high is not None:
-                target_temp_high = convert_temperature(
-                    target_temp_high,
-                    self.temperature_unit,
-                    convert_units(setpoint_high.units),
-                )
                 setpoint_high.send_value(target_temp_high)
 
     async def async_set_fan_mode(self, fan_mode):
@@ -345,9 +309,9 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         self.values.mode.send_value(preset_mode_value)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
-        data = super().device_state_attributes
+        data = super().extra_state_attributes
         if self.values.fan_action:
             data[ATTR_FAN_ACTION] = self.values.fan_action.value
         if self.values.valve_position:
@@ -370,7 +334,7 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
             support |= SUPPORT_PRESET_MODE
         return support
 
-    def _get_current_mode_setpoint_values(self) -> Tuple:
+    def _get_current_mode_setpoint_values(self) -> tuple:
         """Return a tuple of current setpoint Z-Wave value(s)."""
         if not self.values.mode:
             setpoint_names = ("setpoint_heating",)

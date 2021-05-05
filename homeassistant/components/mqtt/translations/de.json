@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Suche aktivieren"
                 },
-                "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass er eine Verbindung mit dem MQTT-Broker herstellt, der vom Hass.io Add-on {addon} bereitgestellt wird?",
-                "title": "MQTT Broker per Hass.io add-on"
+                "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass er eine Verbindung mit dem MQTT-Broker herstellt, der vom Supervisor Add-on {addon} bereitgestellt wird?",
+                "title": "MQTT Broker per Supervisor add-on"
             }
         }
     },
@@ -50,6 +50,8 @@
     },
     "options": {
         "error": {
+            "bad_birth": "Ung\u00fcltiges Birth Thema.",
+            "bad_will": "Ung\u00fcltiges will Thema.",
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
@@ -64,6 +66,7 @@
             },
             "options": {
                 "data": {
+                    "birth_payload": "Nutzdaten der Birth Nachricht",
                     "discovery": "Erkennung aktivieren",
                     "will_enable": "Letzten Willen aktivieren"
                 },

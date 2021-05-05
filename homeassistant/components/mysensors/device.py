@@ -1,7 +1,8 @@
 """Handle MySensors devices."""
+from __future__ import annotations
+
 from functools import partial
 import logging
-from typing import Any, Dict, Optional
 
 from mysensors import BaseAsyncGateway, Sensor
 from mysensors.sensor import ChildSensor
@@ -9,7 +10,7 @@ from mysensors.sensor import ChildSensor
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
     CHILD_CALLBACK,
@@ -107,7 +108,7 @@ class MySensorsDevice:
         return f"{self.gateway_id}-{self.node_id}-{self.child_id}-{self.value_type}"
 
     @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
+    def device_info(self) -> DeviceInfo:
         """Return a dict that allows home assistant to puzzle all entities belonging to a node together."""
         return {
             "identifiers": {(DOMAIN, f"{self.gateway_id}-{self.node_id}")},
@@ -122,7 +123,7 @@ class MySensorsDevice:
         return f"{self.node_name} {self.child_id}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
@@ -162,6 +163,9 @@ class MySensorsDevice:
                 set_req.V_LIGHT,
                 set_req.V_LOCK_STATUS,
                 set_req.V_TRIPPED,
+                set_req.V_UP,
+                set_req.V_DOWN,
+                set_req.V_STOP,
             ):
                 self._values[value_type] = STATE_ON if int(value) == 1 else STATE_OFF
             elif value_type == set_req.V_DIMMER:
@@ -193,7 +197,7 @@ class MySensorsDevice:
         self.hass.loop.call_later(UPDATE_DELAY, delayed_update)
 
 
-def get_mysensors_devices(hass, domain: str) -> Dict[DevId, MySensorsDevice]:
+def get_mysensors_devices(hass, domain: str) -> dict[DevId, MySensorsDevice]:
     """Return MySensors devices for a hass platform name."""
     if MYSENSORS_PLATFORM_DEVICES.format(domain) not in hass.data[DOMAIN]:
         hass.data[DOMAIN][MYSENSORS_PLATFORM_DEVICES.format(domain)] = {}

@@ -70,8 +70,9 @@ def setup(hass, config):
 
                 overwrite = service.data.get(ATTR_OVERWRITE)
 
-                # Check the path
-                raise_if_invalid_path(subdir)
+                if subdir:
+                    # Check the path
+                    raise_if_invalid_path(subdir)
 
                 final_path = None
 
@@ -79,7 +80,7 @@ def setup(hass, config):
 
                 if req.status_code != HTTP_OK:
                     _LOGGER.warning(
-                        "downloading '%s' failed, status_code=%d", url, req.status_code
+                        "Downloading '%s' failed, status_code=%d", url, req.status_code
                     )
                     hass.bus.fire(
                         f"{DOMAIN}_{DOWNLOAD_FAILED_EVENT}",

@@ -8,8 +8,8 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "W\u00ebllt dir Home Assistant konfigur\u00e9iere fir sech mam Almond ze verbannen dee vun der hass.io Erweiderung {addon} bereet gestallt g\u00ebtt?",
-                "title": "Almond via Hass.io Erweiderung"
+                "description": "W\u00ebllt dir Home Assistant konfigur\u00e9iere fir sech mam Almond ze verbannen dee vun der Supervisor Erweiderung {addon} bereet gestallt g\u00ebtt?",
+                "title": "Almond via Supervisor Erweiderung"
             },
             "pick_implementation": {
                 "title": "Wiel Authentifikatiouns Method aus"

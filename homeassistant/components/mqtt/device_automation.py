@@ -1,6 +1,5 @@
 """Provides device automations for MQTT."""
 import functools
-import logging
 
 import voluptuous as vol
 
@@ -9,8 +8,6 @@ from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from . import device_trigger
 from .. import mqtt
 from .mixins import async_setup_entry_helper
-
-_LOGGER = logging.getLogger(__name__)
 
 AUTOMATION_TYPE_TRIGGER = "trigger"
 AUTOMATION_TYPES = [AUTOMATION_TYPE_TRIGGER]

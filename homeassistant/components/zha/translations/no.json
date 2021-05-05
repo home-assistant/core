@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes"
         },
+        "flow_title": "ZHA: {name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -30,6 +31,19 @@
                 "description": "Velg seriell port for Zigbee radio",
                 "title": ""
             }
+        }
+    },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "Kode kreves for tilkobling",
+            "alarm_failed_tries": "Antall p\u00e5f\u00f8lgende mislykkede kodeoppf\u00f8ringer for \u00e5 utl\u00f8se en alarm",
+            "alarm_master_code": "Hovedkode for alarmens kontrollpanel(er)",
+            "title": "Alternativer for alarmkontrollpanel"
+        },
+        "zha_options": {
+            "default_light_transition": "Standard lysovergangstid (sekunder)",
+            "enable_identify_on_join": "Aktiver identifiseringseffekt n\u00e5r enheter blir med i nettverket",
+            "title": "Globale alternativer"
         }
     },
     "device_automation": {

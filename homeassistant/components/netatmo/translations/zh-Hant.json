@@ -15,6 +15,28 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "\u96e2\u5bb6",
+            "hg": "\u9632\u51cd\u6a21\u5f0f",
+            "schedule": "\u6392\u7a0b"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name}\u5075\u6e2c\u5230\u8b66\u5831",
+            "animal": "{entity_name}\u5075\u6e2c\u5230\u52d5\u7269",
+            "cancel_set_point": "{entity_name}\u5df2\u6062\u5fa9\u5176\u6392\u7a0b",
+            "human": "{entity_name}\u5075\u6e2c\u5230\u4eba\u985e",
+            "movement": "{entity_name}\u5075\u6e2c\u5230\u52d5\u4f5c",
+            "outdoor": "{entity_name}\u5075\u6e2c\u5230\u6236\u5916\u52d5\u4f5c",
+            "person": "{entity_name}\u5075\u6e2c\u5230\u4eba\u54e1",
+            "person_away": "{entity_name}\u5075\u6e2c\u5230\u4eba\u54e1\u5df2\u96e2\u958b",
+            "set_point": "\u624b\u52d5\u8a2d\u5b9a{entity_name}\u76ee\u6a19\u6eab\u5ea6",
+            "therm_mode": "{entity_name}\u5207\u63db\u81f3 \"{subtype}\"",
+            "turned_off": "{entity_name}\u5df2\u95dc\u9589",
+            "turned_on": "{entity_name}\u5df2\u958b\u555f",
+            "vehicle": "{entity_name}\u5075\u6e2c\u5230\u8eca\u8f1b"
+        }
+    },
     "options": {
         "step": {
             "public_weather": {

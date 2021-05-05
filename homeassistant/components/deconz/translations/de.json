@@ -14,8 +14,8 @@
         "flow_title": "deCONZ Zigbee Gateway",
         "step": {
             "hassio_confirm": {
-                "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass er eine Verbindung mit dem deCONZ Gateway herstellt, der vom Hass.io Add-on {addon} bereitgestellt wird?",
-                "title": "deCONZ Zigbee Gateway \u00fcber das Hass.io Add-on"
+                "description": "M\u00f6chtest du Home Assistant so konfigurieren, dass er eine Verbindung mit dem deCONZ Gateway herstellt, der vom Supervisor Add-on {addon} bereitgestellt wird?",
+                "title": "deCONZ Zigbee Gateway \u00fcber das Supervisor Add-on"
             },
             "link": {
                 "description": "Entsperre dein deCONZ-Gateway, um es bei Home Assistant zu registrieren. \n\n 1. Gehe in die deCONZ-Systemeinstellungen \n 2. Dr\u00fccke die Taste \"Gateway entsperren\"",
@@ -42,6 +42,10 @@
             "button_2": "Zweite Taste",
             "button_3": "Dritte Taste",
             "button_4": "Vierte Taste",
+            "button_5": "Taste 5",
+            "button_6": "Taste 6",
+            "button_7": "Taste 7",
+            "button_8": "Taste 8",
             "close": "Schlie\u00dfen",
             "dim_down": "Dimmer runter",
             "dim_up": "Dimmer hoch",
@@ -66,6 +70,7 @@
             "remote_button_quadruple_press": "\"{subtype}\" Taste vierfach geklickt",
             "remote_button_quintuple_press": "\"{subtype}\" Taste f\u00fcnffach geklickt",
             "remote_button_rotated": "Button gedreht \"{subtype}\".",
+            "remote_button_rotated_fast": "Button schnell gedreht \"{subtype}\"",
             "remote_button_rotation_stopped": "Die Tastendrehung \"{subtype}\" wurde gestoppt",
             "remote_button_short_press": "\"{subtype}\" Taste gedr\u00fcckt",
             "remote_button_short_release": "\"{subtype}\" Taste losgelassen",

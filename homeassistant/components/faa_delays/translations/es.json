@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Este aeropuerto ya est\u00e1 configurado."
+        },
+        "error": {
+            "cannot_connect": "Fallo al conectar",
+            "invalid_airport": "El c\u00f3digo del aeropuerto no es v\u00e1lido",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "Aeropuerto"
+                },
+                "description": "Introduzca un c\u00f3digo de aeropuerto estadounidense en formato IATA",
+                "title": "Retrasos de la FAA"
+            }
+        }
+    }
+}

@@ -1,5 +1,7 @@
 """Selectors for Home Assistant."""
-from typing import Any, Callable, Dict, cast
+from __future__ import annotations
+
+from typing import Any, Callable, cast
 
 import voluptuous as vol
 
@@ -9,7 +11,7 @@ from homeassistant.util import decorator
 SELECTORS = decorator.Registry()
 
 
-def validate_selector(config: Any) -> Dict:
+def validate_selector(config: Any) -> dict:
     """Validate a selector."""
     if not isinstance(config, dict):
         raise vol.Invalid("Expected a dictionary")
@@ -29,7 +31,7 @@ def validate_selector(config: Any) -> Dict:
         return {selector_type: {}}
 
     return {
-        selector_type: cast(Dict, selector_class.CONFIG_SCHEMA(config[selector_type]))
+        selector_type: cast(dict, selector_class.CONFIG_SCHEMA(config[selector_type]))
     }
 
 
@@ -68,9 +70,7 @@ class DeviceSelector(Selector):
             # Model of device
             vol.Optional("model"): str,
             # Device has to contain entities matching this selector
-            vol.Optional(
-                "entity"
-            ): EntitySelector.CONFIG_SCHEMA,  # pylint: disable=no-member
+            vol.Optional("entity"): EntitySelector.CONFIG_SCHEMA,
         }
     )
 
@@ -114,6 +114,13 @@ class NumberSelector(Selector):
             vol.Optional(CONF_MODE, default="slider"): vol.In(["box", "slider"]),
         }
     )
+
+
+@SELECTORS.register("addon")
+class AddonSelector(Selector):
+    """Selector of a add-on."""
+
+    CONFIG_SCHEMA = vol.Schema({})
 
 
 @SELECTORS.register("boolean")
@@ -176,3 +183,12 @@ class StringSelector(Selector):
     """Selector for a multi-line text string."""
 
     CONFIG_SCHEMA = vol.Schema({vol.Optional("multiline", default=False): bool})
+
+
+@SELECTORS.register("select")
+class SelectSelector(Selector):
+    """Selector for an single-choice input select."""
+
+    CONFIG_SCHEMA = vol.Schema(
+        {vol.Required("options"): vol.All([str], vol.Length(min=1))}
+    )

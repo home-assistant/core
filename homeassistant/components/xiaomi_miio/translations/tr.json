@@ -9,6 +9,11 @@
             "no_device_selected": "Cihaz se\u00e7ilmedi, l\u00fctfen bir cihaz se\u00e7in."
         },
         "step": {
+            "device": {
+                "data": {
+                    "name": "Cihaz\u0131n ad\u0131"
+                }
+            },
             "gateway": {
                 "data": {
                     "host": "\u0130p Adresi",

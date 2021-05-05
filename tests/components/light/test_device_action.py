@@ -21,7 +21,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -107,13 +107,13 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    # Test with entity without optional capabilities
+    entity_id = entity_reg.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
         device_id=device_entry.id,
-    )
-
+    ).entity_id
     actions = await async_get_device_automations(hass, "action", device_entry.id)
     assert len(actions) == 3
     for action in actions:
@@ -122,8 +122,96 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
         )
         assert capabilities == {"extra_fields": []}
 
+    # Test without entity
+    entity_reg.async_remove(entity_id)
+    for action in actions:
+        capabilities = await async_get_device_automation_capabilities(
+            hass, "action", action
+        )
+        assert capabilities == {"extra_fields": []}
 
-async def test_get_action_capabilities_brightness(hass, device_reg, entity_reg):
+
+@pytest.mark.parametrize(
+    "set_state,num_actions,supported_features_reg,supported_features_state,expected_capabilities",
+    [
+        (
+            False,
+            5,
+            SUPPORT_BRIGHTNESS,
+            0,
+            {
+                "turn_on": [
+                    {
+                        "name": "brightness_pct",
+                        "optional": True,
+                        "type": "float",
+                        "valueMax": 100,
+                        "valueMin": 0,
+                    }
+                ]
+            },
+        ),
+        (
+            True,
+            5,
+            0,
+            SUPPORT_BRIGHTNESS,
+            {
+                "turn_on": [
+                    {
+                        "name": "brightness_pct",
+                        "optional": True,
+                        "type": "float",
+                        "valueMax": 100,
+                        "valueMin": 0,
+                    }
+                ]
+            },
+        ),
+        (
+            False,
+            4,
+            SUPPORT_FLASH,
+            0,
+            {
+                "turn_on": [
+                    {
+                        "name": "flash",
+                        "optional": True,
+                        "type": "select",
+                        "options": [("short", "short"), ("long", "long")],
+                    }
+                ]
+            },
+        ),
+        (
+            True,
+            4,
+            0,
+            SUPPORT_FLASH,
+            {
+                "turn_on": [
+                    {
+                        "name": "flash",
+                        "optional": True,
+                        "type": "select",
+                        "options": [("short", "short"), ("long", "long")],
+                    }
+                ]
+            },
+        ),
+    ],
+)
+async def test_get_action_capabilities_features(
+    hass,
+    device_reg,
+    entity_reg,
+    set_state,
+    num_actions,
+    supported_features_reg,
+    supported_features_state,
+    expected_capabilities,
+):
     """Test we get the expected capabilities from a light action."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -131,74 +219,26 @@ async def test_get_action_capabilities_brightness(hass, device_reg, entity_reg):
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_id = entity_reg.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
         device_id=device_entry.id,
-        supported_features=SUPPORT_BRIGHTNESS,
-    )
+        supported_features=supported_features_reg,
+    ).entity_id
+    if set_state:
+        hass.states.async_set(
+            entity_id, None, {"supported_features": supported_features_state}
+        )
 
-    expected_capabilities = {
-        "extra_fields": [
-            {
-                "name": "brightness_pct",
-                "optional": True,
-                "type": "float",
-                "valueMax": 100,
-                "valueMin": 0,
-            }
-        ]
-    }
     actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == 5
+    assert len(actions) == num_actions
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action
         )
-        if action["type"] == "turn_on":
-            assert capabilities == expected_capabilities
-        else:
-            assert capabilities == {"extra_fields": []}
-
-
-async def test_get_action_capabilities_flash(hass, device_reg, entity_reg):
-    """Test we get the expected capabilities from a light action."""
-    config_entry = MockConfigEntry(domain="test", data={})
-    config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    entity_reg.async_get_or_create(
-        DOMAIN,
-        "test",
-        "5678",
-        device_id=device_entry.id,
-        supported_features=SUPPORT_FLASH,
-    )
-
-    expected_capabilities = {
-        "extra_fields": [
-            {
-                "name": "flash",
-                "optional": True,
-                "type": "select",
-                "options": [("short", "short"), ("long", "long")],
-            }
-        ]
-    }
-
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == 4
-    for action in actions:
-        capabilities = await async_get_device_automation_capabilities(
-            hass, "action", action
-        )
-        if action["type"] == "turn_on":
-            assert capabilities == expected_capabilities
-        else:
-            assert capabilities == {"extra_fields": []}
+        expected = {"extra_fields": expected_capabilities.get(action["type"], [])}
+        assert capabilities == expected
 
 
 async def test_action(hass, calls):
@@ -209,7 +249,7 @@ async def test_action(hass, calls):
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
-    ent1, ent2, ent3 = platform.ENTITIES
+    ent1 = platform.ENTITIES[0]
 
     assert await async_setup_component(
         hass,

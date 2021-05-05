@@ -14,7 +14,8 @@
                 "data": {
                     "email": "Correo electr\u00f3nico",
                     "password": "Contrase\u00f1a"
-                }
+                },
+                "title": "Configurar la cuenta Rheem EcoNet"
             }
         }
     }

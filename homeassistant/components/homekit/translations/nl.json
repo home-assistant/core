@@ -4,17 +4,32 @@
             "port_name_in_use": "Er is al een bridge of apparaat met dezelfde naam of poort geconfigureerd."
         },
         "step": {
+            "accessory_mode": {
+                "data": {
+                    "entity_id": "Entiteit"
+                },
+                "description": "Kies de entiteit die moet worden opgenomen. In de accessoiremodus wordt slechts \u00e9\u00e9n entiteit opgenomen.",
+                "title": "Selecteer de entiteit die u wilt opnemen"
+            },
+            "bridge_mode": {
+                "data": {
+                    "include_domains": "Domeinen om op te nemen"
+                },
+                "description": "Kies de domeinen die moeten worden opgenomen. Alle ondersteunde entiteiten in het domein zullen worden opgenomen.",
+                "title": "Selecteer domeinen die u wilt opnemen"
+            },
             "pairing": {
-                "description": "Zodra de {name} klaar is, is het koppelen beschikbaar in \"Meldingen\" als \"HomeKit Bridge Setup\".",
-                "title": "Koppel HomeKit Bridge"
+                "description": "Volg de instructies in \"Meldingen\" onder \"HomeKit-koppeling\" om het koppelen te voltooien.",
+                "title": "Koppel HomeKit"
             },
             "user": {
                 "data": {
                     "auto_start": "Automatisch starten (uitschakelen als u Z-Wave of een ander vertraagd startsysteem gebruikt)",
-                    "include_domains": "Domeinen om op te nemen"
+                    "include_domains": "Domeinen om op te nemen",
+                    "mode": "Mode"
                 },
-                "description": "De HomeKit-integratie geeft u toegang tot uw Home Assistant-entiteiten in HomeKit. In bridge-modus zijn HomeKit-bruggen beperkt tot 150 accessoires per exemplaar, inclusief de brug zelf. Als u meer dan het maximale aantal accessoires wilt overbruggen, is het aan te raden om meerdere HomeKit-bridges voor verschillende domeinen te gebruiken. Gedetailleerde entiteitsconfiguratie is alleen beschikbaar via YAML voor de primaire bridge.",
-                "title": "Activeer HomeKit Bridge"
+                "description": "Kies de domeinen die moeten worden opgenomen. Alle ondersteunde entiteiten in het domein zullen worden opgenomen. Voor elke tv-mediaspeler en camera wordt een afzonderlijke HomeKit-instantie in accessoiremodus aangemaakt.",
+                "title": "Selecteer domeinen die u wilt opnemen"
             }
         }
     },
@@ -22,7 +37,7 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (uitschakelen bij gebruik van Z-Wave of een ander vertraagd startsysteem)",
+                    "auto_start": "Autostart (deactiveer als je de homekit.start service handmatig aanroept)",
                     "safe_mode": "Veilige modus (alleen inschakelen als het koppelen mislukt)"
                 },
                 "description": "Deze instellingen hoeven alleen te worden aangepast als HomeKit niet functioneert.",
@@ -37,12 +52,15 @@
             },
             "include_exclude": {
                 "data": {
-                    "entities": "Entiteiten"
-                }
+                    "entities": "Entiteiten",
+                    "mode": "Mode"
+                },
+                "description": "Kies de entiteiten die u wilt opnemen. In de accessoiremodus is slechts een enkele entiteit inbegrepen. In de bridge-include-modus worden alle entiteiten in het domein opgenomen, tenzij specifieke entiteiten zijn geselecteerd. In de bridge-uitsluitingsmodus worden alle entiteiten in het domein opgenomen, behalve de uitgesloten entiteiten. Voor de beste prestaties is elke tv-mediaspeler en camera een apart HomeKit-accessoire.",
+                "title": "Selecteer de entiteiten die u wilt opnemen"
             },
             "init": {
                 "data": {
-                    "include_domains": "Op te nemen domeinen",
+                    "include_domains": "Domeinen om op te nemen",
                     "mode": "modus"
                 },
                 "description": "HomeKit kan worden geconfigureerd om een brug of een enkel accessoire te tonen. In de accessoiremodus kan slechts \u00e9\u00e9n entiteit worden gebruikt. De accessoiremodus is vereist om mediaspelers met de tv-apparaatklasse correct te laten werken. Entiteiten in de \"Op te nemen domeinen\" zullen worden blootgesteld aan HomeKit. U kunt op het volgende scherm selecteren welke entiteiten u wilt opnemen of uitsluiten van deze lijst.",
@@ -50,7 +68,7 @@
             },
             "yaml": {
                 "description": "Deze invoer wordt beheerd via YAML",
-                "title": "Pas de HomeKit Bridge-opties aan"
+                "title": "Pas de HomeKit-opties aan"
             }
         }
     }

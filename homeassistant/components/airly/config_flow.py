@@ -16,18 +16,13 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import (  # pylint:disable=unused-import
-    CONF_USE_NEAREST,
-    DOMAIN,
-    NO_AIRLY_SENSORS,
-)
+from .const import CONF_USE_NEAREST, DOMAIN, NO_AIRLY_SENSORS
 
 
 class AirlyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Airly."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""

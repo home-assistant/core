@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Plasseringen er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "Destinasjon",
+                    "name": "Navn",
+                    "origin": "Opprinnelse",
+                    "region": "Region"
+                },
+                "description": "For opprinnelse og destinasjon, skriv inn adressen eller GPS-koordinatene til stedet (GPS-koordinatene m\u00e5 v\u00e6re atskilt med komma). Du kan ogs\u00e5 angi en enhets-ID som gir denne informasjonen i sin tilstand, en enhets-id med breddegrad og lengdegrad eller attributt navn."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid_ferries": "Unng\u00e5 ferger?",
+                    "avoid_subscription_roads": "Unng\u00e5 veier trenger en vignett / abonnement?",
+                    "avoid_toll_roads": "Unng\u00e5 bomveier?",
+                    "excl_filter": "Delstreng IKKE i beskrivelse av valgt rute",
+                    "incl_filter": "Delstreng i Beskrivelse av valgt rute",
+                    "realtime": "Reisetid i sanntid?",
+                    "units": "Enheter",
+                    "vehicle_type": "Kj\u00f8ret\u00f8y Type"
+                },
+                "description": "`Substring`-inngangene lar deg tvinge integrasjonen til \u00e5 bruke en bestemt rute eller unng\u00e5 en bestemt rute i beregningen av tidsreiser."
+            }
+        }
+    },
+    "title": "Waze reisetid"
+}

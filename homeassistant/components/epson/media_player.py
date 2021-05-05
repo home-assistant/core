@@ -72,7 +72,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         projector, config_entry.title, unique_id
     )
     async_add_entities([projector_entity], True)
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SELECT_CMODE,
         {vol.Required(ATTR_CMODE): vol.All(cv.string, vol.Any(*CMODE_LIST_SET))},
@@ -215,7 +215,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
         await self._projector.send_command(BACK)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         if self._cmode is None:
             return {}

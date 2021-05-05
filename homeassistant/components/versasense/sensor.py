@@ -1,7 +1,7 @@
 """Support for VersaSense sensor peripheral."""
 import logging
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
 
 from . import DOMAIN
 from .const import (
@@ -40,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensor_list)
 
 
-class VSensor(Entity):
+class VSensor(SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(self, peripheral, parent_name, unit, measurement, consumer):

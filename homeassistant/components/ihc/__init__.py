@@ -18,9 +18,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     ATTR_CONTROLLER_ID,
@@ -55,7 +55,7 @@ DOMAIN = "ihc"
 
 IHC_CONTROLLER = "controller"
 IHC_INFO = "info"
-IHC_PLATFORMS = ("binary_sensor", "light", "sensor", "switch")
+PLATFORMS = ("binary_sensor", "light", "sensor", "switch")
 
 
 def validate_name(config):
@@ -219,7 +219,7 @@ PULSE_SCHEMA = vol.Schema(
 
 
 def setup(hass, config):
-    """Set up the IHC platform."""
+    """Set up the IHC integration."""
     conf = config.get(DOMAIN)
     for index, controller_conf in enumerate(conf):
         if not ihc_setup(hass, config, controller_conf, index):
@@ -229,8 +229,7 @@ def setup(hass, config):
 
 
 def ihc_setup(hass, config, conf, controller_id):
-    """Set up the IHC component."""
-
+    """Set up the IHC integration."""
     url = conf[CONF_URL]
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
@@ -257,11 +256,11 @@ def ihc_setup(hass, config, conf, controller_id):
 
 def get_manual_configuration(hass, config, conf, ihc_controller, controller_id):
     """Get manual configuration for IHC devices."""
-    for component in IHC_PLATFORMS:
+    for platform in PLATFORMS:
         discovery_info = {}
-        if component in conf:
-            component_setup = conf.get(component)
-            for sensor_cfg in component_setup:
+        if platform in conf:
+            platform_setup = conf.get(platform)
+            for sensor_cfg in platform_setup:
                 name = sensor_cfg[CONF_NAME]
                 device = {
                     "ihc_id": sensor_cfg[CONF_ID],
@@ -282,14 +281,11 @@ def get_manual_configuration(hass, config, conf, ihc_controller, controller_id):
                 }
                 discovery_info[name] = device
         if discovery_info:
-            discovery.load_platform(hass, component, DOMAIN, discovery_info, config)
+            discovery.load_platform(hass, platform, DOMAIN, discovery_info, config)
 
 
-def autosetup_ihc_products(
-    hass: HomeAssistantType, config, ihc_controller, controller_id
-):
+def autosetup_ihc_products(hass: HomeAssistant, config, ihc_controller, controller_id):
     """Auto setup of IHC products from the IHC project file."""
-
     project_xml = ihc_controller.get_project()
     if not project_xml:
         _LOGGER.error("Unable to read project from IHC controller")
@@ -306,21 +302,23 @@ def autosetup_ihc_products(
     except vol.Invalid as exception:
         _LOGGER.error("Invalid IHC auto setup data: %s", exception)
         return False
+
     groups = project.findall(".//group")
-    for component in IHC_PLATFORMS:
-        component_setup = auto_setup_conf[component]
-        discovery_info = get_discovery_info(component_setup, groups, controller_id)
+    for platform in PLATFORMS:
+        platform_setup = auto_setup_conf[platform]
+        discovery_info = get_discovery_info(platform_setup, groups, controller_id)
         if discovery_info:
-            discovery.load_platform(hass, component, DOMAIN, discovery_info, config)
+            discovery.load_platform(hass, platform, DOMAIN, discovery_info, config)
+
     return True
 
 
-def get_discovery_info(component_setup, groups, controller_id):
-    """Get discovery info for specified IHC component."""
+def get_discovery_info(platform_setup, groups, controller_id):
+    """Get discovery info for specified IHC platform."""
     discovery_data = {}
     for group in groups:
         groupname = group.attrib["name"]
-        for product_cfg in component_setup:
+        for product_cfg in platform_setup:
             products = group.findall(product_cfg[CONF_XPATH])
             for product in products:
                 nodes = product.findall(product_cfg[CONF_NODE])
@@ -343,7 +341,7 @@ def get_discovery_info(component_setup, groups, controller_id):
     return discovery_data
 
 
-def setup_service_functions(hass: HomeAssistantType):
+def setup_service_functions(hass: HomeAssistant):
     """Set up the IHC service functions."""
 
     def _get_controller(call):

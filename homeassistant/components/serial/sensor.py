@@ -7,11 +7,10 @@ from serial import SerialException
 import serial_asyncio
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,7 +102,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([sensor], True)
 
 
-class SerialSensor(Entity):
+class SerialSensor(SensorEntity):
     """Representation of a Serial sensor."""
 
     def __init__(
@@ -241,7 +240,7 @@ class SerialSensor(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the entity (if any JSON present)."""
         return self._attributes
 

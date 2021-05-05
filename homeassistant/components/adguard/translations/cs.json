@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Slu\u017eba je ji\u017e nastavena",
             "existing_instance_updated": "St\u00e1vaj\u00edc\u00ed nastaven\u00ed aktualizov\u00e1no.",
             "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace."
         },
@@ -9,8 +10,8 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Chcete nakonfigurovat slu\u017ebu Home Assistant pro p\u0159ipojen\u00ed k AddGuard pomoc\u00ed hass.io {addon}?",
-                "title": "AdGuard prost\u0159ednictv\u00edm dopl\u0148ku Hass.io"
+                "description": "Chcete nakonfigurovat slu\u017ebu Home Assistant pro p\u0159ipojen\u00ed k AddGuard pomoc\u00ed Supervisor {addon}?",
+                "title": "AdGuard prost\u0159ednictv\u00edm dopl\u0148ku Supervisor"
             },
             "user": {
                 "data": {

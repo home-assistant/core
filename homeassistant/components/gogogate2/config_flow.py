@@ -6,7 +6,6 @@ from gogogate2_api.common import AbstractInfoResponse, ApiError
 from gogogate2_api.const import GogoGate2ApiErrorCode, ISmartGateApiErrorCode
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow
 from homeassistant.const import (
     CONF_DEVICE,
@@ -16,15 +15,13 @@ from homeassistant.const import (
 )
 
 from .common import get_api
-from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE, DOMAIN
 
 
 class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
     """Gogogate2 config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the config flow."""

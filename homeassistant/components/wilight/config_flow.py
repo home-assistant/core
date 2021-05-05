@@ -4,10 +4,10 @@ from urllib.parse import urlparse
 import pywilight
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from . import DOMAIN
 
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_MODEL_NAME = "model_name"
@@ -15,14 +15,13 @@ CONF_MODEL_NAME = "model_name"
 WILIGHT_MANUFACTURER = "All Automacao Ltda"
 
 # List the components supported by this integration.
-ALLOWED_WILIGHT_COMPONENTS = ["light", "fan"]
+ALLOWED_WILIGHT_COMPONENTS = ["cover", "fan", "light"]
 
 
 class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a WiLight config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the WiLight flow."""
@@ -84,7 +83,6 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self._serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {"name": self._title}
         return await self.async_step_confirm()
 

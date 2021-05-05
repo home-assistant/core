@@ -6,18 +6,12 @@ import voluptuous as vol
 
 from homeassistant.components import number
 from homeassistant.components.number import NumberEntity
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_ICON,
-    CONF_NAME,
-    CONF_OPTIMISTIC,
-    CONF_UNIQUE_ID,
-)
-from homeassistant.core import callback
+from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from . import (
     CONF_COMMAND_TOPIC,
@@ -28,37 +22,25 @@ from . import (
     subscription,
 )
 from .. import mqtt
+from .const import CONF_RETAIN
 from .debug_info import log_messages
-from .mixins import (
-    MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-    MQTT_JSON_ATTRS_SCHEMA,
-    MqttEntity,
-    async_setup_entry_helper,
-)
+from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT Number"
 DEFAULT_OPTIMISTIC = False
 
-PLATFORM_SCHEMA = (
-    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-            vol.Optional(CONF_ICON): cv.icon,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    )
-    .extend(MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
-)
+PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+    }
+).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT number through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
@@ -67,7 +49,6 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT number dynamically through MQTT discovery."""
-
     setup = functools.partial(
         _async_setup_entity, async_add_entities, config_entry=config_entry
     )
@@ -90,7 +71,6 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
 
         self._current_number = None
         self._optimistic = config.get(CONF_OPTIMISTIC)
-        self._unique_id = config.get(CONF_UNIQUE_ID)
 
         NumberEntity.__init__(self)
         MqttEntity.__init__(self, None, config, config_entry, discovery_data)
@@ -100,9 +80,6 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
         """Return the config schema."""
         return PLATFORM_SCHEMA
 
-    def _setup_from_config(self, config):
-        self._config = config
-
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
@@ -110,7 +87,6 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg):
             """Handle new MQTT messages."""
-
             try:
                 if msg.payload.decode("utf-8").isnumeric():
                     self._current_number = int(msg.payload)
@@ -149,7 +125,6 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
 
     async def async_set_value(self, value: float) -> None:
         """Update the current value."""
-
         current_number = value
 
         if value.is_integer():
@@ -164,19 +139,10 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
             self._config[CONF_COMMAND_TOPIC],
             current_number,
             self._config[CONF_QOS],
+            self._config[CONF_RETAIN],
         )
-
-    @property
-    def name(self):
-        """Return the name of this number."""
-        return self._config[CONF_NAME]
 
     @property
     def assumed_state(self):
         """Return true if we do optimistic updates."""
         return self._optimistic
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._config.get(CONF_ICON)

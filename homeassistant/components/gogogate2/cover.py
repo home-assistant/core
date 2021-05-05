@@ -1,13 +1,9 @@
 """Support for Gogogate2 garage Doors."""
-from typing import Callable, List, Optional
+from __future__ import annotations
 
-from gogogate2_api.common import (
-    AbstractDoor,
-    DoorStatus,
-    get_configured_doors,
-    get_door_by_id,
-)
-import voluptuous as vol
+import logging
+
+from gogogate2_api.common import AbstractDoor, DoorStatus, get_configured_doors
 
 from homeassistant.components.cover import (
     DEVICE_CLASS_GARAGE,
@@ -17,40 +13,31 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_IP_ADDRESS,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import (
     DeviceDataUpdateCoordinator,
+    GoGoGate2Entity,
     cover_unique_id,
     get_data_update_coordinator,
 )
-from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE, DOMAIN, MANUFACTURER
+from .const import DOMAIN
 
-COVER_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Required(CONF_DEVICE, default=DEVICE_TYPE_GOGOGATE2): vol.In(
-            (DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE)
-        ),
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-    }
-)
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
-    hass: HomeAssistant, config: dict, add_entities: Callable, discovery_info=None
+    hass: HomeAssistant,
+    config: dict,
+    add_entities: AddEntitiesCallback,
+    discovery_info=None,
 ) -> None:
     """Convert old style file configs to new style configs."""
+    _LOGGER.warning(
+        "Loading gogogate2 via platform config is deprecated; The configuration"
+        " has been migrated to a config entry and can be safely removed"
+    )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
@@ -61,7 +48,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], Optional[bool]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the config entry."""
     data_update_coordinator = get_data_update_coordinator(hass, config_entry)
@@ -74,7 +61,7 @@ async def async_setup_entry(
     )
 
 
-class DeviceCover(CoordinatorEntity, CoverEntity):
+class DeviceCover(GoGoGate2Entity, CoverEntity):
     """Cover entity for goggate2."""
 
     def __init__(
@@ -84,17 +71,10 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
         door: AbstractDoor,
     ) -> None:
         """Initialize the object."""
-        super().__init__(data_update_coordinator)
-        self._config_entry = config_entry
-        self._door = door
+        unique_id = cover_unique_id(config_entry, door)
+        super().__init__(config_entry, data_update_coordinator, door, unique_id)
         self._api = data_update_coordinator.api
-        self._unique_id = cover_unique_id(config_entry, door)
         self._is_available = True
-
-    @property
-    def unique_id(self) -> Optional[str]:
-        """Return a unique ID."""
-        return self._unique_id
 
     @property
     def name(self):
@@ -136,25 +116,6 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
         await self._api.async_close_door(self._get_door().door_id)
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        attrs = super().state_attributes
-        attrs["door_id"] = self._get_door().door_id
-        return attrs
-
-    def _get_door(self) -> AbstractDoor:
-        door = get_door_by_id(self._door.door_id, self.coordinator.data)
-        self._door = door or self._door
-        return self._door
-
-    @property
-    def device_info(self):
-        """Device info for the controller."""
-        data = self.coordinator.data
-        return {
-            "identifiers": {(DOMAIN, self._config_entry.unique_id)},
-            "name": self._config_entry.title,
-            "manufacturer": MANUFACTURER,
-            "model": data.model,
-            "sw_version": data.firmwareversion,
-        }
+        return {"door_id": self._get_door().door_id}

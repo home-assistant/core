@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Standort ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "destination": "Zielort",
+                    "name": "Name",
+                    "origin": "Startort"
+                },
+                "description": "Bei der Angabe von Ursprung und Ziel k\u00f6nnen Sie einen oder mehrere durch das Pipe-Zeichen getrennte Orte in Form einer Adresse, L\u00e4ngen- / Breitengradkoordinaten oder einer Google-Orts-ID angeben. Wenn Sie den Standort mithilfe einer Google-Orts-ID angeben, muss der ID \"place_id:\" vorangestellt werden."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid": "Vermeiden",
+                    "language": "Sprache",
+                    "mode": "Reisemodus",
+                    "time": "Uhrzeit",
+                    "time_type": "Zeittyp",
+                    "transit_mode": "Transit-Modus",
+                    "transit_routing_preference": "Transit-Routing-Einstellungen",
+                    "units": "Einheiten"
+                },
+                "description": "Sie k\u00f6nnen optional entweder eine Abfahrtszeit oder eine Ankunftszeit angeben. Wenn Sie eine Abfahrtszeit angeben, k\u00f6nnen Sie \"Now\", einen Unix-Zeitstempel oder eine 24-Stunden-Zeichenkette wie \"08:00:00\" eingeben. Wenn Sie eine Ankunftszeit angeben, k\u00f6nnen Sie einen Unix-Zeitstempel oder eine 24-Stunden-Zeichenkette wie \"08:00:00\" verwenden."
+            }
+        }
+    },
+    "title": "Google Maps Reisezeit"
+}

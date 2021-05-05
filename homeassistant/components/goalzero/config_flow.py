@@ -8,7 +8,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_NAME, DOMAIN  # pylint:disable=unused-import
+from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +19,6 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Goal Zero Yeti."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""

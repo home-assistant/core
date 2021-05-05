@@ -26,7 +26,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
 from .const import (
-    CONF_GROUP_ID_BASE,
     COVER_TYPES,
     DOMAIN as DECONZ_DOMAIN,
     LOCK_TYPES,
@@ -62,7 +61,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if entities:
             async_add_entities(entities)
 
-    gateway.listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass, gateway.async_signal_new_device(NEW_LIGHT), async_add_light
         )
@@ -88,7 +87,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if entities:
             async_add_entities(entities)
 
-    gateway.listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass, gateway.async_signal_new_device(NEW_GROUP), async_add_group
         )
@@ -224,7 +223,7 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
         await self._device.async_set_state(data)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return {"is_deconz_group": self._device.type == "LightGroup"}
 
@@ -248,10 +247,7 @@ class DeconzGroup(DeconzBaseLight):
 
     def __init__(self, device, gateway):
         """Set up group and create an unique id."""
-        group_id_base = gateway.config_entry.unique_id
-        if CONF_GROUP_ID_BASE in gateway.config_entry.data:
-            group_id_base = gateway.config_entry.data[CONF_GROUP_ID_BASE]
-        self._unique_id = f"{group_id_base}-{device.deconz_id}"
+        self._unique_id = f"{gateway.bridgeid}-{device.deconz_id}"
 
         super().__init__(device, gateway)
 
@@ -279,9 +275,9 @@ class DeconzGroup(DeconzBaseLight):
         }
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
-        attributes = dict(super().device_state_attributes)
+        attributes = dict(super().extra_state_attributes)
         attributes["all_on"] = self._device.all_on
 
         return attributes

@@ -1,7 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Deze co\u00f6rdinaten zijn al geregistreerd."
+            "already_configured": "Locatie is al geconfigureerd."
+        },
+        "error": {
+            "unknown": "Onverwachte fout"
         },
         "step": {
             "user": {
@@ -9,7 +12,7 @@
                     "latitude": "Breedtegraad",
                     "longitude": "Lengtegraad"
                 },
-                "description": "Bewaak op gebruikers gebaseerde en CDC-repots voor een paar co\u00f6rdinaten.",
+                "description": "Bewaak gebruikersgebaseerde en CDC-rapporten voor een paar co\u00f6rdinaten.",
                 "title": "Configureer \nFlu Near You"
             }
         }

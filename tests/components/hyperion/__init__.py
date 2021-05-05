@@ -1,17 +1,18 @@
 """Tests for the Hyperion component."""
 from __future__ import annotations
 
-import logging
 from types import TracebackType
-from typing import Any, Dict, Optional, Type
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from hyperion import const
 
+from homeassistant.components.hyperion import get_hyperion_unique_id
 from homeassistant.components.hyperion.const import CONF_PRIORITY, DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -21,7 +22,7 @@ TEST_PORT_UI = const.DEFAULT_PORT_UI + 1
 TEST_INSTANCE = 1
 TEST_ID = "default"
 TEST_SYSINFO_ID = "f9aab089-f85a-55cf-b7c1-222a72faebe9"
-TEST_SYSINFO_VERSION = "2.0.0-alpha.8"
+TEST_SYSINFO_VERSION = "2.0.0-alpha.9"
 TEST_PRIORITY = 180
 TEST_ENTITY_ID_1 = "light.test_instance_1"
 TEST_ENTITY_ID_2 = "light.test_instance_2"
@@ -31,25 +32,25 @@ TEST_TITLE = f"{TEST_HOST}:{TEST_PORT}"
 
 TEST_TOKEN = "sekr1t"
 TEST_CONFIG_ENTRY_ID = "74565ad414754616000674c87bdc876c"
-TEST_CONFIG_ENTRY_OPTIONS: Dict[str, Any] = {CONF_PRIORITY: TEST_PRIORITY}
+TEST_CONFIG_ENTRY_OPTIONS: dict[str, Any] = {CONF_PRIORITY: TEST_PRIORITY}
 
-TEST_INSTANCE_1: Dict[str, Any] = {
+TEST_INSTANCE_1: dict[str, Any] = {
     "friendly_name": "Test instance 1",
     "instance": 1,
     "running": True,
 }
-TEST_INSTANCE_2: Dict[str, Any] = {
+TEST_INSTANCE_2: dict[str, Any] = {
     "friendly_name": "Test instance 2",
     "instance": 2,
     "running": True,
 }
-TEST_INSTANCE_3: Dict[str, Any] = {
+TEST_INSTANCE_3: dict[str, Any] = {
     "friendly_name": "Test instance 3",
     "instance": 3,
     "running": True,
 }
 
-TEST_AUTH_REQUIRED_RESP: Dict[str, Any] = {
+TEST_AUTH_REQUIRED_RESP: dict[str, Any] = {
     "command": "authorize-tokenRequired",
     "info": {
         "required": True,
@@ -63,22 +64,20 @@ TEST_AUTH_NOT_REQUIRED_RESP = {
     "info": {"required": False},
 }
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class AsyncContextManagerMock(Mock):
     """An async context manager mock for Hyperion."""
 
-    async def __aenter__(self) -> Optional[AsyncContextManagerMock]:
+    async def __aenter__(self) -> AsyncContextManagerMock | None:
         """Enter context manager and connect the client."""
         result = await self.async_client_connect()
         return self if result else None
 
     async def __aexit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc: Optional[BaseException],
-        traceback: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        traceback: TracebackType | None,
     ) -> None:
         """Leave context manager and disconnect the client."""
         await self.async_client_disconnect()
@@ -98,7 +97,7 @@ def create_mock_client() -> Mock:
     )
 
     mock_client.async_sysinfo_id = AsyncMock(return_value=TEST_SYSINFO_ID)
-    mock_client.async_sysinfo_version = AsyncMock(return_value=TEST_SYSINFO_ID)
+    mock_client.async_sysinfo_version = AsyncMock(return_value=TEST_SYSINFO_VERSION)
     mock_client.async_client_switch_instance = AsyncMock(return_value=True)
     mock_client.async_client_login = AsyncMock(return_value=True)
     mock_client.async_get_serverinfo = AsyncMock(
@@ -121,7 +120,9 @@ def create_mock_client() -> Mock:
 
 
 def add_test_config_entry(
-    hass: HomeAssistantType, data: Optional[Dict[str, Any]] = None
+    hass: HomeAssistant,
+    data: dict[str, Any] | None = None,
+    options: dict[str, Any] | None = None,
 ) -> ConfigEntry:
     """Add a test config entry."""
     config_entry: MockConfigEntry = MockConfigEntry(  # type: ignore[no-untyped-call]
@@ -134,19 +135,20 @@ def add_test_config_entry(
         },
         title=f"Hyperion {TEST_SYSINFO_ID}",
         unique_id=TEST_SYSINFO_ID,
-        options=TEST_CONFIG_ENTRY_OPTIONS,
+        options=options or TEST_CONFIG_ENTRY_OPTIONS,
     )
     config_entry.add_to_hass(hass)  # type: ignore[no-untyped-call]
     return config_entry
 
 
 async def setup_test_config_entry(
-    hass: HomeAssistantType,
-    config_entry: Optional[ConfigEntry] = None,
-    hyperion_client: Optional[Mock] = None,
+    hass: HomeAssistant,
+    config_entry: ConfigEntry | None = None,
+    hyperion_client: Mock | None = None,
+    options: dict[str, Any] | None = None,
 ) -> ConfigEntry:
     """Add a test Hyperion entity to hass."""
-    config_entry = config_entry or add_test_config_entry(hass)
+    config_entry = config_entry or add_test_config_entry(hass, options=options)
 
     hyperion_client = hyperion_client or create_mock_client()
     # pylint: disable=attribute-defined-outside-init
@@ -168,3 +170,20 @@ def call_registered_callback(
     for call in client.add_callbacks.call_args_list:
         if key in call[0][0]:
             call[0][0][key](*args, **kwargs)
+
+
+def register_test_entity(
+    hass: HomeAssistant, domain: str, type_name: str, entity_id: str
+) -> None:
+    """Register a test entity."""
+    unique_id = get_hyperion_unique_id(TEST_SYSINFO_ID, TEST_INSTANCE, type_name)
+    entity_id = entity_id.split(".")[1]
+
+    entity_registry = er.async_get(hass)
+    entity_registry.async_get_or_create(
+        domain,
+        DOMAIN,
+        unique_id,
+        suggested_object_id=entity_id,
+        disabled_by=None,
+    )

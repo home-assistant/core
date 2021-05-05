@@ -1,9 +1,12 @@
 """Test UniFi config flow."""
+
+import socket
 from unittest.mock import patch
 
 import aiounifi
 
 from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.unifi.config_flow import async_discover_unifi
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
@@ -88,7 +91,7 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
     """Test config flow."""
     mock_discovery.return_value = "1"
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": "user"}
+        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -134,6 +137,12 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Site name"
     assert result["data"] == {
+        CONF_HOST: "1.2.3.4",
+        CONF_USERNAME: "username",
+        CONF_PASSWORD: "password",
+        CONF_PORT: 1234,
+        CONF_SITE_ID: "site_id",
+        CONF_VERIFY_SSL: True,
         CONF_CONTROLLER: {
             CONF_HOST: "1.2.3.4",
             CONF_USERNAME: "username",
@@ -141,14 +150,31 @@ async def test_flow_works(hass, aioclient_mock, mock_discovery):
             CONF_PORT: 1234,
             CONF_SITE_ID: "site_id",
             CONF_VERIFY_SSL: True,
-        }
+        },
+    }
+
+
+async def test_flow_works_negative_discovery(hass, aioclient_mock, mock_discovery):
+    """Test config flow with a negative outcome of async_discovery_unifi."""
+    result = await hass.config_entries.flow.async_init(
+        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["data_schema"]({CONF_USERNAME: "", CONF_PASSWORD: ""}) == {
+        CONF_HOST: "",
+        CONF_USERNAME: "",
+        CONF_PASSWORD: "",
+        CONF_PORT: 443,
+        CONF_VERIFY_SSL: False,
     }
 
 
 async def test_flow_multiple_sites(hass, aioclient_mock):
     """Test config flow works when finding multiple sites."""
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": "user"}
+        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -196,7 +222,7 @@ async def test_flow_raise_already_configured(hass, aioclient_mock):
     await setup_unifi_integration(hass, aioclient_mock)
 
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": "user"}
+        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -241,21 +267,17 @@ async def test_flow_raise_already_configured(hass, aioclient_mock):
 async def test_flow_aborts_configuration_updated(hass, aioclient_mock):
     """Test config flow aborts since a connected config entry already exists."""
     entry = MockConfigEntry(
-        domain=UNIFI_DOMAIN,
-        data={"controller": {"host": "1.2.3.4", "site": "office"}},
-        unique_id="2",
+        domain=UNIFI_DOMAIN, data={"host": "1.2.3.4", "site": "office"}, unique_id="2"
     )
     entry.add_to_hass(hass)
 
     entry = MockConfigEntry(
-        domain=UNIFI_DOMAIN,
-        data={"controller": {"host": "1.2.3.4", "site": "site_id"}},
-        unique_id="1",
+        domain=UNIFI_DOMAIN, data={"host": "1.2.3.4", "site": "site_id"}, unique_id="1"
     )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": "user"}
+        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -299,7 +321,7 @@ async def test_flow_aborts_configuration_updated(hass, aioclient_mock):
 async def test_flow_fails_user_credentials_faulty(hass, aioclient_mock):
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": "user"}
+        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -326,7 +348,7 @@ async def test_flow_fails_user_credentials_faulty(hass, aioclient_mock):
 async def test_flow_fails_controller_unavailable(hass, aioclient_mock):
     """Test config flow."""
     result = await hass.config_entries.flow.async_init(
-        UNIFI_DOMAIN, context={"source": "user"}
+        UNIFI_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -358,8 +380,12 @@ async def test_reauth_flow_update_configuration(hass, aioclient_mock):
 
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
-        context={"source": SOURCE_REAUTH},
-        data=config_entry,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": config_entry.unique_id,
+            "entry_id": config_entry.entry_id,
+        },
+        data=config_entry.data,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -399,9 +425,9 @@ async def test_reauth_flow_update_configuration(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
-    assert config_entry.data[CONF_CONTROLLER][CONF_HOST] == "1.2.3.4"
-    assert config_entry.data[CONF_CONTROLLER][CONF_USERNAME] == "new_name"
-    assert config_entry.data[CONF_CONTROLLER][CONF_PASSWORD] == "new_pass"
+    assert config_entry.data[CONF_HOST] == "1.2.3.4"
+    assert config_entry.data[CONF_USERNAME] == "new_name"
+    assert config_entry.data[CONF_PASSWORD] == "new_pass"
 
 
 async def test_advanced_option_flow(hass, aioclient_mock):
@@ -422,6 +448,7 @@ async def test_advanced_option_flow(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "device_tracker"
+    assert not result["last_step"]
     assert set(
         result["data_schema"].schema[CONF_SSID_FILTER].options.keys()
     ).intersection(("SSID 1", "SSID 2", "SSID 2_IOT", "SSID 3"))
@@ -439,6 +466,7 @@ async def test_advanced_option_flow(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "client_control"
+    assert not result["last_step"]
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -451,6 +479,7 @@ async def test_advanced_option_flow(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "statistics_sensors"
+    assert result["last_step"]
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -493,6 +522,7 @@ async def test_simple_option_flow(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "simple_options"
+    assert result["last_step"]
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -544,7 +574,7 @@ async def test_form_ssdp_aborts_if_host_already_exists(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
     entry = MockConfigEntry(
         domain=UNIFI_DOMAIN,
-        data={"controller": {"host": "192.168.208.1", "site": "site_id"}},
+        data={"host": "192.168.208.1", "site": "site_id"},
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
@@ -615,3 +645,15 @@ async def test_form_ssdp_gets_form_with_ignored_entry(hass):
         "host": "1.2.3.4",
         "site": "default",
     }
+
+
+async def test_discover_unifi_positive(hass):
+    """Verify positive run of UniFi discovery."""
+    with patch("socket.gethostbyname", return_value=True):
+        assert await async_discover_unifi(hass)
+
+
+async def test_discover_unifi_negative(hass):
+    """Verify negative run of UniFi discovery."""
+    with patch("socket.gethostbyname", side_effect=socket.gaierror):
+        assert await async_discover_unifi(hass) is None

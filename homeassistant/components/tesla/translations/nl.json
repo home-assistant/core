@@ -1,14 +1,19 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol"
+        },
         "error": {
             "already_configured": "Account is al geconfigureerd",
-            "cannot_connect": "Kan geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
             "user": {
                 "data": {
                     "password": "Wachtwoord",
-                    "username": "E-mailadres"
+                    "username": "E-mail"
                 },
                 "description": "Vul alstublieft uw gegevens in.",
                 "title": "Tesla - Configuratie"

@@ -14,7 +14,7 @@ from homeassistant.components.remote import (
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 
-from .const import DOMAIN, PREVIOUS_ACTIVE_ACTIVITY, UNIQUE_ID
+from .const import DOMAIN, HARMONY_DATA, PREVIOUS_ACTIVE_ACTIVITY, UNIQUE_ID
 from .util import (
     find_best_name_for_remote,
     find_unique_id_for_remote,
@@ -48,7 +48,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Logitech Harmony Hub."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the Harmony config flow."""
@@ -89,7 +88,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._host_already_configured(parsed_url.hostname):
             return self.async_abort(reason="already_configured")
 
-        # pylint: disable=no-member
         self.context["title_placeholders"] = {"name": friendly_name}
 
         self.harmony_config = {
@@ -120,6 +118,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.harmony_config, {}
             )
 
+        self._set_confirm_only()
         return self.async_show_form(
             step_id="link",
             errors=errors,
@@ -180,7 +179,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        remote = self.hass.data[DOMAIN][self.config_entry.entry_id]
+        remote = self.hass.data[DOMAIN][self.config_entry.entry_id][HARMONY_DATA]
 
         data_schema = vol.Schema(
             {

@@ -18,12 +18,10 @@ def get_entry_client(hass, entry):
     return hass.data[DOMAIN_DATA_ENTRIES][entry.entry_id]
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class ArcamFmjFlowHandler(config_entries.ConfigFlow):
+class ArcamFmjFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def _async_set_unique_id_and_update(self, host, port, uuid):
         await self.async_set_unique_id(uuid)
@@ -71,7 +69,7 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_confirm(self, user_input=None):
         """Handle user-confirmation of discovered node."""
-        context = self.context  # pylint: disable=no-member
+        context = self.context
         placeholders = {
             "host": context[CONF_HOST],
         }
@@ -94,7 +92,7 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
 
         await self._async_set_unique_id_and_update(host, port, uuid)
 
-        context = self.context  # pylint: disable=no-member
+        context = self.context
         context[CONF_HOST] = host
         context[CONF_PORT] = DEFAULT_PORT
         return await self.async_step_confirm()

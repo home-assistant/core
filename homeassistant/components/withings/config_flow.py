@@ -1,12 +1,13 @@
 """Config flow for Withings."""
+from __future__ import annotations
+
 import logging
-from typing import Dict, Union
 
 import voluptuous as vol
 from withings_api.common import AuthScope
 
-from homeassistant import config_entries
 from homeassistant.components.withings import const
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util import slugify
 
@@ -17,9 +18,9 @@ class WithingsFlowHandler(
     """Handle a config flow."""
 
     DOMAIN = const.DOMAIN
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+
     # Temporarily holds authorization data during the profile step.
-    _current_data: Dict[str, Union[None, str, int]] = {}
+    _current_data: dict[str, None | str | int] = {}
 
     @property
     def logger(self) -> logging.Logger:
@@ -48,10 +49,9 @@ class WithingsFlowHandler(
     async def async_step_profile(self, data: dict) -> dict:
         """Prompt the user to select a user profile."""
         errors = {}
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         reauth_profile = (
             self.context.get(const.PROFILE)
-            if self.context.get("source") == "reauth"
+            if self.context.get("source") == SOURCE_REAUTH
             else None
         )
         profile = data.get(const.PROFILE) or reauth_profile
@@ -81,14 +81,12 @@ class WithingsFlowHandler(
         if data is not None:
             return await self.async_step_user()
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         placeholders = {const.PROFILE: self.context["profile"]}
 
         self.context.update({"title_placeholders": placeholders})
 
         return self.async_show_form(
             step_id="reauth",
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             description_placeholders=placeholders,
         )
 

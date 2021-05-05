@@ -24,7 +24,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from . import async_get_geography_id
-from .const import (  # pylint: disable=unused-import
+from .const import (
     CONF_CITY,
     CONF_COUNTRY,
     CONF_INTEGRATION_TYPE,
@@ -63,7 +63,6 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an AirVisual config flow."""
 
     VERSION = 2
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize the config flow."""

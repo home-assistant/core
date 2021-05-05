@@ -1,13 +1,15 @@
 """Flo device object."""
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from typing import Any
 
 from aioflo.api import API
 from aioflo.errors import RequestError
 from async_timeout import timeout
 
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
@@ -18,16 +20,16 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     """Flo device object."""
 
     def __init__(
-        self, hass: HomeAssistantType, api_client: API, location_id: str, device_id: str
+        self, hass: HomeAssistant, api_client: API, location_id: str, device_id: str
     ):
         """Initialize the device."""
-        self.hass: HomeAssistantType = hass
+        self.hass: HomeAssistant = hass
         self.api_client: API = api_client
         self._flo_location_id: str = location_id
         self._flo_device_id: str = device_id
         self._manufacturer: str = "Flo by Moen"
-        self._device_information: Optional[Dict[str, Any]] = None
-        self._water_usage: Optional[Dict[str, Any]] = None
+        self._device_information: dict[str, Any] | None = None
+        self._water_usage: dict[str, Any] | None = None
         super().__init__(
             hass,
             LOGGER,
@@ -58,7 +60,9 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     @property
     def device_name(self) -> str:
         """Return device name."""
-        return f"{self.manufacturer} {self.model}"
+        return self._device_information.get(
+            "nickname", f"{self.manufacturer} {self.model}"
+        )
 
     @property
     def manufacturer(self) -> str:
@@ -121,6 +125,11 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         return self._device_information["telemetry"]["current"]["tempF"]
 
     @property
+    def humidity(self) -> float:
+        """Return the current humidity in percent (0-100)."""
+        return self._device_information["telemetry"]["current"]["humidity"]
+
+    @property
     def consumption_today(self) -> float:
         """Return the current consumption for today in gallons."""
         return self._water_usage["aggregations"]["sumTotalGallonsConsumed"]
@@ -160,6 +169,11 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     @property
+    def water_detected(self) -> bool:
+        """Return whether water is detected, for leak detectors."""
+        return self._device_information["fwProperties"]["telemetry_water"]
+
+    @property
     def last_known_valve_state(self) -> str:
         """Return the last known valve state for the device."""
         return self._device_information["valve"]["lastKnown"]
@@ -168,6 +182,11 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     def target_valve_state(self) -> str:
         """Return the target valve state for the device."""
         return self._device_information["valve"]["target"]
+
+    @property
+    def battery_level(self) -> float:
+        """Return the battery level for battery-powered device, e.g. leak detectors."""
+        return self._device_information["battery"]["level"]
 
     async def async_set_mode_home(self):
         """Set the Flo location to home mode."""

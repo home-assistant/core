@@ -123,7 +123,7 @@ class MikrotikHubTracker(ScannerEntity):
         return self.hub.available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         if self.is_connected:
             return {k: v for k, v in self.device.attrs.items() if k not in FILTER_ATTRS}

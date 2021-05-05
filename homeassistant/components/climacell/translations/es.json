@@ -1,0 +1,35 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Fallo al conectar",
+            "invalid_api_key": "Clave API no v\u00e1lida",
+            "rate_limited": "Actualmente la tarifa est\u00e1 limitada, por favor int\u00e9ntelo m\u00e1s tarde.",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clave API",
+                    "api_version": "Versi\u00f3n del API",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "name": "Nombre"
+                },
+                "description": "Si no se proporcionan Latitud y Longitud , se utilizar\u00e1n los valores predeterminados en la configuraci\u00f3n de Home Assistant. Se crear\u00e1 una entidad para cada tipo de pron\u00f3stico, pero solo las que seleccione estar\u00e1n habilitadas de forma predeterminada."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "forecast_types": "Tipo(s) de pron\u00f3stico",
+                    "timestep": "Min. Entre pron\u00f3sticos de NowCast"
+                },
+                "description": "Si elige habilitar la entidad de pron\u00f3stico \"nowcast\", puede configurar el n\u00famero de minutos entre cada pron\u00f3stico. El n\u00famero de pron\u00f3sticos proporcionados depende del n\u00famero de minutos elegidos entre los pron\u00f3sticos.",
+                "title": "Actualizar las opciones ClimaCell"
+            }
+        }
+    },
+    "title": "ClimaCell"
+}

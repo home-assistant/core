@@ -1,5 +1,4 @@
 """The Panasonic Viera integration."""
-import asyncio
 from functools import partial
 import logging
 from urllib.request import URLError
@@ -8,6 +7,7 @@ from panasonic_viera import EncryptionRequired, Keys, RemoteControl, SOAPError
 import voluptuous as vol
 
 from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
@@ -46,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [MEDIA_PLAYER_DOMAIN]
+PLATFORMS = [MEDIA_PLAYER_DOMAIN, REMOTE_DOMAIN]
 
 
 async def async_setup(hass, config):
@@ -93,7 +93,7 @@ async def async_setup_entry(hass, config_entry):
         unique_id = config_entry.unique_id
         if device_info is None:
             _LOGGER.error(
-                "Couldn't gather device info. Please restart Home Assistant with your TV turned on and connected to your network."
+                "Couldn't gather device info; Please restart Home Assistant with your TV turned on and connected to your network"
             )
         else:
             unique_id = device_info[ATTR_UDN]
@@ -103,25 +103,16 @@ async def async_setup_entry(hass, config_entry):
             data={**config, ATTR_DEVICE_INFO: device_info},
         )
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
-
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
@@ -219,6 +210,7 @@ class Remote:
         """Turn off the TV."""
         if self.state != STATE_OFF:
             await self.async_send_key(Keys.power)
+            self.state = STATE_OFF
             await self.async_update()
 
     async def async_set_mute(self, enable):

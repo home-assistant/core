@@ -1,5 +1,4 @@
 """Blebox air_quality tests."""
-
 import logging
 from unittest.mock import AsyncMock, PropertyMock
 
@@ -8,6 +7,7 @@ import pytest
 
 from homeassistant.components.air_quality import ATTR_PM_0_1, ATTR_PM_2_5, ATTR_PM_10
 from homeassistant.const import ATTR_ICON, STATE_UNKNOWN
+from homeassistant.helpers import device_registry as dr
 
 from .conftest import async_setup_entity, mock_feature
 
@@ -49,7 +49,7 @@ async def test_init(airsensor, hass, config):
 
     assert state.state == STATE_UNKNOWN
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My air sensor"

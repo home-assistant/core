@@ -8,12 +8,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import (  # pylint: disable=unused-import
-    CONF_ZONE_RUN_TIME,
-    DEFAULT_PORT,
-    DEFAULT_ZONE_RUN,
-    DOMAIN,
-)
+from .const import CONF_ZONE_RUN_TIME, DEFAULT_PORT, DEFAULT_ZONE_RUN, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -28,7 +23,6 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a RainMachine config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback

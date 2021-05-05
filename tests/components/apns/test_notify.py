@@ -199,7 +199,7 @@ async def test_update_existing_device(mock_write, hass):
     assert test_device_1 is not None
     assert test_device_2 is not None
 
-    assert "updated device 1" == test_device_1.name
+    assert test_device_1.name == "updated device 1"
 
 
 @patch("homeassistant.components.apns.notify._write_device")
@@ -239,8 +239,8 @@ async def test_update_existing_device_with_tracking_id(mock_write, hass):
     assert test_device_1 is not None
     assert test_device_2 is not None
 
-    assert "tracking123" == test_device_1.tracking_device_id
-    assert "tracking456" == test_device_2.tracking_device_id
+    assert test_device_1.tracking_device_id == "tracking123"
+    assert test_device_2.tracking_device_id == "tracking456"
 
 
 @patch("homeassistant.components.apns.notify.APNsClient")
@@ -267,16 +267,16 @@ async def test_send(mock_client, hass):
     )
 
     assert send.called
-    assert 1 == len(send.mock_calls)
+    assert len(send.mock_calls) == 1
 
     target = send.mock_calls[0][1][0]
     payload = send.mock_calls[0][1][1]
 
-    assert "1234" == target
-    assert "Hello" == payload.alert
-    assert 1 == payload.badge
-    assert "test.mp3" == payload.sound
-    assert "testing" == payload.category
+    assert target == "1234"
+    assert payload.alert == "Hello"
+    assert payload.badge == 1
+    assert payload.sound == "test.mp3"
+    assert payload.category == "testing"
 
 
 @patch("homeassistant.components.apns.notify.APNsClient")
@@ -337,13 +337,13 @@ async def test_send_with_state(mock_client, hass):
     notify_service.send_message(message="Hello", target="home")
 
     assert send.called
-    assert 1 == len(send.mock_calls)
+    assert len(send.mock_calls) == 1
 
     target = send.mock_calls[0][1][0]
     payload = send.mock_calls[0][1][1]
 
-    assert "5678" == target
-    assert "Hello" == payload.alert
+    assert target == "5678"
+    assert payload.alert == "Hello"
 
 
 @patch("homeassistant.components.apns.notify.APNsClient")

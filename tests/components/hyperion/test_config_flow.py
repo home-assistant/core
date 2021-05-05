@@ -1,8 +1,9 @@
 """Tests for the Hyperion config flow."""
+from __future__ import annotations
 
-import logging
-from typing import Any, Dict, Optional
-from unittest.mock import AsyncMock, patch
+import asyncio
+from typing import Any, Awaitable
+from unittest.mock import AsyncMock, Mock, patch
 
 from hyperion import const
 
@@ -10,6 +11,8 @@ from homeassistant import data_entry_flow
 from homeassistant.components.hyperion.const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
+    CONF_EFFECT_HIDE_LIST,
+    CONF_EFFECT_SHOW_LIST,
     CONF_PRIORITY,
     DOMAIN,
 )
@@ -22,7 +25,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     SERVICE_TURN_ON,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from . import (
     TEST_AUTH_REQUIRED_RESP,
@@ -41,10 +44,8 @@ from . import (
 
 from tests.common import MockConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
-
 TEST_IP_ADDRESS = "192.168.0.1"
-TEST_HOST_PORT: Dict[str, Any] = {
+TEST_HOST_PORT: dict[str, Any] = {
     CONF_HOST: TEST_HOST,
     CONF_PORT: TEST_PORT,
 }
@@ -97,7 +98,7 @@ TEST_SSDP_SERVICE_INFO = {
 }
 
 
-async def _create_mock_entry(hass: HomeAssistantType) -> MockConfigEntry:
+async def _create_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Add a test Hyperion entity to hass."""
     entry: MockConfigEntry = MockConfigEntry(  # type: ignore[no-untyped-call]
         entry_id=TEST_CONFIG_ENTRY_ID,
@@ -124,9 +125,9 @@ async def _create_mock_entry(hass: HomeAssistantType) -> MockConfigEntry:
 
 
 async def _init_flow(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     source: str = SOURCE_USER,
-    data: Optional[Dict[str, Any]] = None,
+    data: dict[str, Any] | None = None,
 ) -> Any:
     """Initialize a flow."""
     data = data or {}
@@ -137,7 +138,7 @@ async def _init_flow(
 
 
 async def _configure_flow(
-    hass: HomeAssistantType, result: Dict, user_input: Optional[Dict[str, Any]] = None
+    hass: HomeAssistant, result: dict, user_input: dict[str, Any] | None = None
 ) -> Any:
     """Provide input to a flow."""
     user_input = user_input or {}
@@ -155,7 +156,7 @@ async def _configure_flow(
     return result
 
 
-async def test_user_if_no_configuration(hass: HomeAssistantType) -> None:
+async def test_user_if_no_configuration(hass: HomeAssistant) -> None:
     """Check flow behavior when no configuration is present."""
     result = await _init_flow(hass)
 
@@ -164,7 +165,7 @@ async def test_user_if_no_configuration(hass: HomeAssistantType) -> None:
     assert result["handler"] == DOMAIN
 
 
-async def test_user_existing_id_abort(hass: HomeAssistantType) -> None:
+async def test_user_existing_id_abort(hass: HomeAssistant) -> None:
     """Verify a duplicate ID results in an abort."""
     result = await _init_flow(hass)
 
@@ -178,7 +179,7 @@ async def test_user_existing_id_abort(hass: HomeAssistantType) -> None:
         assert result["reason"] == "already_configured"
 
 
-async def test_user_client_errors(hass: HomeAssistantType) -> None:
+async def test_user_client_errors(hass: HomeAssistant) -> None:
     """Verify correct behaviour with client errors."""
     result = await _init_flow(hass)
 
@@ -204,7 +205,7 @@ async def test_user_client_errors(hass: HomeAssistantType) -> None:
         assert result["reason"] == "auth_required_error"
 
 
-async def test_user_confirm_cannot_connect(hass: HomeAssistantType) -> None:
+async def test_user_confirm_cannot_connect(hass: HomeAssistant) -> None:
     """Test a failure to connect during confirmation."""
 
     result = await _init_flow(hass)
@@ -223,7 +224,7 @@ async def test_user_confirm_cannot_connect(hass: HomeAssistantType) -> None:
         assert result["reason"] == "cannot_connect"
 
 
-async def test_user_confirm_id_error(hass: HomeAssistantType) -> None:
+async def test_user_confirm_id_error(hass: HomeAssistant) -> None:
     """Test a failure fetching the server id during confirmation."""
     result = await _init_flow(hass)
 
@@ -239,7 +240,7 @@ async def test_user_confirm_id_error(hass: HomeAssistantType) -> None:
         assert result["reason"] == "no_id"
 
 
-async def test_user_noauth_flow_success(hass: HomeAssistantType) -> None:
+async def test_user_noauth_flow_success(hass: HomeAssistant) -> None:
     """Check a full flow without auth."""
     result = await _init_flow(hass)
 
@@ -257,7 +258,7 @@ async def test_user_noauth_flow_success(hass: HomeAssistantType) -> None:
     }
 
 
-async def test_user_auth_required(hass: HomeAssistantType) -> None:
+async def test_user_auth_required(hass: HomeAssistant) -> None:
     """Verify correct behaviour when auth is required."""
     result = await _init_flow(hass)
 
@@ -272,7 +273,7 @@ async def test_user_auth_required(hass: HomeAssistantType) -> None:
     assert result["step_id"] == "auth"
 
 
-async def test_auth_static_token_auth_required_fail(hass: HomeAssistantType) -> None:
+async def test_auth_static_token_auth_required_fail(hass: HomeAssistant) -> None:
     """Verify correct behaviour with a failed auth required call."""
     result = await _init_flow(hass)
 
@@ -286,7 +287,7 @@ async def test_auth_static_token_auth_required_fail(hass: HomeAssistantType) -> 
     assert result["reason"] == "auth_required_error"
 
 
-async def test_auth_static_token_success(hass: HomeAssistantType) -> None:
+async def test_auth_static_token_success(hass: HomeAssistant) -> None:
     """Test a successful flow with a static token."""
     result = await _init_flow(hass)
     assert result["step_id"] == "user"
@@ -311,23 +312,42 @@ async def test_auth_static_token_success(hass: HomeAssistantType) -> None:
     }
 
 
-async def test_auth_static_token_login_fail(hass: HomeAssistantType) -> None:
-    """Test correct behavior with a bad static token."""
+async def test_auth_static_token_login_connect_fail(hass: HomeAssistant) -> None:
+    """Test correct behavior with a static token that cannot connect."""
     result = await _init_flow(hass)
     assert result["step_id"] == "user"
 
     client = create_mock_client()
     client.async_is_auth_required = AsyncMock(return_value=TEST_AUTH_REQUIRED_RESP)
 
-    # Fail the login call.
-    client.async_login = AsyncMock(
-        return_value={"command": "authorize-login", "success": False, "tan": 0}
-    )
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
+        client.async_client_connect = AsyncMock(return_value=False)
+        result = await _configure_flow(
+            hass, result, user_input={CONF_CREATE_TOKEN: False, CONF_TOKEN: TEST_TOKEN}
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_auth_static_token_login_fail(hass: HomeAssistant) -> None:
+    """Test correct behavior with a static token that cannot login."""
+    result = await _init_flow(hass)
+    assert result["step_id"] == "user"
+
+    client = create_mock_client()
+    client.async_is_auth_required = AsyncMock(return_value=TEST_AUTH_REQUIRED_RESP)
 
     with patch(
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
     ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
+        client.async_login = AsyncMock(
+            return_value={"command": "authorize-login", "success": False, "tan": 0}
+        )
         result = await _configure_flow(
             hass, result, user_input={CONF_CREATE_TOKEN: False, CONF_TOKEN: TEST_TOKEN}
         )
@@ -336,7 +356,7 @@ async def test_auth_static_token_login_fail(hass: HomeAssistantType) -> None:
     assert result["errors"]["base"] == "invalid_access_token"
 
 
-async def test_auth_create_token_approval_declined(hass: HomeAssistantType) -> None:
+async def test_auth_create_token_approval_declined(hass: HomeAssistant) -> None:
     """Verify correct behaviour when a token request is declined."""
     result = await _init_flow(hass)
 
@@ -379,8 +399,69 @@ async def test_auth_create_token_approval_declined(hass: HomeAssistantType) -> N
         assert result["reason"] == "auth_new_token_not_granted_error"
 
 
+async def test_auth_create_token_approval_declined_task_canceled(
+    hass: HomeAssistant,
+) -> None:
+    """Verify correct behaviour when a token request is declined."""
+    result = await _init_flow(hass)
+
+    client = create_mock_client()
+    client.async_is_auth_required = AsyncMock(return_value=TEST_AUTH_REQUIRED_RESP)
+
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
+    assert result["step_id"] == "auth"
+
+    client.async_request_token = AsyncMock(return_value=TEST_REQUEST_TOKEN_FAIL)
+
+    class CanceledAwaitableMock(AsyncMock):
+        """A canceled awaitable mock."""
+
+        def __await__(self) -> None:
+            raise asyncio.CancelledError
+
+    mock_task = CanceledAwaitableMock()
+    task_coro: Awaitable | None = None
+
+    def create_task(arg: Any) -> CanceledAwaitableMock:
+        nonlocal task_coro
+        task_coro = arg
+        return mock_task
+
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ), patch(
+        "homeassistant.components.hyperion.config_flow.client.generate_random_auth_id",
+        return_value=TEST_AUTH_ID,
+    ), patch.object(
+        hass, "async_create_task", side_effect=create_task
+    ):
+        result = await _configure_flow(
+            hass, result, user_input={CONF_CREATE_TOKEN: True}
+        )
+        assert result["step_id"] == "create_token"
+
+        result = await _configure_flow(hass, result)
+        assert result["step_id"] == "create_token_external"
+
+        # Leave the task running, to ensure it is canceled.
+        mock_task.done = Mock(return_value=False)
+        mock_task.cancel = Mock()
+
+        result = await _configure_flow(hass, result)
+
+        # This await will advance to the next step.
+        assert task_coro
+        await task_coro
+
+        # Assert that cancel is called on the task.
+        assert mock_task.cancel.called
+
+
 async def test_auth_create_token_when_issued_token_fails(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> None:
     """Verify correct behaviour when a token is granted by fails to authenticate."""
     result = await _init_flow(hass)
@@ -425,7 +506,7 @@ async def test_auth_create_token_when_issued_token_fails(
         assert result["reason"] == "cannot_connect"
 
 
-async def test_auth_create_token_success(hass: HomeAssistantType) -> None:
+async def test_auth_create_token_success(hass: HomeAssistant) -> None:
     """Verify correct behaviour when a token is successfully created."""
     result = await _init_flow(hass)
 
@@ -470,7 +551,48 @@ async def test_auth_create_token_success(hass: HomeAssistantType) -> None:
         }
 
 
-async def test_ssdp_success(hass: HomeAssistantType) -> None:
+async def test_auth_create_token_success_but_login_fail(
+    hass: HomeAssistant,
+) -> None:
+    """Verify correct behaviour when a token is successfully created but the login fails."""
+    result = await _init_flow(hass)
+
+    client = create_mock_client()
+    client.async_is_auth_required = AsyncMock(return_value=TEST_AUTH_REQUIRED_RESP)
+
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
+        result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
+    assert result["step_id"] == "auth"
+
+    client.async_request_token = AsyncMock(return_value=TEST_REQUEST_TOKEN_SUCCESS)
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ), patch(
+        "homeassistant.components.hyperion.config_flow.client.generate_random_auth_id",
+        return_value=TEST_AUTH_ID,
+    ):
+        result = await _configure_flow(
+            hass, result, user_input={CONF_CREATE_TOKEN: True}
+        )
+        assert result["step_id"] == "create_token"
+
+        result = await _configure_flow(hass, result)
+        assert result["step_id"] == "create_token_external"
+
+        client.async_login = AsyncMock(
+            return_value={"command": "authorize-login", "success": False, "tan": 0}
+        )
+
+        # The flow will be automatically advanced by the auth token response.
+        result = await _configure_flow(hass, result)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "auth_new_token_not_work_error"
+
+
+async def test_ssdp_success(hass: HomeAssistant) -> None:
     """Check an SSDP flow."""
 
     client = create_mock_client()
@@ -495,7 +617,7 @@ async def test_ssdp_success(hass: HomeAssistantType) -> None:
     }
 
 
-async def test_ssdp_cannot_connect(hass: HomeAssistantType) -> None:
+async def test_ssdp_cannot_connect(hass: HomeAssistant) -> None:
     """Check an SSDP flow that cannot connect."""
 
     client = create_mock_client()
@@ -511,7 +633,7 @@ async def test_ssdp_cannot_connect(hass: HomeAssistantType) -> None:
     assert result["reason"] == "cannot_connect"
 
 
-async def test_ssdp_missing_serial(hass: HomeAssistantType) -> None:
+async def test_ssdp_missing_serial(hass: HomeAssistant) -> None:
     """Check an SSDP flow where no id is provided."""
 
     client = create_mock_client()
@@ -528,11 +650,11 @@ async def test_ssdp_missing_serial(hass: HomeAssistantType) -> None:
         assert result["reason"] == "no_id"
 
 
-async def test_ssdp_failure_bad_port_json(hass: HomeAssistantType) -> None:
+async def test_ssdp_failure_bad_port_json(hass: HomeAssistant) -> None:
     """Check an SSDP flow with bad json port."""
 
     client = create_mock_client()
-    bad_data: Dict[str, Any] = {**TEST_SSDP_SERVICE_INFO}
+    bad_data: dict[str, Any] = {**TEST_SSDP_SERVICE_INFO}
     bad_data["ports"]["jsonServer"] = "not_a_port"
 
     with patch(
@@ -546,7 +668,7 @@ async def test_ssdp_failure_bad_port_json(hass: HomeAssistantType) -> None:
         assert result["data"][CONF_PORT] == const.DEFAULT_PORT_JSON
 
 
-async def test_ssdp_failure_bad_port_ui(hass: HomeAssistantType) -> None:
+async def test_ssdp_failure_bad_port_ui(hass: HomeAssistant) -> None:
     """Check an SSDP flow with bad ui port."""
 
     client = create_mock_client()
@@ -581,7 +703,7 @@ async def test_ssdp_failure_bad_port_ui(hass: HomeAssistantType) -> None:
         }
 
 
-async def test_ssdp_abort_duplicates(hass: HomeAssistantType) -> None:
+async def test_ssdp_abort_duplicates(hass: HomeAssistant) -> None:
     """Check an SSDP flow where no id is provided."""
 
     client = create_mock_client()
@@ -601,8 +723,8 @@ async def test_ssdp_abort_duplicates(hass: HomeAssistantType) -> None:
     assert result_2["reason"] == "already_in_progress"
 
 
-async def test_options(hass: HomeAssistantType) -> None:
-    """Check an options flow."""
+async def test_options_priority(hass: HomeAssistant) -> None:
+    """Check an options flow priority option."""
 
     config_entry = add_test_config_entry(hass)
 
@@ -620,11 +742,12 @@ async def test_options(hass: HomeAssistantType) -> None:
 
         new_priority = 1
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_PRIORITY: new_priority}
+            result["flow_id"],
+            user_input={CONF_PRIORITY: new_priority},
         )
         await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["data"] == {CONF_PRIORITY: new_priority}
+        assert result["data"][CONF_PRIORITY] == new_priority
 
         # Turn the light on and ensure the new priority is used.
         client.async_send_set_color = AsyncMock(return_value=True)
@@ -638,7 +761,60 @@ async def test_options(hass: HomeAssistantType) -> None:
         assert client.async_send_set_color.call_args[1][CONF_PRIORITY] == new_priority
 
 
-async def test_reauth_success(hass: HomeAssistantType) -> None:
+async def test_options_effect_show_list(hass: HomeAssistant) -> None:
+    """Check an options flow effect show list."""
+
+    config_entry = add_test_config_entry(hass)
+
+    client = create_mock_client()
+    client.effects = [
+        {const.KEY_NAME: "effect1"},
+        {const.KEY_NAME: "effect2"},
+        {const.KEY_NAME: "effect3"},
+    ]
+
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_EFFECT_SHOW_LIST: ["effect1", "effect3"]},
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+        # effect1 and effect3 only, so effect2 & external sources are hidden.
+        assert result["data"][CONF_EFFECT_HIDE_LIST] == sorted(
+            ["effect2"] + const.KEY_COMPONENTID_EXTERNAL_SOURCES
+        )
+
+
+async def test_options_effect_hide_list_cannot_connect(hass: HomeAssistant) -> None:
+    """Check an options flow effect hide list with a failed connection."""
+
+    config_entry = add_test_config_entry(hass)
+    client = create_mock_client()
+
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        client.async_client_connect = AsyncMock(return_value=False)
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "cannot_connect"
+
+
+async def test_reauth_success(hass: HomeAssistant) -> None:
     """Check a reauth flow that succeeds."""
 
     config_data = {
@@ -672,7 +848,7 @@ async def test_reauth_success(hass: HomeAssistantType) -> None:
         assert CONF_TOKEN in config_entry.data
 
 
-async def test_reauth_cannot_connect(hass: HomeAssistantType) -> None:
+async def test_reauth_cannot_connect(hass: HomeAssistant) -> None:
     """Check a reauth flow that fails to connect."""
 
     config_data = {

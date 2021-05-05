@@ -31,15 +31,15 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass, entry):
     """Set up Flu Near You as config entry."""
-    hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id] = {}
+    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
 
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(websession)
 
-    latitude = config_entry.data.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config_entry.data.get(CONF_LONGITUDE, hass.config.longitude)
+    latitude = entry.data.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = entry.data.get(CONF_LONGITUDE, hass.config.longitude)
 
     async def async_update(api_category):
         """Get updated date from the API based on category."""
@@ -54,7 +54,7 @@ async def async_setup_entry(hass, config_entry):
 
     data_init_tasks = []
     for api_category in [CATEGORY_CDC_REPORT, CATEGORY_USER_REPORT]:
-        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id][
+        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
             api_category
         ] = DataUpdateCoordinator(
             hass,
@@ -67,25 +67,15 @@ async def async_setup_entry(hass, config_entry):
 
     await asyncio.gather(*data_init_tasks)
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass, entry):
     """Unload an Flu Near You config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][DATA_COORDINATOR].pop(config_entry.entry_id)
+        hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
 
     return unload_ok

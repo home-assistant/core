@@ -10,7 +10,9 @@ from homeassistant.components.websocket_api.const import ERR_UNKNOWN_ERROR, TYPE
 from .const import DEFAULT_DATA
 
 
-async def test_browse_media(hass, hass_ws_client, mock_plex_server, requests_mock):
+async def test_browse_media(
+    hass, hass_ws_client, mock_plex_server, requests_mock, library_movies_filtertypes
+):
     """Test getting Plex clients from plex.tv."""
     websocket_client = await hass_ws_client(hass)
 
@@ -86,6 +88,11 @@ async def test_browse_media(hass, hass_ws_client, mock_plex_server, requests_moc
     assert len(result["children"]) == len(mock_plex_server.library.onDeck())
 
     # Browse into a special folder (library)
+    requests_mock.get(
+        f"{mock_plex_server.url_in_use}/library/sections/1/all?includeMeta=1",
+        text=library_movies_filtertypes,
+    )
+
     msg_id += 1
     library_section_id = next(iter(mock_plex_server.library.sections())).key
     await websocket_client.send_json(
@@ -127,7 +134,7 @@ async def test_browse_media(hass, hass_ws_client, mock_plex_server, requests_moc
     assert msg["success"]
     result = msg["result"]
     assert result[ATTR_MEDIA_CONTENT_TYPE] == "library"
-    result_id = result[ATTR_MEDIA_CONTENT_ID]
+    result_id = int(result[ATTR_MEDIA_CONTENT_ID])
     assert len(result["children"]) == len(
         mock_plex_server.library.sectionByID(result_id).all()
     ) + len(SPECIAL_METHODS)

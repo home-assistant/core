@@ -74,6 +74,7 @@ async def test_webhook_post(
     arg_user_id: Any,
     arg_appli: Any,
     expected_code: int,
+    current_request_with_host,
 ) -> None:
     """Test webhook callback."""
     person0 = new_profile_config("person0", user_id)
@@ -107,6 +108,7 @@ async def test_webhook_head(
     hass: HomeAssistant,
     component_factory: ComponentFactory,
     aiohttp_client,
+    current_request_with_host,
 ) -> None:
     """Test head method on webhook view."""
     person0 = new_profile_config("person0", 0)
@@ -124,6 +126,7 @@ async def test_webhook_put(
     hass: HomeAssistant,
     component_factory: ComponentFactory,
     aiohttp_client,
+    current_request_with_host,
 ) -> None:
     """Test webhook callback."""
     person0 = new_profile_config("person0", 0)

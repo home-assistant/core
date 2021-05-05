@@ -5,7 +5,7 @@ import socket
 from gps3.agps3threaded import AGPS3mechanism
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -15,7 +15,6 @@ from homeassistant.const import (
     CONF_PORT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([GpsdSensor(hass, name, host, port)])
 
 
-class GpsdSensor(Entity):
+class GpsdSensor(SensorEntity):
     """Representation of a GPS receiver available via GPSD."""
 
     def __init__(self, hass, name, host, port):
@@ -94,7 +93,7 @@ class GpsdSensor(Entity):
         return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the GPS."""
         return {
             ATTR_LATITUDE: self.agps_thread.data_stream.lat,

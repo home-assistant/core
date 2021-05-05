@@ -197,6 +197,6 @@ class GenericZLLSensor(GenericHueSensor):
     """Representation of a Hue-brand, physical sensor."""
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return {"battery_level": self.sensor.battery}

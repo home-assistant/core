@@ -4,16 +4,18 @@ Helpers for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
+from __future__ import annotations
 
 import asyncio
 import binascii
+from collections.abc import Iterator
 from dataclasses import dataclass
 import functools
 import itertools
 import logging
 from random import uniform
 import re
-from typing import Any, Callable, Iterator, List, Optional, Tuple
+from typing import Any, Callable
 
 import voluptuous as vol
 import zigpy.exceptions
@@ -23,7 +25,13 @@ import zigpy.zdo.types as zdo_types
 
 from homeassistant.core import State, callback
 
-from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, DATA_ZHA, DATA_ZHA_GATEWAY
+from .const import (
+    CLUSTER_TYPE_IN,
+    CLUSTER_TYPE_OUT,
+    CUSTOM_CONFIGURATION,
+    DATA_ZHA,
+    DATA_ZHA_GATEWAY,
+)
 from .registries import BINDABLE_CLUSTERS
 from .typing import ZhaDeviceType, ZigpyClusterType
 
@@ -67,7 +75,7 @@ async def safe_read(
 
 async def get_matched_clusters(
     source_zha_device: ZhaDeviceType, target_zha_device: ZhaDeviceType
-) -> List[BindingPair]:
+) -> list[BindingPair]:
     """Get matched input/output cluster pairs for 2 devices."""
     source_clusters = source_zha_device.async_get_std_clusters()
     target_clusters = target_zha_device.async_get_std_clusters()
@@ -121,6 +129,28 @@ def async_is_bindable_target(source_zha_device, target_zha_device):
     return False
 
 
+@callback
+def async_get_zha_config_value(config_entry, section, config_key, default):
+    """Get the value for the specified configuration from the zha config entry."""
+    return (
+        config_entry.options.get(CUSTOM_CONFIGURATION, {})
+        .get(section, {})
+        .get(config_key, default)
+    )
+
+
+def async_input_cluster_exists(hass, cluster_id):
+    """Determine if a device containing the specified in cluster is paired."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_devices = zha_gateway.devices.values()
+    for zha_device in zha_devices:
+        clusters_by_endpoint = zha_device.async_get_clusters()
+        for clusters in clusters_by_endpoint.values():
+            if cluster_id in clusters[CLUSTER_TYPE_IN]:
+                return True
+    return False
+
+
 async def async_get_zha_device(hass, device_id):
     """Get a ZHA device for the given device registry id."""
     device_registry = await hass.helpers.device_registry.async_get_registry()
@@ -131,7 +161,7 @@ async def async_get_zha_device(hass, device_id):
     return zha_gateway.devices[ieee]
 
 
-def find_state_attributes(states: List[State], key: str) -> Iterator[Any]:
+def find_state_attributes(states: list[State], key: str) -> Iterator[Any]:
     """Find attributes with matching key from states."""
     for state in states:
         value = state.attributes.get(key)
@@ -150,9 +180,9 @@ def mean_tuple(*args):
 
 
 def reduce_attribute(
-    states: List[State],
+    states: list[State],
     key: str,
-    default: Optional[Any] = None,
+    default: Any | None = None,
     reduce: Callable[..., Any] = mean_int,
 ) -> Any:
     """Find the first attribute matching key from states.
@@ -280,7 +310,7 @@ QR_CODES = (
 )
 
 
-def qr_to_install_code(qr_code: str) -> Tuple[zigpy.types.EUI64, bytes]:
+def qr_to_install_code(qr_code: str) -> tuple[zigpy.types.EUI64, bytes]:
     """Try to parse the QR code.
 
     if successful, return a tuple of a EUI64 address and install code.

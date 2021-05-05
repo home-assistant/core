@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
             "existing_instance_updated": "Zaktualizowano istniej\u0105c\u0105 konfiguracj\u0119",
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
@@ -9,8 +10,8 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby po\u0142\u0105czy\u0142 si\u0119 z AdGuard Home przez dodatek Hass.io {addon}?",
-                "title": "AdGuard Home przez dodatek Hass.io"
+                "description": "Czy chcesz skonfigurowa\u0107 Home Assistanta, aby po\u0142\u0105czy\u0142 si\u0119 z AdGuard Home przez dodatek {addon}?",
+                "title": "AdGuard Home przez dodatek Home Assistant"
             },
             "user": {
                 "data": {

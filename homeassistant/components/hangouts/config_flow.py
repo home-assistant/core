@@ -36,7 +36,6 @@ class HangoutsFlowHandler(config_entries.ConfigFlow):
     """Config flow Google Hangouts."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     def __init__(self):
         """Initialize Google Hangouts config flow."""

@@ -39,7 +39,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, CoreState
 from homeassistant.exceptions import Unauthorized
-from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -120,16 +120,16 @@ async def test_config_options(hass):
     assert state_2 is not None
     assert state_3 is not None
 
-    assert STATUS_IDLE == state_1.state
+    assert state_1.state == STATUS_IDLE
     assert ATTR_ICON not in state_1.attributes
     assert ATTR_FRIENDLY_NAME not in state_1.attributes
 
-    assert STATUS_IDLE == state_2.state
-    assert "Hello World" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
-    assert "mdi:work" == state_2.attributes.get(ATTR_ICON)
-    assert "0:00:10" == state_2.attributes.get(ATTR_DURATION)
+    assert state_2.state == STATUS_IDLE
+    assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World"
+    assert state_2.attributes.get(ATTR_ICON) == "mdi:work"
+    assert state_2.attributes.get(ATTR_DURATION) == "0:00:10"
 
-    assert STATUS_IDLE == state_3.state
+    assert state_3.state == STATUS_IDLE
     assert str(cv.time_period(DEFAULT_DURATION)) == state_3.attributes.get(
         CONF_DURATION
     )
@@ -248,7 +248,7 @@ async def test_no_initial_state_and_no_restore_state(hass):
 async def test_config_reload(hass, hass_admin_user, hass_read_only_user):
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     _LOGGER.debug("ENTITIES @ start: %s", hass.states.async_entity_ids())
 
@@ -280,14 +280,14 @@ async def test_config_reload(hass, hass_admin_user, hass_read_only_user):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is None
 
-    assert STATUS_IDLE == state_1.state
+    assert state_1.state == STATUS_IDLE
     assert ATTR_ICON not in state_1.attributes
     assert ATTR_FRIENDLY_NAME not in state_1.attributes
 
-    assert STATUS_IDLE == state_2.state
-    assert "Hello World" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
-    assert "mdi:work" == state_2.attributes.get(ATTR_ICON)
-    assert "0:00:10" == state_2.attributes.get(ATTR_DURATION)
+    assert state_2.state == STATUS_IDLE
+    assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World"
+    assert state_2.attributes.get(ATTR_ICON) == "mdi:work"
+    assert state_2.attributes.get(ATTR_DURATION) == "0:00:10"
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -331,12 +331,12 @@ async def test_config_reload(hass, hass_admin_user, hass_read_only_user):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is not None
 
-    assert STATUS_IDLE == state_2.state
-    assert "Hello World reloaded" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
-    assert "mdi:work-reloaded" == state_2.attributes.get(ATTR_ICON)
-    assert "0:00:20" == state_2.attributes.get(ATTR_DURATION)
+    assert state_2.state == STATUS_IDLE
+    assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World reloaded"
+    assert state_2.attributes.get(ATTR_ICON) == "mdi:work-reloaded"
+    assert state_2.attributes.get(ATTR_DURATION) == "0:00:20"
 
-    assert STATUS_IDLE == state_3.state
+    assert state_3.state == STATUS_IDLE
     assert ATTR_ICON not in state_3.attributes
     assert ATTR_FRIENDLY_NAME not in state_3.attributes
 
@@ -498,7 +498,7 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
 
     timer_id = "from_storage"
     timer_entity_id = f"{DOMAIN}.{DOMAIN}_{timer_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(timer_entity_id)
     assert state is not None
@@ -525,7 +525,7 @@ async def test_update(hass, hass_ws_client, storage_setup):
 
     timer_id = "from_storage"
     timer_entity_id = f"{DOMAIN}.{DOMAIN}_{timer_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(timer_entity_id)
     assert state.attributes[ATTR_FRIENDLY_NAME] == "timer from storage"
@@ -554,7 +554,7 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
 
     timer_id = "new_timer"
     timer_entity_id = f"{DOMAIN}.{timer_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(timer_entity_id)
     assert state is None

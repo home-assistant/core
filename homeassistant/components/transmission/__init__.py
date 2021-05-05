@@ -1,7 +1,8 @@
 """Support for the Transmission BitTorrent client API."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import List
 
 import transmissionrpc
 from transmissionrpc.error import TransmissionError
@@ -126,8 +127,9 @@ async def async_unload_entry(hass, config_entry):
     if client.unsub_timer:
         client.unsub_timer()
 
-    for platform in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, platform)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
 
     if not hass.data[DOMAIN]:
         hass.services.async_remove(DOMAIN, SERVICE_ADD_TORRENT)
@@ -135,7 +137,7 @@ async def async_unload_entry(hass, config_entry):
         hass.services.async_remove(DOMAIN, SERVICE_START_TORRENT)
         hass.services.async_remove(DOMAIN, SERVICE_STOP_TORRENT)
 
-    return True
+    return unload_ok
 
 
 async def get_api(hass, entry):
@@ -171,12 +173,12 @@ class TransmissionClient:
         """Initialize the Transmission RPC API."""
         self.hass = hass
         self.config_entry = config_entry
-        self.tm_api = None  # type: transmissionrpc.Client
-        self._tm_data = None  # type: TransmissionData
+        self.tm_api: transmissionrpc.Client = None
+        self._tm_data: TransmissionData = None
         self.unsub_timer = None
 
     @property
-    def api(self) -> "TransmissionData":
+    def api(self) -> TransmissionData:
         """Return the TransmissionData object."""
         return self._tm_data
 
@@ -197,12 +199,7 @@ class TransmissionClient:
         self.add_options()
         self.set_scan_interval(self.config_entry.options[CONF_SCAN_INTERVAL])
 
-        for platform in PLATFORMS:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, platform
-                )
-            )
+        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
         def add_torrent(service):
             """Add new torrent to download."""
@@ -343,14 +340,14 @@ class TransmissionData:
         """Initialize the Transmission RPC API."""
         self.hass = hass
         self.config = config
-        self.data = None  # type: transmissionrpc.Session
-        self.available = True  # type: bool
-        self._all_torrents = []  # type: List[transmissionrpc.Torrent]
-        self._api = api  # type: transmissionrpc.Client
-        self._completed_torrents = []  # type: List[transmissionrpc.Torrent]
-        self._session = None  # type: transmissionrpc.Session
-        self._started_torrents = []  # type: List[transmissionrpc.Torrent]
-        self._torrents = []  # type: List[transmissionrpc.Torrent]
+        self.data: transmissionrpc.Session = None
+        self.available: bool = True
+        self._all_torrents: list[transmissionrpc.Torrent] = []
+        self._api: transmissionrpc.Client = api
+        self._completed_torrents: list[transmissionrpc.Torrent] = []
+        self._session: transmissionrpc.Session = None
+        self._started_torrents: list[transmissionrpc.Torrent] = []
+        self._torrents: list[transmissionrpc.Torrent] = []
 
     @property
     def host(self):
@@ -363,7 +360,7 @@ class TransmissionData:
         return f"{DATA_UPDATED}-{self.host}"
 
     @property
-    def torrents(self) -> List[transmissionrpc.Torrent]:
+    def torrents(self) -> list[transmissionrpc.Torrent]:
         """Get the list of torrents."""
         return self._torrents
 
@@ -397,42 +394,49 @@ class TransmissionData:
 
     def check_completed_torrent(self):
         """Get completed torrent functionality."""
+        old_completed_torrent_names = {
+            torrent.name for torrent in self._completed_torrents
+        }
+
         current_completed_torrents = [
             torrent for torrent in self._torrents if torrent.status == "seeding"
         ]
-        freshly_completed_torrents = set(current_completed_torrents).difference(
-            self._completed_torrents
-        )
-        self._completed_torrents = current_completed_torrents
 
-        for torrent in freshly_completed_torrents:
-            self.hass.bus.fire(
-                EVENT_DOWNLOADED_TORRENT, {"name": torrent.name, "id": torrent.id}
-            )
+        for torrent in current_completed_torrents:
+            if torrent.name not in old_completed_torrent_names:
+                self.hass.bus.fire(
+                    EVENT_DOWNLOADED_TORRENT, {"name": torrent.name, "id": torrent.id}
+                )
+
+        self._completed_torrents = current_completed_torrents
 
     def check_started_torrent(self):
         """Get started torrent functionality."""
+        old_started_torrent_names = {torrent.name for torrent in self._started_torrents}
+
         current_started_torrents = [
             torrent for torrent in self._torrents if torrent.status == "downloading"
         ]
-        freshly_started_torrents = set(current_started_torrents).difference(
-            self._started_torrents
-        )
-        self._started_torrents = current_started_torrents
 
-        for torrent in freshly_started_torrents:
-            self.hass.bus.fire(
-                EVENT_STARTED_TORRENT, {"name": torrent.name, "id": torrent.id}
-            )
+        for torrent in current_started_torrents:
+            if torrent.name not in old_started_torrent_names:
+                self.hass.bus.fire(
+                    EVENT_STARTED_TORRENT, {"name": torrent.name, "id": torrent.id}
+                )
+
+        self._started_torrents = current_started_torrents
 
     def check_removed_torrent(self):
         """Get removed torrent functionality."""
-        freshly_removed_torrents = set(self._all_torrents).difference(self._torrents)
-        self._all_torrents = self._torrents
-        for torrent in freshly_removed_torrents:
-            self.hass.bus.fire(
-                EVENT_REMOVED_TORRENT, {"name": torrent.name, "id": torrent.id}
-            )
+        current_torrent_names = {torrent.name for torrent in self._torrents}
+
+        for torrent in self._all_torrents:
+            if torrent.name not in current_torrent_names:
+                self.hass.bus.fire(
+                    EVENT_REMOVED_TORRENT, {"name": torrent.name, "id": torrent.id}
+                )
+
+        self._all_torrents = self._torrents.copy()
 
     def start_torrents(self):
         """Start all torrents."""

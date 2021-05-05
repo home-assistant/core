@@ -1,6 +1,6 @@
 """Support for monitoring a Smappee energy sensor."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_WATT_HOUR, POWER_WATT, VOLT
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
@@ -205,6 +205,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if service_location.has_voltage_values:
             for sensor_name, sensor in VOLTAGE_SENSORS.items():
                 if service_location.phase_type in sensor[5]:
+                    if (
+                        sensor_name.startswith("line_")
+                        and service_location.local_polling
+                    ):
+                        continue
                     entities.append(
                         SmappeeSensor(
                             smappee_base=smappee_base,
@@ -239,7 +244,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class SmappeeSensor(Entity):
+class SmappeeSensor(SensorEntity):
     """Implementation of a Smappee sensor."""
 
     def __init__(self, smappee_base, service_location, sensor, attributes):

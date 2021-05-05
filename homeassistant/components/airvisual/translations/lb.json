@@ -7,7 +7,8 @@
         "error": {
             "cannot_connect": "Feeler beim verbannen",
             "general_error": "Onerwaarte Feeler",
-            "invalid_api_key": "Ong\u00ebltegen API Schl\u00ebssel"
+            "invalid_api_key": "Ong\u00ebltegen API Schl\u00ebssel",
+            "location_not_found": "Standuert net fonnt."
         },
         "step": {
             "geography": {
@@ -18,6 +19,13 @@
                 },
                 "description": "Benotz Airvisual cloud API fir eng geografescher Lag z'iwwerwaachen.",
                 "title": "Geografie ariichten"
+            },
+            "geography_by_name": {
+                "data": {
+                    "city": "Stad",
+                    "country": "Land",
+                    "state": "Kanton"
+                }
             },
             "node_pro": {
                 "data": {

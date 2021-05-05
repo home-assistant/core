@@ -17,16 +17,9 @@ from simplipy.websocket import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import (
-    ATTR_CODE,
-    CONF_CODE,
-    CONF_TOKEN,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import ATTR_CODE, CONF_CODE, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import CoreState, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
@@ -71,7 +64,7 @@ EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 
 DEFAULT_SOCKET_MIN_RETRY = 15
 
-SUPPORTED_PLATFORMS = (
+PLATFORMS = (
     "alarm_control_panel",
     "binary_sensor",
     "lock",
@@ -115,21 +108,27 @@ SERVICE_SET_PIN_SCHEMA = SERVICE_BASE_SCHEMA.extend(
 SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
         vol.Optional(ATTR_ALARM_DURATION): vol.All(
-            cv.time_period, lambda value: value.seconds, vol.Range(min=30, max=480)
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(min=30, max=480),
         ),
         vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
         vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
         vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
-            cv.time_period, lambda value: value.seconds, vol.Range(min=30, max=255)
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(min=30, max=255),
         ),
         vol.Optional(ATTR_ENTRY_DELAY_HOME): vol.All(
-            cv.time_period, lambda value: value.seconds, vol.Range(max=255)
+            cv.time_period, lambda value: value.total_seconds(), vol.Range(max=255)
         ),
         vol.Optional(ATTR_EXIT_DELAY_AWAY): vol.All(
-            cv.time_period, lambda value: value.seconds, vol.Range(min=45, max=255)
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(min=45, max=255),
         ),
         vol.Optional(ATTR_EXIT_DELAY_HOME): vol.All(
-            cv.time_period, lambda value: value.seconds, vol.Range(max=255)
+            cv.time_period, lambda value: value.total_seconds(), vol.Range(max=255)
         ),
         vol.Optional(ATTR_LIGHT): cv.boolean,
         vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
@@ -176,7 +175,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass, config_entry):  # noqa: C901
     """Set up SimpliSafe as config entry."""
     hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = []
 
@@ -219,10 +218,7 @@ async def async_setup_entry(hass, config_entry):
     )
     await simplisafe.async_init()
 
-    for platform in SUPPORTED_PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     @callback
     def verify_system_exists(coro):
@@ -324,14 +320,7 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a SimpliSafe config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in SUPPORTED_PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
         for remove_listener in hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id):
@@ -459,17 +448,21 @@ class SimpliSafe:
 
     async def async_init(self):
         """Initialize the data class."""
-        asyncio.create_task(self.websocket.async_connect())
+        # 2021-04-29: Disabling connection to the websocket due to the SimpliSafe cloud
+        # removing it (and not providing a clear alternative).
+        # asyncio.create_task(self.websocket.async_connect())
 
-        async def async_websocket_disconnect(_):
-            """Define an event handler to disconnect from the websocket."""
-            await self.websocket.async_disconnect()
+        # async def async_websocket_disconnect(_):
+        #     """Define an event handler to disconnect from the websocket."""
+        #     await self.websocket.async_disconnect()
 
-        self._hass.data[DOMAIN][DATA_LISTENER][self.config_entry.entry_id].append(
-            self._hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, async_websocket_disconnect
-            )
-        )
+        # 2021-04-29: Disabling disconnection from the websocket due to the SimpliSafe
+        # cloud removing it (and not providing a clear alternative).
+        # self._hass.data[DOMAIN][DATA_LISTENER][self.config_entry.entry_id].append(
+        #     self._hass.bus.async_listen_once(
+        #         EVENT_HOMEASSISTANT_STOP, async_websocket_disconnect
+        #     )
+        # )
 
         self.systems = await self._api.get_systems()
         for system in self.systems.values():
@@ -514,27 +507,9 @@ class SimpliSafe:
         for result in results:
             if isinstance(result, InvalidCredentialsError):
                 if self._emergency_refresh_token_used:
-                    matching_flows = [
-                        flow
-                        for flow in self._hass.config_entries.flow.async_progress()
-                        if flow["context"].get("source") == SOURCE_REAUTH
-                        and flow["context"].get("unique_id")
-                        == self.config_entry.unique_id
-                    ]
-
-                    if not matching_flows:
-                        self._hass.async_create_task(
-                            self._hass.config_entries.flow.async_init(
-                                DOMAIN,
-                                context={
-                                    "source": SOURCE_REAUTH,
-                                    "unique_id": self.config_entry.unique_id,
-                                },
-                                data=self.config_entry.data,
-                            )
-                        )
-
-                    raise UpdateFailed("Update failed with stored refresh token")
+                    raise ConfigEntryAuthFailed(
+                        "Update failed with stored refresh token"
+                    )
 
                 LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
                 self._emergency_refresh_token_used = True
@@ -634,7 +609,7 @@ class SimpliSafeEntity(CoordinatorEntity):
         return self._device_info
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attrs
 

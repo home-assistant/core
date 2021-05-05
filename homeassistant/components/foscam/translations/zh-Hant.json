@@ -1,11 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "invalid_response": "\u4f86\u81ea\u88dd\u7f6e\u56de\u61c9\u7121\u6548",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
@@ -14,6 +15,7 @@
                     "host": "\u4e3b\u6a5f\u7aef",
                     "password": "\u5bc6\u78bc",
                     "port": "\u901a\u8a0a\u57e0",
+                    "rtsp_port": "RTSP \u57e0",
                     "stream": "\u4e32\u6d41",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31"
                 }

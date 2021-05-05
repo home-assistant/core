@@ -2,38 +2,37 @@
 
 import asyncio
 
-from roombapy import Roomba
+from roombapy import RoombaFactory
 from roombapy.discovery import RoombaDiscovery
 from roombapy.getpassword import RoombaPassword
 import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import callback
 
 from . import CannotConnect, async_connect_or_timeout, async_disconnect_or_timeout
 from .const import (
     CONF_BLID,
     CONF_CONTINUOUS,
-    CONF_DELAY,
-    CONF_NAME,
     DEFAULT_CONTINUOUS,
     DEFAULT_DELAY,
+    DOMAIN,
     ROOMBA_SESSION,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 ROOMBA_DISCOVERY_LOCK = "roomba_discovery_lock"
+ALL_ATTEMPTS = 2
+HOST_ATTEMPTS = 6
+ROOMBA_WAKE_TIME = 6
 
 DEFAULT_OPTIONS = {CONF_CONTINUOUS: DEFAULT_CONTINUOUS, CONF_DELAY: DEFAULT_DELAY}
 
 MAX_NUM_DEVICES_TO_DISCOVER = 25
 
 AUTH_HELP_URL_KEY = "auth_help_url"
-AUTH_HELP_URL_VALUE = (
-    "https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials"
-)
+AUTH_HELP_URL_VALUE = "https://www.home-assistant.io/integrations/roomba/#manually-retrieving-your-credentials"
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -41,15 +40,17 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    roomba = Roomba(
+    roomba = RoombaFactory.create_roomba(
         address=data[CONF_HOST],
         blid=data[CONF_BLID],
         password=data[CONF_PASSWORD],
-        continuous=data[CONF_CONTINUOUS],
+        continuous=False,
         delay=data[CONF_DELAY],
     )
 
     info = await async_connect_or_timeout(hass, roomba)
+    if info:
+        await async_disconnect_or_timeout(hass, roomba)
 
     return {
         ROOMBA_SESSION: info[ROOMBA_SESSION],
@@ -62,7 +63,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Roomba configuration flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the roomba flow."""
@@ -77,23 +77,31 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_dhcp(self, dhcp_discovery):
+    async def async_step_dhcp(self, discovery_info):
         """Handle dhcp discovery."""
-        if self._async_host_already_configured(dhcp_discovery[IP_ADDRESS]):
+        if self._async_host_already_configured(discovery_info[IP_ADDRESS]):
             return self.async_abort(reason="already_configured")
 
-        if not dhcp_discovery[HOSTNAME].startswith("iRobot-"):
+        if not discovery_info[HOSTNAME].startswith(("irobot-", "roomba-")):
             return self.async_abort(reason="not_irobot_device")
 
-        blid = _async_blid_from_hostname(dhcp_discovery[HOSTNAME])
-        await self.async_set_unique_id(blid)
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: dhcp_discovery[IP_ADDRESS]}
-        )
+        self.host = discovery_info[IP_ADDRESS]
+        self.blid = _async_blid_from_hostname(discovery_info[HOSTNAME])
+        await self.async_set_unique_id(self.blid)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
 
-        self.host = dhcp_discovery[IP_ADDRESS]
-        self.blid = blid
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        # Because the hostname is so long some sources may
+        # truncate the hostname since it will be longer than
+        # the valid allowed length. If we already have a flow
+        # going for a longer hostname we abort so the user
+        # does not see two flows if discovery fails.
+        for progress in self._async_in_progress():
+            flow_unique_id = progress["context"]["unique_id"]
+            if flow_unique_id.startswith(self.blid):
+                return self.async_abort(reason="short_blid")
+            if self.blid.startswith(flow_unique_id):
+                self.hass.config_entries.flow.async_abort(progress["flow_id"])
+
         self.context["title_placeholders"] = {"host": self.host, "name": self.blid}
         return await self.async_step_user()
 
@@ -121,10 +129,8 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_start_link()
 
         already_configured = self._async_current_ids(False)
-        discovery = _async_get_roomba_discovery()
 
-        async with self.hass.data.setdefault(ROOMBA_DISCOVERY_LOCK, asyncio.Lock()):
-            devices = await self.hass.async_add_executor_job(discovery.get_all)
+        devices = await _async_discover_roombas(self.hass, self.host)
 
         if devices:
             # Find already configured hosts
@@ -133,14 +139,14 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 for device in devices
                 if device.blid not in already_configured
             }
-            if self.host and self.host in self.discovered_robots:
-                # From discovery
-                # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-                self.context["title_placeholders"] = {
-                    "host": self.host,
-                    "name": self.discovered_robots[self.host].robot_name,
-                }
-                return await self._async_start_link()
+
+        if self.host and self.host in self.discovered_robots:
+            # From discovery
+            self.context["title_placeholders"] = {
+                "host": self.host,
+                "name": self.discovered_robots[self.host].robot_name,
+            }
+            return await self._async_start_link()
 
         if not self.discovered_robots:
             return await self.async_step_manual()
@@ -184,7 +190,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
 
         self.host = user_input[CONF_HOST]
-        self.blid = user_input[CONF_BLID]
+        self.blid = user_input[CONF_BLID].upper()
         await self.async_set_unique_id(self.blid, raise_on_progress=False)
         self._abort_if_unique_id_configured()
         return await self.async_step_link()
@@ -201,11 +207,11 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders={CONF_NAME: self.name or self.blid},
             )
 
+        roomba_pw = RoombaPassword(self.host)
+
         try:
-            password = await self.hass.async_add_executor_job(
-                RoombaPassword(self.host).get_password
-            )
-        except ConnectionRefusedError:
+            password = await self.hass.async_add_executor_job(roomba_pw.get_password)
+        except (OSError, ConnectionRefusedError):
             return await self.async_step_link_manual()
 
         if not password:
@@ -224,7 +230,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 return self.async_abort(reason="cannot_connect")
 
-            await async_disconnect_or_timeout(self.hass, info[ROOMBA_SESSION])
             self.name = info[CONF_NAME]
 
         return self.async_create_entry(title=self.name, data=config)
@@ -246,7 +251,6 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors = {"base": "cannot_connect"}
 
             if not errors:
-                await async_disconnect_or_timeout(self.hass, info[ROOMBA_SESSION])
                 return self.async_create_entry(title=info[CONF_NAME], data=config)
 
         return self.async_show_form(
@@ -309,4 +313,40 @@ def _async_get_roomba_discovery():
 @callback
 def _async_blid_from_hostname(hostname):
     """Extract the blid from the hostname."""
-    return hostname.split("-")[1].split(".")[0]
+    return hostname.split("-")[1].split(".")[0].upper()
+
+
+async def _async_discover_roombas(hass, host):
+    discovered_hosts = set()
+    devices = []
+    discover_lock = hass.data.setdefault(ROOMBA_DISCOVERY_LOCK, asyncio.Lock())
+    discover_attempts = HOST_ATTEMPTS if host else ALL_ATTEMPTS
+
+    for attempt in range(discover_attempts + 1):
+        async with discover_lock:
+            discovery = _async_get_roomba_discovery()
+            try:
+                if host:
+                    device = await hass.async_add_executor_job(discovery.get, host)
+                    discovered = [device] if device else []
+                else:
+                    discovered = await hass.async_add_executor_job(discovery.get_all)
+            except OSError:
+                # Socket temporarily unavailable
+                await asyncio.sleep(ROOMBA_WAKE_TIME * attempt)
+                continue
+            else:
+                for device in discovered:
+                    if device.ip in discovered_hosts:
+                        continue
+                    discovered_hosts.add(device.ip)
+                    devices.append(device)
+            finally:
+                discovery.server_socket.close()
+
+        if host and host in discovered_hosts:
+            return devices
+
+        await asyncio.sleep(ROOMBA_WAKE_TIME)
+
+    return devices

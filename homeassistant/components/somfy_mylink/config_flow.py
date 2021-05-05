@@ -19,9 +19,9 @@ from .const import (
     CONF_TARGET_ID,
     CONF_TARGET_NAME,
     DEFAULT_PORT,
+    DOMAIN,
     MYLINK_STATUS,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +51,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Somfy MyLink."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_ASSUMED
 
     def __init__(self):
         """Initialize the somfy_mylink flow."""
@@ -59,20 +58,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.mac = None
         self.ip_address = None
 
-    async def async_step_dhcp(self, dhcp_discovery):
+    async def async_step_dhcp(self, discovery_info):
         """Handle dhcp discovery."""
-        if self._host_already_configured(dhcp_discovery[IP_ADDRESS]):
+        if self._host_already_configured(discovery_info[IP_ADDRESS]):
             return self.async_abort(reason="already_configured")
 
-        formatted_mac = format_mac(dhcp_discovery[MAC_ADDRESS])
+        formatted_mac = format_mac(discovery_info[MAC_ADDRESS])
         await self.async_set_unique_id(format_mac(formatted_mac))
         self._abort_if_unique_id_configured(
-            updates={CONF_HOST: dhcp_discovery[IP_ADDRESS]}
+            updates={CONF_HOST: discovery_info[IP_ADDRESS]}
         )
-        self.host = dhcp_discovery[HOSTNAME]
+        self.host = discovery_info[HOSTNAME]
         self.mac = formatted_mac
-        self.ip_address = dhcp_discovery[IP_ADDRESS]
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.ip_address = discovery_info[IP_ADDRESS]
         self.context["title_placeholders"] = {"ip": self.ip_address, "mac": self.mac}
         return await self.async_step_user()
 

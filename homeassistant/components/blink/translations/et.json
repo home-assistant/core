@@ -14,7 +14,7 @@
                 "data": {
                     "2fa": "2FA kood"
                 },
-                "description": "Sisesta E-posti aadressile saadetud PIN-kood",
+                "description": "Sisesta e-posti aadressile saadetud PIN kood",
                 "title": "Kaheastmeline tuvastamine (2FA)"
             },
             "user": {

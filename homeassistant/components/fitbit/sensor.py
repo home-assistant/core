@@ -10,7 +10,7 @@ from oauthlib.oauth2.rfc6749.errors import MismatchingStateError, MissingTokenEr
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_CLIENT_ID,
@@ -25,7 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.network import get_url
 from homeassistant.util.json import load_json, save_json
@@ -403,7 +402,7 @@ class FitbitAuthCallbackView(HomeAssistantView):
         return html_response
 
 
-class FitbitSensor(Entity):
+class FitbitSensor(SensorEntity):
     """Implementation of a Fitbit sensor."""
 
     def __init__(
@@ -457,7 +456,7 @@ class FitbitSensor(Entity):
         return f"mdi:{FITBIT_RESOURCES_LIST[self.resource_type][2]}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
 

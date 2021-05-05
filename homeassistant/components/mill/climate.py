@@ -107,7 +107,7 @@ class MillHeater(ClimateEntity):
         return self._heater.name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         res = {
             "open_window": self._heater.open_window,

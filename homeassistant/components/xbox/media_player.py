@@ -1,6 +1,7 @@
 """Xbox Media Player Support."""
+from __future__ import annotations
+
 import re
-from typing import List, Optional
 
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.catalog.models import Image
@@ -231,7 +232,7 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         }
 
 
-def _find_media_image(images=List[Image]) -> Optional[Image]:
+def _find_media_image(images: list[Image]) -> Image | None:
     purpose_order = ["FeaturePromotionalSquareArt", "Tile", "Logo", "BoxArt"]
     for purpose in purpose_order:
         for image in images:

@@ -23,7 +23,7 @@
                     "host": "Host"
                 },
                 "description": "Enter the IP address of the device.",
-                "title": "Automaticlly connect to the bridge"
+                "title": "Automatically connect to the bridge"
             }
         }
     },

@@ -2,6 +2,8 @@
     "system_health": {
         "info": {
             "alexa_enabled": "Alexa enged\u00e9lyezve",
+            "can_reach_cert_server": "Tan\u00fas\u00edtv\u00e1nykiszolg\u00e1l\u00f3 el\u00e9r\u00e9se",
+            "can_reach_cloud": "Home Assistant Cloud el\u00e9r\u00e9se",
             "can_reach_cloud_auth": "Hiteles\u00edt\u00e9si kiszolg\u00e1l\u00f3 el\u00e9r\u00e9se",
             "google_enabled": "Google enged\u00e9lyezve",
             "logged_in": "Bejelentkezve",

@@ -1,7 +1,9 @@
 """Tests for the Elgato Key Light light platform."""
 from unittest.mock import patch
 
-from homeassistant.components.elgato.light import ElgatoError
+from elgato import ElgatoError
+
+from homeassistant.components.elgato.const import DOMAIN, SERVICE_IDENTIFY
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -15,6 +17,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import mock_coro
 from tests.components.elgato import init_integration
@@ -27,7 +30,7 @@ async def test_light_state(
     """Test the creation and values of the Elgato Key Lights."""
     await init_integration(hass, aioclient_mock)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     # First segment of the strip
     state = hass.states.get("light.frenck")
@@ -91,17 +94,63 @@ async def test_light_unavailable(
     with patch(
         "homeassistant.components.elgato.light.Elgato.light",
         side_effect=ElgatoError,
+    ), patch(
+        "homeassistant.components.elgato.light.Elgato.state",
+        side_effect=ElgatoError,
     ):
-        with patch(
-            "homeassistant.components.elgato.light.Elgato.state",
-            side_effect=ElgatoError,
-        ):
-            await hass.services.async_call(
-                LIGHT_DOMAIN,
-                SERVICE_TURN_OFF,
-                {ATTR_ENTITY_ID: "light.frenck"},
-                blocking=True,
-            )
-            await hass.async_block_till_done()
-            state = hass.states.get("light.frenck")
-            assert state.state == STATE_UNAVAILABLE
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "light.frenck"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get("light.frenck")
+        assert state.state == STATE_UNAVAILABLE
+
+
+async def test_light_identify(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test identifying an Elgato Light."""
+    await init_integration(hass, aioclient_mock)
+
+    with patch(
+        "homeassistant.components.elgato.light.Elgato.identify",
+        return_value=mock_coro(),
+    ) as mock_identify:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_IDENTIFY,
+            {
+                ATTR_ENTITY_ID: "light.frenck",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        assert len(mock_identify.mock_calls) == 1
+        mock_identify.assert_called_with()
+
+
+async def test_light_identify_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
+) -> None:
+    """Test error occurred during identifying an Elgato Light."""
+    await init_integration(hass, aioclient_mock)
+
+    with patch(
+        "homeassistant.components.elgato.light.Elgato.identify",
+        side_effect=ElgatoError,
+    ) as mock_identify:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_IDENTIFY,
+            {
+                ATTR_ENTITY_ID: "light.frenck",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        assert len(mock_identify.mock_calls) == 1
+
+    assert "An error occurred while identifying the Elgato Light" in caplog.text

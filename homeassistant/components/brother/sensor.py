@@ -1,52 +1,43 @@
 """Support for the Brother service."""
+from __future__ import annotations
+
+from typing import Any
+
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import BrotherDataUpdateCoordinator
 from .const import (
-    ATTR_BLACK_DRUM_COUNTER,
-    ATTR_BLACK_DRUM_REMAINING_LIFE,
-    ATTR_BLACK_DRUM_REMAINING_PAGES,
-    ATTR_CYAN_DRUM_COUNTER,
-    ATTR_CYAN_DRUM_REMAINING_LIFE,
-    ATTR_CYAN_DRUM_REMAINING_PAGES,
-    ATTR_DRUM_COUNTER,
-    ATTR_DRUM_REMAINING_LIFE,
-    ATTR_DRUM_REMAINING_PAGES,
-    ATTR_ENABLED,
-    ATTR_ICON,
-    ATTR_LABEL,
-    ATTR_MAGENTA_DRUM_COUNTER,
-    ATTR_MAGENTA_DRUM_REMAINING_LIFE,
-    ATTR_MAGENTA_DRUM_REMAINING_PAGES,
+    ATTR_COUNTER,
     ATTR_MANUFACTURER,
-    ATTR_UNIT,
+    ATTR_REMAINING_PAGES,
     ATTR_UPTIME,
-    ATTR_YELLOW_DRUM_COUNTER,
-    ATTR_YELLOW_DRUM_REMAINING_LIFE,
-    ATTR_YELLOW_DRUM_REMAINING_PAGES,
+    ATTRS_MAP,
+    DATA_CONFIG_ENTRY,
     DOMAIN,
     SENSOR_TYPES,
 )
 
-ATTR_COUNTER = "counter"
-ATTR_FIRMWARE = "firmware"
-ATTR_MODEL = "model"
-ATTR_REMAINING_PAGES = "remaining_pages"
-ATTR_SERIAL = "serial"
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Add Brother entities from a config_entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
 
     sensors = []
 
-    device_info = {
-        "identifiers": {(DOMAIN, coordinator.data[ATTR_SERIAL])},
-        "name": coordinator.data[ATTR_MODEL],
+    device_info: DeviceInfo = {
+        "identifiers": {(DOMAIN, coordinator.data.serial)},
+        "name": coordinator.data.model,
         "manufacturer": ATTR_MANUFACTURER,
-        "model": coordinator.data[ATTR_MODEL],
-        "sw_version": coordinator.data.get(ATTR_FIRMWARE),
+        "model": coordinator.data.model,
+        "sw_version": getattr(coordinator.data, "firmware", None),
     }
 
     for sensor in SENSOR_TYPES:
@@ -55,85 +46,75 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors, False)
 
 
-class BrotherPrinterSensor(CoordinatorEntity):
+class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     """Define an Brother Printer sensor."""
 
-    def __init__(self, coordinator, kind, device_info):
+    def __init__(
+        self,
+        coordinator: BrotherDataUpdateCoordinator,
+        kind: str,
+        device_info: DeviceInfo,
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._name = f"{coordinator.data[ATTR_MODEL]} {SENSOR_TYPES[kind][ATTR_LABEL]}"
-        self._unique_id = f"{coordinator.data[ATTR_SERIAL].lower()}_{kind}"
+        self._description = SENSOR_TYPES[kind]
+        self._name = f"{coordinator.data.model} {self._description['label']}"
+        self._unique_id = f"{coordinator.data.serial.lower()}_{kind}"
         self._device_info = device_info
         self.kind = kind
-        self._attrs = {}
+        self._attrs: dict[str, Any] = {}
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name."""
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> Any:
         """Return the state."""
         if self.kind == ATTR_UPTIME:
-            return self.coordinator.data.get(self.kind).isoformat()
-        return self.coordinator.data.get(self.kind)
+            return getattr(self.coordinator.data, self.kind).isoformat()
+        return getattr(self.coordinator.data, self.kind)
 
     @property
-    def device_class(self):
+    def device_class(self) -> str | None:
         """Return the class of this sensor."""
         if self.kind == ATTR_UPTIME:
             return DEVICE_CLASS_TIMESTAMP
         return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        remaining_pages = None
-        drum_counter = None
-        if self.kind == ATTR_DRUM_REMAINING_LIFE:
-            remaining_pages = ATTR_DRUM_REMAINING_PAGES
-            drum_counter = ATTR_DRUM_COUNTER
-        elif self.kind == ATTR_BLACK_DRUM_REMAINING_LIFE:
-            remaining_pages = ATTR_BLACK_DRUM_REMAINING_PAGES
-            drum_counter = ATTR_BLACK_DRUM_COUNTER
-        elif self.kind == ATTR_CYAN_DRUM_REMAINING_LIFE:
-            remaining_pages = ATTR_CYAN_DRUM_REMAINING_PAGES
-            drum_counter = ATTR_CYAN_DRUM_COUNTER
-        elif self.kind == ATTR_MAGENTA_DRUM_REMAINING_LIFE:
-            remaining_pages = ATTR_MAGENTA_DRUM_REMAINING_PAGES
-            drum_counter = ATTR_MAGENTA_DRUM_COUNTER
-        elif self.kind == ATTR_YELLOW_DRUM_REMAINING_LIFE:
-            remaining_pages = ATTR_YELLOW_DRUM_REMAINING_PAGES
-            drum_counter = ATTR_YELLOW_DRUM_COUNTER
+        remaining_pages, drum_counter = ATTRS_MAP.get(self.kind, (None, None))
         if remaining_pages and drum_counter:
-            self._attrs[ATTR_REMAINING_PAGES] = self.coordinator.data.get(
-                remaining_pages
+            self._attrs[ATTR_REMAINING_PAGES] = getattr(
+                self.coordinator.data, remaining_pages
             )
-            self._attrs[ATTR_COUNTER] = self.coordinator.data.get(drum_counter)
+            self._attrs[ATTR_COUNTER] = getattr(self.coordinator.data, drum_counter)
         return self._attrs
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon."""
-        return SENSOR_TYPES[self.kind][ATTR_ICON]
+        return self._description["icon"]
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique_id for this entity."""
         return self._unique_id
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
-        return SENSOR_TYPES[self.kind][ATTR_UNIT]
+        return self._description["unit"]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return self._device_info
 
     @property
-    def entity_registry_enabled_default(self):
+    def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return SENSOR_TYPES[self.kind][ATTR_ENABLED]
+        return self._description["enabled"]

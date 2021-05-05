@@ -6,6 +6,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.mqtt import DOMAIN, debug_info
 from homeassistant.components.mqtt.device_trigger import async_attach_trigger
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -16,7 +17,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -285,6 +286,81 @@ async def test_if_fires_on_mqtt_message(hass, device_reg, calls, mqtt_mock):
 
     # Fake long press.
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "long_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1].data["some"] == "long_press"
+
+
+async def test_if_fires_on_mqtt_message_template(hass, device_reg, calls, mqtt_mock):
+    """Test triggers firing."""
+    data1 = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        "  \"payload\": \"{{ 'foo_press'|regex_replace('foo', 'short') }}\","
+        '  "topic": "foobar/triggers/button{{ sqrt(16)|round }}",'
+        '  "type": "button_short_press",'
+        '  "subtype": "button_1",'
+        '  "value_template": "{{ value_json.button }}"}'
+    )
+    data2 = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        "  \"payload\": \"{{ 'foo_press'|regex_replace('foo', 'long') }}\","
+        '  "topic": "foobar/triggers/button{{ sqrt(16)|round }}",'
+        '  "type": "button_long_press",'
+        '  "subtype": "button_2",'
+        '  "value_template": "{{ value_json.button }}"}'
+    )
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data2)
+    await hass.async_block_till_done()
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "discovery_id": "bla1",
+                        "type": "button_short_press",
+                        "subtype": "button_1",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ("short_press")},
+                    },
+                },
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "discovery_id": "bla2",
+                        "type": "button_1",
+                        "subtype": "button_long_press",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ("long_press")},
+                    },
+                },
+            ]
+        },
+    )
+
+    # Fake short press.
+    async_fire_mqtt_message(hass, "foobar/triggers/button4", '{"button":"short_press"}')
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "short_press"
+
+    # Fake long press.
+    async_fire_mqtt_message(hass, "foobar/triggers/button4", '{"button":"long_press"}')
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "long_press"
@@ -761,7 +837,7 @@ async def test_attach_remove_late2(hass, device_reg, mqtt_mock):
 
 async def test_entity_device_info_with_connection(hass, mqtt_mock):
     """Test MQTT device registry integration."""
-    registry = await hass.helpers.device_registry.async_get_registry()
+    registry = dr.async_get(hass)
 
     data = json.dumps(
         {
@@ -770,7 +846,7 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock):
             "type": "foo",
             "subtype": "bar",
             "device": {
-                "connections": [["mac", "02:5b:26:a8:dc:12"]],
+                "connections": [[dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12"]],
                 "manufacturer": "Whatever",
                 "name": "Beer",
                 "model": "Glass",
@@ -781,9 +857,11 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device(set(), {("mac", "02:5b:26:a8:dc:12")})
+    device = registry.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12")}
+    )
     assert device is not None
-    assert device.connections == {("mac", "02:5b:26:a8:dc:12")}
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12")}
     assert device.manufacturer == "Whatever"
     assert device.name == "Beer"
     assert device.model == "Glass"
@@ -792,7 +870,7 @@ async def test_entity_device_info_with_connection(hass, mqtt_mock):
 
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):
     """Test MQTT device registry integration."""
-    registry = await hass.helpers.device_registry.async_get_registry()
+    registry = dr.async_get(hass)
 
     data = json.dumps(
         {
@@ -823,7 +901,7 @@ async def test_entity_device_info_with_identifier(hass, mqtt_mock):
 
 async def test_entity_device_info_update(hass, mqtt_mock):
     """Test device registry update."""
-    registry = await hass.helpers.device_registry.async_get_registry()
+    registry = dr.async_get(hass)
 
     config = {
         "automation_type": "trigger",
@@ -832,7 +910,7 @@ async def test_entity_device_info_update(hass, mqtt_mock):
         "subtype": "bar",
         "device": {
             "identifiers": ["helloworld"],
-            "connections": [["mac", "02:5b:26:a8:dc:12"]],
+            "connections": [[dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12"]],
             "manufacturer": "Whatever",
             "name": "Beer",
             "model": "Glass",
@@ -1084,7 +1162,7 @@ async def test_trigger_debug_info(hass, mqtt_mock):
 
     This is a test helper for MQTT debug_info.
     """
-    registry = await hass.helpers.device_registry.async_get_registry()
+    registry = dr.async_get(hass)
 
     config = {
         "platform": "mqtt",
@@ -1093,7 +1171,7 @@ async def test_trigger_debug_info(hass, mqtt_mock):
         "type": "foo",
         "subtype": "bar",
         "device": {
-            "connections": [["mac", "02:5b:26:a8:dc:12"]],
+            "connections": [[dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12"]],
             "manufacturer": "Whatever",
             "name": "Beer",
             "model": "Glass",
@@ -1104,7 +1182,9 @@ async def test_trigger_debug_info(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device(set(), {("mac", "02:5b:26:a8:dc:12")})
+    device = registry.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12")}
+    )
     assert device is not None
 
     debug_info_data = await debug_info.info_for_device(hass, device.id)

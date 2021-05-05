@@ -39,7 +39,6 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
     """Handle a Axis config flow."""
 
     VERSION = 3
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     @staticmethod
     @callback
@@ -138,7 +137,6 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 
     async def async_step_reauth(self, device_config: dict):
         """Trigger a reauthentication flow."""
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_NAME: device_config[CONF_NAME],
             CONF_HOST: device_config[CONF_HOST],
@@ -158,7 +156,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
         return await self._process_discovered_device(
             {
                 CONF_HOST: discovery_info[IP_ADDRESS],
-                CONF_MAC: format_mac(discovery_info.get(MAC_ADDRESS)),
+                CONF_MAC: format_mac(discovery_info.get(MAC_ADDRESS, "")),
                 CONF_NAME: discovery_info.get(HOSTNAME),
                 CONF_PORT: DEFAULT_PORT,
             }
@@ -204,7 +202,6 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             }
         )
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_NAME: device[CONF_NAME],
             CONF_HOST: device[CONF_HOST],

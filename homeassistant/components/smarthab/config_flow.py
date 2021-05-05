@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-# pylint: disable=unused-import
 from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,7 +16,6 @@ class SmartHabConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """SmartHab config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""

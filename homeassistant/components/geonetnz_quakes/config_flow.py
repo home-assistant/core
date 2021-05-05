@@ -12,7 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     CONF_MINIMUM_MAGNITUDE,
     CONF_MMI,
     DEFAULT_MINIMUM_MAGNITUDE,
@@ -36,8 +36,6 @@ _LOGGER = logging.getLogger(__name__)
 
 class GeonetnzQuakesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a GeoNet NZ Quakes config flow."""
-
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def _show_form(self, errors=None):
         """Show the form to the user."""
@@ -66,7 +64,7 @@ class GeonetnzQuakesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        user_input[CONF_SCAN_INTERVAL] = scan_interval.seconds
+        user_input[CONF_SCAN_INTERVAL] = scan_interval.total_seconds()
 
         minimum_magnitude = user_input.get(
             CONF_MINIMUM_MAGNITUDE, DEFAULT_MINIMUM_MAGNITUDE

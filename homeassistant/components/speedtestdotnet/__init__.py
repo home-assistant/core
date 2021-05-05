@@ -29,22 +29,29 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_SERVER_ID): cv.positive_int,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=timedelta(minutes=DEFAULT_SCAN_INTERVAL)
-                ): cv.positive_time_period,
-                vol.Optional(CONF_MANUAL, default=False): cv.boolean,
-                vol.Optional(
-                    CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
-                ): vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
-            }
-        )
-    },
+    vol.All(
+        # Deprecated in Home Assistant 2021.6
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Optional(CONF_SERVER_ID): cv.positive_int,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL,
+                        default=timedelta(minutes=DEFAULT_SCAN_INTERVAL),
+                    ): cv.positive_time_period,
+                    vol.Optional(CONF_MANUAL, default=False): cv.boolean,
+                    vol.Optional(
+                        CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
+                    ): vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
+
+PLATFORMS = ["sensor"]
 
 
 def server_id_valid(server_id):
@@ -96,9 +103,7 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN] = coordinator
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-    )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
@@ -109,11 +114,12 @@ async def async_unload_entry(hass, config_entry):
 
     hass.data[DOMAIN].async_unload()
 
-    await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
-
-    hass.data.pop(DOMAIN)
-
-    return True
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
+    if unload_ok:
+        hass.data.pop(DOMAIN)
+    return unload_ok
 
 
 class SpeedTestDataCoordinator(DataUpdateCoordinator):

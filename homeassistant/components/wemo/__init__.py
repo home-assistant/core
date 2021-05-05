@@ -3,7 +3,6 @@ import asyncio
 import logging
 
 import pywemo
-import requests
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -12,7 +11,7 @@ from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_DISCOVERY, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -57,7 +56,6 @@ def coerce_host_port(value):
 
 
 CONF_STATIC = "static"
-CONF_DISCOVERY = "discovery"
 
 DEFAULT_DISCOVERY = True
 
@@ -111,11 +109,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         await hass.async_add_executor_job(registry.stop)
         wemo_discovery.async_stop_discovery()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_wemo)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_wemo)
+    )
 
     static_conf = config.get(CONF_STATIC, [])
     if static_conf:
-        _LOGGER.debug("Adding statically configured WeMo devices...")
+        _LOGGER.debug("Adding statically configured WeMo devices")
         for device in await asyncio.gather(
             *[
                 hass.async_add_executor_job(validate_static_config, host, port)
@@ -192,7 +192,7 @@ class WemoDiscovery:
 
     async def async_discover_and_schedule(self, *_) -> None:
         """Periodically scan the network looking for WeMo devices."""
-        _LOGGER.debug("Scanning network for WeMo devices...")
+        _LOGGER.debug("Scanning network for WeMo devices")
         try:
             for device in await self._hass.async_add_executor_job(
                 pywemo.discover_devices
@@ -230,10 +230,10 @@ def validate_static_config(host, port):
         return None
 
     try:
-        device = pywemo.discovery.device_from_description(url, None)
+        device = pywemo.discovery.device_from_description(url)
     except (
-        requests.exceptions.ConnectionError,
-        requests.exceptions.Timeout,
+        pywemo.exceptions.ActionException,
+        pywemo.exceptions.HTTPException,
     ) as err:
         _LOGGER.error("Unable to access WeMo at %s (%s)", url, err)
         return None

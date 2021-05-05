@@ -7,6 +7,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
@@ -23,6 +25,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -36,6 +39,8 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = timedelta(seconds=30)
 DEVICE_CLASSES = [
     DEVICE_CLASS_BATTERY,  # % of battery that is left
+    DEVICE_CLASS_CO,  # ppm (parts per million) Carbon Monoxide gas concentration
+    DEVICE_CLASS_CO2,  # ppm (parts per million) Carbon Dioxide gas concentration
     DEVICE_CLASS_CURRENT,  # current (A)
     DEVICE_CLASS_ENERGY,  # energy (kWh, Wh)
     DEVICE_CLASS_HUMIDITY,  # % of humidity in the air
@@ -70,3 +75,7 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     return await hass.data[DOMAIN].async_unload_entry(entry)
+
+
+class SensorEntity(Entity):
+    """Base class for sensor entities."""

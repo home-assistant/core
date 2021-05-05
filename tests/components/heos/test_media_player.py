@@ -53,6 +53,7 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 
@@ -237,8 +238,8 @@ async def test_updates_from_players_changed_new_ids(
 ):
     """Test player updates from changes to available players."""
     await setup_platform(hass, config_entry, config)
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
     player = controller.players[1]
     event = asyncio.Event()
 
@@ -587,10 +588,10 @@ async def test_select_input_command_error(
 
 
 async def test_unload_config_entry(hass, config_entry, config, controller):
-    """Test the player is removed when the config entry is unloaded."""
+    """Test the player is set unavailable when the config entry is unloaded."""
     await setup_platform(hass, config_entry, config)
     await config_entry.async_unload(hass)
-    assert not hass.states.get("media_player.test_player")
+    assert hass.states.get("media_player.test_player").state == STATE_UNAVAILABLE
 
 
 async def test_play_media_url(hass, config_entry, config, controller, caplog):

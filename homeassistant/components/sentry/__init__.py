@@ -1,6 +1,7 @@
 """The sentry integration."""
+from __future__ import annotations
+
 import re
-from typing import Dict, Union
 
 import sentry_sdk
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
@@ -37,11 +38,6 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 LOGGER_INFO_REGEX = re.compile(r"^(\w+)\.?(\w+)?\.?(\w+)?\.?(\w+)?(?:\..*)?$")
-
-
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the Sentry component."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -126,8 +122,8 @@ def process_before_send(
     options,
     channel: str,
     huuid: str,
-    system_info: Dict[str, Union[bool, str]],
-    custom_components: Dict[str, Integration],
+    system_info: dict[str, bool | str],
+    custom_components: dict[str, Integration],
     event,
     hint,
 ):

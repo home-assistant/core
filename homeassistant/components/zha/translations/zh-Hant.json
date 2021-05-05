@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
+        "flow_title": "ZHA\uff1a{name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -30,6 +31,19 @@
                 "description": "\u9078\u64c7 Zigbee \u7121\u7dda\u96fb\u5e8f\u5217\u57e0",
                 "title": "ZHA"
             }
+        }
+    },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "\u8b66\u6212\u52d5\u4f5c\u9700\u8981\u4ee3\u78bc",
+            "alarm_failed_tries": "\u9023\u7e8c\u8f38\u5165\u4ee3\u78bc\u89f8\u767c\u8b66\u5831\u932f\u8aa4\u6b21\u6578",
+            "alarm_master_code": "\u8b66\u6212\u63a7\u5236\u9762\u677f\u63a7\u5236\u78bc",
+            "title": "\u8b66\u6212\u63a7\u5236\u9762\u677f\u9078\u9805"
+        },
+        "zha_options": {
+            "default_light_transition": "\u9810\u8a2d\u71c8\u5149\u8f49\u63db\u6642\u9593\uff08\u79d2\uff09",
+            "enable_identify_on_join": "\u7576\u88dd\u7f6e\u52a0\u5165\u7db2\u8def\u6642\u3001\u958b\u555f\u8b58\u5225\u6548\u679c",
+            "title": "Global \u9078\u9805"
         }
     },
     "device_automation": {

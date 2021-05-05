@@ -10,7 +10,6 @@ from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.zeroconf import ATTR_HOSTNAME
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 
@@ -21,10 +20,10 @@ from .const import (
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
+    DOMAIN,
     ERROR_CANNOT_CONNECT,
     STEP_IMPORT_FAILED,
 )
-from .const import DOMAIN  # pylint: disable=unused-import
 
 HOSTNAME = "hostname"
 
@@ -47,7 +46,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle Lutron Caseta config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize a Lutron Caseta flow."""
@@ -66,7 +64,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle a flow initialized by zeroconf discovery."""
-        hostname = discovery_info[ATTR_HOSTNAME]
+        hostname = discovery_info["hostname"]
         if hostname is None or not hostname.startswith("lutron-"):
             return self.async_abort(reason="not_lutron_device")
 
@@ -77,7 +75,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured({CONF_HOST: host})
 
         self.data[CONF_HOST] = host
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_NAME: self.bridge_id,
             CONF_HOST: host,
@@ -172,7 +169,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by `async_setup`.
         """
-
         host = import_info[CONF_HOST]
         # Store the imported config for other steps in this flow to access.
         self.data[CONF_HOST] = host
@@ -201,8 +197,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import_failed(self, user_input=None):
         """Make failed import surfaced to user."""
-
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {CONF_NAME: self.data[CONF_HOST]}
 
         if user_input is None:
@@ -216,7 +210,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_validate_connectable_bridge_config(self):
         """Check if we can connect to the bridge with the current config."""
-
         bridge = None
 
         try:

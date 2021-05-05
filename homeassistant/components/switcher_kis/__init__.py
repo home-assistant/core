@@ -1,26 +1,26 @@
 """Home Assistant Switcher Component."""
+from __future__ import annotations
+
 from asyncio import QueueEmpty, TimeoutError as Asyncio_TimeoutError, wait_for
 from datetime import datetime, timedelta
 import logging
-from typing import Dict, Optional
 
 from aioswitcher.bridge import SwitcherV2Bridge
 import voluptuous as vol
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.const import CONF_DEVICE_ID, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import EventType, HomeAssistantType
+from homeassistant.helpers.typing import EventType
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "switcher_kis"
 
-CONF_DEVICE_ID = "device_id"
 CONF_DEVICE_PASSWORD = "device_password"
 CONF_PHONE_ID = "phone_id"
 
@@ -46,9 +46,8 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the switcher component."""
-
     phone_id = config[DOMAIN][CONF_PHONE_ID]
     device_id = config[DOMAIN][CONF_DEVICE_ID]
     device_password = config[DOMAIN][CONF_DEVICE_PASSWORD]
@@ -74,7 +73,7 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
     hass.async_create_task(async_load_platform(hass, SWITCH_DOMAIN, DOMAIN, {}, config))
 
     @callback
-    def device_updates(timestamp: Optional[datetime]) -> None:
+    def device_updates(timestamp: datetime | None) -> None:
         """Use for updating the device data from the queue."""
         if v2bridge.running:
             try:

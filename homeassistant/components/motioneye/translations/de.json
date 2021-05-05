@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Der Service ist bereits eingerichtet",
+            "reauth_successful": "Erneute Authentifizierung erfolgreich"
+        },
+        "error": {
+            "cannot_connect": "Fehler beim Verbinden",
+            "invalid_auth": "Authentifizerung fehlgeschlagen",
+            "invalid_url": "Ung\u00fcltige URL"
+        }
+    }
+}

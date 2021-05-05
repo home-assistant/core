@@ -1,5 +1,5 @@
 """Support for Vera binary sensors."""
-from typing import Callable, List, Optional
+from __future__ import annotations
 
 import pyvera as veraApi
 
@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VeraDevice
 from .common import ControllerData, get_controller_data
@@ -19,7 +19,7 @@ from .common import ControllerData, get_controller_data
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
     controller_data = get_controller_data(hass, entry)
@@ -44,10 +44,11 @@ class VeraBinarySensor(VeraDevice[veraApi.VeraBinarySensor], BinarySensorEntity)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
-    def is_on(self) -> Optional[bool]:
+    def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._state
 
     def update(self) -> None:
         """Get the latest data and update the state."""
+        super().update()
         self._state = self.vera_device.is_tripped
