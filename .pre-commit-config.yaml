@@ -5,7 +5,7 @@ repos:
       - id: pyupgrade
         args: [--py38-plus]
   - repo: https://github.com/psf/black
-    rev: 21.4b2
+    rev: 21.5b0
     hooks:
       - id: black
         args:
