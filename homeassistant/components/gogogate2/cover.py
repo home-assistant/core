@@ -3,12 +3,11 @@ from __future__ import annotations
 
 import logging
 
-from gogogate2_api.common import (
+from ismartgate.common import (
     AbstractDoor,
     DoorStatus,
     TransitionDoorStatus,
     get_configured_doors,
-    get_door_by_id,
 )
 
 from homeassistant.components.cover import (

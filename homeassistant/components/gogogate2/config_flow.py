@@ -2,8 +2,8 @@
 import dataclasses
 import re
 
-from gogogate2_api.common import AbstractInfoResponse, ApiError
-from gogogate2_api.const import GogoGate2ApiErrorCode, ISmartGateApiErrorCode
+from ismartgate.common import AbstractInfoResponse, ApiError
+from ismartgate.const import GogoGate2ApiErrorCode, ISmartGateApiErrorCode
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow

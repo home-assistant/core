@@ -2,8 +2,8 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
-from gogogate2_api import GogoGate2Api, ISmartGateApi
-from gogogate2_api.common import (
+from ismartgate import GogoGate2Api, ISmartGateApi
+from ismartgate.common import (
     ApiError,
     DoorMode,
     DoorStatus,
