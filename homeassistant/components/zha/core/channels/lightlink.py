@@ -13,6 +13,8 @@ from .base import ChannelStatus, ZigbeeChannel
 class LightLink(ZigbeeChannel):
     """Lightlink channel."""
 
+    BIND: bool = False
+
     async def async_configure(self) -> None:
         """Add Coordinator to LightLink group ."""
 

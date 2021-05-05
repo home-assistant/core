@@ -3,5 +3,6 @@
   "name": "Switcher",
   "documentation": "https://www.home-assistant.io/integrations/switcher_kis/",
   "codeowners": ["@tomerfi"],
-  "requirements": ["aioswitcher==1.2.1"]
+  "requirements": ["aioswitcher==1.2.1"],
+  "iot_class": "local_push"
 }

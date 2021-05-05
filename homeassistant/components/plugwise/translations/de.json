@@ -14,7 +14,8 @@
                 "data": {
                     "flow_type": "Verbindungstyp"
                 },
-                "description": "Details"
+                "description": "Details",
+                "title": "Plugwise Typ"
             },
             "user_gateway": {
                 "data": {

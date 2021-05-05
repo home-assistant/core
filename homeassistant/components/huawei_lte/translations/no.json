@@ -34,7 +34,8 @@
                 "data": {
                     "name": "Navn p\u00e5 varslingstjeneste (endring krever omstart)",
                     "recipient": "Mottakere av SMS-varsling",
-                    "track_new_devices": "Spor nye enheter"
+                    "track_new_devices": "Spor nye enheter",
+                    "track_wired_clients": "Spor kablede nettverksklienter"
                 }
             }
         }

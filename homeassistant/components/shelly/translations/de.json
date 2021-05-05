@@ -11,6 +11,9 @@
         },
         "flow_title": "Shelly: {name}",
         "step": {
+            "confirm_discovery": {
+                "description": "M\u00f6chten Sie das {Modell} bei {Host} einrichten?\n\nBatteriebetriebene Ger\u00e4te, die passwortgesch\u00fctzt sind, m\u00fcssen aufgeweckt werden, bevor Sie mit dem Einrichten fortfahren.\nBatteriebetriebene Ger\u00e4te, die nicht passwortgesch\u00fctzt sind, werden hinzugef\u00fcgt, wenn das Ger\u00e4t aufwacht. Sie k\u00f6nnen das Ger\u00e4t nun manuell \u00fcber eine Taste am Ger\u00e4t aufwecken oder auf das n\u00e4chste Datenupdate des Ger\u00e4ts warten."
+            },
             "credentials": {
                 "data": {
                     "password": "Passwort",

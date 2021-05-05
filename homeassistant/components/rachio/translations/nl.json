@@ -22,7 +22,7 @@
         "step": {
             "init": {
                 "data": {
-                    "manual_run_mins": "Hoe lang, in minuten, om een station in te schakelen wanneer de schakelaar is ingeschakeld."
+                    "manual_run_mins": "Looptijd in minuten bij activering van een zoneschakelaar"
                 }
             }
         }

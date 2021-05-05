@@ -1,8 +1,8 @@
 """Support for fans through the SmartThings cloud API."""
 from __future__ import annotations
 
+from collections.abc import Sequence
 import math
-from typing import Sequence
 
 from pysmartthings import Capability
 

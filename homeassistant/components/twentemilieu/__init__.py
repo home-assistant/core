@@ -28,6 +28,8 @@ SCAN_INTERVAL = timedelta(seconds=3600)
 SERVICE_UPDATE = "update"
 SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_ID): cv.string})
 
+PLATFORMS = ["sensor"]
+
 
 async def _update_twentemilieu(hass: HomeAssistant, unique_id: str | None) -> None:
     """Update Twente Milieu."""
@@ -71,9 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unique_id = entry.data[CONF_ID]
     hass.data.setdefault(DOMAIN, {})[unique_id] = twentemilieu
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def _interval_update(now=None) -> None:
         """Update Twente Milieu data."""
@@ -86,8 +86,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Twente Milieu config entry."""
-    await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     del hass.data[DOMAIN][entry.data[CONF_ID]]
 
-    return True
+    return unload_ok

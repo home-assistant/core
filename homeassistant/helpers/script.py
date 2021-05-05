@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Sequence
 from contextlib import asynccontextmanager, suppress
 from datetime import datetime, timedelta
 from functools import partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import Any, Callable, Dict, Sequence, Union, cast
+from typing import Any, Callable, Dict, TypedDict, Union, cast
 
 import async_timeout
 import voluptuous as vol
@@ -56,7 +57,10 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import condition, config_validation as cv, service, template
-from homeassistant.helpers.condition import trace_condition_function
+from homeassistant.helpers.condition import (
+    ConditionCheckerType,
+    trace_condition_function,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -456,7 +460,7 @@ class _ScriptRun:
         wait_template.hass = self._hass
 
         # check if condition already okay
-        if condition.async_template(self._hass, wait_template, self._variables):
+        if condition.async_template(self._hass, wait_template, self._variables, False):
             self._variables["wait"]["completed"] = True
             return
 
@@ -492,7 +496,7 @@ class _ScriptRun:
                 task.cancel()
             unsub()
 
-    async def _async_run_long_action(self, long_task):
+    async def _async_run_long_action(self, long_task: asyncio.tasks.Task) -> None:
         """Run a long task while monitoring for stop request."""
 
         async def async_cancel_long_task() -> None:
@@ -741,7 +745,7 @@ class _ScriptRun:
                     except exceptions.ConditionError as ex:
                         _LOGGER.warning("Error in 'choose' evaluation:\n%s", ex)
 
-        if choose_data["default"]:
+        if choose_data["default"] is not None:
             trace_set_result(choice="default")
             with trace_path(["default"]):
                 await self._async_run_script(choose_data["default"])
@@ -808,7 +812,7 @@ class _ScriptRun:
             self._hass, self._variables, render_as_defaults=False
         )
 
-    async def _async_run_script(self, script):
+    async def _async_run_script(self, script: Script) -> None:
         """Execute a script."""
         await self._async_run_long_action(
             self._hass.async_create_task(
@@ -912,6 +916,11 @@ def _referenced_extract_ids(data: dict[str, Any], key: str, found: set[str]) -> 
             found.add(item_id)
 
 
+class _ChooseData(TypedDict):
+    choices: list[tuple[list[ConditionCheckerType], Script]]
+    default: Script | None
+
+
 class Script:
     """Representation of a script."""
 
@@ -973,7 +982,7 @@ class Script:
             self._queue_lck = asyncio.Lock()
         self._config_cache: dict[set[tuple], Callable[..., bool]] = {}
         self._repeat_script: dict[int, Script] = {}
-        self._choose_data: dict[int, dict[str, Any]] = {}
+        self._choose_data: dict[int, _ChooseData] = {}
         self._referenced_entities: set[str] | None = None
         self._referenced_devices: set[str] | None = None
         self._referenced_areas: set[str] | None = None
@@ -1011,14 +1020,14 @@ class Script:
         for choose_data in self._choose_data.values():
             for _, script in choose_data["choices"]:
                 script.update_logger(self._logger)
-            if choose_data["default"]:
+            if choose_data["default"] is not None:
                 choose_data["default"].update_logger(self._logger)
 
     def _changed(self) -> None:
         if self._change_listener_job:
             self._hass.async_run_hass_job(self._change_listener_job)
 
-    def _chain_change_listener(self, sub_script):
+    def _chain_change_listener(self, sub_script: Script) -> None:
         if sub_script.is_running:
             self.last_action = sub_script.last_action
             self._changed()
@@ -1235,7 +1244,7 @@ class Script:
             self._config_cache[config_cache_key] = cond
         return cond
 
-    def _prep_repeat_script(self, step):
+    def _prep_repeat_script(self, step: int) -> Script:
         action = self.sequence[step]
         step_name = action.get(CONF_ALIAS, f"Repeat at step {step+1}")
         sub_script = Script(
@@ -1252,14 +1261,14 @@ class Script:
         sub_script.change_listener = partial(self._chain_change_listener, sub_script)
         return sub_script
 
-    def _get_repeat_script(self, step):
+    def _get_repeat_script(self, step: int) -> Script:
         sub_script = self._repeat_script.get(step)
         if not sub_script:
             sub_script = self._prep_repeat_script(step)
             self._repeat_script[step] = sub_script
         return sub_script
 
-    async def _async_prep_choose_data(self, step):
+    async def _async_prep_choose_data(self, step: int) -> _ChooseData:
         action = self.sequence[step]
         step_name = action.get(CONF_ALIAS, f"Choose at step {step+1}")
         choices = []
@@ -1285,6 +1294,7 @@ class Script:
             )
             choices.append((conditions, sub_script))
 
+        default_script: Script | None
         if CONF_DEFAULT in action:
             default_script = Script(
                 self._hass,
@@ -1305,7 +1315,7 @@ class Script:
 
         return {"choices": choices, "default": default_script}
 
-    async def _async_get_choose_data(self, step):
+    async def _async_get_choose_data(self, step: int) -> _ChooseData:
         choose_data = self._choose_data.get(step)
         if not choose_data:
             choose_data = await self._async_prep_choose_data(step)
@@ -1335,7 +1345,7 @@ def breakpoint_clear(hass, key, run_id, node):
 
 
 @callback
-def breakpoint_clear_all(hass):
+def breakpoint_clear_all(hass: HomeAssistant) -> None:
     """Clear all breakpoints."""
     hass.data[DATA_SCRIPT_BREAKPOINTS] = {}
 
@@ -1353,7 +1363,7 @@ def breakpoint_set(hass, key, run_id, node):
 
 
 @callback
-def breakpoint_list(hass):
+def breakpoint_list(hass: HomeAssistant) -> list[dict[str, Any]]:
     """List breakpoints."""
     breakpoints = hass.data[DATA_SCRIPT_BREAKPOINTS]
 

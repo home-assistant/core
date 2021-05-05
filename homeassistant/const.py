@@ -1,7 +1,7 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 2021
-MINOR_VERSION = 4
-PATCH_VERSION = "6"
+MINOR_VERSION = 5
+PATCH_VERSION = "0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER = (3, 8, 0)
@@ -21,6 +21,10 @@ ENTITY_MATCH_ALL = "all"
 
 # If no name is specified
 DEVICE_DEFAULT_NAME = "Unnamed Device"
+
+# Max characters for an event_type (changing this requires a recorder
+# database migration)
+MAX_LENGTH_EVENT_TYPE = 64
 
 # Sun events
 SUN_EVENT_SUNSET = "sunset"

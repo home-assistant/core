@@ -1,5 +1,4 @@
 """The Omnilogic integration."""
-import asyncio
 import logging
 
 from omnilogic import LoginException, OmniLogic, OmniLogicException
@@ -16,13 +15,6 @@ from .const import CONF_SCAN_INTERVAL, COORDINATOR, DOMAIN, OMNI_API
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Omnilogic component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -58,29 +50,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     await coordinator.async_config_entry_first_refresh()
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: coordinator,
         OMNI_API: api,
     }
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 

@@ -21,7 +21,10 @@
             "init": {
                 "data": {
                     "floor_temperature": "Suhu Lantai",
-                    "precision": "Tingkat Presisi"
+                    "precision": "Tingkat Presisi",
+                    "read_precision": "Tingkat Presisi Baca",
+                    "set_precision": "Atur Presisi",
+                    "temporary_override_mode": "Mode Penimpaan Setpoint Sementara"
                 },
                 "description": "Pilihan untuk Gateway OpenTherm"
             }

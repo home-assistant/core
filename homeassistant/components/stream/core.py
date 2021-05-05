@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 import io
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from aiohttp import web
 import attr
@@ -16,6 +16,10 @@ from homeassistant.util.decorator import Registry
 
 from .const import ATTR_STREAMS, DOMAIN
 
+if TYPE_CHECKING:
+    import av.container
+    import av.video
+
 PROVIDERS = Registry()
 
 
@@ -24,9 +28,9 @@ class StreamBuffer:
     """Represent a segment."""
 
     segment: io.BytesIO = attr.ib()
-    output = attr.ib()  # type=av.OutputContainer
-    vstream = attr.ib()  # type=av.VideoStream
-    astream = attr.ib(default=None)  # type=Optional[av.AudioStream]
+    output: av.container.OutputContainer = attr.ib()
+    vstream: av.video.VideoStream = attr.ib()
+    astream = attr.ib(default=None)  # type=Optional[av.audio.AudioStream]
 
 
 @attr.s

@@ -225,3 +225,19 @@ def test_enabled_requires_valid_sub(hass, mock_expired_cloud_login, cloud_prefs)
     )
 
     assert not config.enabled
+
+
+async def test_setup_integration(hass, mock_conf, cloud_prefs):
+    """Test that we set up the integration if used."""
+    mock_conf._cloud.subscription_expired = False
+
+    assert "google_assistant" not in hass.config.components
+
+    await mock_conf.async_initialize()
+    assert "google_assistant" in hass.config.components
+
+    hass.config.components.remove("google_assistant")
+
+    await cloud_prefs.async_update()
+    await hass.async_block_till_done()
+    assert "google_assistant" in hass.config.components

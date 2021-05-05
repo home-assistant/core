@@ -2,18 +2,19 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 from datetime import datetime, timedelta
 import logging
 from time import monotonic
-from typing import Any, Awaitable, Callable, Generic, TypeVar
+from typing import Any, Callable, Generic, TypeVar
 import urllib.error
 
 import aiohttp
 import requests
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant import config_entries
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity, event
 from homeassistant.util.dt import utcnow
 
@@ -73,10 +74,6 @@ class DataUpdateCoordinator(Generic[T]):
 
         self._debounced_refresh = request_refresh_debouncer
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self._async_stop_refresh
-        )
-
     @callback
     def async_add_listener(self, update_callback: CALLBACK_TYPE) -> Callable[[], None]:
         """Listen for data updates."""
@@ -127,7 +124,7 @@ class DataUpdateCoordinator(Generic[T]):
     async def _handle_refresh_interval(self, _now: datetime) -> None:
         """Handle a refresh interval occurrence."""
         self._unsub_refresh = None
-        await self.async_refresh()
+        await self._async_refresh(log_failures=True, scheduled=True)
 
     async def async_request_refresh(self) -> None:
         """Request a refresh.
@@ -149,7 +146,7 @@ class DataUpdateCoordinator(Generic[T]):
         fails. Additionally logging is handled by config entry setup
         to ensure that multiple retries do not cause log spam.
         """
-        await self._async_refresh(log_failures=False)
+        await self._async_refresh(log_failures=False, raise_on_auth_failed=True)
         if self.last_update_success:
             return
         ex = ConfigEntryNotReady()
@@ -160,14 +157,24 @@ class DataUpdateCoordinator(Generic[T]):
         """Refresh data and log errors."""
         await self._async_refresh(log_failures=True)
 
-    async def _async_refresh(self, log_failures: bool = True) -> None:
+    async def _async_refresh(  # noqa: C901
+        self,
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
+    ) -> None:
         """Refresh data."""
         if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None
 
         self._debounced_refresh.async_cancel()
+
+        if scheduled and self.hass.is_stopping:
+            return
+
         start = monotonic()
+        auth_failed = False
 
         try:
             self.data = await self._async_update_data()
@@ -205,6 +212,23 @@ class DataUpdateCoordinator(Generic[T]):
                     self.logger.error("Error fetching %s data: %s", self.name, err)
                 self.last_update_success = False
 
+        except ConfigEntryAuthFailed as err:
+            auth_failed = True
+            self.last_exception = err
+            if self.last_update_success:
+                if log_failures:
+                    self.logger.error(
+                        "Authentication failed while fetching %s data: %s",
+                        self.name,
+                        err,
+                    )
+                self.last_update_success = False
+            if raise_on_auth_failed:
+                raise
+
+            config_entry = config_entries.current_entry.get()
+            if config_entry:
+                config_entry.async_start_reauth(self.hass)
         except NotImplementedError as err:
             self.last_exception = err
             raise err
@@ -228,7 +252,7 @@ class DataUpdateCoordinator(Generic[T]):
                 self.name,
                 monotonic() - start,
             )
-            if self._listeners:
+            if not auth_failed and self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()
 
         for update_callback in self._listeners:

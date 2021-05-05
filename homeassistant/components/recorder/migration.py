@@ -1,8 +1,8 @@
 """Schema migration helpers."""
 import logging
 
+import sqlalchemy
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, text
-from sqlalchemy.engine import reflection
 from sqlalchemy.exc import (
     InternalError,
     OperationalError,
@@ -11,15 +11,25 @@ from sqlalchemy.exc import (
 )
 from sqlalchemy.schema import AddConstraint, DropConstraint
 
-from .const import DOMAIN
 from .models import SCHEMA_VERSION, TABLE_STATES, Base, SchemaChanges
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def migrate_schema(instance):
-    """Check if the schema needs to be upgraded."""
+def raise_if_exception_missing_str(ex, match_substrs):
+    """Raise an exception if the exception and cause do not contain the match substrs."""
+    lower_ex_strs = [str(ex).lower(), str(ex.__cause__).lower()]
+    for str_sub in match_substrs:
+        for exc_str in lower_ex_strs:
+            if exc_str and str_sub in exc_str:
+                return
+
+    raise ex
+
+
+def get_schema_version(instance):
+    """Get the schema version."""
     with session_scope(session=instance.get_session()) as session:
         res = (
             session.query(SchemaChanges)
@@ -34,24 +44,30 @@ def migrate_schema(instance):
                 "No schema version found. Inspected version: %s", current_version
             )
 
-        if current_version == SCHEMA_VERSION:
-            return
+        return current_version
 
+
+def schema_is_current(current_version):
+    """Check if the schema is current."""
+    return current_version == SCHEMA_VERSION
+
+
+def migrate_schema(instance, current_version):
+    """Check if the schema needs to be upgraded."""
+    with session_scope(session=instance.get_session()) as session:
         _LOGGER.warning(
             "Database is about to upgrade. Schema version: %s", current_version
         )
+        for version in range(current_version, SCHEMA_VERSION):
+            new_version = version + 1
+            _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
+            _apply_update(instance.engine, session, new_version, current_version)
+            session.add(SchemaChanges(schema_version=new_version))
 
-        with instance.hass.timeout.freeze(DOMAIN):
-            for version in range(current_version, SCHEMA_VERSION):
-                new_version = version + 1
-                _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
-                _apply_update(instance.engine, new_version, current_version)
-                session.add(SchemaChanges(schema_version=new_version))
-
-                _LOGGER.info("Upgrade to version %s done", new_version)
+            _LOGGER.info("Upgrade to version %s done", new_version)
 
 
-def _create_index(engine, table_name, index_name):
+def _create_index(connection, table_name, index_name):
     """Create an index for the specified table.
 
     The index name should match the name given for the index
@@ -73,13 +89,9 @@ def _create_index(engine, table_name, index_name):
         index_name,
     )
     try:
-        index.create(engine)
+        index.create(connection)
     except (InternalError, ProgrammingError, OperationalError) as err:
-        lower_err_str = str(err).lower()
-
-        if "already exists" not in lower_err_str and "duplicate" not in lower_err_str:
-            raise
-
+        raise_if_exception_missing_str(err, ["already exists", "duplicate"])
         _LOGGER.warning(
             "Index %s already exists on %s, continuing", index_name, table_name
         )
@@ -87,7 +99,7 @@ def _create_index(engine, table_name, index_name):
     _LOGGER.debug("Finished creating %s", index_name)
 
 
-def _drop_index(engine, table_name, index_name):
+def _drop_index(connection, table_name, index_name):
     """Drop an index from a specified table.
 
     There is no universal way to do something like `DROP INDEX IF EXISTS`
@@ -103,7 +115,7 @@ def _drop_index(engine, table_name, index_name):
 
     # Engines like DB2/Oracle
     try:
-        engine.execute(text(f"DROP INDEX {index_name}"))
+        connection.execute(text(f"DROP INDEX {index_name}"))
     except SQLAlchemyError:
         pass
     else:
@@ -112,7 +124,7 @@ def _drop_index(engine, table_name, index_name):
     # Engines like SQLite, SQL Server
     if not success:
         try:
-            engine.execute(
+            connection.execute(
                 text(
                     "DROP INDEX {table}.{index}".format(
                         index=index_name, table=table_name
@@ -127,7 +139,7 @@ def _drop_index(engine, table_name, index_name):
     if not success:
         # Engines like MySQL, MS Access
         try:
-            engine.execute(
+            connection.execute(
                 text(
                     "DROP INDEX {index} ON {table}".format(
                         index=index_name, table=table_name
@@ -158,7 +170,7 @@ def _drop_index(engine, table_name, index_name):
         )
 
 
-def _add_columns(engine, table_name, columns_def):
+def _add_columns(connection, table_name, columns_def):
     """Add columns to a table."""
     _LOGGER.warning(
         "Adding columns %s to table %s. Note: this can take several "
@@ -171,7 +183,7 @@ def _add_columns(engine, table_name, columns_def):
     columns_def = [f"ADD {col_def}" for col_def in columns_def]
 
     try:
-        engine.execute(
+        connection.execute(
             text(
                 "ALTER TABLE {table} {columns_def}".format(
                     table=table_name, columns_def=", ".join(columns_def)
@@ -186,7 +198,7 @@ def _add_columns(engine, table_name, columns_def):
 
     for column_def in columns_def:
         try:
-            engine.execute(
+            connection.execute(
                 text(
                     "ALTER TABLE {table} {column_def}".format(
                         table=table_name, column_def=column_def
@@ -194,9 +206,7 @@ def _add_columns(engine, table_name, columns_def):
                 )
             )
         except (InternalError, OperationalError) as err:
-            if "duplicate" not in str(err).lower():
-                raise
-
+            raise_if_exception_missing_str(err, ["duplicate"])
             _LOGGER.warning(
                 "Column %s already exists on %s, continuing",
                 column_def.split(" ")[1],
@@ -204,8 +214,18 @@ def _add_columns(engine, table_name, columns_def):
             )
 
 
-def _modify_columns(engine, table_name, columns_def):
+def _modify_columns(connection, engine, table_name, columns_def):
     """Modify columns in a table."""
+    if engine.dialect.name == "sqlite":
+        _LOGGER.debug(
+            "Skipping to modify columns %s in table %s; "
+            "Modifying column length in SQLite is unnecessary, "
+            "it does not impose any length restrictions",
+            ", ".join(column.split(" ")[0] for column in columns_def),
+            table_name,
+        )
+        return
+
     _LOGGER.warning(
         "Modifying columns %s in table %s. Note: this can take several "
         "minutes on large databases and slow computers. Please "
@@ -213,10 +233,21 @@ def _modify_columns(engine, table_name, columns_def):
         ", ".join(column.split(" ")[0] for column in columns_def),
         table_name,
     )
-    columns_def = [f"MODIFY {col_def}" for col_def in columns_def]
+
+    if engine.dialect.name == "postgresql":
+        columns_def = [
+            "ALTER {column} TYPE {type}".format(
+                **dict(zip(["column", "type"], col_def.split(" ", 1)))
+            )
+            for col_def in columns_def
+        ]
+    elif engine.dialect.name == "mssql":
+        columns_def = [f"ALTER COLUMN {col_def}" for col_def in columns_def]
+    else:
+        columns_def = [f"MODIFY {col_def}" for col_def in columns_def]
 
     try:
-        engine.execute(
+        connection.execute(
             text(
                 "ALTER TABLE {table} {columns_def}".format(
                     table=table_name, columns_def=", ".join(columns_def)
@@ -229,7 +260,7 @@ def _modify_columns(engine, table_name, columns_def):
 
     for column_def in columns_def:
         try:
-            engine.execute(
+            connection.execute(
                 text(
                     "ALTER TABLE {table} {column_def}".format(
                         table=table_name, column_def=column_def
@@ -242,9 +273,9 @@ def _modify_columns(engine, table_name, columns_def):
             )
 
 
-def _update_states_table_with_foreign_key_options(engine):
+def _update_states_table_with_foreign_key_options(connection, engine):
     """Add the options to foreign key constraints."""
-    inspector = reflection.Inspector.from_engine(engine)
+    inspector = sqlalchemy.inspect(engine)
     alters = []
     for foreign_key in inspector.get_foreign_keys(TABLE_STATES):
         if foreign_key["name"] and (
@@ -271,25 +302,26 @@ def _update_states_table_with_foreign_key_options(engine):
 
     for alter in alters:
         try:
-            engine.execute(DropConstraint(alter["old_fk"]))
+            connection.execute(DropConstraint(alter["old_fk"]))
             for fkc in states_key_constraints:
                 if fkc.column_keys == alter["columns"]:
-                    engine.execute(AddConstraint(fkc))
+                    connection.execute(AddConstraint(fkc))
         except (InternalError, OperationalError):
             _LOGGER.exception(
                 "Could not update foreign options in %s table", TABLE_STATES
             )
 
 
-def _apply_update(engine, new_version, old_version):
+def _apply_update(engine, session, new_version, old_version):
     """Perform operations to bring schema up to date."""
+    connection = session.connection()
     if new_version == 1:
-        _create_index(engine, "events", "ix_events_time_fired")
+        _create_index(connection, "events", "ix_events_time_fired")
     elif new_version == 2:
         # Create compound start/end index for recorder_runs
-        _create_index(engine, "recorder_runs", "ix_recorder_runs_start_end")
+        _create_index(connection, "recorder_runs", "ix_recorder_runs_start_end")
         # Create indexes for states
-        _create_index(engine, "states", "ix_states_last_updated")
+        _create_index(connection, "states", "ix_states_last_updated")
     elif new_version == 3:
         # There used to be a new index here, but it was removed in version 4.
         pass
@@ -299,41 +331,41 @@ def _apply_update(engine, new_version, old_version):
 
         if old_version == 3:
             # Remove index that was added in version 3
-            _drop_index(engine, "states", "ix_states_created_domain")
+            _drop_index(connection, "states", "ix_states_created_domain")
         if old_version == 2:
             # Remove index that was added in version 2
-            _drop_index(engine, "states", "ix_states_entity_id_created")
+            _drop_index(connection, "states", "ix_states_entity_id_created")
 
         # Remove indexes that were added in version 0
-        _drop_index(engine, "states", "states__state_changes")
-        _drop_index(engine, "states", "states__significant_changes")
-        _drop_index(engine, "states", "ix_states_entity_id_created")
+        _drop_index(connection, "states", "states__state_changes")
+        _drop_index(connection, "states", "states__significant_changes")
+        _drop_index(connection, "states", "ix_states_entity_id_created")
 
-        _create_index(engine, "states", "ix_states_entity_id_last_updated")
+        _create_index(connection, "states", "ix_states_entity_id_last_updated")
     elif new_version == 5:
         # Create supporting index for States.event_id foreign key
-        _create_index(engine, "states", "ix_states_event_id")
+        _create_index(connection, "states", "ix_states_event_id")
     elif new_version == 6:
         _add_columns(
-            engine,
+            session,
             "events",
             ["context_id CHARACTER(36)", "context_user_id CHARACTER(36)"],
         )
-        _create_index(engine, "events", "ix_events_context_id")
-        _create_index(engine, "events", "ix_events_context_user_id")
+        _create_index(connection, "events", "ix_events_context_id")
+        _create_index(connection, "events", "ix_events_context_user_id")
         _add_columns(
-            engine,
+            connection,
             "states",
             ["context_id CHARACTER(36)", "context_user_id CHARACTER(36)"],
         )
-        _create_index(engine, "states", "ix_states_context_id")
-        _create_index(engine, "states", "ix_states_context_user_id")
+        _create_index(connection, "states", "ix_states_context_id")
+        _create_index(connection, "states", "ix_states_context_user_id")
     elif new_version == 7:
-        _create_index(engine, "states", "ix_states_entity_id")
+        _create_index(connection, "states", "ix_states_entity_id")
     elif new_version == 8:
-        _add_columns(engine, "events", ["context_parent_id CHARACTER(36)"])
-        _add_columns(engine, "states", ["old_state_id INTEGER"])
-        _create_index(engine, "events", "ix_events_context_parent_id")
+        _add_columns(connection, "events", ["context_parent_id CHARACTER(36)"])
+        _add_columns(connection, "states", ["old_state_id INTEGER"])
+        _create_index(connection, "events", "ix_events_context_parent_id")
     elif new_version == 9:
         # We now get the context from events with a join
         # since its always there on state_changed events
@@ -343,32 +375,36 @@ def _apply_update(engine, new_version, old_version):
         # and we would have to move to something like
         # sqlalchemy alembic to make that work
         #
-        _drop_index(engine, "states", "ix_states_context_id")
-        _drop_index(engine, "states", "ix_states_context_user_id")
+        _drop_index(connection, "states", "ix_states_context_id")
+        _drop_index(connection, "states", "ix_states_context_user_id")
         # This index won't be there if they were not running
         # nightly but we don't treat that as a critical issue
-        _drop_index(engine, "states", "ix_states_context_parent_id")
+        _drop_index(connection, "states", "ix_states_context_parent_id")
         # Redundant keys on composite index:
         # We already have ix_states_entity_id_last_updated
-        _drop_index(engine, "states", "ix_states_entity_id")
-        _create_index(engine, "events", "ix_events_event_type_time_fired")
-        _drop_index(engine, "events", "ix_events_event_type")
+        _drop_index(connection, "states", "ix_states_entity_id")
+        _create_index(connection, "events", "ix_events_event_type_time_fired")
+        _drop_index(connection, "events", "ix_events_event_type")
     elif new_version == 10:
         # Now done in step 11
         pass
     elif new_version == 11:
-        _create_index(engine, "states", "ix_states_old_state_id")
-        _update_states_table_with_foreign_key_options(engine)
+        _create_index(connection, "states", "ix_states_old_state_id")
+        _update_states_table_with_foreign_key_options(connection, engine)
     elif new_version == 12:
         if engine.dialect.name == "mysql":
-            _modify_columns(engine, "events", ["event_data LONGTEXT"])
-            _modify_columns(engine, "states", ["attributes LONGTEXT"])
+            _modify_columns(connection, engine, "events", ["event_data LONGTEXT"])
+            _modify_columns(connection, engine, "states", ["attributes LONGTEXT"])
     elif new_version == 13:
         if engine.dialect.name == "mysql":
             _modify_columns(
-                engine, "events", ["time_fired DATETIME(6)", "created DATETIME(6)"]
+                connection,
+                engine,
+                "events",
+                ["time_fired DATETIME(6)", "created DATETIME(6)"],
             )
             _modify_columns(
+                connection,
                 engine,
                 "states",
                 [
@@ -377,6 +413,8 @@ def _apply_update(engine, new_version, old_version):
                     "created DATETIME(6)",
                 ],
             )
+    elif new_version == 14:
+        _modify_columns(connection, engine, "events", ["event_type VARCHAR(64)"])
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
@@ -390,7 +428,7 @@ def _inspect_schema_version(engine, session):
     version 1 are present to make the determination. Eventually this logic
     can be removed and we can assume a new db is being created.
     """
-    inspector = reflection.Inspector.from_engine(engine)
+    inspector = sqlalchemy.inspect(engine)
     indexes = inspector.get_indexes("events")
 
     for index in indexes:
