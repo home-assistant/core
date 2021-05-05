@@ -22,31 +22,33 @@ _LOGGER = logging.getLogger(__name__)
 class RakoBridge(Bridge):
     """Represents a Rako Bridge."""
 
-    def __init__(self, host: str, port: int, entry_id: str, hass: HomeAssistant):
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        name: str,
+        mac: str,
+        entry_id: str,
+        hass: HomeAssistant,
+    ):
         """Init subclass of python_rako Bridge."""
-        super().__init__(host, port)
+        super().__init__(host, port, name, mac)
         self.entry_id = entry_id
         self.hass = hass
 
     @property
     def _light_map(self) -> dict[str, RakoLight]:
-        rako_domain_entry_data: RakoDomainEntryData = self.hass.data[DOMAIN][
-            self.entry_id
-        ]
+        rako_domain_entry_data: RakoDomainEntryData = self.hass.data[DOMAIN][self.mac]
         return rako_domain_entry_data["rako_light_map"]
 
     @property
     def _listener_task(self) -> Task | None:
-        rako_domain_entry_data: RakoDomainEntryData = self.hass.data[DOMAIN][
-            self.entry_id
-        ]
+        rako_domain_entry_data: RakoDomainEntryData = self.hass.data[DOMAIN][self.mac]
         return rako_domain_entry_data["rako_listener_task"]
 
     @_listener_task.setter
     def _listener_task(self, task: Task) -> None:
-        rako_domain_entry_data: RakoDomainEntryData = self.hass.data[DOMAIN][
-            self.entry_id
-        ]
+        rako_domain_entry_data: RakoDomainEntryData = self.hass.data[DOMAIN][self.mac]
         rako_domain_entry_data["rako_listener_task"] = task
 
     def get_listening_light(self, light_unique_id: str) -> RakoLight | None:
@@ -66,7 +68,7 @@ class RakoBridge(Bridge):
     async def listen_for_state_updates(self) -> None:
         """Background task to listen for state updates."""
         self._listener_task: Task = asyncio.create_task(
-            listen_for_state_updates(self), name=f"{self.entry_id}_rako_listener_task"
+            listen_for_state_updates(self), name=f"rako_{self.mac}_listener_task"
         )
 
     async def stop_listening_for_state_updates(self) -> None:
@@ -93,7 +95,7 @@ class RakoBridge(Bridge):
 
 def _state_update(bridge: RakoBridge, status_message: StatusMessage) -> None:
     light_unique_id = create_unique_id(
-        bridge.entry_id, status_message.room, status_message.channel
+        bridge.mac, status_message.room, status_message.channel
     )
     brightness = 0
     if isinstance(status_message, ChannelStatusMessage):

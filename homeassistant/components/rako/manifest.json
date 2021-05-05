@@ -3,7 +3,7 @@
   "name": "Rako",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/rako",
-  "requirements": ["python_rako==0.0.11"],
+  "requirements": ["python_rako==0.0.13"],
   "codeowners": [
     "@marengaz"
   ],

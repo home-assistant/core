@@ -8,7 +8,9 @@
             "user": {
                 "data": {
                     "host": "Host IP",
-                    "port": "Port"
+                    "port": "Port",
+                    "name": "Name",
+                    "mac": "MAC Address"
                 },
                 "description": "If pre-populated, Bridge was auto-discovered!",
                 "title": "Rako Bridge Configuration"

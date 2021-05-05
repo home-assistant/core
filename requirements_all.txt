@@ -1955,7 +1955,7 @@ python_awair==0.2.1
 python_opendata_transport==0.2.1
 
 # homeassistant.components.rako
-python_rako==0.0.11
+python_rako==0.0.13
 
 # homeassistant.components.egardia
 pythonegardia==1.0.40

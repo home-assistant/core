@@ -36,7 +36,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the config entry."""
-    rako_domain_entry_data: RakoDomainEntryData = hass.data[DOMAIN][entry.entry_id]
+    rako_domain_entry_data: RakoDomainEntryData = hass.data[DOMAIN][entry.unique_id]
     bridge = rako_domain_entry_data["rako_bridge_client"]
 
     hass_lights: list[Entity] = []
@@ -67,6 +67,11 @@ class RakoLight(LightEntity):
         self._brightness = self._init_get_brightness_from_cache()
         self._available = True
 
+    @property
+    def name(self) -> str:
+        """Return the display name of this light."""
+        raise NotImplementedError()
+
     def _init_get_brightness_from_cache(self) -> int:
         raise NotImplementedError()
 
@@ -82,7 +87,7 @@ class RakoLight(LightEntity):
     def unique_id(self) -> str:
         """Light's unique ID."""
         return create_unique_id(
-            self.bridge.entry_id, self._light.room_id, self._light.channel_id
+            self.bridge.mac, self._light.room_id, self._light.channel_id
         )
 
     @property
@@ -124,8 +129,11 @@ class RakoLight(LightEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this Rako Light."""
         return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
             "manufacturer": "Rako",
             "suggested_area": self._light.room_title,
+            "via_device": (DOMAIN, self.bridge.mac),
         }
 
 

@@ -11,7 +11,9 @@
                 "description": "If pre-populated, Bridge was auto-discovered!",
                 "data": {
                     "host": "[%key:common::config_flow::data::ip%]",
-                    "port": "[%key:common::config_flow::data::port%]"
+                    "port": "[%key:common::config_flow::data::port%]",
+                    "name": "[%key:common::config_flow::data::name%]",
+                    "mac": "MAC Address"
                 }
             }
         }
