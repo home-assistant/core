@@ -60,7 +60,7 @@ class BroadlinkUpdateManager(ABC):
         try:
             data = await self.async_fetch_data()
 
-        except (BroadlinkException, OSError) as err:
+        except (BroadlinkException, ValueError, OSError) as err:
             if self.available and (
                 dt.utcnow() - self.last_update > self.SCAN_INTERVAL * 3
                 or isinstance(err, (AuthorizationError, OSError))
@@ -117,7 +117,15 @@ class BroadlinkRMUpdateManager(BroadlinkUpdateManager):
         device = self.device
 
         if hasattr(device.api, "check_sensors"):
-            return await device.async_request(device.api.check_sensors)
+            data = await device.async_request(device.api.check_sensors)
+
+            # Firmware issue. See https://github.com/home-assistant/core/issues/42100.
+            if data["temperature"] == -7:
+                if self.coordinator.data is not None:
+                    return self.coordinator.data
+                raise ValueError("The device returned malformed data")
+
+            return data
 
         await device.async_request(device.api.update)
         return {}
