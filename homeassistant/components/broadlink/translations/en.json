@@ -26,7 +26,7 @@
             },
             "manual": {
                 "title": "Manual configuration",
-                "description": "Sorry, we don't know this device: {name} ({type} at {host}). You can try to configure it manually by selecting an appropriate device class.\n\nIf you manage to make it work, please consider opening an issue or creating a pull request in the [python-broadlink]({url}) library.",
+                "description": "Sorry, we don't know this device: {name} ({type} at {host}). You can try to configure it manually by selecting an appropriate device class.\n\nIf you manage to make it work, please open an issue or pull request in the [python-broadlink]({url}) repository.",
                 "data": {
                     "device_class": "Device class"
                 }

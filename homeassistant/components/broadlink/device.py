@@ -105,8 +105,8 @@ class BroadlinkDevice:
             )
             _LOGGER.warning(
                 "You have configured an unknown device: %s. If you manage "
-                "to make it work, please consider opening an issue or "
-                "creating a pull request at %s",
+                "to make it work, please open an issue or pull request at "
+                "%s",
                 api,
                 LIBRARY_URL,
             )
