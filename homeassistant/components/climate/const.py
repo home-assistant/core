@@ -67,6 +67,18 @@ FAN_MIDDLE = "middle"
 FAN_FOCUS = "focus"
 FAN_DIFFUSE = "diffuse"
 
+FAN_MODES = [
+    FAN_ON,
+    FAN_OFF,
+    FAN_AUTO,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_HIGH,
+    FAN_MIDDLE,
+    FAN_FOCUS,
+    FAN_DIFFUSE,
+]
+
 
 # Possible swing state
 SWING_OFF = "off"
