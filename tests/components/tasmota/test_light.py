@@ -223,7 +223,7 @@ async def test_attributes_rgbw(hass, mqtt_mock, setup_tasmota):
         state.attributes.get("supported_features")
         == SUPPORT_EFFECT | SUPPORT_TRANSITION
     )
-    assert state.attributes.get("supported_color_modes") == ["rgbw"]
+    assert state.attributes.get("supported_color_modes") == ["rgb", "rgbw"]
     assert state.attributes.get("color_mode") == "rgbw"
 
 

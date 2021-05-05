@@ -95,7 +95,9 @@ class TasmotaLight(
         supported_features = 0
         light_type = self._tasmota_entity.light_type
 
-        if light_type in [LIGHT_TYPE_RGB, LIGHT_TYPE_RGBCW]:
+        if light_type in [LIGHT_TYPE_RGB, LIGHT_TYPE_RGBW, LIGHT_TYPE_RGBCW]:
+            # Mark RGB support for RGBW light because we don't have control over the
+            # white channel, so the base component's RGB->RGBW translation does not work
             self._supported_color_modes.add(COLOR_MODE_RGB)
             self._color_mode = COLOR_MODE_RGB
 
