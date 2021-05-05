@@ -214,7 +214,7 @@ class ModbusHub:
 
     def end_delay(self, args):
         """End startup delay."""
-        self._cancel_call_later = None
+        self._cancel_listener = None
         self._config_delay = 0
 
     def close(self):
