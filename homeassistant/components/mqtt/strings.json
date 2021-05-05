@@ -62,7 +62,7 @@
       },
       "options": {
         "title": "MQTT options",
-        "description": "### Discovery \n If discovery is enabled (recommended), Home Assistant will automatically discover devices and entities which publish their configuration on the MQTT broker. If discovery is disabled, all configuration must be done manually. \n ### Birth message\n The birth message will be sent each time Home Assistant (re)connects to the MQTT broker. \n ### Will message \n The will message will be sent each time Home Assistant loses its connection to the broker, both in case of a clean (e.g. Home Assistant shutting down) and in case of an unclean (e.g. Home Assistant crashing or losing its network connection) disconnect.",
+        "description": "Discovery - If discovery is enabled (recommended), Home Assistant will automatically discover devices and entities which publish their configuration on the MQTT broker. If discovery is disabled, all configuration must be done manually.\nBirth message - The birth message will be sent each time Home Assistant (re)connects to the MQTT broker.\nWill message - The will message will be sent each time Home Assistant loses its connection to the broker, both in case of a clean (e.g. Home Assistant shutting down) and in case of an unclean (e.g. Home Assistant crashing or losing its network connection) disconnect.",
         "data": {
           "discovery": "Enable discovery",
           "birth_enable": "Enable birth message",
