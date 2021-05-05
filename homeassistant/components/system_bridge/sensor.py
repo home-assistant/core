@@ -239,7 +239,7 @@ class BridgeFilesystemSensor(BridgeSensor):
         )
 
     @property
-    def device_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the entity."""
         bridge: Bridge = self.coordinator.data
         return {
@@ -325,7 +325,7 @@ class BridgeProcessesLoadSensor(BridgeSensor):
         )
 
     @property
-    def device_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the entity."""
         bridge: Bridge = self.coordinator.data
         return {
