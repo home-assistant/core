@@ -433,6 +433,95 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, cap
     caplog.clear()
 
 
+async def test_controlling_state_via_topic_and_json_message_shared_topic(
+    hass, mqtt_mock, caplog
+):
+    """Test the controlling state via topic and JSON message using a shared topic."""
+    assert await async_setup_component(
+        hass,
+        fan.DOMAIN,
+        {
+            fan.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "shared-state-topic",
+                "command_topic": "command-topic",
+                "oscillation_state_topic": "shared-state-topic",
+                "oscillation_command_topic": "oscillation-command-topic",
+                "percentage_state_topic": "shared-state-topic",
+                "percentage_command_topic": "percentage-command-topic",
+                "preset_mode_state_topic": "shared-state-topic",
+                "preset_mode_command_topic": "preset-mode-command-topic",
+                "preset_modes": [
+                    "auto",
+                    "smart",
+                    "whoosh",
+                    "eco",
+                    "breeze",
+                    "silent",
+                ],
+                "state_value_template": "{{ value_json.state }}",
+                "oscillation_value_template": "{{ value_json.oscillation }}",
+                "percentage_value_template": "{{ value_json.percentage }}",
+                "preset_mode_value_template": "{{ value_json.preset_mode }}",
+                "speed_range_min": 1,
+                "speed_range_max": 100,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(
+        hass,
+        "shared-state-topic",
+        '{"state":"ON","preset_mode":"eco","oscillation":"oscillate_on","percentage": 50}',
+    )
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("oscillating") is True
+    assert state.attributes.get(fan.ATTR_PERCENTAGE) == 50
+    assert state.attributes.get("preset_mode") == "eco"
+
+    async_fire_mqtt_message(
+        hass,
+        "shared-state-topic",
+        '{"state":"ON","preset_mode":"auto","oscillation":"oscillate_off","percentage": 10}',
+    )
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("oscillating") is False
+    assert state.attributes.get(fan.ATTR_PERCENTAGE) == 10
+    assert state.attributes.get("preset_mode") == "auto"
+
+    async_fire_mqtt_message(
+        hass,
+        "shared-state-topic",
+        '{"state":"OFF","preset_mode":"auto","oscillation":"oscillate_off","percentage": 0}',
+    )
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get("oscillating") is False
+    assert state.attributes.get(fan.ATTR_PERCENTAGE) == 0
+    assert state.attributes.get("preset_mode") == "auto"
+
+    async_fire_mqtt_message(
+        hass,
+        "shared-state-topic",
+        '{"percentage": 100}',
+    )
+    state = hass.states.get("fan.test")
+    assert state.attributes.get(fan.ATTR_PERCENTAGE) == 100
+    assert state.attributes.get("preset_mode") == "auto"
+    assert "Ignoring empty preset_mode from" in caplog.text
+    assert "Ignoring empty state from" in caplog.text
+    assert "Ignoring empty oscillation from" in caplog.text
+    caplog.clear()
+
+
 async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
     """Test optimistic mode without state topic."""
     assert await async_setup_component(

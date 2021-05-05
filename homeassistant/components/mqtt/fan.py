@@ -344,6 +344,9 @@ class MqttFan(MqttEntity, FanEntity):
         def state_received(msg):
             """Handle new received MQTT message."""
             payload = self._value_templates[CONF_STATE](msg.payload)
+            if not payload:
+                _LOGGER.debug("Ignoring empty state from '%s'", msg.topic)
+                return
             if payload == self._payload["STATE_ON"]:
                 self._state = True
             elif payload == self._payload["STATE_OFF"]:
@@ -470,6 +473,9 @@ class MqttFan(MqttEntity, FanEntity):
         def oscillation_received(msg):
             """Handle new received MQTT message for the oscillation."""
             payload = self._value_templates[ATTR_OSCILLATING](msg.payload)
+            if not payload:
+                _LOGGER.debug("Ignoring empty oscillation from '%s'", msg.topic)
+                return
             if payload == self._payload["OSCILLATE_ON_PAYLOAD"]:
                 self._oscillation = True
             elif payload == self._payload["OSCILLATE_OFF_PAYLOAD"]:
