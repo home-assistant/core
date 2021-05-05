@@ -113,6 +113,7 @@ async def test_platform_loading(hass, hass_ws_client, aioclient_mock):
     """Test registering via platform."""
     aioclient_mock.get("http://example.com/status", text="")
     aioclient_mock.get("http://example.com/status_fail", exc=ClientError)
+    aioclient_mock.get("http://example.com/timeout", exc=asyncio.TimeoutError)
     hass.config.components.add("fake_integration")
     mock_platform(
         hass,
@@ -128,6 +129,11 @@ async def test_platform_loading(hass, hass_ws_client, aioclient_mock):
                         "server_fail_reachable": system_health.async_check_can_reach_url(
                             hass,
                             "http://example.com/status_fail",
+                            more_info="http://more-info-url.com",
+                        ),
+                        "server_timeout": system_health.async_check_can_reach_url(
+                            hass,
+                            "http://example.com/timeout",
                             more_info="http://more-info-url.com",
                         ),
                         "async_crash": AsyncMock(side_effect=ValueError)(),
@@ -148,6 +154,11 @@ async def test_platform_loading(hass, hass_ws_client, aioclient_mock):
             "server_fail_reachable": {
                 "type": "failed",
                 "error": "unreachable",
+                "more_info": "http://more-info-url.com",
+            },
+            "server_timeout": {
+                "type": "failed",
+                "error": "timeout",
                 "more_info": "http://more-info-url.com",
             },
             "async_crash": {

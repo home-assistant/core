@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.components.adguard.const import (
     CONF_FORCE,
     DATA_ADGUARD_CLIENT,
-    DATA_ADGUARD_VERION,
+    DATA_ADGUARD_VERSION,
     DOMAIN,
     SERVICE_ADD_URL,
     SERVICE_DISABLE_URL,
@@ -61,17 +61,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=session,
     )
 
-    hass.data.setdefault(DOMAIN, {})[DATA_ADGUARD_CLIENT] = adguard
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_ADGUARD_CLIENT: adguard}
 
     try:
         await adguard.version()
     except AdGuardHomeConnectionError as exception:
         raise ConfigEntryNotReady from exception
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def add_url(call) -> None:
         """Service call to add a new filter subscription to AdGuard Home."""
@@ -126,25 +123,30 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.services.async_remove(DOMAIN, SERVICE_DISABLE_URL)
     hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
 
-    for platform in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(entry, platform)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        del hass.data[DOMAIN]
 
-    del hass.data[DOMAIN]
-
-    return True
+    return unload_ok
 
 
 class AdGuardHomeEntity(Entity):
     """Defines a base AdGuard Home entity."""
 
     def __init__(
-        self, adguard, name: str, icon: str, enabled_default: bool = True
+        self,
+        adguard: AdGuardHome,
+        entry: ConfigEntry,
+        name: str,
+        icon: str,
+        enabled_default: bool = True,
     ) -> None:
         """Initialize the AdGuard Home entity."""
         self._available = True
         self._enabled_default = enabled_default
         self._icon = icon
         self._name = name
+        self._entry = entry
         self.adguard = adguard
 
     @property
@@ -200,6 +202,8 @@ class AdGuardHomeDeviceEntity(AdGuardHomeEntity):
             },
             "name": "AdGuard Home",
             "manufacturer": "AdGuard Team",
-            "sw_version": self.hass.data[DOMAIN].get(DATA_ADGUARD_VERION),
+            "sw_version": self.hass.data[DOMAIN][self._entry.entry_id].get(
+                DATA_ADGUARD_VERSION
+            ),
             "entry_type": "service",
         }

@@ -34,7 +34,7 @@ def test_get_states(hass_history):
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=now):
         for i in range(5):
             state = ha.State(
-                "test.point_in_time_{}".format(i % 5),
+                f"test.point_in_time_{i % 5}",
                 f"State {i}",
                 {"attribute_test": i},
             )
@@ -49,7 +49,7 @@ def test_get_states(hass_history):
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=future):
         for i in range(5):
             state = ha.State(
-                "test.point_in_time_{}".format(i % 5),
+                f"test.point_in_time_{i % 5}",
                 f"State {i}",
                 {"attribute_test": i},
             )

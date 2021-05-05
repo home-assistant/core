@@ -52,7 +52,9 @@ ITEM_TYPE_MEDIA_CLASS = {
 _LOGGER = logging.getLogger(__name__)
 
 
-def browse_media(entity, is_internal, media_content_type=None, media_content_id=None):
+def browse_media(  # noqa: C901
+    entity, is_internal, media_content_type=None, media_content_id=None
+):
     """Implement the websocket media browsing helper."""
 
     def item_payload(item):

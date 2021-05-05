@@ -10,6 +10,7 @@
             "user": {
                 "data": {
                     "api_key": "API-n\u00f8kkel",
+                    "api_version": "API-versjon",
                     "latitude": "Breddegrad",
                     "longitude": "Lengdegrad",
                     "name": "Navn"

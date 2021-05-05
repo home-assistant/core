@@ -1,9 +1,10 @@
 """Support for Verisure cameras."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 import errno
 import os
-from typing import Any, Callable, Iterable
+from typing import Any, Callable
 
 from verisure import Error as VerisureError
 

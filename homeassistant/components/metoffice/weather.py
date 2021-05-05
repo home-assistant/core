@@ -1,8 +1,8 @@
 """Support for UK Met Office weather service."""
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.const import LENGTH_KILOMETERS, TEMP_CELSIUS
-from homeassistant.core import callback
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTRIBUTION,
@@ -18,7 +18,7 @@ from .const import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigType, async_add_entities
+    hass: HomeAssistant, entry: ConfigType, async_add_entities
 ) -> None:
     """Set up the Met Office weather sensor platform."""
     hass_data = hass.data[DOMAIN][entry.entry_id]

@@ -15,8 +15,7 @@ from homeassistant.components.remote import (
     SUPPORT_ACTIVITY,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -29,6 +28,7 @@ from .const import (
     ATTR_DEVICES_LIST,
     ATTR_LAST_ACTIVITY,
     DOMAIN,
+    HARMONY_DATA,
     HARMONY_OPTIONS_UPDATE,
     PREVIOUS_ACTIVE_ACTIVITY,
     SERVICE_CHANGE_CHANNEL,
@@ -43,14 +43,9 @@ PARALLEL_UPDATES = 0
 
 ATTR_CHANNEL = "channel"
 
-HARMONY_SYNC_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
-
-HARMONY_CHANGE_CHANNEL_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_CHANNEL): cv.positive_int,
-    }
-)
+HARMONY_CHANGE_CHANNEL_SCHEMA = {
+    vol.Required(ATTR_CHANNEL): cv.positive_int,
+}
 
 
 async def async_setup_entry(
@@ -58,7 +53,7 @@ async def async_setup_entry(
 ):
     """Set up the Harmony config entry."""
 
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
 
     _LOGGER.debug("HarmonyData : %s", data)
 
@@ -73,7 +68,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_SYNC,
-        HARMONY_SYNC_SCHEMA,
+        {},
         "sync",
     )
     platform.async_register_entity_service(
@@ -114,16 +109,17 @@ class HarmonyRemote(ConnectionStateMixin, remote.RemoteEntity, RestoreEntity):
 
     def _setup_callbacks(self):
         callbacks = {
-            "connected": self.got_connected,
-            "disconnected": self.got_disconnected,
-            "config_updated": self.new_config,
-            "activity_starting": self.new_activity,
-            "activity_started": self._new_activity_finished,
+            "connected": self.async_got_connected,
+            "disconnected": self.async_got_disconnected,
+            "config_updated": self.async_new_config,
+            "activity_starting": self.async_new_activity,
+            "activity_started": self.async_new_activity_finished,
         }
 
         self.async_on_remove(self._data.async_subscribe(HarmonyCallback(**callbacks)))
 
-    def _new_activity_finished(self, activity_info: tuple) -> None:
+    @callback
+    def async_new_activity_finished(self, activity_info: tuple) -> None:
         """Call for finished updated current activity."""
         self._activity_starting = None
         self.async_write_ha_state()
@@ -147,7 +143,7 @@ class HarmonyRemote(ConnectionStateMixin, remote.RemoteEntity, RestoreEntity):
 
         # Store Harmony HUB config, this will also update our current
         # activity
-        await self.new_config()
+        await self.async_new_config()
 
         # Restore the last activity so we know
         # how what to turn on if nothing
@@ -211,7 +207,8 @@ class HarmonyRemote(ConnectionStateMixin, remote.RemoteEntity, RestoreEntity):
         """Return True if connected to Hub, otherwise False."""
         return self._data.available
 
-    def new_activity(self, activity_info: tuple) -> None:
+    @callback
+    def async_new_activity(self, activity_info: tuple) -> None:
         """Call for updating the current activity."""
         activity_id, activity_name = activity_info
         _LOGGER.debug("%s: activity reported as: %s", self._name, activity_name)
@@ -228,10 +225,10 @@ class HarmonyRemote(ConnectionStateMixin, remote.RemoteEntity, RestoreEntity):
         self._state = bool(activity_id != -1)
         self.async_write_ha_state()
 
-    async def new_config(self, _=None):
+    async def async_new_config(self, _=None):
         """Call for updating the current activity."""
         _LOGGER.debug("%s: configuration has been updated", self._name)
-        self.new_activity(self._data.current_activity)
+        self.async_new_activity(self._data.current_activity)
         await self.hass.async_add_executor_job(self.write_config_file)
 
     async def async_turn_on(self, **kwargs):

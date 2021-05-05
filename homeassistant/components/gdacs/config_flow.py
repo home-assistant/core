@@ -53,7 +53,7 @@ class GdacsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        user_input[CONF_SCAN_INTERVAL] = scan_interval.seconds
+        user_input[CONF_SCAN_INTERVAL] = scan_interval.total_seconds()
 
         categories = user_input.get(CONF_CATEGORIES, [])
         user_input[CONF_CATEGORIES] = categories

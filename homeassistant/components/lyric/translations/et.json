@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Kinnitus-URLi loomise ajal\u00f5pp",
-            "missing_configuration": "Komponent pole seadistatud. Palun loe dokumentatsiooni."
+            "missing_configuration": "Komponent pole seadistatud. Palun loe dokumentatsiooni.",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "create_entry": {
             "default": "Tuvastamine \u00f5nnestus"
@@ -10,6 +11,10 @@
         "step": {
             "pick_implementation": {
                 "title": "Vali tuvastusmeetod"
+            },
+            "reauth_confirm": {
+                "description": "Lyricu sidumine peab konto uuesti tuvastama.",
+                "title": "Taastuvastamine"
             }
         }
     }

@@ -1,9 +1,11 @@
 """Support for KNX/IP lights."""
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable
+from collections.abc import Iterable
+from typing import Any, Callable
 
 from xknx.devices import Light as XknxLight
+from xknx.telegram.address import parse_device_group_address
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -16,12 +18,13 @@ from homeassistant.components.light import (
     SUPPORT_WHITE_VALUE,
     LightEntity,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
-from .const import DOMAIN
+from .const import DOMAIN, KNX_ADDRESS
 from .knx_entity import KnxEntity
 from .schema import LightSchema
 
@@ -37,11 +40,83 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up lights for KNX platform."""
+    _async_migrate_unique_id(hass, discovery_info)
     entities = []
     for device in hass.data[DOMAIN].xknx.devices:
         if isinstance(device, XknxLight):
             entities.append(KNXLight(device))
     async_add_entities(entities)
+
+
+@callback
+def _async_migrate_unique_id(
+    hass: HomeAssistant, discovery_info: DiscoveryInfoType | None
+) -> None:
+    """Change unique_ids used in 2021.4 to exchange individual color switch address for brightness address."""
+    entity_registry = er.async_get(hass)
+    if not discovery_info or not discovery_info["platform_config"]:
+        return
+
+    platform_config = discovery_info["platform_config"]
+    for entity_config in platform_config:
+        individual_colors_config = entity_config.get(LightSchema.CONF_INDIVIDUAL_COLORS)
+        if individual_colors_config is None:
+            continue
+        try:
+            ga_red_switch = individual_colors_config[LightSchema.CONF_RED][KNX_ADDRESS][
+                0
+            ]
+            ga_green_switch = individual_colors_config[LightSchema.CONF_GREEN][
+                KNX_ADDRESS
+            ][0]
+            ga_blue_switch = individual_colors_config[LightSchema.CONF_BLUE][
+                KNX_ADDRESS
+            ][0]
+        except KeyError:
+            continue
+        # normalize group address strings
+        ga_red_switch = parse_device_group_address(ga_red_switch)
+        ga_green_switch = parse_device_group_address(ga_green_switch)
+        ga_blue_switch = parse_device_group_address(ga_blue_switch)
+        # white config is optional so it has to be checked for `None` extra
+        white_config = individual_colors_config.get(LightSchema.CONF_WHITE)
+        white_switch = (
+            white_config.get(KNX_ADDRESS) if white_config is not None else None
+        )
+        ga_white_switch = (
+            parse_device_group_address(white_switch[0])
+            if white_switch is not None
+            else None
+        )
+
+        old_uid = (
+            f"{ga_red_switch}_"
+            f"{ga_green_switch}_"
+            f"{ga_blue_switch}_"
+            f"{ga_white_switch}"
+        )
+        entity_id = entity_registry.async_get_entity_id("light", DOMAIN, old_uid)
+        if entity_id is None:
+            continue
+
+        ga_red_brightness = parse_device_group_address(
+            individual_colors_config[LightSchema.CONF_RED][
+                LightSchema.CONF_BRIGHTNESS_ADDRESS
+            ][0]
+        )
+        ga_green_brightness = parse_device_group_address(
+            individual_colors_config[LightSchema.CONF_GREEN][
+                LightSchema.CONF_BRIGHTNESS_ADDRESS
+            ][0]
+        )
+        ga_blue_brightness = parse_device_group_address(
+            individual_colors_config[LightSchema.CONF_BLUE][
+                LightSchema.CONF_BRIGHTNESS_ADDRESS
+            ][0]
+        )
+
+        new_uid = f"{ga_red_brightness}_{ga_green_brightness}_{ga_blue_brightness}"
+        entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
 
 
 class KNXLight(KnxEntity, LightEntity):
@@ -51,7 +126,7 @@ class KNXLight(KnxEntity, LightEntity):
         """Initialize of KNX light."""
         self._device: XknxLight
         super().__init__(device)
-
+        self._unique_id = self._device_unique_id()
         self._min_kelvin = device.min_kelvin or LightSchema.DEFAULT_MIN_KELVIN
         self._max_kelvin = device.max_kelvin or LightSchema.DEFAULT_MAX_KELVIN
         self._min_mireds = color_util.color_temperature_kelvin_to_mired(
@@ -59,6 +134,16 @@ class KNXLight(KnxEntity, LightEntity):
         )
         self._max_mireds = color_util.color_temperature_kelvin_to_mired(
             self._min_kelvin
+        )
+
+    def _device_unique_id(self) -> str:
+        """Return unique id for this device."""
+        if self._device.switch.group_address is not None:
+            return f"{self._device.switch.group_address}"
+        return (
+            f"{self._device.red.brightness.group_address}_"
+            f"{self._device.green.brightness.group_address}_"
+            f"{self._device.blue.brightness.group_address}"
         )
 
     @property

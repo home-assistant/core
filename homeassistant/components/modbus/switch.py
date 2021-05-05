@@ -6,8 +6,6 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pymodbus.exceptions import ConnectionException, ModbusException
-from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
@@ -21,10 +19,11 @@ from homeassistant.const import (
     CONF_SWITCHES,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CALL_TYPE_COIL,
@@ -88,7 +87,7 @@ PLATFORM_SCHEMA = vol.All(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Read configuration and create Modbus switches."""
     switches = []
@@ -124,8 +123,9 @@ async def async_setup_platform(
     for entry in discovery_info[CONF_SWITCHES]:
         if CONF_HUB in entry:
             # from old config!
-            discovery_info[CONF_NAME] = entry[CONF_HUB]
-        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][entry[CONF_HUB]]
+        else:
+            hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         if entry[CONF_INPUT_TYPE] == CALL_TYPE_COIL:
             switches.append(ModbusCoilSwitch(hub, entry))
         else:
@@ -212,13 +212,8 @@ class ModbusCoilSwitch(ModbusBaseSwitch, SwitchEntity):
 
     def _read_coil(self, coil) -> bool:
         """Read coil using the Modbus hub slave."""
-        try:
-            result = self._hub.read_coils(self._slave, coil, 1)
-        except ConnectionException:
-            self._available = False
-            return False
-
-        if isinstance(result, (ModbusException, ExceptionResponse)):
+        result = self._hub.read_coils(self._slave, coil, 1)
+        if result is None:
             self._available = False
             return False
 
@@ -230,13 +225,7 @@ class ModbusCoilSwitch(ModbusBaseSwitch, SwitchEntity):
 
     def _write_coil(self, coil, value):
         """Write coil using the Modbus hub slave."""
-        try:
-            self._hub.write_coil(self._slave, coil, value)
-        except ConnectionException:
-            self._available = False
-            return
-
-        self._available = True
+        self._available = self._hub.write_coil(self._slave, coil, value)
 
 
 class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
@@ -300,33 +289,21 @@ class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
         self.schedule_update_ha_state()
 
     def _read_register(self) -> int | None:
-        try:
-            if self._register_type == CALL_TYPE_REGISTER_INPUT:
-                result = self._hub.read_input_registers(
-                    self._slave, self._verify_register, 1
-                )
-            else:
-                result = self._hub.read_holding_registers(
-                    self._slave, self._verify_register, 1
-                )
-        except ConnectionException:
+        if self._register_type == CALL_TYPE_REGISTER_INPUT:
+            result = self._hub.read_input_registers(
+                self._slave, self._verify_register, 1
+            )
+        else:
+            result = self._hub.read_holding_registers(
+                self._slave, self._verify_register, 1
+            )
+        if result is None:
             self._available = False
             return
-
-        if isinstance(result, (ModbusException, ExceptionResponse)):
-            self._available = False
-            return
-
         self._available = True
 
         return int(result.registers[0])
 
     def _write_register(self, value):
         """Write holding register using the Modbus hub slave."""
-        try:
-            self._hub.write_register(self._slave, self._register, value)
-        except ConnectionException:
-            self._available = False
-            return
-
-        self._available = True
+        self._available = self._hub.write_register(self._slave, self._register, value)

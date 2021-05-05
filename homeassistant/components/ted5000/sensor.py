@@ -56,7 +56,7 @@ class Ted5000Sensor(SensorEntity):
         """Initialize the sensor."""
         units = {POWER_WATT: "power", VOLT: "voltage"}
         self._gateway = gateway
-        self._name = "{} mtu{} {}".format(name, mtu, units[unit])
+        self._name = f"{name} mtu{mtu} {units[unit]}"
         self._mtu = mtu
         self._unit = unit
         self.update()

@@ -1,9 +1,9 @@
 """The Synology DSM component."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 import async_timeout
 from synology_dsm import SynologyDSM
@@ -36,11 +36,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -119,7 +118,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Synology DSM sensors."""
 
     # Migrate old unique_id
@@ -286,25 +285,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         update_interval=timedelta(seconds=30),
     )
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload Synology DSM sensors."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         entry_data = hass.data[DOMAIN][entry.unique_id]
         entry_data[UNDO_UPDATE_LISTENER]()
@@ -314,12 +302,12 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return unload_ok
 
 
-async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry):
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def _async_setup_services(hass: HomeAssistantType):
+async def _async_setup_services(hass: HomeAssistant):
     """Service handler setup."""
 
     async def service_handler(call: ServiceCall):
@@ -358,7 +346,7 @@ async def _async_setup_services(hass: HomeAssistantType):
 class SynoApi:
     """Class to interface with Synology DSM API."""
 
-    def __init__(self, hass: HomeAssistantType, entry: ConfigEntry):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
         """Initialize the API wrapper class."""
         self._hass = hass
         self._entry = entry
@@ -627,12 +615,12 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
         return self._class
 
     @property
-    def extra_state_attributes(self) -> dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> dict[str, Any]:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._api.information.serial)},
@@ -702,7 +690,7 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
         return bool(self._api.storage)
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> dict[str, Any]:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._api.information.serial, self._device_id)},

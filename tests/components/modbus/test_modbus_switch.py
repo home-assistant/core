@@ -12,7 +12,6 @@ from homeassistant.components.modbus.const import (
     CONF_REGISTERS,
     CONF_STATE_OFF,
     CONF_STATE_ON,
-    CONF_SWITCHES,
     CONF_VERIFY_REGISTER,
     CONF_VERIFY_STATE,
 )
@@ -24,6 +23,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_SLAVE,
+    CONF_SWITCHES,
     STATE_OFF,
     STATE_ON,
 )
@@ -34,12 +34,6 @@ from .conftest import base_config_test, base_test
 @pytest.mark.parametrize(
     "array_type, do_config",
     [
-        (
-            None,
-            {
-                CONF_ADDRESS: 1234,
-            },
-        ),
         (
             None,
             {
@@ -61,6 +55,7 @@ from .conftest import base_config_test, base_test
                 CONF_STATE_OFF: 0,
                 CONF_STATE_ON: 1,
                 CONF_VERIFY_REGISTER: 1235,
+                CONF_VERIFY_STATE: False,
                 CONF_COMMAND_OFF: 0x00,
                 CONF_COMMAND_ON: 0x01,
                 CONF_DEVICE_CLASS: "switch",
@@ -75,6 +70,7 @@ from .conftest import base_config_test, base_test
                 CONF_STATE_OFF: 0,
                 CONF_STATE_ON: 1,
                 CONF_VERIFY_REGISTER: 1235,
+                CONF_VERIFY_STATE: True,
                 CONF_COMMAND_OFF: 0x00,
                 CONF_COMMAND_ON: 0x01,
                 CONF_DEVICE_CLASS: "switch",

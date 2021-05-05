@@ -3,5 +3,6 @@
   "name": "Webhook",
   "documentation": "https://www.home-assistant.io/integrations/webhook",
   "dependencies": ["http"],
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }

@@ -5,5 +5,6 @@
   "requirements": ["aiohttp_cors==0.7.0"],
   "after_dependencies": ["http"],
   "codeowners": [],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "iot_class": "local_push"
 }

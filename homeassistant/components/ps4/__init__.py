@@ -18,10 +18,9 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_TOKEN,
 )
-from homeassistant.core import split_entity_id
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import location
 from homeassistant.util.json import load_json, save_json
 
@@ -38,6 +37,8 @@ PS4_COMMAND_SCHEMA = vol.Schema(
         vol.Required(ATTR_COMMAND): vol.In(list(COMMANDS)),
     }
 )
+
+PLATFORMS = ["media_player"]
 
 
 class PS4Data:
@@ -60,18 +61,15 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass, entry):
     """Set up PS4 from a config entry."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "media_player")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a PS4 config entry."""
-    await hass.config_entries.async_forward_entry_unload(entry, "media_player")
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass, entry):
@@ -157,7 +155,7 @@ def format_unique_id(creds, mac_address):
     return f"{mac_address}_{suffix}"
 
 
-def load_games(hass: HomeAssistantType, unique_id: str) -> dict:
+def load_games(hass: HomeAssistant, unique_id: str) -> dict:
     """Load games for sources."""
     g_file = hass.config.path(GAMES_FILE.format(unique_id))
     try:
@@ -176,7 +174,7 @@ def load_games(hass: HomeAssistantType, unique_id: str) -> dict:
     return games
 
 
-def save_games(hass: HomeAssistantType, games: dict, unique_id: str):
+def save_games(hass: HomeAssistant, games: dict, unique_id: str):
     """Save games to file."""
     g_file = hass.config.path(GAMES_FILE.format(unique_id))
     try:
@@ -185,7 +183,7 @@ def save_games(hass: HomeAssistantType, games: dict, unique_id: str):
         _LOGGER.error("Could not save game list, %s", error)
 
 
-def _reformat_data(hass: HomeAssistantType, games: dict, unique_id: str) -> dict:
+def _reformat_data(hass: HomeAssistant, games: dict, unique_id: str) -> dict:
     """Reformat data to correct format."""
     data_reformatted = False
 
@@ -208,7 +206,7 @@ def _reformat_data(hass: HomeAssistantType, games: dict, unique_id: str) -> dict
     return games
 
 
-def service_handle(hass: HomeAssistantType):
+def service_handle(hass: HomeAssistant):
     """Handle for services."""
 
     async def async_service_command(call):

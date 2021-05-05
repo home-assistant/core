@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "cannot_connect": "Kan geen verbinding maken met Volumio"
+            "cannot_connect": "Kan geen verbinding maken met ontdekte Volumio"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",

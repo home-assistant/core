@@ -6,6 +6,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.data_entry_flow import FlowResult
 
 from . import get_coordinator
 from .const import DOMAIN, OPTION_WORLDWIDE
@@ -21,13 +22,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if self._options is None:
             coordinator = await get_coordinator(self.hass)
-            if not coordinator.last_update_success:
+            if not coordinator.last_update_success or coordinator.data is None:
                 return self.async_abort(reason="cannot_connect")
 
             self._options = {OPTION_WORLDWIDE: "Worldwide"}

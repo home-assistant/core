@@ -734,6 +734,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         connection_class=config_entries.CONN_CLASS_UNKNOWN,
         unique_id=None,
         disabled_by=None,
+        reason=None,
     ):
         """Initialize a mock config entry."""
         kwargs = {
@@ -753,6 +754,8 @@ class MockConfigEntry(config_entries.ConfigEntry):
         if state is not None:
             kwargs["state"] = state
         super().__init__(**kwargs)
+        if reason is not None:
+            self.reason = reason
 
     def add_to_hass(self, hass):
         """Test helper to add entry to hass."""
@@ -1046,10 +1049,15 @@ async def get_system_health_info(hass, domain):
     return await hass.data["system_health"][domain].info_callback(hass)
 
 
-def mock_integration(hass, module):
+def mock_integration(hass, module, built_in=True):
     """Mock an integration."""
     integration = loader.Integration(
-        hass, f"homeassistant.components.{module.DOMAIN}", None, module.mock_manifest()
+        hass,
+        f"{loader.PACKAGE_BUILTIN}.{module.DOMAIN}"
+        if built_in
+        else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}",
+        None,
+        module.mock_manifest(),
     )
 
     def mock_import_platform(platform_name):

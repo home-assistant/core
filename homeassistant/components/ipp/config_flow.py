@@ -23,15 +23,17 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_BASE_PATH, CONF_SERIAL, CONF_UUID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: HomeAssistantType, data: dict) -> dict[str, Any]:
+async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -61,9 +63,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
         """Set up the instance."""
         self.discovery_info = {}
 
-    async def async_step_user(
-        self, user_input: ConfigType | None = None
-    ) -> dict[str, Any]:
+    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._show_setup_form()
@@ -99,7 +99,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
-    async def async_step_zeroconf(self, discovery_info: ConfigType) -> dict[str, Any]:
+    async def async_step_zeroconf(self, discovery_info: ConfigType) -> FlowResult:
         """Handle zeroconf discovery."""
         port = discovery_info[CONF_PORT]
         zctype = discovery_info["type"]
@@ -167,7 +167,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(
         self, user_input: ConfigType = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Handle a confirmation flow initiated by zeroconf."""
         if user_input is None:
             return self.async_show_form(
@@ -181,7 +181,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             data=self.discovery_info,
         )
 
-    def _show_setup_form(self, errors: dict | None = None) -> dict[str, Any]:
+    def _show_setup_form(self, errors: dict | None = None) -> FlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",

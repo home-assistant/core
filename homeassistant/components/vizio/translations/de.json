@@ -6,7 +6,8 @@
             "updated_entry": "Dieser Eintrag wurde bereits eingerichtet, aber der Name, die Apps und / oder die in der Konfiguration definierten Optionen stimmen nicht mit der zuvor importierten Konfiguration \u00fcberein, sodass der Konfigurationseintrag entsprechend aktualisiert wurde."
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen"
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "complete_pairing_failed": "Das Pairing konnte nicht abgeschlossen werden. Vergewissere dich, dass der eingegebene PIN korrekt ist und dass der Fernseher noch mit Strom versorgt wird und mit dem Netzwerk verbunden ist, bevor du es erneut versuchst."
         },
         "step": {
             "pair_tv": {
