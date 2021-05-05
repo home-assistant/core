@@ -10,7 +10,14 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+    CONF_HOST,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
@@ -164,9 +171,9 @@ class WLEDDeviceEntity(WLEDEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this WLED device."""
         return {
-            "identifiers": {(DOMAIN, self.coordinator.data.info.mac_address)},
-            "name": self.coordinator.data.info.name,
-            "manufacturer": self.coordinator.data.info.brand,
-            "model": self.coordinator.data.info.product,
-            "sw_version": self.coordinator.data.info.version,
+            ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.data.info.mac_address)},
+            ATTR_NAME: self.coordinator.data.info.name,
+            ATTR_MANUFACTURER: self.coordinator.data.info.brand,
+            ATTR_MODEL: self.coordinator.data.info.product,
+            ATTR_SW_VERSION: self.coordinator.data.info.version,
         }

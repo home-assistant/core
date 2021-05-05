@@ -128,7 +128,7 @@ class WLEDMasterLight(LightEntity, WLEDDeviceEntity):
     @wled_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        data: dict[str, Any] = {ATTR_ON: False}
+        data: dict[str, bool | int] = {ATTR_ON: False}
 
         if ATTR_TRANSITION in kwargs:
             # WLED uses 100ms per unit, so 10 = 1 second.
@@ -139,7 +139,7 @@ class WLEDMasterLight(LightEntity, WLEDDeviceEntity):
     @wled_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        data: dict[str, Any] = {ATTR_ON: True}
+        data: dict[str, bool | int] = {ATTR_ON: True}
 
         if ATTR_TRANSITION in kwargs:
             # WLED uses 100ms per unit, so 10 = 1 second.
@@ -296,7 +296,7 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
     @wled_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        data: dict[str, Any] = {ATTR_ON: False}
+        data: dict[str, bool | int] = {ATTR_ON: False}
 
         if ATTR_TRANSITION in kwargs:
             # WLED uses 100ms per unit, so 10 = 1 second.
@@ -313,7 +313,10 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
     @wled_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        data: dict[str, Any] = {ATTR_ON: True, ATTR_SEGMENT_ID: self._segment}
+        data: dict[str, Any] = {
+            ATTR_ON: True,
+            ATTR_SEGMENT_ID: self._segment,
+        }
 
         if ATTR_COLOR_TEMP in kwargs:
             mireds = color_util.color_temperature_kelvin_to_mired(
@@ -386,7 +389,7 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
         speed: int | None = None,
     ) -> None:
         """Set the effect of a WLED light."""
-        data: dict[str, Any] = {ATTR_SEGMENT_ID: self._segment}
+        data: dict[str, bool | int | str | None] = {ATTR_SEGMENT_ID: self._segment}
 
         if effect is not None:
             data[ATTR_EFFECT] = effect
