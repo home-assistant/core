@@ -196,7 +196,7 @@ async def test_form_start(hass, additional):
             result["flow_id"], add_config
         )
         assert result_add
-        assert result_add["step_id"] == "user"
+        assert result_add["step_id"] == "add_account"
         assert result_add["errors"] is None
         assert result_add["data_schema"] == ACCOUNT_SCHEMA
 
@@ -216,7 +216,7 @@ async def test_unknown(hass, additional):
     if not additional:
         with patch(
             "homeassistant.components.sia.config_flow.validate_input",
-            side_effect=Exception("Test"),
+            return_value={"base": "unknown"},
         ):
             result_err = await hass.config_entries.flow.async_configure(
                 result["flow_id"], BASIC_CONFIG
@@ -233,11 +233,11 @@ async def test_unknown(hass, additional):
         )
         with patch(
             "homeassistant.components.sia.config_flow.validate_input",
-            side_effect=Exception("Test"),
+            return_value={"base": "unknown"},
         ):
             result_add = await hass.config_entries.flow.async_configure(
                 result2["flow_id"], ADDITIONAL_ACCOUNT
             )
             assert result_add
-            assert result_add["step_id"] == "user"
+            assert result_add["step_id"] == "add_account"
             assert result_add["errors"] == {"base": "unknown"}
