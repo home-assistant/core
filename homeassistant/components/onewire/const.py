@@ -20,7 +20,6 @@ from homeassistant.const import (
 CONF_MOUNT_DIR = "mount_dir"
 CONF_NAMES = "names"
 
-CONF_TYPE_OWFS = "OWFS"
 CONF_TYPE_OWSERVER = "OWServer"
 CONF_TYPE_SYSBUS = "SysBus"
 
