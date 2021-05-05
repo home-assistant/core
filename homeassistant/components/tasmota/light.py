@@ -134,7 +134,17 @@ class TasmotaLight(
                 percent_bright = brightness / TASMOTA_BRIGHTNESS_MAX
                 self._brightness = percent_bright * 255
             if "color" in attributes:
-                self._rgb = attributes["color"]
+
+                def clamp(value):
+                    """Clamp value to the range 0..255."""
+                    return min(max(value, 0), 255)
+
+                rgb = attributes["color"]
+                # Tasmota's RGB color is adjusted for brightness, compensate
+                red_compensated = clamp(round(rgb[0] / self._brightness * 255))
+                green_compensated = clamp(round(rgb[1] / self._brightness * 255))
+                blue_compensated = clamp(round(rgb[2] / self._brightness * 255))
+                self._rgb = [red_compensated, green_compensated, blue_compensated]
             if "color_temp" in attributes:
                 self._color_temp = attributes["color_temp"]
             if "effect" in attributes:
