@@ -9,7 +9,11 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.components.homeassistant import SERVICE_CHECK_CONFIG
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_CHECK_CONFIG,
+    SHUTDOWN_SERVICES,
+)
 import homeassistant.config as conf_util
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -21,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HASS_DOMAIN, Config, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, recorder
 from homeassistant.helpers.device_registry import DeviceRegistry, async_get_registry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.loader import bind_hass
@@ -469,23 +473,38 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:  # noqa: C90
 
     async def async_handle_core_service(call):
         """Service handler for handling core services."""
+        if (
+            call.service in SHUTDOWN_SERVICES
+            and await recorder.async_migration_in_progress(hass)
+        ):
+            _LOGGER.error(
+                "The system cannot %s while a database upgrade in progress",
+                call.service,
+            )
+            raise HomeAssistantError(
+                f"The system cannot {call.service} while a database upgrade in progress."
+            )
+
         if call.service == SERVICE_HOMEASSISTANT_STOP:
             await hassio.stop_homeassistant()
             return
 
-        try:
-            errors = await conf_util.async_check_ha_config_file(hass)
-        except HomeAssistantError:
-            return
+        errors = await conf_util.async_check_ha_config_file(hass)
 
         if errors:
-            _LOGGER.error(errors)
+            _LOGGER.error(
+                "The system cannot %s because the configuration is not valid: %s",
+                call.service,
+                errors,
+            )
             hass.components.persistent_notification.async_create(
                 "Config error. See [the logs](/config/logs) for details.",
                 "Config validating",
-                f"{HASS_DOMAIN}.check_config",
+                f"{HA_DOMAIN}.check_config",
             )
-            return
+            raise HomeAssistantError(
+                f"The system cannot {call.service} because the configuration is not valid: {errors}"
+            )
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
             await hassio.restart_homeassistant()
