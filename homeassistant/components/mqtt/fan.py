@@ -362,6 +362,9 @@ class MqttFan(MqttEntity, FanEntity):
         def percentage_received(msg):
             """Handle new received MQTT message for the percentage."""
             numeric_val_str = self._value_templates[ATTR_PERCENTAGE](msg.payload)
+            if not numeric_val_str:
+                _LOGGER.debug("Ignoring empty speed from '%s'", msg.topic)
+                return
             try:
                 percentage = ranged_value_to_percentage(
                     self._speed_range, int(numeric_val_str)
@@ -396,6 +399,9 @@ class MqttFan(MqttEntity, FanEntity):
         def preset_mode_received(msg):
             """Handle new received MQTT message for preset mode."""
             preset_mode = self._value_templates[ATTR_PRESET_MODE](msg.payload)
+            if not preset_mode:
+                _LOGGER.debug("Ignoring empty preset_mode from '%s'", msg.topic)
+                return
             if preset_mode not in self.preset_modes:
                 _LOGGER.warning(
                     "'%s' received on topic %s is not a valid preset mode",
