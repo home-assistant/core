@@ -4,13 +4,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    ClimateEntity,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
+    ClimateEntity,
 )
 from homeassistant.components.climate.const import (
-    ATTR_HVAC_MODE,
     ATTR_FAN_MODE,
+    ATTR_HVAC_MODE,
     CURRENT_HVAC_ACTIONS,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
@@ -25,9 +24,9 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    PRECISION_WHOLE,
     PRECISION_HALVES,
     PRECISION_TENTHS,
+    PRECISION_WHOLE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
