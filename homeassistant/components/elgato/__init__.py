@@ -1,4 +1,4 @@
-"""Support for Elgato Key Lights."""
+"""Support for Elgato Lights."""
 import logging
 
 from elgato import Elgato, ElgatoConnectionError
@@ -16,7 +16,7 @@ PLATFORMS = [LIGHT_DOMAIN]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Elgato Key Light from a config entry."""
+    """Set up Elgato Light from a config entry."""
     session = async_get_clientsession(hass)
     elgato = Elgato(
         entry.data[CONF_HOST],
@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Elgato Key Light config entry."""
+    """Unload Elgato Light config entry."""
     # Unload entities for this entry/device.
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
