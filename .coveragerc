@@ -1216,7 +1216,6 @@ omit =
     homeassistant/components/flexpool/const.py
     homeassistant/components/flexpool/helper.py
     homeassistant/components/flexpool/sensor.py
-    homeassistant/components/flexpool/sensors.py
 
 [report]
 # Regexes for lines to exclude from consideration

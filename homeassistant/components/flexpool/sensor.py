@@ -18,7 +18,7 @@ from .helper import get_hashrate
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -28,7 +28,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async def async_update_data():
         try:
             async with async_timeout.timeout(10):
-                return await flexpoolapi.miner(address).workers()
+                return await hass.async_add_executor_job(get_workers, address)
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}")
 
@@ -47,45 +47,62 @@ async def async_setup_entry(hass, entry, async_add_entities):
         FlexpoolHashrateSensor("flexpool_current_reported", address),
         FlexpoolHashrateSensor("flexpool_current_effective", address),
         FlexpoolHashrateSensor("flexpool_daily_average", address),
+        FlexpoolPoolHashrateSensor("flexpool_effective"),
+        FlexpoolPoolWorkersSensor("flexpool_workers"),
+        FlexpoolPoolLuckSensor("flexpool_luck"),
     ]
 
     if "workers" in entry.data:
         await coordinator.async_config_entry_first_refresh()
         await hass.async_add_executor_job(
-            add_workers_sensors_loop, address, async_add_entities
+            add_workers_sensors_loop, coordinator, async_add_entities
         )
-
-    if "pool" in entry.data:
-        sensors.append(FlexpoolPoolHashrateSensor("flexpool_effective"))
-        sensors.append(FlexpoolPoolWorkersSensor("flexpool_workers"))
-        sensors.append(FlexpoolPoolLuckSensor("flexpool_luck"))
 
     async_add_entities(sensors, True)
 
 
-def add_workers_sensors_loop(address, coordinator, async_add_entities):
+def get_workers(address):
+    """Get all workers."""
+    data = {}
+    for worker in flexpoolapi.miner(address).workers():
+        effective, reported = worker.current_hashrate()
+        stats = worker.stats()
+        valid = stats.valid_shares
+        total = stats.valid_shares + stats.stale_shares + stats.invalid_shares
+
+        data[worker.worker_name] = {
+            "reported": reported,
+            "effective": effective,
+            "valid": valid,
+            "total": total,
+            "worker_name": worker.worker_name,
+        }
+
+    return data
+
+
+def add_workers_sensors_loop(coordinator, async_add_entities):
     """Get workers and add sensors."""
     sensors = []
-
-    for idx, worker in enumerate(coordinator.data):
+    for idx, worker in coordinator.data.items():
         sensors.append(
             FlexpoolWorkerHashrateSensor(
-                "flexpool_worker_reported", worker.worker_name, coordinator, idx
+                "flexpool_worker_reported", worker["worker_name"], coordinator, idx
             )
         )
         sensors.append(
             FlexpoolWorkerHashrateSensor(
-                "flexpool_worker_effective", worker.worker_name, coordinator, idx
+                "flexpool_worker_effective", worker["worker_name"], coordinator, idx
             )
         )
         sensors.append(
             FlexpoolWorkerShareSensor(
-                "flexpool_worker_daily_valid", worker.worker_name, coordinator, idx
+                "flexpool_worker_daily_valid", worker["worker_name"], coordinator, idx
             )
         )
         sensors.append(
             FlexpoolWorkerShareSensor(
-                "flexpool_worker_daily_total", worker.worker_name, coordinator, idx
+                "flexpool_worker_daily_total", worker["worker_name"], coordinator, idx
             )
         )
 
@@ -209,24 +226,16 @@ class FlexpoolWorkerHashrateSensor(CoordinatorEntity, Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
+        worker = self.coordinator.data[self._idx]
+        self._state, self._unit = get_hashrate(worker[self._type])
         return self._state
 
     @property
     def unit_of_measurement(self):
         """Return the unit of the sensor."""
-        return self._unit
-
-    def update(self):
-        """Get the latest state of the sensor."""
-        hashrate = 0
         worker = self.coordinator.data[self._idx]
-
-        if self._type == "effective":
-            hashrate, _ = worker.effective_hashrate
-        elif self._type == "reported":
-            _, hashrate = worker.reported_hashrate
-
-        self._state, self._unit = get_hashrate(hashrate)
+        self._state, self._unit = get_hashrate(worker[self._type])
+        return self._unit
 
 
 class FlexpoolWorkerShareSensor(CoordinatorEntity, Entity):
@@ -257,25 +266,12 @@ class FlexpoolWorkerShareSensor(CoordinatorEntity, Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        return self.coordinator.data[self._idx][self._type]
 
     @property
     def unit_of_measurement(self):
         """Return the unit of the sensor."""
         return "Shares"
-
-    def update(self):
-        """Get the latest state of the sensor."""
-        shares = 0
-        worker = self.coordinator.data[self._idx]
-
-        if self._type == "total":
-            stats = worker.stats()
-            shares = stats.valid_shares + stats.stale_shares + stats.invalid_shares
-        elif self._type == "valid":
-            shares = worker.stats().valid_shares
-
-        self._state = shares
 
 
 class FlexpoolPoolHashrateSensor(Entity):
