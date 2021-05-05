@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from glob import glob
 import logging
 import os
 
@@ -18,7 +17,6 @@ from homeassistant.helpers.typing import StateType
 from .const import (
     CONF_MOUNT_DIR,
     CONF_NAMES,
-    CONF_TYPE_OWFS,
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
     DEFAULT_OWSERVER_PORT,
@@ -242,10 +240,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         config[CONF_TYPE] = CONF_TYPE_OWSERVER
     elif config[CONF_MOUNT_DIR] == DEFAULT_SYSBUS_MOUNT_DIR:
         config[CONF_TYPE] = CONF_TYPE_SYSBUS
-    else:  # pragma: no cover
-        # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
-        # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
-        config[CONF_TYPE] = CONF_TYPE_OWFS
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -361,38 +355,6 @@ def get_entities(onewirehub: OneWireHub, config):
                 "Check the mount_dir parameter if it's defined"
             )
 
-    # We have an owfs mounted
-    else:  # pragma: no cover
-        # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
-        # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
-        base_dir = config[CONF_MOUNT_DIR]
-        _LOGGER.debug("Initializing using OWFS %s", base_dir)
-        _LOGGER.warning(
-            "The OWFS implementation of 1-Wire sensors is deprecated, "
-            "and should be migrated to OWServer (on localhost:4304). "
-            "If migration to OWServer is not feasible on your installation, "
-            "please raise an issue at https://github.com/home-assistant/core/issues/new"
-            "?title=Unable%20to%20migrate%20onewire%20from%20OWFS%20to%20OWServer",
-        )
-        for family_file_path in glob(os.path.join(base_dir, "*", "family")):
-            with open(family_file_path) as family_file:
-                family = family_file.read()
-            if "EF" in family:
-                continue
-            if family in DEVICE_SENSORS:
-                for sensor_key, sensor_value in DEVICE_SENSORS[family].items():
-                    sensor_id = os.path.split(os.path.split(family_file_path)[0])[1]
-                    device_file = os.path.join(
-                        os.path.split(family_file_path)[0], sensor_value
-                    )
-                    entities.append(
-                        OneWireOWFSSensor(
-                            device_names.get(sensor_id, sensor_id),
-                            device_file,
-                            sensor_key,
-                        )
-                    )
-
     return entities
 
 
@@ -459,38 +421,4 @@ class OneWireDirectSensor(OneWireSensor):
             UnsupportResponseException,
         ) as ex:
             _LOGGER.warning("Cannot read from sensor %s: %s", self._device_file, ex)
-        self._state = value
-
-
-class OneWireOWFSSensor(OneWireSensor):  # pragma: no cover
-    """Implementation of a 1-Wire sensor through owfs.
-
-    This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
-    https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
-    """
-
-    @property
-    def state(self) -> StateType:
-        """Return the state of the entity."""
-        return self._state
-
-    def _read_value_raw(self):
-        """Read the value as it is returned by the sensor."""
-        with open(self._device_file) as ds_device_file:
-            lines = ds_device_file.readlines()
-        return lines
-
-    def update(self):
-        """Get the latest data from the device."""
-        value = None
-        try:
-            value_read = self._read_value_raw()
-            if len(value_read) == 1:
-                value = round(float(value_read[0]), 1)
-                self._value_raw = float(value_read[0])
-        except ValueError:
-            _LOGGER.warning("Invalid value read from %s", self._device_file)
-        except FileNotFoundError:
-            _LOGGER.warning("Cannot read from sensor: %s", self._device_file)
-
         self._state = value
