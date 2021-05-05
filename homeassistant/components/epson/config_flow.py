@@ -4,14 +4,19 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+import homeassistant.helpers.config_validation as cv
 
 from . import validate_projector
 from .const import DOMAIN
 from .exceptions import CannotConnect, PoweredOff
 
 DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_HOST): str, vol.Required(CONF_NAME, default=DOMAIN): str}
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_NAME, default=DOMAIN): str,
+        vol.Optional(CONF_PORT, default=80): cv.port,
+    }
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,6 +47,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         serial_no = await projector.get_serial_number()
         await self.async_set_unique_id(serial_no)
         self._abort_if_unique_id_configured()
+        import_config.pop(CONF_PORT, None)
         return self.async_create_entry(
             title=import_config.pop(CONF_NAME), data=import_config
         )
