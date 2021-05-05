@@ -845,19 +845,31 @@ async def test_sending_mqtt_commands_rgbw(hass, mqtt_mock, setup_tasmota):
     )
     mqtt_mock.async_publish.reset_mock()
 
+    # Set color when setting color
     await common.async_turn_on(hass, "light.test", rgb_color=[128, 64, 32])
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Power1 ON;NoDelay;Color2 128,64,32;NoDelay;White 0",
+        "NoDelay;Power1 ON;NoDelay;Color2 128,64,32",
         0,
         False,
     )
     mqtt_mock.async_publish.reset_mock()
 
+    # Set color when setting brighter color than white
     await common.async_turn_on(hass, "light.test", rgbw_color=[128, 64, 32, 16])
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
-        "NoDelay;Power1 ON;NoDelay;Color2 128,64,32;NoDelay;White 6",
+        "NoDelay;Power1 ON;NoDelay;Color2 128,64,32",
+        0,
+        False,
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    # Set white when setting brighter white than color
+    await common.async_turn_on(hass, "light.test", rgbw_color=[16, 64, 32, 128])
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tasmota_49A3BC/cmnd/Backlog",
+        "NoDelay;Power1 ON;NoDelay;White 50",
         0,
         False,
     )

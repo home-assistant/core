@@ -236,13 +236,18 @@ class TasmotaLight(
 
         if ATTR_RGBW_COLOR in kwargs and COLOR_MODE_RGBW in supported_color_modes:
             rgbw = kwargs[ATTR_RGBW_COLOR]
-            attributes["color"] = [rgbw[0], rgbw[1], rgbw[2]]
-            white_value_normalized = rgbw[3] / DEFAULT_BRIGHTNESS_MAX
-            device_white_value = min(
-                round(white_value_normalized * TASMOTA_BRIGHTNESS_MAX),
-                TASMOTA_BRIGHTNESS_MAX,
-            )
-            attributes["white_value"] = device_white_value
+            # Tasmota does not support direct RGBW control, the light must be set to
+            # either white mode or color mode. Set the mode according to max of rgb
+            # and white channels
+            if max(rgbw[0:3]) > rgbw[3]:
+                attributes["color"] = [rgbw[0], rgbw[1], rgbw[2]]
+            else:
+                white_value_normalized = rgbw[3] / DEFAULT_BRIGHTNESS_MAX
+                device_white_value = min(
+                    round(white_value_normalized * TASMOTA_BRIGHTNESS_MAX),
+                    TASMOTA_BRIGHTNESS_MAX,
+                )
+                attributes["white_value"] = device_white_value
 
         if ATTR_TRANSITION in kwargs:
             attributes["transition"] = kwargs[ATTR_TRANSITION]
