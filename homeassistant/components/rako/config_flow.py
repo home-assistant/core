@@ -38,24 +38,23 @@ class RakoConfigFlow(ConfigFlow, domain=DOMAIN):
                 bridge_desc = await asyncio.wait_for(
                     discover_bridge(), timeout=self.rako_timeout
                 )
-            except (asyncio.TimeoutError, ValueError) as e:
-                _LOGGER.warning("Couldn't auto discover Rako bridge %s", e)
+            except (asyncio.TimeoutError, ValueError) as ex:
+                _LOGGER.warning("Couldn't auto discover Rako bridge %s", ex)
 
             if bridge_desc:
                 return self._show_setup_form(bridge_desc=bridge_desc)
             return self._show_setup_form(
                 bridge_desc=bridge_desc, errors={CONF_BASE: "no_devices_found"}
             )
-        else:
-            bridge_desc = {
-                "host": user_input[CONF_HOST],
-                "port": user_input[CONF_PORT],
-                "mac": user_input[CONF_MAC],
-                "name": user_input[CONF_NAME]
-                if user_input.get(CONF_NAME)
-                else user_input[CONF_MAC],
-            }
 
+        bridge_desc = {
+            "host": user_input[CONF_HOST],
+            "port": user_input[CONF_PORT],
+            "mac": user_input[CONF_MAC],
+            "name": user_input[CONF_NAME]
+            if user_input.get(CONF_NAME)
+            else user_input[CONF_MAC],
+        }
         try:
             # just check we can connect using the given data
             await self._get_bridge_info(bridge_desc)
