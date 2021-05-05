@@ -1,19 +1,46 @@
 """Support for Flexpool sensors."""
 from datetime import timedelta
+import logging
 
-from homeassistant.const import PERCENTAGE, CONF_NAME, CONF_ICON, CONF_TYPE
+import async_timeout
+import flexpoolapi
+
+from homeassistant.const import CONF_ICON, CONF_NAME, CONF_TYPE, PERCENTAGE
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import SENSOR_DICT
 from .helper import get_hashrate
-import flexpoolapi
+
+_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the Etherscan.io sensors."""
+    """Set up the Flexpool sensors."""
     address = entry.data["address"]
+
+    async def async_update_data():
+        try:
+            async with async_timeout.timeout(10):
+                return await flexpoolapi.miner(address).workers()
+        except Exception as err:
+            raise UpdateFailed(f"Error communicating with API: {err}")
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        # Name of the data. For logging purposes.
+        name="flexpool_workers_sensor",
+        update_method=async_update_data,
+        # Polling interval. Will only be polled if there are subscribers.
+        update_interval=SCAN_INTERVAL,
+    )
 
     sensors = [
         FlexpoolBalanceSensor("flexpool_unpaid_balance", address),
@@ -23,6 +50,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     ]
 
     if "workers" in entry.data:
+        await coordinator.async_config_entry_first_refresh()
         await hass.async_add_executor_job(
             add_workers_sensors_loop, address, async_add_entities
         )
@@ -35,29 +63,29 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(sensors, True)
 
 
-def add_workers_sensors_loop(address, async_add_entities):
+def add_workers_sensors_loop(address, coordinator, async_add_entities):
     """Get workers and add sensors."""
     sensors = []
-    workers = flexpoolapi.miner(address).workers()
-    for worker in workers:
+
+    for idx, worker in enumerate(coordinator.data):
         sensors.append(
             FlexpoolWorkerHashrateSensor(
-                "flexpool_worker_reported", address, worker.worker_name
+                "flexpool_worker_reported", worker.worker_name, coordinator, idx
             )
         )
         sensors.append(
             FlexpoolWorkerHashrateSensor(
-                "flexpool_worker_effective", address, worker.worker_name
+                "flexpool_worker_effective", worker.worker_name, coordinator, idx
             )
         )
         sensors.append(
             FlexpoolWorkerShareSensor(
-                "flexpool_worker_daily_valid", address, worker.worker_name
+                "flexpool_worker_daily_valid", worker.worker_name, coordinator, idx
             )
         )
         sensors.append(
             FlexpoolWorkerShareSensor(
-                "flexpool_worker_daily_total", address, worker.worker_name
+                "flexpool_worker_daily_total", worker.worker_name, coordinator, idx
             )
         )
 
@@ -65,7 +93,7 @@ def add_workers_sensors_loop(address, async_add_entities):
 
 
 class FlexpoolBalanceSensor(Entity):
-    """Representation of an Etherscan.io sensor."""
+    """Representation of a flexpool unpaid balance sensor."""
 
     def __init__(self, name, address):
         """Initialize the sensor."""
@@ -105,7 +133,7 @@ class FlexpoolBalanceSensor(Entity):
 
 
 class FlexpoolHashrateSensor(Entity):
-    """Representation of an Etherscan.io sensor."""
+    """Representation of the flexpool miner hashrate sensor."""
 
     def __init__(self, name, address):
         """Initialize the sensor."""
@@ -152,16 +180,17 @@ class FlexpoolHashrateSensor(Entity):
         self._state, self._unit = get_hashrate(hashrate)
 
 
-class FlexpoolWorkerHashrateSensor(Entity):
-    """Representation of an Etherscan.io sensor."""
+class FlexpoolWorkerHashrateSensor(CoordinatorEntity, Entity):
+    """Representation of a workers hashrate sensor."""
 
-    def __init__(self, name, address, worker):
+    def __init__(self, name, worker, coordinator, idx):
         """Initialize the sensor."""
+        super().__init__(coordinator)
         info = SENSOR_DICT[name]
+        self._idx = idx
         self._worker_name = worker
         self._icon = info[CONF_ICON]
         self._type = info[CONF_TYPE]
-        self._address = address
         self._state = None
         self._unit = "H/s"
 
@@ -189,34 +218,28 @@ class FlexpoolWorkerHashrateSensor(Entity):
 
     def update(self):
         """Get the latest state of the sensor."""
-        workers = flexpoolapi.miner(self._address).workers()
-
         hashrate = 0
-        # Ugly but I don't think there is another way
-        for worker in workers:
-            if worker.worker_name != self._worker_name:
-                continue
+        worker = self.coordinator.data[self._idx]
 
-            if self._type == "effective":
-                hashrate, _ = worker.current_hashrate()
-            elif self._type == "reported":
-                _, hashrate = worker.current_hashrate()
-
-            break
+        if self._type == "effective":
+            hashrate, _ = worker.effective_hashrate
+        elif self._type == "reported":
+            _, hashrate = worker.reported_hashrate
 
         self._state, self._unit = get_hashrate(hashrate)
 
 
-class FlexpoolWorkerShareSensor(Entity):
-    """Representation of an Etherscan.io sensor."""
+class FlexpoolWorkerShareSensor(CoordinatorEntity, Entity):
+    """Representation of a workers shares sensor."""
 
-    def __init__(self, name, address, worker):
+    def __init__(self, name, worker, coordinator, idx):
         """Initialize the sensor."""
+        super().__init__(coordinator)
         info = SENSOR_DICT[name]
+        self._idx = idx
         self._worker_name = worker
         self._icon = info[CONF_ICON]
         self._type = info[CONF_TYPE]
-        self._address = address
         self._state = None
 
     @property
@@ -243,27 +266,20 @@ class FlexpoolWorkerShareSensor(Entity):
 
     def update(self):
         """Get the latest state of the sensor."""
-        workers = flexpoolapi.miner(self._address).workers()
-
         shares = 0
-        # Ugly but I don't think there is another way
-        for worker in workers:
-            if worker.worker_name != self._worker_name:
-                continue
+        worker = self.coordinator.data[self._idx]
 
-            if self._type == "total":
-                stats = worker.stats()
-                shares = stats.valid_shares + stats.stale_shares + stats.invalid_shares
-            elif self._type == "valid":
-                shares = worker.stats().valid_shares
-
-            break
+        if self._type == "total":
+            stats = worker.stats()
+            shares = stats.valid_shares + stats.stale_shares + stats.invalid_shares
+        elif self._type == "valid":
+            shares = worker.stats().valid_shares
 
         self._state = shares
 
 
 class FlexpoolPoolHashrateSensor(Entity):
-    """Representation of an Etherscan.io sensor."""
+    """Representation of a flexpool pool hashrate sensor."""
 
     def __init__(self, name):
         """Initialize the sensor."""
@@ -301,7 +317,7 @@ class FlexpoolPoolHashrateSensor(Entity):
 
 
 class FlexpoolPoolWorkersSensor(Entity):
-    """Representation of an Etherscan.io sensor."""
+    """Representation of a flexpool worker count sensor."""
 
     def __init__(self, name):
         """Initialize the sensor."""
@@ -336,7 +352,7 @@ class FlexpoolPoolWorkersSensor(Entity):
 
 
 class FlexpoolPoolLuckSensor(Entity):
-    """Representation of an Etherscan.io sensor."""
+    """Representation of a flexpool luck sensor."""
 
     def __init__(self, name):
         """Initialize the sensor."""
