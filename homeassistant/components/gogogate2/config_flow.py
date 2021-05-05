@@ -55,7 +55,7 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
-            api = get_api(user_input)
+            api = get_api(self.hass, user_input)
             try:
                 data: AbstractInfoResponse = await api.async_info()
                 data_dict = dataclasses.asdict(data)
