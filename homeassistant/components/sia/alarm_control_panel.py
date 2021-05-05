@@ -161,9 +161,9 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
 
         If the port and account combo receives any message it means it is online and can therefore be set to available.
         """
-        sia_event: SIAEvent = SIAEvent.from_dict(
+        sia_event: SIAEvent = SIAEvent.from_dict(  # pylint: disable=no-member
             event.data
-        )  # pylint: disable=no-member
+        )
         _LOGGER.debug("Received event: %s", sia_event)
         if int(sia_event.ri) == self._zone:
             self._attr.update(get_attr_from_sia_event(sia_event))
