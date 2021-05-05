@@ -38,13 +38,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             _LOGGER.warning("Cannot connect to projector")
             return self.async_abort(reason="cannot_connect")
-        else:
-            serial_no = await projector.get_serial_number()
-            await self.async_set_unique_id(serial_no)
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=import_config.pop(CONF_NAME), data=import_config
-            )
+
+        serial_no = await projector.get_serial_number()
+        await self.async_set_unique_id(serial_no)
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(
+            title=import_config.pop(CONF_NAME), data=import_config
+        )
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
