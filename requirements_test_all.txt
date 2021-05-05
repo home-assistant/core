@@ -487,7 +487,7 @@ libsoundtouch==0.8
 logi_circle==0.2.2
 
 # homeassistant.components.luftdaten
-luftdaten==0.6.4
+luftdaten==0.6.5
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
