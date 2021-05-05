@@ -105,7 +105,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     lock_state_service_schema = vol.Schema(
         {
             vol.Required(ATTR_FLAP_ID): vol.All(
-                cv.positive_int, vol.In(conf[CONF_FLAPS])
+                cv.positive_int, vol.In(spc.states.keys())
             ),
             vol.Required(ATTR_LOCK_STATE): vol.All(
                 cv.string,
