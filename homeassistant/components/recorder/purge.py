@@ -13,7 +13,7 @@ import homeassistant.util.dt as dt_util
 from .const import MAX_ROWS_TO_PURGE
 from .models import Events, RecorderRuns, States
 from .repack import repack_database
-from .util import session_scope, try_database_job
+from .util import retriable_database_job, session_scope
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
+@retriable_database_job("purge")
 def purge_old_data(
     instance: Recorder, purge_days: int, repack: bool, apply_filter: bool = False
 ) -> bool:
@@ -28,15 +29,6 @@ def purge_old_data(
 
     Cleans up an timeframe of an hour, based on the oldest record.
     """
-    return try_database_job(
-        instance, "purge", _purge_old_data, instance, purge_days, repack, apply_filter
-    )
-
-
-def _purge_old_data(
-    instance: Recorder, purge_days: int, repack: bool, apply_filter: bool = False
-):
-    """Purge events and states."""
     purge_before = dt_util.utcnow() - timedelta(days=purge_days)
     _LOGGER.debug(
         "Purging states and events before target %s",

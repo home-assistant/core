@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import timedelta
+import functools
 import logging
 import os
 import time
@@ -285,28 +286,34 @@ def end_incomplete_runs(session, start_time):
         session.add(run)
 
 
-def try_database_job(
-    instance: Recorder, description: str, job: callable, *args, **kwargs
-):
+def retriable_database_job(description: str):
     """Try to execute a database job.
 
     The job should return True if it finished, and False if it needs to be rescheduled.
     """
-    try:
-        return job(*args, **kwargs)
-    except OperationalError as err:
-        if (
-            instance.engine.dialect.name == "mysql"
-            and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
-        ):
-            _LOGGER.info(
-                "%s; %s not completed, retrying", err.orig.args[1], description
-            )
-            time.sleep(instance.db_retry_wait)
-            # Failed with retriable error
-            return False
 
-        _LOGGER.warning("Error executing %s: %s", description, err)
+    def decorator(job: callable):
+        @functools.wraps(job)
+        def wrapper(instance: Recorder, *args, **kwargs):
+            try:
+                return job(instance, *args, **kwargs)
+            except OperationalError as err:
+                if (
+                    instance.engine.dialect.name == "mysql"
+                    and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
+                ):
+                    _LOGGER.info(
+                        "%s; %s not completed, retrying", err.orig.args[1], description
+                    )
+                    time.sleep(instance.db_retry_wait)
+                    # Failed with retriable error
+                    return False
 
-    # Failed with permanent error
-    return True
+                _LOGGER.warning("Error executing %s: %s", description, err)
+
+            # Failed with permanent error
+            return True
+
+        return wrapper
+
+    return decorator

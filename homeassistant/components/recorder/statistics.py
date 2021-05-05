@@ -9,7 +9,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .models import Statistics
-from .util import session_scope, try_database_job
+from .util import retriable_database_job, session_scope
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -32,16 +32,11 @@ def get_start_time(period: str) -> datetime.datetime:
     return start
 
 
+@retriable_database_job
 def compile_statistics(
     instance: Recorder, period: str, start: datetime.datetime
 ) -> bool:
     """Compile statistics."""
-    return try_database_job(
-        instance, "statistics", _compile_statistics, instance, period, start
-    )
-
-
-def _compile_statistics(instance: Recorder, period: str, start: datetime.datetime):
     start = dt_util.as_utc(start)
     if period == "daily":
         end = start + timedelta(days=1)
