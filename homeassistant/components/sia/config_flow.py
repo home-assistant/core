@@ -147,10 +147,7 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _host_already_configured(self, port: int):
         """See if we already have a SIA entry matching the port."""
-        for entry in self._async_current_entries():
-            if CONF_PORT not in entry.data:
-                continue
-
+        for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_PORT] == port:
                 return True
         return False

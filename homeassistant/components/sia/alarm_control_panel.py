@@ -45,7 +45,7 @@ _LOGGER = logging.getLogger(__name__)
 DEVICE_CLASS_ALARM = "alarm"
 PREVIOUS_STATE = "previous_state"
 
-CODE_CONSEQUENCES = {
+CODE_CONSEQUENCES: dict[str, StateType] = {
     "PA": STATE_ALARM_TRIGGERED,
     "JA": STATE_ALARM_TRIGGERED,
     "TA": STATE_ALARM_TRIGGERED,
@@ -121,7 +121,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         self._available: bool = True
         self._state: StateType = None
         self._old_state: StateType = None
-        self._cancel_availability_tracker: CALLBACK_TYPE | None = None
+        self._cancel_availability_cb: CALLBACK_TYPE | None = None
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass.
@@ -132,7 +132,7 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         2. get previous state from storage
         3. if previous state: restore
         4. if previous state is unavailable: set _available to False and return
-        5. if available: create availability tracker
+        5. if available: create availability cb
         """
         self.async_on_remove(
             self.hass.bus.async_listen(
@@ -142,44 +142,50 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
         )
         last_state = await self.async_get_last_state()
         if last_state is not None:
-            self.state = last_state.state
+            self._state = last_state.state
         if self.state == STATE_UNAVAILABLE:
             self._available = False
             return
-        self._cancel_availability_tracker = self.async_create_availability_tracker()
+        self._cancel_availability_cb = self.async_create_availability_cb()
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
 
         Overridden from Entity.
         """
-        if self._cancel_availability_tracker:
-            self._cancel_availability_tracker()
+        if self._cancel_availability_cb:
+            self._cancel_availability_cb()
 
     async def async_handle_event(self, event: Event) -> None:
-        """Listen to events for this port and account and update states.
+        """Listen to events for this port and account and update state and attributes.
 
         If the port and account combo receives any message it means it is online and can therefore be set to available.
         """
-        sia_event = SIAEvent.from_dict(event.data)  # pylint: disable=no-member
+        sia_event: SIAEvent = SIAEvent.from_dict(
+            event.data
+        )  # pylint: disable=no-member
         _LOGGER.debug("Received event: %s", sia_event)
         if int(sia_event.ri) == self._zone:
-            self.state = CODE_CONSEQUENCES.get(sia_event.code, None)
             self._attr.update(get_attr_from_sia_event(sia_event))
+            new_state = CODE_CONSEQUENCES.get(sia_event.code, None)
+            if new_state is not None:
+                if new_state == PREVIOUS_STATE:
+                    new_state = self._old_state
+                self._state, self._old_state = new_state, self._state
         self._available = True
         self.async_write_ha_state()
-        self.async_reset_availability_tracker()
+        self.async_reset_availability_cb()
 
     @callback
-    def async_reset_availability_tracker(self) -> None:
-        """Reset availability tracker by cancelling the current and creating a new one."""
-        if self._cancel_availability_tracker:
-            self._cancel_availability_tracker()
-        self._cancel_availability_tracker = self.async_create_availability_tracker()
+    def async_reset_availability_cb(self) -> None:
+        """Reset availability cb by cancelling the current and creating a new one."""
+        if self._cancel_availability_cb:
+            self._cancel_availability_cb()
+        self._cancel_availability_cb = self.async_create_availability_cb()
 
     @callback
-    def async_create_availability_tracker(self) -> CALLBACK_TYPE:
-        """Create a availability tracker and return the callback."""
+    def async_create_availability_cb(self) -> CALLBACK_TYPE:
+        """Create a availability cb and return the callback."""
         return async_call_later(
             self.hass,
             get_unavailability_interval(self._ping_interval),
@@ -196,14 +202,6 @@ class SIAAlarmControlPanel(AlarmControlPanelEntity, RestoreEntity):
     def state(self) -> StateType:
         """Get state."""
         return self._state
-
-    @state.setter
-    def state(self, state: StateType) -> None:
-        """Set state."""
-        if state is not None:
-            if state == PREVIOUS_STATE:
-                state = self._old_state
-            self._state, self._old_state = state, self._state
 
     @property
     def name(self) -> str:
