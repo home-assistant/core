@@ -13,4 +13,4 @@ pycodestyle==2.7.0
 pydocstyle==6.0.0
 pyflakes==2.3.1
 pyupgrade==2.12.0
-yamllint==1.24.2
+yamllint==1.26.1
