@@ -240,6 +240,7 @@ FLOWS = [
     "subaru",
     "syncthru",
     "synology_dsm",
+    "system_bridge",
     "tado",
     "tasmota",
     "tellduslive",
