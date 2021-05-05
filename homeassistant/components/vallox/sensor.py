@@ -10,6 +10,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     PERCENTAGE,
     TEMP_CELSIUS,
+    CONCENTRATION_PARTS_PER_MILLION,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -90,6 +91,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device_class=DEVICE_CLASS_TIMESTAMP,
             unit_of_measurement=None,
             icon="mdi:filter",
+        ),
+        ValloxSensor(
+            name=f"{name} CO2",
+            state_proxy=state_proxy,
+            metric_key="A_CYC_CO2_VALUE",
+            device_class=None,
+            unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            icon=None,
         ),
     ]
 
