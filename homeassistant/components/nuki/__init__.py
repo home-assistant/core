@@ -11,7 +11,7 @@ from requests.exceptions import RequestException
 
 from homeassistant import exceptions
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, CONF_PLATFORM
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -23,6 +23,7 @@ from .const import (
     DATA_COORDINATOR,
     DATA_LOCKS,
     DATA_OPENERS,
+    DEFAULT_PORT,
     DEFAULT_TIMEOUT,
     DOMAIN,
     ERROR_STATES,
@@ -60,10 +61,16 @@ async def async_setup(hass, config):
             continue
 
         for conf in confs:
-            if "host" in conf and "port" in conf and "token" in conf:
+            if CONF_PLATFORM in conf and conf[CONF_PLATFORM] == DOMAIN:
                 hass.async_create_task(
                     hass.config_entries.flow.async_init(
-                        DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+                        DOMAIN,
+                        context={"source": SOURCE_IMPORT},
+                        data={
+                            CONF_HOST: conf[CONF_HOST],
+                            CONF_PORT: conf.get(CONF_PORT, DEFAULT_PORT),
+                            CONF_TOKEN: conf[CONF_TOKEN]
+                        }
                     )
                 )
 
