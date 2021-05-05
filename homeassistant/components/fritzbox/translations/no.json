@@ -10,7 +10,7 @@
         "error": {
             "invalid_auth": "Ugyldig godkjenning"
         },
-        "flow_title": "",
+        "flow_title": "AVM FRITZ! SmartHome: {name}",
         "step": {
             "confirm": {
                 "data": {
