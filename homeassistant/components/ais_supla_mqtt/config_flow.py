@@ -124,7 +124,9 @@ class SuplaMqttFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         # save mqtt connection info
-        ais_global.save_ais_mqtt_connection_settings(self.bridge_config)
+        ais_global.save_ais_mqtt_connection_settings(
+            ais_global.G_AIS_SUPLA_MQTT_CONFIG_FILE_NAME, self.bridge_config
+        )
         # restart mqtt broker
         await self.hass.services.async_call(
             "ais_shell_command", "restart_pm2_service", {"service": "mqtt"}

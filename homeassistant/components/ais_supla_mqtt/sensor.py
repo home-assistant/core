@@ -29,20 +29,20 @@ class SuplaMqttSoftBridge(Entity):
         self._qos = 0
         self._manufacturer = "SUPLA.ORG"
         self._model = "MQTT Bridge"
-        self._os_version = "v2"
-        self._supla_published = 0
-        self._supla_received = 0
+        self._os_version = "v3"
+        self._supla_in = 0
+        self._supla_out = 0
         self._sub_state = None
 
     @callback
-    async def hass_message_received(self, msg):
+    async def hass_message_out(self, msg):
         """Handle new MQTT messages."""
-        self._supla_received = self._supla_published + 1
+        self._supla_out = self._supla_out + 1
 
     @callback
-    async def supla_message_received(self, msg):
+    async def supla_message_in(self, msg):
         """Handle new MQTT messages."""
-        self._supla_received = self._supla_received + 1
+        self._supla_in = self._supla_in + 1
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -57,22 +57,22 @@ class SuplaMqttSoftBridge(Entity):
             {
                 "execute": {
                     "topic": "supla/+/devices/+/channels/+/execute_action",
-                    "msg_callback": self.hass_message_received,
+                    "msg_callback": self.hass_message_out,
                     "qos": self._qos,
                 },
                 "set": {
                     "topic": "supla/+/devices/+/channels/+/set/+",
-                    "msg_callback": self.hass_message_received,
+                    "msg_callback": self.hass_message_out,
                     "qos": self._qos,
                 },
                 "set": {
                     "topic": "supla/#",
-                    "msg_callback": self.supla_message_received,
+                    "msg_callback": self.supla_message_in,
                     "qos": self._qos,
                 },
                 "set": {
                     "topic": "homeassistant/#",
-                    "msg_callback": self.supla_message_received,
+                    "msg_callback": self.supla_message_in,
                     "qos": self._qos,
                 },
             },
@@ -121,8 +121,8 @@ class SuplaMqttSoftBridge(Entity):
     def device_state_attributes(self):
         """Return the attributes of the device."""
         return {
-            "MQTT packets sent": self._supla_published,
-            "MQTT packets received": self._supla_received,
+            "MQTT packets OUT": self._supla_out,
+            "MQTT packets IN": self._supla_in,
         }
 
     @property

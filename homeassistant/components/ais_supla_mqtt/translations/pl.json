@@ -19,7 +19,7 @@
         "step": {
             "init": {
               "title": "SUPLA MQTT Broker Settings",
-              "description": "**Użytkownik:** {username}\n**Hasło:** {password}\n**Host:** {hostname}\n**Port:** {port}\n\n**Pytanie o status urządzeń (ilość zapytań dziennie):**\n"
+              "description": "**Użytkownik:** {username}\n**Hasło:** {password}\n**Host:** {hostname}\n**Port:** {port}\n\n**Wykrywanie nowych urządzeń (ilość zapytań dziennie):**\n"
           }
         }
     }
