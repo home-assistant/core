@@ -14,17 +14,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_ACTIONS,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
-    FAN_ON,
-    FAN_OFF,
-    FAN_AUTO,
-    FAN_LOW,
-    FAN_MEDIUM,
-    FAN_HIGH,
-    FAN_MIDDLE,
-    FAN_FOCUS,
-    FAN_DIFFUSE,
     FAN_MODES,
-    HVAC_MODE_OFF,
     HVAC_MODES,
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
@@ -97,6 +87,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_CLIMATES): cv.schema_with_slug_keys(CLIMATE_SCHEMA)}
 )
 
+
 async def _async_create_entities(hass, config):
     """Create the Template Climates."""
     climates = []
@@ -149,9 +140,11 @@ async def _async_create_entities(hass, config):
 
     return climates
 
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template climates."""
     async_add_entities(await _async_create_entities(hass, config))
+
 
 class TemplateClimate(TemplateEntity, ClimateEntity):
     """A template climate component."""
@@ -220,7 +213,7 @@ class TemplateClimate(TemplateEntity, ClimateEntity):
         self._unique_id = unique_id
         self._temperature_unit = hass.config.units.temperature_unit
 
-        self._hvac_modes = hvac_modes        
+        self._hvac_modes = hvac_modes
         self._fan_modes = fan_modes
         self._temperature_step = temperature_step
         self._precision = precision
@@ -276,7 +269,7 @@ class TemplateClimate(TemplateEntity, ClimateEntity):
     def precision(self):
         """The precision of the temperature in the system."""
         return self._precision or super().precision
-    
+
     @property
     def current_temperature(self):
         """The current temperature."""
@@ -336,7 +329,7 @@ class TemplateClimate(TemplateEntity, ClimateEntity):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        
+
         if temperature > self.max_temp or temperature < self.min_temp:
             _LOGGER.error(
                 "Received invalid temperature: %s. Expected: %s-%s",
@@ -424,7 +417,7 @@ class TemplateClimate(TemplateEntity, ClimateEntity):
                 "Received invalid hvac_action: %s. Expected: %s", hvac_action, CURRENT_HVAC_ACTIONS
             )
             self._hvac_action = None
-    
+
     @callback
     def _update_fan_mode(self, fan_mode):
         if fan_mode in self.fan_modes:
