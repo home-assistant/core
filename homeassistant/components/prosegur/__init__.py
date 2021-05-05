@@ -27,6 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             entry.data[CONF_PASSWORD],
             entry.data[CONF_COUNTRY],
         )
+        await hass.data[DOMAIN][entry.entry_id].login()
 
         for component in PLATFORMS:
             hass.async_create_task(

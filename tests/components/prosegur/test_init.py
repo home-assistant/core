@@ -1,11 +1,66 @@
 """Tests prosegur setup."""
-from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
+from unittest.mock import patch
 
-from .common import setup_platform
+from pytest import mark
+
+from homeassistant.components.prosegur import DOMAIN
+
+from tests.common import MockConfigEntry
 
 
-async def test_unload_entry(hass):
+@mark.parametrize(
+    "error",
+    [
+        ConnectionRefusedError,
+        ConnectionError,
+    ],
+)
+async def test_setup_entry_fail_retrieve(hass, error):
+    """Test loading the Prosegur entry."""
+
+    hass.config.components.add(DOMAIN)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "username": "test-username",
+            "password": "test-password",
+            "country": "PT",
+            "contract": "xpto",
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "pyprosegur.auth.Auth.login",
+        side_effect=error,
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+
+async def test_unload_entry(hass, aioclient_mock):
     """Test unloading the Prosegur entry."""
-    mock_entry = await setup_platform(hass, ALARM_DOMAIN)
 
-    assert await hass.config_entries.async_unload(mock_entry.entry_id)
+    aioclient_mock.post(
+        "https://smart.prosegur.com/smart-server/ws/access/login",
+        json={"data": {"token": "123456789"}},
+    )
+
+    hass.config.components.add(DOMAIN)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "username": "test-username",
+            "password": "test-password",
+            "country": "PT",
+            "contract": "xpto",
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)

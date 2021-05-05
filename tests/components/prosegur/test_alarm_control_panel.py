@@ -40,7 +40,7 @@ def mock_auth(request, aioclient_mock):
     )
 
 
-async def test_entity_registry(hass):
+async def test_entity_registry(hass, mock_auth):
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, ALARM_DOMAIN)
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
