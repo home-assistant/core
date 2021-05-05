@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.meteoclimatic.const import CONF_STATION_CODE, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 
 from tests.common import MockConfigEntry
 
@@ -59,20 +59,6 @@ async def test_user(hass, client):
     assert result["data"][CONF_STATION_CODE] == TEST_STATION_CODE
 
 
-async def test_import(hass, client):
-    """Test import step."""
-    # import with all
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_STATION_CODE: TEST_STATION_CODE},
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["result"].unique_id == TEST_STATION_CODE
-    assert result["title"] == TEST_STATION_NAME
-    assert result["data"][CONF_STATION_CODE] == TEST_STATION_CODE
-
-
 async def test_abort_if_already_setup(hass, client):
     """Test we abort if already setup."""
     MockConfigEntry(
@@ -80,15 +66,6 @@ async def test_abort_if_already_setup(hass, client):
         data={CONF_STATION_CODE: TEST_STATION_CODE},
         unique_id=TEST_STATION_CODE,
     ).add_to_hass(hass)
-
-    # Should fail, same station code (import)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_STATION_CODE: TEST_STATION_CODE},
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
 
     # Should fail, same station code (flow)
     result = await hass.config_entries.flow.async_init(
