@@ -118,17 +118,23 @@ class BroadlinkRMUpdateManager(BroadlinkUpdateManager):
 
         if hasattr(device.api, "check_sensors"):
             data = await device.async_request(device.api.check_sensors)
-
-            # Firmware issue. See https://github.com/home-assistant/core/issues/42100.
-            if data["temperature"] == -7:
-                if self.coordinator.data is not None:
-                    return self.coordinator.data
-                raise ValueError("The device returned malformed data")
-
-            return data
+            return self.normalize(data, self.coordinator.data)
 
         await device.async_request(device.api.update)
         return {}
+
+    @staticmethod
+    def normalize(data, previous_data):
+        """Fix firmware issue.
+
+        See https://github.com/home-assistant/core/issues/42100.
+        """
+        if data["temperature"] == -7:
+            if previous_data is None or previous_data["temperature"] is None:
+                data["temperature"] = None
+            elif previous_data["temperature"] - data["temperature"] > 3:
+                data["temperature"] = previous_data["temperature"]
+        return data
 
 
 class BroadlinkSP1UpdateManager(BroadlinkUpdateManager):
