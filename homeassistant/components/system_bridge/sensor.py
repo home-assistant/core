@@ -328,17 +328,13 @@ class BridgeProcessesLoadSensor(BridgeSensor):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the entity."""
         bridge: Bridge = self.coordinator.data
-        return {
-            ATTR_LOAD_AVERAGE: round(bridge.processes.load.avgLoad, 2)
-            if bridge.processes.load.avgLoad is not None
-            else None,
-            ATTR_LOAD_USER: round(bridge.processes.load.currentLoadUser, 2)
-            if bridge.processes.load.currentLoadUser is not None
-            else None,
-            ATTR_LOAD_SYSTEM: round(bridge.processes.load.currentLoadSystem, 2)
-            if bridge.processes.load.currentLoadSystem is not None
-            else None,
-            ATTR_LOAD_IDLE: round(bridge.processes.load.currentLoadIdle, 2)
-            if bridge.processes.load.currentLoadIdle is not None
-            else None,
-        }
+        attrs = {}
+        if bridge.processes.load.avgLoad is not None:
+            attrs[ATTR_LOAD_AVERAGE] = round(bridge.processes.load.avgLoad, 2)
+        if bridge.processes.load.currentLoadUser is not None:
+            attrs[ATTR_LOAD_USER] = round(bridge.processes.load.currentLoadUser, 2)
+        if bridge.processes.load.currentLoadSystem is not None:
+            attrs[ATTR_LOAD_SYSTEM] = round(bridge.processes.load.currentLoadSystem, 2)
+        if bridge.processes.load.currentLoadIdle is not None:
+            attrs[ATTR_LOAD_IDLE] = round(bridge.processes.load.currentLoadIdle, 2)
+        return attrs
