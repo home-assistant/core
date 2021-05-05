@@ -57,8 +57,6 @@ from .const import (
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     DEFAULT_LOW_BATTERY_THRESHOLD,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
     DEVICE_CLASS_PM10,
     DEVICE_CLASS_PM25,
     EVENT_HOMEKIT_CHANGED,
@@ -167,8 +165,10 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
             a_type = "TemperatureSensor"
         elif device_class == DEVICE_CLASS_HUMIDITY and unit == PERCENTAGE:
             a_type = "HumiditySensor"
-        elif device_class in (DEVICE_CLASS_PM10, DEVICE_CLASS_PM25) or DEVICE_CLASS_PM25 in state.entity_id or DEVICE_CLASS_PM10 in state.entity_id:
-            a_type = "AirQualitySensor"
+        elif device_class == DEVICE_CLASS_PM10 or DEVICE_CLASS_PM10 in state.entity_id:
+            a_type = "AirQualitySensor_PM10"
+        elif device_class == DEVICE_CLASS_PM25 or DEVICE_CLASS_PM25 in state.entity_id:
+            a_type = "AirQualitySensor_PM25"
         elif device_class == DEVICE_CLASS_CO:
             a_type = "CarbonMonoxideSensor"
         elif device_class == DEVICE_CLASS_CO2 or "co2" in state.entity_id:

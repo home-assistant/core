@@ -41,8 +41,6 @@ from .const import (
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OCCUPANCY,
     DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_PM10,
-    DEVICE_CLASS_PM25,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_WINDOW,
     PROP_CELSIUS,
@@ -60,7 +58,13 @@ from .const import (
     THRESHOLD_CO,
     THRESHOLD_CO2,
 )
-from .util import convert_to_float, density_to_air_quality, temperature_to_homekit
+from .util import (
+    convert_to_float,
+    density_to_air_quality,
+    density_to_air_quality_pm10,
+    density_to_air_quality_pm25,
+    temperature_to_homekit,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,19 +149,13 @@ class AirQualitySensor(HomeAccessory):
         """Initialize a AirQualitySensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
         state = self.hass.states.get(self.entity_id)
-        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        sensor_char = CHAR_AIR_PARTICULATE_DENSITY
-        if device_class == DEVICE_CLASS_PM10 or DEVICE_CLASS_PM10 in state.entity_id:
-            sensor_char = CHAR_PM10_DENSITY
-        elif device_class == DEVICE_CLASS_PM25 or DEVICE_CLASS_PM25 in state.entity_id:
-            sensor_char = CHAR_PM25_DENSITY
-        else:
-            sensor_char = CHAR_AIR_PARTICULATE_DENSITY
         serv_air_quality = self.add_preload_service(
-            SERV_AIR_QUALITY_SENSOR, [sensor_char]
+            SERV_AIR_QUALITY_SENSOR, [CHAR_AIR_PARTICULATE_DENSITY]
         )
         self.char_quality = serv_air_quality.configure_char(CHAR_AIR_QUALITY, value=0)
-        self.char_density = serv_air_quality.configure_char(sensor_char, value=0)
+        self.char_density = serv_air_quality.configure_char(
+            CHAR_AIR_PARTICULATE_DENSITY, value=0
+        )
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
         self.async_update_state(state)
@@ -171,6 +169,68 @@ class AirQualitySensor(HomeAccessory):
                 self.char_density.set_value(density)
                 _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
             air_quality = density_to_air_quality(density)
+            if self.char_quality.value != air_quality:
+                self.char_quality.set_value(air_quality)
+                _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
+
+
+@TYPES.register("AirQualitySensor_PM10")
+class AirQualitySensor_PM10(AirQualitySensor):
+    """Generate a AirQualitySensor_PM10 accessory as PM 10 sensor."""
+
+    def __init__(self, *args):
+        """Initialize a AirQualitySensor accessory object."""
+        super().__init__(*args, category=CATEGORY_SENSOR)
+        state = self.hass.states.get(self.entity_id)
+        serv_air_quality = self.add_preload_service(
+            SERV_AIR_QUALITY_SENSOR, [CHAR_PM10_DENSITY]
+        )
+        self.char_quality = serv_air_quality.configure_char(CHAR_AIR_QUALITY, value=0)
+        self.char_density = serv_air_quality.configure_char(CHAR_PM10_DENSITY, value=0)
+        # Set the state so it is in sync on initial
+        # GET to avoid an event storm after homekit startup
+        self.async_update_state(state)
+
+    @callback
+    def async_update_state(self, new_state):
+        """Update accessory after state change."""
+        density = convert_to_float(new_state.state)
+        if density:
+            if self.char_density.value != density:
+                self.char_density.set_value(density)
+                _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
+            air_quality = density_to_air_quality_pm10(density)
+            if self.char_quality.value != air_quality:
+                self.char_quality.set_value(air_quality)
+                _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
+
+
+@TYPES.register("AirQualitySensor_PM25")
+class AirQualitySensor_PM25(AirQualitySensor):
+    """Generate a AirQualitySensor_PM25 accessory as PM 2.5 sensor."""
+
+    def __init__(self, *args):
+        """Initialize a AirQualitySensor accessory object."""
+        super().__init__(*args, category=CATEGORY_SENSOR)
+        state = self.hass.states.get(self.entity_id)
+        serv_air_quality = self.add_preload_service(
+            SERV_AIR_QUALITY_SENSOR, [CHAR_PM25_DENSITY]
+        )
+        self.char_quality = serv_air_quality.configure_char(CHAR_AIR_QUALITY, value=0)
+        self.char_density = serv_air_quality.configure_char(CHAR_PM25_DENSITY, value=0)
+        # Set the state so it is in sync on initial
+        # GET to avoid an event storm after homekit startup
+        self.async_update_state(state)
+
+    @callback
+    def async_update_state(self, new_state):
+        """Update accessory after state change."""
+        density = convert_to_float(new_state.state)
+        if density:
+            if self.char_density.value != density:
+                self.char_density.set_value(density)
+                _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
+            air_quality = density_to_air_quality_pm25(density)
             if self.char_quality.value != air_quality:
                 self.char_quality.set_value(air_quality)
                 _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)

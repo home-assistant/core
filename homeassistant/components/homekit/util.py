@@ -385,6 +385,32 @@ def density_to_air_quality(density):
     return 5
 
 
+def density_to_air_quality_pm10(density):
+    """Map PM10 density to HomeKit AirQuality level."""
+    if density <= 40:
+        return 1
+    if density <= 80:
+        return 2
+    if density <= 120:
+        return 3
+    if density <= 300:
+        return 4
+    return 5
+
+
+def density_to_air_quality_pm25(density):
+    """Map PM2.5 density to HomeKit AirQuality level."""
+    if density <= 25:
+        return 1
+    if density <= 50:
+        return 2
+    if density <= 100:
+        return 3
+    if density <= 300:
+        return 4
+    return 5
+
+
 def get_persist_filename_for_entry_id(entry_id: str):
     """Determine the filename of the homekit state file."""
     return f"{DOMAIN}.{entry_id}.state"
