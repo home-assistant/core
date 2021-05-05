@@ -22,6 +22,9 @@ HVAC_MODE_DRY = "dry"
 # Only the fan is on, not fan and another mode like cool
 HVAC_MODE_FAN_ONLY = "fan_only"
 
+# to avoid returning None in the platform, if no HVAC is present
+HVAC_MODE_UNKNOWN = "unknown"
+
 HVAC_MODES = [
     HVAC_MODE_OFF,
     HVAC_MODE_HEAT,
@@ -30,6 +33,7 @@ HVAC_MODES = [
     HVAC_MODE_AUTO,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_UNKNOWN,
 ]
 
 # No preset is active
