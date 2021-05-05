@@ -350,7 +350,6 @@ class TemplateClimate(TemplateEntity, ClimateEntity):
         super()._update_state(result)
         if isinstance(result, TemplateError):
             self._state = None
-            return
         elif result in self.hvac_modes:
             self._state = result
         elif result in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
@@ -431,7 +430,7 @@ class TemplateClimate(TemplateEntity, ClimateEntity):
 
     @callback
     def _update_temperature(self, temperature):
-        if temperature <= self.max_temp and temperature >= self.min_temp:
+        if self.min_temp <= temperature <= self.max_temp:
             self._temperature = temperature
         elif temperature in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
             self._temperature = None
@@ -446,7 +445,7 @@ class TemplateClimate(TemplateEntity, ClimateEntity):
 
     @callback
     def _update_current_temperature(self, current_temperature):
-        if current_temperature <= self.max_temp and current_temperature >= self.min_temp:
+        if self.min_temp <= temperature <= self.max_temp:
             self._current_temperature = current_temperature
         elif current_temperature in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
             self._current_temperature = None
