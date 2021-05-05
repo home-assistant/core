@@ -179,7 +179,7 @@ homeassistant/components/gios/* @bieniu
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff @engrbm87
 homeassistant/components/goalzero/* @tkdrob
-homeassistant/components/gogogate2/* @vangorra
+homeassistant/components/gogogate2/* @vangorra @bdraco
 homeassistant/components/google_assistant/* @home-assistant/cloud
 homeassistant/components/google_cloud/* @lufton
 homeassistant/components/gpsd/* @fabaff

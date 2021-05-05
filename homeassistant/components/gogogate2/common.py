@@ -6,8 +6,8 @@ from datetime import timedelta
 import logging
 from typing import Callable, NamedTuple
 
-from gogogate2_api import AbstractGateApi, GogoGate2Api, ISmartGateApi
-from gogogate2_api.common import AbstractDoor, get_door_by_id
+from ismartgate import AbstractGateApi, GogoGate2Api, ISmartGateApi
+from ismartgate.common import AbstractDoor, get_door_by_id
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
