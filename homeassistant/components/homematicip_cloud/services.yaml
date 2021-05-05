@@ -1,78 +1,136 @@
 # Describes the format for available component services
 
 activate_eco_mode_with_duration:
+  name: Activate eco mode with duration
   description: Activate eco mode with period.
   fields:
     duration:
+      name: Duration
       description: The duration of eco mode in minutes.
+      required: true
       example: 60
     accesspoint_id:
-      description: The ID of the Homematic IP Access Point (optional)
+      name: Accesspoint ID
+      description: The ID of the Homematic IP Access Point
       example: 3014xxxxxxxxxxxxxxxxxxxx
+      selector:
+        text:
 
 activate_eco_mode_with_period:
+  name: Activate eco more with period
   description: Activate eco mode with period.
   fields:
     endtime:
+      name: Endtime
       description: The time when the eco mode should automatically be disabled.
+      required: true
       example: 2019-02-17 14:00
+      selector:
+        text:
     accesspoint_id:
-      description: The ID of the Homematic IP Access Point (optional)
+      name: Accesspoint ID
+      description: The ID of the Homematic IP Access Point
       example: 3014xxxxxxxxxxxxxxxxxxxx
+      selector:
+        text:
 
 activate_vacation:
+  name: Activate vacation
   description: Activates the vacation mode until the given time.
   fields:
     endtime:
+      name: Endtime
       description: The time when the vacation mode should automatically be disabled.
       example: 2019-09-17 14:00
+      selector:
+        text:
     temperature:
+      name: Temperature
       description: the set temperature during the vacation mode.
       example: 18.5
     accesspoint_id:
-      description: The ID of the Homematic IP Access Point (optional)
+      name: Accesspoint ID
+      description: The ID of the Homematic IP Access Point
       example: 3014xxxxxxxxxxxxxxxxxxxx
+      selector:
+        text:
 
 deactivate_eco_mode:
+  name: Deactivate eco mode
   description: Deactivates the eco mode immediately.
   fields:
     accesspoint_id:
-      description: The ID of the Homematic IP Access Point (optional)
+      name: Accesspoint ID
+      description: The ID of the Homematic IP Access Point
       example: 3014xxxxxxxxxxxxxxxxxxxx
+      selector:
+        text:
 
 deactivate_vacation:
+  name: Deactivate vacation
   description: Deactivates the vacation mode immediately.
   fields:
     accesspoint_id:
-      description: The ID of the Homematic IP Access Point (optional)
+      name: Accesspoint ID
+      description: The ID of the Homematic IP Access Point
       example: 3014xxxxxxxxxxxxxxxxxxxx
+      selector:
+        text:
 
 set_active_climate_profile:
+  name: Set active climate profile
   description: Set the active climate profile index.
   fields:
     entity_id:
-      description: The ID of the climte entity. Use 'all' keyword to switch the profile for all entities.
+      name: Entity
+      description: The ID of the climate entity. Use 'all' keyword to switch the profile for all entities.
+      required: true
       example: climate.livingroom
+      selector:
+        text:
     climate_profile_index:
+      name: Climate profile index
       description: The index of the climate profile (1 based)
+      required: true
       example: 1
+      selector:
+        number:
+          min: 1
+          max: 100
 
 dump_hap_config:
+  name: Dump hap config
   description: Dump the configuration of the Homematic IP Access Point(s).
   fields:
     config_output_path:
+      name: Config output path
       description: (Default is 'Your home-assistant config directory') Path where to store the config.
       example: "/config"
+      selector:
+        text:
     config_output_file_prefix:
-      description: (Default is 'hmip-config') Name of the config file. The SGTIN of the AP will always be appended.
+      name: Config output file prefix
+      description: Name of the config file. The SGTIN of the AP will always be appended.
       example: "hmip-config"
+      default: "hmip-config"
+      selector:
+        text:
     anonymize:
-      description: (Default is True) Should the Configuration be anonymized?
+      name: Anonymize
+      description: Should the Configuration be anonymized?
       example: true
+      default: true
+      selector:
+        boolean:
 
 reset_energy_counter:
+  name: Reset energy counter
   description: Reset the energy counter of a measuring entity.
   fields:
     entity_id:
+      name: Entity
       description: The ID of the measuring entity. Use 'all' keyword to reset all energy counters.
+      required: true
       example: switch.livingroom
+      selector:
+        text:

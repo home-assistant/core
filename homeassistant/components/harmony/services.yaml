@@ -1,16 +1,25 @@
 sync:
+  name: Sync
   description: Syncs the remote's configuration.
-  fields:
-    entity_id:
-      description: Name(s) of entities to sync.
-      example: "remote.family_room"
+  target:
+    entity:
+      integration: harmony
+      domain: remote
 
 change_channel:
+  name: Change channel
   description: Sends change channel command to the Harmony HUB
+  target:
+    entity:
+      integration: harmony
+      domain: remote
   fields:
-    entity_id:
-      description: Name(s) of Harmony remote entities to send change channel command to
-      example: "remote.family_room"
     channel:
+      name: Channel
       description: Channel number to change to
+      required: true
       example: "200"
+      selector:
+        number:
+          min: 1
+          max: 100000
