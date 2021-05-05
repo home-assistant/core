@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from gogogate2_api.common import (
+from ismartgate.common import (
     AbstractDoor,
     DoorStatus,
     TransitionDoorStatus,
