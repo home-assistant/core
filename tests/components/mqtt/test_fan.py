@@ -408,6 +408,10 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, cap
     state = hass.states.get("fan.test")
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 100
 
+    async_fire_mqtt_message(hass, "percentage-state-topic", '{"otherval": 100}')
+    assert "Ignoring empty speed from" in caplog.text
+    caplog.clear()
+
     async_fire_mqtt_message(hass, "preset-mode-state-topic", '{"val": "low"}')
     assert "not a valid preset mode" in caplog.text
     caplog.clear()
@@ -423,6 +427,10 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, cap
     async_fire_mqtt_message(hass, "preset-mode-state-topic", '{"val": "silent"}')
     state = hass.states.get("fan.test")
     assert state.attributes.get("preset_mode") == "silent"
+
+    async_fire_mqtt_message(hass, "preset-mode-state-topic", '{"otherval": 100}')
+    assert "Ignoring empty preset_mode from" in caplog.text
+    caplog.clear()
 
 
 async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
