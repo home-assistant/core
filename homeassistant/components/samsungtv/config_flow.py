@@ -84,9 +84,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(
                 self._id, raise_on_progress=raise_on_progress
             )
-            self._abort_if_unique_id_configured(updates={CONF_IP_ADDRESS: ip_address})
+            self._abort_if_unique_id_configured()
 
-        await self._async_get_and_check_device_info()
+        if not self._device_info:
+            await self._async_get_and_check_device_info()
 
         if uuid := self._device_info.get("device", {}).get(ATTR_UPNP_UDN.lower()):
             self._id = uuid
