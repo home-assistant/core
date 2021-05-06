@@ -15,7 +15,7 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_NAME, default=DOMAIN): str,
-        vol.Optional(CONF_PORT, default=80): cv.port,
+        vol.Optional(CONF_PORT): cv.port,
     }
 )
 
@@ -74,6 +74,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 serial_no = await projector.get_serial_number()
                 await self.async_set_unique_id(serial_no)
                 self._abort_if_unique_id_configured()
+                user_input.pop(CONF_PORT, None)
                 return self.async_create_entry(
                     title=user_input.pop(CONF_NAME), data=user_input
                 )
