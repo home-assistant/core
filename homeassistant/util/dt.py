@@ -229,10 +229,10 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> lis
     return res
 
 
-def _dst_offset_diff(now: dt.datetime) -> dt.timedelta:
+def _dst_offset_diff(dattim: dt.datetime) -> dt.timedelta:
     """Return the offset when crossing the DST barrier."""
     delta = dt.timedelta(hours=24)
-    return (now + delta).utcoffset() - (now - delta).utcoffset()  # type: ignore[operator]
+    return (dattim + delta).utcoffset() - (dattim - delta).utcoffset()  # type: ignore[operator]
 
 
 def find_next_time_expression_time(
