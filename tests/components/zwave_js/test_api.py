@@ -626,6 +626,43 @@ async def test_set_config_parameter(
         assert msg["error"]["code"] == "unknown_error"
         assert msg["error"]["message"] == "test"
 
+    # Test getting non-existent node fails
+    await ws_client.send_json(
+        {
+            ID: 5,
+            TYPE: "zwave_js/set_config_parameter",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 9999,
+            PROPERTY: 102,
+            PROPERTY_KEY: 1,
+            VALUE: 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 6,
+            TYPE: "zwave_js/set_config_parameter",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 52,
+            PROPERTY: 102,
+            PROPERTY_KEY: 1,
+            VALUE: 1,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
 
 async def test_get_config_parameters(hass, integration, multisensor_6, hass_ws_client):
     """Test the get config parameters websocket command."""
