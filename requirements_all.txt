@@ -78,7 +78,7 @@ RtmAPI==0.7.2
 TravisPy==0.3.5
 
 # homeassistant.components.twitter
-TwitterAPI==2.7.2
+TwitterAPI==2.7.3
 
 # homeassistant.components.tof
 # VL53L1X2==0.1.5
