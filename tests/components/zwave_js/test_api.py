@@ -784,6 +784,18 @@ async def test_subscribe_logs(hass, integration, client, hass_ws_client):
         "timestamp": "time",
     }
 
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {ID: 2, TYPE: "zwave_js/subscribe_logs", ENTRY_ID: entry.entry_id}
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
 
 async def test_update_log_config(hass, client, integration, hass_ws_client):
     """Test that the update_log_config WS API call works and that schema validation works."""
