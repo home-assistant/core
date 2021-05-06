@@ -73,6 +73,7 @@ class FlowResult(TypedDict, total=False):
     context: dict[str, Any]
     result: Any
     last_step: bool | None
+    options: Mapping[str, Any]
 
 
 class FlowManager(abc.ABC):

@@ -1,0 +1,12 @@
+{
+  "domain": "system_bridge",
+  "name": "System Bridge",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/system_bridge",
+  "requirements": ["systembridge==1.1.3"],
+  "codeowners": ["@timmo001"],
+  "zeroconf": ["_system-bridge._udp.local."],
+  "after_dependencies": ["zeroconf"],
+  "quality_scale": "silver",
+  "iot_class": "local_polling"
+}
