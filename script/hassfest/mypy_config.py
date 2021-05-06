@@ -226,7 +226,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.trace.*",
     "homeassistant.components.tradfri.*",
     "homeassistant.components.tuya.*",
-    "homeassistant.components.twentemilieu.*",
     "homeassistant.components.unifi.*",
     "homeassistant.components.upcloud.*",
     "homeassistant.components.updater.*",
