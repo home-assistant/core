@@ -14,7 +14,6 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
