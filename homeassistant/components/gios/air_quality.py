@@ -1,28 +1,17 @@
 """Support for the GIOS service."""
-from homeassistant.components.air_quality import (
-    ATTR_CO,
-    ATTR_NO2,
-    ATTR_OZONE,
-    ATTR_PM_2_5,
-    ATTR_PM_10,
-    ATTR_SO2,
-    AirQualityEntity,
-)
+from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_STATION, DEFAULT_NAME, DOMAIN, ICONS_MAP, MANUFACTURER
-
-ATTRIBUTION = "Data provided by GIOŚ"
-
-SENSOR_MAP = {
-    "CO": ATTR_CO,
-    "NO2": ATTR_NO2,
-    "O3": ATTR_OZONE,
-    "PM10": ATTR_PM_10,
-    "PM2.5": ATTR_PM_2_5,
-    "SO2": ATTR_SO2,
-}
+from .const import (
+    ATTR_STATION,
+    ATTRIBUTION,
+    DEFAULT_NAME,
+    DOMAIN,
+    ICONS_MAP,
+    MANUFACTURER,
+    SENSOR_MAP,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -72,43 +61,43 @@ class GiosAirQuality(CoordinatorEntity, AirQualityEntity):
     @property
     def air_quality_index(self):
         """Return the air quality index."""
-        return self._get_sensor_value("AQI")
+        return self._get_sensor_value("aqi")
 
     @property
     @round_state
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
-        return self._get_sensor_value("PM2.5")
+        return self._get_sensor_value("pm2.5")
 
     @property
     @round_state
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
-        return self._get_sensor_value("PM10")
+        return self._get_sensor_value("pm10")
 
     @property
     @round_state
     def ozone(self):
         """Return the O3 (ozone) level."""
-        return self._get_sensor_value("O3")
+        return self._get_sensor_value("o3")
 
     @property
     @round_state
     def carbon_monoxide(self):
         """Return the CO (carbon monoxide) level."""
-        return self._get_sensor_value("CO")
+        return self._get_sensor_value("co")
 
     @property
     @round_state
     def sulphur_dioxide(self):
         """Return the SO2 (sulphur dioxide) level."""
-        return self._get_sensor_value("SO2")
+        return self._get_sensor_value("so2")
 
     @property
     @round_state
     def nitrogen_dioxide(self):
         """Return the NO2 (nitrogen dioxide) level."""
-        return self._get_sensor_value("NO2")
+        return self._get_sensor_value("no2")
 
     @property
     def attribution(self):

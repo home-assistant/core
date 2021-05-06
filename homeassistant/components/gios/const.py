@@ -1,6 +1,17 @@
 """Constants for GIOS integration."""
 from datetime import timedelta
 
+from homeassistant.components.air_quality import (
+    ATTR_CO,
+    ATTR_NO2,
+    ATTR_OZONE,
+    ATTR_PM_2_5,
+    ATTR_PM_10,
+    ATTR_SO2,
+)
+
+ATTRIBUTION = "Data provided by GIOŚ"
+
 ATTR_STATION = "station"
 CONF_STATION_ID = "station_id"
 DEFAULT_NAME = "GIOŚ"
@@ -21,4 +32,13 @@ ICONS_MAP = {
     AQI_MODERATE: "mdi:emoticon-neutral",
     AQI_POOR: "mdi:emoticon-sad",
     AQI_VERY_POOR: "mdi:emoticon-dead",
+}
+
+SENSOR_MAP = {
+    "co": ATTR_CO,
+    "no2": ATTR_NO2,
+    "o3": ATTR_OZONE,
+    "pm10": ATTR_PM_10,
+    "pm2.5": ATTR_PM_2_5,
+    "so2": ATTR_SO2,
 }
