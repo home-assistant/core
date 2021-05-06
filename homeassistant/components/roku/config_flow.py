@@ -88,8 +88,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # If we already have the host configured do
         # not open connections to it if we can avoid it.
-        if self._host_already_configured(discovery_info[CONF_HOST]):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: discovery_info[CONF_HOST]})
 
         self.discovery_info.update({CONF_HOST: discovery_info[CONF_HOST]})
 
@@ -151,12 +150,3 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
             title=self.discovery_info[CONF_NAME],
             data=self.discovery_info,
         )
-
-    def _host_already_configured(self, host):
-        """See if we already have a hub with the host address configured."""
-        existing_hosts = {
-            entry.data[CONF_HOST]
-            for entry in self._async_current_entries()
-            if CONF_HOST in entry.data
-        }
-        return host in existing_hosts
