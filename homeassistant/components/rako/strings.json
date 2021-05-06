@@ -1,5 +1,4 @@
 {
-    "title": "Rako",
     "config": {
         "error": {
             "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
@@ -10,7 +9,7 @@
                 "title": "Rako Bridge Configuration",
                 "description": "If pre-populated, Bridge was auto-discovered!",
                 "data": {
-                    "host": "[%key:common::config_flow::data::ip%]",
+                    "host": "[%key:common::config_flow::data::host%]",
                     "port": "[%key:common::config_flow::data::port%]",
                     "name": "[%key:common::config_flow::data::name%]",
                     "mac": "MAC Address"

@@ -1,21 +1,20 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Cannot connect to the Bridge",
-            "no_devices_found": "No Bridge found on the network"
+            "cannot_connect": "Failed to connect",
+            "no_devices_found": "No devices found on the network"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host IP",
-                    "port": "Port",
+                    "host": "Host",
+                    "mac": "MAC Address",
                     "name": "Name",
-                    "mac": "MAC Address"
+                    "port": "Port"
                 },
                 "description": "If pre-populated, Bridge was auto-discovered!",
                 "title": "Rako Bridge Configuration"
             }
         }
-    },
-    "title": "Rako"
+    }
 }
