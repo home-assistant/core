@@ -132,7 +132,7 @@ class BroadlinkRMUpdateManager(BroadlinkUpdateManager):
         if data["temperature"] == -7:
             if previous_data is None or previous_data["temperature"] is None:
                 data["temperature"] = None
-            elif previous_data["temperature"] - data["temperature"] > 3:
+            elif abs(previous_data["temperature"] - data["temperature"]) > 3:
                 data["temperature"] = previous_data["temperature"]
         return data
 
