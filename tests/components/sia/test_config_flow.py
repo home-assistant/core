@@ -5,239 +5,220 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.sia.config_flow import ACCOUNT_SCHEMA, HUB_SCHEMA
-from homeassistant.components.sia.const import DOMAIN
+from homeassistant.components.sia.const import (
+    CONF_ACCOUNT,
+    CONF_ACCOUNTS,
+    CONF_ADDITIONAL_ACCOUNTS,
+    CONF_ENCRYPTION_KEY,
+    CONF_IGNORE_TIMESTAMPS,
+    CONF_PING_INTERVAL,
+    CONF_ZONES,
+    DOMAIN,
+)
+from homeassistant.const import CONF_PORT, CONF_PROTOCOL
 
 BASIC_CONFIG = {
-    "port": 7777,
-    "protocol": "TCP",
-    "account": "ABCDEF",
-    "encryption_key": "AAAAAAAAAAAAAAAA",
-    "ping_interval": 10,
-    "zones": 1,
-    "ignore_timestamps": False,
-    "additional_account": False,
+    CONF_PORT: 7777,
+    CONF_PROTOCOL: "TCP",
+    CONF_ACCOUNT: "ABCDEF",
+    CONF_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAA",
+    CONF_PING_INTERVAL: 10,
+    CONF_ZONES: 1,
+    CONF_IGNORE_TIMESTAMPS: False,
+    CONF_ADDITIONAL_ACCOUNTS: False,
+}
+
+BASIC_CONFIG_ADDITIONAL = {
+    CONF_PORT: 7777,
+    CONF_PROTOCOL: "TCP",
+    CONF_ACCOUNT: "ABCDEF",
+    CONF_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAA",
+    CONF_PING_INTERVAL: 10,
+    CONF_ZONES: 1,
+    CONF_IGNORE_TIMESTAMPS: False,
+    CONF_ADDITIONAL_ACCOUNTS: True,
 }
 
 ADDITIONAL_ACCOUNT = {
-    "account": "ACC2",
-    "encryption_key": "AAAAAAAAAAAAAAAA",
-    "ping_interval": 2,
-    "zones": 2,
-    "ignore_timestamps": False,
-    "additional_account": False,
+    CONF_ACCOUNT: "ACC2",
+    CONF_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAA",
+    CONF_PING_INTERVAL: 2,
+    CONF_ZONES: 2,
+    CONF_IGNORE_TIMESTAMPS: False,
+    CONF_ADDITIONAL_ACCOUNTS: False,
 }
 
 
-async def test_form(hass):
-    """Test we get the form."""
-    with patch(
-        "homeassistant.components.sia.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.sia.config_flow.validate_input",
-        return_value=None,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data=BASIC_CONFIG,
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == f"SIA Alarm on port {BASIC_CONFIG['port']}"
-        assert result["data"] == {
-            "port": BASIC_CONFIG["port"],
-            "protocol": BASIC_CONFIG["protocol"],
-            "accounts": [
-                {
-                    "account": BASIC_CONFIG["account"],
-                    "encryption_key": BASIC_CONFIG["encryption_key"],
-                    "ping_interval": BASIC_CONFIG["ping_interval"],
-                    "zones": BASIC_CONFIG["zones"],
-                    "ignore_timestamps": BASIC_CONFIG["ignore_timestamps"],
-                }
-            ],
-        }
+@pytest.fixture(params=[False, True], ids=["user", "add_account"])
+def additional(request) -> bool:
+    """Return True or False for the additional or base test."""
+    return request.param
 
 
-async def test_form_additional_account(hass):
-    """Test we handle invalid key."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+@pytest.fixture
+async def flow_at_user_step(hass):
+    """Return a initialized flow."""
+    return await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] is None
-    config = BASIC_CONFIG.copy()
-    config["additional_account"] = True
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["errors"] is None
 
-    with patch(
-        "homeassistant.components.sia.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"], ADDITIONAL_ACCOUNT
-        )
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result3["title"] == "SIA Alarm on port 7777"
-    assert result3["data"] == {
-        "port": 7777,
-        "protocol": "TCP",
-        "accounts": [
+
+@pytest.fixture
+async def entry_with_basic_config(hass, flow_at_user_step):
+    """Return a entry with a basic config."""
+    return await hass.config_entries.flow.async_configure(
+        flow_at_user_step["flow_id"], BASIC_CONFIG
+    )
+
+
+@pytest.fixture
+async def flow_at_add_account_step(hass, flow_at_user_step):
+    """Return a initialized flow at the additional account step."""
+    return await hass.config_entries.flow.async_configure(
+        flow_at_user_step["flow_id"], BASIC_CONFIG_ADDITIONAL
+    )
+
+
+@pytest.fixture
+async def entry_with_additional_account_config(hass, flow_at_add_account_step):
+    """Return a entry with a two account config."""
+    return await hass.config_entries.flow.async_configure(
+        flow_at_add_account_step["flow_id"], ADDITIONAL_ACCOUNT
+    )
+
+
+async def test_form_start(
+    hass, flow_at_user_step, flow_at_add_account_step, additional
+):
+    """Start the form and check if you get the right id and schema."""
+    if additional:
+        assert flow_at_add_account_step["step_id"] == "add_account"
+        assert flow_at_add_account_step["errors"] is None
+        assert flow_at_add_account_step["data_schema"] == ACCOUNT_SCHEMA
+        return
+    assert flow_at_user_step["step_id"] == "user"
+    assert flow_at_user_step["errors"] is None
+    assert flow_at_user_step["data_schema"] == HUB_SCHEMA
+
+
+async def test_create(hass, entry_with_basic_config):
+    """Test we create a entry through the form."""
+    assert entry_with_basic_config["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert (
+        entry_with_basic_config["title"]
+        == f"SIA Alarm on port {BASIC_CONFIG[CONF_PORT]}"
+    )
+    assert entry_with_basic_config["data"] == {
+        CONF_PORT: BASIC_CONFIG[CONF_PORT],
+        CONF_PROTOCOL: BASIC_CONFIG[CONF_PROTOCOL],
+        CONF_ACCOUNTS: [
             {
-                "account": "ABCDEF",
-                "encryption_key": "AAAAAAAAAAAAAAAA",
-                "ping_interval": 10,
-                "zones": 1,
-                "ignore_timestamps": False,
+                CONF_ACCOUNT: BASIC_CONFIG[CONF_ACCOUNT],
+                CONF_ENCRYPTION_KEY: BASIC_CONFIG[CONF_ENCRYPTION_KEY],
+                CONF_PING_INTERVAL: BASIC_CONFIG[CONF_PING_INTERVAL],
+                CONF_ZONES: BASIC_CONFIG[CONF_ZONES],
+                CONF_IGNORE_TIMESTAMPS: BASIC_CONFIG[CONF_IGNORE_TIMESTAMPS],
+            }
+        ],
+    }
+
+
+async def test_create_additional_account(hass, entry_with_additional_account_config):
+    """Test we create a config with two accounts."""
+    assert (
+        entry_with_additional_account_config["type"]
+        == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    )
+    assert (
+        entry_with_additional_account_config["title"]
+        == f"SIA Alarm on port {BASIC_CONFIG[CONF_PORT]}"
+    )
+    assert entry_with_additional_account_config["data"] == {
+        CONF_PORT: BASIC_CONFIG[CONF_PORT],
+        CONF_PROTOCOL: BASIC_CONFIG[CONF_PROTOCOL],
+        CONF_ACCOUNTS: [
+            {
+                CONF_ACCOUNT: BASIC_CONFIG[CONF_ACCOUNT],
+                CONF_ENCRYPTION_KEY: BASIC_CONFIG[CONF_ENCRYPTION_KEY],
+                CONF_PING_INTERVAL: BASIC_CONFIG[CONF_PING_INTERVAL],
+                CONF_ZONES: BASIC_CONFIG[CONF_ZONES],
+                CONF_IGNORE_TIMESTAMPS: BASIC_CONFIG[CONF_IGNORE_TIMESTAMPS],
             },
             {
-                "account": "ACC2",
-                "encryption_key": "AAAAAAAAAAAAAAAA",
-                "ping_interval": 2,
-                "zones": 2,
-                "ignore_timestamps": False,
+                CONF_ACCOUNT: ADDITIONAL_ACCOUNT[CONF_ACCOUNT],
+                CONF_ENCRYPTION_KEY: ADDITIONAL_ACCOUNT[CONF_ENCRYPTION_KEY],
+                CONF_PING_INTERVAL: ADDITIONAL_ACCOUNT[CONF_PING_INTERVAL],
+                CONF_ZONES: ADDITIONAL_ACCOUNT[CONF_ZONES],
+                CONF_IGNORE_TIMESTAMPS: ADDITIONAL_ACCOUNT[CONF_IGNORE_TIMESTAMPS],
             },
         ],
     }
-    await hass.async_block_till_done()
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_abort_form(hass):
-    """Test we handle invalid key."""
-    result = await hass.config_entries.flow.async_init(
+async def test_abort_form(hass, entry_with_basic_config):
+    """Test aborting a config that already exists."""
+    assert entry_with_basic_config["data"][CONF_PORT] == BASIC_CONFIG[CONF_PORT]
+    start_another_flow = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    await hass.config_entries.flow.async_configure(result["flow_id"], BASIC_CONFIG)
-
-    result_abort = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    get_abort = await hass.config_entries.flow.async_configure(
+        start_another_flow["flow_id"], BASIC_CONFIG
     )
-    result3 = await hass.config_entries.flow.async_configure(
-        result_abort["flow_id"], BASIC_CONFIG
-    )
-    assert result3["type"] == "abort"
-    assert result3["reason"] == "already_configured"
+    assert get_abort["type"] == "abort"
+    assert get_abort["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
-    "additional, field, value, error",
+    "field, value, error",
     [
-        (False, "encryption_key", "AAAAAAAAAAAAAZZZ", "invalid_key_format"),
-        (True, "encryption_key", "AAAAAAAAAAAAAZZZ", "invalid_key_format"),
-        (False, "encryption_key", "AAAAAAAAAAAAA", "invalid_key_length"),
-        (True, "encryption_key", "AAAAAAAAAAAAA", "invalid_key_length"),
-        (False, "account", "ZZZ", "invalid_account_format"),
-        (True, "account", "ZZZ", "invalid_account_format"),
-        (False, "account", "A", "invalid_account_length"),
-        (True, "account", "A", "invalid_account_length"),
-        (False, "ping_interval", 1500, "invalid_ping"),
-        (True, "ping_interval", 1500, "invalid_ping"),
-        (False, "zones", 0, "invalid_zones"),
-        (True, "zones", 0, "invalid_zones"),
+        ("encryption_key", "AAAAAAAAAAAAAZZZ", "invalid_key_format"),
+        ("encryption_key", "AAAAAAAAAAAAA", "invalid_key_length"),
+        ("account", "ZZZ", "invalid_account_format"),
+        ("account", "A", "invalid_account_length"),
+        ("ping_interval", 1500, "invalid_ping"),
+        ("zones", 0, "invalid_zones"),
     ],
 )
-async def test_form_errors(hass, additional, field, value, error):
-    """Test we handle the different invalid inputs, both in the main and in the additional flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    if not additional:
-        config = BASIC_CONFIG.copy()
-        config[field] = value
-        with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
-            result_err = await hass.config_entries.flow.async_configure(
-                result["flow_id"], config
-            )
-            assert result_err["type"] == "form"
-            assert result_err["errors"] == {"base": error}
-    else:
-        add_config = BASIC_CONFIG.copy()
-        add_config["additional_account"] = True
-        result_add = await hass.config_entries.flow.async_configure(
-            result["flow_id"], add_config
+async def test_validation_errors(
+    hass,
+    flow_at_user_step,
+    additional,
+    field,
+    value,
+    error,
+):
+    """Test we handle the different invalid inputs, both in the user and add_account flow."""
+    config = BASIC_CONFIG.copy()
+    flow_id = flow_at_user_step["flow_id"]
+    if additional:
+        flow_at_add_account_step = await hass.config_entries.flow.async_configure(
+            flow_at_user_step["flow_id"], BASIC_CONFIG_ADDITIONAL
         )
-        assert result_add["type"] == "form"
-        assert result_add["errors"] is None
-
         config = ADDITIONAL_ACCOUNT.copy()
-        config[field] = value
+        flow_id = flow_at_add_account_step["flow_id"]
 
-        with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
-            result_err = await hass.config_entries.flow.async_configure(
-                result_add["flow_id"], config
-            )
-            assert result_err["type"] == "form"
-            assert result_err["errors"] == {"base": error}
+    config[field] = value
+    result_err = await hass.config_entries.flow.async_configure(flow_id, config)
+    assert result_err["type"] == "form"
+    assert result_err["errors"] == {"base": error}
 
 
-@pytest.mark.parametrize(
-    "additional",
-    [
-        (False),
-        (True),
-    ],
-)
-async def test_form_start(hass, additional):
-    """Start the form and check if you get the data_schema."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    if not additional:
-        assert result
-        assert result["step_id"] == "user"
-        assert result["errors"] is None
-        assert result["data_schema"] == HUB_SCHEMA
-    else:
-        add_config = BASIC_CONFIG.copy()
-        add_config["additional_account"] = True
-        result_add = await hass.config_entries.flow.async_configure(
-            result["flow_id"], add_config
+async def test_unknown(hass, flow_at_user_step, additional):
+    """Test unknown exceptions."""
+    flow_id = flow_at_user_step["flow_id"]
+    if additional:
+        flow_at_add_account_step = await hass.config_entries.flow.async_configure(
+            flow_at_user_step["flow_id"], BASIC_CONFIG_ADDITIONAL
         )
-        assert result_add
-        assert result_add["step_id"] == "add_account"
-        assert result_add["errors"] is None
-        assert result_add["data_schema"] == ACCOUNT_SCHEMA
-
-
-@pytest.mark.parametrize(
-    "additional",
-    [
-        (False),
-        (True),
-    ],
-)
-async def test_unknown(hass, additional):
-    """Start the form and check if you get the data_schema."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    if not additional:
-        with patch(
-            "homeassistant.components.sia.config_flow.validate_input",
-            return_value={"base": "unknown"},
-        ):
-            result_err = await hass.config_entries.flow.async_configure(
-                result["flow_id"], BASIC_CONFIG
-            )
-            assert result_err
-            assert result_err["step_id"] == "user"
-            assert result_err["errors"] == {"base": "unknown"}
-            assert result_err["data_schema"] == HUB_SCHEMA
-    else:
-        add_config = BASIC_CONFIG.copy()
-        add_config["additional_account"] = True
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], add_config
-        )
-        with patch(
-            "homeassistant.components.sia.config_flow.validate_input",
-            return_value={"base": "unknown"},
-        ):
-            result_add = await hass.config_entries.flow.async_configure(
-                result2["flow_id"], ADDITIONAL_ACCOUNT
-            )
-            assert result_add
-            assert result_add["step_id"] == "add_account"
-            assert result_add["errors"] == {"base": "unknown"}
+        flow_id = flow_at_add_account_step["flow_id"]
+    with patch(
+        "pysiaalarm.SIAAccount.validate_account",
+        side_effect=Exception,
+    ):
+        config = ADDITIONAL_ACCOUNT if additional else BASIC_CONFIG
+        result_err = await hass.config_entries.flow.async_configure(flow_id, config)
+        assert result_err
+        assert result_err["step_id"] == "add_account" if additional else "user"
+        assert result_err["errors"] == {"base": "unknown"}
+        assert result_err["data_schema"] == ACCOUNT_SCHEMA if additional else HUB_SCHEMA

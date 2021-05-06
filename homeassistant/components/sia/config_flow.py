@@ -71,18 +71,10 @@ def validate_input(data: ConfigType) -> dict[str, str] | None:
     except Exception as exc:  # pylint: disable=broad-except
         _LOGGER.exception("Unexpected exception from SIAAccount: %s", exc)
         return {"base": "unknown"}
-    try:
-        if not 1 <= int(data[CONF_PING_INTERVAL]) <= 1440:
-            return {"base": "invalid_ping"}
-    except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception("Unexpected exception from ping: %s", exc)
-        return {"base": "unknown"}
-    try:
-        if int(data[CONF_ZONES]) == 0:
-            return {"base": "invalid_zones"}
-    except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception("Unexpected exception from zones: %s", exc)
-        return {"base": "unknown"}
+    if not 1 <= data[CONF_PING_INTERVAL] <= 1440:
+        return {"base": "invalid_ping"}
+    if data[CONF_ZONES] == 0:
+        return {"base": "invalid_zones"}
     return None
 
 
