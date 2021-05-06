@@ -35,7 +35,6 @@ async def test_owserver_connect_failure(hass):
             CONF_HOST: "1.2.3.4",
             CONF_PORT: "1234",
         },
-        unique_id=f"{CONF_TYPE_OWSERVER}:1.2.3.4:1234",
         options={},
         entry_id="2",
     )
@@ -63,7 +62,6 @@ async def test_failed_owserver_listing(hass):
             CONF_HOST: "1.2.3.4",
             CONF_PORT: "1234",
         },
-        unique_id=f"{CONF_TYPE_OWSERVER}:1.2.3.4:1234",
         options={},
         entry_id="2",
     )

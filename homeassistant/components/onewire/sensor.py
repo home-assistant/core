@@ -250,7 +250,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up 1-Wire platform."""
-    onewirehub = hass.data[DOMAIN][config_entry.unique_id]
+    onewirehub = hass.data[DOMAIN][config_entry.entry_id]
     entities = await hass.async_add_executor_job(
         get_entities, onewirehub, config_entry.data
     )
