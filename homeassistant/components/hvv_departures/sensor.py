@@ -4,13 +4,12 @@ import logging
 
 from aiohttp import ClientConnectorError
 from pygti.exceptions import InvalidAuth
-from pytz import timezone
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ID, DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util import Throttle
-from homeassistant.util.dt import utcnow
+from homeassistant.util.dt import get_time_zone, utcnow
 
 from .const import ATTRIBUTION, CONF_STATION, DOMAIN, MANUFACTURER
 
@@ -65,7 +64,9 @@ class HVVDepartureSensor(SensorEntity):
             minutes=self.config_entry.options.get("offset", 0)
         )
 
-        departure_time_tz_berlin = departure_time.astimezone(timezone("Europe/Berlin"))
+        departure_time_tz_berlin = departure_time.astimezone(
+            get_time_zone("Europe/Berlin")
+        )
 
         payload = {
             "station": self.config_entry.data[CONF_STATION],

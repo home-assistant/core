@@ -6,7 +6,6 @@ import unittest
 from unittest.mock import patch
 
 import pytest
-import pytz
 
 from homeassistant import config as hass_config
 from homeassistant.components.history_stats import DOMAIN
@@ -82,7 +81,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
     )
     def test_period_parsing(self, mock):
         """Test the conversion from templates to period."""
-        now = datetime(2019, 1, 1, 23, 30, 0, tzinfo=pytz.utc)
+        now = datetime(2019, 1, 1, 23, 30, 0, tzinfo=dt_util.UTC)
         with patch("homeassistant.util.dt.now", return_value=now):
             today = Template(
                 "{{ now().replace(hour=0).replace(minute=0).replace(second=0) }}",
