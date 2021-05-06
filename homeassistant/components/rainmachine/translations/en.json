@@ -6,6 +6,7 @@
         "error": {
             "invalid_auth": "Invalid authentication"
         },
+        "flow_title": "RainMachine {ip}",
         "step": {
             "user": {
                 "data": {

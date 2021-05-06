@@ -24,7 +24,9 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util.network import is_ip_address
 
+from .config_flow import get_client_controller
 from .const import (
     CONF_ZONE_RUN_TIME,
     DATA_CONTROLLER,
@@ -37,8 +39,6 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
-
-DATA_LISTENER = "listener"
 
 DEFAULT_ATTRIBUTION = "Data provided by Green Electronics LLC"
 DEFAULT_ICON = "mdi:water"
@@ -70,32 +70,10 @@ async def async_update_programs_and_zones(
     )
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the RainMachine component."""
-    hass.data[DOMAIN] = {DATA_CONTROLLER: {}, DATA_COORDINATOR: {}, DATA_LISTENER: {}}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up RainMachine as config entry."""
+    hass.data.setdefault(DOMAIN, {DATA_CONTROLLER: {}, DATA_COORDINATOR: {}})
     hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
-
-    entry_updates = {}
-    if not entry.unique_id:
-        # If the config entry doesn't already have a unique ID, set one:
-        entry_updates["unique_id"] = entry.data[CONF_IP_ADDRESS]
-    if CONF_ZONE_RUN_TIME in entry.data:
-        # If a zone run time exists in the config entry's data, pop it and move it to
-        # options:
-        data = {**entry.data}
-        entry_updates["data"] = data
-        entry_updates["options"] = {
-            **entry.options,
-            CONF_ZONE_RUN_TIME: data.pop(CONF_ZONE_RUN_TIME),
-        }
-    if entry_updates:
-        hass.config_entries.async_update_entry(entry, **entry_updates)
-
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(session=websession)
 
@@ -107,14 +85,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ssl=entry.data.get(CONF_SSL, DEFAULT_SSL),
         )
     except RainMachineError as err:
-        LOGGER.error("An error occurred: %s", err)
         raise ConfigEntryNotReady from err
 
     # regenmaschine can load multiple controllers at once, but we only grab the one
     # we loaded above:
-    controller = hass.data[DOMAIN][DATA_CONTROLLER][entry.entry_id] = next(
-        iter(client.controllers.values())
-    )
+    controller = hass.data[DOMAIN][DATA_CONTROLLER][
+        entry.entry_id
+    ] = get_client_controller(client)
+
+    entry_updates = {}
+    if not entry.unique_id or is_ip_address(entry.unique_id):
+        # If the config entry doesn't already have a unique ID, set one:
+        entry_updates["unique_id"] = controller.mac
+    if CONF_ZONE_RUN_TIME in entry.data:
+        # If a zone run time exists in the config entry's data, pop it and move it to
+        # options:
+        data = {**entry.data}
+        entry_updates["data"] = data
+        entry_updates["options"] = {
+            **entry.options,
+            CONF_ZONE_RUN_TIME: data.pop(CONF_ZONE_RUN_TIME),
+        }
+    if entry_updates:
+        hass.config_entries.async_update_entry(entry, **entry_updates)
 
     async def async_update(api_category: str) -> dict:
         """Update the appropriate API data based on a category."""
@@ -158,7 +151,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    hass.data[DOMAIN][DATA_LISTENER] = entry.add_update_listener(async_reload_entry)
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
 
@@ -168,9 +161,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
-        cancel_listener = hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)
-        cancel_listener()
-
     return unload_ok
 
 

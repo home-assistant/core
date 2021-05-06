@@ -99,6 +99,10 @@ ZEROCONF = {
             "name": "rachio*"
         },
         {
+            "domain": "rainmachine",
+            "name": "rainmachine*"
+        },
+        {
             "domain": "shelly",
             "name": "shelly*"
         }
@@ -217,9 +221,11 @@ HOMEKIT = {
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",
     "Rachio": "rachio",
+    "SPK5": "rainmachine",
     "Smart Bridge": "lutron_caseta",
     "Socket": "wemo",
     "TRADFRI": "tradfri",
+    "Touch HD": "rainmachine",
     "Welcome": "netatmo",
     "Wemo": "wemo",
     "iSmartGate": "gogogate2",
