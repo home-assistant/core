@@ -191,7 +191,9 @@ def get_device_wrapper(hass: HomeAssistant, device_id: str):
 async def get_coap_context(hass):
     """Get CoAP context to be used in all Shelly devices."""
     context = aioshelly.COAP()
-    port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
+    port = DEFAULT_COAP_PORT
+    if DOMAIN in hass.data:
+        port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
     _LOGGER.info("Starting CoAP context with UDP port %s", port)
     await context.initialize(port)
 
