@@ -6,7 +6,7 @@ from zwave_js_server.const import LogLevel
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import InvalidNewValue, NotFoundError, SetValueFailed
 
-from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
+from homeassistant.components.websocket_api.const import ERR_NOT_FOUND, ERR_NOT_LOADED
 from homeassistant.components.zwave_js.api import (
     COMMAND_CLASS_ID,
     CONFIG,
@@ -55,7 +55,7 @@ async def test_network_status(hass, integration, hass_ws_client):
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
 async def test_node_status(hass, integration, multisensor_6, hass_ws_client):
@@ -109,7 +109,7 @@ async def test_node_status(hass, integration, multisensor_6, hass_ws_client):
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
 async def test_add_node(
@@ -166,7 +166,7 @@ async def test_add_node(
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
 async def test_cancel_inclusion_exclusion(hass, integration, client, hass_ws_client):
@@ -200,7 +200,7 @@ async def test_cancel_inclusion_exclusion(hass, integration, client, hass_ws_cli
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_LOADED
 
     await ws_client.send_json(
         {ID: 7, TYPE: "zwave_js/stop_exclusion", ENTRY_ID: entry.entry_id}
@@ -208,7 +208,7 @@ async def test_cancel_inclusion_exclusion(hass, integration, client, hass_ws_cli
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
 async def test_remove_node(
@@ -278,7 +278,7 @@ async def test_remove_node(
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
 async def test_refresh_node_info(
@@ -377,7 +377,7 @@ async def test_refresh_node_info(
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
 async def test_refresh_node_values(
@@ -505,7 +505,7 @@ async def test_refresh_node_cc_values(
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
 async def test_set_config_parameter(
@@ -661,7 +661,7 @@ async def test_set_config_parameter(
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
 async def test_get_config_parameters(hass, integration, multisensor_6, hass_ws_client):
@@ -721,7 +721,7 @@ async def test_get_config_parameters(hass, integration, multisensor_6, hass_ws_c
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
 async def test_dump_view(integration, hass_client):
@@ -794,7 +794,7 @@ async def test_subscribe_logs(hass, integration, client, hass_ws_client):
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
 async def test_update_log_config(hass, client, integration, hass_ws_client):
@@ -931,7 +931,7 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
 async def test_get_log_config(hass, client, integration, hass_ws_client):
@@ -982,7 +982,7 @@ async def test_get_log_config(hass, client, integration, hass_ws_client):
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
 async def test_data_collection(hass, client, integration, hass_ws_client):
@@ -1067,7 +1067,7 @@ async def test_data_collection(hass, client, integration, hass_ws_client):
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_LOADED
 
     await ws_client.send_json(
         {
@@ -1080,4 +1080,4 @@ async def test_data_collection(hass, client, integration, hass_ws_client):
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
+    assert msg["error"]["code"] == ERR_NOT_LOADED
