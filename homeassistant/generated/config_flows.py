@@ -65,6 +65,7 @@ FLOWS = [
     "dynalite",
     "eafm",
     "ecobee",
+    "ecodevices",
     "econet",
     "elgato",
     "elkm1",

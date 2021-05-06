@@ -1,0 +1,45 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Parameters of Eco-Device",
+        "description": "Set connexion settings and select which input you use.",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "scan_interval": "Seconds between updates",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "t1_enabled": "Teleinfo 1",
+          "t2_enabled": "Teleinfo 2",
+          "c1_enabled": "Meter 1",
+          "c2_enabled": "Meter 2"
+        }
+      },
+      "params": {
+        "title": "Parameters of Eco-Device entities",
+        "data": {
+          "t1_name": "Teleinfo 1 Name",
+          "t1_unit_of_measurement": "Teleinfo 1 Unit of measurement",
+          "t2_name": "Teleinfo 2 Name",
+          "t2_unit_of_measurement": "Teleinfo 2 Unit of measurement",
+          "c1_name": "Meter 1 Name",
+          "c1_device_class": "Meter 1 Device Class (sensor)",
+          "c1_unit_of_measurement": "Meter 1 Unit of measurement",
+          "c2_name": "Meter 2 Name",
+          "c2_device_class": "Meter 2 Device Class (sensor)",
+          "c2_unit_of_measurement": "Meter 2 Unit of measurement"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

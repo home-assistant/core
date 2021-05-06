@@ -805,6 +805,9 @@ pydexcom==0.2.0
 # homeassistant.components.zwave
 pydispatcher==2.0.5
 
+# homeassistant.components.ecodevices
+pyecodevices==1.3.0
+
 # homeassistant.components.econet
 pyeconet==0.1.14
 

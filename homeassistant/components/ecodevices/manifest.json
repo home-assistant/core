@@ -1,0 +1,10 @@
+{
+  "name": "GCE Eco-Devices",
+  "domain": "ecodevices",
+  "documentation": "https://www.home-assistant.io/integrations/ecodevices",
+  "codeowners": ["@Aohzan"],
+  "config_flow": true,
+  "requirements": ["pyecodevices==1.3.0"],
+  "dependencies": [],
+  "iot_class": "local_polling"
+}
