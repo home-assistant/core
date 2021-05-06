@@ -2,7 +2,9 @@
     "config": {
         "error": {
             "cannot_connect": "Unable to connect to the Syncthing server.",
-            "invalid_auth": "Invalid authentication",
+            "invalid_auth": "Invalid authentication"
+        },
+        "abort": {
             "already_configured": "Service is already configured"
         },
         "step": {

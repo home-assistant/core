@@ -6,7 +6,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
-from homeassistant.util.network import normalize_url
 
 from .const import DEFAULT_URL, DEFAULT_VERIFY_SSL, DOMAIN
 
@@ -24,10 +23,6 @@ DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data[CONF_URL] == normalize_url(data[CONF_URL]):
-            raise AlreadyConfigured
-
     try:
         async with aiosyncthing.Syncthing(
             data[CONF_TOKEN],
@@ -35,8 +30,8 @@ async def validate_input(hass: core.HomeAssistant, data):
             verify_ssl=data[CONF_VERIFY_SSL],
             loop=hass.loop,
         ) as client:
-            await client.system.config()
-            return {"title": f"{data[CONF_URL]}"}
+            server_id = (await client.system.status())["myID"]
+            return {"title": f"{data[CONF_URL]}", "server_id": server_id}
     except aiosyncthing.exceptions.UnauthorizedError as error:
         raise InvalidAuth from error
     except Exception as error:
@@ -62,7 +57,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except AlreadyConfigured:
                 errors[CONF_URL] = "already_configured"
             else:
-                user_input[CONF_URL] = normalize_url(user_input[CONF_URL])
+                await self.async_set_unique_id(info["server_id"])
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
