@@ -153,7 +153,7 @@ class ConfigEntry:
         data: Mapping[str, Any],
         source: str,
         system_options: dict,
-        options: dict | None = None,
+        options: Mapping[str, Any] | None = None,
         unique_id: str | None = None,
         entry_id: str | None = None,
         state: str = ENTRY_STATE_NOT_LOADED,
@@ -631,7 +631,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             domain=result["handler"],
             title=result["title"],
             data=result["data"],
-            options={},
+            options=result["options"],
             system_options={},
             source=flow.context["source"],
             unique_id=flow.unique_id,
@@ -1296,6 +1296,28 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by DHCP discovery."""
         return await self.async_step_discovery(discovery_info)
+
+    @callback
+    def async_create_entry(  # pylint: disable=arguments-differ
+        self,
+        *,
+        title: str,
+        data: Mapping[str, Any],
+        description: str | None = None,
+        description_placeholders: dict | None = None,
+        options: Mapping[str, Any] | None = None,
+    ) -> data_entry_flow.FlowResult:
+        """Finish config flow and create a config entry."""
+        result = super().async_create_entry(
+            title=title,
+            data=data,
+            description=description,
+            description_placeholders=description_placeholders,
+        )
+
+        result["options"] = options or {}
+
+        return result
 
 
 class OptionsFlowManager(data_entry_flow.FlowManager):
