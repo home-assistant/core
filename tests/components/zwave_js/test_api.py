@@ -35,24 +35,7 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
     """Test the network and node status websocket commands."""
     entry = integration
     ws_client = await hass_ws_client(hass)
-
     node = multisensor_6
-    await ws_client.send_json(
-        {
-            ID: 3,
-            TYPE: "zwave_js/node_status",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: node.node_id,
-        }
-    )
-    msg = await ws_client.receive_json()
-    result = msg["result"]
-
-    assert result[NODE_ID] == 52
-    assert result["ready"]
-    assert result["is_routing"]
-    assert not result["is_secure"]
-    assert result["status"] == 1
 
     # Test getting configuration parameter values
     await ws_client.send_json(
@@ -77,23 +60,10 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
     key = "52-112-0-201-255"
     assert result[key]["property_key"] == 255
 
-    # Test getting non-existent node fails
-    await ws_client.send_json(
-        {
-            ID: 5,
-            TYPE: "zwave_js/node_status",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 99999,
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert not msg["success"]
-    assert msg["error"]["code"] == ERR_NOT_FOUND
-
     # Test getting non-existent node config params fails
     await ws_client.send_json(
         {
-            ID: 6,
+            ID: 5,
             TYPE: "zwave_js/get_config_parameters",
             ENTRY_ID: entry.entry_id,
             NODE_ID: 99999,
@@ -123,6 +93,59 @@ async def test_network_status(hass, integration, hass_ws_client):
 
     await ws_client.send_json(
         {ID: 3, TYPE: "zwave_js/network_status", ENTRY_ID: entry.entry_id}
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+
+async def test_node_status(hass, integration, multisensor_6, hass_ws_client):
+    """Test the node status websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    node = multisensor_6
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/node_status",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: node.node_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+    result = msg["result"]
+
+    assert result[NODE_ID] == 52
+    assert result["ready"]
+    assert result["is_routing"]
+    assert not result["is_secure"]
+    assert result["status"] == 1
+
+    # Test getting non-existent node fails
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/node_status",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 99999,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 5,
+            TYPE: "zwave_js/node_status",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: node.node_id,
+        }
     )
     msg = await ws_client.receive_json()
 
