@@ -49,18 +49,6 @@ async def validate_input_owserver(hass: HomeAssistant, data):
     return {"title": host}
 
 
-def is_duplicate_owserver_entry(hass: HomeAssistant, user_input):
-    """Check existing entries for matching host and port."""
-    for config_entry in hass.config_entries.async_entries(DOMAIN):
-        if (
-            config_entry.data[CONF_TYPE] == CONF_TYPE_OWSERVER
-            and config_entry.data[CONF_HOST] == user_input[CONF_HOST]
-            and config_entry.data[CONF_PORT] == user_input[CONF_PORT]
-        ):
-            return True
-    return False
-
-
 async def validate_input_mount_dir(hass: HomeAssistant, data):
     """Validate the user input allows us to connect.
 
@@ -110,8 +98,13 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input:
             # Prevent duplicate entries
-            if is_duplicate_owserver_entry(self.hass, user_input):
-                return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match(
+                {
+                    CONF_TYPE: CONF_TYPE_OWSERVER,
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                }
+            )
 
             self.onewire_config.update(user_input)
 

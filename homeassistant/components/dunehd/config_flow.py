@@ -73,8 +73,7 @@ class DuneHDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle configuration by yaml file."""
         self.host = user_input[CONF_HOST]
 
-        if self.host_already_configured(self.host):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: self.host})
 
         try:
             await self.init_device(self.host)

@@ -60,8 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info):
         """Handle dhcp discovery."""
-        if self._host_already_configured(discovery_info[IP_ADDRESS]):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: discovery_info[IP_ADDRESS]})
 
         formatted_mac = format_mac(discovery_info[MAC_ADDRESS])
         await self.async_set_unique_id(format_mac(formatted_mac))
@@ -79,8 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            if self._host_already_configured(user_input[CONF_HOST]):
-                return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
             try:
                 info = await validate_input(self.hass, user_input)
@@ -108,17 +106,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
-        if self._host_already_configured(user_input[CONF_HOST]):
-            return self.async_abort(reason="already_configured")
-
+        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
         return await self.async_step_user(user_input)
-
-    def _host_already_configured(self, host):
-        """See if we already have an entry matching the host."""
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_HOST) == host:
-                return True
-        return False
 
     @staticmethod
     @callback

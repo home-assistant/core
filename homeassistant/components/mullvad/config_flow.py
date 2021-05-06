@@ -17,8 +17,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
-        if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({})
 
         errors = {}
         if user_input is not None:

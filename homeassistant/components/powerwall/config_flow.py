@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.components.dhcp import IP_ADDRESS
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
-from homeassistant.core import callback
 
 from .const import DOMAIN
 
@@ -60,9 +59,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info):
         """Handle dhcp discovery."""
-        if self._async_ip_address_already_configured(discovery_info[IP_ADDRESS]):
-            return self.async_abort(reason="already_configured")
-
+        self.ip_address = discovery_info[IP_ADDRESS]
+        self._async_abort_entries_match({CONF_IP_ADDRESS: self.ip_address})
         self.ip_address = discovery_info[IP_ADDRESS]
         self.context["title_placeholders"] = {CONF_IP_ADDRESS: self.ip_address}
         return await self.async_step_user()
@@ -110,14 +108,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle configuration by re-auth."""
         self.ip_address = data[CONF_IP_ADDRESS]
         return await self.async_step_user()
-
-    @callback
-    def _async_ip_address_already_configured(self, ip_address):
-        """See if we already have an entry matching the ip_address."""
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_IP_ADDRESS) == ip_address:
-                return True
-        return False
 
 
 class WrongVersion(exceptions.HomeAssistantError):
