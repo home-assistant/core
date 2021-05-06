@@ -15,7 +15,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from . import INCOMPLETE_NAM_DATA, NAM_DATA
+from . import INCOMPLETE_NAM_DATA, nam_data
 
 from tests.common import async_fire_time_changed
 from tests.components.nam import init_integration
@@ -55,6 +55,15 @@ async def test_air_quality(hass):
     entry = registry.async_get("air_quality.nettigo_air_monitor_sps30")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-sps30"
+
+
+async def test_air_quality_without_co2_value(hass):
+    """Test states of the air_quality."""
+    await init_integration(hass, co2_sensor=False)
+
+    state = hass.states.get("air_quality.nettigo_air_monitor_sds011")
+    assert state
+    assert state.attributes.get(ATTR_CO2) is None
 
 
 async def test_incompleta_data_after_device_restart(hass):
@@ -108,7 +117,7 @@ async def test_availability(hass):
     future = utcnow() + timedelta(minutes=12)
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor._async_get_data",
-        return_value=NAM_DATA,
+        return_value=nam_data,
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -127,7 +136,7 @@ async def test_manual_update_entity(hass):
 
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor._async_get_data",
-        return_value=NAM_DATA,
+        return_value=nam_data,
     ) as mock_get_data:
         await hass.services.async_call(
             "homeassistant",

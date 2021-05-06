@@ -24,7 +24,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from . import INCOMPLETE_NAM_DATA, NAM_DATA
+from . import INCOMPLETE_NAM_DATA, nam_data
 
 from tests.common import async_fire_time_changed
 from tests.components.nam import init_integration
@@ -235,7 +235,7 @@ async def test_availability(hass):
     future = utcnow() + timedelta(minutes=12)
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor._async_get_data",
-        return_value=NAM_DATA,
+        return_value=nam_data,
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -254,7 +254,7 @@ async def test_manual_update_entity(hass):
 
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor._async_get_data",
-        return_value=NAM_DATA,
+        return_value=nam_data,
     ) as mock_get_data:
         await hass.services.async_call(
             "homeassistant",

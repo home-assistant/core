@@ -10,7 +10,7 @@ INCOMPLETE_NAM_DATA = {
     "sensordatavalues": [],
 }
 
-NAM_DATA = {
+nam_data = {
     "software_version": "NAMF-2020-36",
     "sensordatavalues": [
         {"value_type": "SDS_P1", "value": "18.65"},
@@ -36,7 +36,7 @@ NAM_DATA = {
 }
 
 
-async def init_integration(hass) -> MockConfigEntry:
+async def init_integration(hass, co2_sensor=True) -> MockConfigEntry:
     """Set up the Nettigo Air Monitor integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -45,9 +45,13 @@ async def init_integration(hass) -> MockConfigEntry:
         data={"host": "10.10.2.3"},
     )
 
+    if not co2_sensor:
+        # Remove conc_co2_ppm value
+        nam_data["sensordatavalues"].pop(6)
+
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor._async_get_data",
-        return_value=NAM_DATA,
+        return_value=nam_data,
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
