@@ -197,7 +197,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by zeroconf discovery."""
         self._host = discovery_info[CONF_HOST]
 
-        LOGGER.debug("Found Samsung device via zeroconf at %s", self._host)
+        LOGGER.debug(
+            "Found Samsung device via zeroconf at %s (%s)", self._host, discovery_info
+        )
 
         await self._async_set_device_unique_id()
 
