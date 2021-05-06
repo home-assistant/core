@@ -214,7 +214,7 @@ async def test_issur_melacha_sensor(
                 [
                     latitude,
                     longitude,
-                    time_zone,
+                    tzname,
                     HDATE_DEFAULT_ALTITUDE,
                     diaspora,
                     "english",

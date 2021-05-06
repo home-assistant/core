@@ -5,9 +5,8 @@ import hdate
 import voluptuous as vol
 
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-from homeassistant.helpers import config_validation as cv
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.util import dt as dt_util
 
 DOMAIN = "jewish_calendar"
 
@@ -112,7 +111,7 @@ async def async_setup(hass, config):
     location = hdate.Location(
         latitude=latitude,
         longitude=longitude,
-        timezone=dt_util.get_time_zone(hass.config.time_zone),
+        timezone=hass.config.time_zone,
         diaspora=diaspora,
     )
 

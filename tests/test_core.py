@@ -877,7 +877,7 @@ def test_config_defaults():
     assert config.longitude == 0
     assert config.elevation == 0
     assert config.location_name == "Home"
-    assert config.time_zone == dt_util.UTC
+    assert config.time_zone == "UTC"
     assert config.internal_url is None
     assert config.external_url is None
     assert config.config_source == "default"
