@@ -6,12 +6,13 @@ from zwave_js_server.const import LogLevel
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import InvalidNewValue, NotFoundError, SetValueFailed
 
-from homeassistant.components.websocket_api.const import ERR_NOT_FOUND, ERR_NOT_LOADED
+from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
     COMMAND_CLASS_ID,
     CONFIG,
     ENABLED,
     ENTRY_ID,
+    ERR_NOT_LOADED,
     FILENAME,
     FORCE_CONSOLE,
     ID,
