@@ -1,10 +1,18 @@
 """The tests for the Media group platform."""
+from unittest.mock import patch
+
+import pytest
+
 from homeassistant.components.group import DOMAIN
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_DOMAIN,
     SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_SEEK,
+    SERVICE_PLAY_MEDIA,
     SERVICE_SHUFFLE_SET,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -12,12 +20,14 @@ from homeassistant.components.media_player import (
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
+    SUPPORT_SEEK,
     SUPPORT_STOP,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_MUTED,
     SERVICE_CLEAR_PLAYLIST,
@@ -28,6 +38,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_STOP,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
@@ -39,6 +50,18 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
+
+from tests.common import async_mock_service
+
+
+@pytest.fixture(name="mock_media_seek")
+def media_player_media_seek_fixture():
+    """Mock demo YouTube player media seek."""
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_seek",
+        autospec=True,
+    ) as seek:
+        yield seek
 
 
 async def test_default_state(hass):
@@ -164,7 +187,7 @@ async def test_supported_features(hass):
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == pause_play_stop | play_media
 
 
-async def test_service_calls(hass):
+async def test_service_calls(hass, mock_media_seek):
     """Test service calls."""
     await async_setup_component(
         hass,
@@ -251,6 +274,41 @@ async def test_service_calls(hass):
     )
     await hass.async_block_till_done()
     assert hass.states.get("media_player.kitchen").attributes[ATTR_MEDIA_TRACK] == 1
+
+    await hass.services.async_call(
+        MEDIA_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.media_group",
+            ATTR_MEDIA_CONTENT_TYPE: "some_type",
+            ATTR_MEDIA_CONTENT_ID: "some_id",
+        },
+    )
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get("media_player.bedroom").attributes[ATTR_MEDIA_CONTENT_ID]
+        == "some_id"
+    )
+    # media_player.kitchen is skipped because it always returns "bounzz-1"
+    assert (
+        hass.states.get("media_player.living_room").attributes[ATTR_MEDIA_CONTENT_ID]
+        == "some_id"
+    )
+
+    state = hass.states.get("media_player.media_group")
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & SUPPORT_SEEK
+    assert not mock_media_seek.called
+
+    await hass.services.async_call(
+        MEDIA_DOMAIN,
+        SERVICE_MEDIA_SEEK,
+        {
+            ATTR_ENTITY_ID: "media_player.media_group",
+            ATTR_MEDIA_SEEK_POSITION: 100,
+        },
+    )
+    await hass.async_block_till_done()
+    assert mock_media_seek.called
 
     await hass.services.async_call(
         MEDIA_DOMAIN,
@@ -361,6 +419,17 @@ async def test_service_calls(hass):
     )
     await hass.async_block_till_done()
     assert hass.states.get("media_player.kitchen").state == STATE_OFF
+
+    calls = async_mock_service(hass, MEDIA_DOMAIN, SERVICE_MEDIA_STOP)
+    assert len(calls) == 0
+
+    await hass.services.async_call(
+        MEDIA_DOMAIN,
+        SERVICE_MEDIA_STOP,
+        {ATTR_ENTITY_ID: "media_player.media_group"},
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 1
 
 
 async def test_nested_group(hass):
