@@ -52,7 +52,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
@@ -107,14 +107,16 @@ class MediaGroup(MediaPlayerEntity):
             KEY_VOLUME: set(),
         }
 
-    async def _on_state_change(self, event: EventType) -> None:
+    @callback
+    def _on_state_change(self, event: EventType) -> None:
         self.async_set_context(event.context)
-        await self.async_update_supported_features(
+        self.update_supported_features(
             event.data.get("entity_id"), event.data.get("new_state")  # type: ignore
         )
-        await self.async_update_state()
+        self.update_state()
 
-    async def async_update_supported_features(
+    @callback
+    def update_supported_features(
         self,
         entity_id: str,
         new_state: State | None,
@@ -165,9 +167,9 @@ class MediaGroup(MediaPlayerEntity):
         """Register listeners."""
         for entity_id in self._entities:
             new_state = self.hass.states.get(entity_id)
-            await self.async_update_supported_features(entity_id, new_state)
+            self.update_supported_features(entity_id, new_state)
         async_track_state_change_event(self.hass, self._entities, self._on_state_change)
-        await self.async_update_state()
+        self.update_state()
 
     @property
     def name(self) -> str:
@@ -356,7 +358,8 @@ class MediaGroup(MediaPlayerEntity):
             if volume_level > 0:
                 await self.async_set_volume_level(max(0, volume_level - 0.1))
 
-    async def async_update_state(self) -> None:
+    @callback
+    def update_state(self) -> None:
         """Query all members and determine the media group state."""
         states = [self.hass.states.get(entity) for entity in self._entities]
         states_values = [state.state for state in states if state is not None]
