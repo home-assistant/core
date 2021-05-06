@@ -51,3 +51,13 @@ class MockLight(MockToggleEntity, LightEntity):
     color_temp = None
 
     white_value = None
+
+    max_mireds = 500
+    min_mireds = 153
+
+    def turn_on(self, **kwargs):
+        """Turn the entity on."""
+        super().turn_on(**kwargs)
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
