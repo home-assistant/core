@@ -14,6 +14,11 @@
   "zeroconf": [
     {"type":"_airplay._tcp.local.","manufacturer":"samsung*"}
   ],
+  "dhcp": [
+    {
+      "hostname": "tizen*"
+    }
+  ],
   "codeowners": [
     "@escoand",
     "@chemelli74"
