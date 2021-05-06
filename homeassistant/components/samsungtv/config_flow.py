@@ -35,6 +35,7 @@ from .const import (
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
     RESULT_UNKNOWN_HOST,
+    WEBSOCKET_PORTS,
 )
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
@@ -111,23 +112,34 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return
 
         for method in SUPPORTED_METHODS:
-            bridge = SamsungTVBridge.get_bridge(method, self._host)
-            if self._bridge.try_connect() == RESULT_SUCCESS:
-                self._bridge = bridge
+            self._bridge = SamsungTVBridge.get_bridge(method, self._host)
+            result = self._bridge.try_connect()
+            if result == RESULT_SUCCESS:
                 return
+            if result != RESULT_CANNOT_CONNECT:
+                raise data_entry_flow.AbortFlow(result)
         LOGGER.debug("No working config found")
         raise data_entry_flow.AbortFlow(RESULT_CANNOT_CONNECT)
 
-    def _connect_get_device_info(self):
-        """Try connect and fetch the device info."""
-        self._try_connect()
-        return self._bridge.device_info
-
     async def _async_get_and_check_device_info(self):
         """Try to get the device info."""
-        self._device_info = await self.hass.async_add_executor_job(
-            self._connect_get_device_info
-        )
+        if self._bridge:
+            self._device_info = await self.hass.async_add_executor_job(
+                self._bridge.device_info
+            )
+        else:
+            for port in WEBSOCKET_PORTS:
+                self._device_info = await self.hass.async_add_executor_job(
+                    SamsungTVBridge.get_bridge(
+                        METHOD_WEBSOCKET, self._host, port
+                    ).device_info
+                )
+                if self._device_info:
+                    break
+
+            if not self._device_info:
+                raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
+
         dev_info = self._device_info.get("device", {})
         device_type = dev_info.get("type")
         if device_type and device_type != "Samsung SmartTV":
