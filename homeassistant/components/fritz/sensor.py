@@ -13,9 +13,36 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
 from .common import FritzBoxBaseEntity, FritzBoxTools
-from .const import DOMAIN, SENSOR_EXTERNAL_IP, SENSOR_UPTIME
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _retrieve_uptime_state(status, last_value):
+    """Return uptime from device."""
+    return get_device_uptime(status.uptime, last_value)
+
+
+def _retrieve_external_ip_state(status, last_value):
+    """Return external ip from device."""
+    return status.external_ip
+
+
+SENSOR_NAME = 0
+SENSOR_DEVICE_CLASS = 1
+SENSOR_ICON = 2
+SENSOR_STATE_PROVIDER = 3
+
+# sensor_type: [name, device_class, icon, state_provider]
+SENSOR_TYPES_FRITZ = {
+    "fritz_external_ip": [
+        "External IP",
+        None,
+        "mdi:earth",
+        _retrieve_external_ip_state,
+    ],
+    "fritz_uptime": ["Uptime", DEVICE_CLASS_TIMESTAMP, None, _retrieve_uptime_state],
+}
 
 
 async def async_setup_entry(
@@ -28,9 +55,14 @@ async def async_setup_entry(
     if "WANIPConn1" in fritzbox_tools.connection.services:
         # Only routers are supported at the moment
 
-        for sensor_type in [SENSOR_EXTERNAL_IP, SENSOR_UPTIME]:
+        for sensor_type in SENSOR_TYPES_FRITZ:
             async_add_entities(
-                [FritzBoxSensor(fritzbox_tools, entry.title, sensor_type)], True
+                [
+                    FritzBoxSensor(
+                        fritzbox_tools, entry.title, SENSOR_TYPES_FRITZ[sensor_type]
+                    )
+                ],
+                True,
             )
 
 
@@ -42,14 +74,17 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
     ) -> None:
         """Init FRITZ!Box connectivity class."""
         self._sensor_type = sensor_type
-        self._unique_id = (
-            f"{fritzbox_tools.unique_id}-{self._sensor_type.replace(' ', '_').lower()}"
-        )
-        self._name = f"{device_friendlyname} {self._sensor_type}"
+        self._unique_id = f"{fritzbox_tools.unique_id}-{self._sensor_type[SENSOR_NAME].replace(' ', '_').lower()}"
+        self._name = f"{device_friendlyname} {self._sensor_type[SENSOR_NAME]}"
         self._is_available = True
         self._last_value: str | None = None
         self._state: str | None = None
         super().__init__(fritzbox_tools, device_friendlyname)
+
+    @property
+    def _state_provider(self):
+        """Return the state provider for the binary sensor."""
+        return self._sensor_type[SENSOR_STATE_PROVIDER]
 
     @property
     def name(self):
@@ -59,16 +94,12 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
     @property
     def device_class(self) -> str | None:
         """Return device class."""
-        if self._sensor_type == SENSOR_UPTIME:
-            return DEVICE_CLASS_TIMESTAMP
-        return None
+        return self._sensor_type[SENSOR_DEVICE_CLASS]
 
     @property
     def icon(self):
         """Return icon."""
-        if self._sensor_type == SENSOR_EXTERNAL_IP:
-            return "mdi:earth"
-        return None
+        return self._sensor_type[SENSOR_ICON]
 
     @property
     def unique_id(self):
@@ -93,13 +124,9 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
             status = self._fritzbox_tools.fritzstatus
             self._is_available = True
 
-            if self._sensor_type == SENSOR_UPTIME:
-                self._state = self._last_value = get_device_uptime(
-                    status.uptime, self._last_value
-                )
-
-            if self._sensor_type == SENSOR_EXTERNAL_IP:
-                self._state = status.external_ip
+            self._state = self._last_value = self._state_provider(
+                status, self._last_value
+            )
 
         except FritzConnectionException:
             _LOGGER.error("Error getting the state from the FRITZ!Box", exc_info=True)

@@ -4,9 +4,6 @@ DOMAIN = "fritz"
 
 PLATFORMS = ["binary_sensor", "device_tracker", "sensor"]
 
-SENSOR_UPTIME = "Uptime"
-SENSOR_EXTERNAL_IP = "External IP"
-
 DATA_FRITZ = "fritz_data"
 
 DEFAULT_DEVICE_NAME = "Unknown device"
