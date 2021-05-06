@@ -268,6 +268,18 @@ async def test_remove_node(
     )
     assert device is None
 
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {ID: 4, TYPE: "zwave_js/remove_node", ENTRY_ID: entry.entry_id}
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
 
 async def test_refresh_node_info(
     hass, client, integration, hass_ws_client, multisensor_6
