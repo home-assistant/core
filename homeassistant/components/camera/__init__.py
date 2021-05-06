@@ -1,4 +1,6 @@
 """Component to interface with cameras."""
+from __future__ import annotations
+
 import asyncio
 import base64
 import collections
@@ -8,7 +10,7 @@ import hashlib
 import logging
 import os
 from random import SystemRandom
-from typing import final
+from typing import cast, final
 
 from aiohttp import web
 import async_timeout
@@ -347,7 +349,7 @@ class Camera(Entity):
         """Return the interval between frames of the mjpeg stream."""
         return 0.5
 
-    async def create_stream(self) -> Stream:
+    async def create_stream(self) -> Stream | None:
         """Create a Stream for stream_source."""
         # There is at most one stream (a decode worker) per camera
         if not self.stream:
@@ -471,6 +473,8 @@ class CameraView(HomeAssistantView):
         if camera is None:
             raise web.HTTPNotFound()
 
+        camera = cast(Camera, camera)
+
         authenticated = (
             request[KEY_AUTHENTICATED]
             or request.query.get("token") in camera.access_tokens
@@ -516,13 +520,13 @@ class CameraMjpegStream(CameraView):
 
     async def handle(self, request: web.Request, camera: Camera) -> web.Response:
         """Serve camera stream, possibly with interval."""
-        interval = request.query.get("interval")
-        if interval is None:
+        interval_str = request.query.get("interval")
+        if interval_str is None:
             return await camera.handle_async_mjpeg_stream(request)
 
         try:
             # Compose camera stream from stills
-            interval = float(request.query.get("interval"))
+            interval = float(interval_str)
             if interval < MIN_STREAM_INTERVAL:
                 raise ValueError(f"Stream interval must be be > {MIN_STREAM_INTERVAL}")
             return await camera.handle_async_still_stream(request, interval)
@@ -554,7 +558,6 @@ async def websocket_camera_thumbnail(hass, connection, msg):
         )
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "camera/stream",
@@ -562,6 +565,7 @@ async def websocket_camera_thumbnail(hass, connection, msg):
         vol.Optional("format", default="hls"): vol.In(OUTPUT_FORMATS),
     }
 )
+@websocket_api.async_response
 async def ws_camera_stream(hass, connection, msg):
     """Handle get camera stream websocket command.
 
@@ -582,17 +586,16 @@ async def ws_camera_stream(hass, connection, msg):
         )
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {vol.Required("type"): "camera/get_prefs", vol.Required("entity_id"): cv.entity_id}
 )
+@websocket_api.async_response
 async def websocket_get_prefs(hass, connection, msg):
     """Handle request for account info."""
     prefs = hass.data[DATA_CAMERA_PREFS].get(msg["entity_id"])
     connection.send_result(msg["id"], prefs.as_dict())
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "camera/update_prefs",
@@ -600,6 +603,7 @@ async def websocket_get_prefs(hass, connection, msg):
         vol.Optional("preload_stream"): bool,
     }
 )
+@websocket_api.async_response
 async def websocket_update_prefs(hass, connection, msg):
     """Handle request for account info."""
     prefs = hass.data[DATA_CAMERA_PREFS]
