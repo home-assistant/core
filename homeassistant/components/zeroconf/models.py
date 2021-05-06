@@ -19,9 +19,9 @@ class HaZeroconf(Zeroconf):
 class HaAsyncZeroconf(AsyncZeroconf):
     """Home Assistant version of AsyncZeroconf."""
 
-    def __init__(
+    def __init__(  # pylint: disable=super-init-not-called
         self, *args: Any, **kwargs: Any
-    ) -> None:  # pylint: disable=super-init-not-called
+    ) -> None:
         """Wrap AsyncZeroconf."""
         self.zeroconf = HaZeroconf(*args, **kwargs)
         self.loop = asyncio.get_running_loop()
