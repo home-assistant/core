@@ -6,7 +6,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import callback
 
 from .const import (
     CONF_2FA,
@@ -20,15 +19,6 @@ from .hangups_utils import (
     HangoutsCredentials,
     HangoutsRefreshToken,
 )
-
-
-@callback
-def configured_hangouts(hass):
-    """Return the configures Google Hangouts Account."""
-    entries = hass.config_entries.async_entries(HANGOUTS_DOMAIN)
-    if entries:
-        return entries[0]
-    return None
 
 
 @config_entries.HANDLERS.register(HANGOUTS_DOMAIN)
@@ -46,8 +36,7 @@ class HangoutsFlowHandler(config_entries.ConfigFlow):
         """Handle a flow start."""
         errors = {}
 
-        if configured_hangouts(self.hass) is not None:
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({})
 
         if user_input is not None:
             user_email = user_input[CONF_EMAIL]
