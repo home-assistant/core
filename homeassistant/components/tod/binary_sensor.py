@@ -2,7 +2,6 @@
 from datetime import datetime, timedelta
 import logging
 
-import pytz
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
@@ -111,25 +110,21 @@ class TodSensor(BinarySensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
+        time_zone = dt_util.get_time_zone(self.hass.config.time_zone)
         return {
-            ATTR_AFTER: self.after.astimezone(self.hass.config.time_zone).isoformat(),
-            ATTR_BEFORE: self.before.astimezone(self.hass.config.time_zone).isoformat(),
-            ATTR_NEXT_UPDATE: self.next_update.astimezone(
-                self.hass.config.time_zone
-            ).isoformat(),
+            ATTR_AFTER: self.after.astimezone(time_zone).isoformat(),
+            ATTR_BEFORE: self.before.astimezone(time_zone).isoformat(),
+            ATTR_NEXT_UPDATE: self.next_update.astimezone(time_zone).isoformat(),
         }
 
     def _naive_time_to_utc_datetime(self, naive_time):
         """Convert naive time from config to utc_datetime with current day."""
         # get the current local date from utc time
         current_local_date = self.current_datetime.astimezone(
-            self.hass.config.time_zone
+            dt_util.get_time_zone(self.hass.config.time_zone)
         ).date()
-        # calculate utc datetime corecponding to local time
-        utc_datetime = self.hass.config.time_zone.localize(
-            datetime.combine(current_local_date, naive_time)
-        ).astimezone(tz=pytz.UTC)
-        return utc_datetime
+        # calculate utc datetime corresponding to local time
+        return dt_util.as_utc(datetime.combine(current_local_date, naive_time))
 
     def _calculate_initial_boudary_time(self):
         """Calculate internal absolute time boundaries."""

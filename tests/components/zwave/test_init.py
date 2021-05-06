@@ -140,7 +140,7 @@ async def test_auto_heal_midnight(hass, mock_openzwave, legacy_patchable_time):
     network = hass.data[zwave.DATA_NETWORK]
     assert not network.heal.called
 
-    time = utc.localize(datetime(2017, 5, 6, 0, 0, 0))
+    time = datetime(2017, 5, 6, 0, 0, 0, tzinfo=utc)
     async_fire_time_changed(hass, time)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -156,7 +156,7 @@ async def test_auto_heal_disabled(hass, mock_openzwave):
     network = hass.data[zwave.DATA_NETWORK]
     assert not network.heal.called
 
-    time = utc.localize(datetime(2017, 5, 6, 0, 0, 0))
+    time = datetime(2017, 5, 6, 0, 0, 0, tzinfo=utc)
     async_fire_time_changed(hass, time)
     await hass.async_block_till_done()
     assert not network.heal.called
