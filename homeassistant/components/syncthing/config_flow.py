@@ -54,8 +54,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors[CONF_TOKEN] = "invalid_auth"
-            except AlreadyConfigured:
-                errors[CONF_URL] = "already_configured"
             else:
                 await self.async_set_unique_id(info["server_id"])
                 self._abort_if_unique_id_configured()
@@ -72,7 +70,3 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
-
-
-class AlreadyConfigured(exceptions.HomeAssistantError):
-    """Error to indicate device is already configured."""
