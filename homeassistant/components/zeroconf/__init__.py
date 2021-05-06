@@ -348,32 +348,29 @@ async def _async_start_zeroconf_browser(
 
         # Not all homekit types are currently used for discovery
         # so not all service type exist in zeroconf_types
-        for entry in zeroconf_types.get(service_type, []):
-            if len(entry) > 1:
-                if (
-                    uppercase_mac is not None
-                    and "macaddress" in entry
-                    and not fnmatch.fnmatch(uppercase_mac, entry["macaddress"])
+        for matcher in zeroconf_types.get(service_type, []):
+            if len(matcher) > 1:
+                if "macaddress" in matcher and (
+                    uppercase_mac is None
+                    or not fnmatch.fnmatch(uppercase_mac, matcher["macaddress"])
                 ):
                     continue
-                if (
-                    lowercase_name is not None
-                    and "name" in entry
-                    and not fnmatch.fnmatch(lowercase_name, entry["name"])
+                if "name" in matcher and (
+                    lowercase_name is None
+                    or not fnmatch.fnmatch(lowercase_name, matcher["name"])
                 ):
                     continue
-                if (
-                    lowercase_manufacturer is not None
-                    and "manufacturer" in entry
-                    and not fnmatch.fnmatch(
-                        lowercase_manufacturer, entry["manufacturer"]
+                if "manufacturer" in matcher and (
+                    lowercase_manufacturer is None
+                    or not fnmatch.fnmatch(
+                        lowercase_manufacturer, matcher["manufacturer"]
                     )
                 ):
                     continue
 
             hass.add_job(
                 hass.config_entries.flow.async_init(
-                    entry["domain"], context={"source": DOMAIN}, data=info
+                    matcher["domain"], context={"source": DOMAIN}, data=info
                 )  # type: ignore
             )
 
