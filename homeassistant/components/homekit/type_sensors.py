@@ -149,6 +149,15 @@ class AirQualitySensor(HomeAccessory):
         """Initialize a AirQualitySensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
         state = self.hass.states.get(self.entity_id)
+
+        self.init()
+
+        # Set the state so it is in sync on initial
+        # GET to avoid an event storm after homekit startup
+        self.async_update_state(state)
+
+    def init(self):
+        """Initialize a AirQualitySensor accessory object."""
         serv_air_quality = self.add_preload_service(
             SERV_AIR_QUALITY_SENSOR, [CHAR_AIR_PARTICULATE_DENSITY]
         )
@@ -156,9 +165,6 @@ class AirQualitySensor(HomeAccessory):
         self.char_density = serv_air_quality.configure_char(
             CHAR_AIR_PARTICULATE_DENSITY, value=0
         )
-        # Set the state so it is in sync on initial
-        # GET to avoid an event storm after homekit startup
-        self.async_update_state(state)
 
     @callback
     def async_update_state(self, new_state):
@@ -180,16 +186,15 @@ class AirQualitySensor_PM10(AirQualitySensor):
 
     def __init__(self, *args):
         """Initialize a AirQualitySensor accessory object."""
-        super().__init__(*args, category=CATEGORY_SENSOR)
-        state = self.hass.states.get(self.entity_id)
+        super().__init__(*args)
+
+    def init(self):
+        """Override the init function for PM 10 Sensor."""
         serv_air_quality = self.add_preload_service(
             SERV_AIR_QUALITY_SENSOR, [CHAR_PM10_DENSITY]
         )
         self.char_quality = serv_air_quality.configure_char(CHAR_AIR_QUALITY, value=0)
         self.char_density = serv_air_quality.configure_char(CHAR_PM10_DENSITY, value=0)
-        # Set the state so it is in sync on initial
-        # GET to avoid an event storm after homekit startup
-        self.async_update_state(state)
 
     @callback
     def async_update_state(self, new_state):
@@ -211,16 +216,15 @@ class AirQualitySensor_PM25(AirQualitySensor):
 
     def __init__(self, *args):
         """Initialize a AirQualitySensor accessory object."""
-        super().__init__(*args, category=CATEGORY_SENSOR)
-        state = self.hass.states.get(self.entity_id)
+        super().__init__(*args)
+
+    def init(self):
+        """Override the init function for PM 2.5 Sensor."""
         serv_air_quality = self.add_preload_service(
             SERV_AIR_QUALITY_SENSOR, [CHAR_PM25_DENSITY]
         )
         self.char_quality = serv_air_quality.configure_char(CHAR_AIR_QUALITY, value=0)
         self.char_density = serv_air_quality.configure_char(CHAR_PM25_DENSITY, value=0)
-        # Set the state so it is in sync on initial
-        # GET to avoid an event storm after homekit startup
-        self.async_update_state(state)
 
     @callback
     def async_update_state(self, new_state):
