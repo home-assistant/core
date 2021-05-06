@@ -10,7 +10,7 @@ from homeassistant.components.humidifier.const import (
     SUPPORT_MODES,
 )
 
-from .const import DOMAIN
+from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 SCAN_INTERVAL = timedelta(minutes=3)
 
@@ -38,10 +38,44 @@ class EcobeeHumidifier(HumidifierEntity):
         self.data = data
         self.thermostat_index = thermostat_index
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
-        self._name = self.thermostat["name"]
+        self._name = f"{self.thermostat['name']} Humidifier"
         self._last_humidifier_on_mode = MODE_MANUAL
 
         self.update_without_throttle = False
+
+    @property
+    def name(self):
+        """Return the name of the humidifier."""
+        return self._name
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier for the humidifier."""
+        return f"{self.data.ecobee.get_thermostat(self.thermostat_index)['identifier']}-humidifier"
+
+    @property
+    def device_info(self):
+        """Return device information for the ecobee humidifier."""
+        thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
+        try:
+            model = f"{ECOBEE_MODEL_TO_NAME[thermostat['modelNumber']]} Thermostat"
+        except KeyError:
+            _LOGGER.error(
+                "Model number for ecobee thermostat %s not recognized. "
+                "Please visit this link and provide the following information: "
+                "https://github.com/home-assistant/core/issues/27172 "
+                "Unrecognized model number: %s",
+                thermostat["name"],
+                thermostat["modelNumber"],
+            )
+            return None
+
+        return {
+            "identifiers": {(DOMAIN, thermostat["identifier"])},
+            "name": self.name,
+            "manufacturer": MANUFACTURER,
+            "model": model,
+        }
 
     async def async_update(self):
         """Get the latest state from the thermostat."""
@@ -83,11 +117,6 @@ class EcobeeHumidifier(HumidifierEntity):
     def mode(self):
         """Return the current mode, e.g., off, auto, manual."""
         return self.thermostat["settings"]["humidifierMode"]
-
-    @property
-    def name(self):
-        """Return the name of the ecobee thermostat."""
-        return self._name
 
     @property
     def supported_features(self):
