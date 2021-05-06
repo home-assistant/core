@@ -394,8 +394,8 @@ class TransmissionData:
 
     def check_completed_torrent(self):
         """Get completed torrent functionality."""
-        old_completed_torrent_names = {
-            torrent.name for torrent in self._completed_torrents
+        old_completed_torrent_hashes = {
+            torrent.hashString for torrent in self._completed_torrents
         }
 
         current_completed_torrents = [
@@ -403,7 +403,7 @@ class TransmissionData:
         ]
 
         for torrent in current_completed_torrents:
-            if torrent.name not in old_completed_torrent_names:
+            if torrent.hashString not in old_completed_torrent_hashes:
                 self.hass.bus.fire(
                     EVENT_DOWNLOADED_TORRENT, {"name": torrent.name, "id": torrent.id}
                 )
@@ -412,14 +412,16 @@ class TransmissionData:
 
     def check_started_torrent(self):
         """Get started torrent functionality."""
-        old_started_torrent_names = {torrent.name for torrent in self._started_torrents}
+        old_started_torrent_hashes = {
+            torrent.hashString for torrent in self._started_torrents
+        }
 
         current_started_torrents = [
             torrent for torrent in self._torrents if torrent.status == "downloading"
         ]
 
         for torrent in current_started_torrents:
-            if torrent.name not in old_started_torrent_names:
+            if torrent.hashString not in old_started_torrent_hashes:
                 self.hass.bus.fire(
                     EVENT_STARTED_TORRENT, {"name": torrent.name, "id": torrent.id}
                 )
@@ -428,10 +430,10 @@ class TransmissionData:
 
     def check_removed_torrent(self):
         """Get removed torrent functionality."""
-        current_torrent_names = {torrent.name for torrent in self._torrents}
+        current_torrent_hashes = {torrent.hashString for torrent in self._torrents}
 
         for torrent in self._all_torrents:
-            if torrent.name not in current_torrent_names:
+            if torrent.hashString not in current_torrent_hashes:
                 self.hass.bus.fire(
                     EVENT_REMOVED_TORRENT, {"name": torrent.name, "id": torrent.id}
                 )
