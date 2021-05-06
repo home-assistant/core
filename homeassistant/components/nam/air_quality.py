@@ -10,7 +10,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NAMDataUpdateCoordinator
-from .const import AIR_QUALITY_SENSORS, DEFAULT_NAME, DOMAIN
+from .const import AIR_QUALITY_SENSORS, DEFAULT_NAME, DOMAIN, SUFFIX_P1, SUFFIX_P2
 
 PARALLEL_UPDATES = 1
 
@@ -23,7 +23,7 @@ async def async_setup_entry(
 
     entities = []
     for sensor in AIR_QUALITY_SENSORS:
-        if f"{sensor}_p1" in coordinator.data:
+        if f"{sensor}{SUFFIX_P1}" in coordinator.data:
             entities.append(NAMAirQuality(coordinator, sensor))
 
     async_add_entities(entities, False)
@@ -47,12 +47,16 @@ class NAMAirQuality(CoordinatorEntity, AirQualityEntity):
     @property
     def particulate_matter_2_5(self) -> StateType:
         """Return the particulate matter 2.5 level."""
-        return round_state(getattr(self.coordinator.data, f"{self.sensor_type}_p2"))
+        return round_state(
+            getattr(self.coordinator.data, f"{self.sensor_type}{SUFFIX_P2}")
+        )
 
     @property
     def particulate_matter_10(self) -> StateType:
         """Return the particulate matter 10 level."""
-        return round_state(getattr(self.coordinator.data, f"{self.sensor_type}_p1"))
+        return round_state(
+            getattr(self.coordinator.data, f"{self.sensor_type}{SUFFIX_P1}")
+        )
 
     @property
     def carbon_dioxide(self) -> StateType:

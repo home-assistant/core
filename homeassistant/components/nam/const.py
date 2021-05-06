@@ -18,6 +18,9 @@ DEFAULT_UPDATE_INTERVAL = timedelta(minutes=6)
 DOMAIN = "nam"
 MANUFACTURER = "Nettigo"
 
+SUFFIX_P1 = "_p1"
+SUFFIX_P2 = "_p2"
+
 AIR_QUALITY_SENSORS = {"sds": "SDS011", "sps30": "SPS30"}
 
 SENSORS = {
