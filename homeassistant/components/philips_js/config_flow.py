@@ -49,9 +49,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, conf: dict) -> dict:
         """Import a configuration from config.yaml."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] == conf[CONF_HOST]:
-                return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: conf[CONF_HOST]})
 
         return await self.async_step_user(
             {

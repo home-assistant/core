@@ -1086,6 +1086,13 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         raise data_entry_flow.UnknownHandler
 
     @callback
+    def _async_abort_entries_match(self, match_dict: dict[Any, Any]) -> None:
+        """Abort if current entries match all data."""
+        for entry in self._async_current_entries(include_ignore=False):
+            if all(item in entry.data.items() for item in match_dict.items()):
+                raise data_entry_flow.AbortFlow("already_configured")
+
+    @callback
     def _abort_if_unique_id_configured(
         self,
         updates: dict[Any, Any] | None = None,

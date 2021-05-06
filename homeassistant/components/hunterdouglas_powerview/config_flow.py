@@ -7,7 +7,7 @@ from aiopvapi.helpers.aiorequest import AioRequest
 import async_timeout
 import voluptuous as vol
 
-from homeassistant import config_entries, core, data_entry_flow, exceptions
+from homeassistant import config_entries, core, exceptions
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -72,8 +72,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_validate_or_error(self, host):
-        if self._host_already_configured(host):
-            raise data_entry_flow.AbortFlow("already_configured")
+        self._async_abort_entries_match({CONF_HOST: host})
 
         try:
             info = await validate_input(self.hass, host)
@@ -108,8 +107,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if progress.get("context", {}).get(CONF_HOST) == self.discovered_ip:
                 return self.async_abort(reason="already_in_progress")
 
-        if self._host_already_configured(self.discovered_ip):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: self.discovered_ip})
 
         info, error = await self._async_validate_or_error(self.discovered_ip)
         if error:
@@ -137,15 +135,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="link", description_placeholders=self.powerview_config
         )
-
-    def _host_already_configured(self, host):
-        """See if we already have a hub with the host address configured."""
-        existing_hosts = {
-            entry.data.get(CONF_HOST)
-            for entry in self._async_current_entries()
-            if CONF_HOST in entry.data
-        }
-        return host in existing_hosts
 
 
 class CannotConnect(exceptions.HomeAssistantError):

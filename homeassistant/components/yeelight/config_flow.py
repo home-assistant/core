@@ -52,8 +52,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                 except CannotConnect:
                     errors["base"] = "cannot_connect"
-                except AlreadyConfigured:
-                    return self.async_abort(reason="already_configured")
             else:
                 return await self.async_step_pick_device()
 
@@ -114,8 +112,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             _LOGGER.error("Failed to import %s: cannot connect", host)
             return self.async_abort(reason="cannot_connect")
-        except AlreadyConfigured:
-            return self.async_abort(reason="already_configured")
         if CONF_NIGHTLIGHT_SWITCH_TYPE in user_input:
             user_input[CONF_NIGHTLIGHT_SWITCH] = (
                 user_input.pop(CONF_NIGHTLIGHT_SWITCH_TYPE)
@@ -125,9 +121,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_try_connect(self, host):
         """Set up with options."""
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_HOST) == host:
-                raise AlreadyConfigured
+        self._async_abort_entries_match({CONF_HOST: host})
 
         bulb = yeelight.Bulb(host)
         try:
@@ -195,7 +189,3 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class AlreadyConfigured(exceptions.HomeAssistantError):
-    """Indicate the ip address is already configured."""

@@ -37,10 +37,7 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         error = None
 
         if user_input:
-            if user_input[CONF_USERNAME] in [
-                entry.data[CONF_USERNAME] for entry in self._async_current_entries()
-            ]:
-                return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
 
             try:
                 await self.validate_login_creds(user_input)

@@ -41,9 +41,7 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
 
         ip_address = discovery_info["host"]
 
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_IP_ADDRESS) == ip_address:
-                return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_IP_ADDRESS: ip_address})
 
         self._ip_address = ip_address
         self._device_type = DEVICE_TYPE_ISMARTGATE
