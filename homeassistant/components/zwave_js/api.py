@@ -25,7 +25,7 @@ from homeassistant.components.websocket_api.const import (
     ERR_NOT_SUPPORTED,
     ERR_UNKNOWN_ERROR,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ENTRY_STATE_LOADED, ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -83,6 +83,13 @@ def async_get_entry(orig_func: Callable) -> Callable:
                 msg[ID], ERR_NOT_FOUND, f"Config entry {entry_id} not found"
             )
             return
+
+        if entry.state != ENTRY_STATE_LOADED:
+            connection.send_error(
+                msg[ID], ERR_NOT_FOUND, f"Config entry {entry_id} not loaded"
+            )
+            return
+
         client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
         await orig_func(hass, connection, msg, entry, client)
 
@@ -137,17 +144,20 @@ def async_register_api(hass: HomeAssistant) -> None:
     hass.http.register_view(DumpView)  # type: ignore
 
 
-@websocket_api.require_admin
+@websocket_api.require_admin  # type: ignore
+@websocket_api.async_response
 @websocket_api.websocket_command(
     {vol.Required(TYPE): "zwave_js/network_status", vol.Required(ENTRY_ID): str}
 )
-@callback
-def websocket_network_status(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+@async_get_entry
+async def websocket_network_status(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: Client,
 ) -> None:
     """Get the status of the Z-Wave JS network."""
-    entry_id = msg[ENTRY_ID]
-    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     data = {
         "client": {
             "ws_server_url": client.ws_server_url,
@@ -166,6 +176,7 @@ def websocket_network_status(
     )
 
 
+@websocket_api.async_response  # type: ignore
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/node_status",
@@ -173,20 +184,14 @@ def websocket_network_status(
         vol.Required(NODE_ID): int,
     }
 )
-@callback
-def websocket_node_status(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+@async_get_node
+async def websocket_node_status(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    node: Node,
 ) -> None:
     """Get the status of a Z-Wave JS node."""
-    entry_id = msg[ENTRY_ID]
-    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
-    node_id = msg[NODE_ID]
-    node = client.driver.controller.nodes.get(node_id)
-
-    if node is None:
-        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
-        return
-
     data = {
         "node_id": node.node_id,
         "is_routing": node.is_routing,
@@ -537,7 +542,8 @@ async def websocket_set_config_parameter(
     )
 
 
-@websocket_api.require_admin
+@websocket_api.require_admin  # type: ignore
+@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/get_config_parameters",
@@ -545,20 +551,11 @@ async def websocket_set_config_parameter(
         vol.Required(NODE_ID): int,
     }
 )
-@callback
-def websocket_get_config_parameters(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+@async_get_node
+async def websocket_get_config_parameters(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict, node: Node
 ) -> None:
     """Get a list of configuration parameters for a Z-Wave node."""
-    entry_id = msg[ENTRY_ID]
-    node_id = msg[NODE_ID]
-    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
-    node = client.driver.controller.nodes.get(node_id)
-
-    if node is None:
-        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
-        return
-
     values = node.get_configuration_values()
     result = {}
     for value_id, zwave_value in values.items():
