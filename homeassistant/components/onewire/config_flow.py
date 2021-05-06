@@ -156,16 +156,3 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=DATA_SCHEMA_MOUNTDIR,
             errors=errors,
         )
-
-    async def async_step_import(self, platform_config):
-        """Handle import configuration from YAML."""
-        # OWServer
-        if platform_config[CONF_TYPE] == CONF_TYPE_OWSERVER:
-            if CONF_PORT not in platform_config:
-                platform_config[CONF_PORT] = DEFAULT_OWSERVER_PORT
-            return await self.async_step_owserver(platform_config)
-
-        # SysBus
-        if CONF_MOUNT_DIR not in platform_config:
-            platform_config[CONF_MOUNT_DIR] = DEFAULT_SYSBUS_MOUNT_DIR
-        return await self.async_step_mount_dir(platform_config)

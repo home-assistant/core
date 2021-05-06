@@ -14,6 +14,7 @@ from homeassistant.setup import async_setup_component
 
 from . import (
     setup_onewire_patched_owserver_integration,
+    setup_onewire_sysbus_integration,
     setup_owproxy_mock_devices,
     setup_sysbus_mock_devices,
 )
@@ -23,16 +24,6 @@ from tests.common import assert_setup_component, mock_device_registry, mock_regi
 
 MOCK_COUPLERS = {
     key: value for (key, value) in MOCK_OWPROXY_DEVICES.items() if "branches" in value
-}
-
-MOCK_SYSBUS_CONFIG = {
-    SENSOR_DOMAIN: {
-        "platform": DOMAIN,
-        "mount_dir": DEFAULT_SYSBUS_MOUNT_DIR,
-        "names": {
-            "10-111111111111": "My DS18B20",
-        },
-    }
 }
 
 
@@ -200,13 +191,11 @@ async def test_onewiredirect_setup_valid_device(hass, device_id):
     mock_device = MOCK_SYSBUS_DEVICES[device_id]
     expected_entities = mock_device.get(SENSOR_DOMAIN, [])
 
-    with patch(
-        "homeassistant.components.onewire.onewirehub.os.path.isdir", return_value=True
-    ), patch("pi1wire._finder.glob.glob", return_value=glob_result,), patch(
+    with patch("pi1wire._finder.glob.glob", return_value=glob_result,), patch(
         "pi1wire.OneWire.get_temperature",
         side_effect=read_side_effect,
     ):
-        assert await async_setup_component(hass, SENSOR_DOMAIN, MOCK_SYSBUS_CONFIG)
+        assert await setup_onewire_sysbus_integration(hass)
         await hass.async_block_till_done()
 
     assert len(entity_registry.entities) == len(expected_entities)
