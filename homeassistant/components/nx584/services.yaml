@@ -1,21 +1,37 @@
 # Describes the format for available nx584 services
 
 bypass_zone:
+  name: Bypass zone
   description: Bypass a zone.
+  target:
+    entity:
+      integration: nx584
+      domain: alarm_control_panel
   fields:
-    entity_id:
-      description: Name of the alarm control panel which state has to be updated.
-      example: "alarm_control_panel.downstairs"
     zone:
+      name: Zone
       description: The number of the zone to be bypassed.
+      required: true
       example: "1"
+      selector:
+        number:
+          min: 1
+          max: 255
 
 unbypass_zone:
+  name: Un-bypass zone
   description: Un-Bypass a zone.
+  target:
+    entity:
+      integration: nx584
+      domain: alarm_control_panel
   fields:
-    entity_id:
-      description: Name of the alarm control panel which state has to be updated.
-      example: "alarm_control_panel.downstairs"
     zone:
+      name: Zone
       description: The number of the zone to be un-bypassed.
+      required: true
       example: "1"
+      selector:
+        number:
+          min: 1
+          max: 255

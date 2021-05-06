@@ -1,13 +1,19 @@
 # Describes the format for available opentherm_gw services
 
 reset_gateway:
+  name: Reset gateway
   description: Reset the OpenTherm Gateway.
   fields:
     gateway_id:
+      name: Gateway ID
       description: The gateway_id of the OpenTherm Gateway.
+      required: true
       example: "opentherm_gateway"
+      selector:
+        text:
 
 set_central_heating_ovrd:
+  name: Set central heating override
   description: >
     Set the central heating override option on the gateway.
     When overriding the control setpoint (via a set_control_setpoint service call with a value other than 0), the gateway automatically enables the central heating override to start heating.
@@ -16,49 +22,83 @@ set_central_heating_ovrd:
     You will only need this if you are writing your own software thermostat.
   fields:
     gateway_id:
+      name: Gateway ID
       description: The gateway_id of the OpenTherm Gateway.
+      required: true
       example: "opentherm_gateway"
     ch_override:
+      name: Central heating override
       description: >
         The desired boolean value for the central heating override.
+      required: true
       example: "on"
+      selector:
+        boolean:
 
 set_clock:
+  name: Set clock
   description: Set the clock and day of the week on the connected thermostat.
   fields:
     gateway_id:
+      name: Gateway ID
       description: The gateway_id of the OpenTherm Gateway.
+      required: true
       example: "opentherm_gateway"
     date:
+      name: Date
       description: Optional date from which the day of the week will be extracted. Defaults to today.
       example: "2018-10-23"
+      selector:
+        text:
     time:
+      name: Name
       description: Optional time in 24h format which will be provided to the thermostat. Defaults to the current time.
       example: "19:34"
+      selector:
+        text:
 
 set_control_setpoint:
+  name: Set control set point
   description: >
     Set the central heating control setpoint override on the gateway.
     You will only need this if you are writing your own software thermostat.
   fields:
     gateway_id:
+      name: Gateway ID
       description: The gateway_id of the OpenTherm Gateway.
+      required: true
       example: "opentherm_gateway"
+      selector:
+        text:
     temperature:
+      name: Temperature
       description: >
         The central heating setpoint to set on the gateway.
         Values between 0 and 90 are accepted, but not all boilers support this range.
         A value of 0 disables the central heating setpoint override.
+      required: true
       example: "37.5"
+      selector:
+        number:
+          min: 0
+          max: 90
+          step: 0.1
+          unit_of_measurement: '°'
 
 set_hot_water_ovrd:
+  name: Set hot water override
   description: >
     Set the domestic hot water enable option on the gateway.
   fields:
     gateway_id:
+      name: Gateway ID
       description: The gateway_id of the OpenTherm Gateway.
+      required: true
       example: "opentherm_gateway"
+      selector:
+        text:
     dhw_override:
+      name: Domestic hot water override
       description: >
         Control the domestic hot water enable option. If the boiler has
         been configured to let the room unit control when to keep a
@@ -66,88 +106,187 @@ set_hot_water_ovrd:
         that.
         Value should be 0 or 1 to enable the override in off or on
         state, or "A" to disable the override.
+      required: true
       example: "1"
+      selector:
+        text:
 
 set_hot_water_setpoint:
+  name: Set hot water set point
   description: >
     Set the domestic hot water setpoint on the gateway.
   fields:
     gateway_id:
+      name: Gateway ID
       description: The gateway_id of the OpenTherm Gateway.
+      required: true
       example: "opentherm_gateway"
+      selector:
+        text:
     temperature:
+      name: Temperature
       description: >
         The domestic hot water setpoint to set on the gateway. Not all boilers support this feature.
         Values between 0 and 90 are accepted, but not all boilers support this range.
         Check the values of the slave_dhw_min_setp and slave_dhw_max_setp sensors to see the supported range on your boiler.
       example: "60"
+      selector:
+        number:
+          min: 0
+          max: 90
+          step: 0.1
+          unit_of_measurement: '°'
 
 set_gpio_mode:
+  name: Set gpio mode
   description: Change the function of the GPIO pins of the gateway.
   fields:
     gateway_id:
+      name: Gateway ID
       description: The gateway_id of the OpenTherm Gateway.
+      required: true
       example: "opentherm_gateway"
+      selector:
+        text:
     id:
-      description: The ID of the GPIO pin. Either "A" or "B".
+      name: ID
+      description: The ID of the GPIO pin.
+      required: true
       example: "B"
+      selector:
+        select:
+          options:
+            - 'A'
+            - 'B'
     mode:
+      name: Mode
       description: >
         Mode to set on the GPIO pin. Values 0 through 6 are accepted for both GPIOs, 7 is only accepted for GPIO "B".
         See https://www.home-assistant.io/integrations/opentherm_gw/#gpio-modes for an explanation of the values.
+      required: true
       example: "5"
+      selector:
+        number:
+          min: 0
+          max: 7
 
 set_led_mode:
+  name: Set LED mode
   description: Change the function of the LEDs of the gateway.
   fields:
     gateway_id:
+      name: Gateway ID
       description: The gateway_id of the OpenTherm Gateway.
+      required: true
       example: "opentherm_gateway"
+      selector:
+        text:
     id:
-      description: The ID of the LED. Possible values are "A" through "F".
+      name: ID
+      description: The ID of the LED.
+      required: true
       example: "C"
+      selector:
+        select:
+          options:
+            - 'A'
+            - 'B'
+            - 'C'
+            - 'D'
+            - 'E'
+            - 'F'
     mode:
+      name: Mode
       description: >
         The function to assign to the LED. One of "R", "X", "T", "B", "O", "F", "H", "W", "C", "E", "M" or "P".
         See https://www.home-assistant.io/integrations/opentherm_gw/#led-modes for an explanation of the values.
+      required: true
       example: "F"
+      selector:
+        select:
+          options:
+            - 'B'
+            - 'C'
+            - 'E'
+            - 'F'
+            - 'H'
+            - 'M'
+            - 'O'
+            - 'P'
+            - 'R'
+            - 'T'
+            - 'W'
+            - 'X'
 
 set_max_modulation:
+  name: Set max modulation
   description: >
     Override the maximum relative modulation level.
     You will only need this if you are writing your own software thermostat.
   fields:
     gateway_id:
+      name: Gateway ID
       description: The gateway_id of the OpenTherm Gateway.
+      required: true
       example: "opentherm_gateway"
+      selector:
+        text:
     level:
+      name: Level
       description: >
         The modulation level to provide to the gateway.
-        Values between 0 and 100 will set the modulation level.
         Provide a value of -1 to clear the override and forward the value from the thermostat again.
+      required: true
       example: "42"
+      selector:
+        number:
+          min: -1
+          max: 100
 
 set_outside_temperature:
+  name: Set outside temperature
   description: >
     Provide an outside temperature to the thermostat.
     If your thermostat is unable to display an outside temperature and does not support OTC (Outside Temperature Correction), this has no effect.
   fields:
     gateway_id:
+      name: Gateway ID
       description: The gateway_id of the OpenTherm Gateway.
+      required: true
       example: "opentherm_gateway"
+      selector:
+        text:
     temperature:
+      name: Temperature
       description: >
         The temperature to provide to the thermostat.
         Values between -40.0 and 64.0 will be accepted, but not all thermostats can display the full range.
         Any value above 64.0 will clear a previously configured value (suggestion: 99)
+      required: true
       example: "-2.3"
+      selector:
+        number:
+          min: -40
+          max: 99
 
 set_setback_temperature:
+  name: Set setback temperature
   description: Configure the setback temperature to be used with the GPIO away mode function.
   fields:
     gateway_id:
+      name: Gateway ID
       description: The gateway_id of the OpenTherm Gateway.
+      required: true
       example: "opentherm_gateway"
+      selector:
+        text:
     temperature:
+      name: Temperature
       description: The setback temperature to configure on the gateway. Values between 0.0 and 30.0 are accepted.
+      required: true
       example: "16.0"
+      selector:
+        number:
+          min: 0
+          max: 30
+          step: 0.1
