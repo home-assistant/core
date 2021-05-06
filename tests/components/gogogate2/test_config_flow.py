@@ -1,9 +1,9 @@
 """Tests for the GogoGate2 component."""
 from unittest.mock import MagicMock, patch
 
-from gogogate2_api import GogoGate2Api
-from gogogate2_api.common import ApiError
-from gogogate2_api.const import GogoGate2ApiErrorCode
+from ismartgate import GogoGate2Api
+from ismartgate.common import ApiError
+from ismartgate.const import GogoGate2ApiErrorCode
 
 from homeassistant import config_entries, setup
 from homeassistant.components.gogogate2.const import (
