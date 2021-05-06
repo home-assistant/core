@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from itertools import chain
 
-from gogogate2_api.common import AbstractDoor, get_configured_doors
+from ismartgate.common import AbstractDoor, get_configured_doors
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry

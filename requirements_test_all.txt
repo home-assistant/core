@@ -368,9 +368,6 @@ glances_api==0.2.0
 # homeassistant.components.goalzero
 goalzero==0.1.7
 
-# homeassistant.components.gogogate2
-gogogate2-api==3.0.0
-
 # homeassistant.components.google
 google-api-python-client==1.6.4
 
@@ -461,6 +458,9 @@ influxdb-client==1.14.0
 
 # homeassistant.components.influxdb
 influxdb==5.2.3
+
+# homeassistant.components.gogogate2
+ismartgate==4.0.0
 
 # homeassistant.components.rest
 jsonpath==0.82
