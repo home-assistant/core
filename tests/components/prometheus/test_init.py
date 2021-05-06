@@ -117,7 +117,7 @@ async def test_view(hass, hass_client):
     )
 
     assert (
-        'temperature_c{domain="sensor",'
+        'sensor_temperature_celsius{domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"} 15.6' in body
     )
@@ -129,7 +129,7 @@ async def test_view(hass, hass_client):
     )
 
     assert (
-        'current_temperature_c{domain="climate",'
+        'climate_current_temperature_celsius{domain="climate",'
         'entity="climate.heatpump",'
         'friendly_name="HeatPump"} 25.0' in body
     )
@@ -160,7 +160,7 @@ async def test_view(hass, hass_client):
     )
 
     assert (
-        'humidity_percent{domain="sensor",'
+        'sensor_humidity_percent{domain="sensor",'
         'entity="sensor.outside_humidity",'
         'friendly_name="Outside Humidity"} 54.0' in body
     )
@@ -172,7 +172,7 @@ async def test_view(hass, hass_client):
     )
 
     assert (
-        'power_kwh{domain="sensor",'
+        'sensor_power_kwh{domain="sensor",'
         'entity="sensor.radio_energy",'
         'friendly_name="Radio Energy"} 14.0' in body
     )
