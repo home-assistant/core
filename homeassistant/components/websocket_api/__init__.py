@@ -23,6 +23,7 @@ from .const import (  # noqa: F401
 )
 from .decorators import (  # noqa: F401
     async_response,
+    async_websocket_command,
     require_admin,
     websocket_command,
     ws_require_user,

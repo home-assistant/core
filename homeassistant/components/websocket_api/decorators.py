@@ -2,15 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
 from functools import wraps
 from typing import Callable
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.exceptions import Unauthorized
 
 from . import const, messages
-from .connection import ActiveConnection
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -24,7 +22,7 @@ async def _handle_async_response(func, hass, connection, msg):
 
 
 def async_response(
-    func: Callable[[HomeAssistant, ActiveConnection, dict], Awaitable[None]]
+    func: const.AsyncWebSocketCommandHandler,
 ) -> const.WebSocketCommandHandler:
     """Decorate an async function to handle WebSocket API messages."""
 
@@ -117,11 +115,29 @@ def websocket_command(
     """Tag a function as a websocket command."""
     command = schema["type"]
 
-    def decorate(func):
+    def decorate(func: const.WebSocketCommandHandler) -> const.WebSocketCommandHandler:
         """Decorate ws command function."""
         # pylint: disable=protected-access
-        func._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema)
-        func._ws_command = command
+        func._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema)  # type: ignore[attr-defined]
+        func._ws_command = command  # type: ignore[attr-defined]
+        return func
+
+    return decorate
+
+
+def async_websocket_command(
+    schema: dict,
+) -> Callable[[const.AsyncWebSocketCommandHandler], const.AsyncWebSocketCommandHandler]:
+    """Async version of websocket_command decorator."""
+    command = schema["type"]
+
+    def decorate(
+        func: const.AsyncWebSocketCommandHandler,
+    ) -> const.AsyncWebSocketCommandHandler:
+        """Decorate ws command function."""
+        # pylint: disable=protected-access
+        func._ws_schema = messages.BASE_COMMAND_MESSAGE_SCHEMA.extend(schema)  # type: ignore[attr-defined]
+        func._ws_command = command  # type: ignore[attr-defined]
         return func
 
     return decorate
