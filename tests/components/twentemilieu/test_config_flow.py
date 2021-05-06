@@ -1,7 +1,7 @@
 """Tests for the Twente Milieu config flow."""
 import aiohttp
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.twentemilieu import config_flow
 from homeassistant.components.twentemilieu.const import (
     CONF_HOUSE_LETTER,
@@ -83,9 +83,11 @@ async def test_address_already_set_up(
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
-    flow = config_flow.TwenteMilieuFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data=FIXTURE_USER_INPUT,
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
