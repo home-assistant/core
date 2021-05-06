@@ -12,7 +12,7 @@ from homeassistant.components.aurora_abb_powerone.const import (
     DOMAIN,
     MANUFACTURER,
 )
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 
 
 async def test_create_auroradevice(hass):
@@ -29,7 +29,6 @@ async def test_create_auroradevice(hass):
             ATTR_FIRMWARE: "0.1.2.3",
         },
         source="dummysource",
-        connection_class=CONN_CLASS_LOCAL_POLL,
         system_options={},
         entry_id="13579",
     )

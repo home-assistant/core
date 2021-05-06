@@ -5,7 +5,6 @@ from homeassistant.components.aurora_abb_powerone.const import (
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
 )
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
 
 from tests.common import MockConfigEntry
@@ -22,7 +21,6 @@ async def test_sensors(hass):
             CONF_ADDRESS: 3,
         },
         source="dummysource",
-        connection_class=CONN_CLASS_LOCAL_POLL,
         system_options={},
         entry_id="13579",
     )
