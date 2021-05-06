@@ -8,13 +8,9 @@ from types import MappingProxyType
 from typing import Any
 
 from pi1wire import InvalidCRCException, OneWireInterface, UnsupportResponseException
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import CONF_TYPE
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType, StateType
@@ -24,8 +20,6 @@ from .const import (
     CONF_NAMES,
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
-    DEFAULT_OWSERVER_PORT,
-    DEFAULT_SYSBUS_MOUNT_DIR,
     DOMAIN,
     SENSOR_TYPE_COUNT,
     SENSOR_TYPE_CURRENT,
@@ -233,16 +227,6 @@ EDS_SENSORS: dict[str, list[DeviceComponentDescription]] = {
 }
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAMES): {cv.string: cv.string},
-        vol.Optional(CONF_MOUNT_DIR, default=DEFAULT_SYSBUS_MOUNT_DIR): cv.string,
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_OWSERVER_PORT): cv.port,
-    }
-)
-
-
 def get_sensor_types(device_sub_type: str) -> dict[str, Any]:
     """Return the proper info array for the device type."""
     if "HobbyBoard" in device_sub_type:
@@ -250,30 +234,6 @@ def get_sensor_types(device_sub_type: str) -> dict[str, Any]:
     if "EDS" in device_sub_type:
         return EDS_SENSORS
     return DEVICE_SENSORS
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: dict[str, Any],
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Old way of setting up 1-Wire platform."""
-    _LOGGER.warning(
-        "Loading 1-Wire via platform setup is deprecated. "
-        "Please remove it from your configuration"
-    )
-
-    if config.get(CONF_HOST):
-        config[CONF_TYPE] = CONF_TYPE_OWSERVER
-    elif config[CONF_MOUNT_DIR] == DEFAULT_SYSBUS_MOUNT_DIR:
-        config[CONF_TYPE] = CONF_TYPE_SYSBUS
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
 
 
 async def async_setup_entry(
