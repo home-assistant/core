@@ -36,15 +36,6 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
     entry = integration
     ws_client = await hass_ws_client(hass)
 
-    await ws_client.send_json(
-        {ID: 2, TYPE: "zwave_js/network_status", ENTRY_ID: entry.entry_id}
-    )
-    msg = await ws_client.receive_json()
-    result = msg["result"]
-
-    assert result["client"]["ws_server_url"] == "ws://test:3000/zjs"
-    assert result["client"]["server_version"] == "1.0.0"
-
     node = multisensor_6
     await ws_client.send_json(
         {
@@ -109,6 +100,32 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
         }
     )
     msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+
+async def test_network_status(hass, integration, hass_ws_client):
+    """Test the network status websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {ID: 2, TYPE: "zwave_js/network_status", ENTRY_ID: entry.entry_id}
+    )
+    msg = await ws_client.receive_json()
+    result = msg["result"]
+
+    assert result["client"]["ws_server_url"] == "ws://test:3000/zjs"
+    assert result["client"]["server_version"] == "1.0.0"
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {ID: 3, TYPE: "zwave_js/network_status", ENTRY_ID: entry.entry_id}
+    )
+    msg = await ws_client.receive_json()
+
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_FOUND
 
