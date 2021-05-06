@@ -25,7 +25,11 @@ class OAuth2FlowHandler(
 
     async def async_step_user(self, user_input: dict | None = None) -> dict:
         """Create an entry for the flow."""
-        self._async_abort_entries_match({})
+        current_entries = self._async_current_entries()
+        if current_entries and CONF_TOKEN in current_entries[0].data:
+            # Already configured
+            return self.async_abort(reason="already_configured")
+
         return await super().async_step_user(user_input=user_input)
 
     async def async_step_reauth(self, data) -> dict:
