@@ -39,9 +39,7 @@ def validate_and_connect(hass: core.HomeAssistant, data):
         client = AuroraSerialClient(address, comport, parity="N", timeout=1)
         client.connect()
         ret[ATTR_SERIAL_NUMBER] = client.serial_number()
-        ver = client.version()
-        partnum = client.pn()
-        ret[ATTR_MODEL] = f"{ver} ({partnum})"
+        ret[ATTR_MODEL] = f"{client.version()} ({client.pn()})"
         ret[ATTR_FIRMWARE] = client.firmware(1)
         _LOGGER.info("Returning device info=%s", ret)
     except AuroraError as err:
