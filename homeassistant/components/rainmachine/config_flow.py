@@ -59,7 +59,7 @@ class RainMachineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Abort if we already have an entry for the ip."""
         # IP already configured
         for entry in self._async_current_entries(include_ignore=False):
-            if ip_address in entry.data[CONF_IP_ADDRESS]:
+            if ip_address == entry.data[CONF_IP_ADDRESS]:
                 raise AbortFlow("already_configured")
 
     async def async_step_homekit(self, discovery_info):
