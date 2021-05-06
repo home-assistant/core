@@ -89,6 +89,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not self._device_info:
             await self._async_get_and_check_device_info()
 
+        LOGGER.debug("_device_info: %s", self._device_info)
+
         if uuid := self._device_info.get("device", {}).get(ATTR_UPNP_UDN.lower()):
             self._id = uuid
 
@@ -138,6 +140,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     break
 
             if not self._device_info:
+                LOGGER.debug("Not supported: %s", self._host)
                 raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
 
         dev_info = self._device_info.get("device", {})
