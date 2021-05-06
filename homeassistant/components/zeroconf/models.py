@@ -16,7 +16,7 @@ class HaZeroconf(Zeroconf):
     ha_close = Zeroconf.close
 
 
-class HaAsyncZeroconf(AsyncZeroconf):  # type: ignore[misc]
+class HaAsyncZeroconf(AsyncZeroconf):
     """Home Assistant version of AsyncZeroconf."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
