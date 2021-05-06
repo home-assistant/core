@@ -968,6 +968,22 @@ async def test_get_log_config(hass, client, integration, hass_ws_client):
     assert log_config["filename"] == "/test.txt"
     assert log_config["force_console"] is False
 
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/get_log_config",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
 
 async def test_data_collection(hass, client, integration, hass_ws_client):
     """Test that the data collection WS API commands work."""
