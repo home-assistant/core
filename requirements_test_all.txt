@@ -720,7 +720,7 @@ pycfdns==1.2.1
 pychromecast==9.1.2
 
 # homeassistant.components.climacell
-pyclimacell==0.18.0
+pyclimacell==0.18.2
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.4

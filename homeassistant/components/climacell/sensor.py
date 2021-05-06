@@ -128,7 +128,7 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
         ):
             return round(self._state * self.sensor_type[ATTR_METRIC_CONVERSION], 4)
 
-        if ATTR_VALUE_MAP in self.sensor_type:
+        if ATTR_VALUE_MAP in self.sensor_type and self._state is not None:
             return self.sensor_type[ATTR_VALUE_MAP](self._state).name.lower()
         return self._state
 
