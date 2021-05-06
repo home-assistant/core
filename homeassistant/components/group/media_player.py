@@ -51,7 +51,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State
 import homeassistant.helpers.config_validation as cv
@@ -176,9 +175,9 @@ class MediaGroup(MediaPlayerEntity):
         return self._name
 
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """Return the state of the media group."""
-        return self._state or STATE_OFF
+        return self._state
 
     @property
     def supported_features(self) -> int:
@@ -361,7 +360,7 @@ class MediaGroup(MediaPlayerEntity):
         """Query all members and determine the media group state."""
         states = [self.hass.states.get(entity) for entity in self._entities]
         states_values = [state.state for state in states if state is not None]
-        off_values = STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN
+        off_values = STATE_OFF, STATE_UNAVAILABLE, None
 
         if states_values:
             if states_values.count(states_values[0]) == len(states_values):
@@ -371,7 +370,7 @@ class MediaGroup(MediaPlayerEntity):
             else:
                 self._state = STATE_OFF
         else:
-            self._state = STATE_UNKNOWN
+            self._state = None
 
         supported_features = 0
         supported_features |= (
