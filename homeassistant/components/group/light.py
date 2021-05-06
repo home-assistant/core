@@ -387,8 +387,8 @@ class LightGroup(GroupEntity, light.LightEntity):
             self._color_mode = color_mode_count.most_common(1)[0][0]
 
         self._supported_color_modes = None
-        all_supported_color_modes = _find_state_attributes(
-            states, ATTR_SUPPORTED_COLOR_MODES
+        all_supported_color_modes = list(
+            _find_state_attributes(states, ATTR_SUPPORTED_COLOR_MODES)
         )
         if all_supported_color_modes:
             # Merge all color modes.
