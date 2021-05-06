@@ -85,24 +85,12 @@ async def test_setting_rising(hass, legacy_patchable_time):
             break
         mod += 1
 
-    assert next_dawn == dt_util.parse_datetime(
-        state.attributes[sun.STATE_ATTR_NEXT_DAWN]
-    )
-    assert next_dusk == dt_util.parse_datetime(
-        state.attributes[sun.STATE_ATTR_NEXT_DUSK]
-    )
-    assert next_midnight == dt_util.parse_datetime(
-        state.attributes[sun.STATE_ATTR_NEXT_MIDNIGHT]
-    )
-    assert next_noon == dt_util.parse_datetime(
-        state.attributes[sun.STATE_ATTR_NEXT_NOON]
-    )
-    assert next_rising == dt_util.parse_datetime(
-        state.attributes[sun.STATE_ATTR_NEXT_RISING]
-    )
-    assert next_setting == dt_util.parse_datetime(
-        state.attributes[sun.STATE_ATTR_NEXT_SETTING]
-    )
+    assert next_dawn == state.attributes[sun.STATE_ATTR_NEXT_DAWN]
+    assert next_dusk == state.attributes[sun.STATE_ATTR_NEXT_DUSK]
+    assert next_midnight == state.attributes[sun.STATE_ATTR_NEXT_MIDNIGHT]
+    assert next_noon == state.attributes[sun.STATE_ATTR_NEXT_NOON]
+    assert next_rising == state.attributes[sun.STATE_ATTR_NEXT_RISING]
+    assert next_setting == state.attributes[sun.STATE_ATTR_NEXT_SETTING]
 
 
 async def test_state_change(hass, legacy_patchable_time):
@@ -115,9 +103,7 @@ async def test_state_change(hass, legacy_patchable_time):
 
     await hass.async_block_till_done()
 
-    test_time = dt_util.parse_datetime(
-        hass.states.get(sun.ENTITY_ID).attributes[sun.STATE_ATTR_NEXT_RISING]
-    )
+    test_time = hass.states.get(sun.ENTITY_ID).attributes[sun.STATE_ATTR_NEXT_RISING]
     assert test_time is not None
 
     assert sun.STATE_BELOW_HORIZON == hass.states.get(sun.ENTITY_ID).state
@@ -153,12 +139,12 @@ async def test_norway_in_june(hass):
     state = hass.states.get(sun.ENTITY_ID)
     assert state is not None
 
-    assert dt_util.parse_datetime(
-        state.attributes[sun.STATE_ATTR_NEXT_RISING]
-    ) == datetime(2016, 7, 24, 22, 59, 45, 689645, tzinfo=dt_util.UTC)
-    assert dt_util.parse_datetime(
-        state.attributes[sun.STATE_ATTR_NEXT_SETTING]
-    ) == datetime(2016, 7, 25, 22, 17, 13, 503932, tzinfo=dt_util.UTC)
+    assert state.attributes[sun.STATE_ATTR_NEXT_RISING] == datetime(
+        2016, 7, 24, 22, 59, 45, 689645, tzinfo=dt_util.UTC
+    )
+    assert state.attributes[sun.STATE_ATTR_NEXT_SETTING] == datetime(
+        2016, 7, 25, 22, 17, 13, 503932, tzinfo=dt_util.UTC
+    )
 
     assert state.state == sun.STATE_ABOVE_HORIZON
 

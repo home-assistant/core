@@ -129,12 +129,12 @@ class Sun(Entity):
     def extra_state_attributes(self):
         """Return the state attributes of the sun."""
         return {
-            STATE_ATTR_NEXT_DAWN: self.next_dawn.isoformat(),
-            STATE_ATTR_NEXT_DUSK: self.next_dusk.isoformat(),
-            STATE_ATTR_NEXT_MIDNIGHT: self.next_midnight.isoformat(),
-            STATE_ATTR_NEXT_NOON: self.next_noon.isoformat(),
-            STATE_ATTR_NEXT_RISING: self.next_rising.isoformat(),
-            STATE_ATTR_NEXT_SETTING: self.next_setting.isoformat(),
+            STATE_ATTR_NEXT_DAWN: self.next_dawn,
+            STATE_ATTR_NEXT_DUSK: self.next_dusk,
+            STATE_ATTR_NEXT_MIDNIGHT: self.next_midnight,
+            STATE_ATTR_NEXT_NOON: self.next_noon,
+            STATE_ATTR_NEXT_RISING: self.next_rising,
+            STATE_ATTR_NEXT_SETTING: self.next_setting,
             STATE_ATTR_ELEVATION: self.solar_elevation,
             STATE_ATTR_AZIMUTH: self.solar_azimuth,
             STATE_ATTR_RISING: self.rising,
