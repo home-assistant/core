@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.dhcp import IP_ADDRESS
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_MANUFACTURER,
@@ -189,6 +190,18 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._name = f"{self._manufacturer} {self._model}"
         self._title = self._model
+
+        self.context["title_placeholders"] = {"model": self._model}
+        return await self.async_step_confirm()
+
+    async def async_step_dhcp(self, discovery_info: DiscoveryInfoType):
+        """Handle a flow initialized by dhcp discovery."""
+        self._host = discovery_info[IP_ADDRESS]
+
+        LOGGER.debug(
+            "Found Samsung device via dhcp at %s (%s)", self._host, discovery_info
+        )
+        await self._async_set_device_unique_id()
 
         self.context["title_placeholders"] = {"model": self._model}
         return await self.async_step_confirm()
