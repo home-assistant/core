@@ -333,6 +333,7 @@ async def test_create_account(hass, client):
         },
         "description": None,
         "description_placeholders": None,
+        "options": {},
     }
 
 
@@ -403,6 +404,7 @@ async def test_two_step_flow(hass, client):
             },
             "description": None,
             "description_placeholders": None,
+            "options": {},
         }
 
 
