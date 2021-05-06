@@ -61,5 +61,6 @@ refresh:
       name: Force
       description: Force update (by passes AdGuard Home throttling).
       example: '"true" to force, "false" or omit for a regular refresh.'
+      default: false
       selector:
         boolean:

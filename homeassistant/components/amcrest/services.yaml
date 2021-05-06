@@ -154,8 +154,9 @@ ptz_control:
             - 'zoom_out'
     travel_time:
       name: Travel time
-      description: "Travel time in fractional seconds: from 0 to 1.  Default: .2"
+      description: "Travel time in fractional seconds: from 0 to 1."
       example: ".5"
+      default: .2
       selector:
         number:
           min: 0
