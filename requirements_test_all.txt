@@ -1146,7 +1146,7 @@ spiderpy==1.4.2
 spotipy==2.18.0
 
 # homeassistant.components.sql
-sqlalchemy==1.4.11
+sqlalchemy==1.4.13
 
 # homeassistant.components.recorder
 sqlalchemy==1.4.13
