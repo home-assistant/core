@@ -1,5 +1,8 @@
 """Constants for Nettigo Air Monitor integration."""
+from __future__ import annotations
+
 from datetime import timedelta
+from typing import Final
 
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -13,17 +16,17 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
-DEFAULT_NAME = "Nettigo Air Monitor"
-DEFAULT_UPDATE_INTERVAL = timedelta(minutes=6)
-DOMAIN = "nam"
-MANUFACTURER = "Nettigo"
+DEFAULT_NAME: Final = "Nettigo Air Monitor"
+DEFAULT_UPDATE_INTERVAL: Final = timedelta(minutes=6)
+DOMAIN: Final = "nam"
+MANUFACTURER: Final = "Nettigo"
 
-SUFFIX_P1 = "_p1"
-SUFFIX_P2 = "_p2"
+SUFFIX_P1: Final = "_p1"
+SUFFIX_P2: Final = "_p2"
 
-AIR_QUALITY_SENSORS = {"sds": "SDS011", "sps30": "SPS30"}
+AIR_QUALITY_SENSORS: Final[dict[str, str]] = {"sds": "SDS011", "sps30": "SPS30"}
 
-SENSORS = {
+SENSORS: Final[dict[str, tuple[str, str, str | None, str | None, bool]]] = {
     "bme280_humidity": (
         f"{DEFAULT_NAME} BME280 Humidity",
         PERCENTAGE,
