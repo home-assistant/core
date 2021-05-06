@@ -105,6 +105,7 @@ class SensorEntity(Entity):
     @property
     def capability_attributes(self) -> Mapping[str, Any] | None:
         """Return the capability attributes."""
-        attrs = {ATTR_STATE_CLASS: self.state_class}
+        if self.state_class:
+            return {ATTR_STATE_CLASS: self.state_class}
 
-        return attrs
+        return None
