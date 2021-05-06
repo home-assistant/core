@@ -32,7 +32,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.loader import async_get_homekit, async_get_zeroconf
+from homeassistant.loader import async_get_homekit, async_get_zeroconf, bind_hass
 from homeassistant.util.network import is_loopback
 
 from .models import HaAsyncZeroconf, HaServiceBrowser, HaZeroconf
@@ -90,11 +90,13 @@ class HaServiceInfo(TypedDict):
     properties: dict[str, Any]
 
 
+@bind_hass
 async def async_get_instance(hass: HomeAssistant) -> HaZeroconf:
     """Zeroconf instance to be shared with other integrations that use it."""
-    return (await _async_get_instance(hass)).zeroconf
+    return cast(HaZeroconf, (await _async_get_instance(hass)).zeroconf)
 
 
+@bind_hass
 async def async_get_async_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
     """Zeroconf instance to be shared with other integrations that use it."""
     return await _async_get_instance(hass)
@@ -107,12 +109,13 @@ async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZero
     logging.getLogger("zeroconf").setLevel(logging.NOTSET)
 
     aio_zc = HaAsyncZeroconf(**zcargs)
+    zeroconf = cast(HaZeroconf, aio_zc.zeroconf)
 
-    install_multiple_zeroconf_catcher(aio_zc.zeroconf)
+    install_multiple_zeroconf_catcher(zeroconf)
 
     def _stop_zeroconf(_event: Event) -> None:
         """Stop Zeroconf."""
-        aio_zc.zeroconf.ha_close()
+        zeroconf.ha_close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_zeroconf)
     hass.data[DOMAIN] = aio_zc
