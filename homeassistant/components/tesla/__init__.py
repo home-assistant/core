@@ -23,7 +23,7 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.httpx_client import SERVER_SOFTWARE, USER_AGENT
 from homeassistant.helpers.update_coordinator import (
@@ -170,6 +170,8 @@ async def async_setup_entry(hass, config_entry):
     except IncompleteCredentials as ex:
         await async_client.aclose()
         raise ConfigEntryAuthFailed from ex
+    except httpx.ConnectTimeout as ex:
+        raise ConfigEntryNotReady from ex
     except TeslaException as ex:
         await async_client.aclose()
         if ex.code == HTTP_UNAUTHORIZED:
