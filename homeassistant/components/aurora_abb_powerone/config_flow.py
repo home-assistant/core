@@ -88,7 +88,9 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Handle the initial step.
         if user_input is not None:
             try:
-                info = validate_and_connect(self.hass, user_input)
+                info = await self.hass.async_add_executor_job(
+                    validate_and_connect, self.hass, user_input
+                )
                 info.update(user_input)
                 # Bomb out early if someone has already set up this device.
                 device_unique_id = info["serial_number"]
