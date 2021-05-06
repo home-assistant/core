@@ -83,6 +83,13 @@ class DuneHDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             return self.async_create_entry(title=self.host, data=user_input)
 
+    def host_already_configured(self, host):
+        """See if we already have a dunehd entry matching user input configured."""
+        existing_hosts = {
+            entry.data[CONF_HOST] for entry in self._async_current_entries()
+        }
+        return host in existing_hosts
+
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
