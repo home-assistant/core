@@ -203,6 +203,18 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 
+    async def async_step_dhcp(self, discovery_info: DiscoveryInfoType):
+        """Handle a flow initialized by dhcp discovery."""
+        self._host = discovery_info[IP_ADDRESS]
+
+        LOGGER.debug(
+            "Found Samsung device via dhcp at %s (%s)", self._host, discovery_info
+        )
+        await self._async_set_device_unique_id()
+
+        self.context["title_placeholders"] = {"model": self._model}
+        return await self.async_step_confirm()
+
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle a flow initialized by zeroconf discovery."""
         self._host = discovery_info[CONF_HOST]
