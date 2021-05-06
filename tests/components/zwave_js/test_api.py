@@ -349,6 +349,36 @@ async def test_refresh_node_info(
 
     client.async_send_command_no_wait.reset_mock()
 
+    # Test getting non-existent node fails
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/refresh_node_info",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 9999,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/refresh_node_info",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 52,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
 
 async def test_refresh_node_values(
     hass, client, integration, hass_ws_client, multisensor_6
