@@ -351,8 +351,6 @@ class Entity(ABC):
 
     def _stringify_state(self) -> str:
         """Convert state to string."""
-        if not self.available:
-            return STATE_UNAVAILABLE
         state = self.state
         if state is None:
             return STATE_UNKNOWN
@@ -381,8 +379,8 @@ class Entity(ABC):
         attr = self.capability_attributes
         attr = dict(attr) if attr else {}
 
-        state = self._stringify_state()
         if self.available:
+            state = self._stringify_state()
             attr.update(self.state_attributes or {})
             extra_state_attributes = self.extra_state_attributes
             # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
@@ -390,6 +388,8 @@ class Entity(ABC):
             if extra_state_attributes is None:
                 extra_state_attributes = self.device_state_attributes
             attr.update(extra_state_attributes or {})
+        else:
+            state = STATE_UNAVAILABLE
 
         unit_of_measurement = self.unit_of_measurement
         if unit_of_measurement is not None:
