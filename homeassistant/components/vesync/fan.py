@@ -49,7 +49,6 @@ def _async_setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
     dev_list = []
     for dev in devices:
-        print(dev.device_type)
         if DEV_TYPE_TO_HA.get(dev.device_type) == "fan":
             dev_list.append(VeSyncFanHA(dev))
         else:
