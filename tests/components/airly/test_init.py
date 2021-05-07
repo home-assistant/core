@@ -13,7 +13,12 @@ from homeassistant.util.dt import utcnow
 
 from . import API_POINT_URL
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_fixture,
+    mock_device_registry,
+)
 from tests.components.airly import init_integration
 
 
@@ -181,3 +186,34 @@ async def test_unload_entry(hass, aioclient_mock):
 
     assert entry.state == ENTRY_STATE_NOT_LOADED
     assert not hass.data.get(DOMAIN)
+
+
+async def test_migrate_device_entry(hass, aioclient_mock):
+    """Test device_info identifiers migration."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        unique_id="123-456",
+        data={
+            "api_key": "foo",
+            "latitude": 123,
+            "longitude": 456,
+            "name": "Home",
+        },
+    )
+
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_valid_station.json"))
+    config_entry.add_to_hass(hass)
+
+    device_reg = mock_device_registry(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, 123, 456)}
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    migrated_device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "123", "456")}
+    )
+    assert device_entry.id == migrated_device_entry.id
