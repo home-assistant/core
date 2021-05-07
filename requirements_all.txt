@@ -694,6 +694,9 @@ gcal-sync==0.7.1
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
 
+# homeassistant.components.geocaching
+geocachingapi==0.0.7
+
 # homeassistant.components.usgs_earthquakes_feed
 geojson_client==0.6
 
