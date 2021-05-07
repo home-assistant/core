@@ -94,12 +94,14 @@ class KNXExposeSensor:
         )
         return device
 
+    @callback
     def _init_expose_state(self) -> None:
         """Initialize state of the exposure."""
         init_state = self.hass.states.get(self.entity_id)
         init_value = self._get_expose_value(init_state)
-        if init_value is not None:
-            self.device.sensor_value.value = init_value
+        self.device.sensor_value.value = (
+            init_value if init_value is not None else self.expose_default
+        )
 
     @callback
     def shutdown(self) -> None:
