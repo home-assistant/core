@@ -38,7 +38,7 @@ from .helpers import is_valid_config_entry
 _LOGGER = logging.getLogger(__name__)
 
 
-def dupe_import(
+def is_dupe_import(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, user_input: dict[str, Any]
 ) -> bool:
     """Return whether imported config already exists."""
@@ -161,7 +161,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             # We need to prevent duplicate imports
             if self.source == config_entries.SOURCE_IMPORT and any(
-                dupe_import(entry, user_input)
+                is_dupe_import(entry, user_input)
                 for entry in self.hass.config_entries.async_entries(DOMAIN)
                 if entry.source == config_entries.SOURCE_IMPORT
             ):
