@@ -1,4 +1,6 @@
 """Hue sensor entities."""
+from typing import TYPE_CHECKING
+
 from aiohue.sensors import (
     TYPE_ZLL_LIGHTLEVEL,
     TYPE_ZLL_ROTARY,
@@ -19,6 +21,10 @@ from homeassistant.const import (
 from .const import DOMAIN as HUE_DOMAIN
 from .sensor_base import SENSOR_CONFIG_MAP, GenericHueSensor, GenericZLLSensor
 
+if TYPE_CHECKING:
+    from homeassistant.components.hue.bridge import HueBridge
+
+
 LIGHT_LEVEL_NAME_FORMAT = "{} light level"
 REMOTE_NAME_FORMAT = "{} battery level"
 TEMPERATURE_NAME_FORMAT = "{} temperature"
@@ -26,9 +32,12 @@ TEMPERATURE_NAME_FORMAT = "{} temperature"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer sensor setup to the shared sensor module."""
-    await hass.data[HUE_DOMAIN][
-        config_entry.entry_id
-    ].sensor_manager.async_register_component("sensor", async_add_entities)
+    bridge: HueBridge = hass.data[HUE_DOMAIN][config_entry.entry_id]
+
+    if not bridge.sensor_manager:
+        return
+
+    await bridge.sensor_manager.async_register_component("sensor", async_add_entities)
 
 
 class GenericHueGaugeSensorEntity(GenericZLLSensor, SensorEntity):
