@@ -49,10 +49,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_platform, service
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.network import is_internal_request
 
@@ -61,8 +58,6 @@ from .const import (
     MEDIA_TYPES_TO_SONOS,
     PLAYABLE_MEDIA_TYPES,
     SONOS_CREATE_MEDIA_PLAYER,
-    SONOS_ENTITY_CREATED,
-    SONOS_GROUP_UPDATE,
     SOURCE_LINEIN,
     SOURCE_TV,
 )
@@ -254,17 +249,6 @@ async def async_setup_entry(
 
 class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     """Representation of a Sonos entity."""
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe sonos events."""
-        await super().async_added_to_hass()
-
-        if self.hass.is_running:
-            async_dispatcher_send(self.hass, SONOS_GROUP_UPDATE)
-
-        async_dispatcher_send(
-            self.hass, f"{SONOS_ENTITY_CREATED}-{self.soco.uid}", self.platform.domain
-        )
 
     @property
     def coordinator(self) -> SonosSpeaker:
