@@ -102,7 +102,8 @@ class HueBridge:
             return False
 
         self.api = bridge
-        self.sensor_manager = SensorManager(self)
+        if bridge.sensors is not None:
+            self.sensor_manager = SensorManager(self)
 
         hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
@@ -178,6 +179,10 @@ class HueBridge:
 
     async def hue_activate_scene(self, data, skip_reload=False, hide_warnings=False):
         """Service to call directly into bridge to set scenes."""
+        if self.api.scenes is None:
+            _LOGGER.warning("Hub %s does not support scenes", self.api.host)
+            return
+
         group_name = data[ATTR_GROUP_NAME]
         scene_name = data[ATTR_SCENE_NAME]
         transition = data.get(ATTR_TRANSITION)
