@@ -1,11 +1,14 @@
 """Config flow for Google Maps Travel Time integration."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -17,12 +20,14 @@ from .const import (
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
     CONF_LANGUAGE,
+    CONF_OPTIONS,
     CONF_ORIGIN,
     CONF_TIME,
     CONF_TIME_TYPE,
     CONF_TRAFFIC_MODEL,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
+    CONF_TRAVEL_MODE,
     CONF_UNITS,
     DEFAULT_NAME,
     DEPARTURE_TIME,
@@ -37,6 +42,53 @@ from .const import (
 from .helpers import is_valid_config_entry
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def dupe_import(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry, user_input: dict[str, Any]
+) -> bool:
+    """Return whether imported config already exists."""
+
+    # Check the main data keys
+    if any(
+        entry.data[key] != user_input[key]
+        for key in (CONF_API_KEY, CONF_DESTINATION, CONF_ORIGIN)
+    ):
+        return False
+
+    # We have to check for default units
+    if (
+        CONF_UNITS not in user_input[CONF_OPTIONS]
+        and entry.options[CONF_UNITS] != hass.config.units.name
+    ):
+        return False
+
+    # We have to check for default travel mode as well as the use of the travel_mode key
+    if CONF_MODE not in user_input[CONF_OPTIONS]:
+        if (
+            CONF_TRAVEL_MODE in user_input
+            and user_input[CONF_TRAVEL_MODE] != entry.options[CONF_MODE]
+        ):
+            return False
+
+        if CONF_TRAVEL_MODE not in user_input and entry.options[CONF_MODE] != "driving":
+            return False
+
+    for key in (
+        CONF_MODE,
+        CONF_LANGUAGE,
+        CONF_AVOID,
+        CONF_UNITS,
+        CONF_ARRIVAL_TIME,
+        CONF_DEPARTURE_TIME,
+        CONF_TRAFFIC_MODEL,
+        CONF_TRANSIT_MODE,
+        CONF_TRANSIT_ROUTING_PREFERENCE,
+    ):
+        if user_input[CONF_OPTIONS].get(key) != entry.options.get(key):
+            return False
+
+    return True
 
 
 class GoogleOptionsFlow(config_entries.OptionsFlow):
@@ -110,7 +162,7 @@ class GoogleOptionsFlow(config_entries.OptionsFlow):
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Google Maps Travel Time."""
 
-    VERSION = 1
+    VERSION = 2
 
     @staticmethod
     @callback
@@ -125,6 +177,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         user_input = user_input or {}
         if user_input:
+            # We need to prevent duplicate imports
+            if self.source == config_entries.SOURCE_IMPORT and any(
+                dupe_import(entry, user_input)
+                for entry in self.hass.config_entries.async_entries(DOMAIN)
+                if entry.source == config_entries.SOURCE_IMPORT
+            ):
+                return self.async_abort(reason="already_configured")
+
             if (
                 self.source == config_entries.SOURCE_IMPORT
                 or await self.hass.async_add_executor_job(
