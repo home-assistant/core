@@ -5,7 +5,6 @@ import random
 from unittest.mock import patch
 
 import pytest
-import pytz
 import voluptuous as vol
 
 from homeassistant.components import group
@@ -763,7 +762,7 @@ def test_render_with_possible_json_value_non_string_value(hass):
         hass,
     )
     value = datetime(2019, 1, 18, 12, 13, 14)
-    expected = str(pytz.utc.localize(value))
+    expected = str(value.replace(tzinfo=dt_util.UTC))
     assert tpl.async_render_with_possible_json_value(value) == expected
 
 
