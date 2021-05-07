@@ -60,9 +60,7 @@ async def test_setup_no_sensors(hass):
 
 async def test_in_period_on_start(hass):
     """Test simple setting."""
-    test_time = datetime(
-        2019, 1, 10, 18, 43, 0, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
-    )
+    test_time = datetime(2019, 1, 10, 18, 43, 0, tzinfo=dt_util.UTC)
     config = {
         "binary_sensor": [
             {
@@ -86,9 +84,7 @@ async def test_in_period_on_start(hass):
 
 async def test_midnight_turnover_before_midnight_inside_period(hass):
     """Test midnight turnover setting before midnight inside period ."""
-    test_time = datetime(
-        2019, 1, 10, 22, 30, 0, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
-    )
+    test_time = datetime(2019, 1, 10, 22, 30, 0, tzinfo=dt_util.UTC)
     config = {
         "binary_sensor": [
             {"platform": "tod", "name": "Night", "after": "22:00", "before": "5:00"}
