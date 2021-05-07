@@ -5,7 +5,6 @@ import pytest
 
 from homeassistant.components import sensor
 import homeassistant.components.geo_rss_events.sensor as geo_rss_events
-from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
@@ -89,7 +88,6 @@ async def test_setup(hass, mock_feed):
             ATTR_FRIENDLY_NAME: "Event Service Any",
             ATTR_UNIT_OF_MEASUREMENT: "Events",
             ATTR_ICON: "mdi:alert",
-            ATTR_STATE_CLASS: None,
             "Title 1": "16km",
             "Title 2": "20km",
         }
@@ -118,7 +116,6 @@ async def test_setup(hass, mock_feed):
             ATTR_FRIENDLY_NAME: "Event Service Any",
             ATTR_UNIT_OF_MEASUREMENT: "Events",
             ATTR_ICON: "mdi:alert",
-            ATTR_STATE_CLASS: None,
         }
 
 
@@ -153,7 +150,6 @@ async def test_setup_with_categories(hass, mock_feed):
             ATTR_FRIENDLY_NAME: "Event Service Category 1",
             ATTR_UNIT_OF_MEASUREMENT: "Events",
             ATTR_ICON: "mdi:alert",
-            ATTR_STATE_CLASS: None,
             "Title 1": "16km",
             "Title 2": "20km",
         }
