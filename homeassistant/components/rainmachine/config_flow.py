@@ -22,9 +22,8 @@ DATA_SCHEMA = vol.Schema(
 
 
 def get_client_controller(client):
-    """Enumerate controllers to find the first mac."""
-    for controller in client.controllers.values():
-        return controller
+    """Return the first local controller."""
+    return next(iter(client.controllers.values()))
 
 
 async def async_get_controller(hass, ip_address, password, port, ssl):
