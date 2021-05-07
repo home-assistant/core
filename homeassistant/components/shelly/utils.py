@@ -194,6 +194,8 @@ async def get_coap_context(hass):
     port = DEFAULT_COAP_PORT
     if DOMAIN in hass.data:
         port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
+    else:
+        port = DEFAULT_COAP_PORT
     _LOGGER.info("Starting CoAP context with UDP port %s", port)
     await context.initialize(port)
 
