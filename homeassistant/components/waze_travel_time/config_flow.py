@@ -161,7 +161,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             # We need to prevent duplicate imports
             if self.source == config_entries.SOURCE_IMPORT and any(
-                is_dupe_import(entry, user_input)
+                is_dupe_import(self.hass, entry, user_input)
                 for entry in self.hass.config_entries.async_entries(DOMAIN)
                 if entry.source == config_entries.SOURCE_IMPORT
             ):

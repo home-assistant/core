@@ -48,18 +48,25 @@ def is_dupe_import(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, user_input: dict[str, Any]
 ) -> bool:
     """Return whether imported config already exists."""
-
     # Check the main data keys
     if any(
         entry.data[key] != user_input[key]
         for key in (CONF_API_KEY, CONF_DESTINATION, CONF_ORIGIN)
     ):
+        _LOGGER.error("1")
         return False
 
-    # We have to check for default units
+    # Bail early if we have no options
+    if CONF_OPTIONS not in user_input:
+        return True
+
+    # We have to check for default units and not default units
     if (
         CONF_UNITS not in user_input[CONF_OPTIONS]
         and entry.options[CONF_UNITS] != hass.config.units.name
+    ) or (
+        CONF_UNITS in user_input[CONF_OPTIONS]
+        and entry.options[CONF_UNITS] != user_input[CONF_OPTIONS][CONF_UNITS]
     ):
         return False
 
@@ -73,12 +80,12 @@ def is_dupe_import(
 
         if CONF_TRAVEL_MODE not in user_input and entry.options[CONF_MODE] != "driving":
             return False
+    elif user_input[CONF_OPTIONS][CONF_MODE] != entry.options[CONF_MODE]:
+        return False
 
     for key in (
-        CONF_MODE,
         CONF_LANGUAGE,
         CONF_AVOID,
-        CONF_UNITS,
         CONF_ARRIVAL_TIME,
         CONF_DEPARTURE_TIME,
         CONF_TRAFFIC_MODEL,
@@ -179,7 +186,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             # We need to prevent duplicate imports
             if self.source == config_entries.SOURCE_IMPORT and any(
-                is_dupe_import(entry, user_input)
+                is_dupe_import(self.hass, entry, user_input)
                 for entry in self.hass.config_entries.async_entries(DOMAIN)
                 if entry.source == config_entries.SOURCE_IMPORT
             ):
