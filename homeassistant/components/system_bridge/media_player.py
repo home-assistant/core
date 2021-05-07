@@ -8,6 +8,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
+    SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
@@ -43,9 +44,10 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
         """Flag media player features that are supported."""
         return (
             SUPPORT_PAUSE
-            | SUPPORT_PLAY_MEDIA
             | SUPPORT_PLAY
+            | SUPPORT_PLAY_MEDIA
             | SUPPORT_TURN_OFF
+            | SUPPORT_STOP
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_VOLUME_SET
             | SUPPORT_VOLUME_STEP
