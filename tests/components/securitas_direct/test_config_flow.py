@@ -14,7 +14,6 @@ from homeassistant.components.securitas_direct.const import (
     STEP_USER,
     UNABLE_TO_CONNECT,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -112,7 +111,7 @@ async def test_reauth(hass):
     ), patch("homeassistant.components.securitas_direct.Installation"):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_REAUTH},
+            context={"source": config_entries.SOURCE_REAUTH},
             data=config,
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

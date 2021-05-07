@@ -43,7 +43,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up securitas_direct from a config entry."""
     try:
         client = SecuritasClient(entry.data)
-        client.update_overview = Throttle(SCAN_INTERVAL)(client.update_overview)
         await hass.async_add_executor_job(_connect, client)
     except (ConnectionException, ConnectTimeout, HTTPError):
         await hass.config_entries.flow.async_init(
@@ -110,6 +109,7 @@ class SecuritasClient:
 
         return True
 
+    @Throttle(SCAN_INTERVAL)
     def update_overview(self):
         """Update the overview."""
 
