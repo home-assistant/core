@@ -11,7 +11,7 @@ from requests.exceptions import RequestException
 
 from homeassistant import exceptions
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, CONF_PLATFORM
+from homeassistant.const import CONF_HOST, CONF_PLATFORM, CONF_PORT, CONF_TOKEN
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -69,8 +69,8 @@ async def async_setup(hass, config):
                         data={
                             CONF_HOST: conf[CONF_HOST],
                             CONF_PORT: conf.get(CONF_PORT, DEFAULT_PORT),
-                            CONF_TOKEN: conf[CONF_TOKEN]
-                        }
+                            CONF_TOKEN: conf[CONF_TOKEN],
+                        },
                     )
                 )
 
