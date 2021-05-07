@@ -1,6 +1,4 @@
 """Hue binary sensor entities."""
-from typing import TYPE_CHECKING
-
 from aiohue.sensors import TYPE_ZLL_PRESENCE
 
 from homeassistant.components.binary_sensor import (
@@ -11,16 +9,12 @@ from homeassistant.components.binary_sensor import (
 from .const import DOMAIN as HUE_DOMAIN
 from .sensor_base import SENSOR_CONFIG_MAP, GenericZLLSensor
 
-if TYPE_CHECKING:
-    from homeassistant.components.hue.bridge import HueBridge
-
-
 PRESENCE_NAME_FORMAT = "{} motion"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer binary sensor setup to the shared sensor module."""
-    bridge: HueBridge = hass.data[HUE_DOMAIN][config_entry.entry_id]
+    bridge = hass.data[HUE_DOMAIN][config_entry.entry_id]
 
     if not bridge.sensor_manager:
         return
