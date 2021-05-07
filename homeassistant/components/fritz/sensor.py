@@ -74,7 +74,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
     ) -> None:
         """Init FRITZ!Box connectivity class."""
         self._sensor_type = sensor_type
-        self._unique_id = f"{fritzbox_tools.unique_id}-{self._sensor_type[SENSOR_NAME].replace(' ', '_').lower()}"
+        self._unique_id = f"{fritzbox_tools.unique_id}-{sensor_type}"
         self._name = f"{device_friendlyname} {self._sensor_type[SENSOR_NAME]}"
         self._is_available = True
         self._last_value: str | None = None
