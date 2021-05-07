@@ -35,6 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
 
     _async_setup_entities(hass.data[DOMAIN][VS_LIGHTS], async_add_entities)
+    return True
 
 
 @callback
@@ -47,7 +48,7 @@ def _async_setup_entities(devices, async_add_entities):
         elif DEV_TYPE_TO_HA.get(dev.device_type) == "bulb":
             entities.append(VeSyncBulbHA(dev))
         else:
-            _LOGGER.debug(
+            _LOGGER.warning(
                 "%s - Unknown device type - %s", dev.device_name, dev.device_type
             )
             continue
