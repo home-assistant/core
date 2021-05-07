@@ -400,6 +400,9 @@ async def test_send_target_temperature(hass, discovery, device, units, temperatu
     assert state is not None
     assert state.attributes.get(ATTR_TEMPERATURE) == temperature
 
+    # Reset config temperature_unit back to CELSIUS, required for additional tests outside this component.
+    hass.config.units.temperature_unit = TEMP_CELSIUS
+
 
 @pytest.mark.parametrize(
     "units,temperature", [(TEMP_CELSIUS, 25), (TEMP_FAHRENHEIT, 74)]
@@ -426,6 +429,9 @@ async def test_send_target_temperature_device_timeout(
     assert state is not None
     assert state.attributes.get(ATTR_TEMPERATURE) == temperature
 
+    # Reset config temperature_unit back to CELSIUS, required for additional tests outside this component.
+    hass.config.units.temperature_unit = TEMP_CELSIUS
+
 
 @pytest.mark.parametrize(
     "units,temperature", [(TEMP_CELSIUS, 25), (TEMP_FAHRENHEIT, 74)]
@@ -442,6 +448,9 @@ async def test_update_target_temperature(hass, discovery, device, units, tempera
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.attributes.get(ATTR_TEMPERATURE) == temperature
+
+    # Reset config temperature_unit back to CELSIUS, required for additional tests outside this component.
+    hass.config.units.temperature_unit = TEMP_CELSIUS
 
 
 @pytest.mark.parametrize(
