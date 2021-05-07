@@ -81,7 +81,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up 1-Wire platform."""
     # Only OWServer implementation works with binary sensors
     if config_entry.data[CONF_TYPE] == CONF_TYPE_OWSERVER:
-        onewirehub = hass.data[DOMAIN][config_entry.unique_id]
+        onewirehub = hass.data[DOMAIN][config_entry.entry_id]
 
         entities = await hass.async_add_executor_job(get_entities, onewirehub)
         async_add_entities(entities, True)
