@@ -31,10 +31,10 @@ from homeassistant.const import (
     STATE_OPENING,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from . import (
     CONF_COMMAND_TOPIC,
@@ -185,7 +185,7 @@ PLATFORM_SCHEMA = vol.All(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT cover through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
@@ -253,49 +253,7 @@ class MqttCover(MqttEntity, CoverEntity):
         if tilt_status_template is not None:
             tilt_status_template.hass = self.hass
 
-    def _tilt_payload_received(self, payload):
-        """Set the tilt value."""
-        if type(payload) in [int, float] or payload.isnumeric():
-            if (
-                self._config[CONF_TILT_MIN]
-                <= int(payload)
-                <= self._config[CONF_TILT_MAX]
-                or self._config[CONF_TILT_MAX]
-                <= int(payload)
-                <= self._config[CONF_TILT_MIN]
-            ):
-                level = self.find_percentage_in_range(float(payload))
-                self._tilt_value = level
-                self.async_write_ha_state()
-            else:
-                _LOGGER.warning(
-                    "Payload '%s' is out of range, must be between '%s' and '%s' inclusive",
-                    payload,
-                    self._config[CONF_TILT_MIN],
-                    self._config[CONF_TILT_MAX],
-                )
-        else:
-            _LOGGER.warning("Payload '%s' is not numeric", payload)
-
-    def _position_message_received(self, payload):
-        """Set the position."""
-        if type(payload) in [int, float] or payload.isnumeric():
-            percentage_payload = self.find_percentage_in_range(
-                float(payload), COVER_PAYLOAD
-            )
-            self._position = percentage_payload
-            if self._config.get(CONF_STATE_TOPIC) is None:
-                self._state = (
-                    STATE_CLOSED
-                    if percentage_payload == DEFAULT_POSITION_CLOSED
-                    else STATE_OPEN
-                )
-        else:
-            _LOGGER.warning("Payload '%s' is not numeric", payload)
-            return
-        self.async_write_ha_state()
-
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self):  # noqa: C901
         """(Re)Subscribe to topics."""
         topics = {}
 
@@ -316,7 +274,12 @@ class MqttCover(MqttEntity, CoverEntity):
                 payload = template.async_render_with_possible_json_value(
                     payload, variables=variables
                 )
-            self._tilt_payload_received(payload)
+
+            if not payload:
+                _LOGGER.debug("Ignoring empty tilt message from '%s'", msg.topic)
+                return
+
+            self.tilt_payload_received(payload)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -329,6 +292,10 @@ class MqttCover(MqttEntity, CoverEntity):
                 payload = template.async_render_with_possible_json_value(
                     payload, variables=variables
                 )
+
+            if not payload:
+                _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
+                return
 
             if payload == self._config[CONF_STATE_STOPPED]:
                 if self._config.get(CONF_GET_POSITION_TOPIC) is not None:
@@ -383,6 +350,12 @@ class MqttCover(MqttEntity, CoverEntity):
                     payload, variables=variables
                 )
 
+                if not payload:
+                    _LOGGER.debug(
+                        "Ignoring empty position message from '%s'", msg.topic
+                    )
+                    return
+
                 try:
                     payload = json_loads(payload)
                 except TypeError:
@@ -400,10 +373,24 @@ class MqttCover(MqttEntity, CoverEntity):
                         if not self._config.get(CONF_TILT_STATE_OPTIMISTIC):
                             # reset forced set tilt optimistic
                             self._tilt_optimistic = False
-                        self._tilt_payload_received(payload["tilt_position"])
+                        self.tilt_payload_received(payload["tilt_position"])
                     payload = payload["position"]
 
-            self._position_message_received(payload)
+            if type(payload) in [int, float] or payload.isnumeric():
+                percentage_payload = self.find_percentage_in_range(
+                    float(payload), COVER_PAYLOAD
+                )
+                self._position = percentage_payload
+                if self._config.get(CONF_STATE_TOPIC) is None:
+                    self._state = (
+                        STATE_CLOSED
+                        if percentage_payload == DEFAULT_POSITION_CLOSED
+                        else STATE_OPEN
+                    )
+            else:
+                _LOGGER.warning("Payload '%s' is not numeric", payload)
+                return
+            self.async_write_ha_state()
 
         if self._config.get(CONF_GET_POSITION_TOPIC):
             topics["get_position_topic"] = {
@@ -705,3 +692,27 @@ class MqttCover(MqttEntity, CoverEntity):
         if range_type == TILT_PAYLOAD and self._config.get(CONF_TILT_INVERT_STATE):
             position = max_range - position + offset
         return position
+
+    def tilt_payload_received(self, payload):
+        """Set the tilt value."""
+        if type(payload) in [int, float] or payload.isnumeric():
+            if (
+                self._config[CONF_TILT_MIN]
+                <= int(payload)
+                <= self._config[CONF_TILT_MAX]
+                or self._config[CONF_TILT_MAX]
+                <= int(payload)
+                <= self._config[CONF_TILT_MIN]
+            ):
+                level = self.find_percentage_in_range(float(payload))
+                self._tilt_value = level
+                self.async_write_ha_state()
+            else:
+                _LOGGER.warning(
+                    "Payload '%s' is out of range, must be between '%s' and '%s' inclusive",
+                    payload,
+                    self._config[CONF_TILT_MIN],
+                    self._config[CONF_TILT_MAX],
+                )
+        else:
+            _LOGGER.warning("Payload '%s' is not numeric", payload)
