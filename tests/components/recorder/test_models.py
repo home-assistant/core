@@ -157,13 +157,13 @@ async def test_process_timestamp():
         2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC
     )
     assert process_timestamp(datetime_est_timezone) == datetime(
-        2016, 7, 9, 15, 56, tzinfo=dt.UTC
+        2016, 7, 9, 15, 0, tzinfo=dt.UTC
     )
     assert process_timestamp(datetime_nst_timezone) == datetime(
-        2016, 7, 9, 14, 31, tzinfo=dt.UTC
+        2016, 7, 9, 13, 30, tzinfo=dt.UTC
     )
     assert process_timestamp(datetime_hst_timezone) == datetime(
-        2016, 7, 9, 21, 31, tzinfo=dt.UTC
+        2016, 7, 9, 21, 0, tzinfo=dt.UTC
     )
     assert process_timestamp(None) is None
 
@@ -191,15 +191,15 @@ async def test_process_timestamp_to_utc_isoformat():
     )
     assert (
         process_timestamp_to_utc_isoformat(datetime_est_timezone)
-        == "2016-07-09T15:56:00+00:00"
+        == "2016-07-09T15:00:00+00:00"
     )
     assert (
         process_timestamp_to_utc_isoformat(datetime_nst_timezone)
-        == "2016-07-09T14:31:00+00:00"
+        == "2016-07-09T13:30:00+00:00"
     )
     assert (
         process_timestamp_to_utc_isoformat(datetime_hst_timezone)
-        == "2016-07-09T21:31:00+00:00"
+        == "2016-07-09T21:00:00+00:00"
     )
     assert process_timestamp_to_utc_isoformat(None) is None
 
