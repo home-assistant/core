@@ -25,7 +25,7 @@ from homeassistant.core import Context, Event, EventOrigin, State, split_entity_
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
-from .const import STATISTIC_PERIODS
+from .const import STATISTIC_PERIODS, STATISTIC_TYPES
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
@@ -219,20 +219,22 @@ class Statistics(Base):  # type: ignore
     }
     __tablename__ = TABLE_STATISTICS
     id = Column(Integer, primary_key=True)
-    entity_id = Column(String(255))
+    statistic_id = Column(String(255), index=True)
     period = Column(Enum(*STATISTIC_PERIODS))
     start = Column(DATETIME_TYPE, index=True)
-    mean = Column(Float())
-    min = Column(Float())
-    max = Column(Float())
+    statistic_type = Column(Enum(*STATISTIC_TYPES))
+    value_1 = Column(Float())
+    value_2 = Column(Float())
+    value_3 = Column(Float())
 
     @staticmethod
-    def from_stats(entity_id, period, start, stats):
+    def from_stats(statistic_id, period, start, statistic_type, stats):
         """Create object from a statistics."""
         return Statistics(
-            entity_id=entity_id,
+            statistic_id=statistic_id,
             period=period,
             start=start,
+            statistic_type=statistic_type,
             **stats,
         )
 

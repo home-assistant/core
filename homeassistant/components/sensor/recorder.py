@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import datetime
-import logging
 import statistics
 
 from homeassistant.components import history
@@ -11,10 +10,6 @@ from homeassistant.core import HomeAssistant
 
 from . import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
-
-DEVICE_CLASSES = {"temperature"}
 DEVICE_CLASS_STATISTICS = {"temperature": {"mean", "min", "max"}}
 
 
@@ -25,7 +20,7 @@ def _get_entities(hass: HomeAssistant) -> list[tuple[str, str]]:
 
     for state in all_sensors:
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        if not device_class or device_class not in DEVICE_CLASSES:
+        if not device_class or device_class not in DEVICE_CLASS_STATISTICS:
             continue
         entity_ids.append((state.entity_id, device_class))
     return entity_ids
@@ -63,11 +58,10 @@ def compile_statistics(
         if entity_id not in history_list:
             continue
 
-        result[entity_id] = {}
+        result[entity_id] = {"statistic_type": "min_max"}
 
         entity_history = history_list[entity_id]
         fstates = [float(el.state) for el in entity_history if _is_number(el.state)]
-        # times = [state.last_updated for el in entity_history if _is_number(el.state)]
 
         # Make calculations
         if "max" in wanted_statistics:

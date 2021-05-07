@@ -10,3 +10,4 @@ CONF_DB_INTEGRITY_CHECK = "db_integrity_check"
 MAX_ROWS_TO_PURGE = 1000
 
 STATISTIC_PERIODS = ["daily", "hourly"]
+STATISTIC_TYPES = ["min_max"]
