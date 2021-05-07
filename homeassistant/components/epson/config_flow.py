@@ -14,14 +14,6 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_NAME, default=DOMAIN): str,
-        vol.Optional(CONF_PORT): int,
-    }
-)
-
-NEW_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_NAME, default=DOMAIN): str,
     }
 )
 
@@ -85,5 +77,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=user_input.pop(CONF_NAME), data=user_input
                 )
         return self.async_show_form(
-            step_id="user", data_schema=NEW_SCHEMA, errors=errors
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
