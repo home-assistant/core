@@ -5,6 +5,7 @@ import logging
 
 import aioshelly
 import async_timeout
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -17,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry, update_coordinator
+import homeassistant.helpers.config_validation as cv
 
 from .const import (
     AIOSHELLY_DEVICE_TIMEOUT_SEC,
@@ -25,7 +27,9 @@ from .const import (
     ATTR_DEVICE,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     COAP,
+    CONF_COAP_PORT,
     DATA_CONFIG_ENTRY,
+    DEFAULT_COAP_PORT,
     DEVICE,
     DOMAIN,
     EVENT_SHELLY_CLICK,
@@ -43,10 +47,22 @@ PLATFORMS = ["binary_sensor", "cover", "light", "sensor", "switch"]
 SLEEPING_PLATFORMS = ["binary_sensor", "sensor"]
 _LOGGER = logging.getLogger(__name__)
 
+COAP_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_COAP_PORT, default=DEFAULT_COAP_PORT): cv.port,
+    }
+)
+CONFIG_SCHEMA = vol.Schema({DOMAIN: COAP_SCHEMA}, extra=vol.ALLOW_EXTRA)
+
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Shelly component."""
     hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
+
+    conf = config.get(DOMAIN)
+    if conf is not None:
+        hass.data[DOMAIN][CONF_COAP_PORT] = conf[CONF_COAP_PORT]
+
     return True
 
 

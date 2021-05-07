@@ -14,7 +14,9 @@ from homeassistant.util.dt import parse_datetime, utcnow
 from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
     COAP,
+    CONF_COAP_PORT,
     DATA_CONFIG_ENTRY,
+    DEFAULT_COAP_PORT,
     DOMAIN,
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
@@ -190,7 +192,13 @@ def get_device_wrapper(hass: HomeAssistant, device_id: str):
 async def get_coap_context(hass):
     """Get CoAP context to be used in all Shelly devices."""
     context = aioshelly.COAP()
-    await context.initialize()
+    port = DEFAULT_COAP_PORT
+    if DOMAIN in hass.data:
+        port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
+    else:
+        port = DEFAULT_COAP_PORT
+    _LOGGER.info("Starting CoAP context with UDP port %s", port)
+    await context.initialize(port)
 
     @callback
     def shutdown_listener(ev):
