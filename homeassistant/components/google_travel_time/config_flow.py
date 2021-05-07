@@ -60,29 +60,23 @@ def is_dupe_import(
     if CONF_OPTIONS not in user_input:
         return True
 
-    # We have to check for default units and not default units
-    if (
-        CONF_UNITS not in user_input[CONF_OPTIONS]
-        and entry.options[CONF_UNITS] != hass.config.units.name
-    ) or (
-        CONF_UNITS in user_input[CONF_OPTIONS]
-        and entry.options[CONF_UNITS] != user_input[CONF_OPTIONS][CONF_UNITS]
-    ):
+    # We have to check for units differently because there is a default
+    units = user_input[CONF_OPTIONS].get(CONF_UNITS) or hass.config.units.name
+    if entry.options[CONF_UNITS] != units:
         return False
 
-    # We have to check for default travel mode as well as the use of the travel_mode key
-    if CONF_MODE not in user_input[CONF_OPTIONS]:
-        if (
-            CONF_TRAVEL_MODE in user_input
-            and user_input[CONF_TRAVEL_MODE] != entry.options[CONF_MODE]
-        ):
-            return False
-
-        if CONF_TRAVEL_MODE not in user_input and entry.options[CONF_MODE] != "driving":
-            return False
-    elif user_input[CONF_OPTIONS][CONF_MODE] != entry.options[CONF_MODE]:
+    # We have to check for travel mode differently because of the default and because
+    # it can be provided in two different ways. We have to give mode preference over
+    # travel mode because that's the way that entry setup works.
+    mode = (
+        user_input[CONF_OPTIONS].get(CONF_MODE)
+        or user_input.get(CONF_TRAVEL_MODE)
+        or "driving"
+    )
+    if entry.options[CONF_MODE] != mode:
         return False
 
+    # We have to check for options that don't have defaults
     for key in (
         CONF_LANGUAGE,
         CONF_AVOID,
