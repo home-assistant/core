@@ -28,6 +28,8 @@ API_PM10 = "pm10"
 API_PM25 = "pm2.5"
 API_SO2 = "so2"
 
+API_TIMEOUT = 30
+
 AQI_GOOD = "dobry"
 AQI_MODERATE = "umiarkowany"
 AQI_POOR = "dostateczny"

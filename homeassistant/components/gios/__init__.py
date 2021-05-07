@@ -8,7 +8,7 @@ from gios import ApiError, Gios, InvalidSensorsData, NoStationError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_STATION_ID, DOMAIN, SCAN_INTERVAL
+from .const import API_TIMEOUT, CONF_STATION_ID, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         try:
-            with timeout(30):
+            with timeout(API_TIMEOUT):
                 return await self.gios.async_update()
         except (
             ApiError,
