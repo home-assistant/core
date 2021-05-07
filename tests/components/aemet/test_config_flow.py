@@ -95,7 +95,6 @@ async def test_form_options(hass):
 
         assert entry.state == "loaded"
 
-
         result = await hass.config_entries.options.async_init(entry.entry_id)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
