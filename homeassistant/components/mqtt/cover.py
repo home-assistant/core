@@ -233,11 +233,6 @@ class MqttCover(MqttEntity, CoverEntity):
         )
         self._tilt_optimistic = config[CONF_TILT_STATE_OPTIMISTIC]
 
-        if self._config.get(CONF_TILT_STATUS_TOPIC) is None:
-            self._has_tilt_topic = False
-        else:
-            self._has_tilt_topic = True
-
         value_template = self._config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
             value_template.hass = self.hass
@@ -431,7 +426,7 @@ class MqttCover(MqttEntity, CoverEntity):
             # Force into optimistic mode.
             self._optimistic = True
 
-        if self._has_tilt_topic:
+        if not self._config.get(CONF_TILT_STATUS_TOPIC) is None:
             self._tilt_value = STATE_UNKNOWN
             topics["tilt_status_topic"] = {
                 "topic": self._config.get(CONF_TILT_STATUS_TOPIC),

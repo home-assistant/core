@@ -2746,18 +2746,6 @@ async def test_position_via_position_topic_template_all_variables(hass, mqtt_moc
                 {% if value | int > position_closed %}\
                     {{ position_open }}\
                 {% endif %}",
-                # {% if state_attr(entity_id, "current_position") == None %}\
-                #   {% set my_json = { "position" : value, "tilt_position" : 0 } %}\
-                # {% else %}\
-                #   {% set position = state_attr(entity_id, "current_position") %}\
-                #   {% set movement = value | int - position %}\
-                #   {% set tilt = state_attr(entity_id, "current_tilt_position")/100*5 %}\
-                #   {% set tilt_new = tilt + movement %}\
-                #   {% if tilt_new > 5 %} {% set tilt_new = 5 %} {% endif %}\
-                #   {% if tilt_new < 0 %} {% set tilt_new = 0 %} {% endif %}\
-                #   {% set my_json = { "position" : value, "tilt_position" : tilt_new } %}\
-                # {% endif %}\
-                # {{ my_json | tojson }}',
             }
         },
     )
@@ -2768,46 +2756,13 @@ async def test_position_via_position_topic_template_all_variables(hass, mqtt_moc
     current_cover_position = hass.states.get("cover.test").attributes[
         ATTR_CURRENT_POSITION
     ]
-    # current_tilt_position = hass.states.get("cover.test").attributes[
-    #     ATTR_CURRENT_TILT_POSITION
-    # ]
     assert current_cover_position == 10
 
     async_fire_mqtt_message(hass, "get-position-topic", "55")
     current_cover_position = hass.states.get("cover.test").attributes[
         ATTR_CURRENT_POSITION
     ]
-    # current_tilt_position = hass.states.get("cover.test").attributes[
-    #     ATTR_CURRENT_TILT_POSITION
-    # ]
     assert current_cover_position == 100
-
-    # async_fire_mqtt_message(hass, "get-position-topic", "6")
-    # current_cover_position = hass.states.get("cover.test").attributes[
-    #     ATTR_CURRENT_POSITION
-    # ]
-    # current_tilt_position = hass.states.get("cover.test").attributes[
-    #     ATTR_CURRENT_TILT_POSITION
-    # ]
-    # assert current_cover_position == 6 and current_tilt_position == 100
-
-    # async_fire_mqtt_message(hass, "get-position-topic", "100")
-    # current_cover_position = hass.states.get("cover.test").attributes[
-    #     ATTR_CURRENT_POSITION
-    # ]
-    # current_tilt_position = hass.states.get("cover.test").attributes[
-    #     ATTR_CURRENT_TILT_POSITION
-    # ]
-    # assert current_cover_position == 100 and current_tilt_position == 100
-
-    # async_fire_mqtt_message(hass, "get-position-topic", "90")
-    # current_cover_position = hass.states.get("cover.test").attributes[
-    #     ATTR_CURRENT_POSITION
-    # ]
-    # current_tilt_position = hass.states.get("cover.test").attributes[
-    #     ATTR_CURRENT_TILT_POSITION
-    # ]
-    # assert current_cover_position == 90 and current_tilt_position == 0
 
 
 async def test_set_state_via_stopped_state_no_position_topic(hass, mqtt_mock):
