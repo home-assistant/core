@@ -99,7 +99,6 @@ class NAMDataUpdateCoordinator(DataUpdateCoordinator):
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return {
-            "identifiers": {(DOMAIN, cast(str, self._unique_id))},
             "connections": {(CONNECTION_NETWORK_MAC, cast(str, self._unique_id))},
             "name": DEFAULT_NAME,
             "sw_version": self.nam.software_version,
