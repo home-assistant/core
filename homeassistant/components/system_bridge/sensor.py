@@ -9,6 +9,7 @@ from systembridge import Bridge
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    DATA_GIGABYTES,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
@@ -51,6 +52,8 @@ async def async_setup_entry(
             BridgeFilesystemSensor(coordinator, bridge, key)
             for key, _ in bridge.filesystem.fsSize.items()
         ],
+        BridgeMemoryFreeSensor(coordinator, bridge),
+        BridgeMemoryUsedSensor(coordinator, bridge),
         BridgeKernelSensor(coordinator, bridge),
         BridgeOsSensor(coordinator, bridge),
         BridgeProcessesLoadSensor(coordinator, bridge),
@@ -250,6 +253,60 @@ class BridgeFilesystemSensor(BridgeSensor):
             ATTR_TYPE: bridge.filesystem.fsSize[self._key]["type"],
             ATTR_USED: bridge.filesystem.fsSize[self._key]["used"],
         }
+
+
+class BridgeMemoryFreeSensor(BridgeSensor):
+    """Defines a memory free sensor."""
+
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            bridge,
+            "memory_free",
+            "Memory Free",
+            "mdi:memory",
+            None,
+            DATA_GIGABYTES,
+            True,
+        )
+
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
+        bridge: Bridge = self.coordinator.data
+        return (
+            round(bridge.memory.free / 1000 ** 3, 2)
+            if bridge.memory.free is not None
+            else None
+        )
+
+
+class BridgeMemoryUsedSensor(BridgeSensor):
+    """Defines a memory used sensor."""
+
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            bridge,
+            "memory_used",
+            "Memory Used",
+            "mdi:memory",
+            None,
+            DATA_GIGABYTES,
+            True,
+        )
+
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
+        bridge: Bridge = self.coordinator.data
+        return (
+            round(bridge.memory.used / 1000 ** 3, 2)
+            if bridge.memory.used is not None
+            else None
+        )
 
 
 class BridgeKernelSensor(BridgeSensor):
