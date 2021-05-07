@@ -43,6 +43,7 @@ import homeassistant.util.dt as dt_util
 from . import migration, purge
 from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
 from .models import Base, Events, RecorderRuns, States
+from .pool import RecorderPool
 from .util import (
     dburl_to_path,
     end_incomplete_runs,
@@ -357,13 +358,27 @@ class Recorder(threading.Thread):
             self._event_listener = None
 
     @callback
-    def _async_event_filter(self, event):
+    def _async_event_filter(self, event) -> bool:
         """Filter events."""
         if event.event_type in self.exclude_t:
             return False
 
         entity_id = event.data.get(ATTR_ENTITY_ID)
-        return bool(entity_id is None or self.entity_filter(entity_id))
+
+        if entity_id is None:
+            return True
+
+        if isinstance(entity_id, str):
+            return self.entity_filter(entity_id)
+
+        if isinstance(entity_id, list):
+            for eid in entity_id:
+                if self.entity_filter(eid):
+                    return True
+            return False
+
+        # Unknown what it is.
+        return True
 
     def do_adhoc_purge(self, **kwargs):
         """Trigger an adhoc purge retaining keep_days worth of data."""
@@ -666,6 +681,9 @@ class Recorder(threading.Thread):
         return False
 
     def _commit_event_session_or_retry(self):
+        """Commit the event session if there is work to do."""
+        if not self.event_session.new and not self.event_session.dirty:
+            return
         tries = 1
         while tries <= self.db_max_retries:
             try:
@@ -780,6 +798,8 @@ class Recorder(threading.Thread):
             kwargs["connect_args"] = {"check_same_thread": False}
             kwargs["poolclass"] = StaticPool
             kwargs["pool_reset_on_return"] = None
+        elif self.db_url.startswith(SQLITE_URL_PREFIX):
+            kwargs["poolclass"] = RecorderPool
         else:
             kwargs["echo"] = False
 

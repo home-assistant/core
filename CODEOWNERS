@@ -76,7 +76,7 @@ homeassistant/components/brother/* @bieniu
 homeassistant/components/brunt/* @eavanvalkenburg
 homeassistant/components/bsblan/* @liudger
 homeassistant/components/bt_smarthub/* @jxwolstenholme
-homeassistant/components/buienradar/* @mjj4791 @ties
+homeassistant/components/buienradar/* @mjj4791 @ties @Robbie1221
 homeassistant/components/cast/* @emontnemery
 homeassistant/components/cert_expiry/* @Cereal2nd @jjlawren
 homeassistant/components/circuit/* @braam
@@ -111,6 +111,7 @@ homeassistant/components/device_automation/* @home-assistant/core
 homeassistant/components/devolo_home_control/* @2Fake @Shutgun
 homeassistant/components/dexcom/* @gagebenne
 homeassistant/components/dhcp/* @bdraco
+homeassistant/components/dht/* @thegardenmonkey
 homeassistant/components/digital_ocean/* @fabaff
 homeassistant/components/directv/* @ctalkington
 homeassistant/components/discogs/* @thibmaek
@@ -164,6 +165,8 @@ homeassistant/components/forked_daapd/* @uvjustin
 homeassistant/components/fortios/* @kimfrellsen
 homeassistant/components/foscam/* @skgsergio
 homeassistant/components/freebox/* @hacf-fr @Quentame
+homeassistant/components/fritz/* @mammuth @AaronDavidSchneider @chemelli74
+homeassistant/components/fritzbox/* @mib1185
 homeassistant/components/fronius/* @nielstron
 homeassistant/components/frontend/* @home-assistant/frontend
 homeassistant/components/garmin_connect/* @cyberjunky
@@ -176,7 +179,7 @@ homeassistant/components/gios/* @bieniu
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff @engrbm87
 homeassistant/components/goalzero/* @tkdrob
-homeassistant/components/gogogate2/* @vangorra
+homeassistant/components/gogogate2/* @vangorra @bdraco
 homeassistant/components/google_assistant/* @home-assistant/cloud
 homeassistant/components/google_cloud/* @lufton
 homeassistant/components/gpsd/* @fabaff
@@ -255,6 +258,7 @@ homeassistant/components/kulersky/* @emlove
 homeassistant/components/lametric/* @robbiet480
 homeassistant/components/launch_library/* @ludeeus
 homeassistant/components/lcn/* @alengwenus
+homeassistant/components/lg_netcast/* @Drafteed
 homeassistant/components/life360/* @pnbruckner
 homeassistant/components/linux_battery/* @fabaff
 homeassistant/components/litejet/* @joncar
@@ -299,10 +303,12 @@ homeassistant/components/mpd/* @fabaff
 homeassistant/components/mqtt/* @emontnemery
 homeassistant/components/msteams/* @peroyvind
 homeassistant/components/mullvad/* @meichthys
+homeassistant/components/mutesync/* @currentoor
 homeassistant/components/my/* @home-assistant/core
 homeassistant/components/myq/* @bdraco
 homeassistant/components/mysensors/* @MartinHjelmare @functionpointer
 homeassistant/components/mystrom/* @fabaff
+homeassistant/components/nam/* @bieniu
 homeassistant/components/neato/* @dshokouhi @Santobert
 homeassistant/components/nederlandse_spoorwegen/* @YarmoM
 homeassistant/components/nello/* @pschmitt
@@ -447,7 +453,7 @@ homeassistant/components/soma/* @ratsept
 homeassistant/components/somfy/* @tetienne
 homeassistant/components/sonarr/* @ctalkington
 homeassistant/components/songpal/* @rytilahti @shenxn
-homeassistant/components/sonos/* @cgtobi
+homeassistant/components/sonos/* @cgtobi @jjlawren
 homeassistant/components/spaceapi/* @fabaff
 homeassistant/components/speedtestdotnet/* @rohankapoorcom @engrbm87
 homeassistant/components/spider/* @peternijssen
@@ -476,6 +482,7 @@ homeassistant/components/syncthru/* @nielstron
 homeassistant/components/synology_dsm/* @hacf-fr @Quentame @mib1185
 homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
+homeassistant/components/system_bridge/* @timmo001
 homeassistant/components/tado/* @michaelarnauts @bdraco @noltari
 homeassistant/components/tag/* @balloob @dmulcahey
 homeassistant/components/tahoma/* @philklei

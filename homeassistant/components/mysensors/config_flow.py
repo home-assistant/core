@@ -27,7 +27,7 @@ from homeassistant.components.mysensors import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_RETAIN, CONF_VERSION, DEFAULT_VERSION
@@ -282,7 +282,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Create the config entry."""
         return self.async_create_entry(
             title=f"{user_input[CONF_DEVICE]}",
@@ -324,7 +324,9 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 except vol.Invalid:
                     errors[CONF_PERSISTENCE_FILE] = "invalid_persistence_file"
                 else:
-                    real_persistence_path = self._normalize_persistence_file(
+                    real_persistence_path = user_input[
+                        CONF_PERSISTENCE_FILE
+                    ] = self._normalize_persistence_file(
                         user_input[CONF_PERSISTENCE_FILE]
                     )
                     for other_entry in self.hass.config_entries.async_entries(DOMAIN):

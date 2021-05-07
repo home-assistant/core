@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError, AdGuardHomeError
 import voluptuous as vol
@@ -33,7 +32,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,10 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except AdGuardHomeConnectionError as exception:
         raise ConfigEntryNotReady from exception
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def add_url(call) -> None:
         """Service call to add a new filter subscription to AdGuard Home."""
@@ -126,12 +122,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.services.async_remove(DOMAIN, SERVICE_DISABLE_URL)
     hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
 
-    for component in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(entry, component)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        del hass.data[DOMAIN]
 
-    del hass.data[DOMAIN]
-
-    return True
+    return unload_ok
 
 
 class AdGuardHomeEntity(Entity):
@@ -198,7 +193,7 @@ class AdGuardHomeDeviceEntity(AdGuardHomeEntity):
     """Defines a AdGuard Home device entity."""
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this AdGuard Home instance."""
         return {
             "identifiers": {

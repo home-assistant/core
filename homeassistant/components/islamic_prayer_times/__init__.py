@@ -22,6 +22,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS = ["sensor"]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -63,9 +64,7 @@ async def async_unload_entry(hass, config_entry):
     if hass.data[DOMAIN].event_unsub:
         hass.data[DOMAIN].event_unsub()
     hass.data.pop(DOMAIN)
-    await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
-
-    return True
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 class IslamicPrayerClient:
@@ -180,11 +179,7 @@ class IslamicPrayerClient:
         await self.async_update()
         self.config_entry.add_update_listener(self.async_options_updated)
 
-        self.hass.async_create_task(
-            self.hass.config_entries.async_forward_entry_setup(
-                self.config_entry, "sensor"
-            )
-        )
+        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
         return True
 

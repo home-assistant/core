@@ -1,6 +1,5 @@
 """This platform provides support for sensor data from RainMachine."""
 from functools import partial
-from typing import Callable
 
 from regenmaschine.controller import Controller
 
@@ -8,6 +7,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, VOLUME_CUBIC_METERS
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import RainMachineEntity
@@ -70,7 +70,7 @@ SENSORS = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up RainMachine sensors based on a config entry."""
     controller = hass.data[DOMAIN][DATA_CONTROLLER][entry.entry_id]

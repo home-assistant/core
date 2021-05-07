@@ -11,7 +11,7 @@ import jwt
 from homeassistant import data_entry_flow
 from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util import dt as dt_util
 
 from . import auth_store, models
@@ -98,8 +98,8 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
         return await auth_provider.async_login_flow(context)
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: FlowResultDict
-    ) -> FlowResultDict:
+        self, flow: data_entry_flow.FlowHandler, result: FlowResult
+    ) -> FlowResult:
         """Return a user as result of login flow."""
         flow = cast(LoginFlow, flow)
 

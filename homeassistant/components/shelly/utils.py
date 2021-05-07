@@ -14,9 +14,12 @@ from homeassistant.util.dt import parse_datetime, utcnow
 from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
     COAP,
+    CONF_COAP_PORT,
     DATA_CONFIG_ENTRY,
+    DEFAULT_COAP_PORT,
     DOMAIN,
-    SHBTN_1_INPUTS_EVENTS_TYPES,
+    SHBTN_INPUTS_EVENTS_TYPES,
+    SHBTN_MODELS,
     SHIX3_1_INPUTS_EVENTS_TYPES,
 )
 
@@ -111,7 +114,7 @@ def get_device_channel_name(
 def is_momentary_input(settings: dict, block: aioshelly.Block) -> bool:
     """Return true if input button settings is set to a momentary type."""
     # Shelly Button type is fixed to momentary and no btn_type
-    if settings["device"]["type"] in ("SHBTN-1", "SHBTN-2"):
+    if settings["device"]["type"] in SHBTN_MODELS:
         return True
 
     button = settings.get("relays") or settings.get("lights") or settings.get("inputs")
@@ -158,8 +161,8 @@ def get_input_triggers(
     else:
         subtype = f"button{int(block.channel)+1}"
 
-    if device.settings["device"]["type"] in ("SHBTN-1", "SHBTN-2"):
-        trigger_types = SHBTN_1_INPUTS_EVENTS_TYPES
+    if device.settings["device"]["type"] in SHBTN_MODELS:
+        trigger_types = SHBTN_INPUTS_EVENTS_TYPES
     elif device.settings["device"]["type"] == "SHIX3-1":
         trigger_types = SHIX3_1_INPUTS_EVENTS_TYPES
     else:
@@ -189,7 +192,13 @@ def get_device_wrapper(hass: HomeAssistant, device_id: str):
 async def get_coap_context(hass):
     """Get CoAP context to be used in all Shelly devices."""
     context = aioshelly.COAP()
-    await context.initialize()
+    port = DEFAULT_COAP_PORT
+    if DOMAIN in hass.data:
+        port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
+    else:
+        port = DEFAULT_COAP_PORT
+    _LOGGER.info("Starting CoAP context with UDP port %s", port)
+    await context.initialize(port)
 
     @callback
     def shutdown_listener(ev):

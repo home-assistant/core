@@ -1,5 +1,4 @@
 """The Control4 integration."""
-import asyncio
 import json
 import logging
 
@@ -107,10 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     entry_data[CONF_CONFIG_LISTENER] = entry.add_update_listener(update_listener)
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -123,14 +119,8 @@ async def update_listener(hass, config_entry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
     hass.data[DOMAIN][entry.entry_id][CONF_CONFIG_LISTENER]()
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)

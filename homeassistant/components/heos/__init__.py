@@ -9,7 +9,7 @@ from pyheos import Heos, HeosError, const as heos_const
 import voluptuous as vol
 
 from homeassistant.components.media_player.const import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -28,8 +28,14 @@ from .const import (
     SIGNAL_HEOS_UPDATED,
 )
 
+PLATFORMS = [MEDIA_PLAYER_DOMAIN]
+
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_HOST): cv.string})}, extra=vol.ALLOW_EXTRA
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {DOMAIN: vol.Schema({vol.Required(CONF_HOST): cv.string})},
+    ),
+    extra=vol.ALLOW_EXTRA,
 )
 
 MIN_UPDATE_SOURCES = timedelta(seconds=1)
@@ -47,7 +53,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
         # Create new entry based on config
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": "import"}, data={CONF_HOST: host}
+                DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: host}
             )
         )
     else:
@@ -119,9 +125,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     services.register(hass, controller)
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, MEDIA_PLAYER_DOMAIN)
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
     return True
 
 
@@ -133,9 +138,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     services.remove(hass)
 
-    return await hass.config_entries.async_forward_entry_unload(
-        entry, MEDIA_PLAYER_DOMAIN
-    )
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class ControllerManager:

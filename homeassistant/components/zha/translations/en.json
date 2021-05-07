@@ -33,6 +33,19 @@
             }
         }
     },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "Code required for arming actions",
+            "alarm_failed_tries": "The number of consecutive failed code entries to trigger an alarm",
+            "alarm_master_code": "Master code for the alarm control panel(s)",
+            "title": "Alarm Control Panel Options"
+        },
+        "zha_options": {
+            "default_light_transition": "Default light transition time (seconds)",
+            "enable_identify_on_join": "Enable identify effect when devices join the network",
+            "title": "Global Options"
+        }
+    },
     "device_automation": {
         "action_type": {
             "squawk": "Squawk",

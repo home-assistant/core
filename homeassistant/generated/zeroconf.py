@@ -95,6 +95,18 @@ ZEROCONF = {
     ],
     "_http._tcp.local.": [
         {
+            "domain": "nam",
+            "name": "nam-*"
+        },
+        {
+            "domain": "rachio",
+            "name": "rachio*"
+        },
+        {
+            "domain": "rainmachine",
+            "name": "rainmachine*"
+        },
+        {
             "domain": "shelly",
             "name": "shelly*"
         }
@@ -168,6 +180,11 @@ ZEROCONF = {
             "name": "smappee50*"
         }
     ],
+    "_system-bridge._udp.local.": [
+        {
+            "domain": "system_bridge"
+        }
+    ],
     "_touch-able._tcp.local.": [
         {
             "domain": "apple_tv"
@@ -208,9 +225,11 @@ HOMEKIT = {
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",
     "Rachio": "rachio",
+    "SPK5": "rainmachine",
     "Smart Bridge": "lutron_caseta",
     "Socket": "wemo",
     "TRADFRI": "tradfri",
+    "Touch HD": "rainmachine",
     "Welcome": "netatmo",
     "Wemo": "wemo",
     "iSmartGate": "gogogate2",

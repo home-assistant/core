@@ -257,14 +257,12 @@ async def test_remove_entry(hass, manager):
 
     async def mock_setup_entry(hass, entry):
         """Mock setting up entry."""
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, "light")
-        )
+        hass.config_entries.async_setup_platforms(entry, ["light"])
         return True
 
     async def mock_unload_entry(hass, entry):
         """Mock unloading an entry."""
-        result = await hass.config_entries.async_forward_entry_unload(entry, "light")
+        result = await hass.config_entries.async_unload_platforms(entry, ["light"])
         assert result
         return result
 
@@ -548,7 +546,6 @@ async def test_saving_and_loading(hass):
         """Test flow."""
 
         VERSION = 5
-        CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
         async def async_step_user(self, user_input=None):
             """Test user step."""
@@ -564,7 +561,6 @@ async def test_saving_and_loading(hass):
         """Test flow."""
 
         VERSION = 3
-        CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
         async def async_step_user(self, user_input=None):
             """Test user step."""
@@ -599,7 +595,6 @@ async def test_saving_and_loading(hass):
         assert orig.title == loaded.title
         assert orig.data == loaded.data
         assert orig.source == loaded.source
-        assert orig.connection_class == loaded.connection_class
         assert orig.unique_id == loaded.unique_id
 
 
@@ -944,6 +939,56 @@ async def test_setup_retrying_during_unload_before_started(hass):
     assert (
         hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED] == initial_listeners + 0
     )
+
+
+async def test_create_entry_options(hass):
+    """Test a config entry being created with options."""
+
+    async def mock_async_setup(hass, config):
+        """Mock setup."""
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                "comp",
+                context={"source": config_entries.SOURCE_IMPORT},
+                data={"data": "data", "option": "option"},
+            )
+        )
+        return True
+
+    async_setup_entry = AsyncMock(return_value=True)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp", async_setup=mock_async_setup, async_setup_entry=async_setup_entry
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+    await async_setup_component(hass, "persistent_notification", {})
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_import(self, user_input):
+            """Test import step creating entry, with options."""
+            return self.async_create_entry(
+                title="title",
+                data={"example": user_input["data"]},
+                options={"example": user_input["option"]},
+            )
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        assert await async_setup_component(hass, "comp", {})
+
+        await hass.async_block_till_done()
+
+        assert len(async_setup_entry.mock_calls) == 1
+
+        entries = hass.config_entries.async_entries("comp")
+        assert len(entries) == 1
+        assert entries[0].data == {"example": "data"}
+        assert entries[0].options == {"example": "option"}
 
 
 async def test_entry_options(hass, manager):
@@ -2068,7 +2113,7 @@ async def test_unignore_create_entry(hass, manager):
         # But after a 'tick' the unignore step has run and we can see a config entry.
         await hass.async_block_till_done()
         entry = hass.config_entries.async_entries("comp")[0]
-        assert entry.source == "unignore"
+        assert entry.source == config_entries.SOURCE_UNIGNORE
         assert entry.unique_id == "mock-unique-id"
         assert entry.title == "yo"
 

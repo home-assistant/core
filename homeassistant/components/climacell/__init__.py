@@ -1,7 +1,6 @@
 """The ClimaCell integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 from math import ceil
@@ -28,6 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -162,23 +162,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
 
     hass.data[DOMAIN].pop(config_entry.entry_id)
@@ -367,7 +359,7 @@ class ClimaCellEntity(CoordinatorEntity):
         return ATTRIBUTION
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device registry information."""
         return {
             "identifiers": {(DOMAIN, self._config_entry.data[CONF_API_KEY])},

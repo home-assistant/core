@@ -21,6 +21,7 @@ from .const import (
     DEFAULT_DETECTION_TIME,
     DEFAULT_NAME,
     DOMAIN,
+    PLATFORMS,
 )
 from .hub import MikrotikHub
 
@@ -41,6 +42,7 @@ MIKROTIK_SCHEMA = vol.All(
         }
     )
 )
+
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.All(cv.ensure_list, [MIKROTIK_SCHEMA])}, extra=vol.ALLOW_EXTRA
@@ -84,8 +86,10 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    await hass.config_entries.async_forward_entry_unload(config_entry, "device_tracker")
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
 
     hass.data[DOMAIN].pop(config_entry.entry_id)
 
-    return True
+    return unload_ok

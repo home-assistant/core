@@ -15,6 +15,7 @@ from pyprof2calltree import convert
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
@@ -44,8 +45,6 @@ SERVICES = (
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 CONF_SECONDS = "seconds"
-CONF_SCAN_INTERVAL = "scan_interval"
-CONF_TYPE = "type"
 
 LOG_INTERVAL_SUB = "log_interval_subscription"
 
@@ -54,7 +53,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Profiler from a config entry."""
-
     lock = asyncio.Lock()
     domain_data = hass.data[DOMAIN] = {}
 

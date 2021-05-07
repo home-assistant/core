@@ -1,5 +1,4 @@
 """Support for Neato botvac connected vacuum cleaners."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -92,22 +91,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[NEATO_LOGIN] = hub
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigType) -> bool:
     """Unload config entry."""
-    unload_functions = (
-        hass.config_entries.async_forward_entry_unload(entry, platform)
-        for platform in PLATFORMS
-    )
-
-    unload_ok = all(await asyncio.gather(*unload_functions))
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[NEATO_DOMAIN].pop(entry.entry_id)
 

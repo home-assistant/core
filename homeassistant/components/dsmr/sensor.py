@@ -23,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import Throttle
 
 from .const import (
@@ -361,7 +362,7 @@ class DSMREntity(SensorEntity):
         return self._unique_id
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._device_serial)},

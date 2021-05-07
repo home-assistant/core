@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -77,7 +79,7 @@ class FreeboxSensor(SensorEntity):
     """Representation of a Freebox sensor."""
 
     def __init__(
-        self, router: FreeboxRouter, sensor_type: str, sensor: dict[str, any]
+        self, router: FreeboxRouter, sensor_type: str, sensor: dict[str, Any]
     ) -> None:
         """Initialize a Freebox sensor."""
         self._state = None
@@ -129,7 +131,7 @@ class FreeboxSensor(SensorEntity):
         return self._device_class
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return self._router.device_info
 
@@ -160,7 +162,7 @@ class FreeboxCallSensor(FreeboxSensor):
     """Representation of a Freebox call sensor."""
 
     def __init__(
-        self, router: FreeboxRouter, sensor_type: str, sensor: dict[str, any]
+        self, router: FreeboxRouter, sensor_type: str, sensor: dict[str, Any]
     ) -> None:
         """Initialize a Freebox call sensor."""
         super().__init__(router, sensor_type, sensor)
@@ -180,7 +182,7 @@ class FreeboxCallSensor(FreeboxSensor):
         self._state = len(self._call_list_for_type)
 
     @property
-    def extra_state_attributes(self) -> dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {
             dt_util.utc_from_timestamp(call["datetime"]).isoformat(): call["name"]
@@ -194,10 +196,10 @@ class FreeboxDiskSensor(FreeboxSensor):
     def __init__(
         self,
         router: FreeboxRouter,
-        disk: dict[str, any],
-        partition: dict[str, any],
+        disk: dict[str, Any],
+        partition: dict[str, Any],
         sensor_type: str,
-        sensor: dict[str, any],
+        sensor: dict[str, Any],
     ) -> None:
         """Initialize a Freebox disk sensor."""
         super().__init__(router, sensor_type, sensor)
@@ -207,7 +209,7 @@ class FreeboxDiskSensor(FreeboxSensor):
         self._unique_id = f"{self._router.mac} {sensor_type} {self._disk['id']} {self._partition['id']}"
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._disk["id"])},

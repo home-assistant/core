@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-from typing import Callable
 
 from googlemaps import Client
 from googlemaps.distance_matrix import distance_matrix
@@ -14,14 +13,16 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
+    CONF_ENTITY_NAMESPACE,
     CONF_MODE,
     CONF_NAME,
-    EVENT_HOMEASSISTANT_START,
+    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_STARTED,
     TIME_MINUTES,
 )
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -49,7 +50,7 @@ from .const import (
     TRAVEL_MODEL,
     UNITS,
 )
-from .helpers import get_location_from_entity, is_valid_config_entry, resolve_zone
+from .helpers import get_location_from_entity, resolve_zone
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +81,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 }
             ),
         ),
-    }
+        # Remove options to exclude from import
+        vol.Remove(CONF_ENTITY_NAMESPACE): cv.string,
+        vol.Remove(CONF_SCAN_INTERVAL): cv.time_period,
+    },
+    extra=vol.REMOVE_EXTRA,
 )
 
 
@@ -97,14 +102,12 @@ def convert_time_to_utc(timestr):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list[SensorEntity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Google travel time sensor entry."""
-    name = None
     if not config_entry.options:
         new_data = config_entry.data.copy()
         options = new_data.pop(CONF_OPTIONS, {})
-        name = new_data.pop(CONF_NAME, None)
 
         if CONF_UNITS not in options:
             options[CONF_UNITS] = hass.config.units.name
@@ -129,12 +132,7 @@ async def async_setup_entry(
     api_key = config_entry.data[CONF_API_KEY]
     origin = config_entry.data[CONF_ORIGIN]
     destination = config_entry.data[CONF_DESTINATION]
-    name = name or f"{DEFAULT_NAME}: {origin} -> {destination}"
-
-    if not await hass.async_add_executor_job(
-        is_valid_config_entry, hass, _LOGGER, api_key, origin, destination
-    ):
-        raise ConfigEntryNotReady
+    name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
 
     client = Client(api_key, timeout=10)
 
@@ -192,7 +190,7 @@ class GoogleTravelTimeSensor(SensorEntity):
         """Handle when entity is added."""
         if self.hass.state != CoreState.running:
             self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, self.first_update
+                EVENT_HOMEASSISTANT_STARTED, self.first_update
             )
         else:
             await self.first_update()

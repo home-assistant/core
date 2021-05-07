@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from aioazuredevops.client import DevOpsClient
 import aiohttp
@@ -17,10 +16,11 @@ from homeassistant.components.azure_devops.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORMS = ["sensor"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -43,18 +43,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(instance_key, {})[DATA_AZURE_DEVOPS_CLIENT] = client
 
     # Setup components
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigType) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Azure DevOps config entry."""
     del hass.data[f"{DOMAIN}_{entry.data[CONF_ORG]}_{entry.data[CONF_PROJECT]}"]
 
-    return await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class AzureDevOpsEntity(Entity):
@@ -104,7 +102,7 @@ class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
     """Defines a Azure DevOps device entity."""
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this Azure DevOps instance."""
         return {
             "identifiers": {

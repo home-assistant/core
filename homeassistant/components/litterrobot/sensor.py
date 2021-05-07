@@ -1,15 +1,13 @@
 """Support for Litter-Robot sensors."""
 from __future__ import annotations
 
-from typing import Callable
-
 from pylitterbot.robot import Robot
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP, PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import LitterRobotEntity
@@ -83,7 +81,7 @@ ROBOT_SENSORS: list[tuple[type[LitterRobotPropertySensor], str, str]] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot sensors using config entry."""
     hub: LitterRobotHub = hass.data[DOMAIN][entry.entry_id]

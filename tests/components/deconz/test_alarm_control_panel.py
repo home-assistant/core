@@ -7,11 +7,22 @@ from pydeconz.sensor import (
     ANCILLARY_CONTROL_ARMED_NIGHT,
     ANCILLARY_CONTROL_ARMED_STAY,
     ANCILLARY_CONTROL_DISARMED,
+    ANCILLARY_CONTROL_ENTRY_DELAY,
+    ANCILLARY_CONTROL_EXIT_DELAY,
+    ANCILLARY_CONTROL_NOT_READY_TO_ARM,
 )
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
 )
+from homeassistant.components.deconz.alarm_control_panel import (
+    CONF_ALARM_PANEL_STATE,
+    PANEL_ENTRY_DELAY,
+    PANEL_EXIT_DELAY,
+    PANEL_NOT_READY_TO_ARM,
+    SERVICE_ALARM_PANEL_STATE,
+)
+from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_ALARM_ARM_AWAY,
@@ -71,7 +82,7 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 2
     assert hass.states.get("alarm_control_panel.keypad").state == STATE_ALARM_DISARMED
 
     # Event signals alarm control panel armed away
@@ -204,10 +215,53 @@ async def test_alarm_control_panel(hass, aioclient_mock, mock_deconz_websocket):
         "panel": ANCILLARY_CONTROL_DISARMED,
     }
 
+    # Verify entity service calls
+
+    # Service set panel to entry delay
+
+    await hass.services.async_call(
+        DECONZ_DOMAIN,
+        SERVICE_ALARM_PANEL_STATE,
+        {
+            ATTR_ENTITY_ID: "alarm_control_panel.keypad",
+            CONF_ALARM_PANEL_STATE: PANEL_ENTRY_DELAY,
+        },
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[5][2] == {"panel": ANCILLARY_CONTROL_ENTRY_DELAY}
+
+    # Service set panel to exit delay
+
+    await hass.services.async_call(
+        DECONZ_DOMAIN,
+        SERVICE_ALARM_PANEL_STATE,
+        {
+            ATTR_ENTITY_ID: "alarm_control_panel.keypad",
+            CONF_ALARM_PANEL_STATE: PANEL_EXIT_DELAY,
+        },
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[6][2] == {"panel": ANCILLARY_CONTROL_EXIT_DELAY}
+
+    # Service set panel to not ready to arm
+
+    await hass.services.async_call(
+        DECONZ_DOMAIN,
+        SERVICE_ALARM_PANEL_STATE,
+        {
+            ATTR_ENTITY_ID: "alarm_control_panel.keypad",
+            CONF_ALARM_PANEL_STATE: PANEL_NOT_READY_TO_ARM,
+        },
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[7][2] == {
+        "panel": ANCILLARY_CONTROL_NOT_READY_TO_ARM
+    }
+
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     states = hass.states.async_all()
-    assert len(states) == 1
+    assert len(states) == 2
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 

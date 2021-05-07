@@ -80,7 +80,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.getData",
-        side_effect=httpx.HTTPError("any", request=MagicMock()),
+        side_effect=httpx.HTTPError("any"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -130,7 +130,7 @@ async def test_import(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "import"},
+            context={"source": config_entries.SOURCE_IMPORT},
             data={
                 "ip_address": "1.1.1.1",
                 "name": "Pool Envoy",
@@ -156,7 +156,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "zeroconf"},
+        context={"source": config_entries.SOURCE_ZEROCONF},
         data={
             "properties": {"serialnum": "1234"},
             "host": "1.1.1.1",
@@ -253,7 +253,7 @@ async def test_zeroconf_serial_already_exists(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "zeroconf"},
+        context={"source": config_entries.SOURCE_ZEROCONF},
         data={
             "properties": {"serialnum": "1234"},
             "host": "1.1.1.1",
@@ -288,7 +288,7 @@ async def test_zeroconf_host_already_exists(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "zeroconf"},
+            context={"source": config_entries.SOURCE_ZEROCONF},
             data={
                 "properties": {"serialnum": "1234"},
                 "host": "1.1.1.1",

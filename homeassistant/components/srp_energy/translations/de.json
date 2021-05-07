@@ -5,12 +5,15 @@
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_account": "Die Konto-ID sollte eine 9-stellige Nummer sein",
             "invalid_auth": "Ung\u00fcltige Anmeldung",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "user": {
                 "data": {
+                    "id": "Konto-ID",
+                    "is_tou": "Ist Nutzungszeitplan",
                     "password": "Passwort",
                     "username": "Benutzername"
                 }

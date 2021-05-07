@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
-            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen."
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
+            "reauth_successful": "Erneute Authentifizierung war erfolgreich"
         },
         "create_entry": {
             "default": "Erfolgreich authentifiziert"
@@ -10,6 +11,10 @@
         "step": {
             "pick_implementation": {
                 "title": "W\u00e4hle die Authentifizierungsmethode"
+            },
+            "reauth_confirm": {
+                "description": "Die Lyric-Integration muss Ihr Konto neu authentifizieren.",
+                "title": "Integration erneut Authentifizieren"
             }
         }
     }

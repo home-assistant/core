@@ -20,7 +20,6 @@ class AccuWeatherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for AccuWeather."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""

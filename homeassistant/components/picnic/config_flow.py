@@ -1,6 +1,7 @@
 """Config flow for Picnic integration."""
+from __future__ import annotations
+
 import logging
-from typing import Tuple
 
 from python_picnic_api import PicnicAPI
 from python_picnic_api.session import PicnicAuthError
@@ -10,11 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 
-from .const import (  # pylint: disable=unused-import
-    CONF_COUNTRY_CODE,
-    COUNTRY_CODES,
-    DOMAIN,
-)
+from .const import CONF_COUNTRY_CODE, COUNTRY_CODES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +30,7 @@ class PicnicHub:
     """Hub class to test user authentication."""
 
     @staticmethod
-    def authenticate(username, password, country_code) -> Tuple[str, dict]:
+    def authenticate(username, password, country_code) -> tuple[str, dict]:
         """Test if we can authenticate with the Picnic API."""
         picnic = PicnicAPI(username, password, country_code)
         return picnic.session.auth_token, picnic.get_user()
@@ -73,7 +70,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Picnic."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

@@ -101,12 +101,8 @@ class HomematicipHAP:
             "Connected to HomematicIP with HAP %s", self.config_entry.unique_id
         )
 
-        for platform in PLATFORMS:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, platform
-                )
-            )
+        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
+
         return True
 
     @callback
@@ -214,10 +210,9 @@ class HomematicipHAP:
             self._retry_task.cancel()
         await self.home.disable_events()
         _LOGGER.info("Closed connection to HomematicIP cloud server")
-        for platform in PLATFORMS:
-            await self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, platform
-            )
+        await self.hass.config_entries.async_unload_platforms(
+            self.config_entry, PLATFORMS
+        )
         self.hmip_device_by_entity_id = {}
         return True
 

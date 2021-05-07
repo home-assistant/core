@@ -9,6 +9,7 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components.homekit_controller import config_flow
 from homeassistant.helpers import device_registry
 
@@ -177,13 +178,15 @@ async def test_discovery_works(hass, controller, upper_case_props, missing_cshar
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
     )
     assert result["type"] == "form"
     assert result["step_id"] == "pair"
     assert get_flow_context(hass, result) == {
         "hkid": "00:00:00:00:00:00",
-        "source": "zeroconf",
+        "source": config_entries.SOURCE_ZEROCONF,
         "title_placeholders": {"name": "TestDevice"},
         "unique_id": "00:00:00:00:00:00",
     }
@@ -209,13 +212,17 @@ async def test_abort_duplicate_flow(hass, controller):
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
     )
     assert result["type"] == "form"
     assert result["step_id"] == "pair"
 
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_in_progress"
@@ -231,7 +238,9 @@ async def test_pair_already_paired_1(hass, controller):
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_paired"
@@ -247,7 +256,9 @@ async def test_id_missing(hass, controller):
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
     )
     assert result["type"] == "abort"
     assert result["reason"] == "invalid_properties"
@@ -262,7 +273,9 @@ async def test_discovery_ignored_model(hass, controller):
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
     )
     assert result["type"] == "abort"
     assert result["reason"] == "ignored_model"
@@ -287,7 +300,9 @@ async def test_discovery_ignored_hk_bridge(hass, controller):
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
     )
     assert result["type"] == "abort"
     assert result["reason"] == "ignored_model"
@@ -312,7 +327,9 @@ async def test_discovery_does_not_ignore_non_homekit(hass, controller):
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
     )
     assert result["type"] == "form"
 
@@ -333,7 +350,9 @@ async def test_discovery_invalid_config_entry(hass, controller):
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
     )
 
     # Discovery of a HKID that is in a pairable state but for which there is
@@ -362,7 +381,9 @@ async def test_discovery_already_configured(hass, controller):
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -377,7 +398,9 @@ async def test_pair_abort_errors_on_start(hass, controller, exception, expected)
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
     )
 
     # User initiates pairing - device refuses to enter pairing mode
@@ -397,7 +420,9 @@ async def test_pair_try_later_errors_on_start(hass, controller, exception, expec
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
     )
 
     # User initiates pairing - device refuses to enter pairing mode but may be successful after entering pairing mode or rebooting
@@ -432,14 +457,16 @@ async def test_pair_form_errors_on_start(hass, controller, exception, expected):
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
     )
 
     assert get_flow_context(hass, result) == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
         "unique_id": "00:00:00:00:00:00",
-        "source": "zeroconf",
+        "source": config_entries.SOURCE_ZEROCONF,
     }
 
     # User initiates pairing - device refuses to enter pairing mode
@@ -455,7 +482,7 @@ async def test_pair_form_errors_on_start(hass, controller, exception, expected):
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
         "unique_id": "00:00:00:00:00:00",
-        "source": "zeroconf",
+        "source": config_entries.SOURCE_ZEROCONF,
     }
 
     # User gets back the form
@@ -480,14 +507,16 @@ async def test_pair_abort_errors_on_finish(hass, controller, exception, expected
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
     )
 
     assert get_flow_context(hass, result) == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
         "unique_id": "00:00:00:00:00:00",
-        "source": "zeroconf",
+        "source": config_entries.SOURCE_ZEROCONF,
     }
 
     # User initiates pairing - this triggers the device to show a pairing code
@@ -501,7 +530,7 @@ async def test_pair_abort_errors_on_finish(hass, controller, exception, expected
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
         "unique_id": "00:00:00:00:00:00",
-        "source": "zeroconf",
+        "source": config_entries.SOURCE_ZEROCONF,
     }
 
     # User enters pairing code
@@ -520,14 +549,16 @@ async def test_pair_form_errors_on_finish(hass, controller, exception, expected)
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
     )
 
     assert get_flow_context(hass, result) == {
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
         "unique_id": "00:00:00:00:00:00",
-        "source": "zeroconf",
+        "source": config_entries.SOURCE_ZEROCONF,
     }
 
     # User initiates pairing - this triggers the device to show a pairing code
@@ -541,7 +572,7 @@ async def test_pair_form_errors_on_finish(hass, controller, exception, expected)
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
         "unique_id": "00:00:00:00:00:00",
-        "source": "zeroconf",
+        "source": config_entries.SOURCE_ZEROCONF,
     }
 
     # User enters pairing code
@@ -555,7 +586,7 @@ async def test_pair_form_errors_on_finish(hass, controller, exception, expected)
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
         "unique_id": "00:00:00:00:00:00",
-        "source": "zeroconf",
+        "source": config_entries.SOURCE_ZEROCONF,
     }
 
 
@@ -565,13 +596,13 @@ async def test_user_works(hass, controller):
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "user"}
+        "homekit_controller", context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
     assert get_flow_context(hass, result) == {
-        "source": "user",
+        "source": config_entries.SOURCE_USER,
     }
 
     result = await hass.config_entries.flow.async_configure(
@@ -581,7 +612,7 @@ async def test_user_works(hass, controller):
     assert result["step_id"] == "pair"
 
     assert get_flow_context(hass, result) == {
-        "source": "user",
+        "source": config_entries.SOURCE_USER,
         "unique_id": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
     }
@@ -596,7 +627,7 @@ async def test_user_works(hass, controller):
 async def test_user_no_devices(hass, controller):
     """Test user initiated pairing where no devices discovered."""
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "user"}
+        "homekit_controller", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "abort"
     assert result["reason"] == "no_devices"
@@ -612,7 +643,7 @@ async def test_user_no_unpaired_devices(hass, controller):
 
     # Device discovery is requested
     result = await hass.config_entries.flow.async_init(
-        "homekit_controller", context={"source": "user"}
+        "homekit_controller", context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "abort"
@@ -626,7 +657,7 @@ async def test_unignore_works(hass, controller):
     # Device is unignored
     result = await hass.config_entries.flow.async_init(
         "homekit_controller",
-        context={"source": "unignore"},
+        context={"source": config_entries.SOURCE_UNIGNORE},
         data={"unique_id": device.device_id},
     )
     assert result["type"] == "form"
@@ -635,7 +666,7 @@ async def test_unignore_works(hass, controller):
         "hkid": "00:00:00:00:00:00",
         "title_placeholders": {"name": "TestDevice"},
         "unique_id": "00:00:00:00:00:00",
-        "source": "unignore",
+        "source": config_entries.SOURCE_UNIGNORE,
     }
 
     # User initiates pairing by clicking on 'configure' - device enters pairing mode and displays code
@@ -658,7 +689,7 @@ async def test_unignore_ignores_missing_devices(hass, controller):
     # Device is unignored
     result = await hass.config_entries.flow.async_init(
         "homekit_controller",
-        context={"source": "unignore"},
+        context={"source": config_entries.SOURCE_UNIGNORE},
         data={"unique_id": "00:00:00:00:00:01"},
     )
 

@@ -362,12 +362,7 @@ class UniFiController:
         self.wireless_clients = wireless_clients.get_data(self.config_entry)
         self.update_wireless_clients()
 
-        for platform in PLATFORMS:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, platform
-                )
-            )
+        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
         self.api.start_websocket()
 
@@ -452,16 +447,10 @@ class UniFiController:
         """
         self.api.stop_websocket()
 
-        unload_ok = all(
-            await asyncio.gather(
-                *[
-                    self.hass.config_entries.async_forward_entry_unload(
-                        self.config_entry, platform
-                    )
-                    for platform in PLATFORMS
-                ]
-            )
+        unload_ok = await self.hass.config_entries.async_unload_platforms(
+            self.config_entry, PLATFORMS
         )
+
         if not unload_ok:
             return False
 

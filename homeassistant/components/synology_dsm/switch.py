@@ -8,6 +8,7 @@ from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 from homeassistant.components.switch import ToggleEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import SynoApi, SynologyDSMBaseEntity
@@ -96,7 +97,7 @@ class SynoDSMSurveillanceHomeModeToggle(SynologyDSMBaseEntity, ToggleEntity):
         return bool(self._api.surveillance_station)
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
             "identifiers": {

@@ -1,6 +1,6 @@
 """Mock device for testing purposes."""
 
-from typing import Mapping
+from typing import Any, Mapping
 from unittest.mock import AsyncMock
 
 from homeassistant.components.upnp.const import (
@@ -60,7 +60,7 @@ class MockDevice(Device):
         """Get the hostname."""
         return "mock-hostname"
 
-    async def async_get_traffic_data(self) -> Mapping[str, any]:
+    async def async_get_traffic_data(self) -> Mapping[str, Any]:
         """Get traffic data."""
         self.times_polled += 1
         return {

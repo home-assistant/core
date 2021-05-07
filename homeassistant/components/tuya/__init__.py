@@ -1,5 +1,4 @@
 """Support for Tuya Smart devices."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -250,17 +249,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unloading the Tuya platforms."""
     domain_data = hass.data[DOMAIN]
-
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(
-                    entry, platform.split(".", 1)[0]
-                )
-                for platform in domain_data[ENTRY_IS_SETUP]
-            ]
-        )
-    )
+    platforms = [platform.split(".", 1)[0] for platform in domain_data[ENTRY_IS_SETUP]]
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
     if unload_ok:
         domain_data["listener"]()
         domain_data[STOP_CANCEL]()

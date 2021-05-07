@@ -11,7 +11,7 @@ async def test_form(hass):
     """Test user config."""
     # First get the form
     result = await hass.config_entries.flow.async_init(
-        SRP_ENERGY_DOMAIN, context={"source": "user"}
+        SRP_ENERGY_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -40,7 +40,7 @@ async def test_form(hass):
 async def test_form_invalid_auth(hass):
     """Test user config with invalid auth."""
     result = await hass.config_entries.flow.async_init(
-        SRP_ENERGY_DOMAIN, context={"source": "user"}
+        SRP_ENERGY_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
@@ -58,7 +58,7 @@ async def test_form_invalid_auth(hass):
 async def test_form_value_error(hass):
     """Test user config that throws a value error."""
     result = await hass.config_entries.flow.async_init(
-        SRP_ENERGY_DOMAIN, context={"source": "user"}
+        SRP_ENERGY_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
@@ -76,7 +76,7 @@ async def test_form_value_error(hass):
 async def test_form_unknown_exception(hass):
     """Test user config that throws an unknown exception."""
     result = await hass.config_entries.flow.async_init(
-        SRP_ENERGY_DOMAIN, context={"source": "user"}
+        SRP_ENERGY_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
@@ -106,7 +106,7 @@ async def test_integration_already_configured(hass):
     """Test integration is already configured."""
     await init_integration(hass)
     result = await hass.config_entries.flow.async_init(
-        SRP_ENERGY_DOMAIN, context={"source": "user"}
+        SRP_ENERGY_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "single_instance_allowed"

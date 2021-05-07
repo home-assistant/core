@@ -49,7 +49,7 @@ from homeassistant.helpers import (
     discovery,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -143,7 +143,6 @@ class Router:
         factory=lambda: defaultdict(set, ((x, {"initial_scan"}) for x in ALL_KEYS)),
     )
     inflight_gets: set[str] = attr.ib(init=False, factory=set)
-    unload_handlers: list[CALLBACK_TYPE] = attr.ib(init=False, factory=list)
     client: Client
     suspended = attr.ib(init=False, default=False)
     notify_last_attempt: float = attr.ib(init=False, default=-1)
@@ -164,7 +163,7 @@ class Router:
         return DEFAULT_DEVICE_NAME
 
     @property
-    def device_identifiers(self) -> set[tuple[str, str]]:
+    def device_identifiers(self) -> set[tuple[str, ...]]:
         """Get router identifiers for device registry."""
         try:
             return {(DOMAIN, self.data[KEY_DEVICE_INFORMATION]["SerialNumber"])}
@@ -292,10 +291,6 @@ class Router:
 
         self.subscriptions.clear()
 
-        for handler in self.unload_handlers:
-            handler()
-        self.unload_handlers.clear()
-
         self.logout()
 
 
@@ -420,10 +415,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     # Forward config entry setup to platforms
-    for domain in CONFIG_ENTRY_PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, domain)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, CONFIG_ENTRY_PLATFORMS)
+
     # Notify doesn't support config entry setup yet, load with discovery for now
     await discovery.async_load_platform(
         hass,
@@ -446,7 +439,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         router.update()
 
     # Set up periodic update
-    router.unload_handlers.append(
+    config_entry.async_on_unload(
         async_track_time_interval(hass, _update_router, SCAN_INTERVAL)
     )
 
@@ -462,8 +455,9 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload config entry."""
 
     # Forward config entry unload to platforms
-    for domain in CONFIG_ENTRY_PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, domain)
+    await hass.config_entries.async_unload_platforms(
+        config_entry, CONFIG_ENTRY_PLATFORMS
+    )
 
     # Forget about the router and invoke its cleanup
     router = hass.data[DOMAIN].routers.pop(config_entry.data[CONF_URL])
@@ -606,7 +600,7 @@ class HuaweiLteBaseEntity(Entity):
         return False
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Get info for matching with parent router."""
         return {
             "identifiers": self.router.device_identifiers,

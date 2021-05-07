@@ -216,7 +216,6 @@ class RenderInfo:
         self.exception: TemplateError | None = None
         self.all_states = False
         self.all_states_lifecycle = False
-        # pylint: disable=unsubscriptable-object  # for abc.Set, https://github.com/PyCQA/pylint/pull/4275
         self.domains: collections.abc.Set[str] = set()
         self.domains_lifecycle: collections.abc.Set[str] = set()
         self.entities: collections.abc.Set[str] = set()

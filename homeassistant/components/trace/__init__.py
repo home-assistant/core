@@ -6,7 +6,10 @@ import datetime as dt
 from itertools import count
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.core import Context
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.trace import (
     TraceElement,
     script_execution_get,
@@ -17,10 +20,14 @@ from homeassistant.helpers.trace import (
 import homeassistant.util.dt as dt_util
 
 from . import websocket_api
-from .const import DATA_TRACE, STORED_TRACES
+from .const import CONF_STORED_TRACES, DATA_TRACE, DEFAULT_STORED_TRACES
 from .utils import LimitedSizeDict
 
 DOMAIN = "trace"
+
+TRACE_CONFIG_SCHEMA = {
+    vol.Optional(CONF_STORED_TRACES, default=DEFAULT_STORED_TRACES): cv.positive_int
+}
 
 
 async def async_setup(hass, config):
@@ -30,18 +37,20 @@ async def async_setup(hass, config):
     return True
 
 
-def async_store_trace(hass, trace):
+def async_store_trace(hass, trace, stored_traces):
     """Store a trace if its item_id is valid."""
     key = trace.key
     if key[1]:
         traces = hass.data[DATA_TRACE]
         if key not in traces:
-            traces[key] = LimitedSizeDict(size_limit=STORED_TRACES)
+            traces[key] = LimitedSizeDict(size_limit=stored_traces)
+        else:
+            traces[key].size_limit = stored_traces
         traces[key][trace.run_id] = trace
 
 
 class ActionTrace:
-    """Base container for an script or automation trace."""
+    """Base container for a script or automation trace."""
 
     _run_ids = count(0)
 

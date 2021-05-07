@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.totalconnect.const import CONF_LOCATION, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD
 
 from .common import (
@@ -133,7 +133,7 @@ async def test_reauth(hass):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=entry.data
+        DOMAIN, context={"source": SOURCE_REAUTH}, data=entry.data
     )
     assert result["step_id"] == "reauth_confirm"
 

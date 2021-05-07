@@ -11,12 +11,12 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_URL
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FILE = "config"
-CONF_URL = "url"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

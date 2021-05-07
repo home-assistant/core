@@ -28,23 +28,17 @@ async def async_setup_entry(hass, config_entry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass, config_entry) -> bool:
     """Unload Awair configuration."""
-    tasks = []
-    for platform in PLATFORMS:
-        tasks.append(
-            hass.config_entries.async_forward_entry_unload(config_entry, platform)
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
 
-    unload_ok = all(await gather(*tasks))
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
