@@ -579,7 +579,7 @@ onvif-zeep-async==1.0.0
 openerz-api==0.1.0
 
 # homeassistant.components.ovo_energy
-ovoenergy==1.1.11
+ovoenergy==1.1.12
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
