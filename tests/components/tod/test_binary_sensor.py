@@ -869,21 +869,20 @@ async def test_dst(hass):
             {"platform": "tod", "name": "Day", "after": "2:30", "before": "2:40"}
         ]
     }
+    # Test DST:
     # after 2019-03-30 03:00 CET the next update should ge scheduled
     # at 3:30 not 2:30 local time
-    # Internally the
     entity_id = "binary_sensor.day"
-    testtime = test_time
     with patch(
         "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
-        return_value=testtime,
+        return_value=test_time,
     ):
         await async_setup_component(hass, "binary_sensor", config)
         await hass.async_block_till_done()
 
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
-        assert state.attributes["after"] == "2019-03-31T03:30:00+02:00"
-        assert state.attributes["before"] == "2019-03-31T03:40:00+02:00"
-        assert state.attributes["next_update"] == "2019-03-31T03:30:00+02:00"
+        assert state.attributes["after"] == "2019-03-30T03:30:00+01:00"
+        assert state.attributes["before"] == "2019-03-30T03:40:00+01:00"
+        assert state.attributes["next_update"] == "2019-03-30T03:30:00+01:00"
         assert state.state == STATE_OFF
