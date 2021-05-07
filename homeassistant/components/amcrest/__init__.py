@@ -83,7 +83,7 @@ def _has_unique_names(devices):
 
 AMCREST_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_HOST): cv.string,50264
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -281,7 +281,7 @@ def setup(hass, config):
 
         disable_events = device.get(CONF_DISABLE_EVENTS)
         if not disable_events:
-            _start_event_monitor(hass, name, api, event_codes
+            _start_event_monitor(hass, name, api, event_codes)
 
         if sensors:
             discovery.load_platform(
