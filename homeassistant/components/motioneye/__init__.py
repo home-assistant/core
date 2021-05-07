@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from typing import Any, Callable
+from urllib.parse import urlencode
 
 from aiohttp import web
 from motioneye_client.client import (
@@ -17,24 +18,6 @@ from motioneye_client.const import (
     KEY_ID,
     KEY_NAME,
     KEY_WEB_HOOK_CONVERSION_SPECIFIERS,
-    KEY_WEB_HOOK_CS_CAMERA_ID,
-    KEY_WEB_HOOK_CS_CHANGED_PIXELS,
-    KEY_WEB_HOOK_CS_DESPECKLE_LABELS,
-    KEY_WEB_HOOK_CS_EVENT,
-    KEY_WEB_HOOK_CS_FILE_PATH,
-    KEY_WEB_HOOK_CS_FILE_TYPE,
-    KEY_WEB_HOOK_CS_FPS,
-    KEY_WEB_HOOK_CS_FRAME_NUMBER,
-    KEY_WEB_HOOK_CS_HEIGHT,
-    KEY_WEB_HOOK_CS_HOST,
-    KEY_WEB_HOOK_CS_MOTION_CENTER_X,
-    KEY_WEB_HOOK_CS_MOTION_CENTER_Y,
-    KEY_WEB_HOOK_CS_MOTION_HEIGHT,
-    KEY_WEB_HOOK_CS_MOTION_VERSION,
-    KEY_WEB_HOOK_CS_MOTION_WIDTH,
-    KEY_WEB_HOOK_CS_NOISE_LEVEL,
-    KEY_WEB_HOOK_CS_THRESHOLD,
-    KEY_WEB_HOOK_CS_WIDTH,
     KEY_WEB_HOOK_NOTIFICATIONS_ENABLED,
     KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD,
     KEY_WEB_HOOK_NOTIFICATIONS_URL,
@@ -56,6 +39,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -74,50 +58,17 @@ from .const import (
     DEFAULT_WEBHOOK_SET_OVERWRITE,
     DOMAIN,
     EVENT_FILE_STORED,
+    EVENT_FILE_STORED_KEYS,
     EVENT_MOTION_DETECTED,
+    EVENT_MOTION_DETECTED_KEYS,
     MOTIONEYE_MANUFACTURER,
     SIGNAL_CAMERA_ADD,
+    WEB_HOOK_SENTINEL_KEY,
+    WEB_HOOK_SENTINEL_VALUE,
 )
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [CAMERA_DOMAIN]
-
-EVENT_MOTION_DETECTED_KEYS = [
-    KEY_WEB_HOOK_CS_EVENT,
-    KEY_WEB_HOOK_CS_FRAME_NUMBER,
-    KEY_WEB_HOOK_CS_CAMERA_ID,
-    KEY_WEB_HOOK_CS_CHANGED_PIXELS,
-    KEY_WEB_HOOK_CS_NOISE_LEVEL,
-    KEY_WEB_HOOK_CS_WIDTH,
-    KEY_WEB_HOOK_CS_HEIGHT,
-    KEY_WEB_HOOK_CS_MOTION_WIDTH,
-    KEY_WEB_HOOK_CS_MOTION_HEIGHT,
-    KEY_WEB_HOOK_CS_MOTION_CENTER_X,
-    KEY_WEB_HOOK_CS_MOTION_CENTER_Y,
-    KEY_WEB_HOOK_CS_THRESHOLD,
-    KEY_WEB_HOOK_CS_DESPECKLE_LABELS,
-    KEY_WEB_HOOK_CS_FPS,
-    KEY_WEB_HOOK_CS_HOST,
-    KEY_WEB_HOOK_CS_MOTION_VERSION,
-]
-
-EVENT_FILE_STORED_KEYS = [
-    KEY_WEB_HOOK_CS_EVENT,
-    KEY_WEB_HOOK_CS_FRAME_NUMBER,
-    KEY_WEB_HOOK_CS_CAMERA_ID,
-    KEY_WEB_HOOK_CS_NOISE_LEVEL,
-    KEY_WEB_HOOK_CS_WIDTH,
-    KEY_WEB_HOOK_CS_HEIGHT,
-    KEY_WEB_HOOK_CS_FILE_PATH,
-    KEY_WEB_HOOK_CS_FILE_TYPE,
-    KEY_WEB_HOOK_CS_THRESHOLD,
-    KEY_WEB_HOOK_CS_FPS,
-    KEY_WEB_HOOK_CS_HOST,
-    KEY_WEB_HOOK_CS_MOTION_VERSION,
-]
-
-HASS_MOTIONEYE_WEB_HOOK_SENTINEL_KEY = "src"
-HASS_MOTIONEYE_WEB_HOOK_SENTINEL_VALUE = "hass-motioneye"
 
 
 def create_motioneye_client(
@@ -175,7 +126,7 @@ def listen_for_new_cameras(
     )
 
 
-async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the motionEye component."""
     hass.http.register_view(MotionEyeView())
     return True
@@ -195,10 +146,7 @@ def _add_camera(
 
     def _is_recognized_web_hook(url: str) -> bool:
         """Determine whether this integration set a web hook."""
-        return (
-            f"{HASS_MOTIONEYE_WEB_HOOK_SENTINEL_KEY}={HASS_MOTIONEYE_WEB_HOOK_SENTINEL_VALUE}"
-            in url
-        )
+        return f"{WEB_HOOK_SENTINEL_KEY}={WEB_HOOK_SENTINEL_VALUE}" in url
 
     def _set_webhook(
         url: str,
@@ -232,11 +180,13 @@ def _add_camera(
         return (
             base
             + "?"
-            + "&".join(
-                [f"{k}={KEY_WEB_HOOK_CONVERSION_SPECIFIERS[k]}" for k in sorted(keys)]
+            + urlencode(
+                {
+                    **{k: KEY_WEB_HOOK_CONVERSION_SPECIFIERS[k] for k in sorted(keys)},
+                    WEB_HOOK_SENTINEL_KEY: WEB_HOOK_SENTINEL_VALUE,
+                },
+                safe="%{}",
             )
-            + f"&{HASS_MOTIONEYE_WEB_HOOK_SENTINEL_KEY}"
-            + f"={HASS_MOTIONEYE_WEB_HOOK_SENTINEL_VALUE}"
         )
 
     device = device_registry.async_get_or_create(
