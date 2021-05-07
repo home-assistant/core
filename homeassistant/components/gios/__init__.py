@@ -52,7 +52,7 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator):
         """Update data via library."""
         try:
             with timeout(30):
-                data = await self.gios.async_update()
+                return await self.gios.async_update()
         except (
             ApiError,
             NoStationError,
@@ -60,4 +60,3 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator):
             InvalidSensorsData,
         ) as error:
             raise UpdateFailed(error) from error
-        return data
