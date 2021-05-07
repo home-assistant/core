@@ -684,7 +684,10 @@ class TestMediaPlayer(unittest.TestCase):
     def test_overrides(self):
         """Test overrides."""
         config = copy(self.config_children_and_attr)
-        excmd = {"service": "media_player.test", "data": {"entity_id": "media_player.overridden"}}
+        excmd = {
+            "service": "media_player.test",
+            "data": {"entity_id": "media_player.overridden"},
+        }
         config["commands"] = {
             "turn_on": excmd,
             "turn_off": excmd,
