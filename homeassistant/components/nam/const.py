@@ -16,6 +16,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 
+from .model import SensorDescription
+
 DEFAULT_NAME: Final = "Nettigo Air Monitor"
 DEFAULT_UPDATE_INTERVAL: Final = timedelta(minutes=6)
 DOMAIN: Final = "nam"
@@ -26,103 +28,103 @@ SUFFIX_P2: Final = "_p2"
 
 AIR_QUALITY_SENSORS: Final[dict[str, str]] = {"sds": "SDS011", "sps30": "SPS30"}
 
-SENSORS: Final[dict[str, tuple[str, str, str | None, str | None, bool]]] = {
-    "bme280_humidity": (
-        f"{DEFAULT_NAME} BME280 Humidity",
-        PERCENTAGE,
-        DEVICE_CLASS_HUMIDITY,
-        None,
-        True,
-    ),
-    "bme280_pressure": (
-        f"{DEFAULT_NAME} BME280 Pressure",
-        PRESSURE_HPA,
-        DEVICE_CLASS_PRESSURE,
-        None,
-        True,
-    ),
-    "bme280_temperature": (
-        f"{DEFAULT_NAME} BME280 Temperature",
-        TEMP_CELSIUS,
-        DEVICE_CLASS_TEMPERATURE,
-        None,
-        True,
-    ),
-    "bmp280_pressure": (
-        f"{DEFAULT_NAME} BMP280 Pressure",
-        PRESSURE_HPA,
-        DEVICE_CLASS_PRESSURE,
-        None,
-        True,
-    ),
-    "bmp280_temperature": (
-        f"{DEFAULT_NAME} BMP280 Temperature",
-        TEMP_CELSIUS,
-        DEVICE_CLASS_TEMPERATURE,
-        None,
-        True,
-    ),
-    "heca_humidity": (
-        f"{DEFAULT_NAME} HECA Humidity",
-        PERCENTAGE,
-        DEVICE_CLASS_HUMIDITY,
-        None,
-        True,
-    ),
-    "heca_temperature": (
-        f"{DEFAULT_NAME} HECA Temperature",
-        TEMP_CELSIUS,
-        DEVICE_CLASS_TEMPERATURE,
-        None,
-        True,
-    ),
-    "sht3x_humidity": (
-        f"{DEFAULT_NAME} SHT3X Humidity",
-        PERCENTAGE,
-        DEVICE_CLASS_HUMIDITY,
-        None,
-        True,
-    ),
-    "sht3x_temperature": (
-        f"{DEFAULT_NAME} SHT3X Temperature",
-        TEMP_CELSIUS,
-        DEVICE_CLASS_TEMPERATURE,
-        None,
-        True,
-    ),
-    "sps30_p0": (
-        f"{DEFAULT_NAME} SPS30 Particulate Matter 1.0",
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        None,
-        "mdi:blur",
-        True,
-    ),
-    "sps30_p4": (
-        f"{DEFAULT_NAME} SPS30 Particulate Matter 4.0",
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        None,
-        "mdi:blur",
-        True,
-    ),
-    "humidity": (
-        f"{DEFAULT_NAME} DHT22 Humidity",
-        PERCENTAGE,
-        DEVICE_CLASS_HUMIDITY,
-        None,
-        True,
-    ),
-    "signal": (
-        f"{DEFAULT_NAME} Signal Strength",
-        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        DEVICE_CLASS_SIGNAL_STRENGTH,
-        None,
-        False,
-    ),
-    "temperature": (
-        f"{DEFAULT_NAME} DHT22 Temperature",
-        TEMP_CELSIUS,
-        DEVICE_CLASS_TEMPERATURE,
-        None,
-        True,
-    ),
+SENSORS: Final[dict[str, SensorDescription]] = {
+    "bme280_humidity": {
+        "label": f"{DEFAULT_NAME} BME280 Humidity",
+        "unit": PERCENTAGE,
+        "device_class": DEVICE_CLASS_HUMIDITY,
+        "icon": None,
+        "enabled": True,
+    },
+    "bme280_pressure": {
+        "label": f"{DEFAULT_NAME} BME280 Pressure",
+        "unit": PRESSURE_HPA,
+        "device_class": DEVICE_CLASS_PRESSURE,
+        "icon": None,
+        "enabled": True,
+    },
+    "bme280_temperature": {
+        "label": f"{DEFAULT_NAME} BME280 Temperature",
+        "unit": TEMP_CELSIUS,
+        "device_class": DEVICE_CLASS_TEMPERATURE,
+        "icon": None,
+        "enabled": True,
+    },
+    "bmp280_pressure": {
+        "label": f"{DEFAULT_NAME} BMP280 Pressure",
+        "unit": PRESSURE_HPA,
+        "device_class": DEVICE_CLASS_PRESSURE,
+        "icon": None,
+        "enabled": True,
+    },
+    "bmp280_temperature": {
+        "label": f"{DEFAULT_NAME} BMP280 Temperature",
+        "unit": TEMP_CELSIUS,
+        "device_class": DEVICE_CLASS_TEMPERATURE,
+        "icon": None,
+        "enabled": True,
+    },
+    "heca_humidity": {
+        "label": f"{DEFAULT_NAME} HECA Humidity",
+        "unit": PERCENTAGE,
+        "device_class": DEVICE_CLASS_HUMIDITY,
+        "icon": None,
+        "enabled": True,
+    },
+    "heca_temperature": {
+        "label": f"{DEFAULT_NAME} HECA Temperature",
+        "unit": TEMP_CELSIUS,
+        "device_class": DEVICE_CLASS_TEMPERATURE,
+        "icon": None,
+        "enabled": True,
+    },
+    "sht3x_humidity": {
+        "label": f"{DEFAULT_NAME} SHT3X Humidity",
+        "unit": PERCENTAGE,
+        "device_class": DEVICE_CLASS_HUMIDITY,
+        "icon": None,
+        "enabled": True,
+    },
+    "sht3x_temperature": {
+        "label": f"{DEFAULT_NAME} SHT3X Temperature",
+        "unit": TEMP_CELSIUS,
+        "device_class": DEVICE_CLASS_TEMPERATURE,
+        "icon": None,
+        "enabled": True,
+    },
+    "sps30_p0": {
+        "label": f"{DEFAULT_NAME} SPS30 Particulate Matter 1.0",
+        "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        "device_class": None,
+        "icon": "mdi:blur",
+        "enabled": True,
+    },
+    "sps30_p4": {
+        "label": f"{DEFAULT_NAME} SPS30 Particulate Matter 4.0",
+        "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        "device_class": None,
+        "icon": "mdi:blur",
+        "enabled": True,
+    },
+    "humidity": {
+        "label": f"{DEFAULT_NAME} DHT22 Humidity",
+        "unit": PERCENTAGE,
+        "device_class": DEVICE_CLASS_HUMIDITY,
+        "icon": None,
+        "enabled": True,
+    },
+    "signal": {
+        "label": f"{DEFAULT_NAME} Signal Strength",
+        "unit": SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        "device_class": DEVICE_CLASS_SIGNAL_STRENGTH,
+        "icon": None,
+        "enabled": False,
+    },
+    "temperature": {
+        "label": f"{DEFAULT_NAME} DHT22 Temperature",
+        "unit": TEMP_CELSIUS,
+        "device_class": DEVICE_CLASS_TEMPERATURE,
+        "icon": None,
+        "enabled": True,
+    },
 }

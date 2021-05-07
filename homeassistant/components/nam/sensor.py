@@ -39,11 +39,12 @@ class NAMSensor(CoordinatorEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
         self.sensor_type = sensor_type
+        self._description = SENSORS[self.sensor_type]
 
     @property
     def name(self) -> str:
         """Return the name."""
-        return SENSORS[self.sensor_type][0]
+        return self._description["label"]
 
     @property
     def state(self) -> Any:
@@ -53,22 +54,22 @@ class NAMSensor(CoordinatorEntity, SensorEntity):
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
-        return SENSORS[self.sensor_type][1]
+        return self._description["unit"]
 
     @property
     def device_class(self) -> str | None:
         """Return the class of this sensor."""
-        return SENSORS[self.sensor_type][2]
+        return self._description["device_class"]
 
     @property
     def icon(self) -> str | None:
         """Return the icon."""
-        return SENSORS[self.sensor_type][3]
+        return self._description["icon"]
 
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return SENSORS[self.sensor_type][4]
+        return self._description["enabled"]
 
     @property
     def unique_id(self) -> str:
