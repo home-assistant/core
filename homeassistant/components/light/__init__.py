@@ -343,7 +343,7 @@ async def async_setup(hass, config):  # noqa: C901
             rgb_color = params.pop(ATTR_RGB_COLOR)
             if COLOR_MODE_RGBW in supported_color_modes:
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
-            if COLOR_MODE_RGBWW in supported_color_modes:
+            elif COLOR_MODE_RGBWW in supported_color_modes:
                 params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
                     *rgb_color, light.min_mireds, light.max_mireds
                 )
