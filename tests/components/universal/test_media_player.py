@@ -713,7 +713,7 @@ class TestMediaPlayer(unittest.TestCase):
         }
         setup_component(self.hass, "media_player", config)
 
-        service = mock_service(self.hass, "media_player", "test")
+        service = mock_service(self.hass, "media_player", "overridden")
         self.hass.services.call(
             "media_player",
             "turn_on",
