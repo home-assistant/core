@@ -99,7 +99,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
     @property
     def icon(self):
         """Return icon."""
-        return self._sensor_type[SENSOR_ICON]
+        return self._sensor_data[SENSOR_ICON]
 
     @property
     def unique_id(self):
