@@ -26,9 +26,12 @@ TEMPERATURE_NAME_FORMAT = "{} temperature"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer sensor setup to the shared sensor module."""
-    await hass.data[HUE_DOMAIN][
-        config_entry.entry_id
-    ].sensor_manager.async_register_component("sensor", async_add_entities)
+    bridge = hass.data[HUE_DOMAIN][config_entry.entry_id]
+
+    if not bridge.sensor_manager:
+        return
+
+    await bridge.sensor_manager.async_register_component("sensor", async_add_entities)
 
 
 class GenericHueGaugeSensorEntity(GenericZLLSensor, SensorEntity):

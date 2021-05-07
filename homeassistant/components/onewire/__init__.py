@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     except CannotConnect as exc:
         raise ConfigEntryNotReady() from exc
 
-    hass.data[DOMAIN][config_entry.unique_id] = onewirehub
+    hass.data[DOMAIN][config_entry.entry_id] = onewirehub
 
     async def cleanup_registry() -> None:
         # Get registries
@@ -71,5 +71,5 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         config_entry, PLATFORMS
     )
     if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.unique_id)
+        hass.data[DOMAIN].pop(config_entry.entry_id)
     return unload_ok

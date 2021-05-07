@@ -651,8 +651,5 @@ def get_all_home_ids(home_data: pyatmo.HomeData) -> list[str]:
     return [
         home_data.homes[home_id]["id"]
         for home_id in home_data.homes
-        if (
-            "therm_schedules" in home_data.homes[home_id]
-            and "modules" in home_data.homes[home_id]
-        )
+        if "modules" in home_data.homes[home_id]
     ]
