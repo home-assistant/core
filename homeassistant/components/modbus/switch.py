@@ -70,6 +70,8 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
             self._command_on = config[CONF_COMMAND_ON]
             self._command_off = config[CONF_COMMAND_OFF]
         if CONF_VERIFY in config:
+            if config[CONF_VERIFY] is None:
+                config[CONF_VERIFY] = {}
             self._verify_active = True
             self._verify_address = config[CONF_VERIFY].get(
                 CONF_ADDRESS, config[CONF_ADDRESS]
