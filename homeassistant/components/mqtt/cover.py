@@ -253,7 +253,7 @@ class MqttCover(MqttEntity, CoverEntity):
         if tilt_status_template is not None:
             tilt_status_template.hass = self.hass
 
-    def _tilt_message_received(self, payload):
+    def _tilt_payload_received(self, payload):
         """Set the tilt value."""
         if type(payload) in [int, float] or payload.isnumeric():
             if (
@@ -316,7 +316,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 payload = template.async_render_with_possible_json_value(
                     payload, variables=variables
                 )
-            self._tilt_message_received(payload)
+            self._tilt_payload_received(payload)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -400,7 +400,7 @@ class MqttCover(MqttEntity, CoverEntity):
                         if not self._config.get(CONF_TILT_STATE_OPTIMISTIC):
                             # reset forced set tilt optimistic
                             self._tilt_optimistic = False
-                        self._tilt_message_received(payload["tilt_position"])
+                        self._tilt_payload_received(payload["tilt_position"])
                     payload = payload["position"]
 
             self._position_message_received(payload)
