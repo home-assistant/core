@@ -126,7 +126,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             raise UpdateFailed(f"Invalid response from API: {error}") from error
 
 
-class WLEDEntity(CoordinatorEntity[WLEDDevice]):
+class WLEDEntity(CoordinatorEntity):
     """Defines a base WLED entity."""
 
     coordinator: WLEDDataUpdateCoordinator
