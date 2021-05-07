@@ -13,14 +13,25 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
 from .common import FritzBoxBaseEntity, FritzBoxTools
-from .const import DOMAIN
+from .const import DOMAIN, UPTIME_DEVIATION
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def _retrieve_uptime_state(status, last_value):
     """Return uptime from device."""
-    return get_device_uptime(status.uptime, last_value)
+    delta_uptime = utcnow() - datetime.timedelta(seconds=status.uptime)
+
+    if (
+        not last_value
+        or abs(
+            (delta_uptime - datetime.datetime.fromisoformat(last_value)).total_seconds()
+        )
+        > UPTIME_DEVIATION
+    ):
+        return delta_uptime.replace(microsecond=0).isoformat()
+
+    return last_value
 
 
 def _retrieve_external_ip_state(status, last_value):
@@ -52,18 +63,15 @@ async def async_setup_entry(
     _LOGGER.debug("Setting up FRITZ!Box sensors")
     fritzbox_tools = hass.data[DOMAIN][entry.entry_id]
 
-    if "WANIPConn1" in fritzbox_tools.connection.services:
+    if "WANIPConn1" not in fritzbox_tools.connection.services:
         # Only routers are supported at the moment
+        return
 
-        for sensor_type in SENSOR_TYPES_FRITZ:
-            async_add_entities(
-                [
-                    FritzBoxSensor(
-                        fritzbox_tools, entry.title, sensor_type
-                    )
-                ],
-                True,
-            )
+    for sensor_type in SENSOR_DATA:
+        async_add_entities(
+            [FritzBoxSensor(fritzbox_tools, entry.title, sensor_type)],
+            True,
+        )
 
 
 class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
@@ -73,9 +81,9 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
         self, fritzbox_tools: FritzBoxTools, device_friendlyname: str, sensor_type: str
     ) -> None:
         """Init FRITZ!Box connectivity class."""
-        self._sensor_data = SENSOR_TYPES_FRITZ[sensor_type]
+        self._sensor_data = SENSOR_DATA[sensor_type]
         self._unique_id = f"{fritzbox_tools.unique_id}-{sensor_type}"
-        self._name = f"{device_friendlyname} {self._sensor_type[SENSOR_NAME]}"
+        self._name = f"{device_friendlyname} {self._sensor_data[SENSOR_NAME]}"
         self._is_available = True
         self._last_value: str | None = None
         self._state: str | None = None
@@ -131,21 +139,3 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
         except FritzConnectionException:
             _LOGGER.error("Error getting the state from the FRITZ!Box", exc_info=True)
             self._is_available = False
-
-
-def get_device_uptime(uptime: int, last_uptime: str | None) -> str:
-    """Return device uptime string, tolerate up to 5 seconds deviation."""
-    delta_uptime = utcnow() - datetime.timedelta(seconds=uptime)
-
-    if (
-        not last_uptime
-        or abs(
-            (
-                delta_uptime - datetime.datetime.fromisoformat(last_uptime)
-            ).total_seconds()
-        )
-        > 5
-    ):
-        return delta_uptime.replace(microsecond=0).isoformat()
-
-    return last_uptime
