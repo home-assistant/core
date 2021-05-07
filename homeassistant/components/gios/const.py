@@ -20,6 +20,14 @@ SCAN_INTERVAL = timedelta(minutes=30)
 DOMAIN = "gios"
 MANUFACTURER = "Główny Inspektorat Ochrony Środowiska"
 
+API_AQI = "aqi"
+API_CO = "co"
+API_NO2 = "no2"
+API_O3 = "o3"
+API_PM10 = "pm10"
+API_PM25 = "pm2.5"
+API_SO2 = "so2"
+
 AQI_GOOD = "dobry"
 AQI_MODERATE = "umiarkowany"
 AQI_POOR = "dostateczny"
@@ -35,10 +43,10 @@ ICONS_MAP = {
 }
 
 SENSOR_MAP = {
-    "co": ATTR_CO,
-    "no2": ATTR_NO2,
-    "o3": ATTR_OZONE,
-    "pm10": ATTR_PM_10,
-    "pm2.5": ATTR_PM_2_5,
-    "so2": ATTR_SO2,
+    API_CO: ATTR_CO,
+    API_NO2: ATTR_NO2,
+    API_O3: ATTR_OZONE,
+    API_PM10: ATTR_PM_10,
+    API_PM25: ATTR_PM_2_5,
+    API_SO2: ATTR_SO2,
 }

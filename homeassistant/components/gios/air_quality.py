@@ -4,6 +4,13 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    API_AQI,
+    API_CO,
+    API_NO2,
+    API_O3,
+    API_PM10,
+    API_PM25,
+    API_SO2,
     ATTR_STATION,
     ATTRIBUTION,
     DEFAULT_NAME,
@@ -61,43 +68,43 @@ class GiosAirQuality(CoordinatorEntity, AirQualityEntity):
     @property
     def air_quality_index(self):
         """Return the air quality index."""
-        return self._get_sensor_value("aqi")
+        return self._get_sensor_value(API_AQI)
 
     @property
     @round_state
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
-        return self._get_sensor_value("pm2.5")
+        return self._get_sensor_value(API_PM25)
 
     @property
     @round_state
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
-        return self._get_sensor_value("pm10")
+        return self._get_sensor_value(API_PM10)
 
     @property
     @round_state
     def ozone(self):
         """Return the O3 (ozone) level."""
-        return self._get_sensor_value("o3")
+        return self._get_sensor_value(API_O3)
 
     @property
     @round_state
     def carbon_monoxide(self):
         """Return the CO (carbon monoxide) level."""
-        return self._get_sensor_value("co")
+        return self._get_sensor_value(API_CO)
 
     @property
     @round_state
     def sulphur_dioxide(self):
         """Return the SO2 (sulphur dioxide) level."""
-        return self._get_sensor_value("so2")
+        return self._get_sensor_value(API_SO2)
 
     @property
     @round_state
     def nitrogen_dioxide(self):
         """Return the NO2 (nitrogen dioxide) level."""
-        return self._get_sensor_value("no2")
+        return self._get_sensor_value(API_NO2)
 
     @property
     def attribution(self):
