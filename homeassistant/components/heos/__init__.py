@@ -28,6 +28,7 @@ from .const import (
     DOMAIN,
     SIGNAL_HEOS_UPDATED,
 )
+from .media_player import HeosMediaPlayer
 
 PLATFORMS = [MEDIA_PLAYER_DOMAIN]
 
@@ -125,9 +126,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     services.register(hass, controller)
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, MEDIA_PLAYER_DOMAIN)
-    )
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     # Update group membership when platform setup is completed
     group_manager.connect_update()
@@ -232,15 +230,14 @@ class ControllerManager:
 class GroupManager:
     """Class that manages HEOS groups."""
 
-    def __init__(self, hass, controller) -> None:
+    def __init__(self, hass, controller):
+        """Init group manager."""
         self._hass = hass
         self._group_membership = {}
         self.controller = controller
 
     def _get_heos_entities_to_ids(self) -> dict:
         """Return a dictionary which maps all HEOS entity ids to HEOS player ids."""
-        from .media_player import HeosMediaPlayer
-
         if MEDIA_PLAYER_DOMAIN not in self._hass.data:
             return {}
 
@@ -254,7 +251,7 @@ class GroupManager:
         """Return a dictionary which maps all HEOS player ids to entity ids."""
         return {v: k for k, v in self._get_heos_entities_to_ids().items()}
 
-    async def async_get_group_membership(self) -> dict:
+    async def async_get_group_membership(self):
         """Return a dictionary which contains all group members for each player as entity_ids."""
         player_id_map = self._get_heos_entities_to_ids()
         group_info_by_player = {player_entity: [] for player_entity in player_id_map}
@@ -282,6 +279,7 @@ class GroupManager:
         return group_info_by_player
 
     async def async_join_players(self, leader_entity: str, member_entities: list):
+        """Create a group with `leader_entity` as group leader and `member_entities` as member players."""
         player_id_map = self._get_heos_entities_to_ids()
         leader_id = player_id_map.get(leader_entity)
         member_ids = [player_id_map.get(member) for member in member_entities]
@@ -307,6 +305,7 @@ class GroupManager:
             )
 
     async def async_update_groups(self, event, data=None):
+        """Update the group membership from the controller."""
         if event in (
             heos_const.EVENT_GROUPS_CHANGED,
             heos_const.EVENT_CONNECTED,
@@ -330,11 +329,12 @@ class GroupManager:
         )
 
     def force_update_groups(self):
+        """Update group membership, regardless of any HEOS event."""
         self._hass.add_job(self.async_update_groups, heos_const.EVENT_GROUPS_CHANGED)
 
     @property
     def group_membership(self):
-        """This is the "API" that player entities use."""
+        """Provide access to group members for player entities."""
         return self._group_membership
 
 
