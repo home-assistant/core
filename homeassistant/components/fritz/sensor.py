@@ -59,7 +59,7 @@ async def async_setup_entry(
             async_add_entities(
                 [
                     FritzBoxSensor(
-                        fritzbox_tools, entry.title, SENSOR_TYPES_FRITZ[sensor_type]
+                        fritzbox_tools, entry.title, sensor_type
                     )
                 ],
                 True,
