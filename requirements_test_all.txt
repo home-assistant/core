@@ -932,6 +932,9 @@ pyroute2==0.5.18
 # homeassistant.components.ruckus_unleashed
 pyruckus==0.12
 
+# homeassistant.components.securitas_direct
+pysecuritas==0.1.6
+
 # homeassistant.components.serial
 # homeassistant.components.zha
 pyserial-asyncio==0.5

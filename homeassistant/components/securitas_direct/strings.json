@@ -1,0 +1,34 @@
+{
+  "title": "Securitas Direct",
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "installation": "[%key:component::securitas_direct::config::step::user::data::installation%]",
+          "country": "[%key:component::securitas_direct::config::step::user::data::country%]",
+          "lang": "[%key:component::securitas_direct::config::step::user::data::lang%]",
+          "code": "[%key:component::securitas_direct::config::step::user::data::code%]"
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "installation": "[%key:component::securitas_direct::config::step::user::data::installation%]",
+          "country": "[%key:component::securitas_direct::config::step::user::data::country%]",
+          "lang": "[%key:component::securitas_direct::config::step::user::data::lang%]",
+          "code": "[%key:component::securitas_direct::config::step::user::data::code%]"
+        }
+      }
+    },
+    "error": {
+      "unable_to_connect": "[%key:component::securitas_direct::config::error::unable_to_connect%]"
+    },
+    "abort": {
+      "multiple_securitas_configs": "[%key:component::securitas_direct::config::abort::multiple_securitas_configs%]",
+      "reloaded": "[%key:component::securitas_direct::config::abort::reloaded%]"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "title": "Securitas Direct",
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "username": "Username",
+          "password": "Password",
+          "installation": "Installation number",
+          "country": "Country",
+          "lang": "Language",
+          "code": "Code"
+        }
+      }
+    },
+    "error": {
+      "unable_to_connect": "Unable to connect to Securitas Direct"
+    },
+    "abort": {
+      "multiple_securitas_configs": "Multiple securitas direct configurations are not supported",
+      "reloaded": "Securitas Direct configuration reloaded"
+    }
+  }
+}

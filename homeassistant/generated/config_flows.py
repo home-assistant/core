@@ -209,6 +209,7 @@ FLOWS = [
     "ruckus_unleashed",
     "samsungtv",
     "screenlogic",
+    "securitas_direct",
     "sense",
     "sentry",
     "sharkiq",

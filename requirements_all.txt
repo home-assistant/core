@@ -1690,6 +1690,9 @@ pysaj==0.0.16
 # homeassistant.components.sony_projector
 pysdcp==1
 
+# homeassistant.components.securitas_direct
+pysecuritas==0.1.6
+
 # homeassistant.components.sensibo
 pysensibo==1.0.3
 
