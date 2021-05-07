@@ -748,9 +748,9 @@ async def test_light_brightness_step(hass):
     )
 
     _, data = entity0.last_call("turn_on")
-    assert data["brightness"] == 126  # 100 + (255 * 0.10)
+    assert data["brightness"] == 116  # 90 + (255 * 0.10)
     _, data = entity1.last_call("turn_on")
-    assert data["brightness"] == 76  # 50 + (255 * 0.10)
+    assert data["brightness"] == 66  # 40 + (255 * 0.10)
 
 
 async def test_light_brightness_pct_conversion(hass):
