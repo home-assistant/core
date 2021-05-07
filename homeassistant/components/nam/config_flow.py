@@ -29,7 +29,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self.host: str = None  # type: ignore[assignment]
+        self.host: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -40,7 +40,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.host = user_input[CONF_HOST]
             try:
-                mac = await self._async_get_mac(self.host)
+                mac = await self._async_get_mac(cast(str, self.host))
             except (ApiError, ClientConnectorError, asyncio.TimeoutError):
                 errors["base"] = "cannot_connect"
             except CannotGetMac:
@@ -54,7 +54,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
                 return self.async_create_entry(
-                    title=self.host,
+                    title=cast(str, self.host),
                     data=user_input,
                 )
 
@@ -75,7 +75,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.host = discovery_info[CONF_HOST]
 
         try:
-            mac = await self._async_get_mac(self.host)
+            mac = await self._async_get_mac(cast(str, self.host))
         except (ApiError, ClientConnectorError, asyncio.TimeoutError):
             return self.async_abort(reason="cannot_connect")
         except CannotGetMac:
@@ -98,7 +98,7 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             return self.async_create_entry(
-                title=self.host,
+                title=cast(str, self.host),
                 data={CONF_HOST: self.host},
             )
 
