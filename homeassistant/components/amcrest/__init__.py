@@ -56,6 +56,7 @@ CONF_RESOLUTION = "resolution"
 CONF_STREAM_SOURCE = "stream_source"
 CONF_FFMPEG_ARGUMENTS = "ffmpeg_arguments"
 CONF_CONTROL_LIGHT = "control_light"
+CONF_DISABLE_EVENTS = "disable_events"
 
 DEFAULT_NAME = "Amcrest Camera"
 DEFAULT_PORT = 80
@@ -105,6 +106,7 @@ AMCREST_SCHEMA = vol.Schema(
             cv.ensure_list, [vol.In(SENSORS)], vol.Unique()
         ),
         vol.Optional(CONF_CONTROL_LIGHT, default=True): cv.boolean,
+        vol.Optional(CONF_DISABLE_EVENTS, default=False): cv.boolean,
     }
 )
 
@@ -277,7 +279,9 @@ def setup(hass, config):
                 if sensor_type not in BINARY_POLLED_SENSORS
             ]
 
-        _start_event_monitor(hass, name, api, event_codes)
+        disable_events = device.get(CONF_DISABLE_EVENTS)
+        if not disable_events:
+            _start_event_monitor(hass, name, api, event_codes
 
         if sensors:
             discovery.load_platform(
