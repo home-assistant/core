@@ -15,13 +15,10 @@ from .const import (
     CONF_ACCOUNT,
     CONF_ACCOUNTS,
     CONF_ENCRYPTION_KEY,
-    CONF_IGNORE_TIMESTAMPS,
+    DEFAULT_TIMEBAND,
     DOMAIN,
     SIA_EVENT,
 )
-
-DEFAULT_TIMEBAND = (80, 40)
-IGNORED_TIMEBAND = (3600, 1800)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,9 +47,7 @@ class SIAHub:
             SIAAccount(
                 account_id=a[CONF_ACCOUNT],
                 key=a.get(CONF_ENCRYPTION_KEY),
-                allowed_timeband=IGNORED_TIMEBAND
-                if a[CONF_IGNORE_TIMESTAMPS]
-                else DEFAULT_TIMEBAND,
+                allowed_timeband=DEFAULT_TIMEBAND,
             )
             for a in self._accounts
         ]

@@ -21,7 +21,6 @@ from .const import (
     CONF_ACCOUNTS,
     CONF_ADDITIONAL_ACCOUNTS,
     CONF_ENCRYPTION_KEY,
-    CONF_IGNORE_TIMESTAMPS,
     CONF_PING_INTERVAL,
     CONF_ZONES,
     DOMAIN,
@@ -39,7 +38,6 @@ HUB_SCHEMA = vol.Schema(
         vol.Optional(CONF_ENCRYPTION_KEY): str,
         vol.Required(CONF_PING_INTERVAL, default=1): int,
         vol.Required(CONF_ZONES, default=1): int,
-        vol.Required(CONF_IGNORE_TIMESTAMPS, default=False): bool,
         vol.Optional(CONF_ADDITIONAL_ACCOUNTS, default=False): bool,
     }
 )
@@ -50,7 +48,6 @@ ACCOUNT_SCHEMA = vol.Schema(
         vol.Optional(CONF_ENCRYPTION_KEY): str,
         vol.Required(CONF_PING_INTERVAL, default=1): int,
         vol.Required(CONF_ZONES, default=1): int,
-        vol.Required(CONF_IGNORE_TIMESTAMPS, default=False): bool,
         vol.Optional(CONF_ADDITIONAL_ACCOUNTS, default=False): bool,
     }
 )
@@ -138,7 +135,6 @@ class SIAConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_ENCRYPTION_KEY: user_input.get(CONF_ENCRYPTION_KEY),
                     CONF_PING_INTERVAL: user_input[CONF_PING_INTERVAL],
                     CONF_ZONES: user_input[CONF_ZONES],
-                    CONF_IGNORE_TIMESTAMPS: user_input[CONF_IGNORE_TIMESTAMPS],
                 }
             ],
         }
