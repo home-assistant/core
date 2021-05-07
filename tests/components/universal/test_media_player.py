@@ -684,7 +684,6 @@ class TestMediaPlayer(unittest.TestCase):
     async def test_overrides(self):
         """Test overrides."""
         config = copy(self.config_children_and_attr)
-        await async_setup_component(self.hass, "media_player", config)
         excmd = {"service": "media_player.test", "data": {"entity_id": "media_player.overridden"}}
         config["commands"] = {
             "turn_on": excmd,
@@ -709,6 +708,7 @@ class TestMediaPlayer(unittest.TestCase):
             "play_media": excmd,
             "toggle": excmd,
         }
+        await async_setup_component(self.hass, "media_player", config)
 
         service = mock_service(self.hass, "media_player", "test")
         await self.hass.services.async_call(
