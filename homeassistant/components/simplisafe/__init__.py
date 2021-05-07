@@ -213,7 +213,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
 
     _async_save_refresh_token(hass, config_entry, api.refresh_token)
 
-    simplisafe = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = SimpliSafe(
+    simplisafe = SimpliSafe(
         hass, api, config_entry
     )
 
@@ -222,6 +222,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
     except SimplipyError as err:
         raise ConfigEntryNotReady from err
 
+    hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = simplisafe
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     @callback
