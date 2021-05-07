@@ -41,7 +41,7 @@ SENSOR_DATA = {
         "mdi:earth",
         _retrieve_external_ip_state,
     ],
-    "fritz_uptime": ["Uptime", DEVICE_CLASS_TIMESTAMP, None, _retrieve_uptime_state],
+    "uptime": ["Uptime", DEVICE_CLASS_TIMESTAMP, None, _retrieve_uptime_state],
 }
 
 
