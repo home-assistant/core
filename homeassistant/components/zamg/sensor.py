@@ -40,6 +40,7 @@ CONF_STATION_ID = "station_id"
 DEFAULT_NAME = "zamg"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
+VIENNA_TIME_ZONE = dt_util.get_time_zone("Europe/Vienna")
 
 SENSOR_TYPES = {
     "pressure": ("Pressure", PRESSURE_HPA, "LDstat hPa", float),
@@ -186,7 +187,7 @@ class ZamgData:
         date, time = self.data.get("update_date"), self.data.get("update_time")
         if date is not None and time is not None:
             return datetime.strptime(date + time, "%d-%m-%Y%H:%M").replace(
-                tzinfo=dt_util.get_time_zone("Europe/Vienna")
+                tzinfo=VIENNA_TIME_ZONE
             )
 
     @classmethod

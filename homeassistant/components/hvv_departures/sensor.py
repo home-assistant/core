@@ -27,6 +27,7 @@ ATTR_DELAY = "delay"
 ATTR_NEXT = "next"
 
 PARALLEL_UPDATES = 0
+BERLIN_TIME_ZONE = get_time_zone("Europe/Berlin")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,14 +60,11 @@ class HVVDepartureSensor(SensorEntity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self, **kwargs):
         """Update the sensor."""
-
         departure_time = utcnow() + timedelta(
             minutes=self.config_entry.options.get("offset", 0)
         )
 
-        departure_time_tz_berlin = departure_time.astimezone(
-            get_time_zone("Europe/Berlin")
-        )
+        departure_time_tz_berlin = departure_time.astimezone(BERLIN_TIME_ZONE)
 
         payload = {
             "station": self.config_entry.data[CONF_STATION],
