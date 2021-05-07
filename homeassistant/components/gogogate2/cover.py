@@ -133,7 +133,7 @@ class DeviceCover(GoGoGate2Entity, CoverEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        return {**super().state_attributes, "door_id": self._get_door().door_id}
+        return {"door_id": self._get_door().door_id}
 
     def _get_door_status(self) -> AbstractDoor:
         return self._api.async_get_door_statuses_from_info(self.coordinator.data)[
