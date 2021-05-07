@@ -94,7 +94,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
     @property
     def device_class(self) -> str | None:
         """Return device class."""
-        return self._sensor_type[SENSOR_DEVICE_CLASS]
+        return self._sensor_data[SENSOR_DEVICE_CLASS]
 
     @property
     def icon(self):
