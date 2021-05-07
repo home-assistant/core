@@ -5,7 +5,6 @@ import asyncio
 from collections.abc import Coroutine
 import contextlib
 import datetime
-import functools as ft
 import logging
 from typing import Any, Callable
 
@@ -78,25 +77,14 @@ def _timespan_secs(timespan: str | None) -> None | float:
     return sum(60 ** x[0] * int(x[1]) for x in enumerate(reversed(timespan.split(":"))))
 
 
-def soco_coordinator(funct: Callable) -> Callable:
-    """Call function on coordinator."""
-
-    @ft.wraps(funct)
-    def wrapper(speaker: SonosSpeaker, *args: Any, **kwargs: Any) -> Any:
-        """Wrap for call to coordinator."""
-        if speaker.is_coordinator:
-            return funct(speaker, *args, **kwargs)
-        return funct(speaker.coordinator, *args, **kwargs)
-
-    return wrapper
-
-
 class SonosMedia:
-    """Representation of a Sonos media item."""
+    """Representation of the current Sonos media."""
 
     def __init__(self, soco: SoCo) -> None:
         """Initialize a SonosMedia."""
         self.library = MusicLibrary(soco)
+        self.play_mode: str | None = None
+        self.playback_status: str | None = None
 
         self.album_name: str | None = None
         self.artist: str | None = None
@@ -170,8 +158,6 @@ class SonosSpeaker:
         self.soco_snapshot: Snapshot | None = None
         self.snapshot_group: list[SonosSpeaker] | None = None
 
-        self._playback_status: str | None = None
-        self._play_mode: str | None = None
         self.favorites: list[DidlFavorite] = []
 
     def setup(self) -> None:
@@ -222,7 +208,7 @@ class SonosSpeaker:
 
     def set_basic_info(self) -> None:
         """Set basic information when speaker is reconnected."""
-        self._play_mode = self.soco.play_mode
+        self.media.play_mode = self.soco.play_mode
         self.update_volume()
         self.set_favorites()
 
@@ -360,18 +346,6 @@ class SonosSpeaker:
     def is_coordinator(self) -> bool:
         """Return true if player is a coordinator."""
         return self.coordinator is None
-
-    @property
-    @soco_coordinator
-    def playback_status(self) -> str:
-        """Return current playback status of speaker group."""
-        return self._playback_status
-
-    @property
-    @soco_coordinator
-    def play_mode(self) -> str:
-        """Return current play mode of speaker group."""
-        return self._play_mode
 
     @property
     def power_source(self) -> str:
@@ -599,7 +573,7 @@ class SonosSpeaker:
         ) -> list[list[SonosSpeaker]]:
             """Pause all current coordinators and restore groups."""
             for speaker in (s for s in speakers if s.is_coordinator):
-                if speaker._playback_status == STATE_PLAYING:
+                if speaker.media.playback_status == STATE_PLAYING:
                     hass.async_create_task(speaker.soco.pause())
 
             groups = []
@@ -739,11 +713,11 @@ class SonosSpeaker:
         if new_status == "TRANSITIONING":
             return
 
-        self._play_mode = event.current_play_mode if event else self.soco.play_mode
+        self.media.play_mode = event.current_play_mode if event else self.soco.play_mode
         self.media.clear()
 
-        update_position = new_status != self._playback_status
-        self._playback_status = new_status
+        update_position = new_status != self.media.playback_status
+        self.media.playback_status = new_status
 
         if variables:
             track_uri = variables["current_track_uri"]
@@ -804,7 +778,7 @@ class SonosSpeaker:
         try:
             uri_meta_data = variables["enqueued_transport_uri_meta_data"]
             if isinstance(uri_meta_data, DidlAudioBroadcast) and (
-                self._playback_status != STATE_PLAYING
+                self.media.playback_status != STATE_PLAYING
                 or self.soco.music_source_from_uri(self.media.title) == MUSIC_SRC_RADIO
                 or (
                     isinstance(self.media.title, str)
@@ -836,7 +810,7 @@ class SonosSpeaker:
 
         # position jumped?
         if current_position is not None and self.media.position is not None:
-            if self._playback_status == STATE_PLAYING:
+            if self.media.playback_status == STATE_PLAYING:
                 assert self.media.position_updated_at is not None
                 time_delta = dt_util.utcnow() - self.media.position_updated_at
                 time_diff = time_delta.total_seconds()

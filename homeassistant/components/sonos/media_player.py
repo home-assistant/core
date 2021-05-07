@@ -272,7 +272,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @property  # type: ignore[misc]
     def state(self) -> str:
         """Return the state of the entity."""
-        if self.coordinator.playback_status in (
+        if self.media.playback_status in (
             "PAUSED_PLAYBACK",
             "STOPPED",
         ):
@@ -281,7 +281,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             if self.media.title is None:
                 return STATE_IDLE
             return STATE_PAUSED
-        if self.coordinator.playback_status in ("PLAYING", "TRANSITIONING"):
+        if self.media.playback_status in ("PLAYING", "TRANSITIONING"):
             return STATE_PLAYING
         return STATE_IDLE
 
@@ -313,13 +313,13 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @property  # type: ignore[misc]
     def shuffle(self) -> str | None:
         """Shuffling state."""
-        shuffle: str = PLAY_MODES[self.coordinator.play_mode][0]
+        shuffle: str = PLAY_MODES[self.media.play_mode][0]
         return shuffle
 
     @property  # type: ignore[misc]
     def repeat(self) -> str | None:
         """Return current repeat mode."""
-        sonos_repeat = PLAY_MODES[self.coordinator.play_mode][1]
+        sonos_repeat = PLAY_MODES[self.media.play_mode][1]
         return SONOS_TO_REPEAT[sonos_repeat]
 
     @property
@@ -406,7 +406,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     def set_shuffle(self, shuffle: str) -> None:
         """Enable/Disable shuffle mode."""
         sonos_shuffle = shuffle
-        sonos_repeat = PLAY_MODES[self.coordinator.play_mode][1]
+        sonos_repeat = PLAY_MODES[self.media.play_mode][1]
         self.coordinator.soco.play_mode = PLAY_MODE_BY_MEANING[
             (sonos_shuffle, sonos_repeat)
         ]
@@ -414,7 +414,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @soco_error(UPNP_ERRORS_TO_IGNORE)
     def set_repeat(self, repeat: str) -> None:
         """Set repeat mode."""
-        sonos_shuffle = PLAY_MODES[self.coordinator.play_mode][0]
+        sonos_shuffle = PLAY_MODES[self.media.play_mode][0]
         sonos_repeat = REPEAT_TO_SONOS[repeat]
         self.coordinator.soco.play_mode = PLAY_MODE_BY_MEANING[
             (sonos_shuffle, sonos_repeat)
