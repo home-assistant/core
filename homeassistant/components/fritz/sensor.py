@@ -84,7 +84,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
     @property
     def _state_provider(self):
         """Return the state provider for the binary sensor."""
-        return self._sensor_type[SENSOR_STATE_PROVIDER]
+        return self._sensor_data[SENSOR_STATE_PROVIDER]
 
     @property
     def name(self):
