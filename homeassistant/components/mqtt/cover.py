@@ -113,7 +113,7 @@ def validate_options(value):
             f"'{CONF_SET_POSITION_TOPIC}' must be set together with '{CONF_GET_POSITION_TOPIC}'."
         )
 
-    """ if templates are set make sure the topic for the template is also set """
+    # if templates are set make sure the topic for the template is also set
 
     if CONF_VALUE_TEMPLATE in value and CONF_STATE_TOPIC not in value:
         raise vol.Invalid(
