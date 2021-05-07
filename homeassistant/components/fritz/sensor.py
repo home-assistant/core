@@ -35,7 +35,7 @@ SENSOR_STATE_PROVIDER = 3
 
 # sensor_type: [name, device_class, icon, state_provider]
 SENSOR_DATA = {
-    "fritz_external_ip": [
+    "external_ip": [
         "External IP",
         None,
         "mdi:earth",
