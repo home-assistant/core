@@ -34,7 +34,7 @@ SENSOR_ICON = 2
 SENSOR_STATE_PROVIDER = 3
 
 # sensor_type: [name, device_class, icon, state_provider]
-SENSOR_TYPES_FRITZ = {
+SENSOR_DATA = {
     "fritz_external_ip": [
         "External IP",
         None,
