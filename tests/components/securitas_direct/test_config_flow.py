@@ -1,6 +1,8 @@
 """Tests for the securitas direct config flow."""
 
-from homeassistant import data_entry_flow, config_entries, setup
+from unittest.mock import patch
+
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.securitas_direct import config_flow
 from homeassistant.components.securitas_direct.const import (
     CONF_COUNTRY,
@@ -16,7 +18,6 @@ from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from unittest.mock import patch
 from tests.common import MockConfigEntry
 
 

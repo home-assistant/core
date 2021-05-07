@@ -3,15 +3,14 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
 from pysecuritas.api.alarm import Alarm
 from pysecuritas.api.installation import Installation
 from pysecuritas.core.session import ConnectionException, Session
 from requests.exceptions import ConnectTimeout, HTTPError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.util import Throttle
 
 from ...config_entries import SOURCE_REAUTH
@@ -22,8 +21,6 @@ from .const import (
     DOMAIN,
     SECURITAS_DIRECT_PLATFORMS,
 )
-
-from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
