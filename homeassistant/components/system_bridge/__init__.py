@@ -39,7 +39,7 @@ from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = ["binary_sensor", "sensor", "media_player"]
 
 CONF_ARGUMENTS = "arguments"
 CONF_BRIDGE = "bridge"
@@ -214,14 +214,14 @@ class BridgeEntity(CoordinatorEntity):
         coordinator: DataUpdateCoordinator,
         bridge: Bridge,
         key: str,
-        name: str,
+        name: str | None,
         icon: str | None,
         enabled_by_default: bool,
     ) -> None:
         """Initialize the System Bridge entity."""
         super().__init__(coordinator)
         self._key = f"{bridge.os.hostname}_{key}"
-        self._name = f"{bridge.os.hostname} {name}"
+        self._name = f"{bridge.os.hostname} {name}" if name else f"{bridge.os.hostname}"
         self._icon = icon
         self._enabled_default = enabled_by_default
         self._hostname = bridge.os.hostname
