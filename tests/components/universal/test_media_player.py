@@ -685,7 +685,7 @@ class TestMediaPlayer(unittest.TestCase):
         """Test overrides."""
         config = copy(self.config_children_and_attr)
         await async_setup_component(self.hass, "media_player", config)
-        excmd = {"service": "media_player.test", "data": {"entity_id": "test"}}
+        excmd = {"service": "media_player.test", "data": {"entity_id": "media_player.overridden"}}
         config["commands"] = {
             "turn_on": excmd,
             "turn_off": excmd,
