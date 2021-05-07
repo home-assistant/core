@@ -68,6 +68,7 @@ DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = "tts"
 DEFAULT_TIME_MEMORY = 300
 DOMAIN = "tts"
+PROXY_PATH = "/api/tts_proxy/"
 
 MEM_CACHE_FILENAME = "filename"
 MEM_CACHE_VOICE = "voice"
@@ -372,7 +373,7 @@ class SpeechManager:
                 engine, key, message, use_cache, language, options
             )
 
-        return f"/api/tts_proxy/{filename}"
+        return f"{PROXY_PATH}{filename}"
 
     async def async_get_tts_audio(self, engine, key, message, cache, language, options):
         """Receive TTS and store for view in cache.
@@ -618,6 +619,16 @@ class TextToSpeechUrlView(HomeAssistantView):
 
         base = self.tts.base_url or get_url(self.tts.hass)
         url = base + path
+
+        hass.bus.fire(
+            DOMAIN,
+            {
+                "cache_filename": path.replace(PROXY_PATH, ""),
+                "cache_path": path.replace(PROXY_PATH, cache_dir),
+                "url_path": path,
+                "url": url,
+            },
+        )
 
         return self.json({"url": url, "path": path})
 
