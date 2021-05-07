@@ -2039,7 +2039,7 @@ screenlogicpy==0.4.1
 scsgate==0.1.0
 
 # homeassistant.components.sendgrid
-sendgrid==6.6.0
+sendgrid==6.7.0
 
 # homeassistant.components.sensehat
 sense-hat==2.2.0
