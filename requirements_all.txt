@@ -182,7 +182,7 @@ aiohomekit==0.2.61
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==2.1.0
+aiohue==2.3.0
 
 # homeassistant.components.imap
 aioimaplib==0.7.15
@@ -491,7 +491,7 @@ directv==0.4.0
 discogs_client==2.3.0
 
 # homeassistant.components.discord
-discord.py==1.6.0
+discord.py==1.7.2
 
 # homeassistant.components.updater
 distro==1.5.0
@@ -657,7 +657,7 @@ georss_qld_bushfire_alert_client==0.3
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==0.2.1
+gios==1.0.1
 
 # homeassistant.components.gitter
 gitterpy==0.1.7
@@ -987,6 +987,9 @@ netdata==0.2.0
 # homeassistant.components.ssdp
 netdisco==2.8.3
 
+# homeassistant.components.nam
+nettigo-air-monitor==0.2.5
+
 # homeassistant.components.neurio_energy
 neurio==0.3.1
 
@@ -1165,7 +1168,7 @@ pmsensor==0.4
 poolsense==0.0.8
 
 # homeassistant.components.reddit
-praw==7.1.4
+praw==7.2.0
 
 # homeassistant.components.islamic_prayer_times
 prayer_times_calculator==0.0.3
@@ -1319,7 +1322,7 @@ pychromecast==9.1.2
 pycketcasts==1.0.0
 
 # homeassistant.components.climacell
-pyclimacell==0.18.0
+pyclimacell==0.18.2
 
 # homeassistant.components.cmus
 pycmus==0.1.1
@@ -2042,7 +2045,7 @@ screenlogicpy==0.4.1
 scsgate==0.1.0
 
 # homeassistant.components.sendgrid
-sendgrid==6.6.0
+sendgrid==6.7.0
 
 # homeassistant.components.sensehat
 sense-hat==2.2.0
@@ -2070,7 +2073,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.6.10
+simplisafe-python==10.0.0
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.0
@@ -2085,7 +2088,7 @@ slackclient==2.5.0
 sleepyq==0.8.1
 
 # homeassistant.components.xmpp
-slixmpp==1.7.0
+slixmpp==1.7.1
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.4.0

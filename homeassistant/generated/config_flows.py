@@ -159,6 +159,7 @@ FLOWS = [
     "mutesync",
     "myq",
     "mysensors",
+    "nam",
     "neato",
     "nest",
     "netatmo",

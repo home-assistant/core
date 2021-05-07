@@ -119,7 +119,7 @@ aiohomekit==0.2.61
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==2.1.0
+aiohue==2.3.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
@@ -360,7 +360,7 @@ georss_qld_bushfire_alert_client==0.3
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==0.2.1
+gios==1.0.1
 
 # homeassistant.components.glances
 glances_api==0.2.0
@@ -535,6 +535,9 @@ nessclient==0.9.15
 # homeassistant.components.ssdp
 netdisco==2.8.3
 
+# homeassistant.components.nam
+nettigo-air-monitor==0.2.5
+
 # homeassistant.components.nexia
 nexia==0.9.6
 
@@ -632,7 +635,7 @@ pmsensor==0.4
 poolsense==0.0.8
 
 # homeassistant.components.reddit
-praw==7.1.4
+praw==7.2.0
 
 # homeassistant.components.islamic_prayer_times
 prayer_times_calculator==0.0.3
@@ -720,7 +723,7 @@ pycfdns==1.2.1
 pychromecast==9.1.2
 
 # homeassistant.components.climacell
-pyclimacell==0.18.0
+pyclimacell==0.18.2
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.4
@@ -1104,7 +1107,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.6.10
+simplisafe-python==10.0.0
 
 # homeassistant.components.slack
 slackclient==2.5.0

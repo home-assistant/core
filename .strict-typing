@@ -25,6 +25,7 @@ homeassistant.components.light.*
 homeassistant.components.lock.*
 homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
+homeassistant.components.nam.*
 homeassistant.components.notify.*
 homeassistant.components.number.*
 homeassistant.components.persistent_notification.*
