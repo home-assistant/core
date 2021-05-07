@@ -324,7 +324,9 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 except vol.Invalid:
                     errors[CONF_PERSISTENCE_FILE] = "invalid_persistence_file"
                 else:
-                    real_persistence_path = self._normalize_persistence_file(
+                    real_persistence_path = user_input[
+                        CONF_PERSISTENCE_FILE
+                    ] = self._normalize_persistence_file(
                         user_input[CONF_PERSISTENCE_FILE]
                     )
                     for other_entry in self.hass.config_entries.async_entries(DOMAIN):
