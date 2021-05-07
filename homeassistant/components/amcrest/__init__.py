@@ -83,7 +83,7 @@ def _has_unique_names(devices):
 
 AMCREST_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,50264
+        vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
