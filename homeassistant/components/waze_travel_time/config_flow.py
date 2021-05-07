@@ -7,7 +7,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_REGION
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify
 
 from .const import (
     CONF_AVOID_FERRIES,
@@ -108,12 +107,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
 
         if user_input:
-            await self.async_set_unique_id(
-                slugify(
-                    f"{DOMAIN}_{user_input[CONF_ORIGIN]}_{user_input[CONF_DESTINATION]}"
-                )
-            )
-            self._abort_if_unique_id_configured()
             if (
                 self.source == config_entries.SOURCE_IMPORT
                 or await self.hass.async_add_executor_job(

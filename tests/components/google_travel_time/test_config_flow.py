@@ -197,8 +197,8 @@ async def test_options_flow_departure_time(hass, validate_config_entry, bypass_u
     }
 
 
-async def test_dupe_id(hass, validate_config_entry, bypass_setup):
-    """Test setting up the same entry twice fails."""
+async def test_dupe(hass, validate_config_entry, bypass_setup):
+    """Test setting up the same entry data twice is OK."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -233,8 +233,7 @@ async def test_dupe_id(hass, validate_config_entry, bypass_setup):
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result2["reason"] == "already_configured"
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 async def test_import_flow(hass, validate_config_entry, bypass_update):
