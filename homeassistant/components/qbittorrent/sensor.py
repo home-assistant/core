@@ -22,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPE_CURRENT_STATUS = "current_status"
 SENSOR_TYPE_DOWNLOAD_SPEED = "download_speed"
 SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
+SENSOR_TYPE_TORRENTS = "torrents"
 
 DEFAULT_NAME = "qBittorrent"
 
@@ -29,6 +30,7 @@ SENSOR_TYPES = {
     SENSOR_TYPE_CURRENT_STATUS: ["Status", None],
     SENSOR_TYPE_DOWNLOAD_SPEED: ["Down Speed", DATA_RATE_KILOBYTES_PER_SECOND],
     SENSOR_TYPE_UPLOAD_SPEED: ["Up Speed", DATA_RATE_KILOBYTES_PER_SECOND],
+    SENSOR_TYPE_TORRENTS: ["Torrents", None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -122,8 +124,16 @@ class QBittorrentSensor(SensorEntity):
 
         download = data["server_state"]["dl_info_speed"]
         upload = data["server_state"]["up_info_speed"]
+        torrents = data["torrents"]
 
-        if self.type == SENSOR_TYPE_CURRENT_STATUS:
+        if self.type == SENSOR_TYPE_TORRENTS:
+            self._state = len(torrents.values())
+            if torrents:
+                self._hass.custom_attributes = torrents
+            else:
+                self._hass.custom_attributes = None
+
+        elif self.type == SENSOR_TYPE_CURRENT_STATUS:
             if upload > 0 and download > 0:
                 self._state = "up_down"
             elif upload > 0 and download == 0:
