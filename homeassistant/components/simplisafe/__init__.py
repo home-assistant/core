@@ -213,9 +213,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
 
     _async_save_refresh_token(hass, config_entry, api.refresh_token)
 
-    simplisafe = SimpliSafe(
-        hass, api, config_entry
-    )
+    simplisafe = SimpliSafe(hass, api, config_entry)
 
     try:
         await simplisafe.async_init()
