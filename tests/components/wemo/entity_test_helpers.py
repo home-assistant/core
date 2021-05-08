@@ -212,7 +212,7 @@ async def test_long_press_event(hass, pywemo_registry, pywemo_device, wemo_entit
 async def test_ensure_long_press_virtual_device_fails_gracefully(hass, pywemo_device):
     """Failure to enable long press support should not block device setup."""
     assert pywemo_device.supports_long_press()
-    pywemo_device.ensure_long_press_virtual_device.side_effect = AttributeError
+    pywemo_device.ensure_long_press_virtual_device.side_effect = ActionException
     assert await async_setup_wemo_entity(hass, pywemo_device)
 
 

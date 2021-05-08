@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Generator, Mapping
 import contextlib
 import logging
+from typing import Any
 
 import async_timeout
 from pywemo import WeMoDevice
@@ -143,7 +144,7 @@ class WemoSubscriptionEntity(WemoEntity):
         }
 
     @property
-    def capability_attributes(self) -> Dict[str, Any]:
+    def capability_attributes(self) -> Mapping[str, Any]:
         """Return the capability attributes."""
         return {
             CAPABILITY_LONG_PRESS: self.wemo.supports_long_press(),
@@ -188,13 +189,9 @@ class WemoSubscriptionEntity(WemoEntity):
         await self.hass.async_add_executor_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
         if self.wemo.supports_long_press():
-            try:
+            with self._wemo_exception_handler("register long press"):
                 await self.hass.async_add_executor_job(
                     self.wemo.ensure_long_press_virtual_device
-                )
-            except (AttributeError, ActionException):
-                _LOGGER.exception(
-                    "Failed to enable long press support for %s", self.name
                 )
 
     async def async_will_remove_from_hass(self) -> None:
