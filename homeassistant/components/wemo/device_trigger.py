@@ -52,7 +52,6 @@ async def async_get_triggers(hass, device_id):
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
     event_config = event_trigger.TRIGGER_SCHEMA(
         {
             event_trigger.CONF_PLATFORM: "event",
