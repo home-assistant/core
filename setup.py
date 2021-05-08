@@ -47,7 +47,7 @@ REQUIRES = [
     "cryptography==3.3.2",
     "pip>=8.0.3,<20.3",
     "python-slugify==4.0.1",
-    "pytz>=2021.1",
+    "python-dateutil==2.8.1",
     "pyyaml==5.4.1",
     "requests==2.25.1",
     "ruamel.yaml==0.15.100",
