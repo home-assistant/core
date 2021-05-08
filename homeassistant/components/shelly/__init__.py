@@ -90,8 +90,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     dev_reg = await device_registry.async_get_registry(hass)
-    identifier = (DOMAIN, entry.unique_id)
-    device_entry = dev_reg.async_get_device(identifiers={identifier}, connections=set())
+    device_entry = None
+    if entry.unique_id is not None:
+        device_entry = dev_reg.async_get_device(
+            identifiers={(DOMAIN, entry.unique_id)}, connections=set()
+        )
     if device_entry and entry.entry_id not in device_entry.config_entries:
         device_entry = None
 
@@ -185,7 +188,7 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         self._async_remove_device_updates_handler = self.async_add_listener(
             self._async_device_updates_handler
         )
-        self._last_input_events_count = {}
+        self._last_input_events_count: dict = {}
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
 

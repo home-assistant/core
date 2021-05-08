@@ -118,6 +118,8 @@ def is_momentary_input(settings: dict, block: aioshelly.Block) -> bool:
         return True
 
     button = settings.get("relays") or settings.get("lights") or settings.get("inputs")
+    if button is None:
+        return False
 
     # Shelly 1L has two button settings in the first channel
     if settings["device"]["type"] == "SHSW-L":
@@ -138,7 +140,11 @@ def get_device_uptime(status: dict, last_uptime: str) -> str:
     if not last_uptime:
         return uptime.replace(microsecond=0).isoformat()
 
-    if abs((uptime - parse_datetime(last_uptime)).total_seconds()) > 5:
+    parsed_last_uptime = parse_datetime(last_uptime)
+    if not parsed_last_uptime:
+        raise ValueError("error parsing last_uptime")
+
+    if abs((uptime - parsed_last_uptime).total_seconds()) > 5:
         return uptime.replace(microsecond=0).isoformat()
 
     return last_uptime

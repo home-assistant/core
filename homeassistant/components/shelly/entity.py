@@ -178,7 +178,7 @@ class ShellyBlockEntity(entity.Entity):
         """Initialize Shelly entity."""
         self.wrapper = wrapper
         self.block = block
-        self._name = get_entity_name(wrapper.device, block)
+        self._name: str | None = get_entity_name(wrapper.device, block)
 
     @property
     def name(self):
