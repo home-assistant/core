@@ -6,6 +6,7 @@ from pyclimacell.const import (
     HealthConcernType,
     PollenIndex,
     PrimaryPollutantType,
+    V3PollenIndex,
     WeatherCode,
 )
 
@@ -307,8 +308,20 @@ CC_V3_SENSOR_TYPES = [
         ATTR_FIELD: CC_V3_ATTR_CHINA_HEALTH_CONCERN,
         ATTR_NAME: "China MEP Health Concern",
     },
-    {ATTR_FIELD: CC_V3_ATTR_POLLEN_TREE, ATTR_NAME: "Tree Pollen Index"},
-    {ATTR_FIELD: CC_V3_ATTR_POLLEN_WEED, ATTR_NAME: "Weed Pollen Index"},
-    {ATTR_FIELD: CC_V3_ATTR_POLLEN_GRASS, ATTR_NAME: "Grass Pollen Index"},
+    {
+        ATTR_FIELD: CC_V3_ATTR_POLLEN_TREE,
+        ATTR_NAME: "Tree Pollen Index",
+        ATTR_VALUE_MAP: V3PollenIndex,
+    },
+    {
+        ATTR_FIELD: CC_V3_ATTR_POLLEN_WEED,
+        ATTR_NAME: "Weed Pollen Index",
+        ATTR_VALUE_MAP: V3PollenIndex,
+    },
+    {
+        ATTR_FIELD: CC_V3_ATTR_POLLEN_GRASS,
+        ATTR_NAME: "Grass Pollen Index",
+        ATTR_VALUE_MAP: V3PollenIndex,
+    },
     {ATTR_FIELD: CC_V3_ATTR_FIRE_INDEX, ATTR_NAME: "Fire Index"},
 ]
