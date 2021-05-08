@@ -235,52 +235,27 @@ DHCP = [
     },
     {
         "domain": "tplink",
-        "hostname": "kl*",
+        "hostname": "k[lp]*",
         "macaddress": "1C3BF3*"
     },
     {
         "domain": "tplink",
-        "hostname": "kl*",
+        "hostname": "k[lp]*",
         "macaddress": "50C7BF*"
     },
     {
         "domain": "tplink",
-        "hostname": "kl*",
+        "hostname": "k[lp]*",
         "macaddress": "68FF7B*"
     },
     {
         "domain": "tplink",
-        "hostname": "kl*",
+        "hostname": "k[lp]*",
         "macaddress": "98DAC4*"
     },
     {
         "domain": "tplink",
-        "hostname": "kl*",
-        "macaddress": "B09575*"
-    },
-    {
-        "domain": "tplink",
-        "hostname": "kp*",
-        "macaddress": "1C3BF3*"
-    },
-    {
-        "domain": "tplink",
-        "hostname": "kp*",
-        "macaddress": "50C7BF*"
-    },
-    {
-        "domain": "tplink",
-        "hostname": "kp*",
-        "macaddress": "68FF7B*"
-    },
-    {
-        "domain": "tplink",
-        "hostname": "kp*",
-        "macaddress": "98DAC4*"
-    },
-    {
-        "domain": "tplink",
-        "hostname": "kp*",
+        "hostname": "k[lp]*",
         "macaddress": "B09575*"
     },
     {
