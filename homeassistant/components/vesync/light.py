@@ -1,9 +1,12 @@
-"""Support for VeSync dimmers."""
+"""Support for VeSync bulbs and wall dimmers."""
 import logging
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_ONOFF,
     LightEntity,
 )
 from homeassistant.core import callback
@@ -35,7 +38,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.data[DOMAIN][VS_DISPATCHERS].append(disp)
 
     _async_setup_entities(hass.data[DOMAIN][VS_LIGHTS], async_add_entities)
-    return True
 
 
 @callback
@@ -48,7 +50,7 @@ def _async_setup_entities(devices, async_add_entities):
         elif DEV_TYPE_TO_HA.get(dev.device_type) == "bulb":
             entities.append(VeSyncBulbHA(dev))
         else:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "%s - Unknown device type - %s", dev.device_name, dev.device_type
             )
             continue
@@ -78,15 +80,34 @@ class VeSyncDimmerHA(VeSyncDevice, LightEntity):
         if not self.is_on:
             self.device.turn_on()
 
-    @property
-    def supported_features(self):
-        """Get supported features for this entity."""
-        return SUPPORT_BRIGHTNESS
+    # @property
+    # def supported_features(self):
+    #     """Get supported features for this entity."""
+    #     return COLOR_MODE_BRIGHTNESS
 
     @property
     def brightness(self):
         """Get dimmer brightness."""
         return round((int(self.dimmer.brightness) / 100) * 255)
+
+    @property
+    def color_mode(self):
+        """Set color mode for this entity."""
+        return COLOR_MODE_BRIGHTNESS
+
+    @property
+    def supported_color_modes(self):
+        """Flag supported color_modes."""
+        supported_color_modes = set()
+        Dimmable = True
+        Tunable_white = False
+        if Tunable_white:
+            supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+        if not supported_color_modes and Dimmable:
+            supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+        if not supported_color_modes:
+            supported_color_modes.add(COLOR_MODE_ONOFF)
+        return supported_color_modes
 
 
 class VeSyncBulbHA(VeSyncDevice, LightEntity):
@@ -108,15 +129,48 @@ class VeSyncBulbHA(VeSyncDevice, LightEntity):
             brightness = max(1, min(brightness, 100))
             self.bulb.set_brightness(brightness)
         # Avoid turning device back on if this is just a brightness adjustment
+        elif ATTR_COLOR_TEMP in kwargs:
+            # get brightness from HA data
+            color_temp = int(kwargs[ATTR_COLOR_TEMP])
+            # convert to percent that vesync api expects
+            color_temp = round(color_temp)
+            # clamp to 1-100
+            color_temp = max(1, min(color_temp, 100))
+            self.bulb.set_color_temp(color_temp)
+        # Avoid turning device back on if this is just a brightness adjustment
         if not self.is_on:
             self.device.turn_on()
 
-    @property
-    def supported_features(self):
-        """Get supported features for this entity."""
-        return SUPPORT_BRIGHTNESS
+    # @property
+    # def supported_features(self):
+    #    """Get supported features for this entity."""
+    #    return ##%%##%#
 
     @property
     def brightness(self):
         """Get bulb brightness."""
         return round((int(self.bulb.brightness) / 100) * 255)
+
+    @property
+    def color_temp(self):
+        """Get bulb white temperature."""
+        return self.bulb.color_temp_pct
+
+    @property
+    def color_mode(self):
+        """Set color mode for this entity."""
+        return COLOR_MODE_COLOR_TEMP
+
+    @property
+    def supported_color_modes(self):
+        """Flag supported color_modes."""
+        supported_color_modes = set()
+        Dimmable = False
+        Tunable_white = True
+        if Tunable_white:
+            supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
+        if not supported_color_modes and Dimmable:
+            supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
+        if not supported_color_modes:
+            supported_color_modes.add(COLOR_MODE_ONOFF)
+        return supported_color_modes
