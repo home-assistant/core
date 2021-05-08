@@ -16,3 +16,14 @@ play_item:
     item:
       description: Numer pozycji do przeczytania.
       example: 0
+change_auto_mode:
+  description: Zmiana automatyzacji
+  fields:
+    entity_id:
+      description: Identyfikator automatyzacji
+      example: 0
+    change_to:
+      description: Zmiana na
+      example: "on"
+stop_talking:
+  description: Zatrzymanie mówienia

@@ -126,7 +126,7 @@ SPOTIFY_PLAYABLE_MEDIA_TYPES = [
 async def browse_media(hass, media_content_type=None, media_content_id=None):
     """Implement the websocket media browsing helper."""
     if media_content_id in [None, "library"]:
-        return ais_media_library()
+        return ais_media_library(hass)
 
     if media_content_id.startswith(media_source_const.URI_SCHEME):
         result = await media_source.async_browse_media(hass, media_content_id)
@@ -166,7 +166,7 @@ async def browse_media(hass, media_content_type=None, media_content_id=None):
     return response
 
 
-def ais_media_library() -> BrowseMedia:
+def ais_media_library(hass) -> BrowseMedia:
     """Create response payload to describe contents of a specific library."""
     ais_library_info = BrowseMedia(
         title="AI-Speaker",
@@ -199,86 +199,87 @@ def ais_media_library() -> BrowseMedia:
             can_play=False,
         )
     )
-    ais_library_info.children.append(
-        BrowseMedia(
-            title="Moje Ulubione",
-            media_class="heart",
-            media_content_id="ais_favorites",
-            media_content_type=MEDIA_TYPE_APP,
-            can_expand=True,
-            can_play=False,
+    if not hass.services.has_service("ais_tts", "play_item"):
+        ais_library_info.children.append(
+            BrowseMedia(
+                title="Moje Ulubione",
+                media_class="heart",
+                media_content_id="ais_favorites",
+                media_content_type=MEDIA_TYPE_APP,
+                can_expand=True,
+                can_play=False,
+            )
         )
-    )
-    ais_library_info.children.append(
-        BrowseMedia(
-            title="Moje Zakładki",
-            media_class="bookmark",
-            media_content_id="ais_bookmarks",
-            media_content_type=MEDIA_TYPE_APP,
-            can_expand=True,
-            can_play=False,
+        ais_library_info.children.append(
+            BrowseMedia(
+                title="Moje Zakładki",
+                media_class="bookmark",
+                media_content_id="ais_bookmarks",
+                media_content_type=MEDIA_TYPE_APP,
+                can_expand=True,
+                can_play=False,
+            )
         )
-    )
-    ais_library_info.children.append(
-        BrowseMedia(
-            title="Radio",
-            media_class="radio",
-            media_content_id="ais_radio",
-            media_content_type=MEDIA_TYPE_APP,
-            can_expand=True,
-            can_play=False,
+        ais_library_info.children.append(
+            BrowseMedia(
+                title="Radio",
+                media_class="radio",
+                media_content_id="ais_radio",
+                media_content_type=MEDIA_TYPE_APP,
+                can_expand=True,
+                can_play=False,
+            )
         )
-    )
-    ais_library_info.children.append(
-        BrowseMedia(
-            title="Podcast",
-            media_class=MEDIA_CLASS_PODCAST,
-            media_content_id="ais_podcast",
-            media_content_type=MEDIA_TYPE_APP,
-            can_expand=True,
-            can_play=False,
+        ais_library_info.children.append(
+            BrowseMedia(
+                title="Podcast",
+                media_class=MEDIA_CLASS_PODCAST,
+                media_content_id="ais_podcast",
+                media_content_type=MEDIA_TYPE_APP,
+                can_expand=True,
+                can_play=False,
+            )
         )
-    )
-    ais_library_info.children.append(
-        BrowseMedia(
-            title="Audio książki",
-            media_class="book",
-            media_content_id="ais_audio_books",
-            media_content_type=MEDIA_TYPE_APP,
-            can_expand=True,
-            can_play=False,
+        ais_library_info.children.append(
+            BrowseMedia(
+                title="Audio książki",
+                media_class="book",
+                media_content_id="ais_audio_books",
+                media_content_type=MEDIA_TYPE_APP,
+                can_expand=True,
+                can_play=False,
+            )
         )
-    )
-    ais_library_info.children.append(
-        BrowseMedia(
-            title="Spotify",
-            media_class="spotify",
-            media_content_id="ais_spotify",
-            media_content_type=MEDIA_TYPE_APP,
-            can_expand=True,
-            can_play=False,
+        ais_library_info.children.append(
+            BrowseMedia(
+                title="Spotify",
+                media_class="spotify",
+                media_content_id="ais_spotify",
+                media_content_type=MEDIA_TYPE_APP,
+                can_expand=True,
+                can_play=False,
+            )
         )
-    )
-    ais_library_info.children.append(
-        BrowseMedia(
-            title="YouTube",
-            media_class="youtube",
-            media_content_id="ais_youtube",
-            media_content_type=MEDIA_TYPE_APP,
-            can_expand=True,
-            can_play=False,
+        ais_library_info.children.append(
+            BrowseMedia(
+                title="YouTube",
+                media_class="youtube",
+                media_content_id="ais_youtube",
+                media_content_type=MEDIA_TYPE_APP,
+                can_expand=True,
+                can_play=False,
+            )
         )
-    )
-    ais_library_info.children.append(
-        BrowseMedia(
-            title="TuneIn",
-            media_class="radiopublic",
-            media_content_id="ais_tunein",
-            media_content_type=MEDIA_TYPE_APP,
-            can_expand=True,
-            can_play=False,
+        ais_library_info.children.append(
+            BrowseMedia(
+                title="TuneIn",
+                media_class="radiopublic",
+                media_content_id="ais_tunein",
+                media_content_type=MEDIA_TYPE_APP,
+                can_expand=True,
+                can_play=False,
+            )
         )
-    )
 
     return ais_library_info
 

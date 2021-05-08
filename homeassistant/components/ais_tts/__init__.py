@@ -4,10 +4,9 @@ import uuid
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_NOT_FOUND
+from homeassistant.const import ATTR_ENTITY_ID, HTTP_BAD_REQUEST, HTTP_NOT_FOUND
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
@@ -101,6 +100,35 @@ async def async_setup(hass, config):
         else:
             data.async_update(item["id"], {"name": name, "complete": True})
 
+    async def change_auto_mode(call):
+        """Change automation selected in auto mode."""
+        entity_id = call.data.get("entity_id")
+        change_to = call.data.get("change_to")
+        automations = {
+            state.entity_id: state.name
+            for state in hass.states.async_all()
+            if state.entity_id.startswith("automation")
+            and not state.entity_id.startswith("automation.ais_")
+        }
+        for key, value in automations.items():
+            await hass.services.async_call(
+                "automation", "turn_off", {ATTR_ENTITY_ID: key}
+            )
+        if change_to == "on":
+            await hass.services.async_call(
+                "automation", "turn_on", {ATTR_ENTITY_ID: entity_id}
+            )
+
+    async def stop_talking(call):
+        """Change automation selected in auto mode."""
+        await hass.services.async_call(
+            "ais_ai_service",
+            "say_it",
+            {
+                "text": "",
+            },
+        )
+
     async def play_item_service(call):
         """Play the item"""
         item_no = 0
@@ -121,6 +149,8 @@ async def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN, SERVICE_COMPLETE_ITEM, complete_item_service, schema=SERVICE_ITEM_SCHEMA
     )
+    hass.services.async_register(DOMAIN, "change_auto_mode", change_auto_mode)
+    hass.services.async_register(DOMAIN, "stop_talking", stop_talking)
 
     hass.http.register_view(AisTtsView)
     hass.http.register_view(CreateAisTtsItemView)
@@ -129,22 +159,30 @@ async def async_setup(hass, config):
 
     hass.components.frontend.async_register_built_in_panel(
         "aistts",
-        require_admin=True,
-        sidebar_title="AIS TTS",
-        sidebar_icon="mdi:bullhorn-outline",
+        require_admin=False,
+        sidebar_title="TTS Ręczny",
+        sidebar_icon="mdi:gesture-tap-button",
         update=True,
     )
-    # remove all panels
-    hass.components.frontend.async_remove_panel("lovelace")
-    hass.components.frontend.async_remove_panel("lovelace-dom")
-    hass.components.frontend.async_remove_panel("aisaudio")
-    hass.components.frontend.async_remove_panel("media-browser")
-    hass.components.frontend.async_remove_panel("map")
-    panel_history = "history" in hass.data.get(hass.components.frontend.DATA_PANELS, {})
-    panel_logbook = "logbook" in hass.data.get(hass.components.frontend.DATA_PANELS, {})
-    if panel_history:
+
+    hass.components.frontend.async_register_built_in_panel(
+        "aisttsauto",
+        require_admin=False,
+        sidebar_title="TTS Automatyczny",
+        sidebar_icon="mdi:electric-switch",
+        update=True,
+    )
+
+    # ais_tts - remove all panels
+    if "lovelace-dom" in hass.data.get(hass.components.frontend.DATA_PANELS, {}):
+        hass.components.frontend.async_remove_panel("lovelace-dom")
+    if "aisaudio" in hass.data.get(hass.components.frontend.DATA_PANELS, {}):
+        hass.components.frontend.async_remove_panel("aisaudio")
+    if "map" in hass.data.get(hass.components.frontend.DATA_PANELS, {}):
+        hass.components.frontend.async_remove_panel("map")
+    if "history" in hass.data.get(hass.components.frontend.DATA_PANELS, {}):
         hass.components.frontend.async_remove_panel("history")
-    if panel_logbook:
+    if "logbook" in hass.data.get(hass.components.frontend.DATA_PANELS, {}):
         hass.components.frontend.async_remove_panel("logbook")
 
     hass.components.websocket_api.async_register_command(

@@ -478,9 +478,7 @@ class AisDbConfigView(HomeAssistantView):
         if db_connection["dbShowHistory"]:
             return_info += " Historia włączona."
 
-            if not panel_history and not hass.services.has_service(
-                "ais_tts", "play_item"
-            ):
+            if not panel_history:
                 hass.components.frontend.async_register_built_in_panel(
                     "history", "history", "hass:poll-box"
                 )
@@ -492,9 +490,7 @@ class AisDbConfigView(HomeAssistantView):
         # Logbook
         if db_connection["dbShowLogbook"]:
             return_info += "Dziennik włączony."
-            if not panel_logbook and not hass.services.has_service(
-                "ais_tts", "play_item"
-            ):
+            if not panel_logbook:
                 hass.components.frontend.async_register_built_in_panel(
                     "logbook", "logbook", "hass:format-list-bulleted-type"
                 )
