@@ -231,7 +231,10 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 get_serial_by_id, user_selection
             )
 
-            data = {CONF_PORT: dev_path}
+            data = {
+                CONF_PORT: dev_path,
+                CONF_DSMR_VERSION: user_input[CONF_DSMR_VERSION],
+            }
 
             try:
                 info = await _validate_dsmr_connection(self.hass, data)
