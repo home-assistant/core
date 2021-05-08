@@ -2312,6 +2312,7 @@ async def async_setup(hass, config):
         rate = None
         language = None
         voice = None
+        path = None
         if ATTR_TEXT in service.data:
             text = service.data[ATTR_TEXT]
         # TODO else:
@@ -2337,6 +2338,8 @@ async def async_setup(hass, config):
             language = service.data["language"]
         if "voice" in service.data:
             voice = service.data["voice"]
+        if "path" in service.data:
+            path = service.data["path"]
 
         _say_it(
             hass=hass,
@@ -2346,6 +2349,7 @@ async def async_setup(hass, config):
             rate=rate,
             language=language,
             voice=voice,
+            path=path,
         )
 
     def say_in_browser(service):
@@ -2379,6 +2383,20 @@ async def async_setup(hass, config):
                     "immersive.full=*'"
                 },
             )
+        if hass.services.has_service("ais_tts", "play_item"):
+            # ais_tts - remove all panels
+            if "lovelace-dom" in hass.data.get(
+                hass.components.frontend.DATA_PANELS, {}
+            ):
+                hass.components.frontend.async_remove_panel("lovelace-dom")
+            if "aisaudio" in hass.data.get(hass.components.frontend.DATA_PANELS, {}):
+                hass.components.frontend.async_remove_panel("aisaudio")
+            if "map" in hass.data.get(hass.components.frontend.DATA_PANELS, {}):
+                hass.components.frontend.async_remove_panel("map")
+            if "history" in hass.data.get(hass.components.frontend.DATA_PANELS, {}):
+                hass.components.frontend.async_remove_panel("history")
+            if "logbook" in hass.data.get(hass.components.frontend.DATA_PANELS, {}):
+                hass.components.frontend.async_remove_panel("logbook")
 
         # set the flag to info that the AIS start part is done - this is needed to don't say some info before this flag
         ais_global.G_AIS_START_IS_DONE = True
@@ -3682,7 +3700,14 @@ def _process_command_from_frame(hass, service):
 
 
 def _post_message(
-    message, hass, exclude_say_it=None, pitch=None, rate=None, language=None, voice=None
+    message,
+    hass,
+    exclude_say_it=None,
+    pitch=None,
+    rate=None,
+    language=None,
+    voice=None,
+    path=None,
 ):
     """Post the message to TTS service."""
     j_data = {
@@ -3691,6 +3716,7 @@ def _post_message(
         "rate": rate if rate is not None else ais_global.GLOBAL_TTS_RATE,
         "language": language if language is not None else "pl_PL",
         "voice": voice if voice is not None else ais_global.GLOBAL_TTS_VOICE,
+        "path": path if path is not None else "",
     }
 
     tts_browser_text = message
@@ -3734,6 +3760,7 @@ def _say_it(
     rate=None,
     language=None,
     voice=None,
+    path=None,
 ):
     # sent the tts message to the panel via http api
     message = message.replace("°C", "stopni Celsjusza")
@@ -3745,6 +3772,7 @@ def _say_it(
         rate=rate,
         language=language,
         voice=voice,
+        path=path,
     )
 
     if len(message) > 1999:
@@ -3783,11 +3811,11 @@ def _create_matcher(utterance):
 
         # Group part
         if group_match is not None:
-            pattern.append(r"(?P<{}>[\w ]+?)\s*".format(group_match.groups()[0]))
+            pattern.append(fr"(?P<{group_match.groups()[0]}>[\w ]+?)\s*")
 
         # Optional part
         elif optional_match is not None:
-            pattern.append(r"(?:{} *)?".format(optional_match.groups()[0]))
+            pattern.append(fr"(?:{optional_match.groups()[0]} *)?")
 
     pattern.append("$")
     return re.compile("".join(pattern), re.I)
