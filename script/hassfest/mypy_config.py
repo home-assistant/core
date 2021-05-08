@@ -137,7 +137,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.mqtt.*",
     "homeassistant.components.mullvad.*",
     "homeassistant.components.mysensors.*",
-    "homeassistant.components.n26.*",
     "homeassistant.components.neato.*",
     "homeassistant.components.ness_alarm.*",
     "homeassistant.components.nest.*",
