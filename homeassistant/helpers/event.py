@@ -1216,7 +1216,7 @@ def async_call_later(
     hass: HomeAssistant, delay: float | timedelta, action: HassJob | Callable[..., None]
 ) -> CALLBACK_TYPE:
     """Add a listener that is called in <delay>."""
-    if isinstance(delay, float):
+    if not isinstance(delay, timedelta):
         delay = timedelta(seconds=delay)
     return async_track_point_in_utc_time(hass, action, dt_util.utcnow() + delay)
 
