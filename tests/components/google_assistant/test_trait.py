@@ -1425,6 +1425,7 @@ async def test_fan_speed(hass):
                 ],
                 "speed": "low",
                 "percentage": 33,
+                "percentage_step": 1.0,
             },
         ),
         BASIC_CONFIG,
@@ -1473,6 +1474,7 @@ async def test_fan_speed(hass):
         },
         "reversible": False,
         "supportsFanSpeedPercent": True,
+        "commandOnlyFanSpeed": True,
     }
 
     assert trt.query_attributes() == {
@@ -1496,6 +1498,51 @@ async def test_fan_speed(hass):
 
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": "fan.living_room_fan", "percentage": 10}
+
+    assert trt.can_execute(
+        trait.COMMAND_FANSPEED, params={"fanSpeedRelativePercent": 10}
+    )
+
+    calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_INCREASE_SPEED)
+    await trt.execute(
+        trait.COMMAND_FANSPEEDRELATIVE, BASIC_DATA, {"fanSpeedRelativePercent": 10}, {}
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": "fan.living_room_fan", "percentage_step": 10}
+
+    assert trt.can_execute(
+        trait.COMMAND_FANSPEED, params={"fanSpeedRelativePercent": -10.0}
+    )
+
+    calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_DECREASE_SPEED)
+    await trt.execute(
+        trait.COMMAND_FANSPEEDRELATIVE,
+        BASIC_DATA,
+        {"fanSpeedRelativePercent": -10.0},
+        {},
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": "fan.living_room_fan", "percentage_step": 10}
+
+    assert trt.can_execute(trait.COMMAND_FANSPEED, params={"fanSpeedRelativeWeight": 2})
+
+    calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_INCREASE_SPEED)
+    await trt.execute(
+        trait.COMMAND_FANSPEEDRELATIVE, BASIC_DATA, {"fanSpeedRelativeWeight": 2}, {}
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": "fan.living_room_fan", "percentage_step": 2}
+
+    calls = async_mock_service(hass, fan.DOMAIN, fan.SERVICE_DECREASE_SPEED)
+    await trt.execute(
+        trait.COMMAND_FANSPEEDRELATIVE, BASIC_DATA, {"fanSpeedRelativeWeight": -2}, {}
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": "fan.living_room_fan", "percentage_step": 2}
 
 
 async def test_climate_fan_speed(hass):
@@ -1542,6 +1589,7 @@ async def test_climate_fan_speed(hass):
         },
         "reversible": False,
         "supportsFanSpeedPercent": True,
+        "commandOnlyFanSpeed": True,
     }
 
     assert trt.query_attributes() == {

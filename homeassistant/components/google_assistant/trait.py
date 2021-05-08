@@ -118,6 +118,7 @@ COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE = (
 COMMAND_THERMOSTAT_SET_MODE = f"{PREFIX_COMMANDS}ThermostatSetMode"
 COMMAND_LOCKUNLOCK = f"{PREFIX_COMMANDS}LockUnlock"
 COMMAND_FANSPEED = f"{PREFIX_COMMANDS}SetFanSpeed"
+COMMAND_FANSPEEDRELATIVE = f"{PREFIX_COMMANDS}SetFanSpeedRelative"
 COMMAND_MODES = f"{PREFIX_COMMANDS}SetModes"
 COMMAND_INPUT = f"{PREFIX_COMMANDS}SetInput"
 COMMAND_NEXT_INPUT = f"{PREFIX_COMMANDS}NextInput"
@@ -1273,6 +1274,7 @@ class FanSpeedTrait(_Trait):
         reversible = False
 
         if domain == fan.DOMAIN:
+            # The use of legacy speeds is deprecated in the schema, support will be removed after a quarter (2021.7)
             modes = self.state.attributes.get(fan.ATTR_SPEED_LIST, [])
             for mode in modes:
                 if mode not in self.speed_synonyms:
@@ -1301,6 +1303,7 @@ class FanSpeedTrait(_Trait):
             "availableFanSpeeds": {"speeds": speeds, "ordered": True},
             "reversible": reversible,
             "supportsFanSpeedPercent": True,
+            "commandOnlyFanSpeed": True,
         }
 
     def query_attributes(self):
@@ -1339,7 +1342,19 @@ class FanSpeedTrait(_Trait):
             service_params = {
                 ATTR_ENTITY_ID: self.state.entity_id,
             }
-            if "fanSpeedPercent" in params:
+            if command == COMMAND_FANSPEEDRELATIVE:
+                if "fanSpeedRelativePercent" in params:
+                    relative_percentage = params["fanSpeedRelativePercent"]
+                else:
+                    relative_percentage = params[
+                        "fanSpeedRelativeWeight"
+                    ] * self.state.attributes.get(fan.ATTR_PERCENTAGE_STEP)
+                if relative_percentage > 0:
+                    service = fan.SERVICE_INCREASE_SPEED
+                else:
+                    service = fan.SERVICE_DECREASE_SPEED
+                service_params[fan.ATTR_PERCENTAGE_STEP] = abs(relative_percentage)
+            elif "fanSpeedPercent" in params:
                 service = fan.SERVICE_SET_PERCENTAGE
                 service_params[fan.ATTR_PERCENTAGE] = params["fanSpeedPercent"]
             else:
@@ -1373,6 +1388,9 @@ class ModesTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
+        if domain == fan.DOMAIN and features & fan.SUPPORT_PRESET_MODE:
+            return True
+
         if domain == input_select.DOMAIN:
             return True
 
@@ -1416,6 +1434,7 @@ class ModesTrait(_Trait):
         modes = []
 
         for domain, attr, name in (
+            (fan.DOMAIN, fan.ATTR_PRESET_MODES, "preset mode"),
             (media_player.DOMAIN, media_player.ATTR_SOUND_MODE_LIST, "sound mode"),
             (input_select.DOMAIN, input_select.ATTR_OPTIONS, "option"),
             (humidifier.DOMAIN, humidifier.ATTR_AVAILABLE_MODES, "mode"),
@@ -1442,7 +1461,10 @@ class ModesTrait(_Trait):
         response = {}
         mode_settings = {}
 
-        if self.state.domain == media_player.DOMAIN:
+        if self.state.domain == fan.DOMAIN:
+            if fan.ATTR_PRESET_MODES in attrs:
+                mode_settings["preset mode"] = attrs.get(fan.ATTR_PRESET_MODE)
+        elif self.state.domain == media_player.DOMAIN:
             if media_player.ATTR_SOUND_MODE_LIST in attrs:
                 mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
         elif self.state.domain == input_select.DOMAIN:
@@ -1463,8 +1485,19 @@ class ModesTrait(_Trait):
         """Execute a SetModes command."""
         settings = params.get("updateModeSettings")
 
+        if self.state.domain == fan.DOMAIN:
+            preset_mode = settings["preset mode"]
+            await self.hass.services.async_call(
+                fan.DOMAIN,
+                fan.SERVICE_SET_PRESET_MODE,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    fan.ATTR_PRESET_MODE: preset_mode,
+                },
+            )
+
         if self.state.domain == input_select.DOMAIN:
-            option = params["updateModeSettings"]["option"]
+            option = settings["option"]
             await self.hass.services.async_call(
                 input_select.DOMAIN,
                 input_select.SERVICE_SELECT_OPTION,
