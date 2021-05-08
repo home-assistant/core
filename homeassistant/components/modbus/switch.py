@@ -70,6 +70,8 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
             self._command_on = config[CONF_COMMAND_ON]
             self._command_off = config[CONF_COMMAND_OFF]
         if CONF_VERIFY in config:
+            if config[CONF_VERIFY] is None:
+                config[CONF_VERIFY] = {}
             self._verify_active = True
             self._verify_address = config[CONF_VERIFY].get(
                 CONF_ADDRESS, config[CONF_ADDRESS]
@@ -97,10 +99,9 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         if state:
             self._is_on = state.state == STATE_ON
 
-        if self._verify_active:
-            async_track_time_interval(
-                self.hass, lambda arg: self.update(), self._scan_interval
-            )
+        async_track_time_interval(
+            self.hass, lambda arg: self.update(), self._scan_interval
+        )
 
     @property
     def is_on(self):
@@ -154,6 +155,8 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
     def update(self):
         """Update the entity state."""
         if not self._verify_active:
+            self._available = True
+            self.schedule_update_ha_state()
             return
 
         result = self._read_func(self._slave, self._verify_address, 1)

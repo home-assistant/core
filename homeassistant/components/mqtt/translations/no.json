@@ -62,7 +62,8 @@
                     "port": "Port",
                     "username": "Brukernavn"
                 },
-                "description": "Vennligst oppgi tilkoblingsinformasjonen for din MQTT megler."
+                "description": "Vennligst oppgi tilkoblingsinformasjonen for din MQTT megler.",
+                "title": "Megleralternativer"
             },
             "options": {
                 "data": {
@@ -78,7 +79,8 @@
                     "will_retain": "Testament melding behold",
                     "will_topic": "Testament melding emne"
                 },
-                "description": "Vennligst velg MQTT-alternativer."
+                "description": "Vennligst velg MQTT-alternativer.",
+                "title": "MQTT-alternativer"
             }
         }
     }
