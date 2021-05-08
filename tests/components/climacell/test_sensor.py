@@ -119,9 +119,9 @@ async def test_v3_sensor(
     check_sensor_state(hass, EPA_HEALTH_CONCERN, "Good")
     check_sensor_state(hass, EPA_PRIMARY_POLLUTANT, "pm25")
     check_sensor_state(hass, FIRE_INDEX, "9")
-    check_sensor_state(hass, GRASS_POLLEN, "0")
-    check_sensor_state(hass, WEED_POLLEN, "0")
-    check_sensor_state(hass, TREE_POLLEN, "0")
+    check_sensor_state(hass, GRASS_POLLEN, "minimal_to_none")
+    check_sensor_state(hass, WEED_POLLEN, "minimal_to_none")
+    check_sensor_state(hass, TREE_POLLEN, "minimal_to_none")
 
 
 async def test_v4_sensor(
