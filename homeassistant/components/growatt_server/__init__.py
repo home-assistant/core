@@ -2,10 +2,7 @@
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 
-
-async def async_setup(hass, config):
-    """Set up this integration."""
-    return True
+from .const import PLATFORMS
 
 
 async def async_setup_entry(
@@ -13,12 +10,10 @@ async def async_setup_entry(
 ) -> bool:
     """Load the saved entities."""
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    return await hass.config_entries.async_forward_entry_unload(entry, "sensor")
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

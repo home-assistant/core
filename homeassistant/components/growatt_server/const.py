@@ -6,3 +6,5 @@ DEFAULT_PLANT_ID = "0"
 DEFAULT_NAME = "Growatt"
 
 DOMAIN = "growatt_server"
+
+PLATFORMS = ["sensor"]
