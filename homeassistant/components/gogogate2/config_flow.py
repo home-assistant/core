@@ -6,7 +6,7 @@ from ismartgate.common import AbstractInfoResponse, ApiError
 from ismartgate.const import GogoGate2ApiErrorCode, ISmartGateApiErrorCode
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_IP_ADDRESS,
@@ -27,12 +27,6 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._ip_address = None
         self._device_type = None
-
-    async def async_step_import(self, config_data: dict = None):
-        """Handle importing of configuration."""
-        result = await self.async_step_user(config_data)
-        self._abort_if_unique_id_configured()
-        return result
 
     async def async_step_homekit(self, discovery_info):
         """Handle homekit discovery."""
@@ -88,9 +82,6 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
 
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "cannot_connect"
-
-        if errors and self.source == SOURCE_IMPORT:
-            return self.async_abort(reason="cannot_connect")
 
         return self.async_show_form(
             step_id="user",
