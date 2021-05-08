@@ -8,7 +8,7 @@ from aiohttp.web_exceptions import HTTPForbidden
 import pytest
 
 from homeassistant.components.daikin.const import KEY_MAC
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -78,27 +78,6 @@ async def test_abort_if_already_setup(hass, mock_daikin):
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_import(hass, mock_daikin):
-    """Test import step."""
-    result = await hass.config_entries.flow.async_init(
-        "daikin",
-        context={"source": SOURCE_IMPORT},
-        data={},
-    )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_init(
-        "daikin",
-        context={"source": SOURCE_IMPORT},
-        data={CONF_HOST: HOST},
-    )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == HOST
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][KEY_MAC] == MAC
 
 
 @pytest.mark.parametrize(

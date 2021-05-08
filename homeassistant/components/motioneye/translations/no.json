@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "invalid_url": "Ugyldig URL-adresse",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "admin_password": "Admin Passord",
+                    "admin_username": "Administrator Brukernavn",
+                    "surveillance_password": "Overv\u00e5king Passord",
+                    "surveillance_username": "Overv\u00e5king Brukernavn",
+                    "url": "URL"
+                }
+            }
+        }
+    }
+}

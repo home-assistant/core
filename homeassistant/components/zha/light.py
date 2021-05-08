@@ -23,14 +23,12 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
-    ATTR_WHITE_VALUE,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
-    SUPPORT_WHITE_VALUE,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import State, callback
@@ -56,6 +54,7 @@ from .core.const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
+    ZHA_OPTIONS,
 )
 from .core.helpers import LogMixin, async_get_zha_config_value
 from .core.registries import ZHA_ENTITIES
@@ -90,7 +89,6 @@ SUPPORT_GROUP_LIGHT = (
     | SUPPORT_FLASH
     | SUPPORT_COLOR
     | SUPPORT_TRANSITION
-    | SUPPORT_WHITE_VALUE
 )
 
 
@@ -131,7 +129,6 @@ class BaseLight(LogMixin, light.LightEntity):
         self._color_temp: int | None = None
         self._min_mireds: int | None = 153
         self._max_mireds: int | None = 500
-        self._white_value: int | None = None
         self._effect_list: list[str] | None = None
         self._effect: str | None = None
         self._supported_features: int = 0
@@ -398,7 +395,10 @@ class Light(BaseLight, ZhaEntity):
             self._effect_list = effect_list
 
         self._default_transition = async_get_zha_config_value(
-            zha_device.gateway.config_entry, CONF_DEFAULT_LIGHT_TRANSITION, 0
+            zha_device.gateway.config_entry,
+            ZHA_OPTIONS,
+            CONF_DEFAULT_LIGHT_TRANSITION,
+            0,
         )
 
     @callback
@@ -557,7 +557,10 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         self._identify_channel = group.endpoint[Identify.cluster_id]
         self._debounced_member_refresh = None
         self._default_transition = async_get_zha_config_value(
-            zha_device.gateway.config_entry, CONF_DEFAULT_LIGHT_TRANSITION, 0
+            zha_device.gateway.config_entry,
+            ZHA_OPTIONS,
+            CONF_DEFAULT_LIGHT_TRANSITION,
+            0,
         )
 
     async def async_added_to_hass(self):
@@ -597,8 +600,6 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         self._hs_color = helpers.reduce_attribute(
             on_states, ATTR_HS_COLOR, reduce=helpers.mean_tuple
         )
-
-        self._white_value = helpers.reduce_attribute(on_states, ATTR_WHITE_VALUE)
 
         self._color_temp = helpers.reduce_attribute(on_states, ATTR_COLOR_TEMP)
         self._min_mireds = helpers.reduce_attribute(

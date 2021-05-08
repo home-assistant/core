@@ -37,6 +37,7 @@
             "init": {
                 "data": {
                     "show_all_sources": "\u986f\u793a\u6240\u6709\u4f86\u6e90",
+                    "update_audyssey": "\u66f4\u65b0 Audyssey \u8a2d\u5b9a",
                     "zone2": "\u8a2d\u5b9a\u5340\u57df 2",
                     "zone3": "\u8a2d\u5b9a\u5340\u57df 3"
                 },

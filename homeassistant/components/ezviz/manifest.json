@@ -5,5 +5,6 @@
   "dependencies": ["ffmpeg"],
   "codeowners": ["@RenierM26", "@baqs"],
   "requirements": ["pyezviz==0.1.8.7"],
-  "config_flow": true
+  "config_flow": true,
+  "iot_class": "cloud_polling"
 }

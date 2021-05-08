@@ -18,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -26,12 +25,6 @@ from .const import DOMAIN
 PLATFORMS = ["media_player", "remote"]
 
 LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Philips TV component."""
-    hass.data[DOMAIN] = {}
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -47,26 +40,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coordinator = PhilipsTVDataUpdateCoordinator(hass, tvapi)
 
     await coordinator.async_refresh()
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
@@ -101,7 +85,7 @@ class PluggableAction:
 
         return _remove
 
-    async def async_run(self, hass: HomeAssistantType, context: Context | None = None):
+    async def async_run(self, hass: HomeAssistant, context: Context | None = None):
         """Run all turn on triggers."""
         for job, variables in self._actions.values():
             hass.async_run_hass_job(job, variables, context)

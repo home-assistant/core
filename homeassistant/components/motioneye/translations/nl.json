@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
+            "invalid_url": "Ongeldige URL",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "admin_password": "Admin Wachtwoord",
+                    "admin_username": "Admin Gebruikersnaam",
+                    "surveillance_password": "Surveillance Wachtwoord",
+                    "surveillance_username": "Surveillance Gebruikersnaam",
+                    "url": "URL"
+                }
+            }
+        }
+    }
+}

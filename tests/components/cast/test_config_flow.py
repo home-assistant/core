@@ -34,7 +34,14 @@ async def test_creating_entry_sets_up_media_player(hass):
     assert len(mock_setup.mock_calls) == 1
 
 
-@pytest.mark.parametrize("source", ["import", "user", "zeroconf"])
+@pytest.mark.parametrize(
+    "source",
+    [
+        config_entries.SOURCE_IMPORT,
+        config_entries.SOURCE_USER,
+        config_entries.SOURCE_ZEROCONF,
+    ],
+)
 async def test_single_instance(hass, source):
     """Test we only allow a single config flow."""
     MockConfigEntry(domain="cast").add_to_hass(hass)
@@ -50,7 +57,7 @@ async def test_single_instance(hass, source):
 async def test_user_setup(hass):
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
-        "cast", context={"source": "user"}
+        "cast", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
 
@@ -70,7 +77,7 @@ async def test_user_setup(hass):
 async def test_user_setup_options(hass):
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
-        "cast", context={"source": "user"}
+        "cast", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
 
@@ -92,7 +99,7 @@ async def test_user_setup_options(hass):
 async def test_zeroconf_setup(hass):
     """Test we can finish a config flow through zeroconf."""
     result = await hass.config_entries.flow.async_init(
-        "cast", context={"source": "zeroconf"}
+        "cast", context={"source": config_entries.SOURCE_ZEROCONF}
     )
     assert result["type"] == "form"
 
@@ -146,7 +153,8 @@ def get_suggested(schema, key):
 )
 async def test_option_flow(hass, parameter_data):
     """Test config flow options."""
-    all_parameters = ["ignore_cec", "known_hosts", "uuid"]
+    basic_parameters = ["known_hosts"]
+    advanced_parameters = ["ignore_cec", "uuid"]
     parameter, initial, suggested, user_input, updated = parameter_data
 
     data = {
@@ -163,32 +171,61 @@ async def test_option_flow(hass, parameter_data):
     # Test ignore_cec and uuid options are hidden if advanced options are disabled
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "options"
+    assert result["step_id"] == "basic_options"
     data_schema = result["data_schema"].schema
     assert set(data_schema) == {"known_hosts"}
     orig_data = dict(config_entry.data)
 
-    # Reconfigure ignore_cec, known_hosts, uuid
-    context = {"source": "user", "show_advanced_options": True}
+    # Reconfigure known_hosts
+    context = {"source": config_entries.SOURCE_USER, "show_advanced_options": True}
     result = await hass.config_entries.options.async_init(
         config_entry.entry_id, context=context
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "options"
+    assert result["step_id"] == "basic_options"
     data_schema = result["data_schema"].schema
-    for other_param in all_parameters:
+    for other_param in basic_parameters:
         if other_param == parameter:
             continue
         assert get_suggested(data_schema, other_param) == ""
-    assert get_suggested(data_schema, parameter) == suggested
+    if parameter in basic_parameters:
+        assert get_suggested(data_schema, parameter) == suggested
 
+    user_input_dict = {}
+    if parameter in basic_parameters:
+        user_input_dict[parameter] = user_input
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={parameter: user_input},
+        user_input=user_input_dict,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "advanced_options"
+    for other_param in basic_parameters:
+        if other_param == parameter:
+            continue
+        assert config_entry.data[other_param] == []
+    # No update yet
+    assert config_entry.data[parameter] == initial
+
+    # Reconfigure ignore_cec, uuid
+    data_schema = result["data_schema"].schema
+    for other_param in advanced_parameters:
+        if other_param == parameter:
+            continue
+        assert get_suggested(data_schema, other_param) == ""
+    if parameter in advanced_parameters:
+        assert get_suggested(data_schema, parameter) == suggested
+
+    user_input_dict = {}
+    if parameter in advanced_parameters:
+        user_input_dict[parameter] = user_input
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=user_input_dict,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] is None
-    for other_param in all_parameters:
+    for other_param in advanced_parameters:
         if other_param == parameter:
             continue
         assert config_entry.data[other_param] == []
@@ -202,18 +239,16 @@ async def test_option_flow(hass, parameter_data):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] is None
-    assert config_entry.data == {
-        **orig_data,
-        "ignore_cec": [],
-        "known_hosts": [],
-        "uuid": [],
-    }
+    expected_data = {**orig_data, "known_hosts": []}
+    if parameter in advanced_parameters:
+        expected_data[parameter] = updated
+    assert dict(config_entry.data) == expected_data
 
 
 async def test_known_hosts(hass, castbrowser_mock, castbrowser_constructor_mock):
     """Test known hosts is passed to pychromecasts."""
     result = await hass.config_entries.flow.async_init(
-        "cast", context={"source": "user"}
+        "cast", context={"source": config_entries.SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"known_hosts": "192.168.0.1, 192.168.0.2"}

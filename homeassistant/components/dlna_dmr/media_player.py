@@ -34,10 +34,10 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import get_local_ip
 import homeassistant.util.dt as dt_util
 
@@ -83,7 +83,7 @@ def catch_request_errors():
 
 
 async def async_start_event_handler(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     server_host: str,
     server_port: int,
     requester,
@@ -118,7 +118,7 @@ async def async_start_event_handler(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config, async_add_entities, discovery_info=None
 ):
     """Set up DLNA DMR platform."""
     if config.get(CONF_URL) is not None:

@@ -5,8 +5,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .common import (
     ATTR_CONFIG,
@@ -23,6 +24,8 @@ from .common import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "tplink"
+
+PLATFORMS = [CONF_LIGHT, CONF_SWITCH]
 
 TPLINK_HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
 
@@ -68,7 +71,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigType):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigType):
     """Set up TPLink from a config entry."""
     config_data = hass.data[DOMAIN].get(ATTR_CONFIG)
 
@@ -108,17 +111,9 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigType):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    forward_unload = hass.config_entries.async_forward_entry_unload
-    remove_lights = remove_switches = False
-    if hass.data[DOMAIN][CONF_LIGHT]:
-        remove_lights = await forward_unload(entry, "light")
-    if hass.data[DOMAIN][CONF_SWITCH]:
-        remove_switches = await forward_unload(entry, "switch")
-
-    if remove_lights or remove_switches:
+    platforms = [platform for platform in PLATFORMS if platform in hass.data[DOMAIN]]
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
+    if unload_ok:
         hass.data[DOMAIN].clear()
-        return True
 
-    # We were not able to unload the platforms, either because there
-    # were none or one of the forward_unloads failed.
-    return False
+    return unload_ok

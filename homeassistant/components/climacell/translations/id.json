@@ -10,6 +10,7 @@
             "user": {
                 "data": {
                     "api_key": "Kunci API",
+                    "api_version": "Versi API",
                     "latitude": "Lintang",
                     "longitude": "Bujur",
                     "name": "Nama"

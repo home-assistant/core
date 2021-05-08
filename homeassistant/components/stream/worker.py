@@ -122,7 +122,7 @@ class SegmentBuffer:
         self._stream_buffer.output.close()
 
 
-def stream_worker(source, options, segment_buffer, quit_event):
+def stream_worker(source, options, segment_buffer, quit_event):  # noqa: C901
     """Handle consuming streams."""
 
     try:

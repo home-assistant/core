@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_STATION_ID, DEFAULT_NAME, DOMAIN
+from .const import API_TIMEOUT, CONF_STATION_ID, DEFAULT_NAME, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -24,7 +24,6 @@ class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for GIOS."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -39,9 +38,9 @@ class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                 websession = async_get_clientsession(self.hass)
 
-                with timeout(30):
+                with timeout(API_TIMEOUT):
                     gios = Gios(user_input[CONF_STATION_ID], websession)
-                    await gios.update()
+                    await gios.async_update()
 
                 return self.async_create_entry(
                     title=user_input[CONF_STATION_ID],

@@ -1,5 +1,4 @@
 """Integration with the Rachio Iro sprinkler system controller."""
-import asyncio
 import logging
 import secrets
 
@@ -26,28 +25,11 @@ PLATFORMS = ["switch", "binary_sensor"]
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the rachio component from YAML."""
-
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
-
-
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok
 
 
@@ -84,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Get the API user
     try:
-        await hass.async_add_executor_job(person.setup, hass)
+        await person.async_setup(hass)
     except ConnectTimeout as error:
         _LOGGER.error("Could not reach the Rachio API: %s", error)
         raise ConfigEntryNotReady from error
@@ -100,12 +82,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     # Enable platform
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = person
     async_register_webhook(hass, webhook_id, entry.entry_id)
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True

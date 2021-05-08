@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/scrape",
   "requirements": ["beautifulsoup4==4.9.3"],
   "after_dependencies": ["rest"],
-  "codeowners": ["@fabaff"]
+  "codeowners": ["@fabaff"],
+  "iot_class": "cloud_polling"
 }

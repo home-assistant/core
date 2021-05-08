@@ -6,9 +6,6 @@ import logging
 import struct
 from typing import Any
 
-from pymodbus.exceptions import ConnectionException, ModbusException
-from pymodbus.pdu import ExceptionResponse
-
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     HVAC_MODE_AUTO,
@@ -24,12 +21,9 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ATTR_TEMPERATURE,
@@ -56,7 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     async_add_entities,
     discovery_info: DiscoveryInfoType | None = None,
@@ -139,7 +133,7 @@ class ModbusThermostat(ClimateEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         async_track_time_interval(
-            self.hass, lambda arg: self._update(), self._scan_interval
+            self.hass, lambda arg: self.update(), self._scan_interval
         )
 
     @property
@@ -215,15 +209,19 @@ class ModbusThermostat(ClimateEntity):
         )
         byte_string = struct.pack(self._structure, target_temperature)
         register_value = struct.unpack(">h", byte_string[0:2])[0]
-        self._write_register(self._target_temperature_register, register_value)
-        self._update()
+        self._available = self._hub.write_registers(
+            self._slave,
+            self._target_temperature_register,
+            register_value,
+        )
+        self.update()
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
-    def _update(self):
+    def update(self):
         """Update Target & Current Temperature."""
         self._target_temperature = self._read_register(
             CALL_TYPE_REGISTER_HOLDING, self._target_temperature_register
@@ -236,22 +234,15 @@ class ModbusThermostat(ClimateEntity):
 
     def _read_register(self, register_type, register) -> float | None:
         """Read register using the Modbus hub slave."""
-        try:
-            if register_type == CALL_TYPE_REGISTER_INPUT:
-                result = self._hub.read_input_registers(
-                    self._slave, register, self._count
-                )
-            else:
-                result = self._hub.read_holding_registers(
-                    self._slave, register, self._count
-                )
-        except ConnectionException:
+        if register_type == CALL_TYPE_REGISTER_INPUT:
+            result = self._hub.read_input_registers(self._slave, register, self._count)
+        else:
+            result = self._hub.read_holding_registers(
+                self._slave, register, self._count
+            )
+        if result is None:
             self._available = False
-            return
-
-        if isinstance(result, (ModbusException, ExceptionResponse)):
-            self._available = False
-            return
+            return -1
 
         byte_string = b"".join(
             [x.to_bytes(2, byteorder="big") for x in result.registers]
@@ -264,21 +255,11 @@ class ModbusThermostat(ClimateEntity):
             )
             return -1
 
-        val = val[0]
+        val2 = val[0]
         register_value = format(
-            (self._scale * val) + self._offset, f".{self._precision}f"
+            (self._scale * val2) + self._offset, f".{self._precision}f"
         )
-        register_value = float(register_value)
+        register_value2 = float(register_value)
         self._available = True
 
-        return register_value
-
-    def _write_register(self, register, value):
-        """Write holding register using the Modbus hub slave."""
-        try:
-            self._hub.write_registers(self._slave, register, value)
-        except ConnectionException:
-            self._available = False
-            return
-
-        self._available = True
+        return register_value2

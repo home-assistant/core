@@ -1,35 +1,40 @@
 # Describes the format for available switch services
 
 reset:
+  name: Reset
   description: Resets the counter of an utility meter.
-  fields:
-    entity_id:
-      description: Name(s) of the utility meter to reset
-      example: "utility_meter.energy"
+  target:
 
 next_tariff:
+  name: Next Tariff
   description: Changes the tariff to the next one.
-  fields:
-    entity_id:
-      description: Name(s) of entities to reset
-      example: "utility_meter.energy"
+  target:
 
 select_tariff:
-  description: selects the current tariff of an utility meter.
+  name: Select Tariff
+  description: Selects the current tariff of an utility meter.
+  target:
   fields:
-    entity_id:
-      description: Name of the entity to set the tariff for
-      example: "utility_meter.energy"
     tariff:
+      name: Tariff
       description: Name of the tariff to switch to
       example: "offpeak"
+      required: true
+      selector:
+        text:
 
 calibrate:
-  description: calibrates an utility meter.
+  name: Calibrate
+  description: Calibrates a utility meter sensor.
+  target:
+    entity:
+      domain: sensor
   fields:
-    entity_id:
-      description: Name of the entity to calibrate
-      example: "utility_meter.energy"
     value:
+      name: Value
       description: Value to which set the meter
       example: "100"
+      required: true
+      selector:
+        text:
+

@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zone
 from homeassistant.components.geofency import CONF_MOBILE_BEACONS, DOMAIN
 from homeassistant.config import async_process_ha_core_config
@@ -157,7 +157,7 @@ async def webhook_id(hass, geofency_client):
         {"internal_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM, result
 

@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "AVM FRITZ!Box: {name}",
+    "flow_title": "AVM FRITZ!SmartHome: {name}",
     "step": {
       "user": {
         "description": "Enter your AVM FRITZ!Box information.",

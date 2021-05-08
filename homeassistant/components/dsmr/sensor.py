@@ -21,9 +21,9 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     TIME_HOURS,
 )
-from homeassistant.core import CoreState, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import Throttle
 
 from .const import (
@@ -73,7 +73,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the DSMR sensor."""
     config = entry.data
@@ -362,7 +362,7 @@ class DSMREntity(SensorEntity):
         return self._unique_id
 
     @property
-    def device_info(self) -> dict[str, any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._device_serial)},

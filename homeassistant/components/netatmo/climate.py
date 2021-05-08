@@ -158,7 +158,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     await data_handler.unregister_data_class(HOMEDATA_DATA_CLASS_NAME, None)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     if home_data is not None:
         platform.async_register_entity_service(
@@ -651,8 +651,5 @@ def get_all_home_ids(home_data: pyatmo.HomeData) -> list[str]:
     return [
         home_data.homes[home_id]["id"]
         for home_id in home_data.homes
-        if (
-            "therm_schedules" in home_data.homes[home_id]
-            and "modules" in home_data.homes[home_id]
-        )
+        if "modules" in home_data.homes[home_id]
     ]

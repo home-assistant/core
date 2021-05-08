@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
 from functools import partial, wraps
 import inspect
 import logging
 import logging.handlers
 import queue
 import traceback
-from typing import Any, Awaitable, Callable, Coroutine, cast, overload
+from typing import Any, Awaitable, Callable, cast, overload
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant, callback, is_callback
@@ -77,6 +78,9 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
     @callback
     def _async_stop_queue_handler(_: Any) -> None:
         """Cleanup handler."""
+        # Ensure any messages that happen after close still get logged
+        for original_handler in migrated_handlers:
+            logging.root.addHandler(original_handler)
         logging.root.removeHandler(queue_handler)
         listener.stop()
 

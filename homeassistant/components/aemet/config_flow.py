@@ -12,8 +12,6 @@ from .const import DEFAULT_NAME, DOMAIN
 class AemetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for AEMET OpenData."""
 
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         errors = {}

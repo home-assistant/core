@@ -34,7 +34,8 @@
                 "data": {
                     "name": "\u901a\u77e5\u670d\u52d9\u540d\u7a31\uff08\u8b8a\u66f4\u5f8c\u9700\u91cd\u555f\uff09",
                     "recipient": "\u7c21\u8a0a\u901a\u77e5\u6536\u4ef6\u8005",
-                    "track_new_devices": "\u8ffd\u8e64\u65b0\u88dd\u7f6e"
+                    "track_new_devices": "\u8ffd\u8e64\u65b0\u88dd\u7f6e",
+                    "track_wired_clients": "\u8ffd\u8e64\u6709\u7dda\u7db2\u8def\u5ba2\u6236\u7aef"
                 }
             }
         }

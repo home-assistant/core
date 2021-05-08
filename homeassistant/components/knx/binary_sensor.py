@@ -1,13 +1,13 @@
 """Support for KNX/IP binary sensors."""
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable
+from typing import Any
 
 from xknx.devices import BinarySensor as XknxBinarySensor
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES, BinarySensorEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt
 
@@ -18,7 +18,7 @@ from .knx_entity import KnxEntity
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: Callable[[Iterable[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up binary sensor(s) for KNX platform."""
@@ -36,6 +36,7 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity):
         """Initialize of KNX binary sensor."""
         self._device: XknxBinarySensor
         super().__init__(device)
+        self._unique_id = f"{self._device.remote_value.group_address_state}"
 
     @property
     def device_class(self) -> str | None:

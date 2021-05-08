@@ -32,11 +32,13 @@ async def test_humanify_command_received(hass):
                     EVENT_COMMAND_RECEIVED,
                     {
                         "request_id": "abcd",
-                        ATTR_ENTITY_ID: "light.kitchen",
-                        "execution": {
-                            "command": "action.devices.commands.OnOff",
-                            "params": {"on": True},
-                        },
+                        ATTR_ENTITY_ID: ["light.kitchen"],
+                        "execution": [
+                            {
+                                "command": "action.devices.commands.OnOff",
+                                "params": {"on": True},
+                            }
+                        ],
                         "source": SOURCE_LOCAL,
                     },
                 ),
@@ -44,11 +46,13 @@ async def test_humanify_command_received(hass):
                     EVENT_COMMAND_RECEIVED,
                     {
                         "request_id": "abcd",
-                        ATTR_ENTITY_ID: "light.non_existing",
-                        "execution": {
-                            "command": "action.devices.commands.OnOff",
-                            "params": {"on": False},
-                        },
+                        ATTR_ENTITY_ID: ["light.non_existing"],
+                        "execution": [
+                            {
+                                "command": "action.devices.commands.OnOff",
+                                "params": {"on": False},
+                            }
+                        ],
                         "source": SOURCE_CLOUD,
                     },
                 ),
@@ -63,10 +67,8 @@ async def test_humanify_command_received(hass):
 
     assert event1["name"] == "Google Assistant"
     assert event1["domain"] == DOMAIN
-    assert event1["message"] == "sent command OnOff for The Kitchen Lights (via local)"
-    assert event1["entity_id"] == "light.kitchen"
+    assert event1["message"] == "sent command OnOff (via local)"
 
     assert event2["name"] == "Google Assistant"
     assert event2["domain"] == DOMAIN
-    assert event2["message"] == "sent command OnOff for light.non_existing (via cloud)"
-    assert event2["entity_id"] == "light.non_existing"
+    assert event2["message"] == "sent command OnOff"

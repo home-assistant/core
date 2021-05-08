@@ -4,11 +4,11 @@
     "step": {
       "user": {
         "title": "Tuya",
-        "description": "Enter your Tuya credential.",
+        "description": "Enter your Tuya credentials.",
         "data": {
           "country_code": "Your account country code (e.g., 1 for USA or 86 for China)",
           "password": "[%key:common::config_flow::data::password%]",
-          "platform": "The app where your account register",
+          "platform": "The app where your account is registered",
           "username": "[%key:common::config_flow::data::username%]"
         }
       }

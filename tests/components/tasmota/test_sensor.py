@@ -542,7 +542,7 @@ async def test_enable_status_sensor(hass, mqtt_mock, setup_tasmota):
     assert state is None
     entry = entity_reg.async_get("sensor.tasmota_signal")
     assert entry.disabled
-    assert entry.disabled_by == "integration"
+    assert entry.disabled_by == er.DISABLED_INTEGRATION
 
     # Enable the status sensor
     updated_entry = entity_reg.async_update_entity(

@@ -36,19 +36,6 @@
 - [ ] Breaking change (fix/feature causing existing functionality to break)
 - [ ] Code quality improvements to existing code or addition of tests
 
-## Example entry for `configuration.yaml`:
-<!--
-  Supplying a configuration snippet, makes it easier for a maintainer to test
-  your PR. Furthermore, for new integrations, it gives an impression of how
-  the configuration would look like.
-  Note: Remove this section if this PR does not have an example entry.
--->
-
-```yaml
-# Example configuration.yaml
-
-```
-
 ## Additional information
 <!--
   Details are important, and help maintainers processing your PR.

@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "H\u00e4\u00e4lestamine on k\u00e4imas",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4ivitatud",
+            "connection_error": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus"
+        },
+        "flow_title": "FRITZ!Box t\u00f6\u00f6riistad: {name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Avasti FRITZ! Box: {name} \n\n Seadista FRITZ! Boxi t\u00f6\u00f6riistad oma {name} juhtimiseks",
+                "title": "FRITZ! Boxi t\u00f6\u00f6riistade seadistamine"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "description": "V\u00e4rskenda FRITZ!Box Tools'i volitusi: {host}.\n\nFRITZ!Box Tools ei saa FRITZ!Boxi sisse logida.",
+                "title": "FRITZ!Boxi t\u00f6\u00f6riistade uuendamine - volitused"
+            },
+            "start_config": {
+                "data": {
+                    "host": "Host",
+                    "password": "Salas\u00f5na",
+                    "port": "Port",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Seadista FRITZ!Boxi t\u00f6\u00f6riistad oma FRITZ!Boxi juhtimiseks.\n Minimaalselt vaja: kasutajanimi ja salas\u00f5na.",
+                "title": "FRITZ! Boxi t\u00f6\u00f6riistade seadistamine - kohustuslik"
+            }
+        }
+    }
+}

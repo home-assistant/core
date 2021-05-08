@@ -33,7 +33,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entities.append(AdvantageAirZoneSignal(instance, ac_key, zone_key))
     async_add_entities(entities)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
         {vol.Required("minutes"): cv.positive_int},

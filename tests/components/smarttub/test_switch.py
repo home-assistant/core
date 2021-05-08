@@ -16,7 +16,8 @@ from homeassistant.const import STATE_OFF, STATE_ON
 async def test_pumps(spa, setup_entry, hass, pump_id, pump_state, entity_suffix):
     """Test pump entities."""
 
-    pump = next(pump for pump in await spa.get_pumps() if pump.id == pump_id)
+    status = await spa.get_status_full()
+    pump = next(pump for pump in status.pumps if pump.id == pump_id)
 
     entity_id = f"switch.{spa.brand}_{spa.model}_{entity_suffix}"
     state = hass.states.get(entity_id)

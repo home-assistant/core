@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_DEVICES,
@@ -58,18 +58,23 @@ DEFAULT_TCP_PORT = 5003
 DEFAULT_VERSION = "1.4"
 
 
+def set_default_persistence_file(value: dict) -> dict:
+    """Set default persistence file."""
+    for idx, gateway in enumerate(value):
+        fil = gateway.get(CONF_PERSISTENCE_FILE)
+        if fil is not None:
+            continue
+        new_name = f"mysensors{idx + 1}.pickle"
+        gateway[CONF_PERSISTENCE_FILE] = new_name
+
+    return value
+
+
 def has_all_unique_files(value):
     """Validate that all persistence files are unique and set if any is set."""
-    persistence_files = [gateway.get(CONF_PERSISTENCE_FILE) for gateway in value]
-    if None in persistence_files and any(
-        name is not None for name in persistence_files
-    ):
-        raise vol.Invalid(
-            "persistence file name of all devices must be set if any is set"
-        )
-    if not all(name is None for name in persistence_files):
-        schema = vol.Schema(vol.Unique())
-        schema(persistence_files)
+    persistence_files = [gateway[CONF_PERSISTENCE_FILE] for gateway in value]
+    schema = vol.Schema(vol.Unique())
+    schema(persistence_files)
     return value
 
 
@@ -128,7 +133,10 @@ CONFIG_SCHEMA = vol.Schema(
                 deprecated(CONF_PERSISTENCE),
                 {
                     vol.Required(CONF_GATEWAYS): vol.All(
-                        cv.ensure_list, has_all_unique_files, [GATEWAY_SCHEMA]
+                        cv.ensure_list,
+                        set_default_persistence_file,
+                        has_all_unique_files,
+                        [GATEWAY_SCHEMA],
                     ),
                     vol.Optional(CONF_RETAIN, default=True): cv.boolean,
                     vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): cv.string,
@@ -142,7 +150,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the MySensors component."""
     hass.data[DOMAIN] = {DATA_HASS_CONFIG: config}
 
@@ -159,7 +167,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
             CONF_TOPIC_IN_PREFIX: gw.get(CONF_TOPIC_IN_PREFIX, ""),
             CONF_RETAIN: config[CONF_RETAIN],
             CONF_VERSION: config[CONF_VERSION],
-            CONF_PERSISTENCE_FILE: gw.get(CONF_PERSISTENCE_FILE)
+            CONF_PERSISTENCE_FILE: gw[CONF_PERSISTENCE_FILE]
             # nodes config ignored at this time. renaming nodes can now be done from the frontend.
         }
         for gw in config[CONF_GATEWAYS]
@@ -182,7 +190,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an instance of the MySensors integration.
 
     Every instance has a connection to exactly one Gateway.
@@ -234,18 +242,13 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Remove an instance of the MySensors integration."""
 
     gateway = get_mysensors_gateway(hass, entry.entry_id)
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS_WITH_ENTRY_SUPPORT
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, PLATFORMS_WITH_ENTRY_SUPPORT
     )
     if not unload_ok:
         return False

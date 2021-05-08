@@ -269,17 +269,9 @@ class HKDevice:
 
         await self.pairing.unsubscribe(self.watchable_characteristics)
 
-        unloads = []
-        for platform in self.platforms:
-            unloads.append(
-                self.hass.config_entries.async_forward_entry_unload(
-                    self.config_entry, platform
-                )
-            )
-
-        results = await asyncio.gather(*unloads)
-
-        return False not in results
+        return await self.hass.config_entries.async_unload_platforms(
+            self.config_entry, self.platforms
+        )
 
     async def async_refresh_entity_map(self, config_num):
         """Handle setup of a HomeKit accessory."""

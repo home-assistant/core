@@ -1,8 +1,10 @@
 {
     "config": {
         "abort": {
+            "addon_get_discovery_info_failed": "Z-Wave-JS-Add-on-Discovery-Informationen konnten nicht abgerufen werden.",
             "addon_info_failed": "Fehler beim Abrufen von Z-Wave JS Add-on Informationen.",
             "addon_install_failed": "Installation des Z-Wave JS Add-Ons fehlgeschlagen.",
+            "addon_missing_discovery_info": "Fehlende Informationen zur Erkennung des Z-Wave JS-Add-Ons.",
             "addon_set_config_failed": "Setzen der Z-Wave JS Konfiguration fehlgeschlagen",
             "addon_start_failed": "Starten des Z-Wave JS Add-ons fehlgeschlagen.",
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",

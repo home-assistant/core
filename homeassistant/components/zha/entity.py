@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 import functools
 import logging
-from typing import Any, Awaitable
+from typing import Any
 
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, Event, callback
@@ -82,7 +83,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         return self._should_poll
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> entity.DeviceInfo:
         """Return a device description for device registry."""
         zha_device_info = self._zha_device.device_info
         ieee = zha_device_info["ieee"]

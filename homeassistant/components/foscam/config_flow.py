@@ -41,7 +41,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for foscam."""
 
     VERSION = 2
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def _validate_and_create(self, data):
         """Validate the user input allows us to connect.

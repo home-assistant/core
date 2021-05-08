@@ -4,5 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/twentemilieu",
   "requirements": ["twentemilieu==0.3.0"],
-  "codeowners": ["@frenck"]
+  "codeowners": ["@frenck"],
+  "iot_class": "cloud_polling"
 }

@@ -62,7 +62,8 @@
                     "port": "Port",
                     "username": "Kasutajanimi"
                 },
-                "description": "Sisesta oma MQTT vahendaja \u00fchenduse teave."
+                "description": "Sisesta oma MQTT vahendaja \u00fchenduse teave.",
+                "title": "MQTT maakleri valikud"
             },
             "options": {
                 "data": {
@@ -78,7 +79,8 @@
                     "will_retain": "L\u00f5petamisteate j\u00e4\u00e4dvustamine",
                     "will_topic": "L\u00f5petamisteade"
                 },
-                "description": "Vali MQTT s\u00e4tted."
+                "description": "Avastamine - kui avastamine on lubatud (soovitatav) avastab Home Assistant automaatselt seadmed ja \u00fcksused, kes avaldavad oma konfiguratsiooni MQTT maakleris. Kui avastamine on keelatud, tuleb kogu seadistamine teha k\u00e4sitsi.\n S\u00fcnnis\u00f5num - s\u00fcnnis\u00f5num saadetakse iga kord kui Home Assistant (uuesti) MQTT maakleriga \u00fchendust v\u00f5tab.\n Tahte s\u00f5num - tahte s\u00f5num saadetakse iga kord kui Home Assistant kaotab \u00fchenduse maakleriga, nii korralisel (nt Home Assistant sulgub) kui ka erakorralisel (nt Home Assistant krahhi v\u00f5i v\u00f5rgu\u00fchenduse kaotamisel) \u00fchenduse kadumisel.",
+                "title": "MQTT valikud"
             }
         }
     }

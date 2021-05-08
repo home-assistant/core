@@ -5,12 +5,14 @@ It will be removed when auth system production ready
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
 import hmac
-from typing import Any, cast
+from typing import cast
 
 import voluptuous as vol
 
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
@@ -57,7 +59,7 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
             raise InvalidAuthError
 
     async def async_get_or_create_credentials(
-        self, flow_result: dict[str, str]
+        self, flow_result: Mapping[str, str]
     ) -> Credentials:
         """Return credentials for this login."""
         credentials = await self.async_credentials()
@@ -82,7 +84,7 @@ class LegacyLoginFlow(LoginFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Handle the step of the form."""
         errors = {}
 

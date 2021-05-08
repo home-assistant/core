@@ -1,5 +1,4 @@
 """Support to embed Plex."""
-import asyncio
 from functools import partial
 import logging
 
@@ -232,15 +231,11 @@ async def async_unload_entry(hass, entry):
     for unsub in dispatchers:
         unsub()
 
-    tasks = [
-        hass.config_entries.async_forward_entry_unload(entry, platform)
-        for platform in PLATFORMS
-    ]
-    await asyncio.gather(*tasks)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     hass.data[PLEX_DOMAIN][SERVERS].pop(server_id)
 
-    return True
+    return unload_ok
 
 
 async def async_options_updated(hass, entry):

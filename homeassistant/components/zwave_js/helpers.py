@@ -1,17 +1,40 @@
 """Helper functions for Z-Wave JS integration."""
 from __future__ import annotations
 
-from typing import cast
+from typing import Any, cast
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.node import Node as ZwaveNode
+from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
 
-from .const import DATA_CLIENT, DOMAIN
+from .const import CONF_DATA_COLLECTION_OPTED_IN, DATA_CLIENT, DOMAIN
+
+
+@callback
+def get_value_of_zwave_value(value: ZwaveValue | None) -> Any | None:
+    """Return the value of a ZwaveValue."""
+    return value.value if value else None
+
+
+async def async_enable_statistics(client: ZwaveClient) -> None:
+    """Enable statistics on the driver."""
+    await client.driver.async_enable_statistics("Home Assistant", HA_VERSION)
+
+
+@callback
+def update_data_collection_preference(
+    hass: HomeAssistant, entry: ConfigEntry, preference: bool
+) -> None:
+    """Update data collection preference on config entry."""
+    new_data = entry.data.copy()
+    new_data[CONF_DATA_COLLECTION_OPTED_IN] = preference
+    hass.config_entries.async_update_entry(entry, data=new_data)
 
 
 @callback
@@ -27,7 +50,7 @@ def get_device_id(client: ZwaveClient, node: ZwaveNode) -> tuple[str, str]:
 
 
 @callback
-def get_home_and_node_id_from_device_id(device_id: tuple[str, str]) -> list[str]:
+def get_home_and_node_id_from_device_id(device_id: tuple[str, ...]) -> list[str]:
     """
     Get home ID and node ID for Z-Wave device registry entry.
 

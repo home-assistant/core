@@ -64,6 +64,7 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
 
         # We make a copy so our initial render is 'unknown' and not 'unavailable'
         self._rendered = dict(self._static_rendered)
+        self._parse_result = set()
 
     @property
     def name(self):
@@ -115,17 +116,18 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
         template.attach(self.hass, self._config)
         await super().async_added_to_hass()
         if self.coordinator.data is not None:
-            self._handle_coordinator_update()
+            self._process_data()
 
     @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _process_data(self) -> None:
+        """Process new data."""
         try:
             rendered = dict(self._static_rendered)
 
             for key in self._to_render:
                 rendered[key] = self._config[key].async_render(
-                    self.coordinator.data["run_variables"], parse_result=False
+                    self.coordinator.data["run_variables"],
+                    parse_result=key in self._parse_result,
                 )
 
             if CONF_ATTRIBUTES in self._config:
@@ -142,4 +144,9 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
             self._rendered = self._static_rendered
 
         self.async_set_context(self.coordinator.data["context"])
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._process_data()
         self.async_write_ha_state()

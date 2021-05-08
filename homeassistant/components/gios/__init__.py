@@ -8,14 +8,16 @@ from gios import ApiError, Gios, InvalidSensorsData, NoStationError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_STATION_ID, DOMAIN, SCAN_INTERVAL
+from .const import API_TIMEOUT, CONF_STATION_ID, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS = ["air_quality"]
 
-async def async_setup_entry(hass, config_entry):
+
+async def async_setup_entry(hass, entry):
     """Set up GIOS as config entry."""
-    station_id = config_entry.data[CONF_STATION_ID]
+    station_id = entry.data[CONF_STATION_ID]
     _LOGGER.debug("Using station_id: %s", station_id)
 
     websession = async_get_clientsession(hass)
@@ -24,19 +26,17 @@ async def async_setup_entry(hass, config_entry):
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "air_quality")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    hass.data[DOMAIN].pop(config_entry.entry_id)
-    await hass.config_entries.async_forward_entry_unload(config_entry, "air_quality")
-    return True
+    hass.data[DOMAIN].pop(entry.entry_id)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class GiosDataUpdateCoordinator(DataUpdateCoordinator):
@@ -51,8 +51,8 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         try:
-            with timeout(30):
-                await self.gios.update()
+            with timeout(API_TIMEOUT):
+                return await self.gios.async_update()
         except (
             ApiError,
             NoStationError,
@@ -60,4 +60,3 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator):
             InvalidSensorsData,
         ) as error:
             raise UpdateFailed(error) from error
-        return self.gios.data

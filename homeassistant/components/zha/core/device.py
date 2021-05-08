@@ -17,13 +17,12 @@ from zigpy.zcl.clusters.general import Groups
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.const import ATTR_COMMAND, ATTR_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import HomeAssistantType
 
 from . import channels, typing as zha_typing
 from .const import (
@@ -66,6 +65,7 @@ from .const import (
     UNKNOWN,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
+    ZHA_OPTIONS,
 )
 from .helpers import LogMixin, async_get_zha_config_value
 
@@ -88,7 +88,7 @@ class ZHADevice(LogMixin):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         zigpy_device: zha_typing.ZigpyDeviceType,
         zha_gateway: zha_typing.ZhaGatewayType,
     ):
@@ -288,7 +288,7 @@ class ZHADevice(LogMixin):
     @classmethod
     def new(
         cls,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         zigpy_dev: zha_typing.ZigpyDeviceType,
         gateway: zha_typing.ZhaGatewayType,
         restored: bool = False,
@@ -397,7 +397,10 @@ class ZHADevice(LogMixin):
     async def async_configure(self):
         """Configure the device."""
         should_identify = async_get_zha_config_value(
-            self._zha_gateway.config_entry, CONF_ENABLE_IDENTIFY_ON_JOIN, True
+            self._zha_gateway.config_entry,
+            ZHA_OPTIONS,
+            CONF_ENABLE_IDENTIFY_ON_JOIN,
+            True,
         )
         self.debug("started configuration")
         await self._channels.async_configure()

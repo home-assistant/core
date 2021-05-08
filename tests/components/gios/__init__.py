@@ -26,8 +26,8 @@ async def init_integration(hass, incomplete_data=False) -> MockConfigEntry:
     sensors = json.loads(load_fixture("gios/sensors.json"))
     if incomplete_data:
         indexes["stIndexLevel"]["indexLevelName"] = "foo"
-        sensors["PM10"]["values"][0]["value"] = None
-        sensors["PM10"]["values"][1]["value"] = None
+        sensors["pm10"]["values"][0]["value"] = None
+        sensors["pm10"]["values"][1]["value"] = None
 
     with patch(
         "homeassistant.components.gios.Gios._get_stations", return_value=STATIONS

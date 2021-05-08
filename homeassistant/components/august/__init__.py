@@ -33,12 +33,6 @@ API_CACHED_ATTRS = (
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the August component from YAML."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up August from a config entry."""
 
@@ -58,14 +52,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id][DATA_AUGUST].async_stop()
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
@@ -85,15 +72,13 @@ async def async_setup_august(hass, config_entry, august_gateway):
 
     await august_gateway.async_authenticate()
 
+    hass.data.setdefault(DOMAIN, {})
     data = hass.data[DOMAIN][config_entry.entry_id] = {
         DATA_AUGUST: AugustData(hass, august_gateway)
     }
     await data[DATA_AUGUST].async_setup()
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 

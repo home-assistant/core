@@ -48,7 +48,8 @@
                     "lon_sw": "L\u00e4ngengrad S\u00fcdwest-Ecke",
                     "mode": "Berechnung",
                     "show_on_map": "Auf Karte anzeigen"
-                }
+                },
+                "title": "\u00d6ffentlicher Netatmo Wettersensor"
             },
             "public_weather_areas": {
                 "data": {

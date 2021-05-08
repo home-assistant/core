@@ -2,11 +2,10 @@
 import dataclasses
 import re
 
-from gogogate2_api.common import AbstractInfoResponse, ApiError
-from gogogate2_api.const import GogoGate2ApiErrorCode, ISmartGateApiErrorCode
+from ismartgate.common import AbstractInfoResponse, ApiError
+from ismartgate.const import GogoGate2ApiErrorCode, ISmartGateApiErrorCode
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow
 from homeassistant.const import (
     CONF_DEVICE,
@@ -23,7 +22,6 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
     """Gogogate2 config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the config flow."""
@@ -57,7 +55,7 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
-            api = get_api(user_input)
+            api = get_api(self.hass, user_input)
             try:
                 data: AbstractInfoResponse = await api.async_info()
                 data_dict = dataclasses.asdict(data)

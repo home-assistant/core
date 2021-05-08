@@ -6,7 +6,7 @@ from typing import Any
 
 from pyownet import protocol
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
     SENSOR_TYPE_COUNT,
@@ -65,7 +65,7 @@ class OneWireBaseEntity(Entity):
         return self._unique_id
 
     @property
-    def device_info(self) -> dict[str, Any] | None:
+    def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         return self._device_info
 

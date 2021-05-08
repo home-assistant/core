@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import namedtuple
-from typing import Sequence
+from collections.abc import Sequence
 
 from pysmartthings import Attribute, Capability
 

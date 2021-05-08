@@ -29,8 +29,6 @@ def configured_instances(hass):
 class GeonetnzVolcanoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a GeoNet NZ Volcano config flow."""
 
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
-
     async def _show_form(self, errors=None):
         """Show the form to the user."""
         data_schema = vol.Schema(
@@ -65,6 +63,6 @@ class GeonetnzVolcanoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_METRIC
 
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        user_input[CONF_SCAN_INTERVAL] = scan_interval.seconds
+        user_input[CONF_SCAN_INTERVAL] = scan_interval.total_seconds()
 
         return self.async_create_entry(title=identifier, data=user_input)

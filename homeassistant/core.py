@@ -7,6 +7,7 @@ of entities and react to changes.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Collection, Coroutine, Iterable, Mapping
 import datetime
 import enum
 import functools
@@ -17,19 +18,7 @@ import re
 import threading
 from time import monotonic
 from types import MappingProxyType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Awaitable,
-    Callable,
-    Collection,
-    Coroutine,
-    Iterable,
-    Mapping,
-    Optional,
-    TypeVar,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, cast
 
 import attr
 import voluptuous as vol
@@ -87,7 +76,7 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntries
 
 
-STAGE_1_SHUTDOWN_TIMEOUT = 120
+STAGE_1_SHUTDOWN_TIMEOUT = 100
 STAGE_2_SHUTDOWN_TIMEOUT = 60
 STAGE_3_SHUTDOWN_TIMEOUT = 30
 
@@ -784,7 +773,9 @@ class EventBus:
 
         return remove_listener
 
-    def listen_once(self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
+    def listen_once(
+        self, event_type: str, listener: Callable[[Event], None]
+    ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``
@@ -1540,7 +1531,7 @@ class Config:
         self.longitude: float = 0
         self.elevation: int = 0
         self.location_name: str = "Home"
-        self.time_zone: datetime.tzinfo = dt_util.UTC
+        self.time_zone: str = "UTC"
         self.units: UnitSystem = METRIC_SYSTEM
         self.internal_url: str | None = None
         self.external_url: str | None = None
@@ -1630,17 +1621,13 @@ class Config:
 
         Async friendly.
         """
-        time_zone = dt_util.UTC.zone
-        if self.time_zone and getattr(self.time_zone, "zone"):
-            time_zone = getattr(self.time_zone, "zone")
-
         return {
             "latitude": self.latitude,
             "longitude": self.longitude,
             "elevation": self.elevation,
             "unit_system": self.units.as_dict(),
             "location_name": self.location_name,
-            "time_zone": time_zone,
+            "time_zone": self.time_zone,
             "components": self.components,
             "config_dir": self.config_dir,
             # legacy, backwards compat
@@ -1660,7 +1647,7 @@ class Config:
         time_zone = dt_util.get_time_zone(time_zone_str)
 
         if time_zone:
-            self.time_zone = time_zone
+            self.time_zone = time_zone_str
             dt_util.set_default_time_zone(time_zone)
         else:
             raise ValueError(f"Received invalid time zone {time_zone_str}")
@@ -1730,17 +1717,13 @@ class Config:
 
     async def async_store(self) -> None:
         """Store [homeassistant] core config."""
-        time_zone = dt_util.UTC.zone
-        if self.time_zone and getattr(self.time_zone, "zone"):
-            time_zone = getattr(self.time_zone, "zone")
-
         data = {
             "latitude": self.latitude,
             "longitude": self.longitude,
             "elevation": self.elevation,
             "unit_system": self.units.name,
             "location_name": self.location_name,
-            "time_zone": time_zone,
+            "time_zone": self.time_zone,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
         }
