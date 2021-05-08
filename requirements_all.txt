@@ -390,7 +390,7 @@ boschshcpy==0.2.17
 boto3==1.16.52
 
 # homeassistant.components.braviatv
-bravia-tv==1.0.8
+bravia-tv==1.0.11
 
 # homeassistant.components.broadlink
 broadlink==0.17.0
