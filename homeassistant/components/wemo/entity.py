@@ -203,7 +203,7 @@ class WemoSubscriptionEntity(WemoEntity):
         self, _device: WeMoDevice, event_type: str, _params: str
     ) -> None:
         """Update the state by the Wemo device."""
-        _LOGGER.info("Subscription event (%s) for %s", event_type, self.name)
+        _LOGGER.debug("Subscription event (%s) for %s", event_type, self.name)
         if event_type == EVENT_TYPE_LONG_PRESS:
             self.hass.bus.fire(
                 WEMO_EVENT,
