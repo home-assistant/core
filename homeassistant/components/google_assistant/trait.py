@@ -1277,8 +1277,6 @@ class FanSpeedTrait(_Trait):
             # The use of legacy speeds is deprecated in the schema, support will be removed after a quarter (2021.7)
             modes = self.state.attributes.get(fan.ATTR_SPEED_LIST, [])
             for mode in modes:
-                if mode not in self.speed_synonyms:
-                    continue
                 speed = {
                     "speed_name": mode,
                     "speed_values": [
@@ -1542,26 +1540,25 @@ class ModesTrait(_Trait):
             )
             return
 
-        if self.state.domain != media_player.DOMAIN:
-            _LOGGER.info(
-                "Received an Options command for unrecognised domain %s",
-                self.state.domain,
-            )
-            return
+        if self.state.domain == media_player.DOMAIN:
+            sound_mode = settings.get("sound mode")
+            if sound_mode:
+                await self.hass.services.async_call(
+                    media_player.DOMAIN,
+                    media_player.SERVICE_SELECT_SOUND_MODE,
+                    {
+                        ATTR_ENTITY_ID: self.state.entity_id,
+                        media_player.ATTR_SOUND_MODE: sound_mode,
+                    },
+                    blocking=True,
+                    context=data.context,
+                )
 
-        sound_mode = settings.get("sound mode")
-
-        if sound_mode:
-            await self.hass.services.async_call(
-                media_player.DOMAIN,
-                media_player.SERVICE_SELECT_SOUND_MODE,
-                {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    media_player.ATTR_SOUND_MODE: sound_mode,
-                },
-                blocking=True,
-                context=data.context,
-            )
+        _LOGGER.info(
+            "Received an Options command for unrecognised domain %s",
+            self.state.domain,
+        )
+        return
 
 
 @register_trait
