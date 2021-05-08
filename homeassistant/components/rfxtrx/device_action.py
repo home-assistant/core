@@ -13,18 +13,15 @@ from .helpers import async_get_device_object
 CONF_DATA = "data"
 CONF_SUBTYPE = "subtype"
 
-ACTION_TYPE_CHIME = "send_chime"
 ACTION_TYPE_COMMAND = "send_command"
 ACTION_TYPE_STATUS = "send_status"
 
 ACTION_TYPES = {
-    ACTION_TYPE_CHIME,
     ACTION_TYPE_COMMAND,
     ACTION_TYPE_STATUS,
 }
 
 ACTION_SELECTION = {
-    ACTION_TYPE_CHIME: "COMMANDS",
     ACTION_TYPE_COMMAND: "COMMANDS",
     ACTION_TYPE_STATUS: "STATUS",
 }
