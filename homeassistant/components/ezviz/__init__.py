@@ -2,7 +2,8 @@
 from datetime import timedelta
 import logging
 
-from pyezviz.client import EzvizClient, HTTPError, InvalidURL, PyEzvizError
+from pyezviz.client import EzvizClient
+from pyezviz.exceptions import HTTPError, InvalidURL, PyEzvizError
 
 from homeassistant.const import (
     CONF_PASSWORD,
