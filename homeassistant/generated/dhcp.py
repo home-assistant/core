@@ -218,6 +218,66 @@ DHCP = [
         "macaddress": "74C63B*"
     },
     {
+        "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "1C3BF3*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "50C7BF*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "68FF7B*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "98DAC4*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "lb*",
+        "macaddress": "1C3BF3*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "lb*",
+        "macaddress": "50C7BF*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "lb*",
+        "macaddress": "68FF7B*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "lb*",
+        "macaddress": "98DAC4*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "kl*",
+        "macaddress": "1C3BF3*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "kl*",
+        "macaddress": "50C7BF*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "kl*",
+        "macaddress": "68FF7B*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "kl*",
+        "macaddress": "98DAC4*"
+    },
+    {
         "domain": "tuya",
         "macaddress": "508A06*"
     },

@@ -579,7 +579,7 @@ onvif-zeep-async==1.0.0
 openerz-api==0.1.0
 
 # homeassistant.components.ovo_energy
-ovoenergy==1.1.11
+ovoenergy==1.1.12
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
@@ -1046,7 +1046,7 @@ pywebpush==1.9.2
 pywemo==0.6.3
 
 # homeassistant.components.wilight
-pywilight==0.0.68
+pywilight==0.0.70
 
 # homeassistant.components.zerproc
 pyzerproc==0.4.8
