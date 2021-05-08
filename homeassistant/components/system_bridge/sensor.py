@@ -54,6 +54,7 @@ async def async_setup_entry(
         ],
         BridgeMemoryFreeSensor(coordinator, bridge),
         BridgeMemoryUsedSensor(coordinator, bridge),
+        BridgeMemoryUsedPercentageSensor(coordinator, bridge),
         BridgeKernelSensor(coordinator, bridge),
         BridgeOsSensor(coordinator, bridge),
         BridgeProcessesLoadSensor(coordinator, bridge),
@@ -306,6 +307,33 @@ class BridgeMemoryUsedSensor(BridgeSensor):
         return (
             round(bridge.memory.used / 1000 ** 3, 2)
             if bridge.memory.used is not None
+            else None
+        )
+
+
+class BridgeMemoryUsedPercentageSensor(BridgeSensor):
+    """Defines a memory used percentage sensor."""
+
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            bridge,
+            "memory_used_percentage",
+            "Memory Used %",
+            "mdi:memory",
+            None,
+            PERCENTAGE,
+            True,
+        )
+
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
+        bridge: Bridge = self.coordinator.data
+        return (
+            round((bridge.memory.used / bridge.memory.total) * 100, 2)
+            if bridge.memory.used is not None and bridge.memory.total is not None
             else None
         )
 
