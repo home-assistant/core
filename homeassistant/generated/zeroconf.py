@@ -97,6 +97,9 @@ ZEROCONF = {
     "_homekit._tcp.local.": [
         {
             "domain": "homekit"
+        },
+        {
+            "domain": "icloud"
         }
     ],
     "_http._tcp.local.": [
