@@ -237,7 +237,7 @@ class ModbusHub:
             except ModbusException as exception_error:
                 self._log_error(exception_error)
                 result = exception_error
-            if not hasattr(result, "registers"):
+            if not hasattr(result, "bits"):
                 self._log_error(result)
                 return None
             self._in_error = False
@@ -251,7 +251,7 @@ class ModbusHub:
                 result = self._client.read_discrete_inputs(address, count, **kwargs)
             except ModbusException as exception_error:
                 result = exception_error
-            if not hasattr(result, "registers"):
+            if not hasattr(result, "bits"):
                 self._log_error(result)
                 return None
             self._in_error = False
@@ -293,7 +293,7 @@ class ModbusHub:
                 result = self._client.write_coil(address, value, **kwargs)
             except ModbusException as exception_error:
                 result = exception_error
-            if not hasattr(result, "registers"):
+            if not hasattr(result, "value"):
                 self._log_error(result)
                 return False
             self._in_error = False
@@ -307,7 +307,7 @@ class ModbusHub:
                 result = self._client.write_coils(address, values, **kwargs)
             except ModbusException as exception_error:
                 result = exception_error
-            if not hasattr(result, "registers"):
+            if not hasattr(result, "count"):
                 self._log_error(result)
                 return False
             self._in_error = False
@@ -321,7 +321,7 @@ class ModbusHub:
                 result = self._client.write_register(address, value, **kwargs)
             except ModbusException as exception_error:
                 result = exception_error
-            if not hasattr(result, "registers"):
+            if not hasattr(result, "value"):
                 self._log_error(result)
                 return False
             self._in_error = False
@@ -335,7 +335,7 @@ class ModbusHub:
                 result = self._client.write_registers(address, values, **kwargs)
             except ModbusException as exception_error:
                 result = exception_error
-            if not hasattr(result, "registers"):
+            if not hasattr(result, "count"):
                 self._log_error(result)
                 return False
             self._in_error = False
