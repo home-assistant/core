@@ -645,7 +645,7 @@ class SonosSpeaker:
             _LOGGER.warning("Timeout waiting for target groups %s", groups)
 
         for speaker in hass.data[DATA_SONOS].discovered.values():
-            speaker.soco._zgs_cache.clear()
+            speaker.soco._zgs_cache.clear()  # pylint: disable=protected-access
 
     def set_favorites(self) -> None:
         """Set available favorites."""
