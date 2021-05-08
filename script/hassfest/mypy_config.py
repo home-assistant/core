@@ -70,7 +70,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.fortios.*",
     "homeassistant.components.foscam.*",
     "homeassistant.components.freebox.*",
-    "homeassistant.components.fritz.*",
     "homeassistant.components.fritzbox.*",
     "homeassistant.components.garmin_connect.*",
     "homeassistant.components.geniushub.*",

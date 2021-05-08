@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import datetime
 import logging
+from typing import Any
 
 from fritzconnection.core.exceptions import FritzConnectionException
 
@@ -100,7 +101,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
         return self._name
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> Any:
         """Return device class."""
         return self._sensor_data[SENSOR_DEVICE_CLASS]
 
