@@ -3,36 +3,23 @@ import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from qnapstats import QNAPStats
+from requests.exceptions import ConnectionError, ConnectTimeout
 
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.helpers import (
-    config_per_platform,
-    config_validation as cv,
-    device_registry as dr,
-)
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_per_platform, device_registry as dr
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    COMPONENTS,
-    CONF_DRIVES,
-    CONF_NICS,
-    CONF_VOLUMES,
-    DEFAULT_PORT,
-    DEFAULT_TIMEOUT,
-    DOMAIN,
-)
+from .const import COMPONENTS, DEFAULT_NAME, DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
 
 UPDATE_INTERVAL = timedelta(minutes=1)
 
@@ -62,18 +49,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set the config entry up."""
-    if not config_entry.options:
-        options = {
-            CONF_VERIFY_SSL: config_entry.data.get(CONF_VERIFY_SSL, True),
-            CONF_SSL: config_entry.data.get(CONF_SSL, False),
-            CONF_TIMEOUT: config_entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
-            CONF_MONITORED_CONDITIONS: config_entry.data.get(CONF_MONITORED_CONDITIONS),
-            CONF_NICS: cv.ensure_list_csv(config_entry.data.get(CONF_NICS)),
-            CONF_DRIVES: cv.ensure_list_csv(config_entry.data.get(CONF_DRIVES)),
-            CONF_VOLUMES: cv.ensure_list_csv(config_entry.data.get(CONF_VOLUMES)),
-        }
-        hass.config_entries.async_update_entry(config_entry, options=options)
-
     host = config_entry.data[CONF_HOST]
     protocol = "https" if config_entry.options.get(CONF_SSL) else "http"
     api = QNAPStats(
@@ -82,45 +57,35 @@ async def async_setup_entry(hass, config_entry):
         username=config_entry.data[CONF_USERNAME],
         password=config_entry.data[CONF_PASSWORD],
         verify_ssl=config_entry.options.get(CONF_VERIFY_SSL),
-        timeout=config_entry.options.get(CONF_TIMEOUT),
+        timeout=DEFAULT_TIMEOUT,
     )
     try:
         system_info = await hass.async_add_executor_job(api.get_system_stats)
-    except:  # noqa: E722 pylint: disable=bare-except
-        _LOGGER.error("Failed to fetch QNAP stats from the NAS (%s)", host)
-        return False
+    except (ConnectTimeout, ConnectionError) as error:
+        raise ConfigEntryNotReady from error
 
     device_registry = await dr.async_get_registry(hass)
-
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, config_entry.unique_id)},
-        manufacturer="Qnap",
+        manufacturer=DEFAULT_NAME,
         name=system_info.get("system", {}).get("name", host),
         model=system_info.get("system", {}).get("model"),
         sw_version=system_info.get("firmware", {}).get("version"),
     )
 
     async def async_update_data():
-        try:
-            async with async_timeout.timeout(10):
-                datas = {}
-                datas["system_stats"] = await hass.async_add_executor_job(
-                    api.get_system_stats
-                )
-                datas["system_health"] = await hass.async_add_executor_job(
-                    api.get_system_health
-                )
-                datas["smart_drive_health"] = await hass.async_add_executor_job(
-                    api.get_smart_disk_health
-                )
-                datas["volumes"] = await hass.async_add_executor_job(api.get_volumes)
-                datas["bandwidth"] = await hass.async_add_executor_job(
-                    api.get_bandwidth
-                )
-                return datas
-        except Exception as err:
-            raise UpdateFailed("Error communicating with API") from err
+        datas = {}
+        datas["system_stats"] = await hass.async_add_executor_job(api.get_system_stats)
+        datas["system_health"] = await hass.async_add_executor_job(
+            api.get_system_health
+        )
+        datas["smart_drive_health"] = await hass.async_add_executor_job(
+            api.get_smart_disk_health
+        )
+        datas["volumes"] = await hass.async_add_executor_job(api.get_volumes)
+        datas["bandwidth"] = await hass.async_add_executor_job(api.get_bandwidth)
+        return datas
 
     coordinator = DataUpdateCoordinator(
         hass,

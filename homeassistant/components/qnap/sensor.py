@@ -255,6 +255,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ]
     )
 
+    # Folders sensors
+    for volume in coordinator.data["volumes"].keys():
+        for folder in coordinator.data["volumes"][volume].get("folders", []):
+            sensors += [
+                QNAPFolderSensor(
+                    coordinator,
+                    unique_id,
+                    variable,
+                    _FOLDER_MON_COND[variable],
+                    volume,
+                    folder["sharename"],
+                )
+                for variable in _FOLDER_MON_COND.keys()
+            ]
+
     async_add_entities(sensors, True)
 
 
@@ -275,6 +290,7 @@ class QNAPSensor(Entity):
         """Initialize the sensor."""
         self.entity_description = description
         self.monitor_device = monitor_device
+        self.monitor_subdevice = monitor_subdevice
         self.coordinator = coordinator
         self.uid = uid
 
@@ -298,6 +314,11 @@ class QNAPSensor(Entity):
     def device_info(self):
         """Return device information."""
         return {"identifiers": {(DOMAIN, self.uid)}}
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self.var_enabled
 
 
 class QNAPCPUSensor(QNAPSensor):
@@ -455,6 +476,41 @@ class QNAPVolumeSensor(QNAPSensor):
             return round_nicely(used_gb)
 
         if self.entity_description.key == "volume_percentage_used":
+            return round(used_gb / total_gb * 100)
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        if self.coordinator.data:
+            data = self.coordinator.data["volumes"][self.monitor_device]
+            total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
+
+            return {ATTR_VOLUME_SIZE: f"{round_nicely(total_gb)} {DATA_GIBIBYTES}"}
+
+
+class QNAPFolderSensor(QNAPSensor):
+    """A QNAP sensor that monitors storage folder stats."""
+
+    @property
+    def name(self):
+        """Return the name of the sensor, if any."""
+        server_name = self.coordinator.data["system_stats"]["system"]["name"]
+        return f"{server_name} {self.var_name} {self.monitor_subdevice} ({self.monitor_device})"
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        vol = self.coordinator.data["volumes"][self.monitor_device]
+        for folder in self.coordinator.data["volumes"][self.monitor_device]["folders"]:
+            if folder["sharename"] == self.monitor_subdevice:
+                data = folder
+
+        used_gb = int(data["used_size"]) / 1024 / 1024 / 1024
+        if self.var_id == "folder_size_used":
+            return round_nicely(used_gb)
+
+        total_gb = int(vol["total_size"]) / 1024 / 1024 / 1024
+        if self.var_id == "folder_percentage_used":
             return round(used_gb / total_gb * 100)
 
     @property

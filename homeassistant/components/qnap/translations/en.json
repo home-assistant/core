@@ -1,42 +1,36 @@
 {
-    "config": {
-      "step": {
-        "user": {
-          "title": "Connect to the QNAP device",
-          "description": "This qnap sensor allows getting various statistics from your QNAP NAS.",
-          "data": {
-            "host":"Hostname",
-            "username":"Username",
-            "password":"Password",
-            "port":"Port",
-            "ssl":"Enable HTTPS",
-            "verify_ssl":"Verify SSL Certificat",
-            "timeout":"Timeout",
-            "monitored_conditions":"Monitors",
-            "nics":"Nic cards (ex: eth0,eth1)",
-            "volumes":"List of volumes to monitor (ex: media,data1)",
-            "drives":"List of drives to monitor (ex: 1,2)"
-          }
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to the QNAP device",
+        "description": "This qnap sensor allows getting various statistics from your QNAP NAS.",
+        "data": {
+          "host": "Hostname",
+          "username": "Username",
+          "password": "Password",
+          "port": "Port",
+          "ssl": "Enable HTTPS",
+          "verify_ssl": "Verify SSL Certificat"
         }
-      },
-      "error": {
-        "cannot_connect": "Failed to connect"
-      }      
+      }
     },
-    "options": {
-      "step": {
-        "init": {
-          "data": {
-            "ssl":"Enable HTTPS",
-            "verify_ssl":"Verify SSL Certificat",
-            "timeout":"Timeout connection",
-            "monitored_conditions":"Monitors",
-            "nics":"Nic cards (ex: eth0,eth1)",
-            "volumes":"List of volumes to monitor (ex: media,data1)",
-            "drives":"List of drives to monitor (ex: 1,2)"
-          }
+    "error": {
+      "cannot_connect": "Failed to connect"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "ssl": "Enable HTTPS",
+          "verify_ssl": "Verify SSL Certificat",
+          "timeout": "Timeout connection",
+          "monitored_conditions": "Monitors",
+          "nics": "Nic cards (ex: eth0,eth1)",
+          "volumes": "List of volumes to monitor (ex: media,data1)",
+          "drives": "List of drives to monitor (ex: 1,2)"
         }
       }
     }
   }
-  
+}

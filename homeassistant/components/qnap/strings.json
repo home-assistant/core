@@ -5,35 +5,32 @@
         "title": "Connect to the QNAP device",
         "description": "This qnap sensor allows getting various statistics from your QNAP NAS.",
         "data": {
-          "host":"[%key:common::config_flow::data::host%]",
-          "username":"[%key:common::config_flow::data::username%]",
-          "password":"[%key:common::config_flow::data::password%]",
-          "port":"[%key:common::config_flow::data::port%]",
-          "ssl":"[%key:common::config_flow::data::ssl%]",
-          "verify_ssl":"[%key:common::config_flow::data::verify_ssl%]",
-          "timeout":"Timeout",
-          "monitored_conditions":"Monitors",
-          "nics":"Nic cards (ex: eth0,eth1)",
-          "volumes":"List of volumes to monitor (ex: media,data1)",
-          "drives":"List of drives to monitor (ex: 1,2)"
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "options": {
     "step": {
       "init": {
         "data": {
-          "ssl":"[%key:common::config_flow::data::ssl%]",
-          "verify_ssl":"[%key:common::config_flow::data::verify_ssl%]",
-          "timeout":"Tiemout",
-          "monitored_conditions":"Monitors",
-          "nics":"Nic cards (ex: eth0,eth1)",
-          "volumes":"List of volumes to monitor (ex: media,data1)",
-          "drives":"List of drives to monitor (ex: 1,2)"
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "timeout": "Tiemout",
+          "monitored_conditions": "Monitors",
+          "nics": "Nic cards (ex: eth0,eth1)",
+          "volumes": "List of volumes to monitor (ex: media,data1)",
+          "drives": "List of drives to monitor (ex: 1,2)"
         }
       }
     }

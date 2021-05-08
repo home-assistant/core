@@ -2,38 +2,23 @@
 import logging
 
 from qnapstats import QNAPStats
+from requests.exceptions import ConnectionError, ConnectTimeout
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.persistent_notification import create as notify_create
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    _MONITORED_CONDITIONS,
-    CONF_DRIVES,
-    CONF_NICS,
-    CONF_VOLUMES,
-    DEFAULT_PORT,
-    DEFAULT_TIMEOUT,
-)
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT
 from .const import DOMAIN  # pylint:disable=unused-import
-
-NICS_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NICS): cv.string,
-    }
-)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -43,13 +28,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=[]): cv.multi_select(
-            _MONITORED_CONDITIONS
-        ),
-        vol.Optional(CONF_NICS): cv.string,
-        vol.Optional(CONF_DRIVES): cv.string,
-        vol.Optional(CONF_VOLUMES): cv.string,
     }
 )
 
@@ -65,12 +43,6 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize."""
         self.is_imported = False
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
 
     async def async_step_import(self, import_info):
         """Set the config entry up from yaml."""
@@ -89,13 +61,17 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 username=user_input.get(CONF_USERNAME),
                 password=user_input.get(CONF_PASSWORD),
                 verify_ssl=user_input.get(CONF_VERIFY_SSL, True),
-                timeout=user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+                timeout=DEFAULT_TIMEOUT,
             )
             try:
                 stats = await self.hass.async_add_executor_job(api.get_system_stats)
-            except Exception:  # noqa: E722 pylint: disable=broad-except
-                _LOGGER.error("Failed to fetch QNAP stats from the NAS (%s)", host)
+            except (ConnectTimeout, ConnectionError):
                 errors["base"] = "cannot_connect"
+            except TypeError:
+                errors["base"] = "invalid_auth"
+            except Exception as error:  # pylint: disable=broad-except
+                _LOGGER.error(error)
+                errors["base"] = "unknown"
 
             if "base" not in errors:
                 unique_id = stats.get("system", {}).get("serial_number", host)
@@ -113,71 +89,4 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
-        )
-
-
-class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle options."""
-
-    def __init__(self, config_entry):
-        """Initialize options flow."""
-        self.config_entry = config_entry
-        self.options = config_entry.options
-
-    async def async_step_init(self, user_input=None):
-        """Manage the options."""
-        errors = {}
-        if user_input is not None:
-            user_input[CONF_NICS] = cv.ensure_list(
-                user_input.get(CONF_NICS, "").split(",")
-            )
-            user_input[CONF_DRIVES] = cv.ensure_list(
-                user_input.get(CONF_DRIVES, "").split(",")
-            )
-            user_input[CONF_VOLUMES] = cv.ensure_list(
-                user_input.get(CONF_VOLUMES, "").split(",")
-            )
-            return self.async_create_entry(title="", data=user_input)
-
-        options_schema = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_SSL,
-                    default=self.options.get(CONF_SSL, False),
-                ): cv.boolean,
-                vol.Optional(
-                    CONF_VERIFY_SSL,
-                    default=self.options.get(CONF_VERIFY_SSL, True),
-                ): cv.boolean,
-                vol.Optional(
-                    CONF_TIMEOUT,
-                    default=self.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
-                ): cv.positive_int,
-                vol.Optional(
-                    CONF_MONITORED_CONDITIONS,
-                    default=self.options.get(CONF_MONITORED_CONDITIONS, []),
-                ): cv.multi_select(_MONITORED_CONDITIONS),
-                vol.Optional(
-                    CONF_NICS,
-                    description={
-                        "suggested_value": ",".join(self.options.get(CONF_NICS, ""))
-                    },
-                ): cv.string,
-                vol.Optional(
-                    CONF_DRIVES,
-                    description={
-                        "suggested_value": ",".join(self.options.get(CONF_DRIVES, ""))
-                    },
-                ): cv.string,
-                vol.Optional(
-                    CONF_VOLUMES,
-                    description={
-                        "suggested_value": ",".join(self.options.get(CONF_VOLUMES, ""))
-                    },
-                ): cv.string,
-            }
-        )
-
-        return self.async_show_form(
-            step_id="init", data_schema=options_schema, errors=errors
         )
