@@ -1,12 +1,7 @@
 """Constants for the Geocaching integration."""
 from datetime import timedelta
 
-# from homeassistant.components.binary_sensor import (
-#     DEVICE_CLASS_CONNECTIVITY,
-#     DEVICE_CLASS_PROBLEM,
-# )
-# from homeassistant.components.sensor import DEVICE_CLASS_POWER, DEVICE_CLASS_TEMPERATURE
-from homeassistant.const import (  # ENERGY_KILO_WATT_HOUR,; PERCENTAGE,; POWER_WATT,; TEMP_CELSIUS,
+from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_NAME,
@@ -19,7 +14,6 @@ ATTR_MEASUREMENT = "measurement"
 DOMAIN = "geocaching"
 ATTR_SECTION = "section"
 
-# TODO Update with your own urls
 OAUTH2_AUTHORIZE_URL = "https://staging.geocaching.com/oauth/authorize.aspx"
 OAUTH2_TOKEN_URL = "https://oauth-staging.geocaching.com/token"
 API_ENDPOINT_URL = "https://staging.api.groundspeak.com"

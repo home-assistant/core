@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -72,15 +72,11 @@ class GeocachingOAuth2Implementation(
 
     async def _token_request(self, data: dict) -> dict:
         """Make a token request."""
-
-        headers = Dict[Any, Any]
-
         data["client_id"] = self.client_id
-
         if self.client_secret is not None:
             data["client_secret"] = self.client_secret
         session = async_get_clientsession(self.hass)
-        resp = await session.post(OAUTH2_TOKEN_URL, data=data, headers=headers)
+        resp = await session.post(OAUTH2_TOKEN_URL, data=data)
         resp.raise_for_status()
         resp_json = cast(dict, await resp.json())
         return resp_json

@@ -34,7 +34,7 @@ async def async_setup_entry(
     """Set up a Geocaching sensor entry."""
 
     coordinator = hass.data[DOMAIN][entry.entry_id]["COORD"]
-    sensors = [GeocachingSensor(coordinator, key=key) for key in SENSOR_ENTITIES.keys()]
+    sensors = [GeocachingSensor(coordinator, key=key) for key in SENSOR_ENTITIES]
     async_add_entities(sensors, True)
 
 
