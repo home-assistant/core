@@ -73,8 +73,7 @@
     },
     "device_automation": {
         "action_type": {
-            "send_status": "Trigger status: {subtype}",
-            "send_chime": "Send command: {subtype}",
+            "send_status": "Send status update: {subtype}",
             "send_command": "Send command: {subtype}"      
         },
         "trigger_type": {
