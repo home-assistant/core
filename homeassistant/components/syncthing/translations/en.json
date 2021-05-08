@@ -1,0 +1,22 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Unable to connect to the Syncthing server.",
+            "invalid_auth": "Invalid authentication"
+        },
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "step": {
+            "user": {
+                "title": "Setup Syncthing integration",
+                "data": {
+                    "url": "URL",
+                    "token": "Token",
+                    "verify_ssl": "Verify SSL"
+                }
+            }
+        }
+    },
+    "title": "Syncthing"
+}
