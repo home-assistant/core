@@ -57,6 +57,7 @@ async def async_setup_entry(
         BridgeKernelSensor(coordinator, bridge),
         BridgeOsSensor(coordinator, bridge),
         BridgeProcessesLoadSensor(coordinator, bridge),
+        BridgeBiosVersionSensor(coordinator, bridge),
     ]
 
     if bridge.battery.hasBattery:
@@ -395,3 +396,26 @@ class BridgeProcessesLoadSensor(BridgeSensor):
         if bridge.processes.load.currentLoadIdle is not None:
             attrs[ATTR_LOAD_IDLE] = round(bridge.processes.load.currentLoadIdle, 2)
         return attrs
+
+
+class BridgeBiosVersionSensor(BridgeSensor):
+    """Defines a bios version sensor."""
+
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            bridge,
+            "bios_version",
+            "BIOS Version",
+            "mdi:chip",
+            None,
+            None,
+            True,
+        )
+
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
+        bridge: Bridge = self.coordinator.data
+        return bridge.system.bios.version
