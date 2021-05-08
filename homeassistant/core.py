@@ -1049,17 +1049,9 @@ class StateMachine:
 
     def all(self, domain_filter: str | Iterable | None = None) -> list[State]:
         """Create a list of all states."""
-        if domain_filter is None:
-            return list(self._states.values())
-
-        if isinstance(domain_filter, str):
-            domain_filter = (domain_filter.lower(),)
-
-        return [
-            state
-            for state in list(self._states.values())
-            if state.domain in domain_filter
-        ]
+        return run_callback_threadsafe(
+            self._loop, self.async_all, domain_filter
+        ).result()
 
     @callback
     def async_all(self, domain_filter: str | Iterable | None = None) -> list[State]:
