@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from geocachingapi.geocachingapi import GeocachingApi
 from geocachingapi.models import GeocachingUser
@@ -22,6 +23,7 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     # Geocaching is polling from the cloud
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
     VERSION = 1
+    data: Any = {}
 
     @property
     def logger(self) -> logging.Logger:
