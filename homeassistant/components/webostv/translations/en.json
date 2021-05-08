@@ -1,0 +1,45 @@
+{
+  "config": {
+    "flow_title": "LG webOS Smart TV ({name})",
+    "step": {
+      "user": {
+        "title": "Connect to the device",
+        "description": "Turn on WebosTV device, fill fields and submit",
+        "data": {
+          "host": "Hostname",
+          "name": "Name - optional",
+          "icon": "Icon - optional (ex: mdi:tv)"
+        }
+      },
+      "pairing": {
+        "title": "Waiting to pairing",
+        "description": "Click start and accept the pairing request on your TV.\n\n![Image](/static/images/config_webos.png)"
+      }
+    },
+    "error": {
+      "encode_json": "Error json encoding",
+      "cannot_connect": "Failed to connect, please turn on your device or check ip address"
+    },
+    "abort": {
+      "error_pairing": "Connected to LG webOS TV but not paired",
+      "already_configured_device": "Device is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Turn on action",
+        "description": "Home Assistant is able to turn on a LG webOS Smart TV if you specify an action, like HDMI-CEC or WakeOnLan.",
+        "data": {
+          "service": "Service (ex: wake_on_lan.send_magic_packet)",
+          "data": "JSON Data (ex: \"mac\":\"01:23:45:67:89:AB\",\"broadcast_address\":\"255.255.255.0\")",
+          "sources": "Sources list"
+        }
+      }
+    },
+    "error": {
+      "encode_json": "Error json encoding",
+      "cannot_retrieve": "Unable to retrieve the list of sources.Device must be switched off"
+    }
+  }  
+}

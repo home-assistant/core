@@ -1,6 +1,5 @@
 """Support for interface with an LG webOS Smart TV."""
 import asyncio
-from contextlib import suppress
 from datetime import timedelta
 from functools import wraps
 import logging
@@ -24,17 +23,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.components.webostv.const import (
-    ATTR_PAYLOAD,
-    ATTR_SOUND_OUTPUT,
-    CONF_ON_ACTION,
-    CONF_SOURCES,
-    DOMAIN,
-    LIVE_TV_APP_ID,
-)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_CUSTOMIZE,
     CONF_HOST,
     CONF_NAME,
     ENTITY_MATCH_ALL,
@@ -44,6 +34,15 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.script import Script
+
+from .const import (
+    ATTR_PAYLOAD,
+    ATTR_SOUND_OUTPUT,
+    CONF_ON_ACTION,
+    CONF_SOURCES,
+    DOMAIN,
+    LIVE_TV_APP_ID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,22 +63,18 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the LG webOS Smart TV platform."""
-
-    if discovery_info is None:
-        return
-
-    host = discovery_info[CONF_HOST]
-    name = discovery_info[CONF_NAME]
-    customize = discovery_info[CONF_CUSTOMIZE]
-    turn_on_action = discovery_info.get(CONF_ON_ACTION)
+    host = config_entry.data[CONF_HOST]
+    uid = config_entry.unique_id
+    name = config_entry.data.get(CONF_NAME)
+    sources = config_entry.options.get(CONF_SOURCES)
+    turn_on_action = [config_entry.options.get(CONF_ON_ACTION)]
 
     client = hass.data[DOMAIN][host]["client"]
     on_script = Script(hass, turn_on_action, name, DOMAIN) if turn_on_action else None
 
-    entity = LgWebOSMediaPlayerEntity(client, name, customize, on_script)
-
+    entity = LgWebOSMediaPlayerEntity(client, name, sources, uid, on_script)
     async_add_entities([entity], update_before_add=False)
 
 
@@ -115,12 +110,13 @@ def cmd(func):
 class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     """Representation of a LG webOS Smart TV."""
 
-    def __init__(self, client: WebOsClient, name: str, customize, on_script=None):
+    def __init__(self, client: WebOsClient, name: str, sources, uid, on_script=None):
         """Initialize the webos device."""
         self._client = client
         self._name = name
+        self._uid = uid
         self._unique_id = client.client_key
-        self._customize = customize
+        self._sources = sources
         self._on_script = on_script
 
         # Assume that the TV is not paused
@@ -165,7 +161,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         """Update list of sources from current source, apps, inputs and configured list."""
         source_list = self._source_list
         self._source_list = {}
-        conf_sources = self._customize[CONF_SOURCES]
+        conf_sources = self._sources
 
         found_live_tv = False
         for app in self._client.apps.values():
@@ -215,7 +211,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     async def async_update(self):
         """Connect."""
         if not self._client.is_connected():
-            with suppress(
+            try:
+                await self._client.connect()
+            except (
                 OSError,
                 ConnectionClosed,
                 ConnectionRefusedError,
@@ -224,7 +222,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
                 PyLGTVPairException,
                 PyLGTVCmdException,
             ):
-                await self._client.connect()
+                pass
 
     @property
     def unique_id(self):
@@ -315,6 +313,11 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
             supported = supported | SUPPORT_TURN_ON
 
         return supported
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        return {"identifiers": {(DOMAIN, self._uid)}}
 
     @property
     def extra_state_attributes(self):
