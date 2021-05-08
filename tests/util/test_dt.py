@@ -1,5 +1,6 @@
 """Test Home Assistant date util methods."""
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
 import pytest
 
@@ -135,6 +136,9 @@ def test_parse_datetime_returns_none_for_incorrect_format():
 
 def test_get_age():
     """Test get_age."""
+    diff = dt_util.now() - timedelta(seconds=-5)
+    assert dt_util.get_age(diff) == "0 seconds"
+
     diff = dt_util.now() - timedelta(seconds=0)
     assert dt_util.get_age(diff) == "0 seconds"
 
@@ -157,6 +161,9 @@ def test_get_age():
     assert dt_util.get_age(diff) == "5 hours"
 
     diff = dt_util.now() - timedelta(minutes=1.6 * 60 * 24)
+    assert dt_util.get_age(diff) == "1 day"
+
+    diff = dt_util.now() - timedelta(days=2)
     assert dt_util.get_age(diff) == "2 days"
 
     diff = dt_util.now() - timedelta(minutes=2 * 60 * 24)
@@ -167,6 +174,38 @@ def test_get_age():
 
     diff = dt_util.now() - timedelta(minutes=365 * 60 * 24)
     assert dt_util.get_age(diff) == "1 year"
+
+    # Test long periods (multiple years) to rule out imprecision errors (leap days, etc.)
+    now = datetime.strptime("2021-04-21 00:00:00", "%Y-%m-%d %H:%M:%S")
+    with patch("homeassistant.util.dt.now", return_value=now):
+
+        assert (
+            dt_util.get_age(
+                datetime.strptime("1988-04-22 00:00:00", "%Y-%m-%d %H:%M:%S")
+            )
+            == "32 years"
+        )
+
+        assert (
+            dt_util.get_age(
+                datetime.strptime("1988-04-21 00:00:00", "%Y-%m-%d %H:%M:%S")
+            )
+            == "33 years"
+        )
+
+        assert (
+            dt_util.get_age(
+                datetime.strptime("1988-04-20 00:00:00", "%Y-%m-%d %H:%M:%S")
+            )
+            == "33 years"
+        )
+
+        assert (
+            dt_util.get_age(
+                datetime.strptime("1970-01-01 00:00:00", "%Y-%m-%d %H:%M:%S")
+            )
+            == "51 years"
+        )
 
 
 def test_parse_time_expression():

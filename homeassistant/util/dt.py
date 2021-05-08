@@ -8,6 +8,7 @@ from typing import Any
 
 import ciso8601
 from dateutil import tz
+from dateutil.relativedelta import relativedelta
 
 from homeassistant.const import MATCH_ALL
 
@@ -186,21 +187,19 @@ def get_age(date: dt.datetime) -> str:
             return f"1 {unit}"
         return f"{number:d} {unit}s"
 
-    delta = (now() - date).total_seconds()
-    rounded_delta = round(delta)
+    delta = relativedelta(now(), date)
+    units = ["year", "month", "day", "hour", "minute", "second"]
+    selected_unit = units[-1]
+    age = 0
 
-    units = ["second", "minute", "hour", "day", "month"]
-    factors = [60, 60, 24, 30, 12]
-    selected_unit = "year"
-
-    for i, next_factor in enumerate(factors):
-        if rounded_delta < next_factor:
-            selected_unit = units[i]
+    for unit in units:
+        value = getattr(delta, f"{unit}s")
+        if value > 0:
+            selected_unit = unit
+            age = value
             break
-        delta /= next_factor
-        rounded_delta = round(delta)
 
-    return formatn(rounded_delta, selected_unit)
+    return formatn(age, selected_unit)
 
 
 def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> list[int]:

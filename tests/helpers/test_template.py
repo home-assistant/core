@@ -901,6 +901,13 @@ def test_relative_time(mock_is_safe, hass):
         ).async_render()
         assert result == "1 hour"
 
+        # Value in the future => original value gets returned
+        result = template.Template(
+            '{{relative_time(strptime("2222-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z"))}}',
+            hass,
+        ).async_render()
+        assert result == "2222-01-01 10:00:00+00:00"
+
         result1 = str(
             template.strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
         )
@@ -965,6 +972,18 @@ def test_timedelta(mock_is_safe, hass):
             hass,
         ).async_render()
         assert result == "15 days"
+
+        result = template.Template(
+            "{{relative_time(now() - timedelta(weeks=5))}}",
+            hass,
+        ).async_render()
+        assert result == "1 month"
+
+        result = template.Template(
+            "{{relative_time(now() - timedelta(weeks=10))}}",
+            hass,
+        ).async_render()
+        assert result == "2 months"
 
 
 def test_regex_match(hass):
