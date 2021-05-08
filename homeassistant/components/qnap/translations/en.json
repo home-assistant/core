@@ -15,7 +15,10 @@
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect"
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "User or password incorrect",
+      "unknown": "Error occured"
+
     }
   },
   "options": {
