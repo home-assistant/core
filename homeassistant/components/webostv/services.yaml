@@ -60,60 +60,12 @@ command:
     command:
       name: Command
       description: >-
-        Endpoint of the command.
+        Endpoint of the command. Known valid endpoints are listed in
+        https://github.com/TheRealLink/pylgtv/blob/master/pylgtv/endpoints.py
       required: true
       example: "system.launcher/open"
       selector:
-        select:
-          options:
-            - "api/getServiceList"
-            - "audio/setMute"
-            - "audio/getStatus"
-            - "audio/getVolume"
-            - "audio/setVolume"
-            - "audio/volumeUp"
-            - "audio/volumeDown"
-            - "com.webos.applicationManager/getForegroundAppInfo"
-            - "com.webos.applicationManager/launch"
-            - "com.webos.applicationManager/listLaunchPoints"
-            - "com.webos.service.appstatus/getAppStatus"
-            - "com.webos.service.ime/sendEnterKey"
-            - "com.webos.service.ime/deleteCharacters"
-            - "com.webos.service.ime/insertText"
-            - "com.webos.service.tv.display/set3DOn"
-            - "com.webos.service.tv.display/set3DOff"
-            - "com.webos.service.update/getCurrentSWInformation"
-            - "media.controls/play"
-            - "media.controls/stop"
-            - "media.controls/pause"
-            - "media.controls/rewind"
-            - "media.controls/fastForward"
-            - "media.viewer/close"
-            - "system/turnOff"
-            - "system/turnOn"
-            - "system.notifications/createToast"
-            - "system.launcher/close"
-            - "system.launcher/getAppState"
-            - "system/getSystemInfo"
-            - "system.launcher/launch"
-            - "system.launcher/open"
-            - "settings/getSystemSettings"
-            - "tv/channelDown"
-            - "tv/channelUp"
-            - "tv/getChannelList"
-            - "tv/getChannelProgramInfo"
-            - "tv/getCurrentChannel"
-            - "tv/getExternalInputList"
-            - "tv/openChannel"
-            - "tv/switchInput"
-            - "webapp/closeWebApp"
-            - "com.webos.service.networkinput/getPointerInputSocket"
-            - "externalpq/setExternalPqData"
-            - "com.webos.service.apiadapter/audio/getSoundOutput"
-            - "com.webos.service.apiadapter/audio/changeSoundOutput"
-            - "com.webos.service.tvpower/power/getPowerState"
-            - "com.webos.service.tvpower/power/turnOffScreen"
-            - "com.webos.service.tvpower/power/turnOnScreen"
+        text:
     payload:
       name: Payload
       description: >-
