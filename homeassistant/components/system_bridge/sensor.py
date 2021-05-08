@@ -297,7 +297,7 @@ class BridgeMemoryUsedSensor(BridgeSensor):
             "mdi:memory",
             None,
             DATA_GIGABYTES,
-            True,
+            False,
         )
 
     @property
@@ -439,7 +439,7 @@ class BridgeBiosVersionSensor(BridgeSensor):
             "mdi:chip",
             None,
             None,
-            True,
+            False,
         )
 
     @property
