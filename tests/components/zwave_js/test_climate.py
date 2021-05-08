@@ -507,7 +507,7 @@ async def test_thermostat_heatit_z_trm3(
 async def test_thermostat_heatit_z_trm2fx(
     hass, client, climate_heatit_z_trm2fx, integration
 ):
-    """Test a heatit Z-TRM3 entity."""
+    """Test a heatit Z-TRM2fx entity."""
     node = climate_heatit_z_trm2fx
     state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
 
