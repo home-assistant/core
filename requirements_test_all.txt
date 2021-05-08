@@ -1139,7 +1139,7 @@ pywilight==0.0.70
 pyzerproc==0.4.8
 
 # homeassistant.components.qnap
-qnapstats==0.3.0
+qnapstats==0.3.1
 
 # homeassistant.components.rachio
 rachiopy==1.0.3
