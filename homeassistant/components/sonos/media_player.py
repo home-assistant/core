@@ -428,24 +428,25 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @soco_error()
     def select_source(self, source: str) -> None:
         """Select input source."""
+        soco = self.coordinator.soco
         if source == SOURCE_LINEIN:
-            self.coordinator.soco.switch_to_line_in()
+            soco.switch_to_line_in()
         elif source == SOURCE_TV:
-            self.coordinator.soco.switch_to_tv()
+            soco.switch_to_tv()
         else:
             fav = [fav for fav in self.coordinator.favorites if fav.title == source]
             if len(fav) == 1:
                 src = fav.pop()
                 uri = src.reference.get_uri()
-                if self.coordinator.soco.music_source_from_uri(uri) in [
+                if soco.music_source_from_uri(uri) in [
                     MUSIC_SRC_RADIO,
                     MUSIC_SRC_LINE_IN,
                 ]:
-                    self.coordinator.soco.play_uri(uri, title=source)
+                    soco.play_uri(uri, title=source)
                 else:
-                    self.coordinator.soco.clear_queue()
-                    self.coordinator.soco.add_to_queue(src.reference)
-                    self.coordinator.soco.play_from_queue(0)
+                    soco.clear_queue()
+                    soco.add_to_queue(src.reference)
+                    soco.play_from_queue(0)
 
     @property  # type: ignore[misc]
     def source_list(self) -> list[str]:
