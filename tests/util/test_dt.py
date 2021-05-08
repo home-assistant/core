@@ -175,6 +175,22 @@ def test_get_age():
     diff = dt_util.now() - timedelta(minutes=365 * 60 * 24)
     assert dt_util.get_age(diff) == "1 year"
 
+    # Test month accuracy, accounting for short February
+    now = datetime.strptime("2021-04-01 00:00:00", "%Y-%m-%d %H:%M:%S")
+    with patch("homeassistant.util.dt.now", return_value=now):
+
+        assert (
+            dt_util.get_age(
+                datetime.strptime("2021-03-01 00:00:00", "%Y-%m-%d %H:%M:%S")
+            )
+            == "1 month"
+        )
+
+        assert dt_util.get_age(dt_util.now() - timedelta(days=31)) == "1 month"
+
+        # To reach 2 months from April 1st, we only need 31 (March) +  28 (February) = 59 days
+        assert dt_util.get_age(dt_util.now() - timedelta(days=59)) == "2 months"
+
     # Test long periods (multiple years) to rule out imprecision errors (leap days, etc.)
     now = datetime.strptime("2021-04-21 00:00:00", "%Y-%m-%d %H:%M:%S")
     with patch("homeassistant.util.dt.now", return_value=now):
