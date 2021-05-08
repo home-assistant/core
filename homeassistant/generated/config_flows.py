@@ -56,6 +56,7 @@ FLOWS = [
     "dialogflow",
     "directv",
     "doorbird",
+    "dsmr",
     "dunehd",
     "dynalite",
     "eafm",
