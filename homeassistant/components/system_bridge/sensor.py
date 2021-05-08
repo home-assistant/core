@@ -102,7 +102,7 @@ class BridgeSensor(BridgeDeviceEntity, SensorEntity):
 class BridgeBatterySensor(BridgeSensor):
     """Defines a Battery sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
@@ -125,7 +125,7 @@ class BridgeBatterySensor(BridgeSensor):
 class BridgeBatteryTimeRemainingSensor(BridgeSensor):
     """Defines the Battery Time Remaining sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
@@ -150,7 +150,7 @@ class BridgeBatteryTimeRemainingSensor(BridgeSensor):
 class BridgeCpuSpeedSensor(BridgeSensor):
     """Defines a CPU speed sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
@@ -173,7 +173,7 @@ class BridgeCpuSpeedSensor(BridgeSensor):
 class BridgeCpuTemperatureSensor(BridgeSensor):
     """Defines a CPU temperature sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
@@ -196,7 +196,7 @@ class BridgeCpuTemperatureSensor(BridgeSensor):
 class BridgeCpuVoltageSensor(BridgeSensor):
     """Defines a CPU voltage sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
@@ -219,7 +219,9 @@ class BridgeCpuVoltageSensor(BridgeSensor):
 class BridgeFilesystemSensor(BridgeSensor):
     """Defines a filesystem sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge, key: str):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator, bridge: Bridge, key: str
+    ) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
@@ -287,7 +289,7 @@ class BridgeMemoryFreeSensor(BridgeSensor):
 class BridgeMemoryUsedSensor(BridgeSensor):
     """Defines a memory used sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
@@ -301,7 +303,7 @@ class BridgeMemoryUsedSensor(BridgeSensor):
         )
 
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return (
@@ -314,7 +316,7 @@ class BridgeMemoryUsedSensor(BridgeSensor):
 class BridgeMemoryUsedPercentageSensor(BridgeSensor):
     """Defines a memory used percentage sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
@@ -328,7 +330,7 @@ class BridgeMemoryUsedPercentageSensor(BridgeSensor):
         )
 
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return (
@@ -341,7 +343,7 @@ class BridgeMemoryUsedPercentageSensor(BridgeSensor):
 class BridgeKernelSensor(BridgeSensor):
     """Defines a kernel sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
@@ -364,7 +366,7 @@ class BridgeKernelSensor(BridgeSensor):
 class BridgeOsSensor(BridgeSensor):
     """Defines an OS sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
@@ -387,7 +389,7 @@ class BridgeOsSensor(BridgeSensor):
 class BridgeProcessesLoadSensor(BridgeSensor):
     """Defines a Processes Load sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
@@ -401,7 +403,7 @@ class BridgeProcessesLoadSensor(BridgeSensor):
         )
 
     @property
-    def state(self) -> float:
+    def state(self) -> float | None:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return (
@@ -429,7 +431,7 @@ class BridgeProcessesLoadSensor(BridgeSensor):
 class BridgeBiosVersionSensor(BridgeSensor):
     """Defines a bios version sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
