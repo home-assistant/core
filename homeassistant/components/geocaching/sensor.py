@@ -44,7 +44,7 @@ class GeocachingSensor(GeocachingEntity, SensorEntity):
     def __init__(
         self, coordinator: GeocachingDataUpdateCoordinator, *, key: str
     ) -> None:
-        """Initialize the Toon sensor."""
+        """Initialize the Geocaching sensor."""
         self.key = key
 
         super().__init__(
