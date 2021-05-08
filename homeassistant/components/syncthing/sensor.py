@@ -54,33 +54,33 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class FolderSensor(SensorEntity):
     """A Syncthing folder sensor."""
 
-    STATE_ATTRIBUTES = [
-        "errors",
-        "globalBytes",
-        "globalDeleted",
-        "globalDirectories",
-        "globalFiles",
-        "globalSymlinks",
-        "globalTotalItems",
-        "ignorePatterns",
-        "inSyncBytes",
-        "inSyncFiles",
-        "invalid",
-        "localBytes",
-        "localDeleted",
-        "localDirectories",
-        "localFiles",
-        "localSymlinks",
-        "localTotalItems",
-        "needBytes",
-        "needDeletes",
-        "needDirectories",
-        "needFiles",
-        "needSymlinks",
-        "needTotalItems",
-        "pullErrors",
-        "state",
-    ]
+    STATE_ATTRIBUTES = {
+        "errors": "errors",
+        "globalBytes": "global_bytes",
+        "globalDeleted": "global_deleted",
+        "globalDirectories": "global_directories",
+        "globalFiles": "global_files",
+        "globalSymlinks": "global_symlinks",
+        "globalTotalItems": "global_total_items",
+        "ignorePatterns": "ignore_patterns",
+        "inSyncBytes": "in_sync_bytes",
+        "inSyncFiles": "in_sync_files",
+        "invalid": "invalid",
+        "localBytes": "local_bytes",
+        "localDeleted": "local_deleted",
+        "localDirectories": "local_directories",
+        "localFiles": "local_files",
+        "localSymlinks": "local_symlinks",
+        "localTotalItems": "local_total_items",
+        "needBytes": "need_bytes",
+        "needDeletes": "need_deletes",
+        "needDirectories": "need_directories",
+        "needFiles": "need_files",
+        "needSymlinks": "need_symlinks",
+        "needTotalItems": "need_total_items",
+        "pullErrors": "pull_errors",
+        "state": "state",
+    }
 
     def __init__(self, syncthing, server_id, folder_id, folder_label, version):
         """Initialize the sensor."""
@@ -250,8 +250,12 @@ class FolderSensor(SensorEntity):
         await self.async_update_status()
 
     def _filter_state(self, state):
-        # Select only needed state attributes
-        state = {key: state[key] for key in state.keys() & self.STATE_ATTRIBUTES}
+        # Select only needed state attributes and map their names
+        state = {
+            self.STATE_ATTRIBUTES[key]: value
+            for key, value in state.items()
+            if key in self.STATE_ATTRIBUTES
+        }
 
         # A workaround, for some reason, state of paused folders is an empty string
         if state["state"] == "":
