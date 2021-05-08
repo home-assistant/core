@@ -56,23 +56,17 @@ def is_dupe_import(
         _LOGGER.error("1")
         return False
 
-    # Bail early if we have no options
-    if CONF_OPTIONS not in user_input:
-        return True
+    options = user_input.get(CONF_OPTIONS, {})
 
     # We have to check for units differently because there is a default
-    units = user_input[CONF_OPTIONS].get(CONF_UNITS) or hass.config.units.name
+    units = options.get(CONF_UNITS) or hass.config.units.name
     if entry.options[CONF_UNITS] != units:
         return False
 
     # We have to check for travel mode differently because of the default and because
     # it can be provided in two different ways. We have to give mode preference over
     # travel mode because that's the way that entry setup works.
-    mode = (
-        user_input[CONF_OPTIONS].get(CONF_MODE)
-        or user_input.get(CONF_TRAVEL_MODE)
-        or "driving"
-    )
+    mode = options.get(CONF_MODE) or user_input.get(CONF_TRAVEL_MODE) or "driving"
     if entry.options[CONF_MODE] != mode:
         return False
 
@@ -86,7 +80,7 @@ def is_dupe_import(
         CONF_TRANSIT_MODE,
         CONF_TRANSIT_ROUTING_PREFERENCE,
     ):
-        if user_input[CONF_OPTIONS].get(key) != entry.options.get(key):
+        if options.get(key) != entry.options.get(key):
             return False
 
     return True
