@@ -89,6 +89,8 @@ class ZWaveDiscoverySchema:
     product_id: set[int] | None = None
     # [optional] the node's product_type must match ANY of these values
     product_type: set[int] | None = None
+    # [optional] the node's label must match ANY of these values
+    label: set[str] | None = None
     # [optional] the node's firmware_version must match ANY of these values
     firmware_version: set[str] | None = None
     # [optional] the node's basic device class must match ANY of these values
@@ -269,6 +271,42 @@ DISCOVERY_SCHEMAS = [
                     THERMOSTAT_CURRENT_TEMP_PROPERTY,
                     CommandClass.SENSOR_MULTILEVEL,
                     endpoint=4,
+                ),
+            },
+            ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
+        ),
+    ),
+    # Heatit Z-TRM2fx
+    ZWaveDiscoverySchema(
+        platform="climate",
+        hint="dynamic_current_temp",
+        manufacturer_id={0x019B},
+        product_id={0x0202},
+        product_type={0x0003},
+        label={"Z-TRM2fx"},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.THERMOSTAT_MODE},
+            property={"mode"},
+            type={"number"},
+        ),
+        data_template=DynamicCurrentTempClimateDataTemplate(
+            {
+                # External Sensor
+                "A2": ZwaveValueID(
+                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=2,
+                ),
+                "A2F": ZwaveValueID(
+                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=2,
+                ),
+                # Floor sensor
+                "F": ZwaveValueID(
+                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=3,
                 ),
             },
             ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
@@ -539,6 +577,10 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
                 schema.product_type is not None
                 and value.node.product_type not in schema.product_type
             ):
+                continue
+
+            # check label
+            if schema.label is not None and value.node.label not in schema.label:
                 continue
 
             # check firmware_version
