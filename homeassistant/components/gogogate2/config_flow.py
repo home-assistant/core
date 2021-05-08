@@ -6,6 +6,8 @@ from ismartgate.common import AbstractInfoResponse, ApiError
 from ismartgate.const import GogoGate2ApiErrorCode, ISmartGateApiErrorCode
 import voluptuous as vol
 
+from homeassistant import data_entry_flow
+from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow
 from homeassistant.const import (
     CONF_DEVICE,
@@ -37,15 +39,27 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_homekit(self, discovery_info):
         """Handle homekit discovery."""
         await self.async_set_unique_id(discovery_info["properties"]["id"])
-        self._abort_if_unique_id_configured({CONF_IP_ADDRESS: discovery_info["host"]})
+        return await self._async_discovery_confirm(discovery_info["host"])
 
-        ip_address = discovery_info["host"]
+    async def async_step_dhcp(self, discovery_info):
+        """Handle dhcp discovery."""
+        await self.async_set_unique_id(discovery_info[MAC_ADDRESS])
+        return await self._async_discovery_confirm(discovery_info[IP_ADDRESS])
+
+    async def _async_discovery_confirm(self, ip_address):
+        """Start the user flow from any discovery."""
+        self.context[CONF_IP_ADDRESS] = ip_address
+        self._abort_if_unique_id_configured({CONF_IP_ADDRESS: ip_address})
 
         for entry in self._async_current_entries():
             if entry.data.get(CONF_IP_ADDRESS) == ip_address:
                 return self.async_abort(reason="already_configured")
 
         self._ip_address = ip_address
+        for progress in self._async_in_progress():
+            if progress.get("context", {}).get(CONF_IP_ADDRESS) == self._ip_address:
+                raise data_entry_flow.AbortFlow("already_in_progress")
+
         self._device_type = DEVICE_TYPE_ISMARTGATE
         return await self.async_step_user()
 
