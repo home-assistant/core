@@ -260,7 +260,7 @@ class BridgeFilesystemSensor(BridgeSensor):
 class BridgeMemoryFreeSensor(BridgeSensor):
     """Defines a memory free sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge) -> None:
         """Initialize System Bridge sensor."""
         super().__init__(
             coordinator,
@@ -274,7 +274,7 @@ class BridgeMemoryFreeSensor(BridgeSensor):
         )
 
     @property
-    def state(self) -> str:
+    def state(self) -> float | None:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return (
