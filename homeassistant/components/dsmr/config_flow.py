@@ -188,21 +188,12 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            try:
-                info = await _validate_dsmr_connection(self.hass, user_input)
+            data = await self.async_validate_dsmr(user_input, errors)
 
-                data = {**user_input, **info}
-
-                await self.async_set_unique_id(info[CONF_SERIAL_ID])
-                self._abort_if_unique_id_configured()
-
+            if not errors:
                 return self.async_create_entry(
                     title=f"{data[CONF_HOST]}:{data[CONF_PORT]}", data=data
                 )
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except CannotCommunicate:
-                errors["base"] = "cannot_communicate"
 
         schema = vol.Schema(
             {
@@ -231,24 +222,15 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 get_serial_by_id, user_selection
             )
 
-            data = {
+            validate_data = {
                 CONF_PORT: dev_path,
                 CONF_DSMR_VERSION: user_input[CONF_DSMR_VERSION],
             }
 
-            try:
-                info = await _validate_dsmr_connection(self.hass, data)
+            data = await self.async_validate_dsmr(validate_data, errors)
 
-                data = {**data, **info}
-
-                await self.async_set_unique_id(info[CONF_SERIAL_ID])
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(title=dev_path, data=data)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except CannotCommunicate:
-                errors["base"] = "cannot_communicate"
+            if not errors:
+                return self.async_create_entry(title=data[CONF_PORT], data=data)
 
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
         list_of_ports = {}
@@ -277,24 +259,15 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            try:
-                data = {
-                    CONF_PORT: user_input[CONF_PORT],
-                    CONF_DSMR_VERSION: self._dsmr_version,
-                }
+            validate_data = {
+                CONF_PORT: user_input[CONF_PORT],
+                CONF_DSMR_VERSION: self._dsmr_version,
+            }
 
-                info = await _validate_dsmr_connection(self.hass, data)
+            data = await self.async_validate_dsmr(validate_data, errors)
 
-                data = {**data, **info}
-
-                await self.async_set_unique_id(info[CONF_SERIAL_ID])
-                self._abort_if_unique_id_configured()
-
+            if not errors:
                 return self.async_create_entry(title=data[CONF_PORT], data=data)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except CannotCommunicate:
-                errors["base"] = "cannot_communicate"
 
         schema = vol.Schema({vol.Required(CONF_PORT): str})
         return self.async_show_form(
@@ -302,6 +275,24 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=schema,
             errors=errors,
         )
+
+    async def async_validate_dsmr(self, input_data, errors):
+        """Validate dsmr connection and create data."""
+        data = input_data
+
+        try:
+            info = await _validate_dsmr_connection(self.hass, data)
+
+            data = {**data, **info}
+
+            await self.async_set_unique_id(info[CONF_SERIAL_ID])
+            self._abort_if_unique_id_configured()
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except CannotCommunicate:
+            errors["base"] = "cannot_communicate"
+
+        return data
 
     async def async_step_import(self, import_config=None):
         """Handle the initial step."""
