@@ -1303,7 +1303,6 @@ class FanSpeedTrait(_Trait):
             "availableFanSpeeds": {"speeds": speeds, "ordered": True},
             "reversible": reversible,
             "supportsFanSpeedPercent": True,
-            "commandOnlyFanSpeed": True,
         }
 
     def query_attributes(self):
@@ -1321,6 +1320,7 @@ class FanSpeedTrait(_Trait):
             if speed is not None:
                 response["on"] = speed != fan.SPEED_OFF
                 response["currentFanSpeedSetting"] = speed
+            if percent:
                 response["currentFanSpeedPercent"] = percent
         return response
 
@@ -1381,6 +1381,7 @@ class ModesTrait(_Trait):
     commands = [COMMAND_MODES]
 
     SYNONYMS = {
+        "preset mode": ["preset mode", "preset"],
         "sound mode": ["sound mode", "effects"],
         "option": ["option", "setting", "mode", "value"],
     }
@@ -1494,7 +1495,10 @@ class ModesTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     fan.ATTR_PRESET_MODE: preset_mode,
                 },
+                blocking=True,
+                context=data.context,
             )
+            return
 
         if self.state.domain == input_select.DOMAIN:
             option = settings["option"]
