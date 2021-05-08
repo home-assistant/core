@@ -39,6 +39,7 @@ from .const import (
     CONF_INPUT_TYPE,
     CONF_PRECISION,
     CONF_REGISTER,
+    CONF_REGISTER_SIZE,
     CONF_REGISTER_TYPE,
     CONF_REGISTERS,
     CONF_REVERSE_ORDER,
@@ -122,7 +123,7 @@ async def async_setup_platform(
 
     for entry in discovery_info[CONF_SENSORS]:
         if entry[CONF_DATA_TYPE] == DATA_TYPE_STRING:
-            structure = str(entry[CONF_COUNT] * 2) + "s"
+            structure = str(entry.get(CONF_REGISTER_SIZE, 2) * entry[CONF_COUNT]) + "s"
         elif entry[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
             try:
                 structure = f">{DEFAULT_STRUCT_FORMAT[entry[CONF_DATA_TYPE]][entry[CONF_COUNT]]}"
@@ -141,10 +142,13 @@ async def async_setup_platform(
             _LOGGER.error("Error in sensor %s structure: %s", entry[CONF_NAME], err)
             continue
 
-        if entry[CONF_COUNT] * 2 != size:
+        regsTotalSize = entry.get(CONF_REGISTER_SIZE, 2) * entry[CONF_COUNT]
+
+        if regsTotalSize != size:
             _LOGGER.error(
-                "Structure size (%d bytes) mismatch registers count (%d words)",
+                "Structure size (%d bytes) mismatch registers size (%d bytes) count %d",
                 size,
+                regsTotalSize,
                 entry[CONF_COUNT],
             )
             continue
