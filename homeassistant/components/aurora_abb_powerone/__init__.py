@@ -8,7 +8,6 @@
 # vscode devcontainer: use the following to access USB device:
 # "runArgs": ["-e", "GIT_EDITOR=code --wait", "--device=/dev/ttyUSB0"],
 
-import asyncio
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -31,14 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     # It should not be necessary to close the serial port because we close
     # it after every use in sensor.py, i.e. no need to do entry["client"].close()
     if unload_ok:
