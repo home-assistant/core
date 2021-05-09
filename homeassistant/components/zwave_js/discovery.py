@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from dataclasses import dataclass
+import dataclasses
 from typing import Any
 
 from awesomeversion import AwesomeVersion
@@ -20,20 +20,24 @@ from .discovery_data_template import (
 )
 
 
-@dataclass
-class FirmwareVersionRange:
+class DataclassMustHaveAtLeastOne:
+    """A dataclass that has to have at least one input parameter that is not None."""
+
+    def __post_init__(self) -> None:
+        """Post dataclass initialization."""
+        if all(val is None for val in dataclasses.asdict(self).values()):
+            raise ValueError("At least one input parameter must not be None")
+
+
+@dataclasses.dataclass
+class FirmwareVersionRange(DataclassMustHaveAtLeastOne):
     """Firmware version range dictionary."""
 
     min: str | None = None
     max: str | None = None
 
-    def __post_init__(self) -> None:
-        """Post dataclass initialization."""
-        if self.min is None and self.max is None:
-            raise ValueError("At least one of min or max must be provided")
 
-
-@dataclass
+@dataclasses.dataclass
 class ZwaveDiscoveryInfo:
     """Info discovered from (primary) ZWave Value to create entity."""
 
@@ -55,8 +59,8 @@ class ZwaveDiscoveryInfo:
     additional_value_ids_to_watch: set[str] | None = None
 
 
-@dataclass
-class ZWaveValueDiscoverySchema:
+@dataclasses.dataclass
+class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
     """Z-Wave Value discovery schema.
 
     The Z-Wave Value must match these conditions.
@@ -80,7 +84,7 @@ class ZWaveValueDiscoverySchema:
     type: set[str] | None = None
 
 
-@dataclass
+@dataclasses.dataclass
 class ZWaveDiscoverySchema:
     """Z-Wave discovery schema.
 

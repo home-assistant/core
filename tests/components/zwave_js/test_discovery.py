@@ -62,6 +62,6 @@ async def test_firmware_version_range_exception(hass):
     with pytest.raises(ValueError):
         ZWaveDiscoverySchema(
             "test",
-            ZWaveValueDiscoverySchema(),
+            ZWaveValueDiscoverySchema(command_class=1),
             firmware_version_range=FirmwareVersionRange(),
         )
