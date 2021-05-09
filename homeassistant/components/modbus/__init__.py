@@ -1,6 +1,7 @@
 """Support for Modbus."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -64,10 +65,12 @@ from .const import (
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_PARITY,
+    CONF_PLATFORMS,
     CONF_PRECISION,
     CONF_REGISTER,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
+    CONF_SECRET_TIMEOUT,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OFF,
@@ -95,9 +98,12 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_STRUCTURE_PREFIX,
     DEFAULT_TEMP_UNIT,
+    MINIMUM_SCAN_INTERVAL,
     MODBUS_DOMAIN as DOMAIN,
 )
 from .modbus import modbus_setup
+
+_LOGGER = logging.getLogger(__name__)
 
 BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
 
@@ -119,6 +125,30 @@ def number(value: Any) -> int | float:
         return value
     except (TypeError, ValueError) as err:
         raise vol.Invalid(f"invalid number {value}") from err
+
+
+def control_scan_interval(config: dict) -> dict:
+    """Control scan_interval."""
+    for hub in config:
+        minimum_scan_interval = DEFAULT_SCAN_INTERVAL
+        for component, conf_key in CONF_PLATFORMS:
+            if conf_key in hub:
+                for entry in hub[conf_key]:
+                    scan_interval = entry.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+                    if scan_interval < MINIMUM_SCAN_INTERVAL:
+                        _LOGGER.warning(
+                            "%s %s scan_interval(%d) is adjusted to minimum(%d)",
+                            component,
+                            entry.get(CONF_NAME),
+                            scan_interval,
+                            MINIMUM_SCAN_INTERVAL,
+                        )
+                        scan_interval = MINIMUM_SCAN_INTERVAL
+                    entry[CONF_SCAN_INTERVAL] = scan_interval
+                    if scan_interval < minimum_scan_interval:
+                        scan_interval = minimum_scan_interval
+        hub[CONF_SECRET_TIMEOUT] = minimum_scan_interval - 1
+    return config
 
 
 BASE_COMPONENT_SCHEMA = vol.Schema(
@@ -252,6 +282,9 @@ MODBUS_SCHEMA = vol.Schema(
         vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
         vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSOR_SCHEMA]),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
+        vol.Required(
+            CONF_SECRET_TIMEOUT
+        ): cv.positive_int,  # Internal transport variable
     }
 )
 
@@ -279,6 +312,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.ensure_list,
+            control_scan_interval,
             [
                 vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],

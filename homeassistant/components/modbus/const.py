@@ -1,5 +1,12 @@
 """Constants used in modbus integration."""
 
+from homeassistant.const import (
+    CONF_BINARY_SENSORS,
+    CONF_COVERS,
+    CONF_SENSORS,
+    CONF_SWITCHES,
+)
+
 # configuration names
 CONF_BAUDRATE = "baudrate"
 CONF_BINARY_SENSOR = "binary_sensor"
@@ -24,6 +31,7 @@ CONF_REGISTERS = "registers"
 CONF_REVERSE_ORDER = "reverse_order"
 CONF_PRECISION = "precision"
 CONF_SCALE = "scale"
+CONF_SECRET_TIMEOUT = "_secret_pymodbus_timeout"
 CONF_SENSOR = "sensor"
 CONF_STATE_CLOSED = "state_closed"
 CONF_STATE_CLOSING = "state_closing"
@@ -74,6 +82,7 @@ SERVICE_WRITE_REGISTER = "write_register"
 
 # integration names
 DEFAULT_HUB = "modbus_hub"
+MINIMUM_SCAN_INTERVAL = 5  # seconds
 DEFAULT_SCAN_INTERVAL = 15  # seconds
 DEFAULT_SLAVE = 1
 DEFAULT_STRUCTURE_PREFIX = ">f"
@@ -84,3 +93,11 @@ DEFAULT_STRUCT_FORMAT = {
 }
 DEFAULT_TEMP_UNIT = "C"
 MODBUS_DOMAIN = "modbus"
+
+CONF_PLATFORMS = (
+    (CONF_CLIMATE, CONF_CLIMATES),
+    (CONF_COVER, CONF_COVERS),
+    (CONF_BINARY_SENSOR, CONF_BINARY_SENSORS),
+    (CONF_SENSOR, CONF_SENSORS),
+    (CONF_SWITCH, CONF_SWITCHES),
+)

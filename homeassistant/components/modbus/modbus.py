@@ -8,15 +8,11 @@ from pymodbus.exceptions import ModbusException
 from pymodbus.transaction import ModbusRtuFramer
 
 from homeassistant.const import (
-    CONF_BINARY_SENSORS,
-    CONF_COVERS,
     CONF_DELAY,
     CONF_HOST,
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
-    CONF_SENSORS,
-    CONF_SWITCHES,
     CONF_TIMEOUT,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
@@ -31,16 +27,13 @@ from .const import (
     ATTR_UNIT,
     ATTR_VALUE,
     CONF_BAUDRATE,
-    CONF_BINARY_SENSOR,
     CONF_BYTESIZE,
-    CONF_CLIMATE,
-    CONF_CLIMATES,
-    CONF_COVER,
     CONF_PARITY,
-    CONF_SENSOR,
+    CONF_PLATFORMS,
+    CONF_SECRET_TIMEOUT,
     CONF_STOPBITS,
-    CONF_SWITCH,
     DEFAULT_HUB,
+    DEFAULT_SCAN_INTERVAL,
     MODBUS_DOMAIN as DOMAIN,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
@@ -63,13 +56,7 @@ def modbus_setup(
         hub_collect[conf_hub[CONF_NAME]].setup(hass)
 
         # load platforms
-        for component, conf_key in (
-            (CONF_CLIMATE, CONF_CLIMATES),
-            (CONF_COVER, CONF_COVERS),
-            (CONF_BINARY_SENSOR, CONF_BINARY_SENSORS),
-            (CONF_SENSOR, CONF_SENSORS),
-            (CONF_SWITCH, CONF_SWITCHES),
-        ):
+        for component, conf_key in CONF_PLATFORMS:
             if conf_key in conf_hub:
                 load_platform(hass, component, DOMAIN, conf_hub, config)
 
@@ -141,7 +128,10 @@ class ModbusHub:
         self._config_timeout = client_config[CONF_TIMEOUT]
         self._config_delay = client_config[CONF_DELAY]
 
-        Defaults.Timeout = 10
+        if CONF_SECRET_TIMEOUT in client_config:
+            Defaults.Timeout = client_config[CONF_SECRET_TIMEOUT]
+        else:
+            Defaults.Timeout = DEFAULT_SCAN_INTERVAL - 1
         if self._config_type == "serial":
             # serial configuration
             self._config_method = client_config[CONF_METHOD]

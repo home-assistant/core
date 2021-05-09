@@ -343,11 +343,14 @@ async def _read_helper(hass, do_group, do_type, do_return, do_exception, mock_py
                 CONF_HOST: "modbusTestHost",
                 CONF_PORT: 5501,
                 CONF_NAME: TEST_MODBUS_NAME,
-                do_group: {
-                    CONF_INPUT_TYPE: do_type,
-                    CONF_NAME: TEST_SENSOR_NAME,
-                    CONF_ADDRESS: 51,
-                },
+                do_group: [
+                    {
+                        CONF_INPUT_TYPE: do_type,
+                        CONF_NAME: TEST_SENSOR_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_SCAN_INTERVAL: 1,
+                    }
+                ],
             }
         ]
     }
