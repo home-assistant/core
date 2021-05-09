@@ -6,9 +6,7 @@ from typing import Any
 
 from geocachingapi.geocachingapi import GeocachingApi
 from geocachingapi.models import GeocachingUser
-import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
@@ -20,30 +18,28 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Config flow to handle Geocaching OAuth2 authentication."""
 
     DOMAIN = DOMAIN
-    # Geocaching is polling from the cloud
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
     VERSION = 1
-    data: Any = {}
+
+    def __init__(self):
+        """Initialize the config flow."""
+        self.data: Any = {}
 
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, user_input: dict[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        return await self.async_step_reauth_confirm()
+        return await self.async_step_reauth_confirm(user_input=user_input)
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(self, user_input: dict[str, Any]) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
-            )
+            return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
-    async def async_oauth_create_entry(self, data: dict) -> FlowResult:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
         self.data = data
         api = GeocachingApi(
