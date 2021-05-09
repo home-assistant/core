@@ -230,7 +230,7 @@ async def test_no_config_creates_no_entry(hass):
     assert mock_setup.call_count == 0
 
 
-@pytest.mark.parametrize("platform", ["switch", "light"])
+@pytest.mark.parametrize("platform", [CONF_LIGHT, CONF_SWITCH])
 async def test_unload(hass, platform):
     """Test that the async_unload_entry works."""
     # As we have currently no configuration, we just to pass the domain here.
@@ -242,7 +242,7 @@ async def test_unload(hass, platform):
     ), patch(
         f"homeassistant.components.tplink.{platform}.async_setup_entry",
         return_value=mock_coro(True),
-    ) as light_setup:
+    ) as device_setup:
         config = {
             tplink.DOMAIN: {
                 platform: [{CONF_HOST: "123.123.123.123"}],
@@ -252,7 +252,7 @@ async def test_unload(hass, platform):
         assert await async_setup_component(hass, tplink.DOMAIN, config)
         await hass.async_block_till_done()
 
-        assert len(light_setup.mock_calls) == 1
+        assert len(device_setup.mock_calls) == 1
         assert tplink.DOMAIN in hass.data
 
     assert await tplink.async_unload_entry(hass, entry)

@@ -18,7 +18,7 @@
                     "strip": "Comma separated list of strips.",
                     "switch": "Comma separated list of switches."
                 },
-                "description": "Do you want to start set up?",
+                "description": "Do you want to setup the TP-Link integration?",
                 "title": "Setup TP-Link Kasa Smart"
             }
         }
@@ -34,8 +34,10 @@
                     "retry_max_attempts": "Retry Max Attempts",
                     "strip": "Comma separated list of strips.",
                     "switch": "Comma separated list of switches."
-                }
+                },
+                "title": "Modify options for TP-Link Kasa Smart"
             }
         }
-    }
+    },
+    "title": "TP-Link Kasa Smart"
 }

@@ -27,6 +27,7 @@
   "options": {
     "step": {
       "init": {
+        "title": "Modify options for TP-Link Kasa Smart",
         "data": {
           "light": "Comma separated list of lights.",
           "dimmer": "Comma separated list of dimmers.",
