@@ -55,10 +55,11 @@ async def test_incorrect_username(hass):
         "growattServer.GrowattApi.login",
         return_value={"errCode": "102", "success": False},
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], FIXTURE_USER_INPUT
         )
-        assert result2["errors"] == {"base": "invalid_auth"}
+
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_no_plants_on_account(hass):
@@ -70,13 +71,15 @@ async def test_no_plants_on_account(hass):
     plant_list = deepcopy(GROWATT_PLANT_LIST_RESPONSE)
     plant_list["data"] = []
 
-    with patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE):
-        with patch("growattServer.GrowattApi.plant_list", return_value=plant_list):
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input
-            )
-            assert result2["type"] == "abort"
-            assert result2["reason"] == "no_plants"
+    with patch(
+        "growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE
+    ), patch("growattServer.GrowattApi.plant_list", return_value=plant_list):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "no_plants"
 
 
 async def test_multiple_plant_ids(hass):
@@ -88,21 +91,23 @@ async def test_multiple_plant_ids(hass):
     plant_list = deepcopy(GROWATT_PLANT_LIST_RESPONSE)
     plant_list["data"].append(plant_list["data"][0])
 
-    with patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE):
-        with patch("growattServer.GrowattApi.plant_list", return_value=plant_list):
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input
-            )
-            assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-            assert result2["step_id"] == "plant"
+    with patch(
+        "growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE
+    ), patch("growattServer.GrowattApi.plant_list", return_value=plant_list):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "plant"
 
-            user_input = {CONF_PLANT_ID: "123456"}
-            result3 = await hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input
-            )
-            assert result3["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
-            assert result3["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
-            assert result3["data"][CONF_PLANT_ID] == user_input[CONF_PLANT_ID]
+        user_input = {CONF_PLANT_ID: "123456"}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+
+    assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
+    assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
+    assert result["data"][CONF_PLANT_ID] == user_input[CONF_PLANT_ID]
 
 
 async def test_one_plant_on_account(hass):
@@ -112,36 +117,40 @@ async def test_one_plant_on_account(hass):
     )
     user_input = FIXTURE_USER_INPUT.copy()
 
-    with patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE):
-        with patch(
-            "growattServer.GrowattApi.plant_list",
-            return_value=GROWATT_PLANT_LIST_RESPONSE,
-        ):
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input
-            )
-            assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-            assert result2["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
-            assert result2["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
+    with patch(
+        "growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE
+    ), patch(
+        "growattServer.GrowattApi.plant_list",
+        return_value=GROWATT_PLANT_LIST_RESPONSE,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
+    assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
 
 
 async def test_import_one_plant(hass):
     """Test import step with a single plant."""
     import_data = FIXTURE_USER_INPUT.copy()
 
-    with patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE):
-        with patch(
-            "growattServer.GrowattApi.plant_list",
-            return_value=GROWATT_PLANT_LIST_RESPONSE,
-        ):
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=import_data,
-            )
-            assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-            assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
-            assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
+    with patch(
+        "growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE
+    ), patch(
+        "growattServer.GrowattApi.plant_list",
+        return_value=GROWATT_PLANT_LIST_RESPONSE,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=import_data,
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
+    assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
 
 
 async def test_existing_plant_configured(hass):
@@ -162,5 +171,6 @@ async def test_existing_plant_configured(hass):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input
         )
-        assert result["type"] == "abort"
-        assert result["reason"] == "already_configured"
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
