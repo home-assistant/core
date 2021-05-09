@@ -50,27 +50,22 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_plant(self, user_input=None):
         """Handle adding a "plant" to Home Assistant."""
-        if user_input is None or user_input[CONF_PLANT_ID] == "0":
-            plant_info = await self.hass.async_add_executor_job(
-                self.api.plant_list, self.user_id
-            )
+        plant_info = await self.hass.async_add_executor_job(
+            self.api.plant_list, self.user_id
+        )
 
-            if not plant_info["data"]:
-                return self.async_abort(reason="no_plants")
+        if not plant_info["data"]:
+            return self.async_abort(reason="no_plants")
 
-            plants = {}
-            for plant in plant_info["data"]:
-                plants[plant["plantId"]] = plant["plantName"]
+        plants = {plant["plantId"]: plant["plantName"] for plant in plant_info["data"]}
 
-            if (user_input is None or user_input[CONF_PLANT_ID] != "0") and len(
-                plant_info["data"]
-            ) > 1:
-                data_schema = vol.Schema({vol.Required(CONF_PLANT_ID): vol.In(plants)})
+        if user_input is None and len(plant_info["data"]) > 1:
+            data_schema = vol.Schema({vol.Required(CONF_PLANT_ID): vol.In(plants)})
 
-                return self.async_show_form(step_id="plant", data_schema=data_schema)
-            if user_input is None:
-                user_input = {}
-            user_input[CONF_PLANT_ID] = plant_info["data"][0]["plantId"]
+            return self.async_show_form(step_id="plant", data_schema=data_schema)
+
+        if user_input is None and len(plant_info["data"]) == 1:
+            user_input = {CONF_PLANT_ID: plant_info["data"][0]["plantId"]}
 
         user_input[CONF_NAME] = plants[user_input[CONF_PLANT_ID]]
         await self.async_set_unique_id(user_input[CONF_PLANT_ID])
