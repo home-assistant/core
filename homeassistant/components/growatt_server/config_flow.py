@@ -32,14 +32,6 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
-    async def _show_plant_id_form(self, plants, errors=None):
-        """Show the form to the user."""
-        data_schema = vol.Schema({vol.Required(CONF_PLANT_ID): vol.In(plants)})
-
-        return self.async_show_form(
-            step_id="plant", data_schema=data_schema, errors=errors
-        )
-
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
         if not user_input:
@@ -75,9 +67,7 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ) > 1:
                 data_schema = vol.Schema({vol.Required(CONF_PLANT_ID): vol.In(plants)})
 
-                return await self.async_show_form(
-                    step_id="plant", data_schema=data_schema
-                )
+                return self.async_show_form(step_id="plant", data_schema=data_schema)
             if user_input is None:
                 user_input = {}
             user_input[CONF_PLANT_ID] = plant_info["data"][0]["plantId"]
