@@ -207,7 +207,7 @@ async def test_migrate_device_entry(hass, aioclient_mock):
 
     device_reg = mock_device_registry(hass)
     device_entry = device_reg.async_get_or_create(
-        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, 123, 456)}
+        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "123-456")}
     )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
