@@ -64,13 +64,7 @@ DHCP = [
     },
     {
         "domain": "flume",
-        "hostname": "flume-gw-*",
-        "macaddress": "ECFABC*"
-    },
-    {
-        "domain": "flume",
-        "hostname": "flume-gw-*",
-        "macaddress": "B4E62D*"
+        "hostname": "flume-gw-*"
     },
     {
         "domain": "gogogate2",
