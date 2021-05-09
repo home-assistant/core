@@ -12,8 +12,11 @@ from homeassistant.components.media_player.const import (
 
 DOMAIN = "onkyo"
 
+ATTR_AUDIO_INFORMATION = "audio_information"
 ATTR_HDMI_OUTPUT = "hdmi_output"
 ATTR_PRESET = "preset"
+ATTR_VIDEO_INFORMATION = "video_information"
+ATTR_VIDEO_OUT = "video_out"
 COMPONENTS = ["media_player"]
 CONF_MAX_VOLUME = "max_volume"
 CONF_RECEIVER_MAX_VOLUME = "receiver_max_volume"

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable, List
 
 import voluptuous as vol
 
@@ -11,12 +10,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from .const import (
     ACCEPTED_VALUES,
+    ATTR_AUDIO_INFORMATION,
     ATTR_HDMI_OUTPUT,
     ATTR_PRESET,
+    ATTR_VIDEO_INFORMATION,
+    ATTR_VIDEO_OUT,
     CONF_MAX_VOLUME,
     CONF_RECEIVER_MAX_VOLUME,
     CONF_SOURCES,
@@ -41,7 +42,28 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-def determine_zones(receiver) -> dict:
+def _parse_onkyo_payload(payload):
+    """Parse a payload returned from the eiscp library."""
+    if isinstance(payload, bool):
+        # command not supported by the device
+        return False
+
+    if len(payload) < 2:
+        # no value
+        return None
+
+    if isinstance(payload[1], str):
+        return payload[1].split(",")
+
+    return payload[1]
+
+
+def _tuple_get(tup, index, default=None):
+    """Return a tuple item at index or a default value if it doesn't exist."""
+    return (tup[index : index + 1] or [default])[0]
+
+
+def determine_zones(receiver) -> list:
     """Determine what zones are available for the receiver."""
     out = []
     try:
@@ -69,7 +91,7 @@ def determine_zones(receiver) -> dict:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities,
 ) -> None:
     """Set up the Onkyo entry."""
     entities = []
@@ -148,6 +170,8 @@ class OnkyoDevice(MediaPlayerEntity):
         self._attributes = {}
         self._hdmi_out_supported = True
         self._unique_id = unique_id
+        self._audio_info_supported = True
+        self._video_info_supported = True
 
     def command(self, command):
         """Run an eiscp command and catch connection errors."""
@@ -326,6 +350,45 @@ class OnkyoDevice(MediaPlayerEntity):
     def device_info(self):
         """Return device information."""
         return {"identifiers": {(DOMAIN, self._uid)}}
+
+    def _parse_audio_information(self, audio_information_raw):
+        values = _parse_onkyo_payload(audio_information_raw)
+        if values is False:
+            self._audio_info_supported = False
+            return
+
+        if values:
+            info = {
+                "format": _tuple_get(values, 1),
+                "input_frequency": _tuple_get(values, 2),
+                "input_channels": _tuple_get(values, 3),
+                "listening_mode": _tuple_get(values, 4),
+                "output_channels": _tuple_get(values, 5),
+                "output_frequency": _tuple_get(values, 6),
+            }
+            self._attributes[ATTR_AUDIO_INFORMATION] = info
+        else:
+            self._attributes.pop(ATTR_AUDIO_INFORMATION, None)
+
+    def _parse_video_information(self, video_information_raw):
+        values = _parse_onkyo_payload(video_information_raw)
+        if values is False:
+            self._video_info_supported = False
+            return
+
+        if values:
+            info = {
+                "input_resolution": _tuple_get(values, 1),
+                "input_color_schema": _tuple_get(values, 2),
+                "input_color_depth": _tuple_get(values, 3),
+                "output_resolution": _tuple_get(values, 5),
+                "output_color_schema": _tuple_get(values, 6),
+                "output_color_depth": _tuple_get(values, 7),
+                "picture_mode": _tuple_get(values, 8),
+            }
+            self._attributes[ATTR_VIDEO_INFORMATION] = info
+        else:
+            self._attributes.pop(ATTR_VIDEO_INFORMATION, None)
 
 
 class OnkyoDeviceZone(OnkyoDevice):
