@@ -70,18 +70,21 @@ SENSOR_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_SENSOR_ID): cv.positive_int,
-                vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-                vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.time_period,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_SENSOR_ID): cv.positive_int,
+                    vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+                    vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                    ): cv.time_period,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
