@@ -59,7 +59,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_set_unique_id(self, pin):
         """Set the config entry's unique ID (based on the device's 4-digit PIN)."""
         await self.async_set_unique_id(UNIQUE_ID.format(pin))
-        self._abort_if_unique_id_configured()
 
     async def async_step_user(self, user_input=None):
         """Handle configuration via the UI."""
@@ -80,6 +79,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         pin = async_get_pin_from_uid(info[CONF_UID])
         await self._async_set_unique_id(pin)
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=info[CONF_UID], data={CONF_UID: info["uid"], **user_input}
@@ -105,6 +105,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle any discovery."""
         pin = async_get_pin_from_discovery_hostname(hostname)
         await self._async_set_unique_id(pin)
+        self._abort_if_unique_id_configured(
+            updates={CONF_IP_ADDRESS: self.discovery_info[CONF_IP_ADDRESS]}
+        )
 
         self.context[CONF_IP_ADDRESS] = self.discovery_info[CONF_IP_ADDRESS]
 
