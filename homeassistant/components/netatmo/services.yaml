@@ -48,7 +48,7 @@ set_persons_home:
   fields:
     persons:
       description: List of names
-      example: [Alice, Bob]
+      example: "[Alice, Bob]"
       required: true
       selector:
         object:
