@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import datetime
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, TypedDict
 
 from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
@@ -42,20 +42,28 @@ def _retrieve_external_ip_state(status: FritzStatus, last_value: str) -> Any:
     return status.external_ip
 
 
-SENSOR_NAME = 0
-SENSOR_DEVICE_CLASS = 1
-SENSOR_ICON = 2
-SENSOR_STATE_PROVIDER = 3
+class SensorData(TypedDict):
+    """Sensor data class."""
 
-# sensor_type: [name, device_class, icon, state_provider]
+    name: str
+    device_class: str | None
+    icon: str | None
+    state_provider: Callable
+
+
 SENSOR_DATA = {
-    "external_ip": [
-        "External IP",
-        None,
-        "mdi:earth",
-        _retrieve_external_ip_state,
-    ],
-    "uptime": ["Uptime", DEVICE_CLASS_TIMESTAMP, None, _retrieve_uptime_state],
+    "external_ip": SensorData(
+        name="External IP",
+        device_class=None,
+        icon="mdi:earth",
+        state_provider=_retrieve_external_ip_state,
+    ),
+    "uptime": SensorData(
+        name="Uptime",
+        device_class=DEVICE_CLASS_TIMESTAMP,
+        icon=None,
+        state_provider=_retrieve_uptime_state,
+    ),
 }
 
 
@@ -84,18 +92,18 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
         self, fritzbox_tools: FritzBoxTools, device_friendlyname: str, sensor_type: str
     ) -> None:
         """Init FRITZ!Box connectivity class."""
-        self._sensor_data: list[str | Callable | None] = SENSOR_DATA[sensor_type]
+        self._sensor_data: SensorData = SENSOR_DATA[sensor_type]
         self._unique_id = f"{fritzbox_tools.unique_id}-{sensor_type}"
-        self._name = f"{device_friendlyname} {self._sensor_data[SENSOR_NAME]}"
+        self._name = f"{device_friendlyname} {self._sensor_data['name']}"
         self._is_available = True
         self._last_value: str | None = None
         self._state: str | None = None
         super().__init__(fritzbox_tools, device_friendlyname)
 
     @property
-    def _state_provider(self) -> str | Callable | None:
+    def _state_provider(self) -> Callable:
         """Return the state provider for the binary sensor."""
-        return self._sensor_data[SENSOR_STATE_PROVIDER]
+        return self._sensor_data["state_provider"]
 
     @property
     def name(self) -> str:
@@ -105,12 +113,12 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
     @property
     def device_class(self) -> str | None:
         """Return device class."""
-        return str(self._sensor_data[SENSOR_DEVICE_CLASS])
+        return self._sensor_data["device_class"]
 
     @property
     def icon(self) -> str | None:
         """Return icon."""
-        return str(self._sensor_data[SENSOR_ICON])
+        return self._sensor_data.get("icon")
 
     @property
     def unique_id(self) -> str:
@@ -139,9 +147,4 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
             self._is_available = False
             return
 
-        if callable(self._state_provider):
-            self._state = self._last_value = self._state_provider(
-                status, self._last_value
-            )
-        else:
-            self._state = self._last_value
+        self._state = self._last_value = self._state_provider(status, self._last_value)
