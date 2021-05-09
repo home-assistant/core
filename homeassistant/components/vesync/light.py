@@ -62,6 +62,7 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
 
     def __init__(self, device):
         """Initialize the VeSync LightDevice."""
+        super().__init__(device)
         self.device = device
 
     @property
