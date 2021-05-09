@@ -564,7 +564,7 @@ async def test_all_sensor(hass, cfg, regs, expected):
                 CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
                 CONF_STRUCTURE: ">2H",
             },
-            [0xAABB,0xCCDD],
+            [0xAABB, 0xCCDD],
             "43707,52445",
         ),
         (
