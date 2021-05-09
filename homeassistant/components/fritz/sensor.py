@@ -12,6 +12,7 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .common import FritzBoxBaseEntity, FritzBoxTools
@@ -102,14 +103,14 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
         return self._name
 
     @property
-    def device_class(self) -> Any:
+    def device_class(self) -> str | None:
         """Return device class."""
-        return self._sensor_data[SENSOR_DEVICE_CLASS]
+        return str(self._sensor_data[SENSOR_DEVICE_CLASS])
 
     @property
-    def icon(self) -> Any:
+    def icon(self) -> str | None:
         """Return icon."""
-        return self._sensor_data[SENSOR_ICON]
+        return str(self._sensor_data[SENSOR_ICON])
 
     @property
     def unique_id(self) -> str:
@@ -133,11 +134,14 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
         try:
             status: FritzStatus = self._fritzbox_tools.fritzstatus
             self._is_available = True
-
-            self._state = self._last_value = self._state_provider(
-                status, self._last_value
-            )
-
         except FritzConnectionException:
             _LOGGER.error("Error getting the state from the FRITZ!Box", exc_info=True)
             self._is_available = False
+            return
+
+        if callable(self._state_provider):
+            self._state = self._last_value = self._state_provider(
+                status, self._last_value
+            )
+        else:
+            self._state = self._last_value
