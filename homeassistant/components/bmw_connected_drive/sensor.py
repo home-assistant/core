@@ -1,9 +1,9 @@
 """Support for reading vehicle status from BMW connected drive portal."""
 import logging
 
-import homeassistant.util.dt as dt_util
 from bimmer_connected.const import SERVICE_LAST_TRIP, SERVICE_STATUS
 from bimmer_connected.state import ChargingState
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
@@ -18,9 +18,9 @@ from homeassistant.const import (
     VOLUME_LITERS,
 )
 from homeassistant.helpers.icon import icon_for_battery_level
+import homeassistant.util.dt as dt_util
 
-from . import DOMAIN as BMW_DOMAIN
-from . import BMWConnectedDriveBaseEntity
+from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
 from .const import CONF_ACCOUNT, DATA_ENTRIES
 
 _LOGGER = logging.getLogger(__name__)
