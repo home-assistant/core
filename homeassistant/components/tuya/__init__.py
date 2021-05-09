@@ -20,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -64,6 +65,8 @@ TUYA_TYPE_TO_HA = {
 
 TUYA_TRACKER = "tuya_tracker"
 STOP_CANCEL = "stop_event_cancel"
+
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 def _update_discovery_interval(hass, interval):
