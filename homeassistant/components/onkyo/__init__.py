@@ -5,9 +5,10 @@ import logging
 from eiscp import eISCP as onkyo_rcv
 from eiscp.commands import COMMANDS
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries
 from homeassistant.components.media_player.const import DOMAIN as media_domain
 from homeassistant.const import CONF_HOST
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_per_platform, device_registry as dr
 
 from .const import COMPONENTS, CONF_SOURCES, DOMAIN
@@ -50,7 +51,7 @@ async def async_setup_entry(hass, config_entry):
     try:
         receiver = onkyo_rcv(config_entry.data[CONF_HOST])
     except CannotConnect as error:
-        raise exceptions.ConfigEntryNotReady from error
+        raise ConfigEntryNotReady from error
 
     hass.data[DOMAIN][config_entry.unique_id] = receiver
 
@@ -113,5 +114,5 @@ def list2dict(sources: list) -> dict:
     return {key: value for key, value in default_sources().items() if key in sources}
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
