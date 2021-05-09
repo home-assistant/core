@@ -22,7 +22,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.event import call_later
 
 from .const import (
     ATTR_ADDRESS,
@@ -109,7 +109,7 @@ def modbus_setup(
             hub_collect[client_name].write_coil(unit, address, state)
 
     # register function to gracefully stop modbus
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_modbus)
 
     # Register services for modbus
     hass.services.register(
@@ -208,9 +208,7 @@ class ModbusHub:
 
         # Start counting down to allow modbus requests.
         if self._config_delay:
-            self._cancel_listener = async_call_later(
-                hass, self._config_delay, self.end_delay
-            )
+            self._cancel_listener = call_later(hass, self._config_delay, self.end_delay)
 
     def end_delay(self, args):
         """End startup delay."""
