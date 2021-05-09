@@ -21,7 +21,7 @@ from .discovery_data_template import (
 
 
 class DataclassMustHaveAtLeastOne:
-    """A dataclass that has to have at least one input parameter that is not None."""
+    """A dataclass that must have at least one input parameter that is not None."""
 
     def __post_init__(self) -> None:
         """Post dataclass initialization."""
