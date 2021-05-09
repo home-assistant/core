@@ -76,8 +76,8 @@ class OnkyoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 receiver = onkyo_rcv(host)
                 if receiver.model_name == UNKNOWN_MODEL:
                     errors["base"] = "receiver_unknown"
-            except OSError:
-                _LOGGER.error("Unable to connect to receiver at %s", host)
+            except OSError as error:
+                _LOGGER.error("Unable to connect to receiver at %s (%s)", host, error)
                 errors["base"] = "cannot_connect"
 
             if "base" not in errors:
