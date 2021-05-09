@@ -1,9 +1,9 @@
 """Base classes for Crownstone devices."""
 from __future__ import annotations
 
-from typing import Any
-
 from crownstone_cloud.cloud_models.crownstones import Crownstone
+
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import CROWNSTONE_INCLUDE_TYPES, DOMAIN
 
@@ -25,12 +25,12 @@ class CrownstoneDevice:
         return str(self.device.cloud_id)
 
     @property
-    def device_info(self) -> dict[str, Any] | None:
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
             "identifiers": {(DOMAIN, self.cloud_id)},
             "name": self.device.name,
             "manufacturer": "Crownstone",
-            "model": CROWNSTONE_INCLUDE_TYPES.get(self.device.type),
+            "model": str(CROWNSTONE_INCLUDE_TYPES.get(self.device.type)),
             "sw_version": self.device.sw_version,
         }
