@@ -51,43 +51,14 @@ async def test_user(hass: HomeAssistant, test_api: Mock) -> None:
     assert result["data"][CONF_API_KEY] == API_KEY
 
 
-async def test_import(hass: HomeAssistant, test_api: Mock) -> None:
-    """Test import step."""
-    flow = init_config_flow(hass)
-
-    # import with site_id and api_key
-    result = await flow.async_step_import(
-        {CONF_API_KEY: API_KEY, CONF_SITE_ID: SITE_ID}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "solaredge"
-    assert result["data"][CONF_SITE_ID] == SITE_ID
-    assert result["data"][CONF_API_KEY] == API_KEY
-
-    # import with all
-    result = await flow.async_step_import(
-        {CONF_API_KEY: API_KEY, CONF_SITE_ID: SITE_ID, CONF_NAME: NAME}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "solaredge_site_1_2_3"
-    assert result["data"][CONF_SITE_ID] == SITE_ID
-    assert result["data"][CONF_API_KEY] == API_KEY
-
-
 async def test_abort_if_already_setup(hass: HomeAssistant, test_api: str) -> None:
     """Test we abort if the site_id is already setup."""
-    flow = init_config_flow(hass)
     MockConfigEntry(
         domain="solaredge",
         data={CONF_NAME: DEFAULT_NAME, CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
     ).add_to_hass(hass)
 
-    # import: Should fail, same SITE_ID
-    result = await flow.async_step_import(
-        {CONF_NAME: DEFAULT_NAME, CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+    flow = init_config_flow(hass)
 
     # user: Should fail, same SITE_ID
     result = await flow.async_step_user(
