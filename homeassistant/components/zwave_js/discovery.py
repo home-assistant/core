@@ -35,6 +35,14 @@ class FirmwareVersionRange(DataclassMustHaveAtLeastOne):
 
     min: str | None = None
     max: str | None = None
+    min_ver: AwesomeVersion = dataclasses.field(init=False)
+    max_ver: AwesomeVersion = dataclasses.field(init=False)
+
+    def __post_init__(self) -> None:
+        """Post dataclass initialization."""
+        super().__post_init__()
+        self.min_ver = AwesomeVersion(min)
+        self.max_ver = AwesomeVersion(max)
 
 
 @dataclasses.dataclass
@@ -601,12 +609,12 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
             if schema.firmware_version_range is not None and (
                 (
                     schema.firmware_version_range.min is not None
-                    and AwesomeVersion(schema.firmware_version_range.min)
+                    and schema.firmware_version_range.min_ver
                     > AwesomeVersion(value.node.firmware_version)
                 )
                 or (
                     schema.firmware_version_range.max is not None
-                    and AwesomeVersion(schema.firmware_version_range.max)
+                    and schema.firmware_version_range.max_ver
                     < AwesomeVersion(value.node.firmware_version)
                 )
             ):
