@@ -489,6 +489,15 @@ coronavirus==1.1.1
 # homeassistant.components.utility_meter
 croniter==1.0.6
 
+# homeassistant.components.crownstone
+crownstone-cloud==1.4.5
+
+# homeassistant.components.crownstone
+crownstone-sse==2.0.0
+
+# homeassistant.components.crownstone
+crownstone-uart==2.0.0
+
 # homeassistant.components.datadog
 datadog==0.15.0
 
@@ -1075,6 +1084,7 @@ nuheat==0.3.0
 numato-gpio==0.10.0
 
 # homeassistant.components.compensation
+# homeassistant.components.crownstone
 # homeassistant.components.iqvia
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow

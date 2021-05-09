@@ -1,0 +1,18 @@
+{
+  "domain": "crownstone",
+  "name": "Crownstone",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/crownstone",
+  "requirements": [
+    "crownstone-cloud==1.4.5",
+    "crownstone-sse==2.0.0",
+    "crownstone-uart==2.0.0",
+    "numpy==1.20.2",
+    "pyserial==3.5"
+  ],
+  "codeowners": [
+    "@Crownstone",
+    "@RicArch97"
+  ],
+  "iot_class": "cloud_push"
+}
