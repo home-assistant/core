@@ -104,7 +104,7 @@ class VeSyncDimmableLightHA(VeSyncBaseLight, LightEntity):
         return [COLOR_MODE_BRIGHTNESS]
 
 
-class VeSyncTunableWhiteLightHA(VeSyncDevice, LightEntity):
+class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
     """Representation of a VeSync Tunable White Light device."""
 
     def __init__(self, device):
@@ -121,9 +121,9 @@ class VeSyncTunableWhiteLightHA(VeSyncDevice, LightEntity):
             brightness = round((brightness / 255) * 100)
             # clamp to 1-100
             brightness = max(1, min(brightness, 100))
+            # pass value to pyvesync library api
             self.device.set_brightness(brightness)
-        # Avoid turning device back on if this is just a brightness adjustment
-        elif ATTR_COLOR_TEMP in kwargs:
+        if ATTR_COLOR_TEMP in kwargs:
             # get brightness from HA data
             color_temp = int(kwargs[ATTR_COLOR_TEMP])
             # flip cold/warm to what pyvesync api expects
