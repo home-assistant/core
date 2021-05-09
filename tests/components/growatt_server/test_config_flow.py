@@ -94,7 +94,7 @@ async def test_multiple_plant_ids(hass):
             assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
             assert result2["step_id"] == "plant"
 
-            user_input[CONF_PLANT_ID] = "123456"
+            user_input = {CONF_PLANT_ID: "123456"}
             result3 = await hass.config_entries.flow.async_configure(
                 result["flow_id"], user_input
             )
