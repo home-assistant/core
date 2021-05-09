@@ -1185,7 +1185,7 @@ omit =
     homeassistant/components/xiaomi_tv/media_player.py
     homeassistant/components/xmpp/notify.py
     homeassistant/components/xs1/*
-    homeassistant/components/yale_smart_alarm/alarm_control_panel.py
+    homeassistant/components/yale_smart_alarm/*
     homeassistant/components/yamaha_musiccast/media_player.py
     homeassistant/components/yandex_transport/*
     homeassistant/components/yeelightsunflower/light.py

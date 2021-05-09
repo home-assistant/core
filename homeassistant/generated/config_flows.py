@@ -280,6 +280,7 @@ FLOWS = [
     "xbox",
     "xiaomi_aqara",
     "xiaomi_miio",
+    "yale_smart_alarm",
     "yeelight",
     "zerproc",
     "zha",
