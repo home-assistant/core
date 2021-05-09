@@ -47,13 +47,7 @@ from homeassistant.const import (
     EVENT_TIMER_OUT_OF_SYNC,
     LENGTH_METERS,
     MATCH_ALL,
-    MAX_LENGTH_EVENT_CONTEXT_ID,
-    MAX_LENGTH_EVENT_CONTEXT_PARENT_ID,
-    MAX_LENGTH_EVENT_CONTEXT_USER_ID,
     MAX_LENGTH_EVENT_EVENT_TYPE,
-    MAX_LENGTH_EVENT_ORIGIN,
-    MAX_LENGTH_STATE_DOMAIN,
-    MAX_LENGTH_STATE_ENTITY_ID,
     MAX_LENGTH_STATE_STATE,
     __version__,
 )
@@ -137,7 +131,7 @@ def valid_entity_id(entity_id: str) -> bool:
 
 def valid_state(state: str) -> bool:
     """Test if a state is valid."""
-    return len(state) < 256
+    return len(state) <= MAX_LENGTH_STATE_STATE
 
 
 def callback(func: CALLABLE_T) -> CALLABLE_T:
@@ -700,25 +694,10 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        for param, param_name, max_length in (
-            (event_type, "event_type", MAX_LENGTH_EVENT_EVENT_TYPE),
-            (str(origin), "origin", MAX_LENGTH_EVENT_ORIGIN),
-        ):
-            if len(param) > max_length:
-                raise MaxLengthExceeded(param, param_name, max_length)
-
-        if context:
-            for param, param_name, max_length in (  # type: ignore
-                (context.id, "context.id", MAX_LENGTH_EVENT_CONTEXT_ID),
-                (
-                    context.parent_id,
-                    "context.parent_id",
-                    MAX_LENGTH_EVENT_CONTEXT_PARENT_ID,
-                ),
-                (context.user_id, "context.user_id", MAX_LENGTH_EVENT_CONTEXT_USER_ID),
-            ):
-                if param and len(param) > max_length:
-                    raise MaxLengthExceeded(param, param_name, max_length)
+        if len(event_type) > MAX_LENGTH_EVENT_EVENT_TYPE:
+            raise MaxLengthExceeded(
+                event_type, "event_type", MAX_LENGTH_EVENT_EVENT_TYPE
+            )
 
         listeners = self._listeners.get(event_type, [])
 
@@ -1208,15 +1187,6 @@ class StateMachine:
 
         This method must be run in the event loop.
         """
-        domain = entity_id.split(".")[0]
-        for param, param_name, max_length in (
-            (str(new_state), "new_state", MAX_LENGTH_STATE_STATE),
-            (domain, "domain", MAX_LENGTH_STATE_DOMAIN),
-            (entity_id, "entity_id", MAX_LENGTH_STATE_ENTITY_ID),
-        ):
-            if len(param) > max_length:
-                raise MaxLengthExceeded(param, param_name, max_length)
-
         entity_id = entity_id.lower()
         new_state = str(new_state)
         attributes = attributes or {}

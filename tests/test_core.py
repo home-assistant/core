@@ -539,32 +539,6 @@ async def test_eventbus_max_length_exceeded(hass):
     assert exc_info.value.max_length == 64
     assert exc_info.value.value == long_evt_name
 
-    long_evt_context_parent_id = "this_parent_id_exceeds_the_maximum_character_length"
-
-    context = ha.Context(parent_id=long_evt_context_parent_id)
-
-    with pytest.raises(MaxLengthExceeded) as exc_info:
-        hass.bus.async_fire("test", context=context)
-
-    assert exc_info.value.property_name == "context.parent_id"
-    assert exc_info.value.max_length == 36
-    assert exc_info.value.value == long_evt_context_parent_id
-
-
-async def test_state_max_length_exceeded(hass):
-    """Test that an exception is raised when the max character length is exceeded."""
-
-    long_domain_name = (
-        "this_domain_name_exceeds_the_maximum_character_length_so_we_can_test_exc"
-    )
-
-    with pytest.raises(MaxLengthExceeded) as exc_info:
-        hass.states.async_set(f"{long_domain_name}.test", "test")
-
-    assert exc_info.value.property_name == "domain"
-    assert exc_info.value.max_length == 64
-    assert exc_info.value.value == long_domain_name
-
 
 def test_state_init():
     """Test state.init."""
