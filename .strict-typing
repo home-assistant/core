@@ -13,6 +13,7 @@ homeassistant.components.cover.*
 homeassistant.components.device_automation.*
 homeassistant.components.elgato.*
 homeassistant.components.frontend.*
+homeassistant.components.fritz.*
 homeassistant.components.geo_location.*
 homeassistant.components.group.*
 homeassistant.components.history.*
