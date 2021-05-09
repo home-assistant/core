@@ -6,6 +6,8 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.growatt_server.const import CONF_PLANT_ID, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
+from tests.common import MockConfigEntry
+
 FIXTURE_USER_INPUT = {CONF_USERNAME: "username", CONF_PASSWORD: "password"}
 
 GROWATT_PLANT_LIST_RESPONSE = {
@@ -140,3 +142,25 @@ async def test_import_one_plant(hass):
             assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
             assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
             assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
+
+
+async def test_existing_plant_configured(hass):
+    """Test entering an existing plant_id."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="123456")
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    user_input = FIXTURE_USER_INPUT.copy()
+
+    with patch(
+        "growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE
+    ), patch(
+        "growattServer.GrowattApi.plant_list",
+        return_value=GROWATT_PLANT_LIST_RESPONSE,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "already_configured"
