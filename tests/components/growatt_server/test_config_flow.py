@@ -121,24 +121,3 @@ async def test_one_plant_on_account(hass):
             assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
             assert result2["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
             assert result2["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
-
-
-async def test_full_flow_implementation(hass):
-    """Test registering an integration and finishing flow works."""
-    with patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE):
-        with patch(
-            "growattServer.GrowattApi.plant_list",
-            return_value=GROWATT_PLANT_LIST_RESPONSE,
-        ):
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_USER}
-            )
-            assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-            assert result["step_id"] == "user"
-
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"], FIXTURE_USER_INPUT
-            )
-            assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-            assert result2["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
-            assert result2["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
