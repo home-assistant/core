@@ -260,9 +260,9 @@ class SmhiWeather(WeatherEntity):
         """Return SMHI specific attributes."""
         extra_attributes = {}
         if self.cloudiness is not None:
-            extra_attributes.update({ATTR_SMHI_CLOUDINESS: self.cloudiness})
+            extra_attributes[ATTR_SMHI_CLOUDINESS] = self.cloudiness
         if self.wind_gust_speed is not None:
-            extra_attributes.update({ATTR_SMHI_WIND_GUST_SPEED: self.wind_gust_speed})
+            extra_attributes[ATTR_SMHI_WIND_GUST_SPEED] = self.wind_gust_speed
         if self.thunder is not None:
-            extra_attributes.update({ATTR_SMHI_THUNDER_PROBABILITY: self.thunder})
+            extra_attributes[ATTR_SMHI_THUNDER_PROBABILITY] = self.thunder
         return extra_attributes
