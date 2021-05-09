@@ -92,7 +92,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
         super().__init__(fritzbox_tools, device_friendlyname)
 
     @property
-    def _state_provider(self) -> Any:
+    def _state_provider(self) -> str | Callable | None:
         """Return the state provider for the binary sensor."""
         return self._sensor_data[SENSOR_STATE_PROVIDER]
 
