@@ -1,19 +1,21 @@
 """Test the Qnap config flow."""
+from unittest.mock import patch
+
+from requests.exceptions import ConnectTimeout
+
 from homeassistant import config_entries, setup
-from homeassistant.components.qnap.const import CONF_NICS, CONF_VOLUMES, DOMAIN
+from homeassistant.components.qnap.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 API_RETURN = {
@@ -79,27 +81,6 @@ MANUAL_CONFIG = {
     CONF_HOST: "1.2.3.4",
     CONF_USERNAME: "myuser",
     CONF_PASSWORD: "password",
-    CONF_MONITORED_CONDITIONS: [
-        "status",
-        "cpu_usage",
-        "memory_percent_used",
-        "network_tx",
-        "volume_percentage_used",
-    ],
-    CONF_NICS: "eth0,eth1",
-    CONF_VOLUMES: "1",
-}
-
-OPTIONS_CONFIG = {
-    CONF_MONITORED_CONDITIONS: [
-        "status",
-        "cpu_usage",
-        "memory_percent_used",
-        "network_tx",
-        "volume_percentage_used",
-    ],
-    CONF_NICS: "eth0,eth1",
-    CONF_VOLUMES: "1",
 }
 
 
@@ -137,7 +118,6 @@ async def test_form_import(hass):
             "volume_percentage_used",
         ],
     }
-    assert result["result"].unique_id == "123456"
 
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -175,17 +155,7 @@ async def test_form(hass):
         CONF_PASSWORD: "password",
         CONF_PORT: 8080,
         CONF_SSL: False,
-        CONF_TIMEOUT: 5,
         CONF_VERIFY_SSL: True,
-        CONF_MONITORED_CONDITIONS: [
-            "status",
-            "cpu_usage",
-            "memory_percent_used",
-            "network_tx",
-            "volume_percentage_used",
-        ],
-        CONF_NICS: "eth0,eth1",
-        CONF_VOLUMES: "1",
     }
     assert result["result"].unique_id == "123456"
 
@@ -201,7 +171,7 @@ async def test_form_cannot_connect(hass):
 
     with patch(
         "homeassistant.components.qnap.config_flow.QNAPStats.get_system_stats",
-        side_effect=Exception,
+        side_effect=ConnectTimeout,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -211,24 +181,25 @@ async def test_form_cannot_connect(hass):
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with patch(
+        "homeassistant.components.qnap.config_flow.QNAPStats.get_system_stats",
+        side_effect=TypeError,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MANUAL_CONFIG,
+        )
+
+    assert result3["type"] == RESULT_TYPE_FORM
+    assert result3["errors"] == {"base": "invalid_auth"}
+
 
 async def test_form_updates_unique_id(hass):
     """Test a duplicate id aborts and updates existing entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="123456",
-        data={
-            CONF_HOST: "1.2.3.4",
-            CONF_USERNAME: "myuser",
-            CONF_PASSWORD: "password",
-            CONF_MONITORED_CONDITIONS: [
-                "status",
-                "cpu_usage",
-                "memory_percent_used",
-                "network_tx",
-                "volume_percentage_used",
-            ],
-        },
+        data={CONF_HOST: "1.2.3.4", CONF_USERNAME: "myuser", CONF_PASSWORD: "password"},
     )
 
     entry.add_to_hass(hass)
@@ -256,34 +227,3 @@ async def test_form_updates_unique_id(hass):
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "already_configured"
-
-
-async def test_options_flow(hass):
-    """Test options config flow."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "1.2.3.4",
-            CONF_USERNAME: "myuser",
-            CONF_PASSWORD: "password",
-        },
-        unique_id=123456,
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.qnap.config_flow.QNAPStats.get_system_stats",
-        return_value=API_RETURN,
-    ):
-        result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input=OPTIONS_CONFIG
-    )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    await hass.async_block_till_done()
