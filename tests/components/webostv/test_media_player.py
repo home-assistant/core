@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import setup
 from homeassistant.components import media_player
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
@@ -25,16 +24,11 @@ from homeassistant.const import (
     CONF_NAME,
     SERVICE_VOLUME_MUTE,
 )
-from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 NAME = "fake"
 ENTITY_ID = f"{media_player.DOMAIN}.{NAME}"
-
-MOCK_YAML_CONFIG = {
-    CONF_HOST: "1.2.3.4",
-    CONF_NAME: NAME,
-    CONF_ICON: "mdi:test",
-}
 
 
 @pytest.fixture(name="client")
@@ -54,12 +48,19 @@ def client_fixture():
 
 async def setup_webostv(hass):
     """Initialize webostv and media_player for tests."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    assert await async_setup_component(
-        hass,
-        DOMAIN,
-        {DOMAIN: MOCK_YAML_CONFIG},
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "1.2.3.4",
+            CONF_NAME: NAME,
+            "client_secret": "0123456789",
+            CONF_ICON: "mdi:test",
+        },
+        unique_id="00:01:02:03:04",
     )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
 
@@ -71,7 +72,10 @@ async def test_mute(hass, client):
         ATTR_ENTITY_ID: ENTITY_ID,
         ATTR_MEDIA_VOLUME_MUTED: True,
     }
-    await hass.services.async_call(media_player.DOMAIN, SERVICE_VOLUME_MUTE, data)
+
+    assert await hass.services.async_call(
+        media_player.DOMAIN, SERVICE_VOLUME_MUTE, data, True
+    )
     await hass.async_block_till_done()
 
     client.set_mute.assert_called_once()
