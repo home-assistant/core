@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 from qnapstats import QNAPStats
-from requests.exceptions import ConnectionError, ConnectTimeout
+from requests.exceptions import ConnectTimeout
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -61,7 +61,7 @@ async def async_setup_entry(hass, config_entry):
     )
     try:
         system_info = await hass.async_add_executor_job(api.get_system_stats)
-    except (ConnectTimeout, ConnectionError) as error:
+    except ConnectTimeout as error:
         raise ConfigEntryNotReady from error
 
     device_registry = await dr.async_get_registry(hass)

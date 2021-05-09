@@ -2,7 +2,7 @@
 import logging
 
 from qnapstats import QNAPStats
-from requests.exceptions import ConnectionError, ConnectTimeout
+from requests.exceptions import ConnectTimeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -65,7 +65,7 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             try:
                 stats = await self.hass.async_add_executor_job(api.get_system_stats)
-            except (ConnectTimeout, ConnectionError):
+            except ConnectTimeout:
                 errors["base"] = "cannot_connect"
             except TypeError:
                 errors["base"] = "invalid_auth"
