@@ -46,22 +46,25 @@ CUSTOMIZE_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Optional(CONF_CUSTOMIZE, default={}): CUSTOMIZE_SCHEMA,
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                        vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-                        vol.Optional(CONF_ICON): cv.string,
-                    }
-                )
-            ],
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.All(
+                cv.ensure_list,
+                [
+                    vol.Schema(
+                        {
+                            vol.Optional(CONF_CUSTOMIZE, default={}): CUSTOMIZE_SCHEMA,
+                            vol.Required(CONF_HOST): cv.string,
+                            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                            vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+                            vol.Optional(CONF_ICON): cv.string,
+                        }
+                    )
+                ],
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
