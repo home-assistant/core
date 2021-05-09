@@ -6,7 +6,6 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_ONOFF,
     LightEntity,
 )
 from homeassistant.core import callback
@@ -18,10 +17,10 @@ from .const import DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_LIGHTS
 _LOGGER = logging.getLogger(__name__)
 
 DEV_TYPE_TO_HA = {
-    "ESD16": "dimmerswitch",
-    "ESWD16": "dimmerswitch",
-    "ESL100": "bulb",
-    "ESL100CW": "bulb",
+    "ESD16": "walldimmer",
+    "ESWD16": "walldimmer",
+    "ESL100": "bulb-dimmable",
+    "ESL100CW": "bulb-tunable-white",
 }
 
 
@@ -45,10 +44,10 @@ def _async_setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
     entities = []
     for dev in devices:
-        if DEV_TYPE_TO_HA.get(dev.device_type) == "dimmerswitch":
-            entities.append(VeSyncDimmerHA(dev))
-        elif DEV_TYPE_TO_HA.get(dev.device_type) == "bulb":
-            entities.append(VeSyncBulbHA(dev))
+        if DEV_TYPE_TO_HA.get(dev.device_type) in ("walldimmer", "bulb-dimmable"):
+            entities.append(VeSyncDimmableLightHA(dev))
+        elif DEV_TYPE_TO_HA.get(dev.device_type) in ("bulb-tunable-white"):
+            entities.append(VeSyncTunableWhiteLightHA(dev))
         else:
             _LOGGER.debug(
                 "%s - Unknown device type - %s", dev.device_name, dev.device_type
@@ -58,13 +57,26 @@ def _async_setup_entities(devices, async_add_entities):
     async_add_entities(entities, update_before_add=True)
 
 
-class VeSyncDimmerHA(VeSyncDevice, LightEntity):
-    """Representation of a VeSync dimmer."""
+class VeSyncBaseLight(VeSyncDevice, LightEntity):
+    """Base class for VeSync Light Devices Representations."""
 
-    def __init__(self, dimmer):
-        """Initialize the VeSync dimmer device."""
-        super().__init__(dimmer)
-        self.dimmer = dimmer
+    def __init__(self, device):
+        """Initialize the VeSync LightDevice."""
+        self.device = device
+
+    @property
+    def brightness(self):
+        """Get light brightness."""
+        return round((int(self.device.brightness) / 100) * 255)
+
+
+class VeSyncDimmableLightHA(VeSyncBaseLight, LightEntity):
+    """Representation of a VeSync dimmable light device."""
+
+    def __init__(self, device):
+        """Initialize the VeSync dimmable light device."""
+        super().__init__(device)
+        self.device = device
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
@@ -75,20 +87,10 @@ class VeSyncDimmerHA(VeSyncDevice, LightEntity):
             brightness = round((brightness / 255) * 100)
             # clamp to 1-100
             brightness = max(1, min(brightness, 100))
-            self.dimmer.set_brightness(brightness)
+            self.device.set_brightness(brightness)
         # Avoid turning device back on if this is just a brightness adjustment
         if not self.is_on:
             self.device.turn_on()
-
-    # @property
-    # def supported_features(self):
-    #     """Get supported features for this entity."""
-    #     return COLOR_MODE_BRIGHTNESS
-
-    @property
-    def brightness(self):
-        """Get dimmer brightness."""
-        return round((int(self.dimmer.brightness) / 100) * 255)
 
     @property
     def color_mode(self):
@@ -97,26 +99,17 @@ class VeSyncDimmerHA(VeSyncDevice, LightEntity):
 
     @property
     def supported_color_modes(self):
-        """Flag supported color_modes."""
-        supported_color_modes = set()
-        Dimmable = True
-        Tunable_white = False
-        if Tunable_white:
-            supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
-        if not supported_color_modes and Dimmable:
-            supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
-        if not supported_color_modes:
-            supported_color_modes.add(COLOR_MODE_ONOFF)
-        return supported_color_modes
+        """Flag supported color_modes (in an array format)."""
+        return [COLOR_MODE_BRIGHTNESS]
 
 
-class VeSyncBulbHA(VeSyncDevice, LightEntity):
-    """Representation of a VeSync bulb."""
+class VeSyncTunableWhiteLightHA(VeSyncDevice, LightEntity):
+    """Representation of a VeSync Tunable White Light device."""
 
-    def __init__(self, bulb):
-        """Initialize the VeSync bulb device."""
-        super().__init__(bulb)
-        self.bulb = bulb
+    def __init__(self, device):
+        """Initialize the VeSync Tunable White Light device."""
+        super().__init__(device)
+        self.device = device
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
@@ -127,34 +120,39 @@ class VeSyncBulbHA(VeSyncDevice, LightEntity):
             brightness = round((brightness / 255) * 100)
             # clamp to 1-100
             brightness = max(1, min(brightness, 100))
-            self.bulb.set_brightness(brightness)
+            self.device.set_brightness(brightness)
         # Avoid turning device back on if this is just a brightness adjustment
         elif ATTR_COLOR_TEMP in kwargs:
             # get brightness from HA data
             color_temp = int(kwargs[ATTR_COLOR_TEMP])
-            # convert to percent that vesync api expects
-            color_temp = round(color_temp)
-            # clamp to 1-100
+            # flip cold/warm to what pyvesync api expects
+            color_temp = 100 - color_temp
+            # ensure value between 1-100
             color_temp = max(1, min(color_temp, 100))
-            self.bulb.set_color_temp(color_temp)
+            # pass value to pyvesync library api
+            self.device.set_color_temp(color_temp)
         # Avoid turning device back on if this is just a brightness adjustment
         if not self.is_on:
             self.device.turn_on()
 
-    # @property
-    # def supported_features(self):
-    #    """Get supported features for this entity."""
-    #    return ##%%##%#
-
-    @property
-    def brightness(self):
-        """Get bulb brightness."""
-        return round((int(self.bulb.brightness) / 100) * 255)
-
     @property
     def color_temp(self):
-        """Get bulb white temperature."""
-        return self.bulb.color_temp_pct
+        """Get device white temperature."""
+        # get value from pyvesync library api, and flip cold/warm
+        color_temp_value = 100 - int(self.device.color_temp_pct)
+        # ensure value between 1-100
+        color_temp_value = max(1, min(color_temp_value, 100))
+        return color_temp_value
+
+    @property
+    def min_mireds(self):
+        """Set device coldest white temperature."""
+        return 1  # 6500K
+
+    @property
+    def max_mireds(self):
+        """Set device warmest white temperature."""
+        return 100  # 2700K
 
     @property
     def color_mode(self):
@@ -163,14 +161,5 @@ class VeSyncBulbHA(VeSyncDevice, LightEntity):
 
     @property
     def supported_color_modes(self):
-        """Flag supported color_modes."""
-        supported_color_modes = set()
-        Dimmable = False
-        Tunable_white = True
-        if Tunable_white:
-            supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
-        if not supported_color_modes and Dimmable:
-            supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
-        if not supported_color_modes:
-            supported_color_modes.add(COLOR_MODE_ONOFF)
-        return supported_color_modes
+        """Flag supported color_modes (in an array format)."""
+        return [COLOR_MODE_COLOR_TEMP]
