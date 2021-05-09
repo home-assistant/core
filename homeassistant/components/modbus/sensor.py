@@ -161,18 +161,15 @@ async def async_setup_platform(
             del entry[CONF_REVERSE_ORDER]
         if entry.get(CONF_SWAP) != CONF_SWAP_NONE:
             if entry[CONF_SWAP] == CONF_SWAP_BYTE:
-                regs_needed = 1
-            else:  # CONF_SWAP_WORD_BYTE, CONF_SWAP_WORD
                 regs_needed = 2
-            if (
-                entry[CONF_COUNT] < regs_needed
-                or (entry[CONF_COUNT] % regs_needed) != 0
-            ):
+            else:  # CONF_SWAP_WORD_BYTE, CONF_SWAP_WORD
+                regs_needed = 4
+            if regsTotalSize < regs_needed or (regsTotalSize % regs_needed) != 0:
                 _LOGGER.error(
-                    "Error in sensor %s swap(%s) not possible due to count: %d",
+                    "Error in sensor %s swap(%s) not possible due to size: %d bytes",
                     entry[CONF_NAME],
                     entry[CONF_SWAP],
-                    entry[CONF_COUNT],
+                    regsTotalSize,
                 )
                 continue
         if CONF_HUB in entry:
@@ -210,6 +207,7 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
         slave = entry.get(CONF_SLAVE)
         self._slave = int(slave) if slave else None
         self._register = int(entry[CONF_ADDRESS])
+        self._register_size = entry.get(CONF_REGISTER_SIZE)
         self._register_type = entry[CONF_INPUT_TYPE]
         self._unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._count = int(entry[CONF_COUNT])

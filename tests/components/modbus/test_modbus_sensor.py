@@ -528,16 +528,17 @@ async def test_all_sensor(hass, cfg, regs, expected):
             [0x40FD, 0xCCCD, 0x4129, 0x999A, 0x10FD, 0xC0CD, 0x4129, 0x109A],
             "7.93,10.60,0.00,10.57",
         ),
-        (
-            {
-                CONF_COUNT: 4,
-                CONF_PRECISION: 0,
-                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
-                CONF_STRUCTURE: ">2i",
-            },
-            [0x0000, 0x0100, 0x0000, 0x0032],
-            "256,50",
-        ),
+        #        (
+        #            {
+        #                CONF_COUNT: 4,
+        #                CONF_REGISTER_SIZE: 2,
+        #                CONF_PRECISION: 0,
+        #                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+        #                CONF_STRUCTURE: ">2i",
+        #            },
+        #            [0x0000, 0x0100, 0x0000, 0x0032],
+        #            "256,50",
+        #        ),
         (
             {
                 CONF_COUNT: 1,
@@ -567,17 +568,27 @@ async def test_all_sensor(hass, cfg, regs, expected):
             [0xAABB, 0xCCDD],
             "43707,52445",
         ),
-        (
-            {
-                CONF_COUNT: 4,
-                CONF_REGISTER_SIZE: 2,
-                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
-                CONF_STRUCTURE: ">2i",
-            },
-            [0x0000, 0x0100, 0x0000, 0x0032],
-            "256,50",
-        ),
-        # end ###
+        #        (
+        #            {
+        #                CONF_COUNT: 4,
+        #                CONF_REGISTER_SIZE: 2,
+        #                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+        #                CONF_STRUCTURE: ">2i",
+        #            },
+        #            [0x0000, 0x0100, 0x0000, 0x0032],
+        #            "256,50",
+        #        ),
+        #        (
+        #          {
+        #               CONF_COUNT: 2,
+        #             CONF_REGISTER_SIZE: 4,
+        #             CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+        #             CONF_STRUCTURE: ">2i",
+        #         },
+        #         [0x00000100, 0x00000032],
+        #         "256,50",
+        #    ),
+        # end group ###
     ],
 )
 async def test_struct_sensor(hass, cfg, regs, expected):
