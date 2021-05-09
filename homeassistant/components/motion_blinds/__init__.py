@@ -94,7 +94,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
                 all_available = False
                 break
 
-        if all_available:
+        if all_available and self._wait_for_push:
             self.update_interval = timedelta(seconds=UPDATE_INTERVAL)
         else:
             self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
