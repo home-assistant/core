@@ -464,7 +464,7 @@ datadog==0.15.0
 datapoint==0.9.5
 
 # homeassistant.components.debugpy
-debugpy==1.2.1
+debugpy==1.3.0
 
 # homeassistant.components.decora
 # decora==0.6
