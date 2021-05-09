@@ -262,12 +262,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 QNAPFolderSensor(
                     coordinator,
                     unique_id,
-                    variable,
-                    _FOLDER_MON_COND[variable],
+                    key,
+                    _FOLDER_MON_COND[key],
                     volume,
                     folder["sharename"],
                 )
-                for variable in _FOLDER_MON_COND.keys()
+                for key in _FOLDER_MON_COND
             ]
 
     async_add_entities(sensors, True)
