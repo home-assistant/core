@@ -1,4 +1,6 @@
 """Test the WebOS Tv config flow."""
+from unittest.mock import patch
+
 from aiopylgtv import PyLGTVPairException
 import pytest
 
@@ -17,13 +19,17 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 MOCK_YAML_CONFIG = {
     CONF_HOST: "1.2.3.4",
     CONF_NAME: "fake",
     CONF_ICON: "mdi:test",
+}
+
+MOCK_CONFIG_ENTRY = {
+    CONF_HOST: "1.2.3.4",
+    "client_secret": "0123456789",
 }
 
 
@@ -34,7 +40,7 @@ def client_fixture():
         "homeassistant.components.webostv.WebOsClient", autospec=True
     ) as mock_client_class:
         client = mock_client_class.return_value
-        client.software_info = {"device_id": "a1:b1:c1:d1:e1:f1"}
+        client.software_info = {"device_id": "00:01:02:03:04"}
         client.client_key = "0123456789"
         client.apps = {0: {"title": "Applicaiton01"}}
         client.inputs = {0: {"label": "Input01"}}
@@ -111,10 +117,8 @@ async def test_options_flow(hass, client):
     """Test options config flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_HOST: "1.2.3.4",
-        },
-        unique_id="1.2.3.4",
+        data=MOCK_CONFIG_ENTRY,
+        unique_id="00:01:02:03:04",
     )
     entry.add_to_hass(hass)
 
@@ -152,10 +156,8 @@ async def test_options_jsonformat_incorrect_flow(hass, client):
     """Test json format incorrect in options config flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_HOST: "1.2.3.4",
-        },
-        unique_id="1.2.3.4",
+        data=MOCK_CONFIG_ENTRY,
+        unique_id="00:01:02:03:04",
     )
     entry.add_to_hass(hass)
 
@@ -228,18 +230,19 @@ async def test_form_updates_unique_id(hass, client):
     """Test duplicated unique_id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_HOST: "1.2.3.4",
-        },
-        unique_id="1.2.3.4",
+        data=MOCK_CONFIG_ENTRY,
+        unique_id="00:01:02:03:04",
     )
     entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=MOCK_YAML_CONFIG,
-    )
+    with patch(
+        "homeassistant.components.webostv.config_flow.get_mac_address",
+        return_value="00:01:02:03:04",
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=MOCK_YAML_CONFIG,
+        )
 
     await hass.async_block_till_done()
 
