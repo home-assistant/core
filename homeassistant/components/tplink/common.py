@@ -154,6 +154,8 @@ def add_available_devices(hass, device_type, device_class):
     entities_ready = []
     devices_unavailable = []
     for device in devices:
+        if device.host is None or device.host == "":
+            continue
         try:
             device.get_sysinfo()
             entities_ready.append(device_class(device))

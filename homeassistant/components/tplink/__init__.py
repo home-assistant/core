@@ -5,8 +5,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .common import SmartDevices, async_discover_devices, get_static_devices
 from .const import (
@@ -125,6 +126,6 @@ async def async_unload_entry(hass, entry):
     platforms = [platform for platform in PLATFORMS if hass.data[DOMAIN].get(platform)]
     unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
     if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
+        hass.data[DOMAIN].clear()
 
     return unload_ok

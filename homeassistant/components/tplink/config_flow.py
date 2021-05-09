@@ -14,6 +14,7 @@ from .const import (
     CONF_RETRY_MAX_ATTEMPTS,
     CONF_STRIP,
     CONF_SWITCH,
+    DEFAULT_DISCOVERY,
     DEFAULT_MAX_ATTEMPTS,
     DEFAULT_RETRY_DELAY,
     DOMAIN,
@@ -23,9 +24,9 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_LIGHT, default=""): str,
         vol.Optional(CONF_SWITCH, default=""): str,
-        vol.Optional(CONF_STRIP, default=""): str,
         vol.Optional(CONF_DIMMER, default=""): str,
-        vol.Optional(CONF_DISCOVERY, default=True): bool,
+        vol.Optional(CONF_STRIP, default=""): str,
+        vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): bool,
         vol.Optional(CONF_RETRY_DELAY, default=DEFAULT_RETRY_DELAY): int,
         vol.Optional(CONF_RETRY_MAX_ATTEMPTS, default=DEFAULT_MAX_ATTEMPTS): int,
     }
@@ -69,15 +70,11 @@ class TpLinkOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
-        return await self.async_step_user()
-
-    async def async_step_user(self, user_input=None):
-        """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
-            step_id="user",
+            step_id="init",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
@@ -85,16 +82,22 @@ class TpLinkOptionsFlowHandler(config_entries.OptionsFlow):
                         default=self.config_entry.options.get(CONF_LIGHT, ""),
                     ): str,
                     vol.Optional(
-                        CONF_STRIP,
-                        default=self.config_entry.options.get(CONF_STRIP, ""),
-                    ): str,
-                    vol.Optional(
                         CONF_SWITCH,
                         default=self.config_entry.options.get(CONF_SWITCH, ""),
                     ): str,
                     vol.Optional(
+                        CONF_DIMMER,
+                        default=self.config_entry.options.get(CONF_DIMMER, ""),
+                    ): str,
+                    vol.Optional(
+                        CONF_STRIP,
+                        default=self.config_entry.options.get(CONF_STRIP, ""),
+                    ): str,
+                    vol.Optional(
                         CONF_DISCOVERY,
-                        default=self.config_entry.options.get(CONF_DISCOVERY, True),
+                        default=self.config_entry.options.get(
+                            CONF_DISCOVERY, DEFAULT_DISCOVERY
+                        ),
                     ): bool,
                     vol.Optional(
                         CONF_RETRY_DELAY,
