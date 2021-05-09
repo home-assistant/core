@@ -6,6 +6,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, callback, valid_entity_id
+from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import (
@@ -904,3 +905,21 @@ async def test_disabled_entities_excluded_from_entity_list(hass, registry):
         registry, device_entry.id, include_disabled_entities=True
     )
     assert entries == [entry1, entry2]
+
+
+async def test_entity_max_length_exceeded(hass, registry):
+    """Test that an exception is raised when the max character length is exceeded."""
+
+    long_entity_id_name = (
+        "1234567890123456789012345678901234567890123456789012345678901234567890"
+        "1234567890123456789012345678901234567890123456789012345678901234567890"
+        "1234567890123456789012345678901234567890123456789012345678901234567890"
+        "1234567890123456789012345678901234567890123456789012345678901234567890"
+    )
+
+    with pytest.raises(MaxLengthExceeded) as exc_info:
+        registry.async_generate_entity_id("sensor", long_entity_id_name)
+
+    assert exc_info.value.property_name == "preferred_entity_id"
+    assert exc_info.value.max_length == 255
+    assert exc_info.value.value == f"sensor.{long_entity_id_name}"
