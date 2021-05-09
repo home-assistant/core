@@ -8,7 +8,6 @@ button:
       name: Entity
       description: Name(s) of the webostv entities where to run the API method.
       required: true
-      example: "media_player.living_room_tv"
       selector:
         entity:
           integration: webostv
@@ -16,33 +15,14 @@ button:
     button:
       name: Button
       description: >-
-        Name of the button to press.
+        Name of the button to press.  Known possible values are
+        LEFT, RIGHT, DOWN, UP, HOME, MENU, BACK, ENTER, DASH, INFO, ASTERISK, CC, EXIT,
+        MUTE, RED, GREEN, BLUE, VOLUMEUP, VOLUMEDOWN, CHANNELUP, CHANNELDOWN,
+        PLAY, PAUSE, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
       required: true
       example: "LEFT"
       selector:
-        select:
-          options:
-            - "LEFT"
-            - "RIGHT"
-            - "DOWN"
-            - "UP"
-            - "HOME"
-            - "MENU"
-            - "BACK"
-            - "ENTER"
-            - "DASH"
-            - "INFO"
-            - "ASTERISK"
-            - "CC"
-            - "EXIT"
-            - "MUTE"
-            - "RED"
-            - "GREEN"
-            - "BLUE"
-            - "VOLUMEUP"
-            - "VOLUMEDOWN"
-            - "CHANNELUP"
-            - "CHANNELDOWN"
+        text:
 
 command:
   name: Command
@@ -52,7 +32,6 @@ command:
       name: Entity
       description: Name(s) of the webostv entities where to run the API method.
       required: true
-      example: "media_player.living_room_tv"
       selector:
         entity:
           integration: webostv
