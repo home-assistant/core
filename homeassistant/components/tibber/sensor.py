@@ -6,8 +6,21 @@ from random import randrange
 
 import aiohttp
 
-from homeassistant.components.sensor import DEVICE_CLASS_POWER, SensorEntity
-from homeassistant.const import POWER_WATT
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_VOLTAGE,
+    SensorEntity,
+)
+from homeassistant.const import (
+    ELECTRICAL_CURRENT_AMPERE,
+    ENERGY_KILO_WATT_HOUR,
+    EVENT_HOMEASSISTANT_START,
+    POWER_WATT,
+    SIGNAL_STRENGTH_DECIBELS,
+    VOLT,
+)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import Throttle, dt as dt_util
 
@@ -39,7 +52,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
         if home.has_active_subscription:
             dev.append(TibberSensorElPrice(home))
         if home.has_real_time_consumption:
-            dev.append(TibberSensorRT(home))
+            TibberRtDataHandler(async_add_entities, home, hass)
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START,
+                TibberRtDataHandler(async_add_entities, home, hass).hass_started,
+            )
 
     async_add_entities(dev, True)
 
@@ -79,8 +96,7 @@ class TibberSensor(SensorEntity):
     @property
     def device_id(self):
         """Return the ID of the physical device this sensor is part of."""
-        home = self._tibber_home.info["viewer"]["home"]
-        return home["meteringPointData"]["consumptionEan"]
+        return self._tibber_home.home_id
 
     @property
     def device_info(self):
@@ -176,7 +192,67 @@ class TibberSensorElPrice(TibberSensor):
 class TibberSensorRT(TibberSensor):
     """Representation of a Tibber sensor for real time consumption."""
 
-    async def async_added_to_hass(self):
+    def __init__(self, tibber_home, sensor, unit, device_class=None):
+        """Initialize the sensor."""
+        super().__init__(tibber_home)
+        self._sensor = sensor
+        self._unit = unit
+        self._device_class = device_class
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._tibber_home.rt_subscription_running
+
+    @property
+    def model(self):
+        """Return the model of the sensor."""
+        return "Tibber Pulse"
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"Real time {self._sensor} {self._name}"
+
+    def set_state(self, state):
+        """Set sensor state."""
+        self._state = state
+        if self.hass is None:
+            return
+        self.async_write_ha_state()
+
+    @property
+    def should_poll(self):
+        """Return the polling state."""
+        return False
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return self._unit
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return f"{self.device_id}_rt_{self._sensor}"
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return self._device_class
+
+
+class TibberRtDataHandler:
+    """Handle Tibber realtime data."""
+
+    def __init__(self, async_add_entities, tibber_home, hass):
+        """Initialize the data handler."""
+        self._async_add_entities = async_add_entities
+        self._tibber_home = tibber_home
+        self.hass = hass
+        self._sensors = {}
+
+    async def hass_started(self, _):
         """Start listen for real time data."""
         await self._tibber_home.rt_subscribe(self.hass.loop, self._async_callback)
 
@@ -192,45 +268,56 @@ class TibberSensorRT(TibberSensor):
         live_measurement = data.get("liveMeasurement")
         if live_measurement is None:
             return
-        self._state = live_measurement.pop("power", None)
-        for key, value in live_measurement.items():
+
+        for sensor, value in live_measurement.items():
             if value is None:
                 continue
-            self._extra_state_attributes[key] = value
-
-        self.async_write_ha_state()
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._tibber_home.rt_subscription_running
-
-    @property
-    def model(self):
-        """Return the model of the sensor."""
-        return "Tibber Pulse"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"Real time consumption {self._name}"
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return POWER_WATT
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return f"{self.device_id}_rt_consumption"
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return DEVICE_CLASS_POWER
+            if sensor not in self._sensors:
+                if sensor in [
+                    "power",
+                    "powerProduction",
+                    "minPower",
+                    "averagePower",
+                    "maxPower",
+                ]:
+                    dev = TibberSensorRT(
+                        self._tibber_home, sensor, POWER_WATT, DEVICE_CLASS_POWER
+                    )
+                elif sensor in [
+                    "accumulatedProduction",
+                    "accumulatedConsumption",
+                    "lastMeterConsumption",
+                    "lastMeterProduction",
+                    "accumulatedConsumptionLastHour",
+                    "accumulatedProductionLastHour",
+                ]:
+                    dev = TibberSensorRT(
+                        self._tibber_home,
+                        sensor,
+                        ENERGY_KILO_WATT_HOUR,
+                        DEVICE_CLASS_ENERGY,
+                    )
+                elif sensor in ["voltagePhase1", "voltagePhase2", "voltagePhase3"]:
+                    dev = TibberSensorRT(
+                        self._tibber_home, sensor, VOLT, DEVICE_CLASS_VOLTAGE
+                    )
+                elif sensor in ["currentL1", "currentL2", "currentL3"]:
+                    dev = TibberSensorRT(
+                        self._tibber_home,
+                        sensor,
+                        ELECTRICAL_CURRENT_AMPERE,
+                        DEVICE_CLASS_CURRENT,
+                    )
+                elif sensor in ["signalStrength"]:
+                    dev = TibberSensorRT(
+                        self._tibber_home, sensor, SIGNAL_STRENGTH_DECIBELS
+                    )
+                elif sensor in ["accumulatedCost"]:
+                    dev = TibberSensorRT(
+                        self._tibber_home, sensor, live_measurement.get("currency")
+                    )
+                else:
+                    continue
+                self._async_add_entities([dev])
+                self._sensors[sensor] = dev
+            self._sensors[sensor].set_state(value)
