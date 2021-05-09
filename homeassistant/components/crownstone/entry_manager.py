@@ -108,8 +108,16 @@ class CrownstoneEntryManager:
             if port is not None:
                 self.uart = CrownstoneUart()
                 # initialize USB, this waits for the usb to be initialized
-                # we do this in the background to avoid blocking, devices depend on the 'is_ready' flag
-                asyncio.create_task(self.uart.initialize_usb(f"/dev/{port}"))
+                # this usually takes less than a second, so cancel if it's taking too long
+                try:
+                    await asyncio.wait_for(
+                        self.uart.initialize_usb(f"/dev/{port}"), timeout=5
+                    )
+                except asyncio.TimeoutError:
+                    _LOGGER.warning(
+                        "Crownstone USB dongle failed to initialize on port /dev/%s",
+                        port,
+                    )
 
         # Create listeners for SSE and UART
         create_data_listeners(self.hass, self)
