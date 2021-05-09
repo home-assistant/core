@@ -147,7 +147,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             self._slave, self._register, self._state_open, self._write_type
         )
         self._available = result is not None
-        self.async_update()
+        await self.async_update()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
@@ -155,7 +155,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             self._slave, self._register, self._state_closed, self._write_type
         )
         self._available = result is not None
-        self.async_update()
+        await self.async_update()
 
     async def async_update(self, now=None):
         """Update the state of the cover."""
