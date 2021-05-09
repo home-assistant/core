@@ -38,7 +38,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util import Throttle, slugify
 
-from .const import ATTR_SMHI_CLOUDINESS, ATTR_SMHI_THUNDER_PROBABILITY, ATTR_SMHI_WIND_GUST_SPEED, ENTITY_ID_SENSOR_FORMAT
+from .const import (
+    ATTR_SMHI_CLOUDINESS,
+    ATTR_SMHI_THUNDER_PROBABILITY,
+    ATTR_SMHI_WIND_GUST_SPEED,
+    ENTITY_ID_SENSOR_FORMAT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -166,7 +171,7 @@ class SmhiWeather(WeatherEntity):
             # Convert from m/s to km/h
             return round(self._forecasts[0].wind_speed * 18 / 5)
         return None
-    
+
     @property
     def wind_gust_speed(self) -> float:
         """Return the wind gust speed."""
@@ -202,7 +207,7 @@ class SmhiWeather(WeatherEntity):
         if self._forecasts is not None:
             return self._forecasts[0].cloudiness
         return None
-    
+
     @property
     def thunder(self) -> int:
         """Return the chance of thunder, unit Percent."""
