@@ -193,6 +193,18 @@ async def test_form_cannot_connect(hass):
     assert result3["type"] == RESULT_TYPE_FORM
     assert result3["errors"] == {"base": "invalid_auth"}
 
+    with patch(
+        "homeassistant.components.qnap.config_flow.QNAPStats.get_system_stats",
+        side_effect=Exception,
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MANUAL_CONFIG,
+        )
+
+    assert result4["type"] == RESULT_TYPE_FORM
+    assert result4["errors"] == {"base": "unknown"}
+
 
 async def test_form_updates_unique_id(hass):
     """Test a duplicate id aborts and updates existing entry."""
