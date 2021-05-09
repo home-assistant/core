@@ -21,7 +21,7 @@ pytest-sugar==0.9.4
 pytest-timeout==1.4.2
 pytest-xdist==2.2.1
 pytest==6.2.4
-requests_mock==1.8.0
+requests_mock==1.9.2
 responses==0.12.0
 respx==0.17.0
 stdlib-list==0.7.0
