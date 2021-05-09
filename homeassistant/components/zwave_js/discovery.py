@@ -5,6 +5,7 @@ from collections.abc import Generator
 from dataclasses import dataclass
 from typing import Any
 
+from awesomeversion import AwesomeVersion
 from zwave_js_server.const import THERMOSTAT_CURRENT_TEMP_PROPERTY, CommandClass
 from zwave_js_server.model.device_class import DeviceClassItem
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -67,6 +68,18 @@ class ZWaveValueDiscoverySchema:
 
 
 @dataclass
+class FirmwareVersionRange:
+    """
+    Firmware version range dictionary.
+
+    At least one parameter must be provided.
+    """
+
+    min: str | None = None
+    max: str | None = None
+
+
+@dataclass
 class ZWaveDiscoverySchema:
     """Z-Wave discovery schema.
 
@@ -89,8 +102,8 @@ class ZWaveDiscoverySchema:
     product_id: set[int] | None = None
     # [optional] the node's product_type must match ANY of these values
     product_type: set[int] | None = None
-    # [optional] the node's label must match ANY of these values
-    label: set[str] | None = None
+    # [optional] the node's firmware_version must be within this range
+    firmware_version_range: FirmwareVersionRange | None = None
     # [optional] the node's firmware_version must match ANY of these values
     firmware_version: set[str] | None = None
     # [optional] the node's basic device class must match ANY of these values
@@ -283,7 +296,7 @@ DISCOVERY_SCHEMAS = [
         manufacturer_id={0x019B},
         product_id={0x0202},
         product_type={0x0003},
-        label={"Z-TRM2fx"},
+        firmware_version_range=FirmwareVersionRange(min="3.0"),
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_MODE},
             property={"mode"},
@@ -579,8 +592,19 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
             ):
                 continue
 
-            # check label
-            if schema.label is not None and value.node.label not in schema.label:
+            # check firmware_version_range
+            if schema.firmware_version_range is not None and (
+                (
+                    schema.firmware_version_range.min is not None
+                    and AwesomeVersion(schema.firmware_version_range.min)
+                    > AwesomeVersion(value.node.firmware_version)
+                )
+                or (
+                    schema.firmware_version_range.max is not None
+                    and AwesomeVersion(schema.firmware_version_range.max)
+                    < AwesomeVersion(value.node.firmware_version)
+                )
+            ):
                 continue
 
             # check firmware_version
