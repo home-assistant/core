@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import datetime
 import logging
-from typing import Any
+from typing import Any, Callable
 
 from fritzconnection.core.exceptions import FritzConnectionException
+from fritzconnection.lib.fritzstatus import FritzStatus
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -19,7 +20,7 @@ from .const import DOMAIN, UPTIME_DEVIATION
 _LOGGER = logging.getLogger(__name__)
 
 
-def _retrieve_uptime_state(status, last_value):
+def _retrieve_uptime_state(status: FritzStatus, last_value: str) -> str:
     """Return uptime from device."""
     delta_uptime = utcnow() - datetime.timedelta(seconds=status.uptime)
 
@@ -35,7 +36,7 @@ def _retrieve_uptime_state(status, last_value):
     return last_value
 
 
-def _retrieve_external_ip_state(status, last_value):
+def _retrieve_external_ip_state(status: FritzStatus, last_value: str) -> Any:
     """Return external ip from device."""
     return status.external_ip
 
@@ -58,7 +59,7 @@ SENSOR_DATA = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up FRITZ!Box sensors")
@@ -82,7 +83,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
         self, fritzbox_tools: FritzBoxTools, device_friendlyname: str, sensor_type: str
     ) -> None:
         """Init FRITZ!Box connectivity class."""
-        self._sensor_data = SENSOR_DATA[sensor_type]
+        self._sensor_data: list[str | None | Callable] = SENSOR_DATA[sensor_type]
         self._unique_id = f"{fritzbox_tools.unique_id}-{sensor_type}"
         self._name = f"{device_friendlyname} {self._sensor_data[SENSOR_NAME]}"
         self._is_available = True
@@ -91,12 +92,12 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
         super().__init__(fritzbox_tools, device_friendlyname)
 
     @property
-    def _state_provider(self):
+    def _state_provider(self) -> Any:
         """Return the state provider for the binary sensor."""
         return self._sensor_data[SENSOR_STATE_PROVIDER]
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return name."""
         return self._name
 
@@ -106,12 +107,12 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
         return self._sensor_data[SENSOR_DEVICE_CLASS]
 
     @property
-    def icon(self):
+    def icon(self) -> Any:
         """Return icon."""
         return self._sensor_data[SENSOR_ICON]
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique id."""
         return self._unique_id
 
@@ -130,7 +131,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
         _LOGGER.debug("Updating FRITZ!Box sensors")
 
         try:
-            status = self._fritzbox_tools.fritzstatus
+            status: FritzStatus = self._fritzbox_tools.fritzstatus
             self._is_available = True
 
             self._state = self._last_value = self._state_provider(
