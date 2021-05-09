@@ -4,7 +4,7 @@ from aioguardian.errors import GuardianError
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
+from homeassistant.components.dhcp import IP_ADDRESS
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import callback
 
@@ -59,6 +59,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_set_unique_id(self, pin):
         """Set the config entry's unique ID (based on the device's 4-digit PIN)."""
         await self.async_set_unique_id(UNIQUE_ID.format(pin))
+        if self.discovery_info:
+            self._abort_if_unique_id_configured(
+                updates={CONF_IP_ADDRESS: self.discovery_info[CONF_IP_ADDRESS]}
+            )
+        else:
+            self._abort_if_unique_id_configured()
 
     async def async_step_user(self, user_input=None):
         """Handle configuration via the UI."""
@@ -79,7 +85,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         pin = async_get_pin_from_uid(info[CONF_UID])
         await self._async_set_unique_id(pin)
-        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=info[CONF_UID], data={CONF_UID: info["uid"], **user_input}
@@ -91,7 +96,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_IP_ADDRESS: discovery_info[IP_ADDRESS],
             CONF_PORT: DEFAULT_PORT,
         }
-        return await self._async_handle_discovery(discovery_info[HOSTNAME])
+        return await self._async_handle_discovery()
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle the configuration via zeroconf."""
@@ -99,18 +104,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_IP_ADDRESS: discovery_info["host"],
             CONF_PORT: discovery_info["port"],
         }
-        return await self._async_handle_discovery(discovery_info["hostname"])
-
-    async def _async_handle_discovery(self, hostname):
-        """Handle any discovery."""
-        pin = async_get_pin_from_discovery_hostname(hostname)
+        pin = async_get_pin_from_discovery_hostname(discovery_info["hostname"])
         await self._async_set_unique_id(pin)
-        self._abort_if_unique_id_configured(
-            updates={CONF_IP_ADDRESS: self.discovery_info[CONF_IP_ADDRESS]}
-        )
+        return await self._async_handle_discovery()
 
+    async def _async_handle_discovery(self):
+        """Handle any discovery."""
         self.context[CONF_IP_ADDRESS] = self.discovery_info[CONF_IP_ADDRESS]
-
         if any(
             self.context[CONF_IP_ADDRESS] == flow["context"][CONF_IP_ADDRESS]
             for flow in self._async_in_progress()
