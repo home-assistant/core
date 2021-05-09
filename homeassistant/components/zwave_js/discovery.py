@@ -21,6 +21,19 @@ from .discovery_data_template import (
 
 
 @dataclass
+class FirmwareVersionRange:
+    """Firmware version range dictionary."""
+
+    min: str | None = None
+    max: str | None = None
+
+    def __post_init__(self) -> None:
+        """Post dataclass initialization."""
+        if self.min is None and self.max is None:
+            raise ValueError("At least one of min or max must be provided")
+
+
+@dataclass
 class ZwaveDiscoveryInfo:
     """Info discovered from (primary) ZWave Value to create entity."""
 
@@ -65,18 +78,6 @@ class ZWaveValueDiscoverySchema:
     property_key_name: set[str] | None = None
     # [optional] the value's metadata_type must match ANY of these values
     type: set[str] | None = None
-
-
-@dataclass
-class FirmwareVersionRange:
-    """
-    Firmware version range dictionary.
-
-    At least one parameter must be provided.
-    """
-
-    min: str | None = None
-    max: str | None = None
 
 
 @dataclass
@@ -595,10 +596,6 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
             # check firmware_version_range
             if schema.firmware_version_range is not None and (
                 (
-                    schema.firmware_version_range.min is None
-                    and schema.firmware_version_range.max is None
-                )
-                or (
                     schema.firmware_version_range.min is not None
                     and AwesomeVersion(schema.firmware_version_range.min)
                     > AwesomeVersion(value.node.firmware_version)
