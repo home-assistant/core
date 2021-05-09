@@ -66,6 +66,7 @@ from .const import (
     CONF_PARITY,
     CONF_PRECISION,
     CONF_REGISTER,
+    CONF_REGISTER_SIZE,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
     CONF_STATE_CLOSED,
@@ -91,6 +92,7 @@ from .const import (
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
     DATA_TYPE_UINT,
+    DATA_TYPE_ULONG,
     DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_STRUCTURE_PREFIX,
@@ -205,6 +207,7 @@ SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
         vol.Required(CONF_ADDRESS): cv.positive_int,
         vol.Optional(CONF_COUNT, default=1): cv.positive_int,
+        vol.Optional(CONF_REGISTER_SIZE, default=1): cv.positive_int,
         vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT): vol.In(
             [
                 DATA_TYPE_INT,
@@ -212,6 +215,7 @@ SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                 DATA_TYPE_FLOAT,
                 DATA_TYPE_STRING,
                 DATA_TYPE_CUSTOM,
+                DATA_TYPE_ULONG,
             ]
         ),
         vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
