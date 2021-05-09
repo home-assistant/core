@@ -735,7 +735,7 @@ hass-nabucasa==0.43.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.2.11
+hatasmota==0.2.12
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.2
@@ -2136,9 +2136,6 @@ speedtest-cli==2.1.3
 
 # homeassistant.components.spider
 spiderpy==1.4.2
-
-# homeassistant.components.spotcrime
-spotcrime==1.0.4
 
 # homeassistant.components.spotify
 spotipy==2.18.0
