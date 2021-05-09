@@ -41,8 +41,8 @@ class FirmwareVersionRange(DataclassMustHaveAtLeastOne):
     def __post_init__(self) -> None:
         """Post dataclass initialization."""
         super().__post_init__()
-        self.min_ver = AwesomeVersion(min)
-        self.max_ver = AwesomeVersion(max)
+        self.min_ver = AwesomeVersion(self.min)
+        self.max_ver = AwesomeVersion(self.max)
 
 
 @dataclasses.dataclass
