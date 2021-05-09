@@ -22,7 +22,7 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
 
     def __init__(
         self, hass: HomeAssistant, *, entry: ConfigEntry, session: OAuth2Session
-    ):
+    ) -> None:
         """Initialize global Geocaching data updater."""
         self.session = session
         self.entry = entry

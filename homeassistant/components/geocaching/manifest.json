@@ -4,9 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/geocaching",
   "requirements": ["geocachingapi==0.0.7"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
   "dependencies": [
     "http"
   ],

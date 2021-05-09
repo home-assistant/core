@@ -80,7 +80,7 @@ async def test_existing_entry(
     hass, aiohttp_client, aioclient_mock, current_request_with_host
 ):
     """Check existing entry."""
-    MockConfigEntry(domain=DOMAIN, unique_id=f"{DOMAIN}_mock_user").add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, unique_id="mock_user").add_to_hass(hass)
     await setup.async_setup_component(
         hass,
         "geocaching",

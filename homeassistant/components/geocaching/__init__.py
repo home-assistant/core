@@ -1,6 +1,4 @@
 """The Geocaching integration."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -34,8 +32,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [SENSOR_DOMAIN]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType):
@@ -77,9 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {"COORD": coordinator, "SESSION": oauth_session}
-
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
@@ -90,5 +84,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         del hass.data[DOMAIN][entry.entry_id]
-
     return unload_ok

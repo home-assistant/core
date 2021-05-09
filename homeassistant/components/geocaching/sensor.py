@@ -1,16 +1,13 @@
 """Platform for sensor integration."""
 from __future__ import annotations
 
-import logging
-
 from homeassistant.components.geocaching.coordinator import (
     GeocachingDataUpdateCoordinator,
 )
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ICON
-
-# from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
@@ -25,17 +22,16 @@ from .const import (
 )
 from .models import GeocachingEntity
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a Geocaching sensor entry."""
 
     coordinator = hass.data[DOMAIN][entry.entry_id]["COORD"]
-    sensors = [GeocachingSensor(coordinator, key=key) for key in SENSOR_ENTITIES]
-    async_add_entities(sensors, True)
+    async_add_entities(
+        [GeocachingSensor(coordinator, key=key) for key in SENSOR_ENTITIES], True
+    )
 
 
 class GeocachingSensor(GeocachingEntity, SensorEntity):
