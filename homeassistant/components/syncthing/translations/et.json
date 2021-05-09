@@ -1,19 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service is already configured"
+            "already_configured": "Teenus on juba seadistatud"
         },
         "error": {
-            "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Vigane autentimine"
         },
         "step": {
             "user": {
                 "data": {
-                    "title": "Setup Syncthing integration",
+                    "title": "Seadista Syncthingi sidumine",
                     "token": "Token",
                     "url": "URL",
-                    "verify_ssl": "Verify SSL certificate"
+                    "verify_ssl": "Kontrolli SSL serti"
                 }
             }
         }

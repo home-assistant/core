@@ -62,7 +62,8 @@
                     "port": "Port",
                     "username": "Username"
                 },
-                "description": "Veuillez entrer les informations de connexion de votre broker MQTT."
+                "description": "Veuillez entrer les informations de connexion de votre broker MQTT.",
+                "title": "Options de courtier"
             },
             "options": {
                 "data": {
@@ -78,7 +79,8 @@
                     "will_retain": "Retenir le message de testament",
                     "will_topic": "Topic du message de testament"
                 },
-                "description": "Veuillez s\u00e9lectionner les options MQTT."
+                "description": "D\u00e9couverte - Si la d\u00e9couverte est activ\u00e9e (recommand\u00e9e), Home Assistant d\u00e9couvrira automatiquement les appareils et les entit\u00e9s qui publient leur configuration sur le courtier MQTT. Si la d\u00e9couverte est d\u00e9sactiv\u00e9e, toute la configuration doit \u00eatre effectu\u00e9e manuellement.\n Message de naissance - Le message de naissance sera envoy\u00e9 chaque fois que Home Assistant (re) se connecte au courtier MQTT.\n Will message - Le message will sera envoy\u00e9 chaque fois que Home Assistant perd sa connexion avec le courtier, \u00e0 la fois en cas de nettoyage (par exemple, arr\u00eat de Home Assistant) et en cas de salet\u00e9 (par exemple, Home Assistant se bloque ou perd sa connexion r\u00e9seau) d\u00e9connecter.",
+                "title": "Options MQTT"
             }
         }
     }

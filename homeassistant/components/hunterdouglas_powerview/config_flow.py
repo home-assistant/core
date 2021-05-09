@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 HAP_SUFFIX = "._hap._tcp.local."
+POWERVIEW_SUFFIX = "._powerview._tcp.local."
 
 
 async def validate_input(hass: core.HomeAssistant, hub_address: str) -> dict[str, str]:
@@ -88,6 +89,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle DHCP discovery."""
         self.discovered_ip = discovery_info[IP_ADDRESS]
         self.discovered_name = discovery_info[HOSTNAME]
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_zeroconf(self, discovery_info):
+        """Handle zeroconf discovery."""
+        self.discovered_ip = discovery_info[CONF_HOST]
+        name = discovery_info[CONF_NAME]
+        if name.endswith(POWERVIEW_SUFFIX):
+            name = name[: -len(POWERVIEW_SUFFIX)]
+        self.discovered_name = name
         return await self.async_step_discovery_confirm()
 
     async def async_step_homekit(self, discovery_info):

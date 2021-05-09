@@ -720,7 +720,7 @@ guppy3==3.1.0
 ha-ffmpeg==3.0.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==2.7.0
+ha-philipsjs==2.7.3
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -970,9 +970,6 @@ mychevy==2.1.1
 
 # homeassistant.components.mycroft
 mycroftapi==2.0
-
-# homeassistant.components.n26
-n26==0.2.7
 
 # homeassistant.components.nad
 nad_receiver==0.0.12
@@ -2199,7 +2196,7 @@ synology-srm==0.2.0
 synologydsm-api==1.0.2
 
 # homeassistant.components.system_bridge
-systembridge==1.1.3
+systembridge==1.1.5
 
 # homeassistant.components.tank_utility
 tank_utility==1.4.0

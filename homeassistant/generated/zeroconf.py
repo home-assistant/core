@@ -164,6 +164,11 @@ ZEROCONF = {
             "domain": "plugwise"
         }
     ],
+    "_powerview._tcp.local.": [
+        {
+            "domain": "hunterdouglas_powerview"
+        }
+    ],
     "_printer._tcp.local.": [
         {
             "domain": "brother",
