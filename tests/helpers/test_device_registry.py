@@ -131,6 +131,7 @@ async def test_requirement_for_identifier_or_connection(registry):
         )
 
     assert exc_info.value.parameter_names == ["identifiers", "connections"]
+    assert exc_info.value.criteria == "non-empty set"
 
 
 async def test_multiple_config_entries(registry):

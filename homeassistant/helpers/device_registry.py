@@ -261,7 +261,9 @@ class DeviceRegistry:
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist."""
         if not identifiers and not connections:
-            raise RequiredParameterMissing(["identifiers", "connections"])
+            raise RequiredParameterMissing(
+                ["identifiers", "connections"], "non-empty set"
+            )
 
         if identifiers is None:
             identifiers = set()
