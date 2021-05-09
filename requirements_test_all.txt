@@ -1238,7 +1238,7 @@ vultr==0.1.2
 wakeonlan==2.0.1
 
 # homeassistant.components.folder_watcher
-watchdog==2.0.3
+watchdog==2.1.0
 
 # homeassistant.components.wiffi
 wiffi==1.0.1
