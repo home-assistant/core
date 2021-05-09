@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_IP_ADDRESS,
@@ -18,6 +18,11 @@ from homeassistant.const import (
 
 from .common import get_api
 from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE, DOMAIN
+
+DEVICE_NAMES = {
+    DEVICE_TYPE_GOGOGATE2: "Gogogate2",
+    DEVICE_TYPE_ISMARTGATE: "ismartgate",
+}
 
 
 class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -33,14 +38,14 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_homekit(self, discovery_info):
         """Handle homekit discovery."""
         await self.async_set_unique_id(discovery_info["properties"]["id"])
-        return await self._async_discovery_confirm(discovery_info["host"])
+        return await self._async_discovery_handler(discovery_info["host"])
 
     async def async_step_dhcp(self, discovery_info):
         """Handle dhcp discovery."""
         await self.async_set_unique_id(discovery_info[MAC_ADDRESS])
-        return await self._async_discovery_confirm(discovery_info[IP_ADDRESS])
+        return await self._async_discovery_handler(discovery_info[IP_ADDRESS])
 
-    async def _async_discovery_confirm(self, ip_address):
+    async def _async_discovery_handler(self, ip_address):
         """Start the user flow from any discovery."""
         self.context[CONF_IP_ADDRESS] = ip_address
         self._abort_if_unique_id_configured({CONF_IP_ADDRESS: ip_address})
@@ -99,6 +104,11 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "cannot_connect"
 
+        if self._ip_address and self._device_type:
+            self.context["title_placeholders"] = {
+                CONF_DEVICE: DEVICE_NAMES[self._device_type],
+                CONF_IP_ADDRESS: self._ip_address,
+            }
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
