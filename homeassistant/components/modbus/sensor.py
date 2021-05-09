@@ -31,7 +31,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import number
-from .const import (  # DATA_TYPE_ULONG,
+from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CONF_DATA_TYPE,
@@ -123,10 +123,10 @@ async def async_setup_platform(
 
     for entry in discovery_info[CONF_SENSORS]:
 
-        regSize = entry[CONF_COUNT] * 2 * entry.get(CONF_REGISTER_SIZE, 1)
+        regSize = entry[CONF_COUNT] * entry.get(CONF_REGISTER_SIZE, 2)
 
         if entry[CONF_DATA_TYPE] == DATA_TYPE_STRING:
-            structure = str(entry[CONF_COUNT] * 2) + "s"
+            structure = str(regSize) + "s"
         elif entry[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
             try:
                 structure = f">{DEFAULT_STRUCT_FORMAT[entry[CONF_DATA_TYPE]][entry[CONF_COUNT]]}"
@@ -147,11 +147,9 @@ async def async_setup_platform(
 
         if regSize != size:
             _LOGGER.error(
-                "Structure size (%d bytes) mismatch registers size (%d bytes). Multi: %d, Count: %d",
+                "Structure size (%d bytes) mismatch registers size (%d bytes)",
                 size,
                 regSize,
-                entry.get(CONF_REGISTER_SIZE, 1),
-                entry[CONF_COUNT],
             )
             continue
 
@@ -212,7 +210,7 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
         slave = entry.get(CONF_SLAVE)
         self._slave = int(slave) if slave else None
         self._register = int(entry[CONF_ADDRESS])
-        self._register_size = entry.get(CONF_REGISTER_SIZE, 1)
+        self._register_size = entry.get(CONF_REGISTER_SIZE, 2)
         self._register_type = entry[CONF_INPUT_TYPE]
         self._unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._count = int(entry[CONF_COUNT])
