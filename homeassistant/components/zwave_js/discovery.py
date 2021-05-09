@@ -595,6 +595,10 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
             # check firmware_version_range
             if schema.firmware_version_range is not None and (
                 (
+                    schema.firmware_version_range.min is None
+                    and schema.firmware_version_range.max is None
+                )
+                or (
                     schema.firmware_version_range.min is not None
                     and AwesomeVersion(schema.firmware_version_range.min)
                     > AwesomeVersion(value.node.firmware_version)
