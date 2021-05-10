@@ -200,7 +200,7 @@ class NmapDeviceScanner:
 
             device = NmapDevice(format_mac(mac), name, ipv4, dt_util.now())
             dispatches.append((self.signal_device_update(ipv4), True))
-            if self.devices.tracked.setdefault(ipv4, device) != device:
+            if self.devices.tracked.setdefault(ipv4, device) == device:
                 dispatches.append((self.signal_device_new, ipv4))
             self.devices.tracked[ipv4] = device
             self.last_results.append(device)
