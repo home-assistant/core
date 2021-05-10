@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def async_get_scanner(hass, config):
+async def async_get_scanner(hass, config):
     """Validate the configuration and return a Nmap scanner."""
     hass.async_create_task(
         hass.config_entries.flow.async_init(
