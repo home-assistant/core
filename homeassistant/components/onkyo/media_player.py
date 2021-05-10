@@ -349,7 +349,11 @@ class OnkyoDevice(MediaPlayerEntity):
     @property
     def device_info(self):
         """Return device information."""
-        return {"identifiers": {(DOMAIN, self._uid)}}
+        return {
+            "identifiers": {(DOMAIN, self._uid)},
+            "manufacturer": "Onkyo",
+            "model": self._receiver.model_name,
+        }
 
     def _parse_audio_information(self, audio_information_raw):
         values = _parse_onkyo_payload(audio_information_raw)
