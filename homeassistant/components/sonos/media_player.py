@@ -500,7 +500,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         if new_status == "TRANSITIONING":
             return
 
-        self._play_mode = event.current_play_mode if event else self.soco.play_mode
+        self._play_mode = (
+            variables["current_play_mode"] if variables else self.soco.play_mode
+        )
         self._uri = None
         self._media_duration = None
         self._media_image_url = None
