@@ -88,15 +88,7 @@ async def async_setup_entry(hass, config_entry):
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
 
-    if not config_entry.update_listeners:
-        config_entry.add_update_listener(async_update_options)
-
     return True
-
-
-async def async_update_options(hass, config_entry):
-    """Update options."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(hass, config_entry):
