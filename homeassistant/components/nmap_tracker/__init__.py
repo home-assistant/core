@@ -218,8 +218,8 @@ class NmapDeviceScanner:
     def _run_nmap_scan(self):
         """Run nmap and return the result."""
         options = self._build_options()
-        if not self.mac_vendor_lookup:
-            self.mac_vendor_lookup = MacLookup()
+        if not self._mac_vendor_lookup:
+            self._mac_vendor_lookup = MacLookup()
         _LOGGER.debug("Scanning %s with args: %s", self._hosts, options)
         result = self._scanner.scan(
             hosts=" ".join(self._hosts),
