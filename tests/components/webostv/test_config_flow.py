@@ -90,6 +90,14 @@ async def test_form(hass, client):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: config_entries.SOURCE_USER},
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: config_entries.SOURCE_USER},
         data=MOCK_YAML_CONFIG,
     )
     assert result["type"] == RESULT_TYPE_FORM
@@ -336,3 +344,23 @@ async def test_pairing_form(hass, client):
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "host"
+
+
+async def test_pairing_failed_form(hass, client):
+    """Test pairing form."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    with patch(
+        "homeassistant.components.webostv.config_flow.async_control_connect",
+        return_value=client,
+    ):
+        client.is_registered.return_value = False
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: "pairing"},
+            data=MOCK_YAML_CONFIG,
+        )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
