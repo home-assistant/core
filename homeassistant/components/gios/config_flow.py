@@ -1,5 +1,8 @@
 """Adds config flow for GIOS."""
+from __future__ import annotations
+
 import asyncio
+from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
@@ -25,7 +28,7 @@ class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input: dict[str, Any] | None = None):
         """Handle a flow initialized by the user."""
         errors = {}
 
