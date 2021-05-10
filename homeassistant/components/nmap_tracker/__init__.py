@@ -13,7 +13,7 @@ from nmap import PortScanner, PortScannerError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS, EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -51,9 +51,9 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    _async_untrack_devices(hass, entry)
 
     if unload_ok:
+        _async_untrack_devices(hass, entry)
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
@@ -121,6 +121,10 @@ class NmapDeviceScanner:
         """Set up the tracker."""
         self._scan_lock = asyncio.Lock()
         self.scanner = PortScanner()
+        if self._hass.state == CoreState.running:
+            self._async_start_scanner()
+            return
+
         self._hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED, self._start_scanner
         )
@@ -135,7 +139,8 @@ class NmapDeviceScanner:
         """Stop the scanner."""
         self._stopping = True
 
-    def _start_scanner(self, *_):
+    @callback
+    def _async_start_scanner(self, *_):
         """Start the scanner."""
         self._entry.async_on_unload(self._async_stop)
         self._entry.async_on_unload(
