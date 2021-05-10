@@ -67,8 +67,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         await coordinator.async_refresh()
-    except UpdateFailed:
-        raise ConfigEntryAuthFailed
+    except UpdateFailed as exc:
+        raise ConfigEntryAuthFailed from exc
 
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
