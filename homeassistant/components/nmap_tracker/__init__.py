@@ -10,7 +10,7 @@ from getmac import get_mac_address
 from nmap import PortScanner, PortScannerError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
+from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
@@ -92,6 +92,12 @@ class NmapDeviceScanner:
         """Set up the tracker."""
         self._scan_lock = asyncio.Lock()
         self.scanner = PortScanner()
+        self._hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED, self._start_scanner
+        )
+
+    def _start_scanner(self, *_):
+        """Start the scanner."""
         self._entry.async_on_unload(
             async_track_time_interval(
                 self._hass,
@@ -99,7 +105,7 @@ class NmapDeviceScanner:
                 timedelta(seconds=TRACKER_SCAN_INTERVAL),
             )
         )
-        asyncio.create_task(self.async_scan_devices())
+        self._hass.async_create_task(self.async_scan_devices())
 
     @property
     def signal_device_new(self) -> str:
