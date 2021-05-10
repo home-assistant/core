@@ -7,7 +7,11 @@ from unittest.mock import AsyncMock, Mock, patch
 from smhi.smhi_lib import APIURL_TEMPLATE, SmhiForecastException
 
 from homeassistant.components.smhi import weather as weather_smhi
-from homeassistant.components.smhi.const import ATTR_SMHI_CLOUDINESS
+from homeassistant.components.smhi.const import (
+    ATTR_SMHI_CLOUDINESS,
+    ATTR_SMHI_THUNDER_PROBABILITY,
+    ATTR_SMHI_WIND_GUST_SPEED,
+)
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
