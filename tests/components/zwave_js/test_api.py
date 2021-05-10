@@ -1137,7 +1137,7 @@ async def test_firmware_upload_view(
             f"/api/zwave_js/firmware/upload/{integration.entry_id}/{multisensor_6.node_id}",
             data={"file": firmware_file},
         )
-        assert mock_cmd.call_args[0] == ("firmware.bin", bytes(10))
+        assert mock_cmd.call_args[0] == ("file", bytes(10))
         assert json.loads(await resp.text()) == {"hello": "world"}
 
 
@@ -1542,6 +1542,58 @@ async def test_abort_firmware_update(
     assert args["nodeId"] == multisensor_6.node_id
 
 
+async def test_abort_firmware_update_failures(
+    hass, integration, multisensor_6, client, hass_ws_client
+):
+    """Test failures for the abort_firmware_update websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+    # Test sending command with improper entry ID fails
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/abort_firmware_update",
+            ENTRY_ID: "fake_entry_id",
+            NODE_ID: multisensor_6.node_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test sending command with improper node ID fails
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/abort_firmware_update",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: multisensor_6.node_id + 100,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/abort_firmware_update",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: multisensor_6.node_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
 async def test_subscribe_firmware_update_status(
     hass, integration, multisensor_6, client, hass_ws_client
 ):
@@ -1598,3 +1650,55 @@ async def test_subscribe_firmware_update_status(
         "status": 255,
         "wait_time": 10,
     }
+
+
+async def test_subscribe_firmware_update_status_failures(
+    hass, integration, multisensor_6, client, hass_ws_client
+):
+    """Test failures for the subscribe_firmware_update_status websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+    # Test sending command with improper entry ID fails
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/subscribe_firmware_update_status",
+            ENTRY_ID: "fake_entry_id",
+            NODE_ID: multisensor_6.node_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test sending command with improper node ID fails
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/subscribe_firmware_update_status",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: multisensor_6.node_id + 100,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "zwave_js/subscribe_firmware_update_status",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: multisensor_6.node_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED

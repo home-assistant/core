@@ -1145,7 +1145,8 @@ class FirmwareUploadView(HomeAssistantView):
         uploaded_file: web_request.FileField = data["file"]
 
         status = await node.async_begin_firmware_update_guess_format(
-            uploaded_file.filename, uploaded_file.file.read()
+            uploaded_file.filename,
+            await hass.async_add_executor_job(uploaded_file.file.read),
         )
 
         return self.json(status)
