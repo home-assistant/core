@@ -66,7 +66,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not self.unique_id:
             return self.async_abort(reason="cannot_connect")
 
-        self._abort_if_unique_id_configured(updates={CONF_HOST: self._discovered_ip})
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self._discovered_ip}, reload_on_update=False
+        )
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(self, user_input=None):
