@@ -256,42 +256,42 @@ class TemplateClimate(TemplateEntity, ClimateEntity):
 
     @property
     def fan_mode(self):
-        """Returns the current fan mode."""
+        """Return the current fan mode."""
         return self._fan_mode
 
     @property
     def fan_modes(self):
-        """Returns the list of available fan modes."""
+        """Return the list of available fan modes."""
         return self._fan_modes
 
     @property
     def precision(self):
-        """The precision of the temperature in the system."""
+        """Return the precision of the temperature values."""
         return self._precision or super().precision
 
     @property
     def current_temperature(self):
-        """The current temperature."""
+        """Return the current temperature."""
         return self._current_temperature
 
     @property
     def target_temperature(self):
-        """The temperature currently set to be reached."""
+        """Return the temperature currently set to be reached."""
         return self._temperature
 
     @property
     def target_temperature_step(self):
-        """The supported step size a target temperature can be increased/decreased"""
+        """Return the supported step size a target temperature can be increased/decreased by."""
         return self._temperature_step
 
     @property
     def min_temp(self):
-        """Returns the minimum temperature."""
+        """Return the minimum temperature."""
         return self._min_temp
 
     @property
     def max_temp(self):
-        """Returns the maximum temperature."""
+        """Return the maximum temperature."""
         return self._max_temp
 
     async def async_set_hvac_mode(self, hvac_mode):
