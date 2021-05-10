@@ -116,10 +116,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             errors = normalize_input(user_input)
 
             if not errors:
-                return self.async_create_entry(
-                    data=self.options,
-                    title=f"Nmap Tracker {self.options[CONF_HOSTS]}",
-                )
+                return self.async_create_entry(data=self.options)
 
         return self.async_show_form(
             step_id="init",
