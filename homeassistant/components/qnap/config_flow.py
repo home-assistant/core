@@ -59,8 +59,8 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             api = QNAPStats(
                 host=f"{protocol}://{host}",
                 port=user_input.get(CONF_PORT, DEFAULT_PORT),
-                username=user_input.get[CONF_USERNAME],
-                password=user_input.get[CONF_PASSWORD],
+                username=user_input[CONF_USERNAME],
+                password=user_input[CONF_PASSWORD],
                 verify_ssl=user_input.get(CONF_VERIFY_SSL, True),
                 timeout=DEFAULT_TIMEOUT,
             )
