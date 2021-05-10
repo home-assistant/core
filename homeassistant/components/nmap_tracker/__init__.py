@@ -104,7 +104,7 @@ class NmapDeviceScanner:
     @callback
     def _async_stop(self):
         """Stop the scanner."""
-        self.hass.add_job(self.scanner.stop)
+        self._hass.add_job(self.scanner.stop)
 
     def _start_scanner(self, *_):
         """Start the scanner."""
