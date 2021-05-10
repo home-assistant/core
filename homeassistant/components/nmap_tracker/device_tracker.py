@@ -3,9 +3,9 @@
 import logging
 
 import voluptuous as vol
-
+from typing import Callable
 from homeassistant.components.device_tracker import (
-    DOMAIN,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA,
     SOURCE_TYPE_ROUTER,
 )
@@ -18,7 +18,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import NmapDeviceScanner
-from .const import CONF_HOME_INTERVAL, CONF_OPTIONS, DEFAULT_OPTIONS
+from .const import DOMAIN, CONF_HOME_INTERVAL, CONF_OPTIONS, DEFAULT_OPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ def async_get_scanner(hass, config):
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data=config[DOMAIN],
+            data=config[DEVICE_TRACKER_DOMAIN],
         )
     )
 
@@ -51,7 +51,7 @@ def async_get_scanner(hass, config):
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up device tracker for Nmap Tracker component."""
     nmap_tracker = hass.data[DOMAIN][entry.entry_id]
@@ -75,7 +75,7 @@ class NmapTrackerEntity(ScannerEntity):
         self._nmap_tracker = nmap_tracker
         self._tracked = self._nmap_tracker.devices.tracked
         self._device = self._tracked[self._mac]
-        self._active = True
+        self._active = False
 
     @property
     def is_connected(self) -> bool:
