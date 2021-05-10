@@ -561,6 +561,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up growatt server from yaml."""
     if not hass.config_entries.async_entries(DOMAIN):
+        _LOGGER.warning(
+            "Loading Growatt via platform setup is deprecated."
+            "Please remove it from your configuration"
+        )
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=config
