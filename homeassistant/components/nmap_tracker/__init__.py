@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     domain_data = hass.data.setdefault(DOMAIN, {})
     devices = domain_data.setdefault(NMAP_TRACKED_DEVICES, NmapTrackedDevices())
     scanner = domain_data[entry.entry_id] = NmapDeviceScanner(hass, entry, devices)
-    await scanner.async_setup()
+    scanner.async_setup()
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
