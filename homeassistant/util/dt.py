@@ -365,6 +365,5 @@ def _datetime_exists(dattim: dt.datetime) -> bool:
 def _datetime_ambiguous(dattim: dt.datetime) -> bool:
     """Check whether a datetime is ambiguous."""
     assert dattim.tzinfo is not None
-    non_folded = dattim.replace(fold=0)
-    folded = dattim.replace(fold=1)
-    return non_folded.utcoffset() != folded.utcoffset()
+    opposite_fold = dattim.replace(fold=not dattim.fold)
+    return _datetime_exists(dattim) and dattim.utcoffset() != opposite_fold.utcoffset()
