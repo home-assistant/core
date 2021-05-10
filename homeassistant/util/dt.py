@@ -367,7 +367,4 @@ def _datetime_ambiguous(dattim: dt.datetime) -> bool:
     assert dattim.tzinfo is not None
     non_folded = dattim.replace(fold=0)
     folded = dattim.replace(fold=1)
-    return not (
-        non_folded.utcoffset() == folded.utcoffset()
-        and non_folded.dst() == folded.dst()
-    )
+    return non_folded.utcoffset() != folded.utcoffset()
