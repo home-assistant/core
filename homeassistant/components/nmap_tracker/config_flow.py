@@ -69,7 +69,7 @@ def _normalize_ips_and_network(hosts_str):
 def normalize_input(user_input):
     """Validate hosts and exclude are valid."""
     normalized_hosts = _normalize_ips_and_network(user_input[CONF_HOSTS])
-    if normalized_hosts is None:
+    if not normalized_hosts:
         return {CONF_HOSTS: "invalid_hosts"}
     user_input[CONF_HOSTS] = ",".join(normalized_hosts)
 
