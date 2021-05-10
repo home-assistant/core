@@ -208,7 +208,7 @@ def _monitor_events(hass, name, api, event_codes):
                     signal = service_signal(SERVICE_EVENT, name, code)
                     start = any(
                         str(key).lower() == "action" and str(val).lower() == "start"
-                        for (key, val) in payload.items()
+                        for key, val in payload.items()
                     )
                     _LOGGER.debug("Sending signal: '%s': %s", signal, start)
                     dispatcher_send(hass, signal, start)
