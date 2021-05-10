@@ -201,7 +201,7 @@ class NmapDeviceScanner:
             except PortScannerError as ex:
                 _LOGGER.error("Nmap scanning failed: %s", ex)
             else:
-                _LOGGER.debug("Dispatches: %", dispatches)
+                _LOGGER.debug("Dispatches: %s", dispatches)
                 for signal, ipv4 in dispatches:
                     async_dispatcher_send(self._hass, signal, ipv4)
 
