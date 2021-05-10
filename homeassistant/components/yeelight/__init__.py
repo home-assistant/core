@@ -190,18 +190,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         capabilities: dict | None = None,
         device: YeelightDevice | None = None,
     ) -> None:
-        remove_dispatcher = async_dispatcher_connect(
-            hass,
-            DEVICE_INITIALIZED.format(host),
-            _load_platforms,
+        entry.async_on_unload(
+            async_dispatcher_connect(
+                hass,
+                DEVICE_INITIALIZED.format(host),
+                _load_platforms,
+            )
         )
-        entry_data[DATA_REMOVE_INIT_DISPATCHER] = remove_dispatcher
 
         if not device:
             device = await _async_get_device(hass, host, entry, capabilities)
-        entry_data[DATA_DEVICE] = device
 
         await device.async_setup()
+        entry.async_on_unload(device.async_unload)
+
+        entry_data[DATA_DEVICE] = device
 
     async def _load_platforms():
         hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -260,17 +263,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
             return False
 
-    if entry_data.get(DATA_DEVICE):
-        data = data_config_entries.pop(entry.entry_id)
-        remove_init_dispatcher = data.get(DATA_REMOVE_INIT_DISPATCHER)
-        if remove_init_dispatcher is not None:
-            remove_init_dispatcher()
-        data[DATA_DEVICE].async_unload()
-
     if entry.data[CONF_ID]:
         # discovery
         scanner = YeelightScanner.async_get(hass)
         scanner.async_unregister_callback(entry.data[CONF_ID])
+
+    data_config_entries.pop(entry.entry_id)
 
     return True
 
