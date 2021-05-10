@@ -1834,7 +1834,7 @@ python-mystrom==1.1.2
 python-nest==4.1.0
 
 # homeassistant.components.nmap_tracker
-python-nmap==0.6.1
+python-nmap==0.6.4
 
 # homeassistant.components.ozw
 python-openzwave-mqtt[mqtt-client]==1.4.0
