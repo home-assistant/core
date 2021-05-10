@@ -60,7 +60,7 @@ async def async_setup_entry(
     @callback
     def update_router(ipv4):
         """Update the values of the router."""
-        async_add_entities(NmapTrackerEntity(nmap_tracker, ipv4))
+        async_add_entities([NmapTrackerEntity(nmap_tracker, ipv4)])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, nmap_tracker.signal_device_new, update_router)
