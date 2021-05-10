@@ -144,9 +144,13 @@ class NmapDeviceScanner:
             return
 
         async with self._scan_lock:
-            online_devices, offline_devices = await self._hass.async_add_executor_job(
-                self._run_nmap_scan
-            )
+            try:
+                (
+                    online_devices,
+                    offline_devices,
+                ) = await self._hass.async_add_executor_job(self._run_nmap_scan)
+            except PortScannerError:
+                return
 
             for device in online_devices:
                 async_dispatcher_send(
@@ -169,14 +173,11 @@ class NmapDeviceScanner:
         Returns boolean if scanning successful.
         """
         options, last_results = self._build_options_from_last_results()
-        _LOGGER.debug("Scanning")
-        try:
-            result = self.scanner.scan(hosts=" ".join(self.hosts), arguments=options)
-        except PortScannerError:
-            return False
+        _LOGGER.debug("Scanning %s with args: %s", self.hosts, options)
+        offline_devices = set()
+        result = self.scanner.scan(hosts=" ".join(self.hosts), arguments=options)
 
         now = dt_util.now()
-        offline_devices = set()
         for ipv4, info in result["scan"].items():
             if info["status"]["state"] != "up":
                 offline_devices.add(ipv4)
