@@ -190,6 +190,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         capabilities: dict | None = None,
         device: YeelightDevice | None = None,
     ) -> None:
+        if not device:
+            device = await _async_get_device(hass, host, entry, capabilities)
+
         entry.async_on_unload(
             async_dispatcher_connect(
                 hass,
@@ -198,11 +201,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         )
 
-        if not device:
-            device = await _async_get_device(hass, host, entry, capabilities)
-
-        await device.async_setup()
         entry.async_on_unload(device.async_unload)
+        await device.async_setup()
 
         entry_data[DATA_DEVICE] = device
 
