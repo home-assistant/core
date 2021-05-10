@@ -14,8 +14,10 @@ from .const import (
     CONF_MAX_VOLUME,
     CONF_RECEIVER_MAX_VOLUME,
     CONF_SOURCES,
+    DEFAULT_RECEIVER_MAX_VOLUME,
     DOMAIN,
     PLATFORMS,
+    SUPPORTED_MAX_VOLUME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,15 +47,19 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set the config entry up."""
     if not config_entry.options:
-        sources = config_entry.data[CONF_SOURCES]
+        sources = config_entry.data.get(CONF_SOURCES, [])
         if isinstance(sources, list):
             sources = list2dict(sources)
         hass.config_entries.async_update_entry(
             config_entry,
             options={
                 CONF_SOURCES: sources,
-                CONF_MAX_VOLUME: config_entry.data[CONF_MAX_VOLUME],
-                CONF_RECEIVER_MAX_VOLUME: config_entry.data[CONF_RECEIVER_MAX_VOLUME],
+                CONF_MAX_VOLUME: config_entry.data.get(
+                    CONF_MAX_VOLUME, SUPPORTED_MAX_VOLUME
+                ),
+                CONF_RECEIVER_MAX_VOLUME: config_entry.data.get(
+                    CONF_RECEIVER_MAX_VOLUME, DEFAULT_RECEIVER_MAX_VOLUME
+                ),
             },
         )
 
