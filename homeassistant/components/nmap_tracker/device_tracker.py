@@ -70,12 +70,12 @@ async def async_setup_entry(
 class NmapTrackerEntity(ScannerEntity):
     """An Nmap Tracker entity."""
 
-    def __init__(self, nmap_tracker: NmapDeviceScanner, ipv4: str) -> None:
+    def __init__(self, nmap_tracker: NmapDeviceScanner, mac_address: str) -> None:
         """Initialize an nmap tracker entity."""
-        self._ipv4 = ipv4
+        self._mac_address = mac_address
         self._nmap_tracker = nmap_tracker
         self._tracked = self._nmap_tracker.devices.tracked
-        self._device = self._tracked[ipv4]
+        self._device = self._tracked[mac_address]
         self._active = False
 
     @property
@@ -91,17 +91,17 @@ class NmapTrackerEntity(ScannerEntity):
     @property
     def unique_id(self) -> str:
         """Return device unique id."""
-        return self._device.mac_address
+        return self._mac_address
 
     @property
     def ip_address(self) -> str:
         """Return the primary ip address of the device."""
-        return self._ipv4
+        return self._device.ipv4
 
     @property
     def mac_address(self) -> str:
         """Return the mac address of the device."""
-        return self._device.mac_address
+        return self._mac_address
 
     @property
     def hostname(self) -> str:
@@ -117,7 +117,8 @@ class NmapTrackerEntity(ScannerEntity):
     def device_info(self):
         """Return the device information."""
         return {
-            "connections": {(CONNECTION_NETWORK_MAC, self._device.mac_address)},
+            "connections": {(CONNECTION_NETWORK_MAC, self._mac_address)},
+            "manufacturer": self._device.manufacturer,
             "name": self.name,
         }
 
@@ -140,7 +141,9 @@ class NmapTrackerEntity(ScannerEntity):
     def extra_state_attributes(self):
         """Return the attributes."""
         return {
-            "last_time_reachable": self._device.last_update.isoformat(timespec="seconds")
+            "last_time_reachable": self._device.last_update.isoformat(
+                timespec="seconds"
+            )
         }
 
     @callback
@@ -155,7 +158,7 @@ class NmapTrackerEntity(ScannerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                self._nmap_tracker.signal_device_update(self._ipv4),
+                self._nmap_tracker.signal_device_update(self._mac_address),
                 self.async_on_demand_update,
             )
         )

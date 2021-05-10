@@ -4,9 +4,11 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import lru_cache
 import logging
 
 from getmac import get_mac_address
+from mac_vendor_lookup import MacLookup
 from nmap import PortScanner, PortScannerError
 
 from homeassistant.config_entries import ConfigEntry
@@ -62,6 +64,7 @@ class NmapDevice:
     mac_address: str
     hostname: str
     ipv4: str
+    manufacturer: str
     last_update: datetime.datetime
 
 
@@ -71,6 +74,7 @@ class NmapTrackedDevices:
     def __init__(self) -> None:
         """Initialize the data."""
         self.tracked: dict = {}
+        self.ipv4_to_mac_address: dict = {}
 
 
 class NmapDeviceScanner:
@@ -84,6 +88,7 @@ class NmapDeviceScanner:
         self._stopping = False
         self._entry_id = entry.entry_id
         self.devices = devices
+        self.mac_vendor_lookup = None
 
         config = entry.options
         self.last_results = []
@@ -101,6 +106,11 @@ class NmapDeviceScanner:
         self._hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED, self._start_scanner
         )
+
+    @lru_cache(max_size=None)
+    def get_manufacturer(self, mac_address):
+        """Lookup the manufacturer."""
+        return self.mac_vendor_lookup.lookup(mac_address)
 
     @callback
     def _async_stop(self):
@@ -124,9 +134,9 @@ class NmapDeviceScanner:
         """Signal specific per nmap tracker entry to signal new device."""
         return f"{DOMAIN}-device-new-{self._entry_id}"
 
-    def signal_device_update(self, ipv4) -> str:
+    def signal_device_update(self, mac_address) -> str:
         """Signal specific per nmap tracker entry to signal updates in device."""
-        return f"{DOMAIN}-device-update-{ipv4}"
+        return f"{DOMAIN}-device-update-{mac_address}"
 
     def _build_options(self):
         """Build the command line and strip out last results that do not need to be updated."""
@@ -174,6 +184,8 @@ class NmapDeviceScanner:
         Returns boolean if scanning successful.
         """
         options = self._build_options()
+        if not self.mac_vendor_lookup:
+            self.mac_vendor_lookup = MacLookup()
         dispatches = []
 
         _LOGGER.debug("Scanning %s with args: %s", self.hosts, options)
@@ -187,9 +199,8 @@ class NmapDeviceScanner:
             return dispatches
         for ipv4, info in result["scan"].items():
             if info["status"]["state"] != "up":
-                if ipv4 in self.devices.tracked:
-                    dispatches.append((self.signal_device_update(ipv4), False))
-                self.offline_devices.add(ipv4)
+                if mac_address := self.devices.ipv4_to_mac_address.pop(ipv4, None):
+                    dispatches.append((self.signal_device_update(mac_address), False))
                 continue
             name = info["hostnames"][0]["name"] if info["hostnames"] else ipv4
             # Mac address only returned if nmap ran as root
@@ -198,11 +209,14 @@ class NmapDeviceScanner:
                 _LOGGER.info("No MAC address found for %s", ipv4)
                 continue
 
-            device = NmapDevice(format_mac(mac), name, ipv4, dt_util.now())
-            dispatches.append((self.signal_device_update(ipv4), True))
-            if self.devices.tracked.setdefault(ipv4, device) is device:
-                dispatches.append((self.signal_device_new, ipv4))
+            formatted_mac = format_mac(mac)
+            manufacturer = self.get_manufacturer(mac)
+            device = NmapDevice(formatted_mac, name, ipv4, manufacturer, dt_util.now())
+            dispatches.append((self.signal_device_update(formatted_mac), True))
+            if self.devices.tracked.setdefault(formatted_mac, device) is device:
+                dispatches.append((self.signal_device_new, formatted_mac))
             else:
-                self.devices.tracked[ipv4] = device
+                self.devices.tracked[formatted_mac] = device
+            self.devices.ipv4_to_mac_address[ipv4] = formatted_mac
             self.last_results.append(device)
         return dispatches
