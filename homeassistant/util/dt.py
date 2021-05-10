@@ -355,23 +355,21 @@ def find_next_time_expression_time(
 
 
 def datetime_exists(dattim: dt.datetime) -> bool:
-    """Check if a datetime exists.
-
-    From https://pytz-deprecation-shim.readthedocs.io/en/latest/migration.html#detecting-ambiguous-and-imaginary-times
-    """
-    # There are no non-existent times in UTC, and comparisons between
-    # aware time zones always compare absolute times; if a datetime is
-    # not equal to the same datetime represented in UTC, it is imaginary.
-    return dattim.astimezone(dt.timezone.utc) == dattim
+    """Check if a datetime exists."""
+    assert dattim.tzinfo is not None
+    tz = dattim.tzinfo
+    # Check if we can round trip to UTC
+    return dattim.replace(tzinfo=None) == dattim.astimezone(UTC).astimezone(tz).replace(
+        tzinfo=None
+    )
 
 
 def datetime_ambiguous(dattim: dt.datetime) -> bool:
-    """Check whether a datetime is ambiguous.
-
-    From https://pytz-deprecation-shim.readthedocs.io/en/latest/migration.html#detecting-ambiguous-and-imaginary-times
-    """
-    # If a datetime exists and its UTC offset changes in response to
-    # changing `fold`, it is ambiguous in the zone specified.
-    return datetime_exists(dattim) and (
-        dattim.replace(fold=not dattim.fold).utcoffset() != dattim.utcoffset()
+    """Check whether a datetime is ambiguous."""
+    assert dattim.tzinfo is not None
+    non_folded = dattim.replace(fold=0)
+    folded = dattim.replace(fold=1)
+    return not (
+        non_folded.utcoffset() == folded.utcoffset()
+        and non_folded.dst() == folded.dst()
     )
