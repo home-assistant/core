@@ -220,6 +220,7 @@ class NmapDeviceScanner:
         result = self.scanner.scan(
             hosts=" ".join(self.hosts),
             arguments=options,
+            timeout=TRACKER_SCAN_INTERVAL * 10,
         )
 
         if self._stopping:
