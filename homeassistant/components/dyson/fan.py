@@ -234,7 +234,7 @@ class DysonFanEntity(DysonEntity, FanEntity):
         """Set the exact speed of the fan."""
         raise NotImplementedError
 
-    def service_set_dyson_speed(self, dyson_speed: str) -> None:
+    def service_set_dyson_speed(self, dyson_speed: int) -> None:
         """Handle the service to set dyson speed."""
         if dyson_speed not in SPEED_LIST_DYSON:
             raise ValueError(f'"{dyson_speed}" is not a valid Dyson speed')
