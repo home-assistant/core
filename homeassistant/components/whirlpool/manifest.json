@@ -6,10 +6,6 @@
   "requirements": [
     "whirlpool-sixth-sense==0.15.1"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@abmantis"
   ],
