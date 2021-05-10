@@ -87,8 +87,6 @@ class NmapDeviceScanner:
         self._options = config[CONF_OPTIONS]
         self.home_interval = timedelta(minutes=minutes)
 
-        _LOGGER.debug("Scanner initialized")
-
     @callback
     def async_setup(self):
         """Set up the tracker."""
@@ -162,7 +160,7 @@ class NmapDeviceScanner:
                         self._hass, self.signal_device_new, device.mac_address
                     )
 
-            for device in self.devices.tracked:
+            for device in self.devices.tracked.values():
                 if device.ip_address in offline_devices:
                     async_dispatcher_send(
                         self.hass, self.signal_device_update(device.mac_address), False
