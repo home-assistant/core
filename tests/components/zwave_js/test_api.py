@@ -192,7 +192,7 @@ async def test_add_node(
     assert msg["event"]["event"] == "interview completed"
 
     event = Event(
-        type="interview started",
+        type="interview failed",
         data={"source": "node", "event": "interview failed", "nodeId": 53},
     )
     client.driver.receive_event(event)
