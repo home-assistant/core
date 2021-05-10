@@ -224,6 +224,7 @@ class NmapDeviceScanner:
 
         if self._stopping:
             return dispatches
+
         for ipv4, info in result["scan"].items():
             if info["status"]["state"] != "up":
                 if mac_address := self.devices.ipv4_to_mac_address.pop(ipv4, None):
@@ -256,4 +257,7 @@ class NmapDeviceScanner:
             self.devices.tracked[formatted_mac] = device
             self.devices.ipv4_to_mac_address[ipv4] = formatted_mac
             self.last_results.append(device)
+
+        _LOGGER.debug("Finished scanning %s with args: %s", self.hosts, options)
+
         return dispatches
