@@ -75,10 +75,10 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if "base" not in errors:
-                unique_id = stats.get("system", {}).get("serial_number", host)
+                unique_id = stats["system"]["serial_number"]
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
-                title = stats.get("system", {}).get("name", host).capitalize()
+                title = stats["system"]["name"].capitalize()
                 if self.is_imported:
                     notify_create(
                         self.hass,
