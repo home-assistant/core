@@ -68,9 +68,9 @@ def _async_untrack_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
         for mac_address, entry_id in devices.config_entry_owner
         if entry_id == entry.entry_id
     ]
-    for mac_address in remove_mac_addresses:
-        ipv4 = devices.tracked.pop(mac_address)
-        del devices.ipv4_to_mac_address[ipv4]
+    for mac_address in remove_mac_addresses.items():
+        if ipv4 := devices.tracked.pop(mac_address, None):
+            del devices.ipv4_to_mac_address[ipv4]
         del devices.config_entry_owner[mac_address]
 
 
