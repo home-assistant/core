@@ -4,13 +4,14 @@ from __future__ import annotations
 import asyncio
 import base64
 import collections
+from collections.abc import Mapping
 from contextlib import suppress
 from datetime import datetime, timedelta
 import hashlib
 import logging
 import os
 from random import SystemRandom
-from typing import Any, Awaitable, Callable, Final, cast, final
+from typing import Awaitable, Callable, Final, cast, final
 
 from aiohttp import web
 import async_timeout
@@ -685,7 +686,7 @@ async def async_handle_play_stream_service(
     url = await _async_stream_endpoint_url(camera.hass, camera, fmt)
 
     hass = camera.hass
-    data: dict[str, Any] = {
+    data: Mapping[str, str] = {
         ATTR_MEDIA_CONTENT_ID: f"{get_url(hass)}{url}",
         ATTR_MEDIA_CONTENT_TYPE: FORMAT_CONTENT_TYPE[fmt],
     }
