@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from itertools import groupby
-import json
 import logging
 import time
 
@@ -13,12 +12,13 @@ from sqlalchemy.ext import baked
 from homeassistant.components import recorder
 from homeassistant.components.recorder.models import (
     States,
-    process_timestamp,
     process_timestamp_to_utc_isoformat,
 )
 from homeassistant.components.recorder.util import execute, session_scope
-from homeassistant.core import Context, State, split_entity_id
+from homeassistant.core import split_entity_id
 import homeassistant.util.dt as dt_util
+
+from .models import LazyState
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -401,116 +401,3 @@ def get_state(hass, utc_point_in_time, entity_id, run=None):
     """Return a state at a specific point in time."""
     states = get_states(hass, utc_point_in_time, (entity_id,), run)
     return states[0] if states else None
-
-
-class LazyState(State):
-    """A lazy version of core State."""
-
-    __slots__ = [
-        "_row",
-        "entity_id",
-        "state",
-        "_attributes",
-        "_last_changed",
-        "_last_updated",
-        "_context",
-    ]
-
-    def __init__(self, row):  # pylint: disable=super-init-not-called
-        """Init the lazy state."""
-        self._row = row
-        self.entity_id = self._row.entity_id
-        self.state = self._row.state or ""
-        self._attributes = None
-        self._last_changed = None
-        self._last_updated = None
-        self._context = None
-
-    @property  # type: ignore
-    def attributes(self):
-        """State attributes."""
-        if not self._attributes:
-            try:
-                self._attributes = json.loads(self._row.attributes)
-            except ValueError:
-                # When json.loads fails
-                _LOGGER.exception("Error converting row to state: %s", self._row)
-                self._attributes = {}
-        return self._attributes
-
-    @attributes.setter
-    def attributes(self, value):
-        """Set attributes."""
-        self._attributes = value
-
-    @property  # type: ignore
-    def context(self):
-        """State context."""
-        if not self._context:
-            self._context = Context(id=None)
-        return self._context
-
-    @context.setter
-    def context(self, value):
-        """Set context."""
-        self._context = value
-
-    @property  # type: ignore
-    def last_changed(self):
-        """Last changed datetime."""
-        if not self._last_changed:
-            self._last_changed = process_timestamp(self._row.last_changed)
-        return self._last_changed
-
-    @last_changed.setter
-    def last_changed(self, value):
-        """Set last changed datetime."""
-        self._last_changed = value
-
-    @property  # type: ignore
-    def last_updated(self):
-        """Last updated datetime."""
-        if not self._last_updated:
-            self._last_updated = process_timestamp(self._row.last_updated)
-        return self._last_updated
-
-    @last_updated.setter
-    def last_updated(self, value):
-        """Set last updated datetime."""
-        self._last_updated = value
-
-    def as_dict(self):
-        """Return a dict representation of the LazyState.
-
-        Async friendly.
-
-        To be used for JSON serialization.
-        """
-        if self._last_changed:
-            last_changed_isoformat = self._last_changed.isoformat()
-        else:
-            last_changed_isoformat = process_timestamp_to_utc_isoformat(
-                self._row.last_changed
-            )
-        if self._last_updated:
-            last_updated_isoformat = self._last_updated.isoformat()
-        else:
-            last_updated_isoformat = process_timestamp_to_utc_isoformat(
-                self._row.last_updated
-            )
-        return {
-            "entity_id": self.entity_id,
-            "state": self.state,
-            "attributes": self._attributes or self.attributes,
-            "last_changed": last_changed_isoformat,
-            "last_updated": last_updated_isoformat,
-        }
-
-    def __eq__(self, other):
-        """Return the comparison."""
-        return (
-            other.__class__ in [self.__class__, State]
-            and self.entity_id == other.entity_id
-            and self.state == other.state
-            and self.attributes == other.attributes
-        )

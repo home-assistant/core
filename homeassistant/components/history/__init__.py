@@ -12,7 +12,7 @@ from sqlalchemy import not_, or_
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.recorder.history import _get_significant_states
+from homeassistant.components.recorder import history
 from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
@@ -50,6 +50,61 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+
+def get_significant_states(hass, *args, **kwargs):
+    """Wrap _get_significant_states with a sql session."""
+    _LOGGER.warning(
+        (
+            "homeassistant.components.history.get_significant_states, call",
+            "homeassistant.components.recorder.history.get_significant_states instead",
+        )
+    )
+    history.get_significant_states(hass, *args, **kwargs)
+
+
+def state_changes_during_period(hass, start_time, end_time=None, entity_id=None):
+    """Return states changes during UTC period start_time - end_time."""
+    _LOGGER.warning(
+        (
+            "homeassistant.components.history.state_changes_during_period, call",
+            "homeassistant.components.recorder.history.state_changes_during_period instead",
+        )
+    )
+    history.state_changes_during_period(hass, start_time, end_time=None, entity_id=None)
+
+
+def get_last_state_changes(hass, number_of_states, entity_id):
+    """Return the last number_of_states."""
+    _LOGGER.warning(
+        (
+            "homeassistant.components.history.get_last_state_changes, call",
+            "homeassistant.components.recorder.history.get_last_state_changes instead",
+        )
+    )
+    history.get_last_state_changes(hass, number_of_states, entity_id)
+
+
+def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None):
+    """Return the states at a specific point in time."""
+    _LOGGER.warning(
+        (
+            "homeassistant.components.history.get_states, call",
+            "homeassistant.components.recorder.history.get_states instead",
+        )
+    )
+    history.get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None)
+
+
+def get_state(hass, utc_point_in_time, entity_id, run=None):
+    """Return a state at a specific point in time."""
+    _LOGGER.warning(
+        (
+            "homeassistant.components.history.get_state, call",
+            "homeassistant.components.recorder.history.get_state instead",
+        )
+    )
+    history.get_state(hass, utc_point_in_time, entity_id, run=None)
 
 
 async def async_setup(hass, config):
@@ -159,16 +214,18 @@ class HistoryPeriodView(HomeAssistantView):
         timer_start = time.perf_counter()
 
         with session_scope(hass=hass) as session:
-            result = _get_significant_states(
-                hass,
-                session,
-                start_time,
-                end_time,
-                entity_ids,
-                self.filters,
-                include_start_time_state,
-                significant_changes_only,
-                minimal_response,
+            result = (
+                history._get_significant_states(  # pylint: disable=protected-access
+                    hass,
+                    session,
+                    start_time,
+                    end_time,
+                    entity_ids,
+                    self.filters,
+                    include_start_time_state,
+                    significant_changes_only,
+                    minimal_response,
+                )
             )
 
         result = list(result.values())
