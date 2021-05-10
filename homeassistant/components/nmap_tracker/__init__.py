@@ -74,6 +74,7 @@ class NmapTrackedDevices:
     def __init__(self) -> None:
         """Initialize the data."""
         self.tracked: dict = {}
+        self.ipv4_to_mac_address: dict = {}
 
 
 class NmapDeviceScanner:
@@ -133,9 +134,9 @@ class NmapDeviceScanner:
         """Signal specific per nmap tracker entry to signal new device."""
         return f"{DOMAIN}-device-new-{self._entry_id}"
 
-    def signal_device_update(self, ipv4) -> str:
+    def signal_device_update(self, mac_address) -> str:
         """Signal specific per nmap tracker entry to signal updates in device."""
-        return f"{DOMAIN}-device-update-{ipv4}"
+        return f"{DOMAIN}-device-update-{mac_address}"
 
     def _build_options(self):
         """Build the command line and strip out last results that do not need to be updated."""
@@ -198,9 +199,8 @@ class NmapDeviceScanner:
             return dispatches
         for ipv4, info in result["scan"].items():
             if info["status"]["state"] != "up":
-                if ipv4 in self.devices.tracked:
-                    dispatches.append((self.signal_device_update(ipv4), False))
-                self.offline_devices.add(ipv4)
+                if mac_address := self.devices.ipv4_to_mac_address.pop(ipv4, None):
+                    dispatches.append((self.signal_device_update(mac_address), False))
                 continue
             name = info["hostnames"][0]["name"] if info["hostnames"] else ipv4
             # Mac address only returned if nmap ran as root
@@ -209,14 +209,14 @@ class NmapDeviceScanner:
                 _LOGGER.info("No MAC address found for %s", ipv4)
                 continue
 
+            formatted_mac = format_mac(mac)
             manufacturer = self.get_manufacturer(mac)
-            device = NmapDevice(
-                format_mac(mac), name, ipv4, manufacturer, dt_util.now()
-            )
-            dispatches.append((self.signal_device_update(ipv4), True))
-            if self.devices.tracked.setdefault(ipv4, device) is device:
-                dispatches.append((self.signal_device_new, ipv4))
+            device = NmapDevice(formatted_mac, name, ipv4, manufacturer, dt_util.now())
+            dispatches.append((self.signal_device_update(formatted_mac), True))
+            if self.devices.tracked.setdefault(formatted_mac, device) is device:
+                dispatches.append((self.signal_device_new, formatted_mac))
             else:
-                self.devices.tracked[ipv4] = device
+                self.devices.tracked[formatted_mac] = device
+            self.devices.ipv4_to_mac_address[ipv4] = formatted_mac
             self.last_results.append(device)
         return dispatches
