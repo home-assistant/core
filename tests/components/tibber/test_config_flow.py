@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
 
@@ -19,7 +20,7 @@ def tibber_setup_fixture():
 async def test_show_config_form(hass):
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == "form"
@@ -42,7 +43,7 @@ async def test_create_entry(hass):
 
     with patch("tibber.Tibber", return_value=tibber_mock):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=test_data
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
         )
 
     assert result["type"] == "create_entry"
@@ -65,7 +66,7 @@ async def test_flow_entry_already_exists(hass):
 
     with patch("tibber.Tibber.update_info", return_value=None):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}, data=test_data
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
         )
 
     assert result["type"] == "abort"

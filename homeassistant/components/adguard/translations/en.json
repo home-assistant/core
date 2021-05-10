@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Service is already configured",
             "existing_instance_updated": "Updated existing configuration.",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },

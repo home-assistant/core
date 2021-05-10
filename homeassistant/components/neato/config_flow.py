@@ -5,7 +5,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -18,7 +17,6 @@ class OAuth2FlowHandler(
     """Config flow to handle Neato Botvac OAuth2 authentication."""
 
     DOMAIN = NEATO_DOMAIN
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @property
     def logger(self) -> logging.Logger:

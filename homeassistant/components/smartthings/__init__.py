@@ -1,14 +1,16 @@
 """Support for SmartThings Cloud."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Iterable
 import importlib
 import logging
-from typing import Iterable
 
 from aiohttp.client_exceptions import ClientConnectionError, ClientResponseError
 from pysmartapp.event import EVENT_TYPE_DEVICE
 from pysmartthings import Attribute, Capability, SmartThings
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_CLIENT_ID,
@@ -16,6 +18,7 @@ from homeassistant.const import (
     HTTP_FORBIDDEN,
     HTTP_UNAUTHORIZED,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -24,7 +27,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import SmartThingsFlowHandler  # noqa: F401
 from .const import (
@@ -53,13 +56,13 @@ from .smartapp import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType):
     """Initialize the SmartThings platform."""
     await setup_smartapp_endpoint(hass)
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Handle migration of a previous version config entry.
 
     A config entry created under a previous version must go through the
@@ -72,14 +75,16 @@ async def async_migrate_entry(hass: HomeAssistantType, entry: ConfigEntry):
     flows = hass.config_entries.flow.async_progress()
     if not [flow for flow in flows if flow["handler"] == DOMAIN]:
         hass.async_create_task(
-            hass.config_entries.flow.async_init(DOMAIN, context={"source": "import"})
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}
+            )
         )
 
     # Return False because it could not be migrated.
     return False
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Initialize config entry which represents an installed SmartApp."""
     # For backwards compat
     if entry.unique_id is None:
@@ -179,15 +184,12 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         if not [flow for flow in flows if flow["handler"] == DOMAIN]:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": "import"}
+                    DOMAIN, context={"source": SOURCE_IMPORT}
                 )
             )
         return False
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
@@ -206,20 +208,16 @@ async def async_get_entry_scenes(entry: ConfigEntry, api):
     return []
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS].pop(entry.entry_id, None)
     if broker:
         broker.disconnect()
 
-    tasks = [
-        hass.config_entries.async_forward_entry_unload(entry, platform)
-        for platform in PLATFORMS
-    ]
-    return all(await asyncio.gather(*tasks))
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_remove_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Perform clean-up when entry is being removed."""
     api = SmartThings(async_get_clientsession(hass), entry.data[CONF_ACCESS_TOKEN])
 
@@ -268,7 +266,7 @@ class DeviceBroker:
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         entry: ConfigEntry,
         token,
         smart_app,

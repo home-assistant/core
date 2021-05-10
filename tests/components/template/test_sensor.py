@@ -26,7 +26,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import assert_setup_component, async_fire_time_changed
 
 
-async def test_template(hass):
+async def test_template_legacy(hass):
     """Test template."""
     with assert_setup_component(1, sensor.DOMAIN):
         assert await async_setup_component(
@@ -636,8 +636,12 @@ async def test_unique_id(hass):
     """Test unique_id option only creates one sensor per id."""
     await async_setup_component(
         hass,
-        sensor.DOMAIN,
+        "template",
         {
+            "template": {
+                "unique_id": "group-id",
+                "sensor": {"name": "top-level", "unique_id": "sensor-id", "state": "5"},
+            },
             "sensor": {
                 "platform": "template",
                 "sensors": {
@@ -650,7 +654,7 @@ async def test_unique_id(hass):
                         "value_template": "{{ false }}",
                     },
                 },
-            }
+            },
         },
     )
 
@@ -658,7 +662,19 @@ async def test_unique_id(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 2
+
+    ent_reg = entity_registry.async_get(hass)
+
+    assert len(ent_reg.entities) == 2
+    assert (
+        ent_reg.async_get_entity_id("sensor", "template", "group-id-sensor-id")
+        is not None
+    )
+    assert (
+        ent_reg.async_get_entity_id("sensor", "template", "not-so-unique-anymore")
+        is not None
+    )
 
 
 async def test_sun_renders_once_per_sensor(hass):

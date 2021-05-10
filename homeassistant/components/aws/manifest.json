@@ -3,5 +3,6 @@
   "name": "Amazon Web Services (AWS)",
   "documentation": "https://www.home-assistant.io/integrations/aws",
   "requirements": ["aiobotocore==1.2.2"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

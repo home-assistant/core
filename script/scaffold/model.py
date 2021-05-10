@@ -18,6 +18,7 @@ class Info:
     is_new: bool = attr.ib()
     codeowner: str = attr.ib(default=None)
     requirement: str = attr.ib(default=None)
+    iot_class: str = attr.ib(default=None)
     authentication: str = attr.ib(default=None)
     discoverable: str = attr.ib(default=None)
     oauth2: str = attr.ib(default=None)

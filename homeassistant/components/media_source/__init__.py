@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from urllib.parse import quote
 
 import voluptuous as vol
 
@@ -123,7 +124,7 @@ async def websocket_resolve_media(hass, connection, msg):
             url = async_sign_path(
                 hass,
                 connection.refresh_token_id,
-                url,
+                quote(url),
                 timedelta(seconds=msg["expires"]),
             )
 

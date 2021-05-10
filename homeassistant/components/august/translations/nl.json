@@ -14,8 +14,8 @@
                 "data": {
                     "password": "Wachtwoord"
                 },
-                "description": "Voer het wachtwoord in voor {username} .",
-                "title": "Verifieer een August-account opnieuw"
+                "description": "Voer het wachtwoord in voor {username}.",
+                "title": "Verifieer opnieuw een August-account"
             },
             "user": {
                 "data": {
@@ -33,7 +33,7 @@
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
                 },
-                "description": "Als de aanmeldingsmethode 'e-mail' is, is de gebruikersnaam het e-mailadres. Als de aanmeldingsmethode 'telefoon' is, is de gebruikersnaam het telefoonnummer in de indeling '+ NNNNNNNNN'.",
+                "description": "Als de aanmeldingsmethode 'e-mail' is, is de gebruikersnaam het e-mailadres. Als de aanmeldingsmethode 'telefoon' is, is de gebruikersnaam het telefoonnummer in de indeling '+NNNNNNNNN'.",
                 "title": "Stel een August account in"
             },
             "validation": {

@@ -3,5 +3,6 @@
   "name": "BlinkStick",
   "documentation": "https://www.home-assistant.io/integrations/blinksticklight",
   "requirements": ["blinkstick==1.1.8"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

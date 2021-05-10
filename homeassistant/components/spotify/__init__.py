@@ -37,6 +37,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = [MEDIA_PLAYER_DOMAIN]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Spotify integration."""
@@ -86,20 +88,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not set(session.token["scope"].split(" ")).issuperset(SPOTIFY_SCOPES):
         raise ConfigEntryAuthFailed
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, MEDIA_PLAYER_DOMAIN)
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Spotify config entry."""
     # Unload entities for this entry/device.
-    await hass.config_entries.async_forward_entry_unload(entry, MEDIA_PLAYER_DOMAIN)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     # Cleanup
     del hass.data[DOMAIN][entry.entry_id]
     if not hass.data[DOMAIN]:
         del hass.data[DOMAIN]
 
-    return True
+    return unload_ok

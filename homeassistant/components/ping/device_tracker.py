@@ -54,18 +54,18 @@ class HostSubProcess:
 
     def ping(self):
         """Send an ICMP echo request and return True if success."""
-        pinger = subprocess.Popen(
+        with subprocess.Popen(
             self._ping_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
-        )
-        try:
-            pinger.communicate(timeout=1 + PING_TIMEOUT)
-            return pinger.returncode == 0
-        except subprocess.TimeoutExpired:
-            kill_subprocess(pinger)
-            return False
+        ) as pinger:
+            try:
+                pinger.communicate(timeout=1 + PING_TIMEOUT)
+                return pinger.returncode == 0
+            except subprocess.TimeoutExpired:
+                kill_subprocess(pinger)
+                return False
 
-        except subprocess.CalledProcessError:
-            return False
+            except subprocess.CalledProcessError:
+                return False
 
     def update(self) -> bool:
         """Update device state by sending one or more ping messages."""
@@ -141,9 +141,10 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
         try:
             await async_update(now)
         finally:
-            async_track_point_in_utc_time(
-                hass, _async_update_interval, util.dt.utcnow() + interval
-            )
+            if not hass.is_stopping:
+                async_track_point_in_utc_time(
+                    hass, _async_update_interval, util.dt.utcnow() + interval
+                )
 
     await _async_update_interval(None)
     return True

@@ -35,11 +35,6 @@ VACUUM_PLATFORMS = ["vacuum"]
 AIR_MONITOR_PLATFORMS = ["air_quality", "sensor"]
 
 
-async def async_setup(hass: core.HomeAssistant, config: dict):
-    """Set up the Xiaomi Miio component."""
-    return True
-
-
 async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):

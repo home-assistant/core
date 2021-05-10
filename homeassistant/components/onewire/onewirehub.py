@@ -6,8 +6,8 @@ from pyownet import protocol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import CONF_MOUNT_DIR, CONF_TYPE_OWSERVER, CONF_TYPE_SYSBUS
 
@@ -20,7 +20,7 @@ DEVICE_COUPLERS = {
 class OneWireHub:
     """Hub to communicate with SysBus or OWServer."""
 
-    def __init__(self, hass: HomeAssistantType):
+    def __init__(self, hass: HomeAssistant):
         """Initialize."""
         self.hass = hass
         self.type: str = None

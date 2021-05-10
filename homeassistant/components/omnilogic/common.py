@@ -3,8 +3,9 @@
 from datetime import timedelta
 import logging
 
-from omnilogic import OmniLogicException
+from omnilogic import OmniLogic, OmniLogicException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
@@ -30,12 +31,14 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        api: str,
+        api: OmniLogic,
         name: str,
+        config_entry: ConfigEntry,
         polling_interval: int,
     ):
         """Initialize the global Omnilogic data updater."""
         self.api = api
+        self.config_entry = config_entry
 
         super().__init__(
             hass=hass,
@@ -103,9 +106,13 @@ class OmniLogicEntity(CoordinatorEntity):
 
         if bow_id is not None:
             unique_id = f"{unique_id}_{coordinator.data[bow_id]['systemId']}"
-            entity_friendly_name = (
-                f"{entity_friendly_name}{coordinator.data[bow_id]['Name']} "
-            )
+
+            if kind != "Heaters":
+                entity_friendly_name = (
+                    f"{entity_friendly_name}{coordinator.data[bow_id]['Name']} "
+                )
+            else:
+                entity_friendly_name = f"{entity_friendly_name}{coordinator.data[bow_id]['Operation']['VirtualHeater']['Name']} "
 
         unique_id = f"{unique_id}_{coordinator.data[item_id]['systemId']}_{kind}"
 
@@ -155,3 +162,17 @@ class OmniLogicEntity(CoordinatorEntity):
             ATTR_MANUFACTURER: "Hayward",
             ATTR_MODEL: "OmniLogic",
         }
+
+
+def check_guard(state_key, item, entity_setting):
+    """Validate that this entity passes the defined guard conditions defined at setup."""
+
+    if state_key not in item:
+        return True
+
+    for guard_condition in entity_setting["guard_condition"]:
+        if guard_condition and all(
+            item.get(guard_key) == guard_value
+            for guard_key, guard_value in guard_condition.items()
+        ):
+            return True

@@ -1,6 +1,7 @@
 """Support for the OpenWeatherMap (OWM) service."""
 from homeassistant.components.weather import WeatherEntity
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import PRESSURE_HPA, PRESSURE_INHG, TEMP_CELSIUS
+from homeassistant.util.pressure import convert as pressure_convert
 
 from .const import (
     ATTR_API_CONDITION,
@@ -11,9 +12,11 @@ from .const import (
     ATTR_API_WIND_BEARING,
     ATTR_API_WIND_SPEED,
     ATTRIBUTION,
+    DEFAULT_NAME,
     DOMAIN,
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
+    MANUFACTURER,
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
@@ -55,6 +58,16 @@ class OpenWeatherMapWeather(WeatherEntity):
         return self._unique_id
 
     @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self._unique_id)},
+            "name": DEFAULT_NAME,
+            "manufacturer": MANUFACTURER,
+            "entry_type": "service",
+        }
+
+    @property
     def should_poll(self):
         """Return the polling requirement of the entity."""
         return False
@@ -82,7 +95,12 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the pressure."""
-        return self._weather_coordinator.data[ATTR_API_PRESSURE]
+        pressure = self._weather_coordinator.data[ATTR_API_PRESSURE]
+        # OpenWeatherMap returns pressure in hPA, so convert to
+        # inHg if we aren't using metric.
+        if not self.hass.config.units.is_metric and pressure:
+            return pressure_convert(pressure, PRESSURE_HPA, PRESSURE_INHG)
+        return pressure
 
     @property
     def humidity(self):

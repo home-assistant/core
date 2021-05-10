@@ -34,7 +34,8 @@
                 "data": {
                     "name": "Nazwa us\u0142ugi powiadomie\u0144 (zmiana wymaga ponownego uruchomienia)",
                     "recipient": "Odbiorcy powiadomie\u0144 SMS",
-                    "track_new_devices": "\u015aled\u017a nowe urz\u0105dzenia"
+                    "track_new_devices": "\u015aled\u017a nowe urz\u0105dzenia",
+                    "track_wired_clients": "\u015aled\u017a klient\u00f3w sieci przewodowej"
                 }
             }
         }

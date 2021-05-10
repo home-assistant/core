@@ -528,7 +528,7 @@ async def test_poll_value(
         },
         blocking=True,
     )
-    assert len(client.async_send_command.call_args_list) == 7
+    assert len(client.async_send_command.call_args_list) == 8
 
     # Test polling against an invalid entity raises ValueError
     with pytest.raises(ValueError):

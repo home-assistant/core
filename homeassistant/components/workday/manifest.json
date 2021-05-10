@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/workday",
   "requirements": ["holidays==0.11.1"],
   "codeowners": ["@fabaff"],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "iot_class": "local_polling"
 }

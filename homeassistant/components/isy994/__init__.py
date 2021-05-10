@@ -1,7 +1,6 @@
 """Support the ISY-994 controllers."""
 from __future__ import annotations
 
-import asyncio
 from functools import partial
 from urllib.parse import urlparse
 
@@ -177,10 +176,7 @@ async def async_setup_entry(
     await _async_get_or_create_isy_device_in_registry(hass, entry, isy)
 
     # Load platforms for the devices in the ISY controller that we support.
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     def _start_auto_update() -> None:
         """Start isy auto update."""
@@ -245,14 +241,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     hass_isy_data = hass.data[DOMAIN][entry.entry_id]
 

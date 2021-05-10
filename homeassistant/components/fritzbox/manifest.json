@@ -8,6 +8,7 @@
       "st": "urn:schemas-upnp-org:device:fritzbox:1"
     }
   ],
-  "codeowners": [],
-  "config_flow": true
+  "codeowners": ["@mib1185"],
+  "config_flow": true,
+  "iot_class": "local_polling"
 }

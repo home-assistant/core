@@ -14,7 +14,6 @@ class AmbientStationFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an Ambient PWS config flow."""
 
     VERSION = 2
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     def __init__(self):
         """Initialize the config flow."""

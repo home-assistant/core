@@ -14,7 +14,7 @@ from homeassistant.components.onewire.const import (
     DEFAULT_SYSBUS_MOUNT_DIR,
     DOMAIN,
 )
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 
 from .const import MOCK_OWPROXY_DEVICES, MOCK_SYSBUS_DEVICES
@@ -26,13 +26,12 @@ async def setup_onewire_sysbus_integration(hass):
     """Create the 1-Wire integration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        source="user",
+        source=SOURCE_USER,
         data={
             CONF_TYPE: CONF_TYPE_SYSBUS,
             CONF_MOUNT_DIR: DEFAULT_SYSBUS_MOUNT_DIR,
         },
         unique_id=f"{CONF_TYPE_SYSBUS}:{DEFAULT_SYSBUS_MOUNT_DIR}",
-        connection_class=CONN_CLASS_LOCAL_POLL,
         options={},
         entry_id="1",
     )
@@ -51,13 +50,12 @@ async def setup_onewire_owserver_integration(hass):
     """Create the 1-Wire integration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        source="user",
+        source=SOURCE_USER,
         data={
             CONF_TYPE: CONF_TYPE_OWSERVER,
             CONF_HOST: "1.2.3.4",
             CONF_PORT: 1234,
         },
-        connection_class=CONN_CLASS_LOCAL_POLL,
         options={},
         entry_id="2",
     )
@@ -76,7 +74,7 @@ async def setup_onewire_patched_owserver_integration(hass):
     """Create the 1-Wire integration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        source="user",
+        source=SOURCE_USER,
         data={
             CONF_TYPE: CONF_TYPE_OWSERVER,
             CONF_HOST: "1.2.3.4",
@@ -85,7 +83,6 @@ async def setup_onewire_patched_owserver_integration(hass):
                 "10.111111111111": "My DS18B20",
             },
         },
-        connection_class=CONN_CLASS_LOCAL_POLL,
         options={},
         entry_id="2",
     )

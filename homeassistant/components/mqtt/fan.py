@@ -1,6 +1,7 @@
 """Support for MQTT fans."""
 import functools
 import logging
+import math
 
 import voluptuous as vol
 
@@ -27,10 +28,10 @@ from homeassistant.const import (
     CONF_PAYLOAD_ON,
     CONF_STATE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.percentage import (
     int_states_in_range,
     ordered_list_item_to_percentage,
@@ -180,7 +181,7 @@ PLATFORM_SCHEMA = vol.All(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT fan through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
@@ -334,7 +335,7 @@ class MqttFan(MqttEntity, FanEntity):
                     tpl.hass = self.hass
                     tpl_dict[key] = tpl.async_render_with_possible_json_value
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self):  # noqa: C901
         """(Re)Subscribe to topics."""
         topics = {}
 
@@ -343,6 +344,9 @@ class MqttFan(MqttEntity, FanEntity):
         def state_received(msg):
             """Handle new received MQTT message."""
             payload = self._value_templates[CONF_STATE](msg.payload)
+            if not payload:
+                _LOGGER.debug("Ignoring empty state from '%s'", msg.topic)
+                return
             if payload == self._payload["STATE_ON"]:
                 self._state = True
             elif payload == self._payload["STATE_OFF"]:
@@ -361,22 +365,27 @@ class MqttFan(MqttEntity, FanEntity):
         def percentage_received(msg):
             """Handle new received MQTT message for the percentage."""
             numeric_val_str = self._value_templates[ATTR_PERCENTAGE](msg.payload)
+            if not numeric_val_str:
+                _LOGGER.debug("Ignoring empty speed from '%s'", msg.topic)
+                return
             try:
                 percentage = ranged_value_to_percentage(
                     self._speed_range, int(numeric_val_str)
                 )
             except ValueError:
                 _LOGGER.warning(
-                    "'%s' received on topic %s is not a valid speed within the speed range",
+                    "'%s' received on topic %s. '%s' is not a valid speed within the speed range",
                     msg.payload,
                     msg.topic,
+                    numeric_val_str,
                 )
                 return
             if percentage < 0 or percentage > 100:
                 _LOGGER.warning(
-                    "'%s' received on topic %s is not a valid speed within the speed range",
+                    "'%s' received on topic %s. '%s' is not a valid speed within the speed range",
                     msg.payload,
                     msg.topic,
+                    numeric_val_str,
                 )
                 return
             self._percentage = percentage
@@ -395,11 +404,15 @@ class MqttFan(MqttEntity, FanEntity):
         def preset_mode_received(msg):
             """Handle new received MQTT message for preset mode."""
             preset_mode = self._value_templates[ATTR_PRESET_MODE](msg.payload)
+            if not preset_mode:
+                _LOGGER.debug("Ignoring empty preset_mode from '%s'", msg.topic)
+                return
             if preset_mode not in self.preset_modes:
                 _LOGGER.warning(
-                    "'%s' received on topic %s is not a valid preset mode",
+                    "'%s' received on topic %s. '%s' is not a valid preset mode",
                     msg.payload,
                     msg.topic,
+                    preset_mode,
                 )
                 return
 
@@ -435,19 +448,19 @@ class MqttFan(MqttEntity, FanEntity):
                 self._speed = speed
             else:
                 _LOGGER.warning(
-                    "'%s' received on topic %s is not a valid speed",
+                    "'%s' received on topic %s. '%s' is not a valid speed",
                     msg.payload,
                     msg.topic,
+                    speed,
                 )
                 return
 
-            if not self._feature_percentage:
-                if speed in self._legacy_speeds_list_no_off:
-                    self._percentage = ordered_list_item_to_percentage(
-                        self._legacy_speeds_list_no_off, speed
-                    )
-                elif speed == SPEED_OFF:
-                    self._percentage = 0
+            if speed in self._legacy_speeds_list_no_off:
+                self._percentage = ordered_list_item_to_percentage(
+                    self._legacy_speeds_list_no_off, speed
+                )
+            elif speed == SPEED_OFF:
+                self._percentage = 0
 
             self.async_write_ha_state()
 
@@ -464,6 +477,9 @@ class MqttFan(MqttEntity, FanEntity):
         def oscillation_received(msg):
             """Handle new received MQTT message for the oscillation."""
             payload = self._value_templates[ATTR_OSCILLATING](msg.payload)
+            if not payload:
+                _LOGGER.debug("Ignoring empty oscillation from '%s'", msg.topic)
+                return
             if payload == self._payload["OSCILLATE_ON_PAYLOAD"]:
                 self._oscillation = True
             elif payload == self._payload["OSCILLATE_OFF_PAYLOAD"]:
@@ -592,7 +608,7 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
-        percentage_payload = int(
+        percentage_payload = math.ceil(
             percentage_to_ranged_value(self._speed_range, percentage)
         )
         mqtt_payload = self._command_templates[ATTR_PERCENTAGE](percentage_payload)

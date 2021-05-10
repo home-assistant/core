@@ -19,9 +19,9 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     LightEntity,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
@@ -43,6 +43,7 @@ ATTR_DAILY_ENERGY_KWH = "daily_energy_kwh"
 ATTR_MONTHLY_ENERGY_KWH = "monthly_energy_kwh"
 
 LIGHT_STATE_DFT_ON = "dft_on_state"
+LIGHT_STATE_DFT_IGNORE = "ignore_default"
 LIGHT_STATE_ON_OFF = "on_off"
 LIGHT_STATE_RELAY_STATE = "relay_state"
 LIGHT_STATE_BRIGHTNESS = "brightness"
@@ -77,7 +78,7 @@ FALLBACK_MIN_COLOR = 2700
 FALLBACK_MAX_COLOR = 5000
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
     """Set up lights."""
     entities = await hass.async_add_executor_job(
         add_available_devices, hass, CONF_LIGHT, TPLinkSmartBulb
@@ -117,6 +118,7 @@ class LightState(NamedTuple):
 
         return {
             LIGHT_STATE_ON_OFF: 1 if self.state else 0,
+            LIGHT_STATE_DFT_IGNORE: 1 if self.state else 0,
             LIGHT_STATE_BRIGHTNESS: brightness_to_percentage(self.brightness),
             LIGHT_STATE_COLOR_TEMP: color_temp,
             LIGHT_STATE_HUE: self.hs[0] if self.hs else 0,
@@ -354,7 +356,7 @@ class TPLinkSmartBulb(LightEntity):
         ):
             color_temp = kelvin_to_mired(light_state_params[LIGHT_STATE_COLOR_TEMP])
 
-        if light_features.supported_features & SUPPORT_COLOR:
+        if color_temp is None and light_features.supported_features & SUPPORT_COLOR:
             hue_saturation = (
                 light_state_params[LIGHT_STATE_HUE],
                 light_state_params[LIGHT_STATE_SATURATION],

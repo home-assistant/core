@@ -19,7 +19,7 @@
                 "title": "Automatisch verbinding maken met het apparaat"
             },
             "link": {
-                "description": "Houd de Home-knop op {name} ingedrukt totdat het apparaat een geluid genereert (ongeveer twee seconden).",
+                "description": "Houd de Home-knop op {name} ingedrukt totdat het apparaat een geluid genereert (ongeveer twee seconden), bevestig vervolgens binnen 30 seconden.",
                 "title": "Wachtwoord opvragen"
             },
             "link_manual": {

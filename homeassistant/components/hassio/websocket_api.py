@@ -16,6 +16,7 @@ from .const import (
     ATTR_DATA,
     ATTR_ENDPOINT,
     ATTR_METHOD,
+    ATTR_RESULT,
     ATTR_TIMEOUT,
     ATTR_WS_EVENT,
     DOMAIN,
@@ -94,7 +95,6 @@ async def websocket_supervisor_api(
 ):
     """Websocket handler to call Supervisor API."""
     supervisor: HassIO = hass.data[DOMAIN]
-    result = False
     try:
         result = await supervisor.send_command(
             msg[ATTR_ENDPOINT],
@@ -102,6 +102,9 @@ async def websocket_supervisor_api(
             timeout=msg.get(ATTR_TIMEOUT, 10),
             payload=msg.get(ATTR_DATA, {}),
         )
+
+        if result.get(ATTR_RESULT) == "error":
+            raise hass.components.hassio.HassioAPIError(result.get("message"))
     except hass.components.hassio.HassioAPIError as err:
         _LOGGER.error("Failed to to call %s - %s", msg[ATTR_ENDPOINT], err)
         connection.send_error(

@@ -6,9 +6,18 @@
   "codeowners": ["@danielhiversen", "@felipediel"],
   "config_flow": true,
   "dhcp": [
-      {"macaddress": "34EA34*"},
-      {"macaddress": "24DFA7*"},
-      {"macaddress": "A043B0*"},
-      {"macaddress": "B4430D*"}
-  ]
+    {
+      "macaddress": "34EA34*"
+    },
+    {
+      "macaddress": "24DFA7*"
+    },
+    {
+      "macaddress": "A043B0*"
+    },
+    {
+      "macaddress": "B4430D*"
+    }
+  ],
+  "iot_class": "local_polling"
 }

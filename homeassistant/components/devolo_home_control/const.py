@@ -6,3 +6,4 @@ DEFAULT_MYDEVOLO = "https://www.mydevolo.com"
 PLATFORMS = ["binary_sensor", "climate", "cover", "light", "sensor", "switch"]
 CONF_MYDEVOLO = "mydevolo_url"
 GATEWAY_SERIAL_PATTERN = re.compile(r"\d{16}")
+SUPPORTED_MODEL_TYPES = ["2600", "2601"]

@@ -5,8 +5,8 @@ from pybotvac.neato import Neato
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.neato.const import NEATO_DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.common import MockConfigEntry
 
@@ -74,7 +74,7 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_abort_if_already_setup(hass: HomeAssistantType):
+async def test_abort_if_already_setup(hass: HomeAssistant):
     """Test we abort if Neato is already setup."""
     entry = MockConfigEntry(
         domain=NEATO_DOMAIN,
@@ -91,7 +91,7 @@ async def test_abort_if_already_setup(hass: HomeAssistantType):
 
 
 async def test_reauth(
-    hass: HomeAssistantType, aiohttp_client, aioclient_mock, current_request_with_host
+    hass: HomeAssistant, aiohttp_client, aioclient_mock, current_request_with_host
 ):
     """Test initialization of the reauth flow."""
     assert await setup.async_setup_component(

@@ -127,8 +127,9 @@ async def async_unload_entry(hass, config_entry):
     if client.unsub_timer:
         client.unsub_timer()
 
-    for platform in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, platform)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
 
     if not hass.data[DOMAIN]:
         hass.services.async_remove(DOMAIN, SERVICE_ADD_TORRENT)
@@ -136,7 +137,7 @@ async def async_unload_entry(hass, config_entry):
         hass.services.async_remove(DOMAIN, SERVICE_START_TORRENT)
         hass.services.async_remove(DOMAIN, SERVICE_STOP_TORRENT)
 
-    return True
+    return unload_ok
 
 
 async def get_api(hass, entry):
@@ -198,12 +199,7 @@ class TransmissionClient:
         self.add_options()
         self.set_scan_interval(self.config_entry.options[CONF_SCAN_INTERVAL])
 
-        for platform in PLATFORMS:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, platform
-                )
-            )
+        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
         def add_torrent(service):
             """Add new torrent to download."""

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
             "not_xiaomi_aqara": "\u4e26\u975e\u5c0f\u7c73 Aqara \u7db2\u95dc\uff0c\u6240\u63a2\u7d22\u4e4b\u88dd\u7f6e\u8207\u5df2\u77e5\u7db2\u95dc\u4e0d\u7b26\u5408"
         },

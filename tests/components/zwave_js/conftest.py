@@ -240,6 +240,12 @@ def climate_heatit_z_trm3_state_fixture():
     return json.loads(load_fixture("zwave_js/climate_heatit_z_trm3_state.json"))
 
 
+@pytest.fixture(name="climate_heatit_z_trm2fx_state", scope="session")
+def climate_heatit_z_trm2fx_state_fixture():
+    """Load the climate HEATIT Z-TRM2fx thermostat node state fixture data."""
+    return json.loads(load_fixture("zwave_js/climate_heatit_z_trm2fx_state.json"))
+
+
 @pytest.fixture(name="nortek_thermostat_state", scope="session")
 def nortek_thermostat_state_fixture():
     """Load the nortek thermostat node state fixture data."""
@@ -335,6 +341,18 @@ def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_stat
             "zwave_js/climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state.json"
         )
     )
+
+
+@pytest.fixture(name="vision_security_zl7432_state", scope="session")
+def vision_security_zl7432_state_fixture():
+    """Load the vision security zl7432 switch node state fixture data."""
+    return json.loads(load_fixture("zwave_js/vision_security_zl7432_state.json"))
+
+
+@pytest.fixture(name="zen_31_state", scope="session")
+def zem_31_state_fixture():
+    """Load the zen_31 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/zen_31_state.json"))
 
 
 @pytest.fixture(name="client")
@@ -468,6 +486,14 @@ def climate_eurotronic_spirit_z_fixture(client, climate_eurotronic_spirit_z_stat
 def climate_heatit_z_trm3_fixture(client, climate_heatit_z_trm3_state):
     """Mock a climate radio HEATIT Z-TRM3 node."""
     node = Node(client, copy.deepcopy(climate_heatit_z_trm3_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_heatit_z_trm2fx")
+def climate_heatit_z_trm2fx_fixture(client, climate_heatit_z_trm2fx_state):
+    """Mock a climate radio HEATIT Z-TRM2fx node."""
+    node = Node(client, copy.deepcopy(climate_heatit_z_trm2fx_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -635,5 +661,21 @@ def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_fixt
             climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state
         ),
     )
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="vision_security_zl7432")
+def vision_security_zl7432_fixture(client, vision_security_zl7432_state):
+    """Mock a vision security zl7432 node."""
+    node = Node(client, copy.deepcopy(vision_security_zl7432_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="zen_31")
+def zen_31_fixture(client, zen_31_state):
+    """Mock a bulb 6 multi-color node."""
+    node = Node(client, copy.deepcopy(zen_31_state))
     client.driver.controller.nodes[node.node_id] = node
     return node

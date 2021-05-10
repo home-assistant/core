@@ -3,18 +3,18 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 
 from .const import DOMAIN, HASS_DATA_REMOVE_LISTENERS_KEY, HASS_DATA_UPDATER_KEY
 
+PLATFORMS = [MP_DOMAIN]
+
 
 async def async_setup_entry(hass, entry):
     """Set up forked-daapd from a config entry by forwarding to platform."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, MP_DOMAIN)
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Remove forked-daapd component."""
-    status = await hass.config_entries.async_forward_entry_unload(entry, MP_DOMAIN)
+    status = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if status and hass.data.get(DOMAIN) and hass.data[DOMAIN].get(entry.entry_id):
         hass.data[DOMAIN][entry.entry_id][
             HASS_DATA_UPDATER_KEY

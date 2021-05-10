@@ -1,8 +1,8 @@
 """Location helpers for Home Assistant."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 import logging
-from typing import Sequence
 
 import voluptuous as vol
 
@@ -25,7 +25,7 @@ def has_location(state: State) -> bool:
     )
 
 
-def closest(latitude: float, longitude: float, states: Sequence[State]) -> State | None:
+def closest(latitude: float, longitude: float, states: Iterable[State]) -> State | None:
     """Return closest state to point.
 
     Async friendly.

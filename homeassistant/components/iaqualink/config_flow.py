@@ -11,12 +11,10 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class AqualinkFlowHandler(config_entries.ConfigFlow):
+class AqualinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Aqualink config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input: ConfigType | None = None):
         """Handle a flow start."""

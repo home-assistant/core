@@ -37,6 +37,7 @@
             "init": {
                 "data": {
                     "show_all_sources": "Poka\u017c wszystkie \u017ar\u00f3d\u0142a",
+                    "update_audyssey": "Uaktualnij ustawienia Audyssey",
                     "zone2": "Konfiguracja Strefy 2",
                     "zone3": "Konfiguracja Strefy 3"
                 },

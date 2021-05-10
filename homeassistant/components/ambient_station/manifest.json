@@ -3,6 +3,7 @@
   "name": "Ambient Weather Station",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ambient_station",
-  "requirements": ["aioambient==1.2.1"],
-  "codeowners": ["@bachya"]
+  "requirements": ["aioambient==1.2.4"],
+  "codeowners": ["@bachya"],
+  "iot_class": "cloud_push"
 }

@@ -2,10 +2,8 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import logging
 from typing import Any
-
-from pymodbus.exceptions import ConnectionException, ModbusException
-from pymodbus.pdu import ExceptionResponse
 
 from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN, CoverEntity
 from homeassistant.const import (
@@ -15,13 +13,10 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CALL_TYPE_COIL,
@@ -38,15 +33,22 @@ from .const import (
 )
 from .modbus import ModbusHub
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     async_add_entities,
     discovery_info: DiscoveryInfoType | None = None,
 ):
     """Read configuration and create Modbus cover."""
     if discovery_info is None:
+        _LOGGER.warning(
+            "You're trying to init Modbus Cover in an unsupported way."
+            " Check https://www.home-assistant.io/integrations/modbus/#configuring-platform-cover"
+            " and fix your configuration"
+        )
         return
 
     covers = []
@@ -101,12 +103,11 @@ class ModbusCover(CoverEntity, RestoreEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         state = await self.async_get_last_state()
-        if not state:
-            return
-        self._value = state.state
+        if state:
+            self._value = state.state
 
         async_track_time_interval(
-            self.hass, lambda arg: self._update(), self._scan_interval
+            self.hass, lambda arg: self.update(), self._scan_interval
         )
 
     @property
@@ -160,7 +161,7 @@ class ModbusCover(CoverEntity, RestoreEntity):
         else:
             self._write_register(self._state_open)
 
-        self._update()
+        self.update()
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
@@ -169,9 +170,9 @@ class ModbusCover(CoverEntity, RestoreEntity):
         else:
             self._write_register(self._state_closed)
 
-        self._update()
+        self.update()
 
-    def _update(self):
+    def update(self):
         """Update the state of the cover."""
         if self._coil is not None and self._status_register is None:
             self._value = self._read_coil()
@@ -182,22 +183,17 @@ class ModbusCover(CoverEntity, RestoreEntity):
 
     def _read_status_register(self) -> int | None:
         """Read status register using the Modbus hub slave."""
-        try:
-            if self._status_register_type == CALL_TYPE_REGISTER_INPUT:
-                result = self._hub.read_input_registers(
-                    self._slave, self._status_register, 1
-                )
-            else:
-                result = self._hub.read_holding_registers(
-                    self._slave, self._status_register, 1
-                )
-        except ConnectionException:
+        if self._status_register_type == CALL_TYPE_REGISTER_INPUT:
+            result = self._hub.read_input_registers(
+                self._slave, self._status_register, 1
+            )
+        else:
+            result = self._hub.read_holding_registers(
+                self._slave, self._status_register, 1
+            )
+        if result is None:
             self._available = False
-            return
-
-        if isinstance(result, (ModbusException, ExceptionResponse)):
-            self._available = False
-            return
+            return None
 
         value = int(result.registers[0])
         self._available = True
@@ -206,37 +202,18 @@ class ModbusCover(CoverEntity, RestoreEntity):
 
     def _write_register(self, value):
         """Write holding register using the Modbus hub slave."""
-        try:
-            self._hub.write_register(self._slave, self._register, value)
-        except ConnectionException:
-            self._available = False
-            return
-
-        self._available = True
+        self._available = self._hub.write_register(self._slave, self._register, value)
 
     def _read_coil(self) -> bool | None:
         """Read coil using the Modbus hub slave."""
-        try:
-            result = self._hub.read_coils(self._slave, self._coil, 1)
-        except ConnectionException:
+        result = self._hub.read_coils(self._slave, self._coil, 1)
+        if result is None:
             self._available = False
-            return
-
-        if isinstance(result, (ModbusException, ExceptionResponse)):
-            self._available = False
-            return
+            return None
 
         value = bool(result.bits[0] & 1)
-        self._available = True
-
         return value
 
     def _write_coil(self, value):
         """Write coil using the Modbus hub slave."""
-        try:
-            self._hub.write_coil(self._slave, self._coil, value)
-        except ConnectionException:
-            self._available = False
-            return
-
-        self._available = True
+        self._available = self._hub.write_coil(self._slave, self._coil, value)

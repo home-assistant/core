@@ -4,7 +4,7 @@
             "already_configured": "Account is al geconfigureerd",
             "external_error": "Uitzondering opgetreden uit een andere stroom.",
             "external_setup": "Logi Circle is met succes geconfigureerd vanuit een andere stroom.",
-            "missing_configuration": "De Netatmo-component is niet geconfigureerd. Gelieve de documentatie volgen."
+            "missing_configuration": "De component is niet geconfigureerd. Gelieve de documentatie volgen."
         },
         "error": {
             "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",

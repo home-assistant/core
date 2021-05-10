@@ -3,5 +3,6 @@
   "name": "XBee",
   "documentation": "https://www.home-assistant.io/integrations/xbee",
   "requirements": ["xbee-helper==0.0.7"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

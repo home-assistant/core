@@ -5,16 +5,17 @@ from unittest.mock import patch
 
 from homeassistant import setup
 from homeassistant.components.profiler import (
-    CONF_SCAN_INTERVAL,
     CONF_SECONDS,
-    CONF_TYPE,
     SERVICE_DUMP_LOG_OBJECTS,
+    SERVICE_LOG_EVENT_LOOP_SCHEDULED,
+    SERVICE_LOG_THREAD_FRAMES,
     SERVICE_MEMORY,
     SERVICE_START,
     SERVICE_START_LOG_OBJECTS,
     SERVICE_STOP_LOG_OBJECTS,
 )
 from homeassistant.components.profiler.const import DOMAIN
+from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -143,6 +144,50 @@ async def test_dump_log_object(hass, caplog):
     await hass.async_block_till_done()
 
     assert "MockConfigEntry" in caplog.text
+    caplog.clear()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_log_thread_frames(hass, caplog):
+    """Test we can log thread frames."""
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(DOMAIN, SERVICE_LOG_THREAD_FRAMES)
+
+    await hass.services.async_call(DOMAIN, SERVICE_LOG_THREAD_FRAMES, {})
+    await hass.async_block_till_done()
+
+    assert "SyncWorker_0" in caplog.text
+    caplog.clear()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_log_scheduled(hass, caplog):
+    """Test we can log scheduled items in the event loop."""
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(DOMAIN, SERVICE_LOG_EVENT_LOOP_SCHEDULED)
+
+    await hass.services.async_call(DOMAIN, SERVICE_LOG_EVENT_LOOP_SCHEDULED, {})
+    await hass.async_block_till_done()
+
+    assert "Scheduled" in caplog.text
     caplog.clear()
 
     assert await hass.config_entries.async_unload(entry.entry_id)

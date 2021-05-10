@@ -507,5 +507,5 @@ def state_needs_accessory_mode(state):
         or state.domain == MEDIA_PLAYER_DOMAIN
         and state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TV
         or state.domain == REMOTE_DOMAIN
-        and state.attributes.get(ATTR_SUPPORTED_FEATURES) & SUPPORT_ACTIVITY
+        and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & SUPPORT_ACTIVITY
     )

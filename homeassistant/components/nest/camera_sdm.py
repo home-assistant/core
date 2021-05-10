@@ -16,9 +16,9 @@ from haffmpeg.tools import IMAGE_JPEG
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import async_get_image
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
 from .const import DATA_SUBSCRIBER, DOMAIN
@@ -31,7 +31,7 @@ STREAM_EXPIRATION_BUFFER = datetime.timedelta(seconds=30)
 
 
 async def async_setup_sdm_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the cameras."""
 

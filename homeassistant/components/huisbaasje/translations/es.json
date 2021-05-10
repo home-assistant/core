@@ -4,6 +4,7 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado"
         },
         "error": {
+            "cannot_connect": "No se pudo conectar",
             "connection_exception": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unauthenticated_exception": "Autenticaci\u00f3n no v\u00e1lida",

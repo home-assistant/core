@@ -8,11 +8,11 @@ import re
 import time
 
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import async_get_mqtt
 
 from .. import mqtt
@@ -79,8 +79,8 @@ class MQTTConfig(dict):
     """Dummy class to allow adding attributes."""
 
 
-async def async_start(
-    hass: HomeAssistantType, discovery_topic, config_entry=None
+async def async_start(  # noqa: C901
+    hass: HomeAssistant, discovery_topic, config_entry=None
 ) -> bool:
     """Start MQTT Discovery."""
     mqtt_integrations = {}
@@ -295,7 +295,7 @@ async def async_start(
     return True
 
 
-async def async_stop(hass: HomeAssistantType) -> bool:
+async def async_stop(hass: HomeAssistant) -> bool:
     """Stop MQTT Discovery."""
     if DISCOVERY_UNSUBSCRIBE in hass.data:
         for unsub in hass.data[DISCOVERY_UNSUBSCRIBE]:

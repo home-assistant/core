@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Sequence
 from datetime import timedelta
 import hashlib
 from types import ModuleType
-from typing import Any, Callable, Sequence, final
+from typing import Any, Callable, final
 
 import attr
 import voluptuous as vol
@@ -250,20 +251,18 @@ class DeviceTrackerPlatform:
                 else:
                     raise HomeAssistantError("Invalid legacy device_tracker platform.")
 
-                if setup:
-                    hass.config.components.add(full_name)
-
                 if scanner:
                     async_setup_scanner_platform(
                         hass, self.config, scanner, tracker.async_see, self.type
                     )
-                    return
 
-                if not setup:
+                if not setup and not scanner:
                     LOGGER.error(
                         "Error setting up platform %s %s", self.type, self.name
                     )
                     return
+
+                hass.config.components.add(full_name)
 
             except Exception:  # pylint: disable=broad-except
                 LOGGER.exception(

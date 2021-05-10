@@ -64,28 +64,31 @@ DHCP = [
     },
     {
         "domain": "flume",
-        "hostname": "flume-gw-*",
-        "macaddress": "ECFABC*"
+        "hostname": "flume-gw-*"
     },
     {
-        "domain": "flume",
-        "hostname": "flume-gw-*",
-        "macaddress": "B4E62D*"
-    },
-    {
-        "domain": "lyric",
-        "hostname": "lyric-*",
-        "macaddress": "48A2E6"
+        "domain": "hunterdouglas_powerview",
+        "hostname": "hunter*",
+        "macaddress": "002674*"
     },
     {
         "domain": "lyric",
         "hostname": "lyric-*",
-        "macaddress": "B82CA0"
+        "macaddress": "48A2E6*"
     },
     {
         "domain": "lyric",
         "hostname": "lyric-*",
-        "macaddress": "00D02D"
+        "macaddress": "B82CA0*"
+    },
+    {
+        "domain": "lyric",
+        "hostname": "lyric-*",
+        "macaddress": "00D02D*"
+    },
+    {
+        "domain": "myq",
+        "macaddress": "645299*"
     },
     {
         "domain": "nest",
@@ -176,6 +179,10 @@ DHCP = [
         "macaddress": "000420*"
     },
     {
+        "domain": "tado",
+        "hostname": "tado*"
+    },
+    {
         "domain": "tesla",
         "hostname": "tesla_*",
         "macaddress": "4CFCAA*"
@@ -194,6 +201,105 @@ DHCP = [
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "1C3BF3*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "50C7BF*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "68FF7B*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "98DAC4*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "B09575*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "1C3BF3*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "50C7BF*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "68FF7B*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "98DAC4*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "B09575*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "lb*",
+        "macaddress": "1C3BF3*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "lb*",
+        "macaddress": "50C7BF*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "lb*",
+        "macaddress": "68FF7B*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "lb*",
+        "macaddress": "98DAC4*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "lb*",
+        "macaddress": "B09575*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "508A06*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "7CF666*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "10D561*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "D4A651*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "68572D*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "1869D8*"
     },
     {
         "domain": "verisure",

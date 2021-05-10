@@ -9,7 +9,6 @@ from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
-import pytz
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -44,7 +43,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from tests.common import async_capture_events, async_mock_service
 
-PST = pytz.timezone("America/Los_Angeles")
+PST = dt_util.get_time_zone("America/Los_Angeles")
 
 
 def test_split_entity_id():
@@ -877,7 +876,7 @@ def test_config_defaults():
     assert config.longitude == 0
     assert config.elevation == 0
     assert config.location_name == "Home"
-    assert config.time_zone == dt_util.UTC
+    assert config.time_zone == "UTC"
     assert config.internal_url is None
     assert config.external_url is None
     assert config.config_source == "default"

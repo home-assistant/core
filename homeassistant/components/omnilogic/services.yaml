@@ -1,0 +1,9 @@
+set_pump_speed:
+  description: Set the run speed of a variable speed pump.
+  fields:
+    entity_id:
+      description: Target switch entity
+      example: switch.pool_pump
+    speed:
+      description: Speed for the VSP between min and max speed.
+      example: 85
