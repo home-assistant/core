@@ -55,8 +55,6 @@ async def async_get_scanner(hass, config):
         "please remove it from configuration.yaml. "
     )
 
-    return None
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
