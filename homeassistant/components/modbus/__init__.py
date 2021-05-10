@@ -149,7 +149,7 @@ def control_scan_interval(config: dict) -> dict:
                 minimum_scan_interval = min(scan_interval, minimum_scan_interval)
         if CONF_TIMEOUT in hub and hub[CONF_TIMEOUT] > minimum_scan_interval - 1:
             _LOGGER.warning(
-                "modbus %s timeout(%d) is adjusted(%d) due to scan_interval",
+                "Modbus %s timeout(%d) is adjusted(%d) due to scan_interval",
                 hub.get(CONF_NAME, ""),
                 hub[CONF_TIMEOUT],
                 minimum_scan_interval - 1,
