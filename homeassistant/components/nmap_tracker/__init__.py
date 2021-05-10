@@ -134,7 +134,7 @@ class NmapDeviceScanner:
             options += f" --exclude {','.join(exclude_hosts)}"
         return options, last_results
 
-    async def async_scan_devices(self):
+    async def async_scan_devices(self, *_):
         """Scan devices and dispatch."""
         if self._scan_lock.locked():
             _LOGGER.warning(
