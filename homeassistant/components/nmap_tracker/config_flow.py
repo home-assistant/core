@@ -122,7 +122,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 )
 
         return self.async_show_form(
-            step_id="user",
+            step_id="init",
             data_schema=await _async_build_schema_with_user_input(
                 self.hass, self.options
             ),
