@@ -8,6 +8,7 @@ from homeassistant import config_entries, exceptions
 from homeassistant.components.dhcp import IP_ADDRESS
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow
 import homeassistant.helpers.config_validation as cv
 
 from . import (
@@ -171,7 +172,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_try_connect(self, host):
         """Set up with options."""
-        self._async_abort_entries_match({CONF_HOST: host})
+        for entry in self._async_current_entries():
+            if entry.data.get(CONF_HOST) == host:
+                raise AbortFlow("already_configured")
 
         bulb = yeelight.Bulb(host)
         try:

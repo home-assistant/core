@@ -209,8 +209,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def _load_platforms():
         if entry_data[DATA_PLATFORMS_LOADED]:
             return
-        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
         entry_data[DATA_PLATFORMS_LOADED] = True
+        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     # Move options from data for imported entries
     # Initialize options with default values for other entries
