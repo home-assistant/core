@@ -157,6 +157,12 @@ class NmapDeviceScanner:
                 _LOGGER.error("nmap scanning failed: %s", ex)
                 return
 
+            _LOGGER.debug(
+                "Nmap scan complete: online_devices: %s offline_devices: %s",
+                online_devices,
+                offline_devices,
+            )
+
             for device in online_devices:
                 async_dispatcher_send(
                     self._hass, self.signal_device_update(device.mac_address), True
