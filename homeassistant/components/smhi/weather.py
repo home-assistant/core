@@ -209,7 +209,7 @@ class SmhiWeather(WeatherEntity):
         return None
 
     @property
-    def thunder(self) -> int:
+    def thunder_probability(self) -> int:
         """Return the chance of thunder, unit Percent."""
         if self._forecasts is not None:
             return self._forecasts[0].thunder
@@ -264,5 +264,5 @@ class SmhiWeather(WeatherEntity):
         if self.wind_gust_speed is not None:
             extra_attributes[ATTR_SMHI_WIND_GUST_SPEED] = self.wind_gust_speed
         if self.thunder is not None:
-            extra_attributes[ATTR_SMHI_THUNDER_PROBABILITY] = self.thunder
+            extra_attributes[ATTR_SMHI_THUNDER_PROBABILITY] = self.thunder_probability
         return extra_attributes
