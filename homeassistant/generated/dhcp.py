@@ -67,6 +67,11 @@ DHCP = [
         "hostname": "flume-gw-*"
     },
     {
+        "domain": "goalzero",
+        "hostname": "yeti*",
+        "macaddress": "A4CF12*"
+    },
+    {
         "domain": "hunterdouglas_powerview",
         "hostname": "hunter*",
         "macaddress": "002674*"
