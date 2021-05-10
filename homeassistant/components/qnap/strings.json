@@ -19,20 +19,5 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "ssl": "[%key:common::config_flow::data::ssl%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
-          "timeout": "Tiemout",
-          "monitored_conditions": "Monitors",
-          "nics": "Nic cards (ex: eth0,eth1)",
-          "volumes": "List of volumes to monitor (ex: media,data1)",
-          "drives": "List of drives to monitor (ex: 1,2)"
-        }
-      }
-    }
   }
 }

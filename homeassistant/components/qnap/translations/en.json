@@ -20,20 +20,5 @@
       "unknown": "Error occured"
 
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "ssl": "Enable HTTPS",
-          "verify_ssl": "Verify SSL Certificat",
-          "timeout": "Timeout connection",
-          "monitored_conditions": "Monitors",
-          "nics": "Nic cards (ex: eth0,eth1)",
-          "volumes": "List of volumes to monitor (ex: media,data1)",
-          "drives": "List of drives to monitor (ex: 1,2)"
-        }
-      }
-    }
   }
 }
