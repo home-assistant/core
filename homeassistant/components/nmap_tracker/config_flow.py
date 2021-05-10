@@ -49,19 +49,19 @@ def _normalize_ips_and_network(hosts_str):
 
     for host in sorted(hosts):
         try:
-            network = ip_network(host)
+            ip = ip_address(host)
         except ValueError:
             pass
         else:
-            normalized_hosts.append(str(network))
-            continue
+            normalized_hosts.append(str(ip))
 
         try:
-            ip = ip_address(host)
+            network = ip_network(host)
         except ValueError:
             return None
         else:
-            normalized_hosts.append(str(ip))
+            normalized_hosts.append(str(network))
+            continue
 
     return normalized_hosts
 
