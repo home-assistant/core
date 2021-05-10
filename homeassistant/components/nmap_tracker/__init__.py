@@ -259,6 +259,11 @@ class NmapDeviceScanner:
             self.devices.ipv4_to_mac_address[ipv4] = formatted_mac
             self.last_results.append(device)
 
-        _LOGGER.debug("Finished scanning %s with args: %s", self.hosts, options)
+        _LOGGER.debug(
+            "Finished scanning %s with args: %s (dispatches:%s)",
+            self.hosts,
+            options,
+            dispatches,
+        )
 
         return dispatches
