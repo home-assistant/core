@@ -61,7 +61,7 @@ class NmapDevice:
 
     mac_address: str
     hostname: str
-    ip_address: str
+    ipv4: str
     last_update: datetime.datetime
 
 
@@ -137,9 +137,7 @@ class NmapDeviceScanner:
                 device for device in self.last_results if device.last_update > boundary
             ]
             if last_results:
-                exclude_hosts = self.exclude + [
-                    device.ip_address for device in last_results
-                ]
+                exclude_hosts = self.exclude + [device.ipv4 for device in last_results]
             else:
                 exclude_hosts = self.exclude
         else:
