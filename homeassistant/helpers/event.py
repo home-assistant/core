@@ -683,7 +683,7 @@ def async_track_state_change_filtered(
 def async_track_template(
     hass: HomeAssistant,
     template: Template,
-    action: Callable[[str, State | None, State | None], None | Awaitable],
+    action: Callable[[str, State | None, State | None], Awaitable | None],
     variables: TemplateVarsType | None = None,
 ) -> Callable[[], None]:
     """Add a listener that fires when a a template evaluates to 'true'.
@@ -1072,7 +1072,7 @@ def async_track_template_result(
 def async_track_same_state(
     hass: HomeAssistant,
     period: timedelta,
-    action: Callable[..., None | Awaitable],
+    action: Callable[..., Awaitable | None],
     async_check_same_func: Callable[[str, State | None, State | None], bool],
     entity_ids: str | Iterable[str] = MATCH_ALL,
 ) -> CALLBACK_TYPE:
@@ -1141,7 +1141,7 @@ track_same_state = threaded_listener_factory(async_track_same_state)
 @bind_hass
 def async_track_point_in_time(
     hass: HomeAssistant,
-    action: HassJob | Callable[..., None | Awaitable],
+    action: HassJob | Callable[..., Awaitable | None],
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in time."""
@@ -1162,7 +1162,7 @@ track_point_in_time = threaded_listener_factory(async_track_point_in_time)
 @bind_hass
 def async_track_point_in_utc_time(
     hass: HomeAssistant,
-    action: HassJob | Callable[..., None | Awaitable],
+    action: HassJob | Callable[..., Awaitable | None],
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in UTC time."""
@@ -1213,7 +1213,7 @@ track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_tim
 @callback
 @bind_hass
 def async_call_later(
-    hass: HomeAssistant, delay: float, action: HassJob | Callable[..., None | Awaitable]
+    hass: HomeAssistant, delay: float, action: HassJob | Callable[..., Awaitable | None]
 ) -> CALLBACK_TYPE:
     """Add a listener that is called in <delay>."""
     return async_track_point_in_utc_time(
@@ -1228,7 +1228,7 @@ call_later = threaded_listener_factory(async_call_later)
 @bind_hass
 def async_track_time_interval(
     hass: HomeAssistant,
-    action: Callable[..., None | Awaitable],
+    action: Callable[..., Awaitable | None],
     interval: timedelta,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
@@ -1360,7 +1360,7 @@ time_tracker_utcnow = dt_util.utcnow
 @bind_hass
 def async_track_utc_time_change(
     hass: HomeAssistant,
-    action: Callable[..., None | Awaitable],
+    action: Callable[..., Awaitable | None],
     hour: Any | None = None,
     minute: Any | None = None,
     second: Any | None = None,
