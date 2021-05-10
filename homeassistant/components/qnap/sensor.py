@@ -324,7 +324,7 @@ class QNAPSensor(Entity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return self.var_enabled
+        return self._enabled
 
 
 class QNAPCPUSensor(QNAPSensor):
@@ -501,7 +501,7 @@ class QNAPFolderSensor(QNAPSensor):
     def name(self):
         """Return the name of the sensor, if any."""
         server_name = self.coordinator.data["system_stats"]["system"]["name"]
-        return f"{server_name} {self.var_name} {self.monitor_subdevice} ({self.monitor_device})"
+        return f"{server_name} {self._name} {self.monitor_subdevice} ({self.monitor_device})"
 
     @property
     def state(self):
@@ -512,11 +512,11 @@ class QNAPFolderSensor(QNAPSensor):
                 data = folder
 
         used_gb = int(data["used_size"]) / 1024 / 1024 / 1024
-        if self.var_id == "folder_size_used":
+        if self.sensor_type == "folder_size_used":
             return round_nicely(used_gb)
 
         total_gb = int(vol["total_size"]) / 1024 / 1024 / 1024
-        if self.var_id == "folder_percentage_used":
+        if self.sensor_type == "folder_percentage_used":
             return round(used_gb / total_gb * 100)
 
     @property
