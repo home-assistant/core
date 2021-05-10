@@ -145,8 +145,7 @@ def control_scan_interval(config: dict) -> dict:
                         )
                         scan_interval = MINIMUM_SCAN_INTERVAL
                     entry[CONF_SCAN_INTERVAL] = scan_interval
-                    if scan_interval < minimum_scan_interval:
-                        scan_interval = minimum_scan_interval
+                    scan_interval = min(scan_interval, minimum_scan_interval)
         hub[CONF_SECRET_TIMEOUT] = minimum_scan_interval - 1
     return config
 
