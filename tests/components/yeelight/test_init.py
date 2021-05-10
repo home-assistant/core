@@ -11,7 +11,14 @@ from homeassistant.components.yeelight import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
+from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
+from homeassistant.const import (
+    CONF_DEVICES,
+    CONF_HOST,
+    CONF_ID,
+    CONF_NAME,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -33,6 +40,77 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
+
+
+async def test_ip_changes_fallback_discovery(hass: HomeAssistant):
+    """Test Yeelight ip changes and we fallback to discovery."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ID: ID,
+            CONF_HOST: "5.5.5.5",
+        },
+        unique_id=ID,
+    )
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb(True)
+    mocked_bulb.bulb_type = BulbType.WhiteTempMood
+    mocked_bulb.get_capabilities = MagicMock(
+        side_effect=[OSError, CAPABILITIES, CAPABILITIES]
+    )
+
+    _discovered_devices = [
+        {
+            "capabilities": CAPABILITIES,
+            "ip": IP_ADDRESS,
+        }
+    ]
+    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb), patch(
+        f"{MODULE}.discover_bulbs", return_value=_discovered_devices
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    binary_sensor_entity_id = ENTITY_BINARY_SENSOR_TEMPLATE.format(
+        f"yeelight_color_{ID}"
+    )
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(binary_sensor_entity_id) is None
+
+    await hass.async_block_till_done()
+
+    type(mocked_bulb).get_properties = MagicMock(None)
+
+    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE].update()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(binary_sensor_entity_id) is not None
+
+
+async def test_ip_changes_id_missing_cannot_fallback(hass: HomeAssistant):
+    """Test Yeelight ip changes and we fallback to discovery."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "5.5.5.5",
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb(True)
+    mocked_bulb.bulb_type = BulbType.WhiteTempMood
+    mocked_bulb.get_capabilities = MagicMock(
+        side_effect=[OSError, CAPABILITIES, CAPABILITIES]
+    )
+
+    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state == ENTRY_STATE_SETUP_RETRY
 
 
 async def test_setup_discovery(hass: HomeAssistant):
@@ -181,6 +259,7 @@ async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant):
     type(mocked_bulb).get_properties = MagicMock(None)
 
     hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE].update()
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)

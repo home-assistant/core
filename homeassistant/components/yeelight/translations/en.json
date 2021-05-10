@@ -7,7 +7,12 @@
         "error": {
             "cannot_connect": "Failed to connect"
         },
+        "flow_title": "{model} {host}",
         "step": {
+            "discovery_confirm": {
+                "description": "Do you want to setup {model} ({host})?",
+                "title": "Setup Yeelight"
+            },
             "pick_device": {
                 "data": {
                     "device": "Device"
