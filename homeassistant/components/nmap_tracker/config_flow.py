@@ -4,6 +4,7 @@ from __future__ import annotations
 from ipaddress import ip_address, ip_network
 from typing import Any
 
+import ifaddr
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -11,8 +12,29 @@ from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import get_local_ip
 
 from .const import CONF_HOME_INTERVAL, CONF_OPTIONS, DEFAULT_OPTIONS, DOMAIN
+
+DEFAULT_NETWORK_PREFIX = 24
+
+
+def get_network():
+    """Search adapters for the network."""
+    adapters = ifaddr.get_adapters()
+    local_ip = get_local_ip()
+    network_prefix = (
+        get_ip_prefix_from_adapters(local_ip, adapters) or DEFAULT_NETWORK_PREFIX
+    )
+    return str(ip_network(f"{local_ip}/{network_prefix}", False))
+
+
+def get_ip_prefix_from_adapters(local_ip, adapters):
+    """Find the network prefix for an adapter."""
+    for adapter in adapters:
+        for ip in adapter.ips:
+            if local_ip == ip.ip:
+                return ip.network_prefix
 
 
 def _normalize_ips_and_network(hosts_str):
@@ -59,14 +81,18 @@ def normalize_input(user_input):
     return {}
 
 
-def _build_schema_with_user_input(user_input):
+async def _async_build_schema_with_user_input(hass, user_input):
+    hosts = user_input.get(CONF_HOSTS, await hass.async_add_executor_job(get_network))
+    exclude = user_input.get(
+        CONF_EXCLUDE, await hass.async_add_executor_job(get_local_ip)
+    )
     return vol.Schema(
         {
-            vol.Required(CONF_HOSTS, default=user_input.get(CONF_HOSTS)): str,
+            vol.Required(CONF_HOSTS, default=hosts): str,
             vol.Required(
                 CONF_HOME_INTERVAL, default=user_input.get(CONF_HOME_INTERVAL, 0)
             ): int,
-            vol.Optional(CONF_EXCLUDE, default=user_input.get(CONF_EXCLUDE)): str,
+            vol.Optional(CONF_EXCLUDE, default=exclude): str,
             vol.Optional(
                 CONF_OPTIONS, default=user_input.get(CONF_OPTIONS, DEFAULT_OPTIONS)
             ): str,
@@ -97,7 +123,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=_build_schema_with_user_input(self.options),
+            data_schema=await _async_build_schema_with_user_input(
+                self.hass, self.options
+            ),
             errors=errors,
         )
 
@@ -129,7 +157,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=_build_schema_with_user_input(self.options),
+            data_schema=await _async_build_schema_with_user_input(
+                self.hass, self.options
+            ),
             errors=errors,
         )
 
