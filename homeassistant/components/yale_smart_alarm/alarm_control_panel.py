@@ -1,52 +1,39 @@
-"""Support for Yale Alarm"""
+"""Support for Yale Alarm."""
 from __future__ import annotations
 
 import asyncio
-import logging
-from typing import Any, Callable, Iterable
 
-import voluptuous as vol
 from yalesmartalarmclient.client import (
     YALE_STATE_ARM_FULL,
     YALE_STATE_ARM_PARTIAL,
     YALE_STATE_DISARM,
-    AuthenticationError,
-    YaleSmartAlarmClient,
 )
 
-from homeassistant.components.alarm_control_panel import (
-    PLATFORM_SCHEMA,
-    AlarmControlPanelEntity,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_AREA_ID, DEFAULT_AREA_ID, DEFAULT_NAME, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 from .coordinator import YaleDataUpdateCoordinator
 
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the alarm platform"""
+    """Set up the alarm platform."""
     return True
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """ Set up the alarm entry """
+    """Set up the alarm entry."""
 
     async_add_entities(
         [YaleAlarmDevice(coordinator=hass.data[DOMAIN][entry.entry_id]["coordinator"])]
@@ -84,18 +71,18 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     async def _async_set_arm_state(self, state) -> None:
         """Send set arm state command."""
         if state == "arm":
-            await self.hass.async_add_executor_job(self.coordinator._yale.arm_full())
+            await self.hass.async_add_executor_job(self.coordinator._yale.arm_full())  # type: ignore[attr-defined]
         elif state == "home":
-            await self.hass.async_add_executor_job(self.coordinator._yale.arm_partial())
+            await self.hass.async_add_executor_job(self.coordinator._yale.arm_partial())  # type: ignore[attr-defined]
         elif state == "disarm":
-            await self.hass.async_add_executor_job(self.coordinator._yale.disarm())
+            await self.hass.async_add_executor_job(self.coordinator._yale.disarm())  # type: ignore[attr-defined]
 
         LOGGER.debug("Yale set arm state %s", state)
         transaction = None
         while state != transaction:
             await asyncio.sleep(0.5)
             transaction = await self.hass.async_add_executor_job(
-                self.coordinator._yale.get_armed_status()
+                self.coordinator._yale.get_armed_status()  # type: ignore[attr-defined]
             )
 
         await self.coordinator.async_refresh()
@@ -115,7 +102,9 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._state = self._state_map.get(self.coordinator.data["alarm"])
+        self._state = self._state_map.get(
+            self.coordinator.data["alarm"], STATE_UNAVAILABLE
+        )
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:

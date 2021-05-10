@@ -1,14 +1,11 @@
 """Adds config flow for Yale Smart Alarm integration."""
 from __future__ import annotations
 
-import logging
-
 import voluptuous as vol
 from yalesmartalarmclient.client import AuthenticationError, YaleSmartAlarmClient
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_CODE, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_AREA_ID, DEFAULT_AREA_ID, DEFAULT_NAME, DOMAIN, LOGGER
@@ -32,11 +29,15 @@ async def validate_input(hass: core.HomeAssistant, username, password):
 
     try:
         await hass.async_add_executor_job(YaleSmartAlarmClient, username, password)
-    except:
-        LOGGER.error("Authentication failed. Check credentials")
+    except AuthenticationError as e:
+        LOGGER.error("Authentication failed. Check credentials %s", e)
         raise InvalidAuth
+    except Exception as e:
+        LOGGER.error("Connection could not be made %s", e)
+        raise CannotConnect
 
     return True
+
 
 class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Yale integration."""
@@ -51,7 +52,7 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
-            code = user_input.get[CONF_CODE, ""]
+            code = user_input[CONF_CODE]
             name = user_input.get(CONF_NAME, DEFAULT_NAME)
             area = user_input.get(CONF_AREA_ID, DEFAULT_AREA_ID)
 
@@ -88,7 +89,7 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_AREA_ID: area,
                 },
             )
-            LOGGER.info("Config entry created succesfully")
+            LOGGER.info("Config entry created successfully")
 
         return self.async_show_form(
             step_id="user",

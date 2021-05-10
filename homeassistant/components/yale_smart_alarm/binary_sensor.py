@@ -1,31 +1,24 @@
-"""Support for Yale binary sensors"""
+"""Support for Yale binary sensors."""
 from __future__ import annotations
-
-import asyncio
-import logging
-
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OPENING,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_CODE, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_AREA_ID, DEFAULT_AREA_ID, DEFAULT_NAME, DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import YaleDataUpdateCoordinator
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the binary_sensor platform"""
+    """Set up the binary_sensor platform."""
 
     return True
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """ Set up the lock entry """
+    """Set up the binary sensor entry."""
     coordinator: YaleDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         "coordinator"
     ]
@@ -36,14 +29,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     return True
 
-    return True
-
 
 class YaleDoorWindowSensor(CoordinatorEntity, BinarySensorEntity):
-    """Representation of a Yale door window sensor"""
+    """Representation of a Yale door window sensor."""
 
     def __init__(self, coordinator: YaleDataUpdateCoordinator, name: str):
-        """Initialize the Yale Alarm Device."""
+        """Initialize Yale door window sensor."""
         self._name = name
         self._state = None
         self.coordinator = coordinator

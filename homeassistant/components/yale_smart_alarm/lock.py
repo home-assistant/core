@@ -1,38 +1,30 @@
-"""Support for Yale Lock"""
+"""Support for Yale Lock."""
 from __future__ import annotations
 
 import asyncio
-import logging
 
-import voluptuous as vol
-from yalesmartalarmclient.client import AuthenticationError, YaleSmartAlarmClient
-
-from homeassistant.components.lock import PLATFORM_SCHEMA, LockEntity
+from homeassistant.components.lock import LockEntity
 from homeassistant.const import (
     ATTR_CODE,
     CONF_CODE,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
     STATE_LOCKED,
     STATE_UNAVAILABLE,
     STATE_UNLOCKED,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_AREA_ID, DEFAULT_AREA_ID, DEFAULT_NAME, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 from .coordinator import YaleDataUpdateCoordinator
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the lock platform"""
+    """Set up the lock platform."""
 
     return True
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """ Set up the lock entry """
+    """Set up the lock entry."""
     coordinator: YaleDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         "coordinator"
     ]
@@ -72,6 +64,7 @@ class YaleDoorlock(CoordinatorEntity, LockEntity):
 
     @property
     def is_locked(self):
+        """Return if locked."""
         return (
             self._state_map.get(self.coordinator.data["lock"][self._name])
             == STATE_LOCKED
@@ -84,7 +77,7 @@ class YaleDoorlock(CoordinatorEntity, LockEntity):
 
     async def async_unlock(self, **kwargs) -> None:
         """Send unlock command."""
-        code = kwargs.get(ATTR_CODE, self.coordinator._entry.data.get(CONF_CODE))
+        code = kwargs.get(ATTR_CODE, self.coordinator._entry.data.get(CONF_CODE))  # type: ignore[attr-defined]
         if code is None:
             LOGGER.error("Code required but none provided")
             return
@@ -93,24 +86,24 @@ class YaleDoorlock(CoordinatorEntity, LockEntity):
 
     async def async_lock(self, **kwargs) -> None:
         """Send lock command."""
-        code = None
+        code = ""
         await self.async_set_lock_state(code, "lock")
 
     async def async_set_lock_state(self, code: str, state: str) -> None:
         """Send set lock state command."""
         get_lock = await self.hass.async_add_executor_job(
-            self.coordinator._yale.lock_api.get, self._name
+            self.coordinator._yale.lock_api.get, self._name  # type: ignore[attr-defined]
         )
         if state == "lock":
 
             lock_state = await self.hass.async_add_executor_job(
-                self.coordinator._yale.lock_api.close_lock,
+                self.coordinator._yale.lock_api.close_lock,  # type: ignore[attr-defined]
                 get_lock,
             )
             expected = 1
         elif state == "unlock":
             lock_state = await self.hass.async_add_executor_job(
-                self.coordinator._yale.lock_api.open_lock,
+                self.coordinator._yale.lock_api.open_lock,  # type: ignore[attr-defined]
                 get_lock,
                 code,
             )
@@ -119,9 +112,9 @@ class YaleDoorlock(CoordinatorEntity, LockEntity):
         LOGGER.debug("Yale doorlock %s", state)
         transaction = None
         attempts = 0
-        while lock_state != True and transaction != expected:
+        while lock_state is not True and transaction != expected:
             transaction = await self.hass.async_add_executor_job(
-                self.coordinator._yale.lock_api.get(self._name).state._value_
+                self.coordinator._yale.lock_api.get(self._name).state._value_  # type: ignore[attr-defined]
             )
             attempts += 1
             if attempts == 30:

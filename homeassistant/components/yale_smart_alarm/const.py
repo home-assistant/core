@@ -1,4 +1,4 @@
-""" Yale integration constants """
+"""Yale integration constants."""
 import logging
 
 CONF_AREA_ID = "area_id"

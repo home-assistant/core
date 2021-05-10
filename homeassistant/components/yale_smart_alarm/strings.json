@@ -14,12 +14,9 @@
           "password": "[%key:common::config_flow::data::password%]",
           "code": "Code to open/close door lock",
           "name": "Name of integration",
-          "area": "Area ID"
-        },
-        "description": "Integration with Yale Smart Alarm",
-        "title": "Yale Smart Alarm"
+          "area_id": "Area ID"
+        }
       }
-    },
-    "title": "Yale Smart Alarm"
+    }
   }
 }
