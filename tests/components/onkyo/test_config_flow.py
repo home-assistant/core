@@ -2,8 +2,9 @@
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.onkyo.const import CONF_SOURCES, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.components import ssdp
+from homeassistant.components.onkyo.const import CONF_SOURCES, DOMAIN, UNKNOWN_MODEL
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -33,7 +34,20 @@ def client_fixture():
         client = mock_client_class.return_value
         client.host = "1.2.3.4"
         client.identifier = "0123456789"
+        client.info = {"identifier": "0123456789"}
+        client.model_name = "SN0123456789"
         yield client
+
+
+@pytest.fixture(name="client_unknown")
+def client_unknown_fixture():
+    """Patch of client library for tests."""
+    with patch(
+        "homeassistant.components.onkyo.onkyo_rcv", autospec=True
+    ) as mock_client_unknown_class:
+        client_unknown = mock_client_unknown_class.return_value
+        client_unknown.model_name = UNKNOWN_MODEL
+        yield client_unknown
 
 
 async def test_form_import(hass, client):
@@ -41,12 +55,7 @@ async def test_form_import(hass, client):
     with patch(
         "homeassistant.components.onkyo.config_flow.onkyo_rcv",
         return_value=client,
-    ), patch(
-        "homeassistant.components.onkyo.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.onkyo.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -55,10 +64,7 @@ async def test_form_import(hass, client):
 
     await hass.async_block_till_done()
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"]["name"] == "my_receiver"
-
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["title"] == "my_receiver"
 
 
 async def test_form(hass, client):
@@ -66,24 +72,33 @@ async def test_form(hass, client):
     with patch(
         "homeassistant.components.onkyo.config_flow.onkyo_rcv",
         return_value=client,
-    ), patch(
-        "homeassistant.components.onkyo.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.onkyo.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
+            context={CONF_SOURCE: config_entries.SOURCE_USER},
             data=MOCK_YAML_CONFIG,
         )
 
     await hass.async_block_till_done()
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"]["name"] == "my_receiver"
+    assert result["title"] == "my_receiver"
 
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+
+async def test_form_client_unknown(hass, client_unknown):
+    """Test client unknown."""
+    with patch(
+        "homeassistant.components.onkyo.config_flow.onkyo_rcv",
+        return_value=client_unknown,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: config_entries.SOURCE_USER},
+            data=MOCK_YAML_CONFIG,
+        )
+
+    await hass.async_block_till_done()
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "receiver_unknown"}
 
 
 async def test_form_updates_unique_id(hass, client):
@@ -102,7 +117,7 @@ async def test_form_updates_unique_id(hass, client):
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
+            context={CONF_SOURCE: config_entries.SOURCE_USER},
             data=MOCK_YAML_CONFIG,
         )
 
@@ -117,6 +132,7 @@ async def test_options_flow(hass, client):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "1.2.3.4", CONF_SOURCES: "video1"},
+        options={CONF_SOURCES: {"fm": "fm", "am": "am"}},
         unique_id="0123456789",
     )
     entry.add_to_hass(hass)
@@ -176,9 +192,29 @@ async def test_form_receiver_notfound(hass):
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
+            context={CONF_SOURCE: config_entries.SOURCE_USER},
             data=MOCK_YAML_CONFIG,
         )
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_ssdp(hass, client):
+    """Test ssdp discovery."""
+    discovery_infos = {
+        ssdp.ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver",
+        ssdp.ATTR_SSDP_LOCATION: "http://hostname",
+    }
+    with patch(
+        "homeassistant.components.onkyo.config_flow.onkyo_rcv",
+        return_value=client,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: config_entries.SOURCE_SSDP},
+            data=discovery_infos,
+        )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "Onkyo Receiver"
