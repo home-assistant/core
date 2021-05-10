@@ -45,7 +45,7 @@ ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 
 
 class _DeviceIndex(NamedTuple):
-    identifiers: dict[tuple[str, ...], str]
+    identifiers: dict[tuple[str, str], str]
     connections: dict[tuple[str, str], str]
 
 
@@ -55,7 +55,7 @@ class DeviceEntry:
 
     config_entries: set[str] = attr.ib(converter=set, factory=set)
     connections: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
-    identifiers: set[tuple[str, ...]] = attr.ib(converter=set, factory=set)
+    identifiers: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
     manufacturer: str | None = attr.ib(default=None)
     model: str | None = attr.ib(default=None)
     name: str | None = attr.ib(default=None)
@@ -92,7 +92,7 @@ class DeletedDeviceEntry:
 
     config_entries: set[str] = attr.ib()
     connections: set[tuple[str, str]] = attr.ib()
-    identifiers: set[tuple[str, ...]] = attr.ib()
+    identifiers: set[tuple[str, str]] = attr.ib()
     id: str = attr.ib()
     orphaned_timestamp: float | None = attr.ib()
 
@@ -100,7 +100,7 @@ class DeletedDeviceEntry:
         self,
         config_entry_id: str,
         connections: set[tuple[str, str]],
-        identifiers: set[tuple[str, ...]],
+        identifiers: set[tuple[str, str]],
     ) -> DeviceEntry:
         """Create DeviceEntry from DeletedDeviceEntry."""
         return DeviceEntry(
@@ -135,7 +135,7 @@ def format_mac(mac: str) -> str:
 
 def _async_get_device_id_from_index(
     devices_index: _DeviceIndex,
-    identifiers: set[tuple[str, ...]],
+    identifiers: set[tuple[str, str]],
     connections: set[tuple[str, str]] | None,
 ) -> str | None:
     """Check if device has previously been registered."""
@@ -172,7 +172,7 @@ class DeviceRegistry:
     @callback
     def async_get_device(
         self,
-        identifiers: set[tuple[str, ...]],
+        identifiers: set[tuple[str, str]],
         connections: set[tuple[str, str]] | None = None,
     ) -> DeviceEntry | None:
         """Check if device is registered."""
@@ -185,7 +185,7 @@ class DeviceRegistry:
 
     def _async_get_deleted_device(
         self,
-        identifiers: set[tuple[str, ...]],
+        identifiers: set[tuple[str, str]],
         connections: set[tuple[str, str]] | None,
     ) -> DeletedDeviceEntry | None:
         """Check if device is deleted."""
@@ -245,7 +245,7 @@ class DeviceRegistry:
         *,
         config_entry_id: str,
         connections: set[tuple[str, str]] | None = None,
-        identifiers: set[tuple[str, ...]] | None = None,
+        identifiers: set[tuple[str, str]] | None = None,
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
@@ -329,7 +329,7 @@ class DeviceRegistry:
         model: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         name_by_user: str | None | UndefinedType = UNDEFINED,
-        new_identifiers: set[tuple[str, ...]] | UndefinedType = UNDEFINED,
+        new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
         via_device_id: str | None | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
@@ -360,8 +360,8 @@ class DeviceRegistry:
         add_config_entry_id: str | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
         merge_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
-        merge_identifiers: set[tuple[str, ...]] | UndefinedType = UNDEFINED,
-        new_identifiers: set[tuple[str, ...]] | UndefinedType = UNDEFINED,
+        merge_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
+        new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
@@ -519,7 +519,7 @@ class DeviceRegistry:
                     config_entries=set(device["config_entries"]),
                     # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
                     connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
-                    identifiers={tuple(iden) for iden in device["identifiers"]},
+                    identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore[misc]
                     id=device["id"],
                     # Introduced in 2021.2
                     orphaned_timestamp=device.get("orphaned_timestamp"),
