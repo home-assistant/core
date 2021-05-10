@@ -9,6 +9,7 @@ from homeassistant.components import ssdp
 from homeassistant.components.webostv import CannotConnect
 from homeassistant.components.webostv.const import (
     CONF_ON_ACTION,
+    CONF_SOURCES,
     DOMAIN,
     TURN_ON_DATA,
     TURN_ON_SERVICE,
@@ -45,7 +46,7 @@ def client_fixture():
         client.software_info = {"device_id": "00:01:02:03:04:05"}
         client.client_key = "0123456789"
         client.apps = {0: {"title": "Applicaiton01"}}
-        client.inputs = {0: {"label": "Input01"}}
+        client.inputs = {0: {"label": "Input01"}, 1: {"label": "Input02"}}
         yield client
 
 
@@ -146,7 +147,7 @@ async def test_options_flow(hass, client):
         return_value=client,
     ):
         result = await hass.config_entries.options.async_init(entry.entry_id)
-
+    await hass.async_block_till_done()
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
@@ -159,6 +160,7 @@ async def test_options_flow(hass, client):
             user_input={
                 TURN_ON_SERVICE: "service.test",
                 TURN_ON_DATA: '{"title":"Hello","message":"World"}',
+                CONF_SOURCES: ["Input01", "Input02"],
             },
         )
 
@@ -183,6 +185,16 @@ async def test_options_flow(hass, client):
     assert result3["type"] == RESULT_TYPE_FORM
     assert result3["errors"] == {"base": "cannot_retrieve"}
 
+    with patch(
+        "homeassistant.components.webostv.config_flow.async_control_connect",
+        side_effect=CannotConnect("devicenotfound"),
+    ):
+        result4 = await hass.config_entries.options.async_init(entry.entry_id)
+
+    await hass.async_block_till_done()
+    assert result4["type"] == RESULT_TYPE_FORM
+    assert result4["errors"] == {"base": "cannot_retrieve"}
+
 
 async def test_options_jsonformat_incorrect_flow(hass, client):
     """Test json format incorrect in options config flow."""
@@ -198,7 +210,7 @@ async def test_options_jsonformat_incorrect_flow(hass, client):
         return_value=client,
     ):
         result = await hass.config_entries.options.async_init(entry.entry_id)
-    await hass.async_block_till_done()
+
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
@@ -254,6 +266,7 @@ async def test_form_pairexception(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
+    await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_ABORT
     assert result2["reason"] == "error_pairing"
@@ -297,6 +310,8 @@ async def test_form_ssdp(hass, client):
             DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=discovery_info
         )
 
+    await hass.async_block_till_done()
+
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "pairing"
 
@@ -316,6 +331,8 @@ async def test_pairing_form(hass, client):
             context={CONF_SOURCE: "pairing"},
             data=MOCK_YAML_CONFIG,
         )
+
+    await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "host"
