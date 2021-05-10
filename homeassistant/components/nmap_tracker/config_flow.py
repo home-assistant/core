@@ -174,7 +174,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not self._async_is_unique_host_list(user_input):
             return self.async_abort(reason="already_configured")
         return self.async_create_entry(
-            title=f"Nmap Tracker {user_input[CONF_HOSTS]}", options=user_input
+            title=f"Nmap Tracker {user_input[CONF_HOSTS]}", data={}, options=user_input
         )
 
     @staticmethod
