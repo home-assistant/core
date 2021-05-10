@@ -1318,7 +1318,7 @@ class FanSpeedTrait(_Trait):
             if speed is not None:
                 response["on"] = speed != fan.SPEED_OFF
                 response["currentFanSpeedSetting"] = speed
-            if percent:
+            if percent is not None:
                 response["currentFanSpeedPercent"] = percent
         return response
 
@@ -1340,19 +1340,7 @@ class FanSpeedTrait(_Trait):
             service_params = {
                 ATTR_ENTITY_ID: self.state.entity_id,
             }
-            if command == COMMAND_FANSPEEDRELATIVE:
-                if "fanSpeedRelativePercent" in params:
-                    relative_percentage = params["fanSpeedRelativePercent"]
-                else:
-                    relative_percentage = params[
-                        "fanSpeedRelativeWeight"
-                    ] * self.state.attributes.get(fan.ATTR_PERCENTAGE_STEP)
-                if relative_percentage > 0:
-                    service = fan.SERVICE_INCREASE_SPEED
-                else:
-                    service = fan.SERVICE_DECREASE_SPEED
-                service_params[fan.ATTR_PERCENTAGE_STEP] = abs(relative_percentage)
-            elif "fanSpeedPercent" in params:
+            if "fanSpeedPercent" in params:
                 service = fan.SERVICE_SET_PERCENTAGE
                 service_params[fan.ATTR_PERCENTAGE] = params["fanSpeedPercent"]
             else:
@@ -1379,7 +1367,7 @@ class ModesTrait(_Trait):
     commands = [COMMAND_MODES]
 
     SYNONYMS = {
-        "preset mode": ["preset mode", "preset"],
+        "preset mode": ["preset mode", "mode", "preset"],
         "sound mode": ["sound mode", "effects"],
         "option": ["option", "setting", "mode", "value"],
     }
