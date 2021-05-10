@@ -57,6 +57,8 @@ async def test_setup_hass(hass: HomeAssistant, aioclient_mock) -> None:
 
     assert state.state == "sunny"
     assert state.attributes[ATTR_SMHI_CLOUDINESS] == 50
+    assert state.attributes[ATTR_SMHI_THUNDER_PROBABILITY] == 29
+    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 11
     assert state.attributes[ATTR_WEATHER_ATTRIBUTION].find("SMHI") >= 0
     assert state.attributes[ATTR_WEATHER_HUMIDITY] == 55
     assert state.attributes[ATTR_WEATHER_PRESSURE] == 1024
@@ -85,10 +87,12 @@ def test_properties_no_data(hass: HomeAssistant) -> None:
     assert weather.temperature is None
     assert weather.humidity is None
     assert weather.wind_speed is None
+    assert weather.wind_gust is None
     assert weather.wind_bearing is None
     assert weather.visibility is None
     assert weather.pressure is None
     assert weather.cloudiness is None
+    assert weather.thunder is None
     assert weather.condition is None
     assert weather.forecast is None
     assert weather.temperature_unit == TEMP_CELSIUS
@@ -104,10 +108,12 @@ def test_properties_unknown_symbol() -> None:
     data.total_precipitation = 1
     data.humidity = 5
     data.wind_speed = 10
+    data.wind_gust = 17
     data.wind_direction = 180
     data.horizontal_visibility = 6
     data.pressure = 1008
     data.cloudiness = 52
+    data.thunder = 41
     data.symbol = 100  # Faulty symbol
     data.valid_time = datetime(2018, 1, 1, 0, 1, 2)
 
@@ -117,10 +123,12 @@ def test_properties_unknown_symbol() -> None:
     data2.total_precipitation = 1
     data2.humidity = 5
     data2.wind_speed = 10
+    data2.wind_gust = 17
     data2.wind_direction = 180
     data2.horizontal_visibility = 6
     data2.pressure = 1008
     data2.cloudiness = 52
+    data2.thunder = 41
     data2.symbol = 100  # Faulty symbol
     data2.valid_time = datetime(2018, 1, 1, 12, 1, 2)
 
@@ -130,10 +138,12 @@ def test_properties_unknown_symbol() -> None:
     data3.total_precipitation = 1
     data3.humidity = 5
     data3.wind_speed = 10
+    data3.wind_gust = 17
     data3.wind_direction = 180
     data3.horizontal_visibility = 6
     data3.pressure = 1008
     data3.cloudiness = 52
+    data3.thunder = 41
     data3.symbol = 100  # Faulty symbol
     data3.valid_time = datetime(2018, 1, 2, 12, 1, 2)
 
