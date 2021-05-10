@@ -51,10 +51,27 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    _async_untrack_devices(hass, entry)
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+@callback
+def _async_untrack_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove tracking for devices owned by this config entry."""
+    devices = hass.data[DOMAIN][NMAP_TRACKED_DEVICES]
+    remove_mac_addresses = [
+        mac_address
+        for mac_address, entry_id in devices.config_entry_owner
+        if entry_id == entry.entry_id
+    ]
+    for mac_address in remove_mac_addresses:
+        ipv4 = devices.tracked.pop(mac_address)
+        del devices.ipv4_to_mac_address[ipv4]
+        del devices.config_entry_owner[mac_address]
 
 
 @dataclass
@@ -75,6 +92,7 @@ class NmapTrackedDevices:
         """Initialize the data."""
         self.tracked: dict = {}
         self.ipv4_to_mac_address: dict = {}
+        self.config_entry_owner: dict = {}
 
 
 class NmapDeviceScanner:
@@ -213,10 +231,18 @@ class NmapDeviceScanner:
             manufacturer = self.get_manufacturer(mac)
             device = NmapDevice(formatted_mac, name, ipv4, manufacturer, dt_util.now())
             dispatches.append((self.signal_device_update(formatted_mac), True))
-            if self.devices.tracked.setdefault(formatted_mac, device) is device:
+            if (
+                self.devices.config_entry_owner.setdefault(
+                    formatted_mac, self._entry_id
+                )
+                != self._entry_id
+            ):
+                continue
+
+            if formatted_mac not in self.devices.tracked:
                 dispatches.append((self.signal_device_new, formatted_mac))
-            else:
-                self.devices.tracked[formatted_mac] = device
+
+            self.devices.tracked[formatted_mac] = device
             self.devices.ipv4_to_mac_address[ipv4] = formatted_mac
             self.last_results.append(device)
         return dispatches
