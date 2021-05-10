@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_per_platform, device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -62,7 +62,7 @@ async def async_setup_entry(hass, config_entry):
     try:
         system_info = await hass.async_add_executor_job(api.get_system_stats)
     except ConnectTimeout as error:
-        raise ConfigEntryNotReady from error
+        raise PlatformNotReady from error
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
