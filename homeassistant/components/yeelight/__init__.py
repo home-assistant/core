@@ -194,7 +194,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async_dispatcher_connect(
                 hass,
                 DEVICE_INITIALIZED.format(host),
-                _load_platforms,
+                _async_load_platforms,
             )
         )
 
@@ -206,11 +206,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         entry_data[DATA_DEVICE] = device
 
-    async def _load_platforms():
+    @callback
+    def _async_load_platforms():
         if entry_data[DATA_PLATFORMS_LOADED]:
             return
-        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
         entry_data[DATA_PLATFORMS_LOADED] = True
+        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     # Move options from data for imported entries
     # Initialize options with default values for other entries
