@@ -3,10 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.climate import (
-    ENTITY_ID_FORMAT,
-    ClimateEntity,
-)
+from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
