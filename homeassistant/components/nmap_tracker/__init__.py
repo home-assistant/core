@@ -226,6 +226,7 @@ class NmapDeviceScanner:
         if self._stopping:
             return dispatches
 
+        _LOGGER.debug("Scan result: %s", result)
         for ipv4, info in result["scan"].items():
             if info["status"]["state"] != "up":
                 if mac_address := self.devices.ipv4_to_mac_address.pop(ipv4, None):
