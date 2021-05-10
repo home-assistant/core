@@ -118,10 +118,6 @@ class NmapTrackerEntity(ScannerEntity):
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
             "name": self.name,
-            "via_device": (
-                DOMAIN,
-                self._nmap_tracker.entry_id,
-            ),
         }
 
     @property
