@@ -73,7 +73,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_create_entry(
                 title=f"{self._discovered_model} {self.unique_id}",
-                data={CONF_HOST: self._discovered_ip},
+                data={CONF_ID: self.unique_id, CONF_HOST: self._discovered_ip},
             )
 
         self._set_confirm_only()
