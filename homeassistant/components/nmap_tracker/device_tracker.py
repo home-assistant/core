@@ -148,7 +148,8 @@ class NmapTrackerEntity(ScannerEntity):
         return {
             "last_time_reachable": self._device.last_update.isoformat(
                 timespec="seconds"
-            )
+            ),
+            "reason": self._device.reason,
         }
 
     @callback

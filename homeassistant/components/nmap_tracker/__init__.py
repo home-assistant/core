@@ -4,11 +4,9 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from functools import lru_cache
 import logging
 
 from getmac import get_mac_address
-from mac_vendor_lookup import MacLookup
 from nmap import PortScanner, PortScannerError
 
 from homeassistant.config_entries import ConfigEntry
@@ -82,6 +80,7 @@ class NmapDevice:
     hostname: str
     ipv4: str
     manufacturer: str
+    reason: str
     last_update: datetime.datetime
 
 
@@ -106,7 +105,6 @@ class NmapDeviceScanner:
         self._stopping = False
         self._entry_id = entry.entry_id
         self.devices = devices
-        self.mac_vendor_lookup = None
 
         config = entry.options
         self.last_results = []
@@ -128,14 +126,6 @@ class NmapDeviceScanner:
         self._hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED, self._async_start_scanner
         )
-
-    @lru_cache(maxsize=4096)
-    def get_manufacturer(self, mac_address):
-        """Lookup the manufacturer."""
-        try:
-            return self.mac_vendor_lookup.lookup(mac_address)
-        except KeyError:
-            return None
 
     @callback
     def _async_stop(self):
@@ -201,7 +191,6 @@ class NmapDeviceScanner:
             except PortScannerError as ex:
                 _LOGGER.error("Nmap scanning failed: %s", ex)
             else:
-                _LOGGER.debug("Dispatches: %s", dispatches)
                 for signal, ipv4 in dispatches:
                     async_dispatcher_send(self._hass, signal, ipv4)
 
@@ -211,8 +200,6 @@ class NmapDeviceScanner:
         Returns boolean if scanning successful.
         """
         options = self._build_options()
-        if not self.mac_vendor_lookup:
-            self.mac_vendor_lookup = MacLookup()
         dispatches = []
 
         _LOGGER.debug("Scanning %s with args: %s", self.hosts, options)
@@ -226,38 +213,44 @@ class NmapDeviceScanner:
         if self._stopping:
             return dispatches
 
+        devices = self.devices
+        entry_id = self._entry_id
         _LOGGER.debug("Scan result: %s", result)
         for ipv4, info in result["scan"].items():
-            if info["status"]["state"] != "up":
-                if mac_address := self.devices.ipv4_to_mac_address.pop(ipv4, None):
-                    dispatches.append((self.signal_device_update(mac_address), False))
+            status = info["status"]
+            if status["state"] != "up":
+                if formatted_mac := devices.ipv4_to_mac_address.pop(ipv4, None):
+                    devices.tracked[formatted_mac].reason = status["reason"]
+                    dispatches.append((self.signal_device_update(formatted_mac), False))
                 continue
-            name = info["hostnames"][0]["name"] if info["hostnames"] else ipv4
             # Mac address only returned if nmap ran as root
             mac = info["addresses"].get("mac") or get_mac_address(ip=ipv4)
             if mac is None:
                 _LOGGER.info("No MAC address found for %s", ipv4)
+                if formatted_mac := devices.ipv4_to_mac_address.pop(ipv4, None):
+                    devices.tracked[formatted_mac].reason = "No MAC address found"
+                    dispatches.append((self.signal_device_update(formatted_mac), False))
                 continue
 
+            name = info["hostnames"][0]["name"] if info["hostnames"] else ipv4
+
             formatted_mac = format_mac(mac)
-            manufacturer = self.get_manufacturer(
-                self.mac_vendor_lookup.sanitise(mac)[:6]
-            )
-            device = NmapDevice(formatted_mac, name, ipv4, manufacturer, dt_util.now())
-            dispatches.append((self.signal_device_update(formatted_mac), True))
             if (
-                self.devices.config_entry_owner.setdefault(
-                    formatted_mac, self._entry_id
-                )
-                != self._entry_id
+                devices.config_entry_owner.setdefault(formatted_mac, entry_id)
+                != entry_id
             ):
                 continue
 
-            if formatted_mac not in self.devices.tracked:
+            manufacturer = info.get("vendor", {}).get(mac)
+            device = NmapDevice(
+                formatted_mac, name, ipv4, manufacturer, status["reason"], dt_util.now()
+            )
+            if formatted_mac not in devices.tracked:
                 dispatches.append((self.signal_device_new, formatted_mac))
+            dispatches.append((self.signal_device_update(formatted_mac), True))
 
-            self.devices.tracked[formatted_mac] = device
-            self.devices.ipv4_to_mac_address[ipv4] = formatted_mac
+            devices.tracked[formatted_mac] = device
+            devices.ipv4_to_mac_address[ipv4] = formatted_mac
             self.last_results.append(device)
 
         _LOGGER.debug(
