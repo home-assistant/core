@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Coroutine
 import contextlib
 import datetime
+from functools import partial
 import logging
 from typing import Any, Callable
 
@@ -290,7 +291,11 @@ class SonosSpeaker:
             return
 
         self._poll_timer = self.hass.helpers.event.async_track_time_interval(
-            async_dispatcher_send(self.hass, f"{SONOS_ENTITY_UPDATE}-{self.soco.uid}"),
+            partial(
+                async_dispatcher_send,
+                self.hass,
+                f"{SONOS_ENTITY_UPDATE}-{self.soco.uid}",
+            ),
             SCAN_INTERVAL,
         )
 
@@ -713,17 +718,17 @@ class SonosSpeaker:
         if new_status == "TRANSITIONING":
             return
 
-        self.media.play_mode = event.current_play_mode if event else self.soco.play_mode
         self.media.clear()
-
         update_position = new_status != self.media.playback_status
         self.media.playback_status = new_status
 
         if variables:
+            self.media.play_mode = variables["current_play_mode"]
             track_uri = variables["current_track_uri"]
             music_source = self.soco.music_source_from_uri(track_uri)
         else:
             # This causes a network round-trip so we avoid it when possible
+            self.media.play_mode = self.soco.play_mode
             music_source = self.soco.music_source
 
         if music_source == MUSIC_SRC_TV:
