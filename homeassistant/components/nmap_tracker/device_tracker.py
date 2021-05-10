@@ -35,11 +35,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_get_scanner(hass, config):
     """Validate the configuration and return a Nmap scanner."""
+    validated_config = config[DEVICE_TRACKER_DOMAIN]
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data=config[DEVICE_TRACKER_DOMAIN],
+            data={
+                CONF_HOSTS: ", ".join(validated_config[CONF_HOSTS]),
+                CONF_HOME_INTERVAL: validated_config[CONF_HOME_INTERVAL],
+                CONF_EXCLUDE: ", ".join(validated_config[CONF_EXCLUDE]),
+                CONF_OPTIONS: validated_config[CONF_OPTIONS],
+            },
         )
     )
 
