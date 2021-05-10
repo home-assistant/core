@@ -210,7 +210,6 @@ async def async_unload_entry(hass, config_entry):
         await hass_notify.async_reload(hass, DOMAIN)
         client.clear_state_update_callbacks()
         await client.disconnect()
-        hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
 
