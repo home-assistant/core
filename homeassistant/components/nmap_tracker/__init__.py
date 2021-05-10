@@ -128,7 +128,7 @@ class NmapDeviceScanner:
         """Signal specific per nmap tracker entry to signal updates in device."""
         return f"{DOMAIN}-device-update-{formatted_mac}"
 
-    def _build_options_from_last_results(self):
+    def _build_options(self):
         """Build the command line and strip out last results that do not need to be updated."""
         options = self._options
         if self.home_interval:
@@ -147,11 +147,12 @@ class NmapDeviceScanner:
             exclude_hosts = self.exclude
         if exclude_hosts:
             options += f" --exclude {','.join(exclude_hosts)}"
-        return options, last_results
+        self.last_results = last_results
+        return options
 
     async def async_scan_devices(self, *_):
         """Scan devices and dispatch."""
-        if self._scan_lock.locked():
+        if self._scan_lock.locked() or self.scanner.still_scanning():
             _LOGGER.debug(
                 "Nmap scanning is taking longer than the scheduled interval: %s",
                 TRACKER_SCAN_INTERVAL,
@@ -198,11 +199,10 @@ class NmapDeviceScanner:
 
         Returns boolean if scanning successful.
         """
-        options, self.last_results = self._build_options_from_last_results()
+        options = self._build_options()
         _LOGGER.debug("Scanning %s with args: %s", self.hosts, options)
         self.scanner.scan(
             hosts=" ".join(self.hosts),
-            callback=self._process_nmap_host,
             arguments=options,
+            callback=self._process_nmap_host,
         )
-        self.scanner.wait()
