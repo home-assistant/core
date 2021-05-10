@@ -418,9 +418,8 @@ class RachioZone(RachioSwitch):
                 CONF_MANUAL_RUN_MINS, DEFAULT_MANUAL_RUN_MINS
             )
         )
-        self._controller.rachio.zone.start(
-            self.zone_id, manual_run_time.total_seconds()
-        )
+        # The API limit is 3 hours, and requires an int be passed
+        self._controller.rachio.zone.start(self.zone_id, manual_run_time.seconds)
         _LOGGER.debug(
             "Watering %s on %s for %s",
             self.name,

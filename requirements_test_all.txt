@@ -167,7 +167,7 @@ airly==1.1.0
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.58
+androidtv[async]==0.0.59
 
 # homeassistant.components.apns
 apns2==0.3.0
@@ -264,7 +264,7 @@ debugpy==1.2.1
 defusedxml==0.6.0
 
 # homeassistant.components.denonavr
-denonavr==0.10.6
+denonavr==0.10.7
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.17.3
@@ -393,7 +393,7 @@ guppy3==3.1.0
 ha-ffmpeg==3.0.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==2.7.0
+ha-philipsjs==2.7.3
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -405,7 +405,7 @@ hangups==0.4.11
 hass-nabucasa==0.43.0
 
 # homeassistant.components.tasmota
-hatasmota==0.2.11
+hatasmota==0.2.12
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.2
@@ -576,7 +576,7 @@ onvif-zeep-async==1.0.0
 openerz-api==0.1.0
 
 # homeassistant.components.ovo_energy
-ovoenergy==1.1.11
+ovoenergy==1.1.12
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
@@ -959,7 +959,7 @@ pysmartthings==0.7.6
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.44
+pysonos==0.0.45
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
