@@ -167,7 +167,7 @@ class NmapDeviceScanner:
 
     def _process_nmap_host(self, host, result):
         """Process an nmap host update."""
-        _LOGGER.debug("Processing nmap host: %s", result)
+        _LOGGER.debug("Processing nmap for host %s: %s", host, result)
         for ipv4, info in result["scan"].items():
             if info["status"]["state"] != "up":
                 if ipv4 in self.devices.tracked:
@@ -182,9 +182,8 @@ class NmapDeviceScanner:
             if mac is None:
                 _LOGGER.info("No MAC address found for %s", ipv4)
                 continue
-            formatted_mac = format_mac(mac)
 
-            device = NmapDevice(formatted_mac, name, ipv4, dt_util.now())
+            device = NmapDevice(format_mac(mac), name, ipv4, dt_util.now())
             dispatcher_send(self._hass, self.signal_device_update(ipv4), True)
             if ipv4 not in self.devices.tracked:
                 dispatcher_send(self._hass, self.signal_device_new, ipv4)
