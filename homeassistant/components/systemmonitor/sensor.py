@@ -204,7 +204,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the system monitor sensors."""
     entities = []
-    sensor_registry: dict[str, dict[str, SensorData]] = {}
+    sensor_registry: dict[tuple[str, str], SensorData] = {}
 
     for resource in config[CONF_RESOURCES]:
         type_ = resource[CONF_TYPE]
@@ -226,9 +226,9 @@ async def async_setup_platform(
             _LOGGER.warning("Cannot read CPU / processor temperature information")
             continue
 
-        if type_ not in sensor_registry:
-            sensor_registry[type_] = {}
-        sensor_registry[type_][argument] = SensorData(argument, None, None, None, None)
+        sensor_registry[(type_, argument)] = SensorData(
+            argument, None, None, None, None
+        )
         entities.append(SystemMonitorSensor(sensor_registry, type_, argument))
 
     scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -239,7 +239,7 @@ async def async_setup_platform(
 
 async def async_setup_sensor_registry_updates(
     hass: HomeAssistant,
-    sensor_registry: dict[str, dict[str, SensorData]],
+    sensor_registry: dict[tuple[str, str], SensorData],
     scan_interval: datetime.timedelta,
 ) -> None:
     """Update the registry and create polling."""
@@ -248,18 +248,17 @@ async def async_setup_sensor_registry_updates(
 
     def _update_sensors() -> None:
         """Update sensors and store the result in the registry."""
-        for type_, outer_data in sensor_registry.items():
-            for argument, data in outer_data.items():
-                try:
-                    state, value, update_time = _update(type_, data)
-                except Exception as ex:  # pylint: disable=broad-except
-                    _LOGGER.exception("Error updating sensor: %s (%s)", type_, argument)
-                    data.last_exception = ex
-                else:
-                    data.state = state
-                    data.value = value
-                    data.update_time = update_time
-                    data.last_exception = None
+        for (type_, argument), data in sensor_registry.items():
+            try:
+                state, value, update_time = _update(type_, data)
+            except Exception as ex:  # pylint: disable=broad-except
+                _LOGGER.exception("Error updating sensor: %s (%s)", type_, argument)
+                data.last_exception = ex
+            else:
+                data.state = state
+                data.value = value
+                data.update_time = update_time
+                data.last_exception = None
 
         # Only fetch these once per iteration as we use the same
         # data source multiple times in _update
@@ -299,7 +298,7 @@ class SystemMonitorSensor(SensorEntity):
 
     def __init__(
         self,
-        sensor_registry: dict[str, dict[str, SensorData]],
+        sensor_registry: dict[tuple[str, str], SensorData],
         sensor_type: str,
         argument: str = "",
     ) -> None:
@@ -358,7 +357,7 @@ class SystemMonitorSensor(SensorEntity):
     @property
     def data(self) -> SensorData:
         """Return registry entry for the data."""
-        return self._sensor_registry[self._type][self._argument]
+        return self._sensor_registry[(self._type, self._argument)]
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
