@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import datetime
 import logging
-from typing import Any, Callable, TypedDict
+from typing import Callable, TypedDict
 
 from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
@@ -37,9 +37,9 @@ def _retrieve_uptime_state(status: FritzStatus, last_value: str) -> str:
     return last_value
 
 
-def _retrieve_external_ip_state(status: FritzStatus, last_value: str) -> Any:
+def _retrieve_external_ip_state(status: FritzStatus, last_value: str) -> str:
     """Return external ip from device."""
-    return status.external_ip
+    return status.external_ip  # type: ignore[no-any-return]
 
 
 class SensorData(TypedDict):
