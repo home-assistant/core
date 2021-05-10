@@ -746,6 +746,9 @@ hdate==0.10.2
 # homeassistant.components.heatmiser
 heatmiserV3==1.1.18
 
+# homeassistant.components.heatzy
+heatzypy==0.1.4.1
+
 # homeassistant.components.here_travel_time
 herepy==2.0.0
 

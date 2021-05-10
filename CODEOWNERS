@@ -193,6 +193,7 @@ homeassistant/components/habitica/* @ASMfreaK @leikoilja
 homeassistant/components/harmony/* @ehendrix23 @bramkragten @bdraco @mkeesey
 homeassistant/components/hassio/* @home-assistant/supervisor
 homeassistant/components/heatmiser/* @andylockran
+homeassistant/components/heatzy/* @cyr-ius
 homeassistant/components/heos/* @andrewsayre
 homeassistant/components/here_travel_time/* @eifinger
 homeassistant/components/hikvision/* @mezz64
