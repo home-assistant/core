@@ -1,5 +1,12 @@
 """Support for AirVisual Node/Pro units."""
 from homeassistant.components.air_quality import AirQualityEntity
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+)
 from homeassistant.core import callback
 
 from . import AirVisualEntity
@@ -56,11 +63,11 @@ class AirVisualNodeProSensor(AirVisualEntity, AirQualityEntity):
     def device_info(self):
         """Return device registry information for this entity."""
         return {
-            "identifiers": {(DOMAIN, self.coordinator.data["serial_number"])},
-            "name": self.coordinator.data["settings"]["node_name"],
-            "manufacturer": "AirVisual",
-            "model": f'{self.coordinator.data["status"]["model"]}',
-            "sw_version": (
+            ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.data["serial_number"])},
+            ATTR_NAME: self.coordinator.data["settings"]["node_name"],
+            ATTR_MANUFACTURER: "AirVisual",
+            ATTR_MODEL: f'{self.coordinator.data["status"]["model"]}',
+            ATTR_SW_VERSION: (
                 f'Version {self.coordinator.data["status"]["system_version"]}'
                 f'{self.coordinator.data["status"]["app_version"]}'
             ),

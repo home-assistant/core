@@ -3,7 +3,7 @@
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN, MANUFACTURER
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -14,7 +14,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     device_info = {
         "identifiers": {(DOMAIN, unique_id)},
         "name": DEFAULT_NAME,
-        "manufacturer": ATTR_MANUFACTURER,
+        "manufacturer": MANUFACTURER,
         "model": config_entry.title,
     }
 

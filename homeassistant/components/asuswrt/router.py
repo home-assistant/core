@@ -14,6 +14,10 @@ from homeassistant.components.device_tracker.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
     CONF_HOST,
     CONF_MODE,
     CONF_PASSWORD,
@@ -372,10 +376,10 @@ class AsusWrtRouter:
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
-            "identifiers": {(DOMAIN, "AsusWRT")},
-            "name": self._host,
-            "model": self._model,
-            "manufacturer": "Asus",
+            ATTR_IDENTIFIERS: {(DOMAIN, "AsusWRT")},
+            ATTR_NAME: self._host,
+            ATTR_MODEL: self._model,
+            ATTR_MANUFACTURER: "Asus",
             "sw_version": self._sw_v,
         }
 

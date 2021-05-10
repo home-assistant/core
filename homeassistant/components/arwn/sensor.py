@@ -4,7 +4,7 @@ import logging
 
 from homeassistant.components import mqtt
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEGREE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_NAME, DEGREE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.util import slugify
 
@@ -100,13 +100,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 store[sensor.name] = sensor
                 _LOGGER.debug(
                     "Registering sensor %(name)s => %(event)s",
-                    {"name": sensor.name, "event": event},
+                    {ATTR_NAME: sensor.name, "event": event},
                 )
                 async_add_entities((sensor,), True)
             else:
                 _LOGGER.debug(
                     "Recording sensor %(name)s => %(event)s",
-                    {"name": sensor.name, "event": event},
+                    {ATTR_NAME: sensor.name, "event": event},
                 )
                 store[sensor.name].set_event(event)
 

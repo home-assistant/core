@@ -15,6 +15,7 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import conversation
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    ATTR_NAME,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_HOST,
@@ -258,7 +259,7 @@ class AlmondAgent(conversation.AbstractConversationAgent):
     @property
     def attribution(self):
         """Return the attribution."""
-        return {"name": "Powered by Almond", "url": "https://almond.stanford.edu/"}
+        return {ATTR_NAME: "Powered by Almond", "url": "https://almond.stanford.edu/"}
 
     async def async_get_onboarding(self):
         """Get onboard url if not onboarded."""

@@ -18,6 +18,7 @@ from homeassistant.components.climate import const as climate
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
+    ATTR_NAME,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     SERVICE_ALARM_ARM_AWAY,
@@ -406,7 +407,7 @@ async def async_api_lock(hass, config, directive, context):
 
     response = directive.response()
     response.add_context_property(
-        {"name": "lockState", "namespace": "Alexa.LockController", "value": "LOCKED"}
+        {ATTR_NAME: "lockState", "namespace": "Alexa.LockController", "value": "LOCKED"}
     )
     return response
 
@@ -429,7 +430,11 @@ async def async_api_unlock(hass, config, directive, context):
 
     response = directive.response()
     response.add_context_property(
-        {"namespace": "Alexa.LockController", "name": "lockState", "value": "UNLOCKED"}
+        {
+            "namespace": "Alexa.LockController",
+            ATTR_NAME: "lockState",
+            "value": "UNLOCKED",
+        }
     )
 
     return response
@@ -678,7 +683,7 @@ async def async_api_set_target_temp(hass, config, directive, context):
         data[ATTR_TEMPERATURE] = temp
         response.add_context_property(
             {
-                "name": "targetSetpoint",
+                ATTR_NAME: "targetSetpoint",
                 "namespace": "Alexa.ThermostatController",
                 "value": {"value": temp, "scale": API_TEMP_UNITS[unit]},
             }
@@ -690,7 +695,7 @@ async def async_api_set_target_temp(hass, config, directive, context):
         data[climate.ATTR_TARGET_TEMP_LOW] = temp_low
         response.add_context_property(
             {
-                "name": "lowerSetpoint",
+                ATTR_NAME: "lowerSetpoint",
                 "namespace": "Alexa.ThermostatController",
                 "value": {"value": temp_low, "scale": API_TEMP_UNITS[unit]},
             }
@@ -702,7 +707,7 @@ async def async_api_set_target_temp(hass, config, directive, context):
         data[climate.ATTR_TARGET_TEMP_HIGH] = temp_high
         response.add_context_property(
             {
-                "name": "upperSetpoint",
+                ATTR_NAME: "upperSetpoint",
                 "namespace": "Alexa.ThermostatController",
                 "value": {"value": temp_high, "scale": API_TEMP_UNITS[unit]},
             }
@@ -747,7 +752,7 @@ async def async_api_adjust_target_temp(hass, config, directive, context):
     )
     response.add_context_property(
         {
-            "name": "targetSetpoint",
+            ATTR_NAME: "targetSetpoint",
             "namespace": "Alexa.ThermostatController",
             "value": {"value": target_temp, "scale": API_TEMP_UNITS[unit]},
         }
@@ -810,7 +815,7 @@ async def async_api_set_thermostat_mode(hass, config, directive, context):
     )
     response.add_context_property(
         {
-            "name": "thermostatMode",
+            ATTR_NAME: "thermostatMode",
             "namespace": "Alexa.ThermostatController",
             "value": mode,
         }
@@ -899,7 +904,7 @@ async def async_api_arm(hass, config, directive, context):
 
     response.add_context_property(
         {
-            "name": "armState",
+            ATTR_NAME: "armState",
             "namespace": "Alexa.SecurityPanelController",
             "value": arm_state,
         }
@@ -932,7 +937,7 @@ async def async_api_disarm(hass, config, directive, context):
 
     response.add_context_property(
         {
-            "name": "armState",
+            ATTR_NAME: "armState",
             "namespace": "Alexa.SecurityPanelController",
             "value": "DISARMED",
         }
@@ -992,7 +997,7 @@ async def async_api_set_mode(hass, config, directive, context):
         {
             "namespace": "Alexa.ModeController",
             "instance": instance,
-            "name": "mode",
+            ATTR_NAME: "mode",
             "value": mode,
         }
     )
@@ -1039,7 +1044,7 @@ async def async_api_toggle_on(hass, config, directive, context):
         {
             "namespace": "Alexa.ToggleController",
             "instance": instance,
-            "name": "toggleState",
+            ATTR_NAME: "toggleState",
             "value": "ON",
         }
     )
@@ -1073,7 +1078,7 @@ async def async_api_toggle_off(hass, config, directive, context):
         {
             "namespace": "Alexa.ToggleController",
             "instance": instance,
-            "name": "toggleState",
+            ATTR_NAME: "toggleState",
             "value": "OFF",
         }
     )
@@ -1164,7 +1169,7 @@ async def async_api_set_range(hass, config, directive, context):
         {
             "namespace": "Alexa.RangeController",
             "instance": instance,
-            "name": "rangeValue",
+            ATTR_NAME: "rangeValue",
             "value": range_value,
         }
     )
@@ -1279,7 +1284,7 @@ async def async_api_adjust_range(hass, config, directive, context):
         {
             "namespace": "Alexa.RangeController",
             "instance": instance,
-            "name": "rangeValue",
+            ATTR_NAME: "rangeValue",
             "value": response_value,
         }
     )
@@ -1331,7 +1336,7 @@ async def async_api_changechannel(hass, config, directive, context):
     response.add_context_property(
         {
             "namespace": "Alexa.ChannelController",
-            "name": "channel",
+            ATTR_NAME: "channel",
             "value": {payload_name: channel},
         }
     )
@@ -1362,7 +1367,7 @@ async def async_api_skipchannel(hass, config, directive, context):
     response.add_context_property(
         {
             "namespace": "Alexa.ChannelController",
-            "name": "channel",
+            ATTR_NAME: "channel",
             "value": {"number": ""},
         }
     )
@@ -1403,7 +1408,9 @@ async def async_api_seek(hass, config, directive, context):
     # convert seconds to milliseconds for StateReport.
     seek_position = int(seek_position * 1000)
 
-    payload = {"properties": [{"name": "positionMilliseconds", "value": seek_position}]}
+    payload = {
+        "properties": [{ATTR_NAME: "positionMilliseconds", "value": seek_position}]
+    }
     return directive.response(
         name="StateReport", namespace="Alexa.SeekController", payload=payload
     )

@@ -1,5 +1,12 @@
 """Advantage Air parent entity class."""
 
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -27,9 +34,9 @@ class AdvantageAirEntity(CoordinatorEntity):
     def device_info(self):
         """Return parent device information."""
         return {
-            "identifiers": {(DOMAIN, self.coordinator.data["system"]["rid"])},
-            "name": self.coordinator.data["system"]["name"],
-            "manufacturer": "Advantage Air",
-            "model": self.coordinator.data["system"]["sysType"],
-            "sw_version": self.coordinator.data["system"]["myAppRev"],
+            ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.data["system"]["rid"])},
+            ATTR_NAME: self.coordinator.data["system"]["name"],
+            ATTR_MANUFACTURER: "Advantage Air",
+            ATTR_MODEL: self.coordinator.data["system"]["sysType"],
+            ATTR_SW_VERSION: self.coordinator.data["system"]["myAppRev"],
         }

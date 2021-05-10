@@ -15,7 +15,15 @@ import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
+from homeassistant.const import (
+    ATTR_MODEL,
+    ATTR_NAME,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_TIMEOUT,
+    CONF_TYPE,
+)
 from homeassistant.helpers import config_validation as cv
 
 from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN, DOMAINS_AND_TYPES
@@ -50,8 +58,8 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.device = device
 
         self.context["title_placeholders"] = {
-            "name": device.name,
-            "model": device.model,
+            ATTR_NAME: device.name,
+            ATTR_MODEL: device.model,
             "host": device.host[0],
         }
 
@@ -206,8 +214,8 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="reset",
                 errors=errors,
                 description_placeholders={
-                    "name": device.name,
-                    "model": device.model,
+                    ATTR_NAME: device.name,
+                    ATTR_MODEL: device.model,
                     "host": device.host[0],
                 },
             )
@@ -264,8 +272,8 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             data_schema=vol.Schema(data_schema),
             description_placeholders={
-                "name": device.name,
-                "model": device.model,
+                ATTR_NAME: device.name,
+                ATTR_MODEL: device.model,
                 "host": device.host[0],
             },
         )

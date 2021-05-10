@@ -10,6 +10,7 @@ from typing import Any
 from aiohttp import ClientError
 from bond_api import BPUPSubscriptions
 
+from homeassistant.const import ATTR_IDENTIFIERS, ATTR_MANUFACTURER
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
@@ -67,9 +68,9 @@ class BondEntity(Entity):
     def device_info(self) -> DeviceInfo:
         """Get a an HA device representing this Bond controlled device."""
         device_info: DeviceInfo = {
-            "manufacturer": self._hub.make,
+            ATTR_MANUFACTURER: self._hub.make,
             # type ignore: tuple items should not be Optional
-            "identifiers": {(DOMAIN, self._hub.bond_id, self._device.device_id)},  # type: ignore[arg-type]
+            ATTR_IDENTIFIERS: {(DOMAIN, self._hub.bond_id, self._device.device_id)},  # type: ignore[arg-type]
         }
         if self.name is not None:
             device_info["name"] = self.name

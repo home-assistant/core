@@ -14,6 +14,9 @@ from homeassistant.const import (
     ATTR_DATE,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_NAME,
     ATTR_TIME,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -370,9 +373,9 @@ class AbodeDevice(AbodeEntity):
     def device_info(self):
         """Return device registry information for this entity."""
         return {
-            "identifiers": {(DOMAIN, self._device.device_id)},
-            "manufacturer": "Abode",
-            "name": self._device.name,
+            ATTR_IDENTIFIERS: {(DOMAIN, self._device.device_id)},
+            ATTR_MANUFACTURER: "Abode",
+            ATTR_NAME: self._device.name,
             "device_type": self._device.type,
         }
 

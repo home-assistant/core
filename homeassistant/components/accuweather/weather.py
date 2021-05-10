@@ -17,7 +17,14 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_NAME,
+    CONF_NAME,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -82,9 +89,9 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return {
-            "identifiers": {(DOMAIN, self.coordinator.location_key)},
-            "name": NAME,
-            "manufacturer": MANUFACTURER,
+            ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.location_key)},
+            ATTR_NAME: NAME,
+            ATTR_MANUFACTURER: MANUFACTURER,
             "entry_type": "service",
         }
 

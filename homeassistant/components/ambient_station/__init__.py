@@ -11,7 +11,9 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    ATTR_IDENTIFIERS,
     ATTR_LOCATION,
+    ATTR_MANUFACTURER,
     ATTR_NAME,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -530,9 +532,9 @@ class AmbientWeatherEntity(Entity):
     def device_info(self):
         """Return device registry information for this entity."""
         return {
-            "identifiers": {(DOMAIN, self._mac_address)},
-            "name": self._station_name,
-            "manufacturer": "Ambient Weather",
+            ATTR_IDENTIFIERS: {(DOMAIN, self._mac_address)},
+            ATTR_NAME: self._station_name,
+            ATTR_MANUFACTURER: "Ambient Weather",
         }
 
     @property

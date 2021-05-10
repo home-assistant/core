@@ -11,6 +11,10 @@ from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
     CONF_DEVICE_ID,
     CONF_NAME,
     CONF_PASSWORD,
@@ -331,10 +335,10 @@ class BMWConnectedDriveBaseEntity(Entity):
     def device_info(self) -> DeviceInfo:
         """Return info for device registry."""
         return {
-            "identifiers": {(DOMAIN, self._vehicle.vin)},
-            "name": f'{self._vehicle.attributes.get("brand")} {self._vehicle.name}',
-            "model": self._vehicle.name,
-            "manufacturer": self._vehicle.attributes.get("brand"),
+            ATTR_IDENTIFIERS: {(DOMAIN, self._vehicle.vin)},
+            ATTR_NAME: f'{self._vehicle.attributes.get("brand")} {self._vehicle.name}',
+            ATTR_MODEL: self._vehicle.name,
+            ATTR_MANUFACTURER: self._vehicle.attributes.get("brand"),
         }
 
     @property

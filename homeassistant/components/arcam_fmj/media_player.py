@@ -21,7 +21,15 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant, callback
 
 from .config_flow import get_entry_client
@@ -114,13 +122,13 @@ class ArcamFmj(MediaPlayerEntity):
     def device_info(self):
         """Return a device description for device registry."""
         return {
-            "name": self._device_name,
-            "identifiers": {
+            ATTR_NAME: self._device_name,
+            ATTR_IDENTIFIERS: {
                 (DOMAIN, self._uuid),
                 (DOMAIN, self._state.client.host, self._state.client.port),
             },
-            "model": "Arcam FMJ AVR",
-            "manufacturer": "Arcam",
+            ATTR_MODEL: "Arcam FMJ AVR",
+            ATTR_MANUFACTURER: "Arcam",
         }
 
     @property

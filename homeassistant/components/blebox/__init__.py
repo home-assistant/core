@@ -6,7 +6,15 @@ from blebox_uniapi.products import Products
 from blebox_uniapi.session import ApiHost
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+    CONF_HOST,
+    CONF_PORT,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -102,9 +110,9 @@ class BleBoxEntity(Entity):
         """Return device information for this entity."""
         product = self._feature.product
         return {
-            "identifiers": {(DOMAIN, product.unique_id)},
-            "name": product.name,
-            "manufacturer": product.brand,
-            "model": product.model,
-            "sw_version": product.firmware_version,
+            ATTR_IDENTIFIERS: {(DOMAIN, product.unique_id)},
+            ATTR_NAME: product.name,
+            ATTR_MANUFACTURER: product.brand,
+            ATTR_MODEL: product.model,
+            ATTR_SW_VERSION: product.firmware_version,
         }

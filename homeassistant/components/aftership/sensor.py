@@ -11,7 +11,13 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME, HTTP_OK
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_NAME,
+    CONF_API_KEY,
+    CONF_NAME,
+    HTTP_OK,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -186,7 +192,7 @@ class AfterShipSensor(SensorEntity):
             status_counts[status] = status_counts.get(status, 0) + 1
             trackings.append(
                 {
-                    "name": name,
+                    ATTR_NAME: name,
                     "tracking_number": track["tracking_number"],
                     "slug": track["slug"],
                     "link": f"{BASE}{track['slug']}/{track['tracking_number']}",

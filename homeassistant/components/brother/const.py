@@ -40,7 +40,6 @@ ATTR_MAGENTA_DRUM_REMAINING_LIFE: Final = "magenta_drum_remaining_life"
 ATTR_MAGENTA_DRUM_REMAINING_PAGES: Final = "magenta_drum_remaining_pages"
 ATTR_MAGENTA_INK_REMAINING: Final = "magenta_ink_remaining"
 ATTR_MAGENTA_TONER_REMAINING: Final = "magenta_toner_remaining"
-ATTR_MANUFACTURER: Final = "Brother"
 ATTR_PAGE_COUNTER: Final = "page_counter"
 ATTR_PF_KIT_1_REMAINING_LIFE: Final = "pf_kit_1_remaining_life"
 ATTR_PF_KIT_MP_REMAINING_LIFE: Final = "pf_kit_mp_remaining_life"
@@ -57,6 +56,8 @@ ATTR_YELLOW_TONER_REMAINING: Final = "yellow_toner_remaining"
 DATA_CONFIG_ENTRY: Final = "config_entry"
 
 DOMAIN: Final = "brother"
+
+MANUFACTURER: Final = "Brother"
 
 UNIT_PAGES: Final = "p"
 

@@ -9,7 +9,7 @@ from brother import Brother, SnmpError, UnsupportedModel
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_HOST, CONF_TYPE
+from homeassistant.const import ATTR_MODEL, CONF_HOST, CONF_TYPE
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -102,7 +102,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 "title_placeholders": {
                     "serial_number": self.brother.serial,
-                    "model": self.brother.model,
+                    ATTR_MODEL: self.brother.model,
                 }
             }
         )
@@ -125,7 +125,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             description_placeholders={
                 "serial_number": self.brother.serial,
-                "model": self.brother.model,
+                ATTR_MODEL: self.brother.model,
             },
         )
 

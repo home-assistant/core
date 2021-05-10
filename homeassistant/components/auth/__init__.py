@@ -77,7 +77,7 @@ The result payload likes
     "success": true,
     "result": {
         "id": "USER_ID",
-        "name": "John Doe",
+        ATTR_NAME: "John Doe",
         "is_owner": true,
         "credentials": [{
             "auth_provider_type": "homeassistant",
@@ -85,7 +85,7 @@ The result payload likes
         }],
         "mfa_modules": [{
             "id": "totp",
-            "name": "TOTP",
+            ATTR_NAME: "TOTP",
             "enabled": true
         }]
     }
@@ -133,7 +133,7 @@ from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_FORBIDDEN, HTTP_OK
+from homeassistant.const import ATTR_NAME, HTTP_BAD_REQUEST, HTTP_FORBIDDEN, HTTP_OK
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
@@ -467,7 +467,7 @@ async def websocket_current_user(
             msg["id"],
             {
                 "id": user.id,
-                "name": user.name,
+                ATTR_NAME: user.name,
                 "is_owner": user.is_owner,
                 "is_admin": user.is_admin,
                 "credentials": [
@@ -480,7 +480,7 @@ async def websocket_current_user(
                 "mfa_modules": [
                     {
                         "id": module.id,
-                        "name": module.name,
+                        ATTR_NAME: module.name,
                         "enabled": module.id in enabled_modules,
                     }
                     for module in hass.auth.auth_mfa_modules

@@ -1,5 +1,7 @@
 """Alexa Resources and Assets."""
 
+from homeassistant.const import ATTR_NAME
+
 
 class AlexaGlobalCatalog:
     """The Global Alexa catalog.
@@ -384,7 +386,7 @@ class AlexaSemantics:
             {
                 "@type": self.ACTIONS_TO_DIRECTIVE,
                 "actions": actions,
-                "directive": {"name": directive, "payload": payload},
+                "directive": {ATTR_NAME: directive, "payload": payload},
             }
         )
 

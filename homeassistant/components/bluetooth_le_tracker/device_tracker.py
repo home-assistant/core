@@ -20,7 +20,7 @@ from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
     async_load_config,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import ATTR_NAME, EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
 import homeassistant.util.dt as dt_util
@@ -92,7 +92,7 @@ def setup_scanner(hass, config, see, discovery_info=None):  # noqa: C901
                     )
             else:
                 _LOGGER.debug("Seen %s for the first time", address)
-                new_devices[address] = {"seen": 1, "name": name}
+                new_devices[address] = {"seen": 1, ATTR_NAME: name}
                 return
 
         see(

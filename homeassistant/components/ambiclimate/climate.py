@@ -12,6 +12,8 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
     ATTR_NAME,
     ATTR_TEMPERATURE,
     CONF_CLIENT_ID,
@@ -157,9 +159,9 @@ class AmbiclimateEntity(ClimateEntity):
     def device_info(self):
         """Return the device info."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Ambiclimate",
+            ATTR_IDENTIFIERS: {(DOMAIN, self.unique_id)},
+            ATTR_NAME: self.name,
+            ATTR_MANUFACTURER: "Ambiclimate",
         }
 
     @property

@@ -8,6 +8,10 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -197,12 +201,12 @@ class AdGuardHomeDeviceEntity(AdGuardHomeEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this AdGuard Home instance."""
         return {
-            "identifiers": {
+            ATTR_IDENTIFIERS: {
                 (DOMAIN, self.adguard.host, self.adguard.port, self.adguard.base_path)
             },
-            "name": "AdGuard Home",
-            "manufacturer": "AdGuard Team",
-            "sw_version": self.hass.data[DOMAIN][self._entry.entry_id].get(
+            ATTR_NAME: "AdGuard Home",
+            ATTR_MANUFACTURER: "AdGuard Team",
+            ATTR_SW_VERSION: self.hass.data[DOMAIN][self._entry.entry_id].get(
                 DATA_ADGUARD_VERSION
             ),
             "entry_type": "service",

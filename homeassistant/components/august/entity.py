@@ -1,4 +1,11 @@
 """Base class for August entity."""
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
@@ -35,11 +42,11 @@ class AugustEntityMixin(Entity):
         """Return the device_info of the device."""
         name = self._device.device_name
         return {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": name,
-            "manufacturer": MANUFACTURER,
-            "sw_version": self._detail.firmware_version,
-            "model": self._detail.model,
+            ATTR_IDENTIFIERS: {(DOMAIN, self._device_id)},
+            ATTR_NAME: name,
+            ATTR_MANUFACTURER: MANUFACTURER,
+            ATTR_SW_VERSION: self._detail.firmware_version,
+            ATTR_MODEL: self._detail.model,
             "suggested_area": _remove_device_types(name, DEVICE_TYPES),
         }
 

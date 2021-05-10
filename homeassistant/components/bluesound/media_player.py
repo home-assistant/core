@@ -32,6 +32,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_NAME,
     CONF_HOST,
     CONF_HOSTS,
     CONF_NAME,
@@ -468,7 +469,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             self._capture_items.append(
                 {
                     "title": item.get("@text", ""),
-                    "name": item.get("@text", ""),
+                    ATTR_NAME: item.get("@text", ""),
                     "type": item.get("@serviceType", "Capture"),
                     "image": item.get("@image", ""),
                     "url": item.get("@URL", ""),
@@ -496,7 +497,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             self._preset_items.append(
                 {
                     "title": item.get("@name", ""),
-                    "name": item.get("@name", ""),
+                    ATTR_NAME: item.get("@name", ""),
                     "type": "preset",
                     "image": item.get("@image", ""),
                     "is_raw_url": True,
@@ -526,7 +527,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             self._services_items.append(
                 {
                     "title": item.get("@displayname", ""),
-                    "name": item.get("@name", ""),
+                    ATTR_NAME: item.get("@name", ""),
                     "type": item.get("@type", ""),
                     "image": item.get("@icon", ""),
                     "url": item.get("@name", ""),

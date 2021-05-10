@@ -9,6 +9,13 @@ from homeassistant.components.climate import DOMAIN as CLIMATE
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
@@ -83,11 +90,11 @@ class AtagEntity(CoordinatorEntity):
         device = self.coordinator.data.id
         version = self.coordinator.data.apiversion
         return {
-            "identifiers": {(DOMAIN, device)},
-            "name": "Atag Thermostat",
-            "model": "Atag One",
-            "sw_version": version,
-            "manufacturer": "Atag",
+            ATTR_IDENTIFIERS: {(DOMAIN, device)},
+            ATTR_NAME: "Atag Thermostat",
+            ATTR_MODEL: "Atag One",
+            ATTR_SW_VERSION: version,
+            ATTR_MANUFACTURER: "Atag",
         }
 
     @property

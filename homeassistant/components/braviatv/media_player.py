@@ -13,10 +13,18 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
+from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    STATE_OFF,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN, MANUFACTURER
 
 SUPPORT_BRAVIA = (
     SUPPORT_PAUSE
@@ -39,10 +47,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     unique_id = config_entry.unique_id
     device_info = {
-        "identifiers": {(DOMAIN, unique_id)},
-        "name": DEFAULT_NAME,
-        "manufacturer": ATTR_MANUFACTURER,
-        "model": config_entry.title,
+        ATTR_IDENTIFIERS: {(DOMAIN, unique_id)},
+        ATTR_NAME: DEFAULT_NAME,
+        ATTR_MANUFACTURER: MANUFACTURER,
+        ATTR_MODEL: config_entry.title,
     }
 
     async_add_entities(

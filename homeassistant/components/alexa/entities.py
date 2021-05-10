@@ -29,6 +29,8 @@ from homeassistant.components import (
 from homeassistant.components.climate import const as climate
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     CLOUD_NEVER_EXPOSED_ENTITIES,
@@ -332,8 +334,8 @@ class AlexaEntity:
             "description": self.description(),
             "manufacturerName": "Home Assistant",
             "additionalAttributes": {
-                "manufacturer": "Home Assistant",
-                "model": self.entity.domain,
+                ATTR_MANUFACTURER: "Home Assistant",
+                ATTR_MODEL: self.entity.domain,
                 "softwareVersion": __version__,
                 "customIdentifier": f"{self.config.user_identifier()}-{self.entity_id}",
             },

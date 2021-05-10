@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
+    ATTR_NAME,
     CONF_ADDRESS,
     CONF_NAME,
     CONF_PIN,
@@ -99,7 +100,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(info[CONF_IDENTIFIER])
         self.target_device = info[CONF_IDENTIFIER]
 
-        self.context["title_placeholders"] = {"name": info[CONF_NAME]}
+        self.context["title_placeholders"] = {ATTR_NAME: info[CONF_NAME]}
         self.context["identifier"] = self.unique_id
         return await self.async_step_reconfigure()
 
@@ -166,7 +167,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         self.context["identifier"] = self.unique_id
-        self.context["title_placeholders"] = {"name": name}
+        self.context["title_placeholders"] = {ATTR_NAME: name}
         self.target_device = identifier
         return await self.async_find_device_wrapper(self.async_step_confirm)
 
@@ -213,7 +214,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self.async_begin_pairing()
         return self.async_show_form(
-            step_id="confirm", description_placeholders={"name": self.atv.name}
+            step_id="confirm", description_placeholders={ATTR_NAME: self.atv.name}
         )
 
     async def async_begin_pairing(self):

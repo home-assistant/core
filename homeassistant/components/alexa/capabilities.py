@@ -21,6 +21,7 @@ from homeassistant.components.alarm_control_panel.const import (
 import homeassistant.components.climate.const as climate
 import homeassistant.components.media_player.const as media_player
 from homeassistant.const import (
+    ATTR_NAME,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -256,7 +257,7 @@ class AlexaCapability:
                 continue
 
             result = {
-                "name": prop_name,
+                ATTR_NAME: prop_name,
                 "namespace": self.name(),
                 "value": prop_value,
                 "timeOfSample": dt_util.utcnow().strftime(DATE_FORMAT),
@@ -328,7 +329,7 @@ class AlexaEndpointHealth(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{"name": "connectivity"}]
+        return [{ATTR_NAME: "connectivity"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -373,7 +374,7 @@ class AlexaPowerController(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{"name": "powerState"}]
+        return [{ATTR_NAME: "powerState"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -431,7 +432,7 @@ class AlexaLockController(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{"name": "lockState"}]
+        return [{ATTR_NAME: "lockState"}]
 
     def properties_retrievable(self):
         """Return True if properties can be retrieved."""
@@ -509,7 +510,7 @@ class AlexaBrightnessController(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{"name": "brightness"}]
+        return [{ATTR_NAME: "brightness"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -555,7 +556,7 @@ class AlexaColorController(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{"name": "color"}]
+        return [{ATTR_NAME: "color"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -606,7 +607,7 @@ class AlexaColorTemperatureController(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{"name": "colorTemperatureInKelvin"}]
+        return [{ATTR_NAME: "colorTemperatureInKelvin"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -652,7 +653,7 @@ class AlexaPercentageController(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{"name": "percentage"}]
+        return [{ATTR_NAME: "percentage"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -701,11 +702,11 @@ class AlexaSpeaker(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        properties = [{"name": "volume"}]
+        properties = [{ATTR_NAME: "volume"}]
 
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & media_player.SUPPORT_VOLUME_MUTE:
-            properties.append({"name": "muted"})
+            properties.append({ATTR_NAME: "muted"})
 
         return properties
 
@@ -819,7 +820,7 @@ class AlexaInputController(AlexaCapability):
             )
             if formatted_source in Inputs.VALID_SOURCE_NAME_MAP:
                 input_list.append(
-                    {"name": Inputs.VALID_SOURCE_NAME_MAP[formatted_source]}
+                    {ATTR_NAME: Inputs.VALID_SOURCE_NAME_MAP[formatted_source]}
                 )
 
         return input_list
@@ -855,7 +856,7 @@ class AlexaTemperatureSensor(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{"name": "temperature"}]
+        return [{ATTR_NAME: "temperature"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -921,7 +922,7 @@ class AlexaContactSensor(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{"name": "detectionState"}]
+        return [{ATTR_NAME: "detectionState"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -970,7 +971,7 @@ class AlexaMotionSensor(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{"name": "detectionState"}]
+        return [{ATTR_NAME: "detectionState"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -1021,13 +1022,13 @@ class AlexaThermostatController(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        properties = [{"name": "thermostatMode"}]
+        properties = [{ATTR_NAME: "thermostatMode"}]
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & climate.SUPPORT_TARGET_TEMPERATURE:
-            properties.append({"name": "targetSetpoint"})
+            properties.append({ATTR_NAME: "targetSetpoint"})
         if supported & climate.SUPPORT_TARGET_TEMPERATURE_RANGE:
-            properties.append({"name": "lowerSetpoint"})
-            properties.append({"name": "upperSetpoint"})
+            properties.append({ATTR_NAME: "lowerSetpoint"})
+            properties.append({ATTR_NAME: "upperSetpoint"})
         return properties
 
     def properties_proactively_reported(self):
@@ -1137,7 +1138,7 @@ class AlexaPowerLevelController(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{"name": "powerLevel"}]
+        return [{ATTR_NAME: "powerLevel"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -1190,7 +1191,7 @@ class AlexaSecurityPanelController(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{"name": "armState"}]
+        return [{ATTR_NAME: "armState"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -1281,7 +1282,7 @@ class AlexaModeController(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{"name": "mode"}]
+        return [{ATTR_NAME: "mode"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -1460,7 +1461,7 @@ class AlexaRangeController(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{"name": "rangeValue"}]
+        return [{ATTR_NAME: "rangeValue"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -1705,7 +1706,7 @@ class AlexaToggleController(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{"name": "toggleState"}]
+        return [{ATTR_NAME: "toggleState"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -1813,7 +1814,7 @@ class AlexaPlaybackStateReporter(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{"name": "playbackState"}]
+        return [{ATTR_NAME: "playbackState"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -1869,7 +1870,7 @@ class AlexaEventDetectionSensor(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        return [{"name": "humanPresenceDetectionState"}]
+        return [{ATTR_NAME: "humanPresenceDetectionState"}]
 
     def properties_proactively_reported(self):
         """Return True if properties asynchronously reported."""
@@ -1933,7 +1934,7 @@ class AlexaEqualizerController(AlexaCapability):
 
         Either bands, mode or both can be specified. Only mode is supported at this time.
         """
-        return [{"name": "mode"}]
+        return [{ATTR_NAME: "mode"}]
 
     def properties_retrievable(self):
         """Return True if properties can be retrieved."""
@@ -1969,7 +1970,7 @@ class AlexaEqualizerController(AlexaCapability):
             sound_mode = sound_mode.upper()
 
             if sound_mode in cls.VALID_SOUND_MODES:
-                input_list.append({"name": sound_mode})
+                input_list.append({ATTR_NAME: sound_mode})
 
         return input_list
 

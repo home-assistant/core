@@ -7,14 +7,13 @@ from bravia_tv.braviarc import NoIPControl
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
+from homeassistant.const import ATTR_MODEL, CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
     ATTR_CID,
     ATTR_MAC,
-    ATTR_MODEL,
     CLIENTID_PREFIX,
     CONF_IGNORED_SOURCES,
     DOMAIN,

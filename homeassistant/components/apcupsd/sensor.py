@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
+    ATTR_MODEL,
     CONF_RESOURCES,
     ELECTRICAL_CURRENT_AMPERE,
     ELECTRICAL_VOLT_AMPERE,
@@ -63,7 +64,7 @@ SENSOR_TYPES = {
     "mbattchg": ["Battery Shutdown", PERCENTAGE, "mdi:battery-alert"],
     "minlinev": ["Input Voltage Low", VOLT, "mdi:flash"],
     "mintimel": ["Shutdown Time", "", "mdi:timer-outline"],
-    "model": ["Model", "", "mdi:information-outline"],
+    ATTR_MODEL: ["Model", "", "mdi:information-outline"],
     "nombattv": ["Battery Nominal Voltage", VOLT, "mdi:flash"],
     "nominv": ["Nominal Input Voltage", VOLT, "mdi:flash"],
     "nomoutv": ["Nominal Output Voltage", VOLT, "mdi:flash"],

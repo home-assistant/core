@@ -6,6 +6,10 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_NIGHT,
 )
 from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
@@ -62,10 +66,10 @@ class AgentBaseStation(AlarmControlPanelEntity):
     def device_info(self):
         """Return the device info for adding the entity to the agent object."""
         return {
-            "identifiers": {(AGENT_DOMAIN, self._client.unique)},
-            "manufacturer": "Agent",
-            "model": CONST_ALARM_CONTROL_PANEL_NAME,
-            "sw_version": self._client.version,
+            ATTR_IDENTIFIERS: {(AGENT_DOMAIN, self._client.unique)},
+            ATTR_MANUFACTURER: "Agent",
+            ATTR_MODEL: CONST_ALARM_CONTROL_PANEL_NAME,
+            ATTR_SW_VERSION: self._client.version,
         }
 
     async def async_update(self):

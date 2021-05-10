@@ -1,4 +1,5 @@
 """Describe logbook events."""
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import callback
 
 from .const import DOMAIN, EVENT_ALEXA_SMART_HOME
@@ -23,6 +24,6 @@ def async_describe_events(hass, async_describe_event):
                 f"sent command {data['request']['namespace']}/{data['request']['name']}"
             )
 
-        return {"name": "Amazon Alexa", "message": message, "entity_id": entity_id}
+        return {ATTR_NAME: "Amazon Alexa", "message": message, "entity_id": entity_id}
 
     async_describe_event(DOMAIN, EVENT_ALEXA_SMART_HOME, async_describe_logbook_event)

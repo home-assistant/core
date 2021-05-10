@@ -6,7 +6,7 @@ Return a list of auth providers. Example:
 
 [
     {
-        "name": "Local",
+        ATTR_NAME: "Local",
         "id": null,
         "type": "local_provider",
     }
@@ -37,8 +37,8 @@ flow for details.
 
 {
     "data_schema": [
-        {"name": "username", "type": "string"},
-        {"name": "password", "type": "string"}
+        {ATTR_NAME: "username", "type": "string"},
+        {ATTR_NAME: "password", "type": "string"}
     ],
     "errors": {},
     "flow_id": "8f7e42faab604bcab7ac43c44ca34d58",
@@ -81,6 +81,7 @@ from homeassistant.components.http.ban import (
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import (
+    ATTR_NAME,
     HTTP_BAD_REQUEST,
     HTTP_METHOD_NOT_ALLOWED,
     HTTP_NOT_FOUND,
@@ -115,7 +116,7 @@ class AuthProvidersView(HomeAssistantView):
 
         return self.json(
             [
-                {"name": provider.name, "id": provider.id, "type": provider.type}
+                {ATTR_NAME: provider.name, "id": provider.id, "type": provider.type}
                 for provider in hass.auth.auth_providers
             ]
         )

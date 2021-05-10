@@ -9,6 +9,9 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_NAME,
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant
@@ -119,13 +122,13 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return {
-            "identifiers": {
+            ATTR_IDENTIFIERS: {
                 (
                     DOMAIN,
                     f"{self.coordinator.latitude}-{self.coordinator.longitude}",
                 )
             },
-            "name": DEFAULT_NAME,
-            "manufacturer": MANUFACTURER,
+            ATTR_NAME: DEFAULT_NAME,
+            ATTR_MANUFACTURER: MANUFACTURER,
             "entry_type": "service",
         }

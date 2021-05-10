@@ -11,7 +11,15 @@ from homeassistant.components.mjpeg.camera import (
     MjpegCamera,
     filter_urllib3_logging,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+    CONF_NAME,
+)
 from homeassistant.helpers import entity_platform
 
 from .const import (
@@ -87,11 +95,11 @@ class AgentCamera(MjpegCamera):
     def device_info(self):
         """Return the device info for adding the entity to the agent object."""
         return {
-            "identifiers": {(AGENT_DOMAIN, self._unique_id)},
-            "name": self._name,
-            "manufacturer": "Agent",
-            "model": "Camera",
-            "sw_version": self.device.client.version,
+            ATTR_IDENTIFIERS: {(AGENT_DOMAIN, self._unique_id)},
+            ATTR_NAME: self._name,
+            ATTR_MANUFACTURER: "Agent",
+            ATTR_MODEL: "Camera",
+            ATTR_SW_VERSION: self.device.client.version,
         }
 
     async def async_update(self):

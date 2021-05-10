@@ -7,7 +7,14 @@ import voluptuous as vol
 from homeassistant.components.awair import AwairDataUpdateCoordinator, AwairResult
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS, CONF_ACCESS_TOKEN
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_DEVICE_CLASS,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    CONF_ACCESS_TOKEN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
@@ -213,9 +220,9 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Device information."""
         info = {
-            "identifiers": {(DOMAIN, self._device.uuid)},
-            "manufacturer": "Awair",
-            "model": self._device.model,
+            ATTR_IDENTIFIERS: {(DOMAIN, self._device.uuid)},
+            ATTR_MANUFACTURER: "Awair",
+            ATTR_MODEL: self._device.model,
         }
 
         if self._device.name:

@@ -10,6 +10,9 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_NAME,
     CONF_ADDRESS,
     CONF_NAME,
     CONF_PROTOCOL,
@@ -145,7 +148,7 @@ class AppleTVEntity(Entity):
     def device_info(self):
         """Return the device info."""
         return {
-            "identifiers": {(DOMAIN, self._identifier)},
+            ATTR_IDENTIFIERS: {(DOMAIN, self._identifier)},
         }
 
 
@@ -341,9 +344,9 @@ class AppleTVManager:
 
     async def _async_setup_device_registry(self):
         attrs = {
-            "identifiers": {(DOMAIN, self.config_entry.unique_id)},
-            "manufacturer": "Apple",
-            "name": self.config_entry.data[CONF_NAME],
+            ATTR_IDENTIFIERS: {(DOMAIN, self.config_entry.unique_id)},
+            ATTR_MANUFACTURER: "Apple",
+            ATTR_NAME: self.config_entry.data[CONF_NAME],
         }
 
         area = attrs["name"]

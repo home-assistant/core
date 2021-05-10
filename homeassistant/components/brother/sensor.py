@@ -5,7 +5,15 @@ from typing import Any
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -16,13 +24,13 @@ from .const import (
     ATTR_COUNTER,
     ATTR_ENABLED,
     ATTR_LABEL,
-    ATTR_MANUFACTURER,
     ATTR_REMAINING_PAGES,
     ATTR_UNIT,
     ATTR_UPTIME,
     ATTRS_MAP,
     DATA_CONFIG_ENTRY,
     DOMAIN,
+    MANUFACTURER,
     SENSOR_TYPES,
 )
 
@@ -36,11 +44,11 @@ async def async_setup_entry(
     sensors = []
 
     device_info: DeviceInfo = {
-        "identifiers": {(DOMAIN, coordinator.data.serial)},
-        "name": coordinator.data.model,
-        "manufacturer": ATTR_MANUFACTURER,
-        "model": coordinator.data.model,
-        "sw_version": getattr(coordinator.data, "firmware", None),
+        ATTR_IDENTIFIERS: {(DOMAIN, coordinator.data.serial)},
+        ATTR_NAME: coordinator.data.model,
+        ATTR_MANUFACTURER: MANUFACTURER,
+        ATTR_MODEL: coordinator.data.model,
+        ATTR_SW_VERSION: getattr(coordinator.data, "firmware", None),
     }
 
     for sensor in SENSOR_TYPES:

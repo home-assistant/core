@@ -1,6 +1,7 @@
 """Support for alexa Smart Home Skill API."""
 import logging
 
+from homeassistant.const import ATTR_NAME
 import homeassistant.core as ha
 
 from .const import API_DIRECTIVE, API_HEADER, EVENT_ALEXA_SMART_HOME
@@ -49,7 +50,7 @@ async def async_handle_message(hass, config, request, context=None, enabled=True
             error_type=err.error_type, error_message=err.error_message
         )
 
-    request_info = {"namespace": directive.namespace, "name": directive.name}
+    request_info = {"namespace": directive.namespace, ATTR_NAME: directive.name}
 
     if directive.has_endpoint:
         request_info["entity_id"] = directive.entity_id
@@ -58,7 +59,7 @@ async def async_handle_message(hass, config, request, context=None, enabled=True
         EVENT_ALEXA_SMART_HOME,
         {
             "request": request_info,
-            "response": {"namespace": response.namespace, "name": response.name},
+            "response": {"namespace": response.namespace, ATTR_NAME: response.name},
         },
         context=context,
     )

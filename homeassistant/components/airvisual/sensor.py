@@ -1,9 +1,14 @@
 """Support for AirVisual air quality sensors."""
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
+    ATTR_IDENTIFIERS,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
     ATTR_STATE,
+    ATTR_SW_VERSION,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -256,11 +261,11 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
     def device_info(self):
         """Return device registry information for this entity."""
         return {
-            "identifiers": {(DOMAIN, self.coordinator.data["serial_number"])},
-            "name": self.coordinator.data["settings"]["node_name"],
-            "manufacturer": "AirVisual",
-            "model": f'{self.coordinator.data["status"]["model"]}',
-            "sw_version": (
+            ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.data["serial_number"])},
+            ATTR_NAME: self.coordinator.data["settings"]["node_name"],
+            ATTR_MANUFACTURER: "AirVisual",
+            ATTR_MODEL: f'{self.coordinator.data["status"]["model"]}',
+            ATTR_SW_VERSION: (
                 f'Version {self.coordinator.data["status"]["system_version"]}'
                 f'{self.coordinator.data["status"]["app_version"]}'
             ),

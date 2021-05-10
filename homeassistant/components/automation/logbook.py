@@ -19,7 +19,7 @@ def async_describe_events(hass: HomeAssistant, async_describe_event):  # type: i
             message = f"{message} by {data[ATTR_SOURCE]}"
 
         return {
-            "name": data.get(ATTR_NAME),
+            ATTR_NAME: data.get(ATTR_NAME),
             "message": message,
             "source": data.get(ATTR_SOURCE),
             "entity_id": data.get(ATTR_ENTITY_ID),

@@ -9,6 +9,9 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_NAME,
     CONF_NAME,
     DEVICE_CLASS_TEMPERATURE,
 )
@@ -109,9 +112,9 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return {
-            "identifiers": {(DOMAIN, self.coordinator.location_key)},
-            "name": NAME,
-            "manufacturer": MANUFACTURER,
+            ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.location_key)},
+            ATTR_NAME: NAME,
+            ATTR_MANUFACTURER: MANUFACTURER,
             "entry_type": "service",
         }
 
