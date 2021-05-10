@@ -43,7 +43,7 @@ def _normalize_ips_and_network(hosts_str):
     normalized_hosts = []
 
     try:
-        hosts = cv.ensure_list_csv(hosts_str)
+        hosts = [host for host in cv.ensure_list_csv(hosts_str) if host != ""]
     except (vol.MultipleInvalid, vol.Invalid):
         return None
 
