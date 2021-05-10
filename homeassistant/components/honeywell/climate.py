@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import datetime
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.core import HomeAssistant
 import logging
 from typing import Any
 
-import requests
 import somecomfort
-import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
@@ -35,46 +35,18 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    CONF_PASSWORD,
-    CONF_REGION,
-    CONF_USERNAME,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-import homeassistant.helpers.config_validation as cv
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_FAN_ACTION = "fan_action"
 
-CONF_COOL_AWAY_TEMPERATURE = "away_cool_temperature"
-CONF_HEAT_AWAY_TEMPERATURE = "away_heat_temperature"
-CONF_DEV_ID = "thermostat"
-CONF_LOC_ID = "location"
-
-DEFAULT_COOL_AWAY_TEMPERATURE = 88
-DEFAULT_HEAT_AWAY_TEMPERATURE = 61
-
 ATTR_PERMANENT_HOLD = "permanent_hold"
-
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_REGION),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_USERNAME): cv.string,
-            vol.Required(CONF_PASSWORD): cv.string,
-            vol.Optional(
-                CONF_COOL_AWAY_TEMPERATURE, default=DEFAULT_COOL_AWAY_TEMPERATURE
-            ): vol.Coerce(int),
-            vol.Optional(
-                CONF_HEAT_AWAY_TEMPERATURE, default=DEFAULT_HEAT_AWAY_TEMPERATURE
-            ): vol.Coerce(int),
-            vol.Optional(CONF_REGION): cv.string,
-            vol.Optional(CONF_DEV_ID): cv.string,
-            vol.Optional(CONF_LOC_ID): cv.string,
-        }
-    ),
-)
 
 HVAC_MODE_TO_HW_MODE = {
     "SwitchOffAllowed": {HVAC_MODE_OFF: "off"},
@@ -106,65 +78,40 @@ HW_FAN_MODE_TO_HA = {
     "circulate": FAN_DIFFUSE,
     "follow schedule": FAN_AUTO,
 }
+SENSOR_TYPES = {
+    "temperature": ["Temperature", TEMP_FAHRENHEIT],
+    "humidity": ["Humidity", PERCENTAGE],
+}
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant, config: ConfigType, add_entities, discovery_info=None
+) -> None:
     """Set up the Honeywell thermostat."""
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-
-    try:
-        client = somecomfort.SomeComfort(username, password)
-    except somecomfort.AuthError:
-        _LOGGER.error("Failed to login to honeywell account %s", username)
-        return
-    except somecomfort.SomeComfortError:
-        _LOGGER.error(
-            "Failed to initialize the Honeywell client: "
-            "Check your configuration (username, password), "
-            "or maybe you have exceeded the API rate limit?"
-        )
-        return
-
-    dev_id = config.get(CONF_DEV_ID)
-    loc_id = config.get(CONF_LOC_ID)
-    cool_away_temp = config.get(CONF_COOL_AWAY_TEMPERATURE)
-    heat_away_temp = config.get(CONF_HEAT_AWAY_TEMPERATURE)
+    # TODO: Find out how to default these optional config items
+    # cool_away_temp = None #config[DOMAIN][CONF_COOL_AWAY_TEMPERATURE]
+    # heat_away_temp = None #config[DOMAIN][CONF_HEAT_AWAY_TEMPERATURE]
 
     add_entities(
         [
             HoneywellUSThermostat(
-                client,
-                device,
-                cool_away_temp,
-                heat_away_temp,
-                username,
-                password,
-            )
-            for location in client.locations_by_id.values()
-            for device in location.devices_by_id.values()
-            if (
-                (not loc_id or location.locationid == loc_id)
-                and (not dev_id or device.deviceid == dev_id)
+                hass.data[DOMAIN]["device"],
+                None,
+                None
             )
         ]
     )
-
 
 class HoneywellUSThermostat(ClimateEntity):
     """Representation of a Honeywell US Thermostat."""
 
     def __init__(
-        self, client, device, cool_away_temp, heat_away_temp, username, password
+        self, device, cool_away_temp, heat_away_temp
     ):
         """Initialize the thermostat."""
-        self._client = client
         self._device = device
         self._cool_away_temp = cool_away_temp
         self._heat_away_temp = heat_away_temp
         self._away = False
-        self._username = username
-        self._password = password
 
         _LOGGER.debug("latestData = %s ", device._data)
 
@@ -417,55 +364,3 @@ class HoneywellUSThermostat(ClimateEntity):
             self.set_hvac_mode(HVAC_MODE_HEAT)
         else:
             self.set_hvac_mode(HVAC_MODE_OFF)
-
-    def _retry(self) -> bool:
-        """Recreate a new somecomfort client.
-
-        When we got an error, the best way to be sure that the next query
-        will succeed, is to recreate a new somecomfort client.
-        """
-        try:
-            self._client = somecomfort.SomeComfort(self._username, self._password)
-        except somecomfort.AuthError:
-            _LOGGER.error("Failed to login to honeywell account %s", self._username)
-            return False
-        except somecomfort.SomeComfortError as ex:
-            _LOGGER.error("Failed to initialize honeywell client: %s", str(ex))
-            return False
-
-        devices = [
-            device
-            for location in self._client.locations_by_id.values()
-            for device in location.devices_by_id.values()
-            if device.name == self._device.name
-        ]
-
-        if len(devices) != 1:
-            _LOGGER.error("Failed to find device %s", self._device.name)
-            return False
-
-        self._device = devices[0]
-        return True
-
-    def update(self) -> None:
-        """Update the state."""
-        retries = 3
-        while retries > 0:
-            try:
-                self._device.refresh()
-                break
-            except (
-                somecomfort.client.APIRateLimited,
-                OSError,
-                requests.exceptions.ReadTimeout,
-            ) as exp:
-                retries -= 1
-                if retries == 0:
-                    raise exp
-                if not self._retry():
-                    raise exp
-                _LOGGER.error("SomeComfort update failed, Retrying - Error: %s", exp)
-
-        _LOGGER.debug(
-            "latestData = %s ", self._device._data  # pylint: disable=protected-access
-        )
