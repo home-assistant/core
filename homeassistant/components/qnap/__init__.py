@@ -95,7 +95,7 @@ async def async_setup_entry(hass, config_entry):
     )
 
     # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
