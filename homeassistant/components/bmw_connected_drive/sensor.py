@@ -170,7 +170,7 @@ ATTR_TO_HA_METRIC = {
         "mdi:map-marker-distance",
         None,
         LENGTH_KILOMETERS,
-        True
+        True,
     ],
     "total_electric_distance_community_average": [
         "mdi:map-marker-distance",
