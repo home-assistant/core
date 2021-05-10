@@ -257,7 +257,7 @@ ambiclimate==0.2.1
 amcrest==1.7.2
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.58
+androidtv[async]==0.0.59
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -295,7 +295,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.dlna_dmr
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
-async-upnp-client==0.16.2
+async-upnp-client==0.17.0
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -464,7 +464,7 @@ datadog==0.15.0
 datapoint==0.9.5
 
 # homeassistant.components.debugpy
-debugpy==1.2.1
+debugpy==1.3.0
 
 # homeassistant.components.decora
 # decora==0.6
@@ -735,7 +735,7 @@ hass-nabucasa==0.43.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.2.11
+hatasmota==0.2.12
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.2
@@ -970,9 +970,6 @@ mychevy==2.1.1
 
 # homeassistant.components.mycroft
 mycroftapi==2.0
-
-# homeassistant.components.n26
-n26==0.2.7
 
 # homeassistant.components.nad
 nad_receiver==0.0.12
@@ -2055,7 +2052,7 @@ sense-hat==2.2.0
 sense_energy==0.9.0
 
 # homeassistant.components.sentry
-sentry-sdk==1.0.0
+sentry-sdk==1.1.0
 
 # homeassistant.components.sharkiq
 sharkiqpy==0.1.8
@@ -2137,9 +2134,6 @@ speedtest-cli==2.1.3
 # homeassistant.components.spider
 spiderpy==1.4.2
 
-# homeassistant.components.spotcrime
-spotcrime==1.0.4
-
 # homeassistant.components.spotify
 spotipy==2.18.0
 
@@ -2196,7 +2190,7 @@ synology-srm==0.2.0
 synologydsm-api==1.0.2
 
 # homeassistant.components.system_bridge
-systembridge==1.1.3
+systembridge==1.1.5
 
 # homeassistant.components.tahoma
 tahoma-api==0.0.16
@@ -2326,7 +2320,7 @@ wakeonlan==2.0.1
 waqiasync==1.0.0
 
 # homeassistant.components.folder_watcher
-watchdog==2.0.3
+watchdog==2.1.0
 
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0
