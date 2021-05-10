@@ -127,13 +127,6 @@ def _migrate_old_unique_ids(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up sma from a config entry."""
-    # Init all default sensors
-    sensor_def = pysma.Sensors()
-
-    if entry.source == SOURCE_IMPORT:
-        config_sensors = _parse_legacy_options(entry, sensor_def)
-        _migrate_old_unique_ids(hass, entry, sensor_def, config_sensors)
-
     # Init the SMA interface
     protocol = "https" if entry.data[CONF_SSL] else "http"
     url = f"{protocol}://{entry.data[CONF_HOST]}"
@@ -143,6 +136,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     session = async_get_clientsession(hass, verify_ssl=verify_ssl)
     sma = pysma.SMA(session, url, password, group)
+
+    # Get all device sensors
+    sensor_def = await sma.get_sensors()
+
+    # Parse legacy options if initial setup was done from yaml
+    if entry.source == SOURCE_IMPORT:
+        config_sensors = _parse_legacy_options(entry, sensor_def)
+        _migrate_old_unique_ids(hass, entry, sensor_def, config_sensors)
 
     # Define the coordinator
     async def async_update_data():
