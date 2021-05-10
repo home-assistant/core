@@ -1,5 +1,4 @@
 """The onkyo component."""
-import asyncio
 import logging
 
 from eiscp import eISCP as onkyo_rcv
@@ -9,14 +8,14 @@ from homeassistant import config_entries
 from homeassistant.components.media_player.const import DOMAIN as media_domain
 from homeassistant.const import CONF_HOST
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import config_per_platform, device_registry as dr
+from homeassistant.helpers import config_per_platform
 
 from .const import (
-    COMPONENTS,
     CONF_MAX_VOLUME,
     CONF_RECEIVER_MAX_VOLUME,
     CONF_SOURCES,
     DOMAIN,
+    PLATFORMS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,17 +45,15 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set the config entry up."""
     if not config_entry.options:
-        sources = config_entry.data.get(CONF_SOURCES, {})
+        sources = config_entry.data[CONF_SOURCES]
         if isinstance(sources, list):
             sources = list2dict(sources)
         hass.config_entries.async_update_entry(
             config_entry,
             options={
                 CONF_SOURCES: sources,
-                CONF_MAX_VOLUME: config_entry.data.get(CONF_MAX_VOLUME),
-                CONF_RECEIVER_MAX_VOLUME: config_entry.data.get(
-                    CONF_RECEIVER_MAX_VOLUME
-                ),
+                CONF_MAX_VOLUME: config_entry.data[CONF_MAX_VOLUME],
+                CONF_RECEIVER_MAX_VOLUME: config_entry.data[CONF_RECEIVER_MAX_VOLUME],
             },
         )
 
@@ -67,15 +64,7 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN][config_entry.unique_id] = receiver
 
-    device_registry = await dr.async_get_registry(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, receiver.identifier)},
-        manufacturer="Onkyo",
-        model=receiver.model_name,
-    )
-
-    for component in COMPONENTS:
+    for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
@@ -93,13 +82,8 @@ async def async_update_options(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in COMPONENTS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
     if unload_ok:
         receiver = hass.data[DOMAIN][config_entry.unique_id]
