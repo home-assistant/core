@@ -76,7 +76,8 @@ CLIMATE_SCHEMA = vol.Schema(
         vol.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
         vol.Optional(CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
         vol.Optional(CONF_PRECISION): vol.In(
-            [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
+            [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
+        ),
         vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
@@ -99,7 +100,9 @@ async def _async_create_entities(hass, config):
         availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
         fan_mode_template = device_config.get(CONF_FAN_MODE_TEMPLATE)
         temperature_template = device_config.get(CONF_TEMPERATURE_TEMPLATE)
-        current_temperature_template = device_config.get(CONF_CURRENT_TEMPERATURE_TEMPLATE)
+        current_temperature_template = device_config.get(
+            CONF_CURRENT_TEMPERATURE_TEMPLATE
+        )
 
         set_hvac_mode_action = device_config[CONF_SET_HVAC_MODE_ACTION]
         set_fan_mode_action = device_config.get(CONF_SET_FAN_MODE_ACTION)
@@ -187,7 +190,9 @@ class TemplateClimate(TemplateEntity, ClimateEntity):
 
         domain = __name__.split(".")[-2]
 
-        self._set_hvac_mode_script = Script(hass, set_hvac_mode_action, friendly_name, domain)
+        self._set_hvac_mode_script = Script(
+            hass, set_hvac_mode_action, friendly_name, domain
+        )
 
         self._set_fan_mode_script = None
         if set_fan_mode_action:
@@ -298,14 +303,16 @@ class TemplateClimate(TemplateEntity, ClimateEntity):
         """Set new target hvac mode."""
         if hvac_mode not in self.hvac_modes:
             _LOGGER.error(
-                "Received invalid hvac_mode: %s. Expected: %s", hvac_mode, self.hvac_modes
+                "Received invalid hvac_mode: %s. Expected: %s",
+                hvac_mode,
+                self.hvac_modes,
             )
             return
 
         self._state = hvac_mode
 
         await self._set_hvac_mode_script.async_run(
-            {ATTR_HVAC_MODE : hvac_mode}, context=self._context
+            {ATTR_HVAC_MODE: hvac_mode}, context=self._context
         )
 
     async def async_set_fan_mode(self, fan_mode):
@@ -320,7 +327,7 @@ class TemplateClimate(TemplateEntity, ClimateEntity):
 
         if self._set_fan_mode_script:
             await self._set_fan_mode_script.async_run(
-                {ATTR_FAN_MODE : fan_mode}, context=self._context
+                {ATTR_FAN_MODE: fan_mode}, context=self._context
             )
 
     async def async_set_temperature(self, **kwargs):
@@ -342,7 +349,7 @@ class TemplateClimate(TemplateEntity, ClimateEntity):
 
         if self._set_temperature_script:
             await self._set_temperature_script.async_run(
-                {ATTR_TEMPERATURE : temperature}, context=self._context
+                {ATTR_TEMPERATURE: temperature}, context=self._context
             )
 
     @callback
@@ -412,7 +419,9 @@ class TemplateClimate(TemplateEntity, ClimateEntity):
             self._hvac_action = None
         else:
             _LOGGER.error(
-                "Received invalid hvac_action: %s. Expected: %s", hvac_action, CURRENT_HVAC_ACTIONS
+                "Received invalid hvac_action: %s. Expected: %s",
+                hvac_action,
+                CURRENT_HVAC_ACTIONS,
             )
             self._hvac_action = None
 
@@ -424,7 +433,9 @@ class TemplateClimate(TemplateEntity, ClimateEntity):
             self._fan_mode = None
         else:
             _LOGGER.error(
-                "Received invalid hvac_action: %s. Expected: %s", fan_mode, self.fan_modes
+                "Received invalid hvac_action: %s. Expected: %s",
+                fan_mode,
+                self.fan_modes,
             )
             self._fan_mode = None
 
