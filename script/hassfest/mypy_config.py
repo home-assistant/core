@@ -31,7 +31,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.bluetooth_tracker.*",
     "homeassistant.components.bmw_connected_drive.*",
     "homeassistant.components.bsblan.*",
-    "homeassistant.components.camera.*",
     "homeassistant.components.canary.*",
     "homeassistant.components.cast.*",
     "homeassistant.components.cert_expiry.*",
@@ -187,7 +186,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.sentry.*",
     "homeassistant.components.sesame.*",
     "homeassistant.components.sharkiq.*",
-    "homeassistant.components.shelly.*",
     "homeassistant.components.sma.*",
     "homeassistant.components.smart_meter_texas.*",
     "homeassistant.components.smartthings.*",
@@ -207,7 +205,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.surepetcare.*",
     "homeassistant.components.switchbot.*",
     "homeassistant.components.switcher_kis.*",
-    "homeassistant.components.synology_dsm.*",
     "homeassistant.components.synology_srm.*",
     "homeassistant.components.system_health.*",
     "homeassistant.components.system_log.*",
@@ -237,7 +234,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.wemo.*",
     "homeassistant.components.wink.*",
     "homeassistant.components.withings.*",
-    "homeassistant.components.wled.*",
     "homeassistant.components.wunderground.*",
     "homeassistant.components.xbox.*",
     "homeassistant.components.xiaomi_aqara.*",
@@ -260,10 +256,13 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "python_version": "3.8",
     "show_error_codes": "true",
     "follow_imports": "silent",
+    # Enable some checks globally.
     "ignore_missing_imports": "true",
+    "strict_equality": "true",
     "warn_incomplete_stub": "true",
     "warn_redundant_casts": "true",
     "warn_unused_configs": "true",
+    "warn_unused_ignores": "true",
 }
 
 # This is basically the list of checks which is enabled for "strict=true".
@@ -276,10 +275,8 @@ STRICT_SETTINGS: Final[list[str]] = [
     "disallow_untyped_decorators",
     "disallow_untyped_defs",
     "no_implicit_optional",
-    "strict_equality",
     "warn_return_any",
     "warn_unreachable",
-    "warn_unused_ignores",
     # TODO: turn these on, address issues
     # "disallow_any_generics",
     # "no_implicit_reexport",

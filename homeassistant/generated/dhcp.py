@@ -64,13 +64,7 @@ DHCP = [
     },
     {
         "domain": "flume",
-        "hostname": "flume-gw-*",
-        "macaddress": "ECFABC*"
-    },
-    {
-        "domain": "flume",
-        "hostname": "flume-gw-*",
-        "macaddress": "B4E62D*"
+        "hostname": "flume-gw-*"
     },
     {
         "domain": "hunterdouglas_powerview",
@@ -207,6 +201,81 @@ DHCP = [
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "1C3BF3*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "50C7BF*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "68FF7B*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "98DAC4*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "hs*",
+        "macaddress": "B09575*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "1C3BF3*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "50C7BF*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "68FF7B*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "98DAC4*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "B09575*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "lb*",
+        "macaddress": "1C3BF3*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "lb*",
+        "macaddress": "50C7BF*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "lb*",
+        "macaddress": "68FF7B*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "lb*",
+        "macaddress": "98DAC4*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "lb*",
+        "macaddress": "B09575*"
     },
     {
         "domain": "tuya",

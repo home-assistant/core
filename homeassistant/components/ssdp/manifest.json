@@ -5,7 +5,7 @@
   "requirements": [
     "defusedxml==0.6.0",
     "netdisco==2.8.3",
-    "async-upnp-client==0.16.2"
+    "async-upnp-client==0.17.0"
   ],
   "after_dependencies": ["zeroconf"],
   "codeowners": [],

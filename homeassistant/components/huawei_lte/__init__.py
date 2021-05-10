@@ -163,7 +163,7 @@ class Router:
         return DEFAULT_DEVICE_NAME
 
     @property
-    def device_identifiers(self) -> set[tuple[str, ...]]:
+    def device_identifiers(self) -> set[tuple[str, str]]:
         """Get router identifiers for device registry."""
         try:
             return {(DOMAIN, self.data[KEY_DEVICE_INFORMATION]["SerialNumber"])}
@@ -393,26 +393,29 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     router.subscriptions.clear()
 
     # Set up device registry
-    device_data = {}
-    sw_version = None
-    if router.data.get(KEY_DEVICE_INFORMATION):
-        device_info = router.data[KEY_DEVICE_INFORMATION]
-        sw_version = device_info.get("SoftwareVersion")
-        if device_info.get("DeviceName"):
-            device_data["model"] = device_info["DeviceName"]
-    if not sw_version and router.data.get(KEY_DEVICE_BASIC_INFORMATION):
-        sw_version = router.data[KEY_DEVICE_BASIC_INFORMATION].get("SoftwareVersion")
-    if sw_version:
-        device_data["sw_version"] = sw_version
-    device_registry = await dr.async_get_registry(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections=router.device_connections,
-        identifiers=router.device_identifiers,
-        name=router.device_name,
-        manufacturer="Huawei",
-        **device_data,
-    )
+    if router.device_identifiers or router.device_connections:
+        device_data = {}
+        sw_version = None
+        if router.data.get(KEY_DEVICE_INFORMATION):
+            device_info = router.data[KEY_DEVICE_INFORMATION]
+            sw_version = device_info.get("SoftwareVersion")
+            if device_info.get("DeviceName"):
+                device_data["model"] = device_info["DeviceName"]
+        if not sw_version and router.data.get(KEY_DEVICE_BASIC_INFORMATION):
+            sw_version = router.data[KEY_DEVICE_BASIC_INFORMATION].get(
+                "SoftwareVersion"
+            )
+        if sw_version:
+            device_data["sw_version"] = sw_version
+        device_registry = await dr.async_get_registry(hass)
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            connections=router.device_connections,
+            identifiers=router.device_identifiers,
+            name=router.device_name,
+            manufacturer="Huawei",
+            **device_data,
+        )
 
     # Forward config entry setup to platforms
     hass.config_entries.async_setup_platforms(config_entry, CONFIG_ENTRY_PLATFORMS)
