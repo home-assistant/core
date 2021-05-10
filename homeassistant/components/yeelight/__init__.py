@@ -207,6 +207,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_data[DATA_DEVICE] = device
 
     async def _load_platforms():
+        if entry_data[DATA_PLATFORMS_LOADED]:
+            return
         hass.config_entries.async_setup_platforms(entry, PLATFORMS)
         entry_data[DATA_PLATFORMS_LOADED] = True
 
@@ -263,7 +265,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
             return False
 
-    if entry.data[CONF_ID]:
+    if entry.data.get(CONF_ID):
         # discovery
         scanner = YeelightScanner.async_get(hass)
         scanner.async_unregister_callback(entry.data[CONF_ID])
