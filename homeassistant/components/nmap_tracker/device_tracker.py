@@ -67,6 +67,11 @@ async def async_setup_entry(
     )
 
 
+def short_hostname(hostname):
+    """Return the first part of the hostname."""
+    return hostname.split(".")[0]
+
+
 class NmapTrackerEntity(ScannerEntity):
     """An Nmap Tracker entity."""
 
@@ -106,7 +111,7 @@ class NmapTrackerEntity(ScannerEntity):
     @property
     def hostname(self) -> str:
         """Return hostname of the device."""
-        return self._device.hostname
+        return short_hostname(self._device.hostname)
 
     @property
     def source_type(self) -> str:
