@@ -9,7 +9,7 @@ from homeassistant.const import (
 CONF_DRIVES = "drives"
 CONF_NICS = "nics"
 CONF_VOLUMES = "volumes"
-COMPONENTS = ["sensor"]
+PLATFORMS = ["sensor"]
 DEFAULT_NAME = "QNAP"
 DEFAULT_PORT = 8080
 DEFAULT_TIMEOUT = 5
