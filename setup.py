@@ -37,6 +37,7 @@ REQUIRES = [
     "async_timeout==3.0.1",
     "attrs==21.2.0",
     "awesomeversion==21.2.3",
+    'backports.zoneinfo;python_version<"3.9"',
     "bcrypt==3.1.7",
     "certifi>=2020.12.5",
     "ciso8601==2.1.3",
@@ -53,7 +54,6 @@ REQUIRES = [
     "voluptuous==0.12.1",
     "voluptuous-serialize==2.4.0",
     "yarl==1.6.3",
-    'backports.zoneinfo;python_version<"3.9"',
 ]
 
 MIN_PY_VERSION = ".".join(map(str, hass_const.REQUIRED_PYTHON_VER))
