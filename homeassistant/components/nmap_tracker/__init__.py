@@ -152,7 +152,7 @@ class NmapDeviceScanner:
 
     async def async_scan_devices(self, *_):
         """Scan devices and dispatch."""
-        if self._scan_lock.locked() or self.scanner.still_scanning():
+        if self._scan_lock.locked():
             _LOGGER.debug(
                 "Nmap scanning is taking longer than the scheduled interval: %s",
                 TRACKER_SCAN_INTERVAL,
