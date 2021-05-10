@@ -155,7 +155,7 @@ async def test_add_node(
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "device registered"
     # Check the keys of the device item
-    assert list(msg["event"]["device"]) == ["name", "id"]
+    assert list(msg["event"]["device"]) == ["name", "id", "manufacturer", "model"]
 
     # Test receiving interview events
     event = Event(
