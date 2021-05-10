@@ -38,7 +38,6 @@ from .const import (
     DATA_CLIENT,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
-    LOGGER,
 )
 from .helpers import async_enable_statistics, update_data_collection_preference
 
@@ -271,7 +270,6 @@ async def websocket_add_node(
 
     @callback
     def device_registered(device: DeviceEntry) -> None:
-        LOGGER.warning("device registered")
         device_details = {"name": device.name, "id": device.id}
         connection.send_message(
             websocket_api.event_message(
