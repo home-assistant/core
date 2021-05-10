@@ -1,0 +1,17 @@
+{
+    "title": "Heatzy",
+    "config": {
+        "step": {
+            "user": {
+                "title": "Enregistrer votre compte Heatzy.",
+                "data": {
+                    "username": "Email",
+                    "password": "Mot de passe"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Une erreur inconnue s'est produite"
+        }
+    }
+}

@@ -1,0 +1,17 @@
+{
+    "title": "Heatzy",
+    "config": {
+        "step": {
+            "user": {
+                "title": "Register your heatzy account",
+                "data": {
+                    "username": "Username",
+                    "password": "Password"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Can not to connect"
+        }
+    }
+}
