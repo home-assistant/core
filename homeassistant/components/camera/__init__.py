@@ -4,14 +4,14 @@ from __future__ import annotations
 import asyncio
 import base64
 import collections
-from collections.abc import Mapping
+from collections.abc import Awaitable, Mapping
 from contextlib import suppress
 from datetime import datetime, timedelta
 import hashlib
 import logging
 import os
 from random import SystemRandom
-from typing import Awaitable, Callable, Final, cast, final
+from typing import Callable, Final, cast, final
 
 from aiohttp import web
 import async_timeout
