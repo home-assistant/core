@@ -34,5 +34,17 @@
       "invalid_zones": "There needs to be at least 1 zone.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "options": {
+    "step": {
+      "options": {
+        "data": {
+          "ignore_timestamps": "Ignore the timestamp check of the SIA events",
+          "zones": "[%key:component::sia::config::step::user::data::zones%]"
+        },
+        "description": "Set the options for account: {account}",
+        "title": "Options for the SIA Setup."
+      }
+    }
   }
 }

@@ -1,6 +1,7 @@
 """The sia hub."""
 from __future__ import annotations
 
+from copy import deepcopy
 import logging
 from typing import Any
 
@@ -15,8 +16,12 @@ from .const import (
     CONF_ACCOUNT,
     CONF_ACCOUNTS,
     CONF_ENCRYPTION_KEY,
+    CONF_IGNORE_TIMESTAMPS,
+    CONF_ZONES,
     DEFAULT_TIMEBAND,
     DOMAIN,
+    IGNORED_TIMEBAND,
+    PLATFORMS,
     SIA_EVENT,
 )
 
@@ -36,28 +41,14 @@ class SIAHub:
         self._entry: ConfigEntry = entry
         self._port: int = int(entry.data[CONF_PORT])
         self._title: str = entry.title
-        self._accounts: list[dict[str, Any]] = entry.data[CONF_ACCOUNTS]
+        self._accounts: list[dict[str, Any]] = deepcopy(entry.data[CONF_ACCOUNTS])
         self._protocol: str = entry.data[CONF_PROTOCOL]
         self.sia_accounts: list[SIAAccount] | None = None
         self.sia_client: SIAClient = None
 
     async def async_setup_hub(self) -> None:
         """Add a device to the device_registry, register shutdown listener, load reactions."""
-        self.sia_accounts = [
-            SIAAccount(
-                account_id=a[CONF_ACCOUNT],
-                key=a.get(CONF_ENCRYPTION_KEY),
-                allowed_timeband=DEFAULT_TIMEBAND,
-            )
-            for a in self._accounts
-        ]
-        self.sia_client = SIAClient(
-            host="",
-            port=self._port,
-            accounts=self.sia_accounts,
-            function=self.async_create_and_fire_event,
-            protocol=CommunicationsProtocol(self._protocol),
-        )
+        self.update_accounts()
         device_registry = await dr.async_get_registry(self._hass)
         for acc in self._accounts:
             account = acc[CONF_ACCOUNT]
@@ -66,6 +57,9 @@ class SIAHub:
                 identifiers={(DOMAIN, f"{self._port}_{account}")},
                 name=f"{self._port} - {account}",
             )
+        self._entry.async_on_unload(
+            self._entry.add_update_listener(self.async_config_entry_updated)
+        )
         self._entry.async_on_unload(
             self._hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.async_shutdown)
         )
@@ -91,3 +85,54 @@ class SIAHub:
             event_data=event.to_dict(encode_json=True),
             origin=EventOrigin.remote,
         )
+
+    def update_accounts(self):
+        """Update the SIA_Accounts variable."""
+        self._load_options()
+        self.sia_accounts = [
+            SIAAccount(
+                account_id=a[CONF_ACCOUNT],
+                key=a.get(CONF_ENCRYPTION_KEY),
+                allowed_timeband=IGNORED_TIMEBAND
+                if a[CONF_IGNORE_TIMESTAMPS]
+                else DEFAULT_TIMEBAND,
+            )
+            for a in self._accounts
+        ]
+        if self.sia_client is not None:
+            self.sia_client.accounts = self.sia_accounts
+            return
+        self.sia_client = SIAClient(
+            host="",
+            port=self._port,
+            accounts=self.sia_accounts,
+            function=self.async_create_and_fire_event,
+            protocol=CommunicationsProtocol(self._protocol),
+        )
+
+    def _load_options(self) -> None:
+        """Store attributes to avoid property call overhead since they are called frequently."""
+        options = dict(self._entry.options)
+        for acc in self._accounts:
+            acc_id = acc[CONF_ACCOUNT]
+            if acc_id in options[CONF_ACCOUNTS].keys():
+                acc[CONF_IGNORE_TIMESTAMPS] = options[CONF_ACCOUNTS][acc_id][
+                    CONF_IGNORE_TIMESTAMPS
+                ]
+                acc[CONF_ZONES] = options[CONF_ACCOUNTS][acc_id][CONF_ZONES]
+
+    @staticmethod
+    async def async_config_entry_updated(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> None:
+        """Handle signals of config entry being updated.
+
+        First, update the accounts, this will reflect any changes with ignore_timestamps.
+        Second, unload underlying platforms, and then setup platforms, this reflects any changes in number of zones.
+
+        """
+        if not (hub := hass.data[DOMAIN].get(config_entry.entry_id)):
+            return
+        hub.update_accounts()
+        await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+        hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)

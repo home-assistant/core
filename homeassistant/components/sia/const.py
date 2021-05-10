@@ -1,4 +1,9 @@
 """Constants for the sia integration."""
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+)
+
+PLATFORMS = [ALARM_CONTROL_PANEL_DOMAIN]
 
 CONF_ACCOUNT = "account"
 CONF_ACCOUNTS = "accounts"

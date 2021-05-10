@@ -83,7 +83,11 @@ async def async_setup_entry(
         [
             SIAAlarmControlPanel(entry, account_data, zone)
             for account_data in entry.data[CONF_ACCOUNTS]
-            for zone in range(1, account_data[CONF_ZONES] + 1)
+            for zone in range(
+                1,
+                entry.options[CONF_ACCOUNTS][account_data[CONF_ACCOUNT]][CONF_ZONES]
+                + 1,
+            )
         ]
     )
     return True
