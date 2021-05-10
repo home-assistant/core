@@ -11,10 +11,11 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_TYPE_OWSERVER, DOMAIN, SENSOR_TYPE_SENSED
+from .model import DeviceComponentDescription
 from .onewire_entities import OneWireBaseEntity, OneWireProxyEntity
 from .onewirehub import OneWireHub
 
-DEVICE_BINARY_SENSORS = {
+DEVICE_BINARY_SENSORS: dict[str, list[DeviceComponentDescription]] = {
     # Family : { path, sensor_type }
     "12": [
         {

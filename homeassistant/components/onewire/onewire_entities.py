@@ -7,6 +7,7 @@ from typing import Any
 from pyownet import protocol
 
 from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.typing import StateType
 
 from .const import (
     SENSOR_TYPE_COUNT,
@@ -15,6 +16,7 @@ from .const import (
     SWITCH_TYPE_LATCH,
     SWITCH_TYPE_PIO,
 )
+from .model import DeviceComponentDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +41,7 @@ class OneWireBaseEntity(Entity):
         self._device_class = SENSOR_TYPES[entity_type][1]
         self._unit_of_measurement = SENSOR_TYPES[entity_type][0]
         self._device_info = device_info
-        self._state: int | bool | float | None = None
+        self._state: StateType = None
         self._value_raw: float | None = None
         self._default_disabled = default_disabled
         self._unique_id = unique_id
@@ -84,7 +86,7 @@ class OneWireProxyEntity(OneWireBaseEntity):
         device_name: str,
         device_info: DeviceInfo,
         entity_path: str,
-        entity_specs: dict[str, Any],
+        entity_specs: DeviceComponentDescription,
         owproxy: protocol._Proxy,
     ):
         """Initialize the sensor."""

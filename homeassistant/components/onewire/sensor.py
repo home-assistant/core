@@ -37,12 +37,13 @@ from .const import (
     SENSOR_TYPE_VOLTAGE,
     SENSOR_TYPE_WETNESS,
 )
+from .model import DeviceComponentDescription
 from .onewire_entities import OneWireBaseEntity, OneWireProxyEntity
 from .onewirehub import OneWireHub
 
 _LOGGER = logging.getLogger(__name__)
 
-DEVICE_SENSORS = {
+DEVICE_SENSORS: dict[str, list[DeviceComponentDescription]] = {
     # Family : { SensorType: owfs path }
     "10": [
         {"path": "temperature", "name": "Temperature", "type": SENSOR_TYPE_TEMPERATURE}
@@ -150,7 +151,7 @@ DEVICE_SUPPORT_SYSBUS = ["10", "22", "28", "3B", "42"]
 # These can only be read by OWFS.  Currently this driver only supports them
 # via owserver (network protocol)
 
-HOBBYBOARD_EF = {
+HOBBYBOARD_EF: dict[str, list[DeviceComponentDescription]] = {
     "HobbyBoards_EF": [
         {
             "path": "humidity/humidity_corrected",
@@ -194,7 +195,7 @@ HOBBYBOARD_EF = {
 
 # 7E sensors are special sensors by Embedded Data Systems
 
-EDS_SENSORS = {
+EDS_SENSORS: dict[str, list[DeviceComponentDescription]] = {
     "EDS0068": [
         {
             "path": "EDS0068/temperature",
