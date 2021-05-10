@@ -70,7 +70,7 @@ def _async_untrack_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     ]
     for mac_address in remove_mac_addresses:
         if device := devices.tracked.pop(mac_address, None):
-            devices.ipv4_to_mac_address.pop(device.ipv4, None)
+            devices.ipv4_last_mac.pop(device.ipv4, None)
         del devices.config_entry_owner[mac_address]
 
 
@@ -92,7 +92,7 @@ class NmapTrackedDevices:
     def __init__(self) -> None:
         """Initialize the data."""
         self.tracked: dict = {}
-        self.ipv4_to_mac_address: dict = {}
+        self.ipv4_last_mac: dict = {}
         self.config_entry_owner: dict = {}
 
 
@@ -131,8 +131,8 @@ class NmapDeviceScanner:
         )
 
     @lru_cache(maxsize=4096)
-    def get_manufacturer(self, oui):
-        """Lookup the manufacturer."""
+    def get_vendor(self, oui):
+        """Lookup the vendor."""
         try:
             return self.mac_vendor_lookup.lookup(oui)
         except KeyError:
@@ -229,6 +229,12 @@ class NmapDeviceScanner:
         )
         return result
 
+    def _mark_ip_offline(self, ipv4, reason, dispatches):
+        """Mark an IP offline."""
+        if formatted_mac := self.devices.ipv4_last_mac.pop(ipv4, None):
+            self.devices.tracked[formatted_mac].reason = reason
+            dispatches.append((self.signal_device_update(formatted_mac), False))
+
     def _start_nmap_scan(self):
         """Scan the network for devices.
 
@@ -241,20 +247,18 @@ class NmapDeviceScanner:
         dispatches = []
         devices = self.devices
         entry_id = self._entry_id
+        now = dt_util.now()
         for ipv4, info in result["scan"].items():
             status = info["status"]
+            reason = status["reason"]
             if status["state"] != "up":
-                if formatted_mac := devices.ipv4_to_mac_address.pop(ipv4, None):
-                    devices.tracked[formatted_mac].reason = status["reason"]
-                    dispatches.append((self.signal_device_update(formatted_mac), False))
+                self._mark_ip_offline(ipv4, reason, dispatches)
                 continue
             # Mac address only returned if nmap ran as root
             mac = info["addresses"].get("mac") or get_mac_address(ip=ipv4)
             if mac is None:
+                self._mark_ip_offline(ipv4, "No MAC address found", dispatches)
                 _LOGGER.info("No MAC address found for %s", ipv4)
-                if formatted_mac := devices.ipv4_to_mac_address.pop(ipv4, None):
-                    devices.tracked[formatted_mac].reason = "No MAC address found"
-                    dispatches.append((self.signal_device_update(formatted_mac), False))
                 continue
 
             name = info["hostnames"][0]["name"] if info["hostnames"] else ipv4
@@ -266,18 +270,16 @@ class NmapDeviceScanner:
             ):
                 continue
 
-            manufacturer = info.get("vendor", {}).get(mac) or self.get_manufacturer(
+            vendor = info.get("vendor", {}).get(mac) or self.get_vendor(
                 self.mac_vendor_lookup.sanitise(mac)[:6]
             )
-            device = NmapDevice(
-                formatted_mac, name, ipv4, manufacturer, status["reason"], dt_util.now()
-            )
+            device = NmapDevice(formatted_mac, name, ipv4, vendor, reason, now)
             if formatted_mac not in devices.tracked:
                 dispatches.append((self.signal_device_new, formatted_mac))
             dispatches.append((self.signal_device_update(formatted_mac), True))
 
             devices.tracked[formatted_mac] = device
-            devices.ipv4_to_mac_address[ipv4] = formatted_mac
+            devices.ipv4_last_mac[ipv4] = formatted_mac
             self.last_results.append(device)
 
         return dispatches
