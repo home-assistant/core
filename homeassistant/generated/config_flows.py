@@ -92,6 +92,7 @@ FLOWS = [
     "google_travel_time",
     "gpslogger",
     "gree",
+    "growatt_server",
     "guardian",
     "habitica",
     "hangouts",
