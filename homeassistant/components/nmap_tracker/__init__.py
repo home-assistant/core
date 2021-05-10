@@ -7,14 +7,14 @@ from datetime import datetime, timedelta
 import logging
 
 from getmac import get_mac_address
-from nmap import PortScannerAsync, PortScannerError
+from nmap import PortScanner, PortScannerError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
@@ -81,6 +81,7 @@ class NmapDeviceScanner:
         self._hass = hass
         self._entry = entry
         self._scan_lock = None
+        self._stopping = False
         self._entry_id = entry.entry_id
         self.devices = devices
 
@@ -96,7 +97,7 @@ class NmapDeviceScanner:
     def async_setup(self):
         """Set up the tracker."""
         self._scan_lock = asyncio.Lock()
-        self.scanner = PortScannerAsync()
+        self.scanner = PortScanner()
         self._hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED, self._start_scanner
         )
@@ -104,7 +105,7 @@ class NmapDeviceScanner:
     @callback
     def _async_stop(self):
         """Stop the scanner."""
-        self._hass.add_job(self.scanner.stop)
+        self._stopping = True
 
     def _start_scanner(self, *_):
         """Start the scanner."""
@@ -123,7 +124,6 @@ class NmapDeviceScanner:
         """Signal specific per nmap tracker entry to signal new device."""
         return f"{DOMAIN}-device-new-{self._entry_id}"
 
-    @property
     def signal_device_update(self, ipv4) -> str:
         """Signal specific per nmap tracker entry to signal updates in device."""
         return f"{DOMAIN}-device-update-{ipv4}"
@@ -161,19 +161,36 @@ class NmapDeviceScanner:
 
         async with self._scan_lock:
             try:
-                await self._hass.async_add_executor_job(self._run_nmap_scan)
+                dispatches = await self._hass.async_add_executor_job(
+                    self._run_nmap_scan
+                )
             except PortScannerError as ex:
                 _LOGGER.error("Nmap scanning failed: %s", ex)
+            else:
+                for signal, ipv4 in dispatches:
+                    async_dispatcher_send(self._hass, signal, ipv4)
 
-    def _process_nmap_host(self, host, result):
-        """Process an nmap host update."""
-        _LOGGER.debug("Processing nmap for host %s: %s", host, result)
+    def _run_nmap_scan(self):
+        """Scan the network for devices.
+
+        Returns boolean if scanning successful.
+        """
+        options = self._build_options()
+        dispatches = []
+
+        _LOGGER.debug("Scanning %s with args: %s", self.hosts, options)
+
+        result = self.scanner.scan(
+            hosts=" ".join(self.hosts),
+            arguments=options,
+        )
+
+        if self._stopping:
+            return dispatches
         for ipv4, info in result["scan"].items():
             if info["status"]["state"] != "up":
                 if ipv4 in self.devices.tracked:
-                    async_dispatcher_send(
-                        self.hass, self.signal_device_update(ipv4), False
-                    )
+                    dispatches.append((self.signal_device_update(ipv4), False))
                 self.offline_devices.add(ipv4)
                 continue
             name = info["hostnames"][0]["name"] if info["hostnames"] else ipv4
@@ -184,21 +201,8 @@ class NmapDeviceScanner:
                 continue
 
             device = NmapDevice(format_mac(mac), name, ipv4, dt_util.now())
-            dispatcher_send(self._hass, self.signal_device_update(ipv4), True)
+            dispatches.append((self.signal_device_update(ipv4), True))
             if ipv4 not in self.devices.tracked:
-                dispatcher_send(self._hass, self.signal_device_new, ipv4)
+                dispatches.append((self.signal_device_new, ipv4))
             self.last_results.append(device)
-
-    def _run_nmap_scan(self):
-        """Scan the network for devices.
-
-        Returns boolean if scanning successful.
-        """
-        options = self._build_options()
-        _LOGGER.debug("Scanning %s with args: %s", self.hosts, options)
-        self.scanner.scan(
-            hosts=" ".join(self.hosts),
-            arguments=options,
-            callback=self._process_nmap_host,
-        )
-        _LOGGER.debug("Background scan started")
+        return dispatches
