@@ -3,12 +3,11 @@ from datetime import datetime, timedelta
 import logging
 from unittest.mock import patch
 
-from pytz import timezone
-
 from homeassistant.components.pvpc_hourly_pricing import ATTR_TARIFF, DOMAIN
 from homeassistant.const import CONF_NAME
 from homeassistant.core import ATTR_NOW, EVENT_TIME_CHANGED
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import check_valid_state
 
@@ -32,7 +31,7 @@ async def test_sensor_availability(
     hass, caplog, legacy_patchable_time, pvpc_aioclient_mock: AiohttpClientMocker
 ):
     """Test sensor availability and handling of cloud access."""
-    hass.config.time_zone = timezone("Europe/Madrid")
+    hass.config.time_zone = dt_util.get_time_zone("Europe/Madrid")
     config = {DOMAIN: [{CONF_NAME: "test_dst", ATTR_TARIFF: "discrimination"}]}
     mock_data = {"return_time": datetime(2019, 10, 27, 20, 0, 0, tzinfo=date_util.UTC)}
 

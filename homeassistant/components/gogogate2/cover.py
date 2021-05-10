@@ -17,7 +17,7 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     CoverEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -27,27 +27,8 @@ from .common import (
     cover_unique_id,
     get_data_update_coordinator,
 )
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: dict,
-    add_entities: AddEntitiesCallback,
-    discovery_info=None,
-) -> None:
-    """Convert old style file configs to new style configs."""
-    _LOGGER.warning(
-        "Loading gogogate2 via platform config is deprecated; The configuration"
-        " has been migrated to a config entry and can be safely removed"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
 
 
 async def async_setup_entry(

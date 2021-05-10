@@ -9,6 +9,7 @@ homeassistant.components.binary_sensor.*
 homeassistant.components.bond.*
 homeassistant.components.brother.*
 homeassistant.components.calendar.*
+homeassistant.components.camera.*
 homeassistant.components.cover.*
 homeassistant.components.device_automation.*
 homeassistant.components.elgato.*
@@ -40,6 +41,7 @@ homeassistant.components.slack.*
 homeassistant.components.sonos.media_player
 homeassistant.components.sun.*
 homeassistant.components.switch.*
+homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
 homeassistant.components.tts.*
 homeassistant.components.vacuum.*

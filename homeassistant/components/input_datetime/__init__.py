@@ -224,8 +224,8 @@ class InputDatetime(RestoreEntity):
                 dt_util.DEFAULT_TIME_ZONE
             )
         else:
-            self._current_datetime = dt_util.DEFAULT_TIME_ZONE.localize(
-                current_datetime
+            self._current_datetime = current_datetime.replace(
+                tzinfo=dt_util.DEFAULT_TIME_ZONE
             )
 
     @classmethod
@@ -388,8 +388,8 @@ class InputDatetime(RestoreEntity):
         if not time:
             time = self._current_datetime.time()
 
-        self._current_datetime = dt_util.DEFAULT_TIME_ZONE.localize(
-            py_datetime.datetime.combine(date, time)
+        self._current_datetime = py_datetime.datetime.combine(
+            date, time, dt_util.DEFAULT_TIME_ZONE
         )
         self.async_write_ha_state()
 
