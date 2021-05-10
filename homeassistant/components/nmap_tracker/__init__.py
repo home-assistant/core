@@ -175,7 +175,7 @@ class NmapDeviceScanner:
         if self.home_interval:
             boundary = dt_util.now() - self.home_interval
             last_results = [
-                device for device in self.last_results if device.last_update > boundary
+                device for device in self._last_results if device.last_update > boundary
             ]
             if last_results:
                 exclude_hosts = self._exclude + [device.ipv4 for device in last_results]
@@ -192,7 +192,7 @@ class NmapDeviceScanner:
         # Report down hosts
         if "-v" not in options:
             options += " -v"
-        self.last_results = last_results
+        self._last_results = last_results
         return options
 
     async def _async_scan_devices(self, *_):
@@ -284,6 +284,6 @@ class NmapDeviceScanner:
 
             devices.tracked[formatted_mac] = device
             devices.ipv4_last_mac[ipv4] = formatted_mac
-            self.last_results.append(device)
+            self._last_results.append(device)
 
         return dispatches
