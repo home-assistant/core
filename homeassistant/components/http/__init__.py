@@ -321,8 +321,7 @@ class HomeAssistantHTTP:
             """Serve file from disk."""
             if cache_headers:
                 return web.FileResponse(path, headers=CACHE_HEADERS)
-            else:
-                return web.FileResponse(path)
+            return web.FileResponse(path)
 
         self.app.router.add_route("GET", url_path, serve_file)
         return None
