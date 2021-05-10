@@ -47,7 +47,7 @@ def _normalize_ips_and_network(hosts_str):
     except (vol.MultipleInvalid, vol.Invalid):
         return None
 
-    for host in hosts.sorted():
+    for host in sorted(hosts):
         try:
             network = ip_network(host)
         except ValueError:
