@@ -78,7 +78,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
             },
             coordinator,
         )
-        Camera.__init__(self)  # type: ignore[no-untyped-call]
+        Camera.__init__(self)
         self._camera_id = camera_id
 
     @property
