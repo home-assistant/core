@@ -192,6 +192,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) -> None:
         if not device:
             device = await _async_get_device(hass, host, entry, capabilities)
+        entry_data[DATA_DEVICE] = device
 
         entry.async_on_unload(
             async_dispatcher_connect(
@@ -203,8 +204,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         entry.async_on_unload(device.async_unload)
         await device.async_setup()
-
-        entry_data[DATA_DEVICE] = device
 
     @callback
     def _async_load_platforms():

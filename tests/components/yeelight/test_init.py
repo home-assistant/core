@@ -84,6 +84,7 @@ async def test_ip_changes_fallback_discovery(hass: HomeAssistant):
 
     hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE].update()
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
     assert entity_registry.async_get(binary_sensor_entity_id) is not None
@@ -258,6 +259,7 @@ async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant):
     type(mocked_bulb).get_properties = MagicMock(None)
 
     hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE].update()
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
