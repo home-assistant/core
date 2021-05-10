@@ -172,7 +172,7 @@ class NmapDeviceScanner:
                         self.hass, self.signal_device_update(device.mac_address), False
                     )
 
-    def _process_nmap_host(self, result):
+    def _process_nmap_host(self, host, result):
         """Process an nmap host update."""
         _LOGGER.debug("Processing nmap host: %s", result)
         for ipv4, info in result["scan"].items():
