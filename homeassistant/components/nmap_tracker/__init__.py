@@ -107,7 +107,7 @@ class NmapDeviceScanner:
             EVENT_HOMEASSISTANT_STARTED, self._start_scanner
         )
 
-    @lru_cache(max_size=None)
+    @lru_cache(maxsize=4096)
     def get_manufacturer(self, mac_address):
         """Lookup the manufacturer."""
         return self.mac_vendor_lookup.lookup(mac_address)
