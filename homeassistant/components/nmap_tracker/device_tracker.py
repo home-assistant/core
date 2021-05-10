@@ -118,6 +118,7 @@ class NmapTrackerEntity(ScannerEntity):
         """Return the device information."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self._device.mac_address)},
+            "manufacturer": self._device.manufacturer,
             "name": self.name,
         }
 
@@ -140,7 +141,9 @@ class NmapTrackerEntity(ScannerEntity):
     def extra_state_attributes(self):
         """Return the attributes."""
         return {
-            "last_time_reachable": self._device.last_update.isoformat(timespec="seconds")
+            "last_time_reachable": self._device.last_update.isoformat(
+                timespec="seconds"
+            )
         }
 
     @callback

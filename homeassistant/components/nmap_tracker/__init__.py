@@ -4,9 +4,11 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import lru_cache
 import logging
 
 from getmac import get_mac_address
+from mac_vendor_lookup import MacLookup
 from nmap import PortScanner, PortScannerError
 
 from homeassistant.config_entries import ConfigEntry
@@ -62,6 +64,7 @@ class NmapDevice:
     mac_address: str
     hostname: str
     ipv4: str
+    manufacturer: str
     last_update: datetime.datetime
 
 
@@ -84,6 +87,7 @@ class NmapDeviceScanner:
         self._stopping = False
         self._entry_id = entry.entry_id
         self.devices = devices
+        self.mac_vendor_lookup = None
 
         config = entry.options
         self.last_results = []
@@ -101,6 +105,11 @@ class NmapDeviceScanner:
         self._hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED, self._start_scanner
         )
+
+    @lru_cache(max_size=None)
+    def get_manufacturer(self, mac_address):
+        """Lookup the manufacturer."""
+        return self.mac_vendor_lookup.lookup(mac_address)
 
     @callback
     def _async_stop(self):
@@ -174,6 +183,8 @@ class NmapDeviceScanner:
         Returns boolean if scanning successful.
         """
         options = self._build_options()
+        if not self.mac_vendor_lookup:
+            self.mac_vendor_lookup = MacLookup()
         dispatches = []
 
         _LOGGER.debug("Scanning %s with args: %s", self.hosts, options)
@@ -198,7 +209,10 @@ class NmapDeviceScanner:
                 _LOGGER.info("No MAC address found for %s", ipv4)
                 continue
 
-            device = NmapDevice(format_mac(mac), name, ipv4, dt_util.now())
+            manufacturer = self.get_manufacturer(mac)
+            device = NmapDevice(
+                format_mac(mac), name, ipv4, manufacturer, dt_util.now()
+            )
             dispatches.append((self.signal_device_update(ipv4), True))
             if self.devices.tracked.setdefault(ipv4, device) is device:
                 dispatches.append((self.signal_device_new, ipv4))
