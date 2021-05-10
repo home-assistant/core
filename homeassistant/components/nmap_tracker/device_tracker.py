@@ -140,7 +140,7 @@ class NmapTrackerEntity(ScannerEntity):
     def extra_state_attributes(self):
         """Return the attributes."""
         return {
-            "last_time_reachable": self.device.last_update.isoformat(timespec="seconds")
+            "last_time_reachable": self._device.last_update.isoformat(timespec="seconds")
         }
 
     @callback
