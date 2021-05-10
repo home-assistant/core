@@ -91,7 +91,7 @@ class NmapTrackerEntity(ScannerEntity):
     @property
     def unique_id(self) -> str:
         """Return device unique id."""
-        return self.device.mac_address
+        return self._device.mac_address
 
     @property
     def ip_address(self) -> str:
@@ -101,7 +101,7 @@ class NmapTrackerEntity(ScannerEntity):
     @property
     def mac_address(self) -> str:
         """Return the mac address of the device."""
-        return self.device.mac_address
+        return self._device.mac_address
 
     @property
     def hostname(self) -> str:
