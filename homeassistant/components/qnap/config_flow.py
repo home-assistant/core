@@ -38,7 +38,6 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Qnap configuration flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize."""
@@ -55,13 +54,13 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            host = user_input.get(CONF_HOST)
+            host = user_input[CONF_HOST]
             protocol = "https" if user_input.get(CONF_SSL, False) else "http"
             api = QNAPStats(
                 host=f"{protocol}://{host}",
                 port=user_input.get(CONF_PORT, DEFAULT_PORT),
-                username=user_input.get(CONF_USERNAME),
-                password=user_input.get(CONF_PASSWORD),
+                username=user_input.get[CONF_USERNAME],
+                password=user_input.get[CONF_PASSWORD],
                 verify_ssl=user_input.get(CONF_VERIFY_SSL, True),
                 timeout=DEFAULT_TIMEOUT,
             )
