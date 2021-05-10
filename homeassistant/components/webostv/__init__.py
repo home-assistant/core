@@ -31,11 +31,11 @@ from .const import (
     ATTR_COMMAND,
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
-    COMPONENTS,
     CONF_ON_ACTION,
     CONF_SOURCES,
     DEFAULT_NAME,
     DOMAIN,
+    PLATFORMS,
     SERVICE_BUTTON,
     SERVICE_COMMAND,
     SERVICE_SELECT_SOUND_OUTPUT,
@@ -131,6 +131,7 @@ async def async_setup_entry(hass, config_entry):
 
     host = config_entry.data[CONF_HOST]
     key = config_entry.data[CONF_CLIENT_SECRET]
+
     client = await WebOsClient.create(host, client_key=key)
     await async_connect(client)
 
@@ -158,7 +159,7 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN][host] = {"client": client}
 
-    for component in COMPONENTS:
+    for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
@@ -201,19 +202,15 @@ async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
     host = config_entry.data[CONF_HOST]
     client = hass.data[DOMAIN][host]["client"]
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in COMPONENTS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
 
     if unload_ok:
         await hass_notify.async_reload(hass, DOMAIN)
         client.clear_state_update_callbacks()
         await client.disconnect()
+        hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
 
