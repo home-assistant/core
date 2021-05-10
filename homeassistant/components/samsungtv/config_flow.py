@@ -82,14 +82,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_set_device_unique_id(self, raise_on_progress=True):
         """Set device unique_id."""
 
-        if self._id:
-            await self.async_set_unique_id(
-                self._id, raise_on_progress=raise_on_progress
-            )
-            self._abort_if_unique_id_configured()
-
-        if not self._device_info:
-            await self._async_get_and_check_device_info()
+        await self._async_get_and_check_device_info()
 
         if uuid := self._device_info.get("device", {}).get(ATTR_UPNP_UDN.lower()):
             self._id = uuid
@@ -148,6 +141,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
         self._model = dev_info.get("modelName")
         self._manufacturer = "Samsung"
+        self._name = dev_info.get("name")
+        self._title = f"{self._name} ({self._model})"
         if dev_info.get("networkType") == "wireless":
             self._mac = dev_info.get("wifiMac")
 
@@ -179,17 +174,16 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by ssdp discovery."""
         self._host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
 
-        LOGGER.debug("Found Samsung device via ssdp at %s", self._host)
+        LOGGER.debug(
+            "Found Samsung device via ssdp at %s (%s)", self._host, discovery_info
+        )
         await self._async_set_device_unique_id()
 
         self._manufacturer = discovery_info.get(ATTR_UPNP_MANUFACTURER)
         if not self._model:
             self._model = discovery_info.get(ATTR_UPNP_MODEL_NAME)
 
-        self._name = f"{self._manufacturer} {self._model}"
-        self._title = self._model
-
-        self.context["title_placeholders"] = {"model": self._model}
+        self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 
     async def async_step_dhcp(self, discovery_info: DiscoveryInfoType):
@@ -201,14 +195,16 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         await self._async_set_device_unique_id()
 
-        self.context["title_placeholders"] = {"model": self._model}
+        self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle a flow initialized by zeroconf discovery."""
         self._host = discovery_info[CONF_HOST]
 
-        LOGGER.debug("Found Samsung device via zeroconf at %s", self._host)
+        LOGGER.debug(
+            "Found Samsung device via zeroconf at %s (%s)", self._host, discovery_info
+        )
 
         await self._async_set_device_unique_id()
 
@@ -216,10 +212,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._manufacturer = discovery_info[ATTR_PROPERTIES].get("manufacturer")
         if not self._model:
             self._model = discovery_info[ATTR_PROPERTIES].get("model")
-        self._name = f"{self._manufacturer} {self._model}"
-        self._title = self._model
 
-        self.context["title_placeholders"] = {"model": self._model}
+        self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 
     async def async_step_confirm(self, user_input=None):
@@ -231,7 +225,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._set_confirm_only()
         return self.async_show_form(
-            step_id="confirm", description_placeholders={"model": self._model}
+            step_id="confirm", description_placeholders={"device": self._title}
         )
 
     async def async_step_reauth(self, user_input):
@@ -240,9 +234,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._manufacturer = user_input.get(CONF_MANUFACTURER)
         self._model = user_input.get(CONF_MODEL)
         self._name = user_input.get(CONF_NAME)
-        self._title = self._model or self._name
+        self._title = self._name or self._model
 
         await self.async_set_unique_id(self._id)
-        self.context["title_placeholders"] = {"model": self._title}
+        self.context["title_placeholders"] = {"device": self._title}
 
         return await self.async_step_confirm()
