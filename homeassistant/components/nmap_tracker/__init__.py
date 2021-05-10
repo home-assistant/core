@@ -132,7 +132,10 @@ class NmapDeviceScanner:
     @lru_cache(maxsize=4096)
     def get_manufacturer(self, mac_address):
         """Lookup the manufacturer."""
-        return self.mac_vendor_lookup.lookup(mac_address)
+        try:
+            return self.mac_vendor_lookup.lookup(mac_address)
+        except KeyError:
+            return None
 
     @callback
     def _async_stop(self):
@@ -233,7 +236,9 @@ class NmapDeviceScanner:
                 continue
 
             formatted_mac = format_mac(mac)
-            manufacturer = self.get_manufacturer(mac)
+            manufacturer = self.get_manufacturer(
+                self.mac_vendor_lookup.sanitise(mac)[:6]
+            )
             device = NmapDevice(formatted_mac, name, ipv4, manufacturer, dt_util.now())
             dispatches.append((self.signal_device_update(formatted_mac), True))
             if (
