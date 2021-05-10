@@ -171,6 +171,12 @@ class NmapDeviceScanner:
             exclude_hosts = self.exclude
         if exclude_hosts:
             options += f" --exclude {','.join(exclude_hosts)}"
+        # Report reason
+        if "--reason" not in options:
+            options += " --reason"
+        # Report down hosts
+        if "-v" not in options:
+            options += " -v"
         self.last_results = last_results
         return options
 
