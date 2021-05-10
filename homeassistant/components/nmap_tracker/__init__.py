@@ -203,7 +203,7 @@ class NmapDeviceScanner:
         async with self._scan_lock:
             try:
                 dispatches = await self._hass.async_add_executor_job(
-                    self._run_nmap_scan
+                    self._start_nmap_scan
                 )
             except PortScannerError as ex:
                 _LOGGER.error("Nmap scanning failed: %s", ex)
@@ -212,26 +212,33 @@ class NmapDeviceScanner:
                     async_dispatcher_send(self._hass, signal, ipv4)
 
     def _run_nmap_scan(self):
-        """Scan the network for devices.
-
-        Returns boolean if scanning successful.
-        """
+        """Run nmap and return the result."""
         options = self._build_options()
         if not self.mac_vendor_lookup:
             self.mac_vendor_lookup = MacLookup()
-        dispatches = []
-
         _LOGGER.debug("Scanning %s with args: %s", self.hosts, options)
-
         result = self.scanner.scan(
             hosts=" ".join(self.hosts),
             arguments=options,
             timeout=TRACKER_SCAN_INTERVAL * 10,
         )
+        _LOGGER.debug(
+            "Finished scanning %s with args: %s",
+            self.hosts,
+            options,
+        )
+        return result
 
+    def _start_nmap_scan(self):
+        """Scan the network for devices.
+
+        Returns dispatches to callback if scanning successful.
+        """
+        result = self._run_nmap_scan()
         if self._stopping:
-            return dispatches
+            return []
 
+        dispatches = []
         devices = self.devices
         entry_id = self._entry_id
         for ipv4, info in result["scan"].items():
@@ -272,11 +279,5 @@ class NmapDeviceScanner:
             devices.tracked[formatted_mac] = device
             devices.ipv4_to_mac_address[ipv4] = formatted_mac
             self.last_results.append(device)
-
-        _LOGGER.debug(
-            "Finished scanning %s with args: %s",
-            self.hosts,
-            options,
-        )
 
         return dispatches
