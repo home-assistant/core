@@ -87,7 +87,7 @@ class NmapDevice:
 
 
 class NmapTrackedDevices:
-    """Storage class for platform global data."""
+    """Storage class for all nmap trackers."""
 
     def __init__(self) -> None:
         """Initialize the data."""
@@ -101,27 +101,31 @@ class NmapDeviceScanner:
 
     def __init__(self, hass, entry, devices):
         """Initialize the scanner."""
+        self.devices = devices
+        self.home_interval = None
+
         self._hass = hass
         self._entry = entry
         self._scan_lock = None
         self._stopping = False
         self._entry_id = entry.entry_id
-        self.devices = devices
-
-        config = entry.options
-        self.last_results = []
-        self.hosts = cv.ensure_list(config[CONF_HOSTS])
-        self.exclude = cv.ensure_list(config[CONF_EXCLUDE])
-        minutes = cv.positive_int(config[CONF_HOME_INTERVAL])
-        self._options = config[CONF_OPTIONS]
-        self.home_interval = timedelta(minutes=minutes)
-        self.mac_vendor_lookup = None
+        self._hosts = None
+        self._exclude = None
+        self._last_results = []
+        self._mac_vendor_lookup = None
 
     @callback
     def async_setup(self):
         """Set up the tracker."""
+        config = self._entry.options
+        self._hosts = cv.ensure_list_csv(config[CONF_HOSTS])
+        self._exclude = cv.ensure_list_csv(config[CONF_EXCLUDE])
+        self._options = config[CONF_OPTIONS]
+        self.home_interval = timedelta(
+            minutes=cv.positive_int(config[CONF_HOME_INTERVAL])
+        )
         self._scan_lock = asyncio.Lock()
-        self.scanner = PortScanner()
+        self._scanner = PortScanner()
         if self._hass.state == CoreState.running:
             self._async_start_scanner()
             return
@@ -130,11 +134,20 @@ class NmapDeviceScanner:
             EVENT_HOMEASSISTANT_STARTED, self._async_start_scanner
         )
 
+    @property
+    def signal_device_new(self) -> str:
+        """Signal specific per nmap tracker entry to signal new device."""
+        return f"{DOMAIN}-device-new-{self._entry_id}"
+
+    def signal_device_update(self, mac_address) -> str:
+        """Signal specific per nmap tracker entry to signal updates in device."""
+        return f"{DOMAIN}-device-update-{mac_address}"
+
     @lru_cache(maxsize=4096)
-    def get_vendor(self, oui):
+    def _get_vendor(self, oui):
         """Lookup the vendor."""
         try:
-            return self.mac_vendor_lookup.lookup(oui)
+            return self._mac_vendor_lookup.lookup(oui)
         except KeyError:
             return None
 
@@ -150,20 +163,11 @@ class NmapDeviceScanner:
         self._entry.async_on_unload(
             async_track_time_interval(
                 self._hass,
-                self.async_scan_devices,
+                self._async_scan_devices,
                 timedelta(seconds=TRACKER_SCAN_INTERVAL),
             )
         )
-        self._hass.async_create_task(self.async_scan_devices())
-
-    @property
-    def signal_device_new(self) -> str:
-        """Signal specific per nmap tracker entry to signal new device."""
-        return f"{DOMAIN}-device-new-{self._entry_id}"
-
-    def signal_device_update(self, mac_address) -> str:
-        """Signal specific per nmap tracker entry to signal updates in device."""
-        return f"{DOMAIN}-device-update-{mac_address}"
+        self._hass.async_create_task(self._async_scan_devices())
 
     def _build_options(self):
         """Build the command line and strip out last results that do not need to be updated."""
@@ -174,12 +178,12 @@ class NmapDeviceScanner:
                 device for device in self.last_results if device.last_update > boundary
             ]
             if last_results:
-                exclude_hosts = self.exclude + [device.ipv4 for device in last_results]
+                exclude_hosts = self._exclude + [device.ipv4 for device in last_results]
             else:
-                exclude_hosts = self.exclude
+                exclude_hosts = self._exclude
         else:
             last_results = []
-            exclude_hosts = self.exclude
+            exclude_hosts = self._exclude
         if exclude_hosts:
             options += f" --exclude {','.join(exclude_hosts)}"
         # Report reason
@@ -191,7 +195,7 @@ class NmapDeviceScanner:
         self.last_results = last_results
         return options
 
-    async def async_scan_devices(self, *_):
+    async def _async_scan_devices(self, *_):
         """Scan devices and dispatch."""
         if self._scan_lock.locked():
             _LOGGER.debug(
@@ -216,15 +220,15 @@ class NmapDeviceScanner:
         options = self._build_options()
         if not self.mac_vendor_lookup:
             self.mac_vendor_lookup = MacLookup()
-        _LOGGER.debug("Scanning %s with args: %s", self.hosts, options)
-        result = self.scanner.scan(
-            hosts=" ".join(self.hosts),
+        _LOGGER.debug("Scanning %s with args: %s", self._hosts, options)
+        result = self._scanner.scan(
+            hosts=" ".join(self._hosts),
             arguments=options,
             timeout=TRACKER_SCAN_INTERVAL * 10,
         )
         _LOGGER.debug(
             "Finished scanning %s with args: %s",
-            self.hosts,
+            self._hosts,
             options,
         )
         return result
@@ -270,8 +274,8 @@ class NmapDeviceScanner:
             ):
                 continue
 
-            vendor = info.get("vendor", {}).get(mac) or self.get_vendor(
-                self.mac_vendor_lookup.sanitise(mac)[:6]
+            vendor = info.get("vendor", {}).get(mac) or self._get_vendor(
+                self._mac_vendor_lookup.sanitise(mac)[:6]
             )
             device = NmapDevice(formatted_mac, name, ipv4, vendor, reason, now)
             if formatted_mac not in devices.tracked:
