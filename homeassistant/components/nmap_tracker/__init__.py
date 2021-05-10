@@ -149,7 +149,8 @@ class NmapDeviceScanner:
                     online_devices,
                     offline_devices,
                 ) = await self._hass.async_add_executor_job(self._run_nmap_scan)
-            except PortScannerError:
+            except PortScannerError as ex:
+                _LOGGER.error("nmap scanning failed: %s", ex)
                 return
 
             for device in online_devices:
