@@ -994,6 +994,9 @@ python-miio==0.5.6
 # homeassistant.components.nest
 python-nest==4.1.0
 
+# homeassistant.components.nmap_tracker
+python-nmap==0.6.1
+
 # homeassistant.components.ozw
 python-openzwave-mqtt[mqtt-client]==1.4.0
 
