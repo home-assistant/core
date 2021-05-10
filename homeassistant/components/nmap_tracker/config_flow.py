@@ -54,6 +54,7 @@ def _normalize_ips_and_network(hosts_str):
             pass
         else:
             normalized_hosts.append(str(ip))
+            continue
 
         try:
             network = ip_network(host)
@@ -61,7 +62,6 @@ def _normalize_ips_and_network(hosts_str):
             return None
         else:
             normalized_hosts.append(str(network))
-            continue
 
     return normalized_hosts
 
