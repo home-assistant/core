@@ -253,20 +253,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES].pop(entry.entry_id)
+    data_config_entries = hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
+    entry_data = data_config_entries[entry.entry_id]
+
+    if DATA_DEVICE in entry_data:
+        if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+            return False
+        data = data_config_entries.pop(entry.entry_id)
         remove_init_dispatcher = data.get(DATA_REMOVE_INIT_DISPATCHER)
         if remove_init_dispatcher is not None:
             remove_init_dispatcher()
         data[DATA_UNSUB_UPDATE_LISTENER]()
         data[DATA_DEVICE].async_unload()
-        if entry.data[CONF_ID]:
-            # discovery
-            scanner = YeelightScanner.async_get(hass)
-            scanner.async_unregister_callback(entry.data[CONF_ID])
 
-    return unload_ok
+    if entry.data[CONF_ID]:
+        # discovery
+        scanner = YeelightScanner.async_get(hass)
+        scanner.async_unregister_callback(entry.data[CONF_ID])
+
+    return True
 
 
 @callback
