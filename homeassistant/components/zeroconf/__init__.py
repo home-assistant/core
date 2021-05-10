@@ -467,8 +467,8 @@ def handle_homekit(
     for test_model in homekit_models:
         if (
             model != test_model
-            and not model.startswith(f"{test_model} ")
-            and not model.startswith(f"{test_model}-")
+            and not model.startswith((f"{test_model} ", f"{test_model}-"))
+            and not fnmatch.fnmatch(model, test_model)
         ):
             continue
 
