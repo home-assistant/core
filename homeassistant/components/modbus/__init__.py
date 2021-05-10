@@ -65,12 +65,10 @@ from .const import (
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_PARITY,
-    CONF_PLATFORMS,
     CONF_PRECISION,
     CONF_REGISTER,
     CONF_REVERSE_ORDER,
     CONF_SCALE,
-    CONF_SECRET_TIMEOUT,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OFF,
@@ -100,6 +98,7 @@ from .const import (
     DEFAULT_TEMP_UNIT,
     MINIMUM_SCAN_INTERVAL,
     MODBUS_DOMAIN as DOMAIN,
+    PLATFORMS,
 )
 from .modbus import modbus_setup
 
@@ -131,22 +130,31 @@ def control_scan_interval(config: dict) -> dict:
     """Control scan_interval."""
     for hub in config:
         minimum_scan_interval = DEFAULT_SCAN_INTERVAL
-        for component, conf_key in CONF_PLATFORMS:
-            if conf_key in hub:
-                for entry in hub[conf_key]:
-                    scan_interval = entry.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-                    if scan_interval < MINIMUM_SCAN_INTERVAL:
-                        _LOGGER.warning(
-                            "%s %s scan_interval(%d) is adjusted to minimum(%d)",
-                            component,
-                            entry.get(CONF_NAME),
-                            scan_interval,
-                            MINIMUM_SCAN_INTERVAL,
-                        )
-                        scan_interval = MINIMUM_SCAN_INTERVAL
-                    entry[CONF_SCAN_INTERVAL] = scan_interval
-                    scan_interval = min(scan_interval, minimum_scan_interval)
-        hub[CONF_SECRET_TIMEOUT] = minimum_scan_interval - 1
+        for component, conf_key in PLATFORMS:
+            if conf_key not in hub:
+                continue
+
+            for entry in hub[conf_key]:
+                scan_interval = entry.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+                if scan_interval < MINIMUM_SCAN_INTERVAL:
+                    _LOGGER.warning(
+                        "%s %s scan_interval(%d) is adjusted to minimum(%d)",
+                        component,
+                        entry.get(CONF_NAME),
+                        scan_interval,
+                        MINIMUM_SCAN_INTERVAL,
+                    )
+                    scan_interval = MINIMUM_SCAN_INTERVAL
+                entry[CONF_SCAN_INTERVAL] = scan_interval
+                minimum_scan_interval = min(scan_interval, minimum_scan_interval)
+        if CONF_TIMEOUT in hub and hub[CONF_TIMEOUT] > minimum_scan_interval - 1:
+            _LOGGER.warning(
+                "modbus %s timeout(%d) is adjusted(%d) due to scan_interval",
+                hub.get(CONF_NAME, ""),
+                hub[CONF_TIMEOUT],
+                minimum_scan_interval - 1,
+            )
+        hub[CONF_TIMEOUT] = minimum_scan_interval - 1
     return config
 
 
@@ -281,9 +289,6 @@ MODBUS_SCHEMA = vol.Schema(
         vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
         vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSOR_SCHEMA]),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
-        vol.Required(
-            CONF_SECRET_TIMEOUT
-        ): cv.positive_int,  # Internal transport variable
     }
 )
 

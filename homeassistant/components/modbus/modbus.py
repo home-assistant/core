@@ -29,12 +29,10 @@ from .const import (
     CONF_BAUDRATE,
     CONF_BYTESIZE,
     CONF_PARITY,
-    CONF_PLATFORMS,
-    CONF_SECRET_TIMEOUT,
     CONF_STOPBITS,
     DEFAULT_HUB,
-    DEFAULT_SCAN_INTERVAL,
     MODBUS_DOMAIN as DOMAIN,
+    PLATFORMS,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
 )
@@ -56,7 +54,7 @@ def modbus_setup(
         hub_collect[conf_hub[CONF_NAME]].setup(hass)
 
         # load platforms
-        for component, conf_key in CONF_PLATFORMS:
+        for component, conf_key in PLATFORMS:
             if conf_key in conf_hub:
                 load_platform(hass, component, DOMAIN, conf_hub, config)
 
@@ -127,11 +125,7 @@ class ModbusHub:
         self._config_port = client_config[CONF_PORT]
         self._config_timeout = client_config[CONF_TIMEOUT]
         self._config_delay = client_config[CONF_DELAY]
-
-        if CONF_SECRET_TIMEOUT in client_config:
-            Defaults.Timeout = client_config[CONF_SECRET_TIMEOUT]
-        else:
-            Defaults.Timeout = DEFAULT_SCAN_INTERVAL - 1
+        Defaults.Timeout = client_config[CONF_TIMEOUT]
         if self._config_type == "serial":
             # serial configuration
             self._config_method = client_config[CONF_METHOD]
