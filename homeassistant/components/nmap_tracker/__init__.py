@@ -124,9 +124,9 @@ class NmapDeviceScanner:
         return f"{DOMAIN}-device-new-{self._entry_id}"
 
     @property
-    def signal_device_update(self, formatted_mac) -> str:
+    def signal_device_update(self, ipv4) -> str:
         """Signal specific per nmap tracker entry to signal updates in device."""
-        return f"{DOMAIN}-device-update-{formatted_mac}"
+        return f"{DOMAIN}-device-update-{ipv4}"
 
     def _build_options(self):
         """Build the command line and strip out last results that do not need to be updated."""
@@ -160,24 +160,20 @@ class NmapDeviceScanner:
             return
 
         async with self._scan_lock:
-            self.offline_devices = set()
             try:
                 await self._hass.async_add_executor_job(self._run_nmap_scan)
             except PortScannerError as ex:
-                _LOGGER.error("nmap scanning failed: %s", ex)
-                return
-
-            for device in self.devices.tracked.values():
-                if device.ip_address in self.offline_devices:
-                    async_dispatcher_send(
-                        self.hass, self.signal_device_update(device.mac_address), False
-                    )
+                _LOGGER.error("Nmap scanning failed: %s", ex)
 
     def _process_nmap_host(self, host, result):
         """Process an nmap host update."""
         _LOGGER.debug("Processing nmap host: %s", result)
         for ipv4, info in result["scan"].items():
             if info["status"]["state"] != "up":
+                if ipv4 in self.devices.tracked:
+                    async_dispatcher_send(
+                        self.hass, self.signal_device_update(ipv4), False
+                    )
                 self.offline_devices.add(ipv4)
                 continue
             name = info["hostnames"][0]["name"] if info["hostnames"] else ipv4
@@ -188,11 +184,11 @@ class NmapDeviceScanner:
                 continue
             formatted_mac = format_mac(mac)
 
-        device = NmapDevice(formatted_mac, name, ipv4, dt_util.now())
-        dispatcher_send(self._hass, self.signal_device_update(device.mac_address), True)
-        if device.mac_address not in self.devices.tracked:
-            dispatcher_send(self._hass, self.signal_device_new, device.mac_address)
-        self.last_results.append(device)
+            device = NmapDevice(formatted_mac, name, ipv4, dt_util.now())
+            dispatcher_send(self._hass, self.signal_device_update(ipv4), True)
+            if ipv4 not in self.devices.tracked:
+                dispatcher_send(self._hass, self.signal_device_new, ipv4)
+            self.last_results.append(device)
 
     def _run_nmap_scan(self):
         """Scan the network for devices.
@@ -206,3 +202,4 @@ class NmapDeviceScanner:
             arguments=options,
             callback=self._process_nmap_host,
         )
+        _LOGGER.debug("Background scan started")
