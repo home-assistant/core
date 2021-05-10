@@ -8,7 +8,7 @@ import logging
 import voluptuous as vol
 from yeelight import Bulb, BulbException, discover_bulbs
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -182,7 +182,11 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Yeelight from a config entry."""
 
-    async def _initialize(host: str, capabilities: dict | None = None) -> None:
+    async def _initialize(
+        host: str,
+        capabilities: dict | None = None,
+        device: YeelightDevice | None = None,
+    ) -> None:
         remove_dispatcher = async_dispatcher_connect(
             hass,
             DEVICE_INITIALIZED.format(host),
@@ -192,7 +196,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             DATA_REMOVE_INIT_DISPATCHER
         ] = remove_dispatcher
 
-        device = await _async_get_device(hass, host, entry, capabilities)
+        if not device:
+            device = await _async_get_device(hass, host, entry, capabilities)
         hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id][DATA_DEVICE] = device
 
         await device.async_setup()
@@ -228,13 +233,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     if entry.data.get(CONF_HOST):
-        # manually added device
-        await _initialize(entry.data[CONF_HOST])
-    else:
-        # discovery
-        scanner = YeelightScanner.async_get(hass)
-        scanner.async_register_callback(entry.data[CONF_ID], _initialize)
+        try:
+            device = await _async_get_device(hass, entry.data[CONF_HOST], entry)
+        except OSError as ex:
+            # If CONF_ID is not valid we cannot fallback to discovery
+            # so we must retry by raising  ConfigEntryNotReady
+            if not entry.data.get(CONF_ID):
+                raise ConfigEntryNotReady from ex
+        else:
+            # manually added device
+            await _initialize(entry.data[CONF_HOST], device=device)
+            return True
 
+    # discovery
+    scanner = YeelightScanner.async_get(hass)
+    scanner.async_register_callback(entry.data[CONF_ID], _initialize)
     return True
 
 

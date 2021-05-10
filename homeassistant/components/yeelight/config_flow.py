@@ -72,7 +72,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_create_entry(
                 title=f"{self._discovered_model} {self.unique_id}",
-                data={CONF_HOST: self._discovered_ip},
+                data={CONF_ID: self.unique_id, CONF_HOST: self._discovered_ip},
             )
 
         self._set_confirm_only()
@@ -94,11 +94,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     model = await self._async_try_connect(user_input[CONF_HOST])
                 except CannotConnect:
                     errors["base"] = "cannot_connect"
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=f"{model} {self.unique_id}",
-                    data=user_input,
-                )
+                else:
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        title=f"{model} {self.unique_id}",
+                        data=user_input,
+                    )
             else:
                 return await self.async_step_pick_device()
 

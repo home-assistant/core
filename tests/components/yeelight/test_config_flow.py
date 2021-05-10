@@ -205,7 +205,7 @@ async def test_manual(hass: HomeAssistant):
         )
         await hass.async_block_till_done()
     assert result4["type"] == "create_entry"
-    assert result4["title"] == IP_ADDRESS
+    assert result4["title"] == "color 0x000000000015243f"
     assert result4["data"] == {CONF_HOST: IP_ADDRESS}
 
     # Duplicate
