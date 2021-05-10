@@ -166,7 +166,12 @@ ATTR_TO_HA_METRIC = {
         LENGTH_KILOMETERS,
         True,
     ],
-    "chargecycle_range_user_high": ["mdi:map-marker-distance", None, LENGTH_KILOMETERS, True],
+    "chargecycle_range_user_high": [
+        "mdi:map-marker-distance",
+        None,
+        LENGTH_KILOMETERS,
+        True
+    ],
     "total_electric_distance_community_average": [
         "mdi:map-marker-distance",
         None,
@@ -395,6 +400,7 @@ ATTR_TO_HA_IMPERIAL.update(ATTR_TO_HA_GENERIC)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the BMW ConnectedDrive sensors from config entry."""
+    # pylint: disable=too-many-nested-blocks
     if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
         attribute_info = ATTR_TO_HA_IMPERIAL
     else:
