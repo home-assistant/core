@@ -270,7 +270,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 for key in _FOLDER_MON_COND
             ]
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors)
 
 
 def round_nicely(number):
@@ -313,7 +313,13 @@ class QNAPSensor(Entity):
     @property
     def device_info(self):
         """Return device information."""
-        return {"identifiers": {(DOMAIN, self.uid)}}
+        return {
+            "identifiers": {(DOMAIN, self.uid)},
+            "name": self.coordinator.data["system_stats"]["system"]["name"],
+            "model": self.coordinator.data["system_stats"]["system"]["model"],
+            "sw_version": self.coordinator.data["system_stats"]["firmware"]["version"],
+            "manufacturer": DEFAULT_NAME,
+        }
 
     @property
     def entity_registry_enabled_default(self) -> bool:

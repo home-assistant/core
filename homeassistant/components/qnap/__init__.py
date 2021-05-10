@@ -3,7 +3,6 @@ from datetime import timedelta
 import logging
 
 from qnapstats import QNAPStats
-from requests.exceptions import ConnectTimeout
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -14,11 +13,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_per_platform, device_registry as dr
+from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
+from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
 
 UPDATE_INTERVAL = timedelta(minutes=1)
 
@@ -57,20 +55,6 @@ async def async_setup_entry(hass, config_entry):
         password=config_entry.data[CONF_PASSWORD],
         verify_ssl=config_entry.options.get(CONF_VERIFY_SSL),
         timeout=DEFAULT_TIMEOUT,
-    )
-    try:
-        system_info = await hass.async_add_executor_job(api.get_system_stats)
-    except ConnectTimeout as error:
-        raise ConfigEntryNotReady from error
-
-    device_registry = await dr.async_get_registry(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, config_entry.unique_id)},
-        manufacturer=DEFAULT_NAME,
-        name=system_info["system"]["name"],
-        model=system_info["system"]["model"],
-        sw_version=system_info["firmware"]["version"],
     )
 
     async def async_update_data():
