@@ -113,7 +113,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         errors = {}
         if user_input is not None:
             self.options.update(user_input)
-            errors = normalize_input(self.hass, user_input)
+            errors = normalize_input(user_input)
 
             if not errors:
                 return self.async_create_entry(
@@ -146,7 +146,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             self.options.update(user_input)
-            errors = normalize_input(self.hass, user_input)
+            errors = normalize_input(user_input)
 
             if not errors:
                 return self.async_create_entry(
