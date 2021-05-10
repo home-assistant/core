@@ -69,11 +69,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(self, user_input=None):
         """Confirm discovery."""
-        if user_input:
+        if user_input is not None:
             return self.async_create_entry(
                 title=f"{self._discovered_model} {self.unique_id}",
                 data={CONF_HOST: self._discovered_ip},
             )
+
+        self._set_confirm_only()
         placeholders = {
             "model": self._discovered_model,
             "host": self._discovered_ip,
