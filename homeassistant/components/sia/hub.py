@@ -66,9 +66,9 @@ class SIAHub:
 
     async def async_shutdown(self, _: Event = None) -> None:
         """Shutdown the SIA server."""
-        await self.sia_client.stop()  # type: ignore
+        await self.sia_client.stop()
 
-    async def async_create_and_fire_event(self, event: SIAEvent) -> None:  # type: ignore
+    async def async_create_and_fire_event(self, event: SIAEvent) -> None:
         """Create a event on HA's bus, with the data from the SIAEvent.
 
         The created event is handled by default for only a small subset for each platform (there are about 320 SIA Codes defined, only 22 of those are used in the alarm_control_panel), a user can choose to build other automation or even entities on the same event for SIA codes not handled by the built-in platforms.
