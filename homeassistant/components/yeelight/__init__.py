@@ -234,7 +234,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if entry.data.get(CONF_HOST):
         try:
-            device = await _async_get_device(hass, entry.data[CONF_HOST], entry)
+            device = await _async_get_device(hass, entry.data[CONF_HOST], entry, None)
         except OSError as ex:
             # If CONF_ID is not valid we cannot fallback to discovery
             # so we must retry by raising  ConfigEntryNotReady
