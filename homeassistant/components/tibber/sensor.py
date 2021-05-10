@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_VOLTAGE,
     SensorEntity,
 )
@@ -197,41 +198,12 @@ class TibberSensorElPrice(TibberSensor):
 class TibberSensorRT(TibberSensor):
     """Representation of a Tibber sensor for real time consumption."""
 
-    def __init__(self, tibber_home, sensor):
+    def __init__(self, tibber_home, sensor, device_class, unit):
         """Initialize the sensor."""
         super().__init__(tibber_home)
         self._sensor = sensor
-        self._device_class = None
-        self._unit = None
-        if self._sensor in [
-            "power",
-            "powerProduction",
-            "minPower",
-            "averagePower",
-            "maxPower",
-        ]:
-            self._device_class = DEVICE_CLASS_POWER
-            self._unit = POWER_WATT
-        elif self._sensor in [
-            "accumulatedProduction",
-            "accumulatedConsumption",
-            "lastMeterConsumption",
-            "lastMeterProduction",
-            "accumulatedConsumptionLastHour",
-            "accumulatedProductionLastHour",
-        ]:
-            self._device_class = DEVICE_CLASS_ENERGY
-            self._unit = ENERGY_KILO_WATT_HOUR
-        elif self._sensor in ["voltagePhase1", "voltagePhase2", "voltagePhase3"]:
-            self._device_class = DEVICE_CLASS_VOLTAGE
-            self._unit = VOLT
-        elif self._sensor in ["currentL1", "currentL2", "currentL3"]:
-            self._device_class = DEVICE_CLASS_CURRENT
-            self._unit = (ELECTRICAL_CURRENT_AMPERE,)
-        elif self._sensor in ["signalStrength"]:
-            self._unit = SIGNAL_STRENGTH_DECIBELS
-        elif self._sensor in ["accumulatedCost"]:
-            self._unit = self._tibber_home.currency
+        self._device_class = device_class
+        self._unit = unit
 
     @property
     def available(self):
@@ -308,7 +280,44 @@ class TibberRtDataHandler:
             if state is None:
                 continue
             if sensor not in self._sensors:
-                dev = TibberSensorRT(self._tibber_home, sensor)
+                if sensor in [
+                    "averagePower",
+                    "power",
+                    "powerProduction",
+                    "minPower",
+                    "maxPower",
+                ]:
+                    device_class = DEVICE_CLASS_POWER
+                    unit = POWER_WATT
+                elif sensor in [
+                    "accumulatedConsumption",
+                    "accumulatedConsumptionLastHour",
+                    "accumulatedProduction",
+                    "accumulatedProductionLastHour",
+                    "lastMeterConsumption",
+                    "lastMeterProduction",
+                ]:
+                    device_class = DEVICE_CLASS_ENERGY
+                    unit = ENERGY_KILO_WATT_HOUR
+                elif sensor in [
+                    "voltagePhase1",
+                    "voltagePhase2",
+                    "voltagePhase3",
+                ]:
+                    device_class = DEVICE_CLASS_VOLTAGE
+                    unit = VOLT
+                elif sensor in ["currentL1", "currentL2", "currentL3"]:
+                    device_class = DEVICE_CLASS_CURRENT
+                    unit = ELECTRICAL_CURRENT_AMPERE
+                elif sensor in ["signalStrength"]:
+                    device_class = DEVICE_CLASS_SIGNAL_STRENGTH
+                    unit = SIGNAL_STRENGTH_DECIBELS
+                elif sensor in ["accumulatedCost"]:
+                    device_class = None
+                    unit = self._tibber_home.currency
+                else:
+                    continue
+                dev = TibberSensorRT(self._tibber_home, sensor, device_class, unit)
                 new_sensors.append(dev)
                 self._sensors[sensor] = dev
             self._sensors[sensor].set_state(state)
