@@ -359,9 +359,7 @@ def _datetime_exists(dattim: dt.datetime) -> bool:
     assert dattim.tzinfo is not None
     original_tzinfo = dattim.tzinfo
     # Check if we can round trip to UTC
-    return dattim.replace(tzinfo=None) == dattim.astimezone(UTC).astimezone(
-        original_tzinfo
-    ).replace(tzinfo=None)
+    return dattim == dattim.astimezone(UTC).astimezone(original_tzinfo)
 
 
 def _datetime_ambiguous(dattim: dt.datetime) -> bool:
