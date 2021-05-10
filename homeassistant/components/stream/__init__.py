@@ -124,7 +124,7 @@ class Stream:
         if self.options is None:
             self.options = {}
 
-    def endpoint_url(self, fmt):
+    def endpoint_url(self, fmt: str) -> str:
         """Start the stream and returns a url for the output format."""
         if fmt not in self._outputs:
             raise ValueError(f"Stream is not configured for format '{fmt}'")
