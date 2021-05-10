@@ -65,7 +65,7 @@ SENSOR_DICT = {
         SIGNAL_STRENGTH_DECIBELS,
         True,
     ],
-    "timestamp": ["Up Time", TIME_SECONDS, TIME_SECONDS, False],
+    "timestamp": ["Up Time", None, TIME_SECONDS, False],
 }
 
 SWITCH_DICT = {
