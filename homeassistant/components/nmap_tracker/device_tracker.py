@@ -117,7 +117,7 @@ class NmapTrackerEntity(ScannerEntity):
     def device_info(self):
         """Return the device information."""
         return {
-            "connections": {(CONNECTION_NETWORK_MAC, self.device.mac_address)},
+            "connections": {(CONNECTION_NETWORK_MAC, self._device.mac_address)},
             "name": self.name,
         }
 
