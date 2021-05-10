@@ -98,7 +98,7 @@ async def async_setup_entry(hass, config_entry):
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
 
-    hass.data[DOMAIN] = coordinator
+    hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
     for component in COMPONENTS:
         hass.async_create_task(
@@ -126,4 +126,6 @@ async def async_unload_entry(hass, config_entry):
             ]
         )
     )
+    if unload_ok:
+        hass.data[DOMAIN].pop(config_entry.entry_id)
     return unload_ok
