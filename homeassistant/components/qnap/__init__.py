@@ -68,9 +68,9 @@ async def async_setup_entry(hass, config_entry):
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, config_entry.unique_id)},
         manufacturer=DEFAULT_NAME,
-        name=system_info.get("system", {}).get("name", host),
-        model=system_info.get("system", {}).get("model"),
-        sw_version=system_info.get("firmware", {}).get("version"),
+        name=system_info["system"]["name"],
+        model=system_info["system"]["model"],
+        sw_version=system_info["firmware"]["version"],
     )
 
     async def async_update_data():
