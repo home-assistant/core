@@ -1,9 +1,10 @@
 """Support for scanning a network with nmap."""
 
 import logging
+from typing import Callable
 
 import voluptuous as vol
-from typing import Callable
+
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA,
@@ -18,7 +19,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import NmapDeviceScanner
-from .const import DOMAIN, CONF_HOME_INTERVAL, CONF_OPTIONS, DEFAULT_OPTIONS
+from .const import CONF_HOME_INTERVAL, CONF_OPTIONS, DEFAULT_OPTIONS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
