@@ -128,8 +128,8 @@ class NmapTrackerEntity(ScannerEntity):
         """Return the device information."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self._mac_address)},
-            "manufacturer": self._device.manufacturer,
-            "name": self.name,
+            "default_manufacturer": self._device.manufacturer,
+            "default_name": self.name,
         }
 
     @property
