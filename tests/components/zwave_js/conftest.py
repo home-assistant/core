@@ -2,6 +2,7 @@
 import asyncio
 import copy
 import json
+import os
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -717,3 +718,12 @@ def wallmote_central_scene_fixture(client, wallmote_central_scene_state):
     node = Node(client, copy.deepcopy(wallmote_central_scene_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
+
+
+@pytest.fixture(name="firmware_file")
+def firmware_file_fixture():
+    """Return BufferedReader of the firmware file."""
+    file_path = os.path.join(
+        os.path.dirname(__file__), "../../fixtures/zwave_js/firmware.bin"
+    )
+    return open(file_path, "rb")

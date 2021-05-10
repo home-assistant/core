@@ -1,6 +1,5 @@
 """Test the Z-Wave JS Websocket API."""
 import json
-import os
 from unittest.mock import patch
 
 import pytest
@@ -1125,20 +1124,18 @@ async def test_dump_view(integration, hass_client):
     assert json.loads(await resp.text()) == [{"hello": "world"}, {"second": "msg"}]
 
 
-async def test_firmware_upload_view(hass, multisensor_6, integration, hass_client):
+async def test_firmware_upload_view(
+    hass, multisensor_6, integration, hass_client, firmware_file
+):
     """Test the HTTP firmware upload view."""
     client = await hass_client()
-    file_path = os.path.join(
-        os.path.dirname(__file__), "../../fixtures/zwave_js/firmware.bin"
-    )
-    file = await hass.async_add_executor_job(open, file_path, "rb")
     with patch(
         "zwave_js_server.model.node.Node.async_begin_firmware_update_guess_format",
         return_value={"hello": "world"},
     ) as mock_cmd:
         resp = await client.post(
             f"/api/zwave_js/firmware/upload/{integration.entry_id}/{multisensor_6.node_id}",
-            data={"file": file},
+            data={"file": firmware_file},
         )
         assert mock_cmd.call_args[0] == ("firmware.bin", bytes(10))
         assert json.loads(await resp.text()) == {"hello": "world"}
