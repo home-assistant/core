@@ -42,9 +42,9 @@ async def async_get_scanner(hass, config):
             DOMAIN,
             context={"source": SOURCE_IMPORT},
             data={
-                CONF_HOSTS: ", ".join(validated_config[CONF_HOSTS]),
+                CONF_HOSTS: ",".join(validated_config[CONF_HOSTS]),
                 CONF_HOME_INTERVAL: validated_config[CONF_HOME_INTERVAL],
-                CONF_EXCLUDE: ", ".join(validated_config[CONF_EXCLUDE]),
+                CONF_EXCLUDE: ",".join(validated_config[CONF_EXCLUDE]),
                 CONF_OPTIONS: validated_config[CONF_OPTIONS],
             },
         )

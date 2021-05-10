@@ -71,12 +71,12 @@ def normalize_input(user_input):
     normalized_hosts = _normalize_ips_and_network(user_input[CONF_HOSTS])
     if normalized_hosts is None:
         return {CONF_HOSTS: "invalid_hosts"}
-    user_input[CONF_HOSTS] = ", ".join(normalized_hosts)
+    user_input[CONF_HOSTS] = ",".join(normalized_hosts)
 
     normalized_exclude = _normalize_ips_and_network(user_input[CONF_EXCLUDE])
     if normalized_exclude is None:
         return {CONF_EXCLUDE: "invalid_hosts"}
-    user_input[CONF_EXCLUDE] = ", ".join(normalized_exclude)
+    user_input[CONF_EXCLUDE] = ",".join(normalized_exclude)
 
     return {}
 
