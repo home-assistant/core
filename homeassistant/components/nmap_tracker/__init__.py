@@ -4,9 +4,11 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import lru_cache
 import logging
 
 from getmac import get_mac_address
+from mac_vendor_lookup import MacLookup
 from nmap import PortScanner, PortScannerError
 
 from homeassistant.config_entries import ConfigEntry
@@ -113,6 +115,7 @@ class NmapDeviceScanner:
         minutes = cv.positive_int(config[CONF_HOME_INTERVAL])
         self._options = config[CONF_OPTIONS]
         self.home_interval = timedelta(minutes=minutes)
+        self.mac_vendor_lookup = None
 
     @callback
     def async_setup(self):
@@ -126,6 +129,14 @@ class NmapDeviceScanner:
         self._hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED, self._async_start_scanner
         )
+
+    @lru_cache(maxsize=4096)
+    def get_manufacturer(self, oui):
+        """Lookup the manufacturer."""
+        try:
+            return self.mac_vendor_lookup.lookup(oui)
+        except KeyError:
+            return None
 
     @callback
     def _async_stop(self):
@@ -206,6 +217,8 @@ class NmapDeviceScanner:
         Returns boolean if scanning successful.
         """
         options = self._build_options()
+        if not self.mac_vendor_lookup:
+            self.mac_vendor_lookup = MacLookup()
         dispatches = []
 
         _LOGGER.debug("Scanning %s with args: %s", self.hosts, options)
@@ -221,7 +234,6 @@ class NmapDeviceScanner:
 
         devices = self.devices
         entry_id = self._entry_id
-        _LOGGER.debug("Scan result: %s", result)
         for ipv4, info in result["scan"].items():
             status = info["status"]
             if status["state"] != "up":
@@ -247,7 +259,9 @@ class NmapDeviceScanner:
             ):
                 continue
 
-            manufacturer = info.get("vendor", {}).get(mac)
+            manufacturer = info.get("vendor", {}).get(mac) or self.get_manufacturer(
+                self.mac_vendor_lookup.sanitise(mac)[:6]
+            )
             device = NmapDevice(
                 formatted_mac, name, ipv4, manufacturer, status["reason"], dt_util.now()
             )
@@ -260,10 +274,9 @@ class NmapDeviceScanner:
             self.last_results.append(device)
 
         _LOGGER.debug(
-            "Finished scanning %s with args: %s (dispatches:%s)",
+            "Finished scanning %s with args: %s",
             self.hosts,
             options,
-            dispatches,
         )
 
         return dispatches
