@@ -212,7 +212,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         await self._async_set_device_unique_id()
 
-        self.context["title_placeholders"] = {"model": self._model}
+        self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
