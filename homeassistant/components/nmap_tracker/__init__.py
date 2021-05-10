@@ -152,7 +152,7 @@ class NmapDeviceScanner:
     async def async_scan_devices(self, *_):
         """Scan devices and dispatch."""
         if self._scan_lock.locked():
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Nmap scanning is taking longer than the scheduled interval: %s",
                 TRACKER_SCAN_INTERVAL,
             )
@@ -174,6 +174,7 @@ class NmapDeviceScanner:
 
     def _process_nmap_host(self, result):
         """Process an nmap host update."""
+        _LOGGER.debug("Processing nmap host: %s", result)
         for ipv4, info in result["scan"].items():
             if info["status"]["state"] != "up":
                 self.offline_devices.add(ipv4)
