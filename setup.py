@@ -47,13 +47,13 @@ REQUIRES = [
     "cryptography==3.3.2",
     "pip>=8.0.3,<20.3",
     "python-slugify==4.0.1",
-    "python-dateutil==2.8.1",
     "pyyaml==5.4.1",
     "requests==2.25.1",
     "ruamel.yaml==0.15.100",
     "voluptuous==0.12.1",
     "voluptuous-serialize==2.4.0",
     "yarl==1.6.3",
+    'backports.zoneinfo;python_version<"3.9"',
 ]
 
 MIN_PY_VERSION = ".".join(map(str, hass_const.REQUIRED_PYTHON_VER))
