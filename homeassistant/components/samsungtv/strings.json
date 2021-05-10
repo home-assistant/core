@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Samsung TV: {model}",
+    "flow_title": "{device}",
     "step": {
       "user": {
         "description": "Enter your Samsung TV information. If you never connected Home Assistant before you should see a popup on your TV asking for authorization.",
@@ -10,7 +10,7 @@
         }
       },
       "confirm": {
-        "description": "Do you want to set up Samsung TV {model}? If you never connected Home Assistant before you should see a popup on your TV asking for authorization."
+        "description": "Do you want to set up {device}? If you never connected Home Assistant before you should see a popup on your TV asking for authorization."
       }
     },
     "abort": {
