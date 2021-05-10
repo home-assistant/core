@@ -357,11 +357,11 @@ def find_next_time_expression_time(
 def datetime_exists(dattim: dt.datetime) -> bool:
     """Check if a datetime exists."""
     assert dattim.tzinfo is not None
-    tz = dattim.tzinfo
+    original_tzinfo = dattim.tzinfo
     # Check if we can round trip to UTC
-    return dattim.replace(tzinfo=None) == dattim.astimezone(UTC).astimezone(tz).replace(
-        tzinfo=None
-    )
+    return dattim.replace(tzinfo=None) == dattim.astimezone(UTC).astimezone(
+        original_tzinfo
+    ).replace(tzinfo=None)
 
 
 def datetime_ambiguous(dattim: dt.datetime) -> bool:
