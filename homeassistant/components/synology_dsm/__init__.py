@@ -205,7 +205,7 @@ async def async_setup_entry(  # noqa: C901
     for device in devices:
         old_identifier = list(next(iter(device.identifiers)))
         if len(old_identifier) > 2:
-            new_identifier: set[tuple[str, ...]] = {
+            new_identifier = {
                 (old_identifier.pop(0), "_".join([str(x) for x in old_identifier]))
             }
             _LOGGER.debug(
