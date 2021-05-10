@@ -36,7 +36,7 @@ from homeassistant.components.climate.const import (
     SWING_OFF,
     SWING_VERTICAL,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
 from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
@@ -323,6 +323,11 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         """Return the unit of measurement."""
         return TEMP_CELSIUS
 
+    @property
+    def precision(self):
+        """Return the precision of the system."""
+        return PRECISION_TENTHS
+
 
 class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
     """Representation of a Homekit climate device."""
@@ -535,6 +540,11 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
     def temperature_unit(self):
         """Return the unit of measurement."""
         return TEMP_CELSIUS
+
+    @property
+    def precision(self):
+        """Return the precision of the system."""
+        return PRECISION_TENTHS
 
 
 ENTITY_TYPES = {
