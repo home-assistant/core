@@ -48,8 +48,8 @@ DATA_CONFIG_ENTRIES = "config_entries"
 DATA_CUSTOM_EFFECTS = "custom_effects"
 DATA_SCAN_INTERVAL = "scan_interval"
 DATA_DEVICE = "device"
-DATA_UNSUB_UPDATE_LISTENER = "unsub_update_listener"
 DATA_REMOVE_INIT_DISPATCHER = "remove_init_dispatcher"
+DATA_PLATFORMS_LOADED = "platforms_loaded"
 
 ATTR_COUNT = "count"
 ATTR_ACTION = "action"
@@ -181,6 +181,9 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Yeelight from a config entry."""
+    entry_data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id] = {
+        DATA_PLATFORMS_LOADED: False
+    }
 
     async def _initialize(
         host: str,
@@ -192,18 +195,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             DEVICE_INITIALIZED.format(host),
             _load_platforms,
         )
-        hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id][
-            DATA_REMOVE_INIT_DISPATCHER
-        ] = remove_dispatcher
+        entry_data[DATA_REMOVE_INIT_DISPATCHER] = remove_dispatcher
 
         if not device:
             device = await _async_get_device(hass, host, entry, capabilities)
-        hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id][DATA_DEVICE] = device
+        entry_data[DATA_DEVICE] = device
 
         await device.async_setup()
 
     async def _load_platforms():
         hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+        entry_data[DATA_PLATFORMS_LOADED] = True
 
     # Move options from data for imported entries
     # Initialize options with default values for other entries
@@ -228,9 +230,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             },
         )
 
-    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id] = {
-        DATA_UNSUB_UPDATE_LISTENER: entry.add_update_listener(_async_update_listener)
-    }
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     if entry.data.get(CONF_HOST):
         try:
@@ -256,14 +256,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     data_config_entries = hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
     entry_data = data_config_entries[entry.entry_id]
 
-    if DATA_DEVICE in entry_data:
+    if entry_data[DATA_PLATFORMS_LOADED]:
         if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
             return False
+
+    if entry_data.get(DATA_DEVICE):
         data = data_config_entries.pop(entry.entry_id)
         remove_init_dispatcher = data.get(DATA_REMOVE_INIT_DISPATCHER)
         if remove_init_dispatcher is not None:
             remove_init_dispatcher()
-        data[DATA_UNSUB_UPDATE_LISTENER]()
         data[DATA_DEVICE].async_unload()
 
     if entry.data[CONF_ID]:
