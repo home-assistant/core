@@ -263,6 +263,6 @@ class SmhiWeather(WeatherEntity):
             extra_attributes[ATTR_SMHI_CLOUDINESS] = self.cloudiness
         if self.wind_gust_speed is not None:
             extra_attributes[ATTR_SMHI_WIND_GUST_SPEED] = self.wind_gust_speed
-        if self.thunder is not None:
+        if self.thunder_probability is not None:
             extra_attributes[ATTR_SMHI_THUNDER_PROBABILITY] = self.thunder_probability
         return extra_attributes
