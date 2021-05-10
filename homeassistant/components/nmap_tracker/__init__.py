@@ -126,7 +126,7 @@ class NmapDeviceScanner:
             return
 
         self._hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED, self._start_scanner
+            EVENT_HOMEASSISTANT_STARTED, self._async_start_scanner
         )
 
     @lru_cache(maxsize=4096)
