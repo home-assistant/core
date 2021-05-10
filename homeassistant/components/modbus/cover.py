@@ -12,6 +12,10 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
@@ -105,7 +109,13 @@ class ModbusCover(CoverEntity, RestoreEntity):
         """Handle entity which will be added."""
         state = await self.async_get_last_state()
         if state:
-            self._value = state.state
+            convert = {
+                STATE_CLOSED: self._state_closed,
+                STATE_CLOSING: self._state_closing,
+                STATE_OPENING: self._state_opening,
+                STATE_OPEN: self._state_open,
+            }
+            self._value = convert[state.state]
 
         async_track_time_interval(self.hass, self.async_update, self._scan_interval)
 

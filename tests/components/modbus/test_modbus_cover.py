@@ -1,5 +1,6 @@
 """The tests for the Modbus cover component."""
 import logging
+from unittest import mock
 
 import pytest
 
@@ -8,6 +9,11 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
     CONF_REGISTER,
+    CONF_STATE_CLOSED,
+    CONF_STATE_CLOSING,
+    CONF_STATE_OPEN,
+    CONF_STATE_OPENING,
+    CONF_STATUS_REGISTER,
     CONF_STATUS_REGISTER_TYPE,
 )
 from homeassistant.const import (
@@ -16,8 +22,11 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OPEN,
+    STATE_OPENING,
 )
+from homeassistant.core import State
 
 from .conftest import ReadResult, base_config_test, base_test, prepare_service_update
 
@@ -202,3 +211,38 @@ async def test_service_cover_update(hass, mock_pymodbus):
         "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
     )
     assert hass.states.get(entity_id).state == STATE_OPEN
+
+
+@pytest.mark.parametrize(
+    "state", [STATE_CLOSED, STATE_CLOSING, STATE_OPENING, STATE_OPEN]
+)
+async def test_restore_state_cover(hass, state):
+    """Run test for cover restore state."""
+
+    entity_id = "cover.test"
+    cover_name = "test"
+    config = {
+        CONF_NAME: cover_name,
+        CALL_TYPE_COIL: 1234,
+        CONF_STATE_OPEN: 1,
+        CONF_STATE_CLOSED: 0,
+        CONF_STATE_OPENING: 2,
+        CONF_STATE_CLOSING: 3,
+        CONF_STATUS_REGISTER: 1234,
+        CONF_STATUS_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
+    }
+    with mock.patch(
+        "homeassistant.components.modbus.cover.ModbusCover.async_get_last_state"
+    ) as mock_get_last_state:
+        mock_get_last_state.return_value = State(entity_id, f"{state}")
+
+        await base_config_test(
+            hass,
+            config,
+            cover_name,
+            COVER_DOMAIN,
+            CONF_COVERS,
+            None,
+            method_discovery=True,
+        )
+        assert hass.states.get(entity_id).state == state
