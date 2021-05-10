@@ -123,8 +123,8 @@ class EsphomeLight(EsphomeEntity, LightEntity):
         return round(self._state.brightness * 255)
 
     @property
-    def color_mode(self) -> int | None:
-        """Return the brightness of this light between 0..255."""
+    def color_mode(self) -> str | None:
+        """Return the color mode of the light."""
         color_modes = self.supported_color_modes
         # RGBWW light may be in color_temp mode or rgbww mode
         if COLOR_MODE_RGBWW in color_modes:
@@ -143,26 +143,26 @@ class EsphomeLight(EsphomeEntity, LightEntity):
     @esphome_state_property
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the RGB color value."""
-        red = int(self._state.red * 255)
-        green = int(self._state.green * 255)
-        blue = int(self._state.blue * 255)
+        red = round(self._state.red * 255)
+        green = round(self._state.green * 255)
+        blue = round(self._state.blue * 255)
         return (red, green, blue)
 
     @esphome_state_property
     def rgbw_color(self) -> tuple[int, int, int, int] | None:
-        """Return the RGB color value."""
-        red = int(self._state.red * 255)
-        green = int(self._state.green * 255)
-        blue = int(self._state.blue * 255)
-        white = int(self._state.white * 255)
+        """Return the RGBW color value."""
+        red = round(self._state.red * 255)
+        green = round(self._state.green * 255)
+        blue = round(self._state.blue * 255)
+        white = round(self._state.white * 255)
         return (red, green, blue, white)
 
     @esphome_state_property
     def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
-        """Return the RGB color value."""
-        red = int(self._state.red * 255)
-        green = int(self._state.green * 255)
-        blue = int(self._state.blue * 255)
+        """Return the RGBWW color value."""
+        red = round(self._state.red * 255)
+        green = round(self._state.green * 255)
+        blue = round(self._state.blue * 255)
         white = self._state.white
         color_temp = self._state.color_temperature
 
@@ -174,12 +174,6 @@ class EsphomeLight(EsphomeEntity, LightEntity):
         max_cw_ww = max(cold_white_fraction, warm_white_fraction)
         warm_white = int(min(white * warm_white_fraction / max_cw_ww * 255, 255))
         cold_white = int(min(white * cold_white_fraction / max_cw_ww * 255, 255))
-        _LOGGER.debug(
-            "rgbww_color: %s -> %s (%s)",
-            {"r": red, "g": green, "b": blue, "w": white, "ct": color_temp},
-            (red, green, blue, cold_white, warm_white),
-            warm_white_fraction,
-        )
         return (red, green, blue, cold_white, warm_white)
 
     @esphome_state_property
@@ -188,7 +182,7 @@ class EsphomeLight(EsphomeEntity, LightEntity):
         return self._state.effect
 
     @property
-    def supported_color_modes(self) -> int:
+    def supported_color_modes(self) -> set | None:
         """Flag supported color_modes."""
         supported_color_modes = set()
         supports_color_temp = self._static_info.supports_color_temperature
@@ -200,7 +194,7 @@ class EsphomeLight(EsphomeEntity, LightEntity):
             supported_color_modes.add(COLOR_MODE_RGBW)
         if supports_rgb and supports_white and supports_color_temp:
             supported_color_modes.add(COLOR_MODE_RGBWW)
-        if self._static_info.supports_color_temperature:
+        if supports_color_temp:
             supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
         if not supported_color_modes and self._static_info.supports_brightness:
             supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
