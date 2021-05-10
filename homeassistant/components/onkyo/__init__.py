@@ -11,7 +11,13 @@ from homeassistant.const import CONF_HOST
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_per_platform, device_registry as dr
 
-from .const import COMPONENTS, CONF_SOURCES, DOMAIN
+from .const import (
+    COMPONENTS,
+    CONF_MAX_VOLUME,
+    CONF_RECEIVER_MAX_VOLUME,
+    CONF_SOURCES,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +51,13 @@ async def async_setup_entry(hass, config_entry):
             sources = list2dict(sources)
         hass.config_entries.async_update_entry(
             config_entry,
-            options={CONF_SOURCES: sources},
+            options={
+                CONF_SOURCES: sources,
+                CONF_MAX_VOLUME: config_entry.data.get(CONF_MAX_VOLUME),
+                CONF_RECEIVER_MAX_VOLUME: config_entry.data.get(
+                    CONF_RECEIVER_MAX_VOLUME
+                ),
+            },
         )
 
     try:

@@ -22,10 +22,14 @@
   "options": {
     "step": {
       "init": {
-        "title": "Sources of receiver",
-        "description": "select sources of you receiver."
+        "title": "Options of receiver",
+        "data": {
+          "max_volume": "Max volume",
+          "receiver_max_volume": "Receiver Max volume",
+          "sources": "Sources"
+        }
       },
-      "customize":{
+      "customize": {
         "title": "Sources naming",
         "description": "Rename sources to friendly name."
       }

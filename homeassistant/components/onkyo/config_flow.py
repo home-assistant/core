@@ -113,6 +113,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         """Initialize options flow."""
         self.config_entry = config_entry
+        self._other_options = None
 
     async def async_step_init(self, user_input=None):
         """Select sources."""
@@ -120,8 +121,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         select_sources = []
         if user_input is not None:
             if user_input.get(CONF_SOURCES):
+                sources_selected = user_input.pop(CONF_SOURCES)
+                self._other_options = user_input
                 return await self.async_step_customize(
-                    sources_selected=user_input[CONF_SOURCES]
+                    sources_selected=sources_selected
                 )
             return self.async_create_entry(title="", data={CONF_SOURCES: {}})
 
@@ -130,11 +133,23 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 DEFAULT_SOURCES[key] = value
             select_sources = list(self.config_entry.options[CONF_SOURCES].keys())
 
+        supported_max_volume = self.config_entry.options.get(
+            CONF_MAX_VOLUME, SUPPORTED_MAX_VOLUME
+        )
+        default_receiver_max_volume = self.config_entry.options.get(
+            CONF_RECEIVER_MAX_VOLUME, DEFAULT_RECEIVER_MAX_VOLUME
+        )
         sources_schema = vol.Schema(
             {
+                vol.Optional(CONF_MAX_VOLUME, default=supported_max_volume): vol.All(
+                    vol.Coerce(int), vol.Range(min=1, max=100)
+                ),
+                vol.Optional(
+                    CONF_RECEIVER_MAX_VOLUME, default=default_receiver_max_volume
+                ): cv.positive_int,
                 vol.Required(CONF_SOURCES, default=select_sources): cv.multi_select(
                     DEFAULT_SOURCES
-                )
+                ),
             }
         )
         return self.async_show_form(
@@ -144,7 +159,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_customize(self, user_input=None, sources_selected=None):
         """Rename sources."""
         if user_input is not None:
-            return self.async_create_entry(title="", data={CONF_SOURCES: user_input})
+            data = {CONF_SOURCES: user_input}
+            data.update(self._other_options)
+            return self.async_create_entry(title="", data=data)
         data_schema = rename_sources(sources_selected)
         return self.async_show_form(step_id="customize", data_schema=data_schema)
 

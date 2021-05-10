@@ -1,34 +1,38 @@
 {
-  "title": "[%key:component::onkyo::title%]",
+  "title": "Onkyo Receiver",
   "config": {
     "step": {
       "user": {
-        "title": "[%key:component::onkyo::config::step::user::title%]",
-        "description": "[%key:component::onkyo::config::step::user::description%]",
+        "title": "Connect to the Onkyo receiver",
+        "description": "Onkyo receiver",
         "data": {
-          "host": "[%key:component::onkyo::config::step::user::data::host%]",
-          "name": "[%key:component::onkyo::config::step::user::data::name%]",
-          "max_volume": "[%key:component::onkyo::config::step::user::data::max_volume%]",
-          "receiver_max_volume": "[%key:component::onkyo::config::step::user::data::receiver_max_volume%]",
-          "sources": "[%key:component::onkyo::config::step::user::data::sources%]"
+          "host": "Hostname or IP Address",
+          "name": "Name",
+          "max_volume": "Maximum volume",
+          "receiver_max_volume": "Maximum volume receiver",
+          "sources": "Sources"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "receiver_unknown": "[%key:component::onkyo::config::error::receiver_unknown%]"
+      "receiver_unknown": "Onkyo receiver unknown"
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "[%key:component::onkyo::options::step::init::title%]",
-        "description": "[%key:component::onkyo::options::step::init::description%]"
+        "title": "Options of receiver",
+        "data": {
+          "max_volume": "Max volume",
+          "receiver_max_volume": "Receiver Max volume",
+          "sources": "Sources"
+        }
       },
       "customize": {
-        "title": "[%key:component::onkyo::options::step::customize::title%]",
-        "description": "[%key:component::onkyo::options::step::customize::description%]"
-      }      
+        "title": "Sources naming",
+        "description": "Rename sources to friendly name."
+      }
     }
   }
 }
