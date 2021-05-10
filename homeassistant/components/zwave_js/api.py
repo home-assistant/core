@@ -270,7 +270,12 @@ async def websocket_add_node(
 
     @callback
     def device_registered(device: DeviceEntry) -> None:
-        device_details = {"name": device.name, "id": device.id}
+        device_details = {
+            "name": device.name,
+            "id": device.id,
+            "manufacturer": device.manufacturer,
+            "model": device.model,
+        }
         connection.send_message(
             websocket_api.event_message(
                 msg[ID], {"event": "device registered", "device": device_details}
