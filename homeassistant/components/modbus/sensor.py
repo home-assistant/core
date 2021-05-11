@@ -123,10 +123,10 @@ async def async_setup_platform(
 
     for entry in discovery_info[CONF_SENSORS]:
 
-        regSize = entry[CONF_COUNT] * entry.get(CONF_REGISTER_SIZE, 2)
+        regtsize = entry[CONF_COUNT] * entry.get(CONF_REGISTER_SIZE, 2)
 
         if entry[CONF_DATA_TYPE] == DATA_TYPE_STRING:
-            structure = str(regSize) + "s"
+            structure = str(regtsize) + "s"
         elif entry[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
             try:
                 structure = f">{DEFAULT_STRUCT_FORMAT[entry[CONF_DATA_TYPE]][entry[CONF_COUNT]]}"
@@ -145,11 +145,11 @@ async def async_setup_platform(
             _LOGGER.error("Error in sensor %s structure: %s", entry[CONF_NAME], err)
             continue
 
-        if regSize != size:
+        if regtsize != size:
             _LOGGER.error(
                 "Structure size (%d bytes) mismatch registers size (%d bytes)",
                 size,
-                regSize,
+                regtsize,
             )
             continue
 
@@ -161,18 +161,16 @@ async def async_setup_platform(
             del entry[CONF_REVERSE_ORDER]
         if entry.get(CONF_SWAP) != CONF_SWAP_NONE:
             if entry[CONF_SWAP] == CONF_SWAP_BYTE:
-                regs_needed = 1
+                size_needed = 2
             else:  # CONF_SWAP_WORD_BYTE, CONF_SWAP_WORD
-                regs_needed = 2
-            if (
-                entry[CONF_COUNT] < regs_needed
-                or (entry[CONF_COUNT] % regs_needed) != 0
-            ):
+                size_needed = 4
+            if regtsize < size_needed or (regtsize % size_needed) != 0 or regtsize > 4:
                 _LOGGER.error(
-                    "Error in sensor %s swap(%s) not possible due to count: %d",
+                    "Error in sensor %s swap(%s) not possible due to count (%d) or total size (%d bytes)",
                     entry[CONF_NAME],
                     entry[CONF_SWAP],
                     entry[CONF_COUNT],
+                    regtsize,
                 )
                 continue
         if CONF_HUB in entry:
