@@ -65,7 +65,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input=None):
         """Handle external yaml configuration."""
-        self._async_abort_entries_match({})
+        self._async_abort_entries_match()
 
         self.flow_impl = DOMAIN
 
