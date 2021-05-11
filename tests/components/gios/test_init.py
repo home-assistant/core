@@ -58,8 +58,8 @@ async def test_unload_entry(hass):
     assert not hass.data.get(DOMAIN)
 
 
-async def test_migrate_device_entry(hass, aioclient_mock):
-    """Test device_info identifiers migration."""
+async def test_migrate_device_and_config_entry(hass):
+    """Test device_info identifiers and config entry migration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
