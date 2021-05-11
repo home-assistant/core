@@ -286,7 +286,7 @@ class EntityPlatform:
 
                 if hass.state == CoreState.running:
                     self._async_cancel_retry_setup = async_call_later(
-                        hass, wait_time, setup_again  # type: ignore[arg-type]
+                        hass, wait_time, setup_again
                     )
                 else:
                     self._async_cancel_retry_setup = hass.bus.async_listen_once(
