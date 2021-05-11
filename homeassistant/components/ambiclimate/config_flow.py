@@ -62,7 +62,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_auth(self, user_input=None):
         """Handle a flow start."""
-        self._async_abort_entries_match({})
+        self._async_abort_entries_match()
 
         errors = {}
 
