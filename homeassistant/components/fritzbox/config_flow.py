@@ -48,13 +48,14 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self._entry: ConfigEntry
-        self._host: str
-        self._name: str
-        self._password: str
-        self._username: str
+        self._entry: ConfigEntry | None = None
+        self._host: str | None = None
+        self._name: str | None = None
+        self._password: str | None = None
+        self._username: str | None = None
 
     def _get_entry(self) -> FlowResult:
+        assert self._name is not None
         return self.async_create_entry(
             title=self._name,
             data={
@@ -65,6 +66,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _update_entry(self) -> None:
+        assert self._entry is not None
         self.hass.config_entries.async_update_entry(
             self._entry,
             data={
