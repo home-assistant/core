@@ -746,6 +746,22 @@ class SonosSpeaker:
                 self.media.album_name = track_info.get("album")
                 self.media.title = track_info.get("title")
 
+                # Handle metadata where the title is still encoded
+                if self.media.title.startswith("TYPE=SNG|"):
+                    tags = dict(
+                        [
+                            p.split(" ", 1)
+                            for p in self.media.title.split("|")
+                            if " " in p
+                        ]
+                    )
+                    if "TITLE" in tags:
+                        self.media.title = tags["TITLE"]
+                    if "ARTIST" in tags:
+                        self.media.artist = tags["ARTIST"]
+                    if "ALBUM" in tags:
+                        self.media.album_name = tags["ALBUM"]
+
                 if music_source == MUSIC_SRC_RADIO:
                     self.update_media_radio(variables)
                 else:
