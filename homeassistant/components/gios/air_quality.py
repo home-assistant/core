@@ -1,7 +1,7 @@
 """Support for the GIOS service."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Optional, cast
 
 from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.config_entries import ConfigEntry
@@ -73,14 +73,14 @@ class GiosAirQuality(CoordinatorEntity, AirQualityEntity):
     @property
     def icon(self) -> str:
         """Return the icon."""
-        if cast(str, self.air_quality_index) in ICONS_MAP:
-            return ICONS_MAP[cast(str, self.air_quality_index)]
+        if self.air_quality_index is not None and self.air_quality_index in ICONS_MAP:
+            return ICONS_MAP[self.air_quality_index]
         return "mdi:blur"
 
     @property
-    def air_quality_index(self) -> Any:
+    def air_quality_index(self) -> str | None:
         """Return the air quality index."""
-        return self.coordinator.data.get(API_AQI, {}).get("value")
+        return cast(Optional[str], self.coordinator.data.get(API_AQI, {}).get("value"))
 
     @property
     def particulate_matter_2_5(self) -> float | None:
