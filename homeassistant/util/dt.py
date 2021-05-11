@@ -4,11 +4,12 @@ from __future__ import annotations
 from contextlib import suppress
 import datetime as dt
 import re
+import sys
 from typing import Any
 
-try:
+if sys.version_info[:2] >= (3, 9):
     import zoneinfo
-except ImportError:
+else:
     from backports import zoneinfo
 
 import ciso8601
