@@ -1,5 +1,4 @@
 """Support for WeMo device discovery."""
-import asyncio
 import logging
 
 import pywemo
@@ -16,8 +15,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util.async_ import gather_with_concurrency
 
 from .const import DOMAIN
+
+# Max number of devices to initialize at once. This limit is in place to
+# avoid tying up too many executor threads with WeMo device setup.
+MAX_CONCURRENCY = 3
 
 # Mapping from Wemo model_name to domain.
 WEMO_MODEL_DISPATCH = {
@@ -217,13 +221,14 @@ class WemoDiscovery:
         """Initialize or Re-Initialize connections to statically configured devices."""
         if self._static_config:
             _LOGGER.debug("Adding statically configured WeMo devices")
-            for device in await asyncio.gather(
+            for device in await gather_with_concurrency(
+                MAX_CONCURRENCY,
                 *[
                     self._hass.async_add_executor_job(
                         validate_static_config, host, port
                     )
                     for host, port in self._static_config
-                ]
+                ],
             ):
                 if device:
                     self._wemo_dispatcher.async_add_unique_device(self._hass, device)
