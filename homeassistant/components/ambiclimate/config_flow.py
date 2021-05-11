@@ -83,7 +83,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_code(self, code=None):
         """Received code for authentication."""
-        self._async_abort_entries_match({})
+        self._async_abort_entries_match()
 
         token_info = await self._get_token_info(code)
 
