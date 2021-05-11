@@ -492,6 +492,39 @@ async def test_config_wrong_struct_sensor(hass, do_config):
             [0x0102, 0x0304],
             str(int(0x04030201)),
         ),
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_REGISTER_SIZE: 4,
+                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_STRUCTURE: ">HH",
+                CONF_SWAP: CONF_SWAP_BYTE,
+            },
+            [0x01020304],
+            str(int(0x02010403)),
+        ),
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_REGISTER_SIZE: 4,
+                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_STRUCTURE: ">HH",
+                CONF_SWAP: CONF_SWAP_WORD,
+            },
+            [0x01020304],
+            str(int(0x03040102)),
+        ),
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_REGISTER_SIZE: 4,
+                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_STRUCTURE: ">HH",
+                CONF_SWAP: CONF_SWAP_WORD_BYTE,
+            },
+            [0x01020304],
+            str(int(0x04030201)),
+        ),
     ],
 )
 async def test_all_sensor(hass, cfg, regs, expected):

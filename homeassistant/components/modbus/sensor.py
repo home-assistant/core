@@ -276,7 +276,7 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
             # convert [12][34] --> [21][43]
             for i, register in enumerate(registers):
                 registers[i] = int.from_bytes(
-                    register.to_bytes(2, byteorder="little"),
+                    register.to_bytes(self._register_size, byteorder="little"),
                     byteorder="big",
                     signed=False,
                 )
