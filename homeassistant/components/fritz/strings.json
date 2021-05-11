@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "FRITZ!Box Tools: {name}",
+    "flow_title": "{name}",
     "step": {
       "confirm": {
         "title": "Setup FRITZ!Box Tools",
