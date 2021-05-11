@@ -40,7 +40,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
-from . import migration, purge
+from . import history, migration, purge
 from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
 from .models import Base, Events, RecorderRuns, States
 from .pool import RecorderPool
@@ -220,6 +220,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     instance.async_initialize()
     instance.start()
     _async_register_services(hass, instance)
+    history.async_setup(hass)
 
     return await instance.async_db_ready
 

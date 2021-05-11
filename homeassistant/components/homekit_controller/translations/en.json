@@ -17,7 +17,7 @@
             "unable_to_pair": "Unable to pair, please try again.",
             "unknown_error": "Device reported an unknown error. Pairing failed."
         },
-        "flow_title": "{name} via HomeKit Accessory Protocol",
+        "flow_title": "{name}",
         "step": {
             "busy_error": {
                 "description": "Abort pairing on all controllers, or try restarting the device, then continue to resume pairing.",
