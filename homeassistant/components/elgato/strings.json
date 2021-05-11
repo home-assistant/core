@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Elgato Light: {serial_number}",
+    "flow_title": "{serial_number}",
     "step": {
       "user": {
         "description": "Set up your Elgato Light to integrate with Home Assistant.",

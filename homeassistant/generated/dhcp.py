@@ -71,6 +71,10 @@ DHCP = [
         "hostname": "yeti*",
         "macaddress": "A4CF12*"
     },
+        "domain": "guardian",
+        "hostname": "gvc*",
+        "macaddress": "30AEA4*"
+    },
     {
         "domain": "hunterdouglas_powerview",
         "hostname": "hunter*",

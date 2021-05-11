@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "UPnP/IGD: {name}",
+    "flow_title": "{name}",
     "step": {
       "init": {
       },

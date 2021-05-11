@@ -13,6 +13,10 @@
         "step": {
             "user": {
                 "data": {
+                    "admin_password": "Admin Passwort",
+                    "admin_username": "Admin Benutzername",
+                    "surveillance_password": "Surveillance Passwort",
+                    "surveillance_username": "Surveillance Benutzername",
                     "url": "URL"
                 }
             }

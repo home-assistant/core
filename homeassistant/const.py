@@ -593,7 +593,7 @@ SERVICE_TOGGLE_COVER_TILT = "toggle_cover_tilt"
 SERVICE_SELECT_OPTION = "select_option"
 
 # #### API / REMOTE ####
-SERVER_PORT = 8123
+SERVER_PORT: Final = 8123
 
 URL_ROOT = "/"
 URL_API = "/api/"
