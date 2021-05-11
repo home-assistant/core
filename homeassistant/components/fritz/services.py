@@ -43,11 +43,12 @@ async def _async_get_configured_fritz_tools(
 ):
     """Get FritzBoxTools class from config entry."""
 
-    return [
-        entry_id
-        for entry_id in await async_extract_config_entry_ids(hass, service_call)
-        if hass.config_entries.async_get_entry(entry_id).domain == DOMAIN
-    ]
+    list_entry_id = []
+    for entry_id in await async_extract_config_entry_ids(hass, service_call):
+        config_entry = hass.config_entries.async_get_entry(entry_id)
+        if config_entry and config_entry.domain == DOMAIN:
+            list_entry_id.append(entry_id)
+    return list_entry_id
 
 
 async def async_unload_services(hass: HomeAssistant):
