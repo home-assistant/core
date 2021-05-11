@@ -27,6 +27,9 @@ class HeatzyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
+                unique_id = user_input[CONF_USERNAME]
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
                 await async_connect_heatzy(self.hass, user_input)
             except HeatzyException:
                 errors["base"] = "cannot_connect"
