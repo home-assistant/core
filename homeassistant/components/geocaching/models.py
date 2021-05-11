@@ -1,6 +1,8 @@
 """Define DataUpdate Coordinator, Base Entity and Device models for Geocaching API."""
 from __future__ import annotations
 
+from typing import TypedDict
+
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import GeocachingDataUpdateCoordinator
@@ -38,3 +40,15 @@ class GeocachingEntity(CoordinatorEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._enabled_default
+
+
+class GeocachingSensorSettings(TypedDict):
+    """Define Sensor settings class."""
+
+    name: str
+    section: str
+    state: str
+    unit_of_measurement: str | None
+    device_class: str | None
+    icon: str
+    default_enabled: bool
