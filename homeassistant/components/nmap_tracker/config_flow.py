@@ -32,9 +32,9 @@ def get_network():
 def get_ip_prefix_from_adapters(local_ip, adapters):
     """Find the network prefix for an adapter."""
     for adapter in adapters:
-        for ip in adapter.ips:
-            if local_ip == ip.ip:
-                return ip.network_prefix
+        for ip_cfg in adapter.ips:
+            if local_ip == ip_cfg.ip:
+                return ip_cfg.network_prefix
 
 
 def _normalize_ips_and_network(hosts_str):
@@ -104,7 +104,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry):
         """Initialize options flow."""
-        self.config_entry = config_entry
         self.options = dict(config_entry.options)
 
     async def async_step_init(self, user_input=None):
