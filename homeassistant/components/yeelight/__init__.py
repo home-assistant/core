@@ -179,31 +179,16 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Yeelight from a config entry."""
+async def _async_initialize(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    host: str,
+    device: YeelightDevice | None = None,
+) -> None:
     entry_data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id] = {
         DATA_PLATFORMS_LOADED: False
     }
-
-    async def _initialize(
-        host: str,
-        capabilities: dict | None = None,
-        device: YeelightDevice | None = None,
-    ) -> None:
-        if not device:
-            device = await _async_get_device(hass, host, entry, capabilities)
-        entry_data[DATA_DEVICE] = device
-
-        entry.async_on_unload(
-            async_dispatcher_connect(
-                hass,
-                DEVICE_INITIALIZED.format(host),
-                _async_load_platforms,
-            )
-        )
-
-        entry.async_on_unload(device.async_unload)
-        await device.async_setup()
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     @callback
     def _async_load_platforms():
@@ -212,47 +197,77 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_data[DATA_PLATFORMS_LOADED] = True
         hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    # Move options from data for imported entries
-    # Initialize options with default values for other entries
-    if not entry.options:
-        hass.config_entries.async_update_entry(
-            entry,
-            data={
-                CONF_HOST: entry.data.get(CONF_HOST),
-                CONF_ID: entry.data.get(CONF_ID),
-            },
-            options={
-                CONF_NAME: entry.data.get(CONF_NAME, ""),
-                CONF_MODEL: entry.data.get(CONF_MODEL, ""),
-                CONF_TRANSITION: entry.data.get(CONF_TRANSITION, DEFAULT_TRANSITION),
-                CONF_MODE_MUSIC: entry.data.get(CONF_MODE_MUSIC, DEFAULT_MODE_MUSIC),
-                CONF_SAVE_ON_CHANGE: entry.data.get(
-                    CONF_SAVE_ON_CHANGE, DEFAULT_SAVE_ON_CHANGE
-                ),
-                CONF_NIGHTLIGHT_SWITCH: entry.data.get(
-                    CONF_NIGHTLIGHT_SWITCH, DEFAULT_NIGHTLIGHT_SWITCH
-                ),
-            },
-        )
+    if not device:
+        device = await _async_get_device(hass, host, entry)
+    entry_data[DATA_DEVICE] = device
 
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            DEVICE_INITIALIZED.format(host),
+            _async_load_platforms,
+        )
+    )
+
+    entry.async_on_unload(device.async_unload)
+    await device.async_setup()
+
+
+@callback
+def _async_populate_entry_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Move options from data for imported entries.
+
+    Initialize options with default values for other entries.
+    """
+    if entry.options:
+        return
+
+    hass.config_entries.async_update_entry(
+        entry,
+        data={
+            CONF_HOST: entry.data.get(CONF_HOST),
+            CONF_ID: entry.data.get(CONF_ID),
+        },
+        options={
+            CONF_NAME: entry.data.get(CONF_NAME, ""),
+            CONF_MODEL: entry.data.get(CONF_MODEL, ""),
+            CONF_TRANSITION: entry.data.get(CONF_TRANSITION, DEFAULT_TRANSITION),
+            CONF_MODE_MUSIC: entry.data.get(CONF_MODE_MUSIC, DEFAULT_MODE_MUSIC),
+            CONF_SAVE_ON_CHANGE: entry.data.get(
+                CONF_SAVE_ON_CHANGE, DEFAULT_SAVE_ON_CHANGE
+            ),
+            CONF_NIGHTLIGHT_SWITCH: entry.data.get(
+                CONF_NIGHTLIGHT_SWITCH, DEFAULT_NIGHTLIGHT_SWITCH
+            ),
+        },
+    )
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Yeelight from a config entry."""
+    _async_populate_entry_options(hass, entry)
 
     if entry.data.get(CONF_HOST):
         try:
-            device = await _async_get_device(hass, entry.data[CONF_HOST], entry, None)
+            device = await _async_get_device(hass, entry.data[CONF_HOST], entry)
         except OSError as ex:
             # If CONF_ID is not valid we cannot fallback to discovery
-            # so we must retry by raising  ConfigEntryNotReady
+            # so we must retry by raising ConfigEntryNotReady
             if not entry.data.get(CONF_ID):
                 raise ConfigEntryNotReady from ex
+            # Otherwise fall through to discovery
         else:
             # manually added device
-            await _initialize(entry.data[CONF_HOST], device=device)
+            await _async_initialize(hass, entry, entry.data[CONF_HOST], device=device)
             return True
 
     # discovery
     scanner = YeelightScanner.async_get(hass)
-    scanner.async_register_callback(entry.data[CONF_ID], _initialize)
+
+    async def _async_from_discovery(host: str) -> None:
+        await _async_initialize(hass, entry, host)
+
+    scanner.async_register_callback(entry.data[CONF_ID], _async_from_discovery)
     return True
 
 
@@ -601,16 +616,12 @@ async def _async_get_device(
     hass: HomeAssistant,
     host: str,
     entry: ConfigEntry,
-    capabilities: dict | None,
 ) -> YeelightDevice:
     # Get model from config and capabilities
     model = entry.options.get(CONF_MODEL)
-    if not model and capabilities is not None:
-        model = capabilities.get("model")
 
     # Set up device
     bulb = Bulb(host, model=model or None)
-    if capabilities is None:
-        capabilities = await hass.async_add_executor_job(bulb.get_capabilities)
+    capabilities = await hass.async_add_executor_job(bulb.get_capabilities)
 
     return YeelightDevice(hass, host, entry.options, bulb, capabilities)
