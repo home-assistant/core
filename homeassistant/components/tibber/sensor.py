@@ -341,17 +341,19 @@ class TibberRtDataHandler:
                 continue
             if sensor_type not in RT_SENSOR_MAP:
                 continue
-            sensor_name, device_class, unit = RT_SENSOR_MAP[sensor_type]
-            if sensor_type == "accumulatedCost":
-                unit = self._tibber_home.currency
             if sensor_type not in self._sensors:
+                sensor_name, device_class, unit = RT_SENSOR_MAP[sensor_type]
+                if sensor_type == "accumulatedCost":
+                    unit = self._tibber_home.currency
                 entity = TibberSensorRT(
                     self._tibber_home, sensor_name, device_class, unit
                 )
                 new_sensors.append(entity)
                 self._sensors.add(sensor_type)
             async_dispatcher_send(
-                self.hass, SIGNAL_UPDATE_ENTITY.format(sensor_name), state
+                self.hass,
+                SIGNAL_UPDATE_ENTITY.format(RT_SENSOR_MAP[sensor_type][0]),
+                state,
             )
         if new_sensors:
             self._async_add_entities(new_sensors)
