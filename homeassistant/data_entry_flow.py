@@ -73,6 +73,7 @@ class FlowResult(TypedDict, total=False):
     context: dict[str, Any]
     result: Any
     last_step: bool | None
+    options: Mapping[str, Any]
 
 
 class FlowManager(abc.ABC):
@@ -307,7 +308,9 @@ class FlowHandler:
 
     # Set by flow manager
     cur_step: dict[str, str] | None = None
-    # Ignore types: https://github.com/PyCQA/pylint/issues/3167
+
+    # While not purely typed, it makes typehinting more useful for us
+    # and removes the need for constant None checks or asserts.
     flow_id: str = None  # type: ignore
     hass: HomeAssistant = None  # type: ignore
     handler: str = None  # type: ignore

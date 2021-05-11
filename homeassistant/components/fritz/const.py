@@ -2,7 +2,7 @@
 
 DOMAIN = "fritz"
 
-PLATFORMS = ["device_tracker"]
+PLATFORMS = ["binary_sensor", "device_tracker", "sensor"]
 
 DATA_FRITZ = "fritz_data"
 
@@ -17,3 +17,5 @@ ERROR_CONNECTION_ERROR = "connection_error"
 ERROR_UNKNOWN = "unknown_error"
 
 TRACKER_SCAN_INTERVAL = 30
+
+UPTIME_DEVIATION = 5

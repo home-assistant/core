@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, Callable
 
 import async_timeout
 from synology_dsm import SynologyDSM
@@ -15,6 +15,7 @@ from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.dsm.network import SynoDSMNetwork
 from synology_dsm.api.storage.storage import SynoStorage
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
+from synology_dsm.api.surveillance_station.camera import SynoCamera
 from synology_dsm.exceptions import (
     SynologyDSMAPIErrorException,
     SynologyDSMLoginFailedException,
@@ -38,9 +39,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import (
+    DeviceEntry,
+    async_get_registry as get_dev_reg,
+)
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -74,6 +80,7 @@ from .const import (
     SYSTEM_LOADED,
     UNDO_UPDATE_LISTENER,
     UTILISATION_SENSORS,
+    EntityInfo,
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -90,7 +97,10 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [CONFIG_SCHEMA]))},
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [CONFIG_SCHEMA]))},
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -100,7 +110,7 @@ ATTRIBUTION = "Data provided by Synology"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Synology DSM sensors from legacy config file."""
 
     conf = config.get(DOMAIN)
@@ -119,12 +129,16 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up Synology DSM sensors."""
 
     # Migrate old unique_id
     @callback
-    def _async_migrator(entity_entry: entity_registry.RegistryEntry):
+    def _async_migrator(
+        entity_entry: entity_registry.RegistryEntry,
+    ) -> dict[str, str] | None:
         """Migrate away from ID using label."""
         # Reject if new unique_id
         if "SYNO." in entity_entry.unique_id:
@@ -149,7 +163,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         ):
             return None
 
-        entity_type = None
+        entity_type: str | None = None
         for entity_key, entity_attrs in entries.items():
             if (
                 device_id
@@ -167,6 +181,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             if entity_attrs[ENTITY_NAME] == label:
                 entity_type = entity_key
 
+        if entity_type is None:
+            return None
+
         new_unique_id = "_".join([serial, entity_type])
         if device_id:
             new_unique_id += f"_{device_id}"
@@ -179,6 +196,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return {"new_unique_id": new_unique_id}
 
     await entity_registry.async_migrate_entries(hass, entry.entry_id, _async_migrator)
+
+    # migrate device indetifiers
+    dev_reg = await get_dev_reg(hass)
+    devices: list[DeviceEntry] = device_registry.async_entries_for_config_entry(
+        dev_reg, entry.entry_id
+    )
+    for device in devices:
+        old_identifier = list(next(iter(device.identifiers)))
+        if len(old_identifier) > 2:
+            new_identifier = {
+                (old_identifier.pop(0), "_".join([str(x) for x in old_identifier]))
+            }
+            _LOGGER.debug(
+                "migrate identifier '%s' to '%s'", device.identifiers, new_identifier
+            )
+            dev_reg.async_update_device(device.id, new_identifiers=new_identifier)
 
     # Migrate existing entry configuration
     if entry.data.get(CONF_VERIFY_SSL) is None:
@@ -213,7 +246,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             entry, data={**entry.data, CONF_MAC: network.macs}
         )
 
-    async def async_coordinator_update_data_cameras():
+    async def async_coordinator_update_data_cameras() -> dict[
+        str, dict[str, SynoCamera]
+    ] | None:
         """Fetch all camera data from api."""
         if not hass.data[DOMAIN][entry.unique_id][SYSTEM_LOADED]:
             raise UpdateFailed("System not fully loaded")
@@ -235,7 +270,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             }
         }
 
-    async def async_coordinator_update_data_central():
+    async def async_coordinator_update_data_central() -> None:
         """Fetch all device and sensor data from api."""
         try:
             await api.async_update()
@@ -243,7 +278,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         return None
 
-    async def async_coordinator_update_data_switches():
+    async def async_coordinator_update_data_switches() -> dict[
+        str, dict[str, Any]
+    ] | None:
         """Fetch all switch data from api."""
         if not hass.data[DOMAIN][entry.unique_id][SYSTEM_LOADED]:
             raise UpdateFailed("System not fully loaded")
@@ -291,7 +328,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Synology DSM sensors."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
@@ -303,15 +340,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def _async_setup_services(hass: HomeAssistant):
+async def _async_setup_services(hass: HomeAssistant) -> None:
     """Service handler setup."""
 
-    async def service_handler(call: ServiceCall):
+    async def service_handler(call: ServiceCall) -> None:
         """Handle service call."""
         serial = call.data.get(CONF_SERIAL)
         dsm_devices = hass.data[DOMAIN]
@@ -347,7 +384,7 @@ async def _async_setup_services(hass: HomeAssistant):
 class SynoApi:
     """Class to interface with Synology DSM API."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the API wrapper class."""
         self._hass = hass
         self._entry = entry
@@ -364,7 +401,7 @@ class SynoApi:
         self.utilisation: SynoCoreUtilization = None
 
         # Should we fetch them
-        self._fetching_entities = {}
+        self._fetching_entities: dict[str, set[str]] = {}
         self._with_information = True
         self._with_security = True
         self._with_storage = True
@@ -373,7 +410,7 @@ class SynoApi:
         self._with_upgrade = True
         self._with_utilisation = True
 
-    async def async_setup(self):
+    async def async_setup(self) -> None:
         """Start interacting with the NAS."""
         self.dsm = SynologyDSM(
             self._entry.data[CONF_HOST],
@@ -403,7 +440,7 @@ class SynoApi:
         await self.async_update()
 
     @callback
-    def subscribe(self, api_key, unique_id):
+    def subscribe(self, api_key: str, unique_id: str) -> Callable[[], None]:
         """Subscribe an entity to API fetches."""
         _LOGGER.debug("Subscribe new entity: %s", unique_id)
         if api_key not in self._fetching_entities:
@@ -421,7 +458,7 @@ class SynoApi:
         return unsubscribe
 
     @callback
-    def _async_setup_api_requests(self):
+    def _async_setup_api_requests(self) -> None:
         """Determine if we should fetch each API, if one entity needs it."""
         # Entities not added yet, fetch all
         if not self._fetching_entities:
@@ -485,7 +522,7 @@ class SynoApi:
             self.dsm.reset(self.utilisation)
             self.utilisation = None
 
-    def _fetch_device_configuration(self):
+    def _fetch_device_configuration(self) -> None:
         """Fetch initial device config."""
         self.information = self.dsm.information
         self.network = self.dsm.network
@@ -520,7 +557,7 @@ class SynoApi:
             )
             self.surveillance_station = self.dsm.surveillance_station
 
-    async def async_reboot(self):
+    async def async_reboot(self) -> None:
         """Reboot NAS."""
         try:
             await self._hass.async_add_executor_job(self.system.reboot)
@@ -531,7 +568,7 @@ class SynoApi:
             )
             _LOGGER.debug("Exception:%s", err)
 
-    async def async_shutdown(self):
+    async def async_shutdown(self) -> None:
         """Shutdown NAS."""
         try:
             await self._hass.async_add_executor_job(self.system.shutdown)
@@ -542,7 +579,7 @@ class SynoApi:
             )
             _LOGGER.debug("Exception:%s", err)
 
-    async def async_unload(self):
+    async def async_unload(self) -> None:
         """Stop interacting with the NAS and prepare for removal from hass."""
         try:
             await self._hass.async_add_executor_job(self.dsm.logout)
@@ -551,7 +588,7 @@ class SynoApi:
                 "Logout from '%s' not possible:%s", self._entry.unique_id, err
             )
 
-    async def async_update(self, now=None):
+    async def async_update(self, now: timedelta | None = None) -> None:
         """Update function for updating API information."""
         _LOGGER.debug("Start data update for '%s'", self._entry.unique_id)
         self._async_setup_api_requests()
@@ -579,9 +616,9 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
         self,
         api: SynoApi,
         entity_type: str,
-        entity_info: dict[str, str],
-        coordinator: DataUpdateCoordinator,
-    ):
+        entity_info: EntityInfo,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+    ) -> None:
         """Initialize the Synology DSM entity."""
         super().__init__(coordinator)
 
@@ -606,12 +643,12 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
         return self._name
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Return the icon."""
         return self._icon
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> str | None:
         """Return the class of this device."""
         return self._class
 
@@ -636,7 +673,7 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._enable_default
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register entity for updates from API."""
         self.async_on_remove(self._api.subscribe(self._api_key, self.unique_id))
         await super().async_added_to_hass()
@@ -649,10 +686,10 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
         self,
         api: SynoApi,
         entity_type: str,
-        entity_info: dict[str, str],
-        coordinator: DataUpdateCoordinator,
-        device_id: str = None,
-    ):
+        entity_info: EntityInfo,
+        coordinator: DataUpdateCoordinator[dict[str, dict[str, Any]]],
+        device_id: str | None = None,
+    ) -> None:
         """Initialize the Synology DSM disk or volume entity."""
         super().__init__(api, entity_type, entity_info, coordinator)
         self._device_id = device_id
@@ -688,16 +725,18 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return bool(self._api.storage)
+        return self._api.storage  # type: ignore [no-any-return]
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
-            "identifiers": {(DOMAIN, self._api.information.serial, self._device_id)},
+            "identifiers": {
+                (DOMAIN, f"{self._api.information.serial}_{self._device_id}")
+            },
             "name": f"Synology NAS ({self._device_name} - {self._device_type})",
-            "manufacturer": self._device_manufacturer,
-            "model": self._device_model,
-            "sw_version": self._device_firmware,
+            "manufacturer": self._device_manufacturer,  # type: ignore[typeddict-item]
+            "model": self._device_model,  # type: ignore[typeddict-item]
+            "sw_version": self._device_firmware,  # type: ignore[typeddict-item]
             "via_device": (DOMAIN, self._api.information.serial),
         }

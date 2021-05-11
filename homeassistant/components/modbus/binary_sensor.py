@@ -35,7 +35,6 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     MODBUS_DOMAIN,
 )
-from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,27 +83,15 @@ async def async_setup_platform(
             CONF_NAME: "no name",
             CONF_BINARY_SENSORS: config[CONF_INPUTS],
         }
-        config = None
 
     for entry in discovery_info[CONF_BINARY_SENSORS]:
         if CONF_HUB in entry:
-            # from old config!
-            hub: ModbusHub = hass.data[MODBUS_DOMAIN][entry[CONF_HUB]]
+            hub = hass.data[MODBUS_DOMAIN][entry[CONF_HUB]]
         else:
-            hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+            hub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         if CONF_SCAN_INTERVAL not in entry:
             entry[CONF_SCAN_INTERVAL] = DEFAULT_SCAN_INTERVAL
-        sensors.append(
-            ModbusBinarySensor(
-                hub,
-                entry[CONF_NAME],
-                entry.get(CONF_SLAVE),
-                entry[CONF_ADDRESS],
-                entry.get(CONF_DEVICE_CLASS),
-                entry[CONF_INPUT_TYPE],
-                entry[CONF_SCAN_INTERVAL],
-            )
-        )
+        sensors.append(ModbusBinarySensor(hub, hass, entry))
 
     async_add_entities(sensors)
 
@@ -112,24 +99,23 @@ async def async_setup_platform(
 class ModbusBinarySensor(BinarySensorEntity):
     """Modbus binary sensor."""
 
-    def __init__(
-        self, hub, name, slave, address, device_class, input_type, scan_interval
-    ):
+    def __init__(self, hub, hass, entry):
         """Initialize the Modbus binary sensor."""
         self._hub = hub
-        self._name = name
-        self._slave = int(slave) if slave else None
-        self._address = int(address)
-        self._device_class = device_class
-        self._input_type = input_type
+        self._hass = hass
+        self._name = entry[CONF_NAME]
+        self._slave = entry.get(CONF_SLAVE)
+        self._address = int(entry[CONF_ADDRESS])
+        self._device_class = entry.get(CONF_DEVICE_CLASS)
+        self._input_type = entry[CONF_INPUT_TYPE]
         self._value = None
         self._available = True
-        self._scan_interval = timedelta(seconds=scan_interval)
+        self._scan_interval = timedelta(seconds=entry[CONF_SCAN_INTERVAL])
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         async_track_time_interval(
-            self.hass, lambda arg: self.update(), self._scan_interval
+            self._hass, lambda arg: self.update(), self._scan_interval
         )
 
     @property

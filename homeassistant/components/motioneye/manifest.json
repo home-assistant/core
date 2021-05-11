@@ -4,7 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/motioneye",
   "config_flow": true,
   "requirements": [
-    "motioneye-client==0.3.2"
+    "motioneye-client==0.3.6"
   ],
   "codeowners": [
     "@dermotduffy"
