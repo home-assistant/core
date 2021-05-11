@@ -43,6 +43,24 @@ DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME):
 SUPPORTED_METHODS = [METHOD_LEGACY, METHOD_WEBSOCKET]
 
 
+def _get_device_info(host):
+    """Fetch device info by any websocket method."""
+    for port in WEBSOCKET_PORTS:
+        if device_info := SamsungTVBridge.get_bridge(
+            METHOD_WEBSOCKET, host, port
+        ).device_info:
+            return device_info
+    return None
+
+
+async def async_get_device_info(hass, bridge, host):
+    """Fetch device info from bridge or websocket."""
+    if bridge:
+        return await hass.async_add_executor_job(bridge.device_info)
+
+    return await hass.async_add_executor_job(_get_device_info, host)
+
+
 class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Samsung TV config flow."""
 
@@ -119,25 +137,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_and_check_device_info(self):
         """Try to get the device info."""
-        if self._bridge:
-            self._device_info = await self.hass.async_add_executor_job(
-                self._bridge.device_info
-            )
-        else:
-            for port in WEBSOCKET_PORTS:
-                self._device_info = await self.hass.async_add_executor_job(
-                    SamsungTVBridge.get_bridge(
-                        METHOD_WEBSOCKET, self._host, port
-                    ).device_info
-                )
-                if self._device_info:
-                    break
-
-            if not self._device_info:
-                LOGGER.debug("Not supported: %s", self._host)
-                raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
-
-        dev_info = self._device_info.get("device", {})
+        device_info = await async_get_device_info(self.hass, self._bridge, self._host)
+        if not device_info:
+            raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
+        dev_info = device_info.get("device", {})
         device_type = dev_info.get("type")
         if device_type and device_type != "Samsung SmartTV":
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
@@ -147,6 +150,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._title = f"{self._name} ({self._model})"
         if dev_info.get("networkType") == "wireless":
             self._mac = dev_info.get("wifiMac")
+        self._device_info = device_info
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
@@ -236,7 +240,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._manufacturer = user_input.get(CONF_MANUFACTURER)
         self._model = user_input.get(CONF_MODEL)
         self._name = user_input.get(CONF_NAME)
-        self._title = self._name or self._model
+        self._title = f"{self._name} ({self._model})"
 
         await self.async_set_unique_id(self._id)
         self.context["title_placeholders"] = {"device": self._title}

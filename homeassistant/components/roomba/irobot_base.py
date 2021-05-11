@@ -100,7 +100,9 @@ class IRobotEntity(Entity):
             "sw_version": self._version,
             "model": self._sku,
         }
-        if mac_address := self.vacuum_state.get("hwPartsRev", {}).get("wlan0HwAddr", self.vacuum_state.get("mac")):
+        if mac_address := self.vacuum_state.get("hwPartsRev", {}).get(
+            "wlan0HwAddr", self.vacuum_state.get("mac")
+        ):
             info["connections"] = {(dr.CONNECTION_NETWORK_MAC, mac_address)}
         return info
 
