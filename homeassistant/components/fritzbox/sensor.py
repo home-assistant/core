@@ -24,7 +24,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome sensor from ConfigEntry."""
-    entities: list[FritzBoxBatterySensor | FritzBoxTempSensor] = []
+    entities: list[FritzBoxEntity] = []
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
     for ain, device in coordinator.data.items():

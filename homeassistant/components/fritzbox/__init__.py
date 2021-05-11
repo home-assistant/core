@@ -31,8 +31,8 @@ from .const import (
     DOMAIN,
     LOGGER,
     PLATFORMS,
-    EntityInfo,
 )
+from .model import EntityInfo
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
