@@ -283,7 +283,7 @@ def round_nicely(number):
     return round(number)
 
 
-class QNAPSensor(Entity):
+class QNAPSensor(CoordinatorEntity, Entity):
     """Base class for a QNAP sensor."""
 
     def __init__(self, api, description: SensorEntityDescription, monitor_device=None):
