@@ -1,23 +1,25 @@
 """Tests for the Samsung TV Integration."""
 from unittest.mock import Mock, call, patch
 
-import pytest
-
 from homeassistant.components.media_player.const import DOMAIN, SUPPORT_TURN_ON
 from homeassistant.components.samsungtv.const import (
     CONF_ON_ACTION,
     DOMAIN as SAMSUNGTV_DOMAIN,
+    METHOD_WEBSOCKET,
 )
 from homeassistant.components.samsungtv.media_player import SUPPORT_SAMSUNGTV
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_HOST,
+    CONF_METHOD,
     CONF_NAME,
     SERVICE_VOLUME_UP,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from . import setup_samsungtv
 
 ENTITY_ID = f"{DOMAIN}.fake_name"
 MOCK_CONFIG = {
@@ -26,6 +28,7 @@ MOCK_CONFIG = {
             CONF_HOST: "fake_host",
             CONF_NAME: "fake_name",
             CONF_ON_ACTION: [{"delay": "00:00:01"}],
+            CONF_METHOD: METHOD_WEBSOCKET,
         }
     ]
 }
@@ -40,28 +43,12 @@ REMOTE_CALL = {
 }
 
 
-@pytest.fixture(name="remote")
-def remote_fixture():
-    """Patch the samsungctl Remote."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote"
-    ) as remote_class, patch(
-        "homeassistant.components.samsungtv.config_flow.gethostbyname"
-    ):
-        remote = Mock()
-        remote.__enter__ = Mock()
-        remote.__exit__ = Mock()
-        remote_class.return_value = remote
-        yield remote
-
-
 async def test_setup(hass: HomeAssistant, remote: Mock):
     """Test Samsung TV integration is setup."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
-        "homeassistant.components.samsungtv.config_flow.gethostbyname"
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname"
     ):
-        await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
-        await hass.async_block_till_done()
+        await setup_samsungtv(hass, MOCK_CONFIG)
         state = hass.states.get(ENTITY_ID)
 
         # test name and turn_on

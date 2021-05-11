@@ -1,7 +1,6 @@
 """Tests for Samsung TV config flow."""
-from unittest.mock import DEFAULT as Mock, PropertyMock, call, patch
+from unittest.mock import Mock, PropertyMock, call, patch
 
-import pytest
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
 from samsungtvws.exceptions import ConnectionFailure
 from websocket import WebSocketProtocolException
@@ -105,38 +104,6 @@ DEVICEINFO_WEBSOCKET_SSL = {
     "timeout": 8,
     "token": "123456789",
 }
-
-
-@pytest.fixture(name="remote")
-def remote_fixture():
-    """Patch the samsungctl Remote."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote"
-    ) as remote_class, patch(
-        "homeassistant.components.samsungtv.config_flow.gethostbyname"
-    ):
-        remote = Mock()
-        remote.__enter__ = Mock()
-        remote.__exit__ = Mock()
-        remote_class.return_value = remote
-        yield remote
-
-
-@pytest.fixture(name="remotews")
-def remotews_fixture():
-    """Patch the samsungtvws SamsungTVWS."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
-    ) as remotews_class, patch(
-        "homeassistant.components.samsungtv.config_flow.gethostbyname"
-    ):
-        remotews = Mock()
-        remotews.__enter__ = Mock()
-        remotews.__exit__ = Mock()
-        remotews.rest_device_info.return_value = {"device": {"type": "Samsung SmartTV"}}
-        remotews_class.return_value = remotews
-        remotews_class().__enter__().token = "FAKE_TOKEN"
-        yield remotews
 
 
 async def test_user_legacy(hass: HomeAssistant, remote: Mock):
