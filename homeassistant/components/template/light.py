@@ -437,7 +437,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             common_params["brightness"] = kwargs[ATTR_BRIGHTNESS]
 
-        if ATTR_TRANSITION in kwargs:
+        if ATTR_TRANSITION in kwargs and self._supports_transition == True:
             common_params["transition"] = kwargs[ATTR_TRANSITION]
 
         if ATTR_COLOR_TEMP in kwargs and self._temperature_script:
