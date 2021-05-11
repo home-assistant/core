@@ -85,8 +85,12 @@ class NmapTrackerEntity(ScannerEntity):
         self._mac_address = mac_address
         self._nmap_tracker = nmap_tracker
         self._tracked = self._nmap_tracker.devices.tracked
-        self._device = self._tracked[mac_address]
         self._active = False
+
+    @property
+    def _device(self) -> bool:
+        """Get latest device state."""
+        return self._tracked[self._mac_address]
 
     @property
     def is_connected(self) -> bool:
