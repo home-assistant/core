@@ -5,12 +5,12 @@ import asyncio
 import functools
 import logging
 import math
-from typing import Any, Callable
+from typing import Callable
 
 from aioesphomeapi import (
     APIClient,
     APIConnectionError,
-    DeviceInfo,
+    DeviceInfo as EsphomeDeviceInfo,
     EntityInfo,
     EntityState,
     HomeassistantServiceCall,
@@ -36,7 +36,7 @@ from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.service import async_set_service_schema
@@ -448,7 +448,7 @@ class ReconnectLogic(RecordUpdateListener):
 
 
 async def _async_setup_device_registry(
-    hass: HomeAssistant, entry: ConfigEntry, device_info: DeviceInfo
+    hass: HomeAssistant, entry: ConfigEntry, device_info: EsphomeDeviceInfo
 ):
     """Set up device registry feature for a particular config entry."""
     sw_version = device_info.esphome_version
@@ -769,7 +769,7 @@ class EsphomeBaseEntity(Entity):
         return self._entry_data.old_info[self._component_key].get(self._key)
 
     @property
-    def _device_info(self) -> DeviceInfo:
+    def _device_info(self) -> EsphomeDeviceInfo:
         return self._entry_data.device_info
 
     @property
@@ -803,7 +803,7 @@ class EsphomeBaseEntity(Entity):
         return self._static_info.unique_id
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         return {
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)}
