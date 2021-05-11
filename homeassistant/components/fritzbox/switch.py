@@ -1,25 +1,25 @@
 """Support for AVM FRITZ!SmartHome switch devices."""
+from __future__ import annotations
+
+from typing import Any
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_NAME,
-    ATTR_TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT,
-    ENERGY_KILO_WATT_HOUR,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import ATTR_TEMPERATURE, ENERGY_KILO_WATT_HOUR, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxEntity
 from .const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    ATTR_NAME,
     ATTR_STATE_DEVICE_LOCKED,
     ATTR_STATE_LOCKED,
     ATTR_TEMPERATURE_UNIT,
     ATTR_TOTAL_CONSUMPTION,
     ATTR_TOTAL_CONSUMPTION_UNIT,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_COORDINATOR,
     DOMAIN as FRITZBOX_DOMAIN,
 )
@@ -31,7 +31,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome switch from ConfigEntry."""
-    entities = []
+    entities: list[FritzboxSwitch] = []
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
     for ain, device in coordinator.data.items():
@@ -58,27 +58,27 @@ class FritzboxSwitch(FritzBoxEntity, SwitchEntity):
     """The switch class for FRITZ!SmartHome switches."""
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if switch is available."""
-        return self.device.present
+        return self.device.present  # type: ignore [no-any-return]
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the switch is on."""
-        return self.device.switch_state
+        return self.device.switch_state  # type: ignore [no-any-return]
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.hass.async_add_executor_job(self.device.set_switch_state_on)
         await self.coordinator.async_refresh()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.hass.async_add_executor_job(self.device.set_switch_state_off)
         await self.coordinator.async_refresh()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes of the device."""
         attrs = {}
         attrs[ATTR_STATE_DEVICE_LOCKED] = self.device.device_lock
@@ -99,6 +99,6 @@ class FritzboxSwitch(FritzBoxEntity, SwitchEntity):
         return attrs
 
     @property
-    def current_power_w(self):
+    def current_power_w(self) -> float:
         """Return the current power usage in W."""
-        return self.device.power / 1000
+        return self.device.power / 1000  # type: ignore [no-any-return]
