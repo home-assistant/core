@@ -48,7 +48,7 @@ def _get_device_info(host):
     for port in WEBSOCKET_PORTS:
         if device_info := SamsungTVBridge.get_bridge(
             METHOD_WEBSOCKET, host, port
-        ).device_info:
+        ).device_info():
             return device_info
     return None
 
