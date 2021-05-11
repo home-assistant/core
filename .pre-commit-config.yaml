@@ -1,11 +1,11 @@
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.12.0
+    rev: v2.14.0
     hooks:
       - id: pyupgrade
         args: [--py38-plus]
   - repo: https://github.com/psf/black
-    rev: 21.4b2
+    rev: 21.5b0
     hooks:
       - id: black
         args:
@@ -61,7 +61,7 @@ repos:
           - --branch=master
           - --branch=rc
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.24.2
+    rev: v1.26.1
     hooks:
       - id: yamllint
   - repo: https://github.com/pre-commit/mirrors-prettier

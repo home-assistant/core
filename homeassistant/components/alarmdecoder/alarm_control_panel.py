@@ -56,8 +56,7 @@ async def async_setup_entry(
     )
     async_add_entities([entity])
 
-    platform = entity_platform.current_platform.get()
-
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_ALARM_TOGGLE_CHIME,
         {

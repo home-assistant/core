@@ -2,9 +2,8 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
-from gogogate2_api import GogoGate2Api, ISmartGateApi
-from gogogate2_api.common import (
-    ApiError,
+from ismartgate import GogoGate2Api, ISmartGateApi
+from ismartgate.common import (
     DoorMode,
     DoorStatus,
     GogoGate2ActivateResponse,
@@ -14,6 +13,7 @@ from gogogate2_api.common import (
     ISmartGateInfoResponse,
     Network,
     Outputs,
+    TransitionDoorStatus,
     Wifi,
 )
 
@@ -30,26 +30,21 @@ from homeassistant.components.gogogate2.const import (
     DOMAIN,
     MANUFACTURER,
 )
-from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     CONF_DEVICE,
     CONF_IP_ADDRESS,
-    CONF_NAME,
     CONF_PASSWORD,
-    CONF_PLATFORM,
-    CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_METRIC,
     CONF_USERNAME,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OPEN,
+    STATE_OPENING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed, mock_device_registry
@@ -182,85 +177,6 @@ def _mocked_ismartgate_closed_door_response():
 
 
 @patch("homeassistant.components.gogogate2.common.GogoGate2Api")
-async def test_import_fail(gogogate2api_mock, hass: HomeAssistant) -> None:
-    """Test the failure to import."""
-    api = MagicMock(spec=GogoGate2Api)
-    api.async_info.side_effect = ApiError(22, "Error")
-    gogogate2api_mock.return_value = api
-
-    hass_config = {
-        HA_DOMAIN: {CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC},
-        COVER_DOMAIN: [
-            {
-                CONF_PLATFORM: "gogogate2",
-                CONF_NAME: "cover0",
-                CONF_DEVICE: DEVICE_TYPE_GOGOGATE2,
-                CONF_IP_ADDRESS: "127.0.1.0",
-                CONF_USERNAME: "user0",
-                CONF_PASSWORD: "password0",
-            }
-        ],
-    }
-
-    await async_process_ha_core_config(hass, hass_config[HA_DOMAIN])
-    assert await async_setup_component(hass, HA_DOMAIN, {})
-    assert await async_setup_component(hass, COVER_DOMAIN, hass_config)
-    await hass.async_block_till_done()
-
-    entity_ids = hass.states.async_entity_ids(COVER_DOMAIN)
-    assert not entity_ids
-
-
-@patch("homeassistant.components.gogogate2.common.GogoGate2Api")
-@patch("homeassistant.components.gogogate2.common.ISmartGateApi")
-async def test_import(
-    ismartgateapi_mock, gogogate2api_mock, hass: HomeAssistant
-) -> None:
-    """Test importing of file based config."""
-    api0 = MagicMock(spec=GogoGate2Api)
-    api0.async_info.return_value = _mocked_gogogate_open_door_response()
-    gogogate2api_mock.return_value = api0
-
-    api1 = MagicMock(spec=ISmartGateApi)
-    api1.async_info.return_value = _mocked_ismartgate_closed_door_response()
-    ismartgateapi_mock.return_value = api1
-
-    hass_config = {
-        HA_DOMAIN: {CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_METRIC},
-        COVER_DOMAIN: [
-            {
-                CONF_PLATFORM: "gogogate2",
-                CONF_NAME: "cover0",
-                CONF_DEVICE: DEVICE_TYPE_GOGOGATE2,
-                CONF_IP_ADDRESS: "127.0.1.0",
-                CONF_USERNAME: "user0",
-                CONF_PASSWORD: "password0",
-            },
-            {
-                CONF_PLATFORM: "gogogate2",
-                CONF_NAME: "cover1",
-                CONF_DEVICE: DEVICE_TYPE_ISMARTGATE,
-                CONF_IP_ADDRESS: "127.0.1.1",
-                CONF_USERNAME: "user1",
-                CONF_PASSWORD: "password1",
-            },
-        ],
-    }
-
-    await async_process_ha_core_config(hass, hass_config[HA_DOMAIN])
-    assert await async_setup_component(hass, HA_DOMAIN, {})
-    assert await async_setup_component(hass, COVER_DOMAIN, hass_config)
-    await hass.async_block_till_done()
-
-    entity_ids = hass.states.async_entity_ids(COVER_DOMAIN)
-    assert entity_ids is not None
-    assert len(entity_ids) == 3
-    assert "cover.door1" in entity_ids
-    assert "cover.door1_2" in entity_ids
-    assert "cover.door2" in entity_ids
-
-
-@patch("homeassistant.components.gogogate2.common.GogoGate2Api")
 async def test_open_close_update(gogogate2api_mock, hass: HomeAssistant) -> None:
     """Test open and close and data update."""
 
@@ -331,6 +247,10 @@ async def test_open_close_update(gogogate2api_mock, hass: HomeAssistant) -> None
     api = MagicMock(GogoGate2Api)
     api.async_activate.return_value = GogoGate2ActivateResponse(result=True)
     api.async_info.return_value = info_response(DoorStatus.OPENED)
+    api.async_get_door_statuses_from_info.return_value = {
+        1: DoorStatus.OPENED,
+        2: DoorStatus.OPENED,
+    }
     gogogate2api_mock.return_value = api
 
     config_entry = MockConfigEntry(
@@ -351,31 +271,101 @@ async def test_open_close_update(gogogate2api_mock, hass: HomeAssistant) -> None
     assert dict(hass.states.get("cover.door1").attributes) == expected_attributes
 
     api.async_info.return_value = info_response(DoorStatus.CLOSED)
+    api.async_get_door_statuses_from_info.return_value = {
+        1: DoorStatus.CLOSED,
+        2: DoorStatus.CLOSED,
+    }
     await hass.services.async_call(
         COVER_DOMAIN,
         "close_cover",
         service_data={"entity_id": "cover.door1"},
     )
+    api.async_get_door_statuses_from_info.return_value = {
+        1: TransitionDoorStatus.CLOSING,
+        2: TransitionDoorStatus.CLOSING,
+    }
+    async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.door1").state == STATE_CLOSING
+    api.async_close_door.assert_called_with(1)
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.door1").state == STATE_CLOSING
+
+    api.async_info.return_value = info_response(DoorStatus.CLOSED)
+    api.async_get_door_statuses_from_info.return_value = {
+        1: DoorStatus.CLOSED,
+        2: DoorStatus.CLOSED,
+    }
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1").state == STATE_CLOSED
-    api.async_close_door.assert_called_with(1)
 
     api.async_info.return_value = info_response(DoorStatus.OPENED)
+    api.async_get_door_statuses_from_info.return_value = {
+        1: DoorStatus.OPENED,
+        2: DoorStatus.OPENED,
+    }
     await hass.services.async_call(
         COVER_DOMAIN,
         "open_cover",
         service_data={"entity_id": "cover.door1"},
     )
+    api.async_get_door_statuses_from_info.return_value = {
+        1: TransitionDoorStatus.OPENING,
+        2: TransitionDoorStatus.OPENING,
+    }
+    async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.door1").state == STATE_OPENING
+    api.async_open_door.assert_called_with(1)
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.door1").state == STATE_OPENING
+
+    api.async_info.return_value = info_response(DoorStatus.OPENED)
+    api.async_get_door_statuses_from_info.return_value = {
+        1: DoorStatus.OPENED,
+        2: DoorStatus.OPENED,
+    }
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1").state == STATE_OPEN
-    api.async_open_door.assert_called_with(1)
 
     api.async_info.return_value = info_response(DoorStatus.UNDEFINED)
+    api.async_get_door_statuses_from_info.return_value = {
+        1: DoorStatus.UNDEFINED,
+        2: DoorStatus.UNDEFINED,
+    }
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1").state == STATE_UNKNOWN
+
+    api.async_info.return_value = info_response(DoorStatus.OPENED)
+    api.async_get_door_statuses_from_info.return_value = {
+        1: DoorStatus.OPENED,
+        2: DoorStatus.OPENED,
+    }
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        "close_cover",
+        service_data={"entity_id": "cover.door1"},
+    )
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        "open_cover",
+        service_data={"entity_id": "cover.door1"},
+    )
+    api.async_get_door_statuses_from_info.return_value = {
+        1: TransitionDoorStatus.OPENING,
+        2: TransitionDoorStatus.OPENING,
+    }
+    async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
+    await hass.async_block_till_done()
+    assert hass.states.get("cover.door1").state == STATE_OPENING
+    api.async_open_door.assert_called_with(1)
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert not hass.states.async_entity_ids(DOMAIN)
@@ -430,6 +420,10 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
 
     api.async_info.side_effect = None
     api.async_info.return_value = closed_door_response
+    api.async_get_door_statuses_from_info.return_value = {
+        1: DoorStatus.CLOSED,
+        2: DoorStatus.CLOSED,
+    }
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1").state == STATE_CLOSED
