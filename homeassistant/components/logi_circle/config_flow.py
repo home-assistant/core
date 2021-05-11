@@ -65,7 +65,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input=None):
         """Handle external yaml configuration."""
-        self._async_abort_entries_match({})
+        self._async_abort_entries_match()
 
         self.flow_impl = DOMAIN
 
@@ -75,7 +75,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow start."""
         flows = self.hass.data.get(DATA_FLOW_IMPL, {})
 
-        self._async_abort_entries_match({})
+        self._async_abort_entries_match()
 
         if not flows:
             return self.async_abort(reason="missing_configuration")
@@ -95,7 +95,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_auth(self, user_input=None):
         """Create an entry for auth."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="external_setup")
 
         external_error = self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]
@@ -136,7 +136,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_code(self, code=None):
         """Received code for authentication."""
-        self._async_abort_entries_match({})
+        self._async_abort_entries_match()
 
         return await self._async_create_session(code)
 

@@ -50,9 +50,7 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
         self.context[CONF_IP_ADDRESS] = ip_address
         self._abort_if_unique_id_configured({CONF_IP_ADDRESS: ip_address})
 
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_IP_ADDRESS) == ip_address:
-                return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_IP_ADDRESS: ip_address})
 
         self._ip_address = ip_address
         for progress in self._async_in_progress():

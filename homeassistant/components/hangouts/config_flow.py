@@ -36,7 +36,7 @@ class HangoutsFlowHandler(config_entries.ConfigFlow):
         """Handle a flow start."""
         errors = {}
 
-        self._async_abort_entries_match({})
+        self._async_abort_entries_match()
 
         if user_input is not None:
             user_email = user_input[CONF_EMAIL]

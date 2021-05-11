@@ -82,7 +82,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_homekit(self, discovery_info):
         """Handle HomeKit discovery."""
-        self._async_abort_entries_match({})
+        self._async_abort_entries_match()
         properties = {
             key.lower(): value for (key, value) in discovery_info["properties"].items()
         }
