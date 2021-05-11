@@ -168,7 +168,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         except UnhandledResponse:
             LOGGER.debug("Working but unsupported config: %s", config)
             return RESULT_NOT_SUPPORTED
-        except OSError as err:
+        except (ConnectionClosed, OSError) as err:
             LOGGER.debug("Failing config: %s, error: %s", config, err)
             return RESULT_CANNOT_CONNECT
 
