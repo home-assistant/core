@@ -65,13 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass, entry=entry, session=oauth_session
     )
 
-    try:
-        await coordinator.async_refresh()
-    except UpdateFailed as exc:
-        raise ConfigEntryAuthFailed from exc
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = {"COORD": coordinator, "SESSION": oauth_session}
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
