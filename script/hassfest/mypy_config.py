@@ -330,7 +330,7 @@ def generate_and_validate(config: Config) -> str:
 
     # Don't generate mypy.ini if there're errors found because it will likely crash.
     if config.errors:
-        return
+        return ""
 
     mypy_config = configparser.ConfigParser()
 
@@ -374,6 +374,9 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate mypy config."""
     config_path = config.root / "mypy.ini"
     config.cache["mypy_config"] = content = generate_and_validate(config)
+
+    if config.errors:
+        return
 
     with open(str(config_path)) as fp:
         if fp.read().strip() != content:
