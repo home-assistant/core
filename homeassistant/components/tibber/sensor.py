@@ -317,7 +317,7 @@ class TibberRtDataHandler:
                     unit = self._tibber_home.currency
                 else:
                     continue
-                dev = TibberSensorRT(self._tibber_home, sensor, device_class, unit)
+                entity = TibberSensorRT(self._tibber_home, sensor, device_class, unit)
                 new_sensors.append(dev)
                 self._sensors[sensor] = dev
             self._sensors[sensor].set_state(state)
