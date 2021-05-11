@@ -1,5 +1,6 @@
 """Support for Honeywell (US) Total Connect Comfort sensors."""
 from __future__ import annotations
+import homeassistant
 
 import logging
 
@@ -25,10 +26,14 @@ def setup_platform(
     device = hass.data[DOMAIN]["device"]
     sensors = []
 
+    if device.current_temperature != None:
+        sensors.append(HoneywellUSSensor(device, "indoor", "temperature"))
+    if device.current_humidity != None and device.current_humidity != 128:
+        sensors.append(HoneywellUSSensor(device, "indoor", "humidity"))
     if device.outdoor_temperature != None:
-        sensors.append(HoneywellUSSensor(device, "temperature"))
+        sensors.append(HoneywellUSSensor(device, "outdoor", "temperature"))
     if device.outdoor_humidity != None:
-        sensors.append(HoneywellUSSensor(device, "humidity"))
+        sensors.append(HoneywellUSSensor(device, "outdoor", "humidity"))
 
     add_entities(sensors)
 
@@ -36,14 +41,20 @@ def setup_platform(
 class HoneywellUSSensor(SensorEntity):
     """Representation of a Honeywell US Sensor."""
 
-    def __init__(self, device, sensor_type):
+    def __init__(self, device, location, sensor_type):
         """Initialize the sensor."""
         self._device = device
 
-        self._name = f"{device.name} outdoor {sensor_type}"
+        self._name = f"{device.name} {location} {sensor_type}"
+        self._location = location
         self._type = sensor_type
 
         _LOGGER.debug("latestData = %s ", device._data)
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        return f"{homeassistant.helpers.device_registry.format_mac(self._device.mac_address)}_{self._name}"
 
     @property
     def name(self):
@@ -81,9 +92,13 @@ class HoneywellUSSensor(SensorEntity):
     @property
     def outdoor_humidity(self) -> int | None:
         """Return the current outdoor humidity."""
+        if self._location == "indoor":
+            return self._device.current_humidity
         return self._device.outdoor_humidity
 
     @property
     def outdoor_temperature(self) -> float | None:
         """Return the current outdoor temperature."""
+        if self._location == "indoor":
+            return self._device.current_temperature
         return self._device.outdoor_temperature

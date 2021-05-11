@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime
+import homeassistant
 import logging
 from typing import Any
 
@@ -125,6 +126,11 @@ class HoneywellUSThermostat(ClimateEntity):
         self._fan_mode_map = {k: v for d in mappings for k, v in d.items()}
 
         self._supported_features |= SUPPORT_FAN_MODE
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return a unique ID."""
+        return homeassistant.helpers.device_registry.format_mac(self._device.mac_address)
 
     @property
     def name(self) -> str | None:
