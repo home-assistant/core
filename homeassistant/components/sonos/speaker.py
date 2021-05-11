@@ -20,7 +20,6 @@ from pysonos.snapshot import Snapshot
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as ent_reg
 from homeassistant.helpers.dispatcher import (
@@ -578,7 +577,7 @@ class SonosSpeaker:
         ) -> list[list[SonosSpeaker]]:
             """Pause all current coordinators and restore groups."""
             for speaker in (s for s in speakers if s.is_coordinator):
-                if speaker.media.playback_status == STATE_PLAYING:
+                if speaker.media.playback_status == "PLAYING":
                     hass.async_create_task(speaker.soco.pause())
 
             groups = []
@@ -783,7 +782,7 @@ class SonosSpeaker:
         try:
             uri_meta_data = variables["enqueued_transport_uri_meta_data"]
             if isinstance(uri_meta_data, DidlAudioBroadcast) and (
-                self.media.playback_status != STATE_PLAYING
+                self.media.playback_status != "PLAYING"
                 or self.soco.music_source_from_uri(self.media.title) == MUSIC_SRC_RADIO
                 or (
                     isinstance(self.media.title, str)
@@ -815,7 +814,7 @@ class SonosSpeaker:
 
         # position jumped?
         if current_position is not None and self.media.position is not None:
-            if self.media.playback_status == STATE_PLAYING:
+            if self.media.playback_status == "PLAYING":
                 assert self.media.position_updated_at is not None
                 time_delta = dt_util.utcnow() - self.media.position_updated_at
                 time_diff = time_delta.total_seconds()
