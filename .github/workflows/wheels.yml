@@ -42,7 +42,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: env_file
-          path: ./env_file
+          path: ./.env_file
 
       - name: Upload requirements_diff
         uses: actions/upload-artifact@v2
