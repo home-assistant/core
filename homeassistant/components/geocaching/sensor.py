@@ -3,15 +3,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.geocaching.coordinator import (
-    GeocachingDataUpdateCoordinator,
-)
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
+from .coordinator import GeocachingDataUpdateCoordinator
 from .models import GeocachingEntity, GeocachingSensorSettings
 
 
