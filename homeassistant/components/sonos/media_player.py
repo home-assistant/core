@@ -58,6 +58,8 @@ from .const import (
     MEDIA_TYPES_TO_SONOS,
     PLAYABLE_MEDIA_TYPES,
     SONOS_CREATE_MEDIA_PLAYER,
+    SONOS_STATE_PLAYING,
+    SONOS_STATE_TRANSITIONING,
     SOURCE_LINEIN,
     SOURCE_TV,
 )
@@ -281,7 +283,10 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             if self.media.title is None:
                 return STATE_IDLE
             return STATE_PAUSED
-        if self.media.playback_status in ("PLAYING", "TRANSITIONING"):
+        if self.media.playback_status in (
+            SONOS_STATE_PLAYING,
+            SONOS_STATE_TRANSITIONING,
+        ):
             return STATE_PLAYING
         return STATE_IDLE
 
