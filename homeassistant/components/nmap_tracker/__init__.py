@@ -287,7 +287,7 @@ class NmapDeviceScanner:
             device = NmapDevice(formatted_mac, name, ipv4, vendor, reason, now)
             if formatted_mac not in devices.tracked:
                 dispatches.append((self.signal_device_new, formatted_mac))
-            dispatches.append((self.signal_device_update(formatted_mac), True))
+            dispatches.append((signal_device_update(formatted_mac), True))
 
             devices.tracked[formatted_mac] = device
             devices.ipv4_last_mac[ipv4] = formatted_mac
