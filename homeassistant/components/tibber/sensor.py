@@ -21,6 +21,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     VOLT,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -249,19 +250,22 @@ class TibberSensorElPrice(TibberSensor):
 class TibberSensorRT(TibberSensor):
     """Representation of a Tibber sensor for real time consumption."""
 
-    def __init__(self, tibber_home, sensor_name, device_class, unit):
+    def __init__(self, tibber_home, sensor_name, device_class, unit, initial_state):
         """Initialize the sensor."""
         super().__init__(tibber_home)
         self._sensor_name = sensor_name
         self._device_class = device_class
         self._unit = unit
+        self._state = initial_state
 
     async def async_added_to_hass(self):
         """Start listen for real time data."""
-        async_dispatcher_connect(
-            self.hass,
-            SIGNAL_UPDATE_ENTITY.format(self._sensor_name),
-            self._set_state,
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_UPDATE_ENTITY.format(self._sensor_name),
+                self._set_state,
+            )
         )
 
     @property
@@ -333,19 +337,20 @@ class TibberRtDataHandler:
         for sensor_type, state in live_measurement.items():
             if state is None or sensor_type not in RT_SENSOR_MAP:
                 continue
-            if sensor_type not in self._entities:
+            if sensor_type in self._entities:
+                async_dispatcher_send(
+                    self.hass,
+                    SIGNAL_UPDATE_ENTITY.format(RT_SENSOR_MAP[sensor_type][0]),
+                    state,
+                )
+            else:
                 sensor_name, device_class, unit = RT_SENSOR_MAP[sensor_type]
                 if sensor_type == "accumulatedCost":
                     unit = self._tibber_home.currency
                 entity = TibberSensorRT(
-                    self._tibber_home, sensor_name, device_class, unit
+                    self._tibber_home, sensor_name, device_class, unit, state
                 )
                 new_entities.append(entity)
                 self._entities.add(sensor_type)
-            async_dispatcher_send(
-                self.hass,
-                SIGNAL_UPDATE_ENTITY.format(RT_SENSOR_MAP[sensor_type][0]),
-                state,
-            )
         if new_entities:
             self._async_add_entities(new_entities)
