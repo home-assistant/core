@@ -154,6 +154,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            if not self._async_is_unique_host_list(user_input):
+                return self.async_abort(reason="already_configured")
+
             errors = normalize_input(user_input)
             self.options.update(user_input)
 
