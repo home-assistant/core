@@ -1,6 +1,7 @@
 """Helper methods to handle the time in Home Assistant."""
 from __future__ import annotations
 
+import bisect
 from contextlib import suppress
 import datetime as dt
 import re
@@ -265,15 +266,7 @@ def find_next_time_expression_time(
 
         Return None if no such value exists.
         """
-        left = 0
-        right = len(arr)
-        while left < right:
-            mid = (left + right) // 2
-            if arr[mid] < cmp:
-                left = mid + 1
-            else:
-                right = mid
-
+        left = bisect.bisect_left(arr, cmp)
         if left == len(arr):
             return None
         return arr[left]
