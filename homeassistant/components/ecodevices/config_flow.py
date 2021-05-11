@@ -37,7 +37,7 @@ BASE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Optional(CONF_PORT, default=80): int,
-        vol.Required(CONF_SCAN_INTERVAL, default=5): float,
+        vol.Required(CONF_SCAN_INTERVAL, default=5): int,
         vol.Optional(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,
         vol.Required(CONF_T1_ENABLED, default=False): bool,
@@ -164,9 +164,11 @@ class EcoDevicesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
+        if user_input is not None:
+            return self.async_step_user(user_input=user_input)
 
         return self.async_show_form(
-            step_id="user",
+            step_id="reauth",
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_USERNAME): str,

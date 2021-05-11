@@ -9,7 +9,6 @@ from homeassistant.components.ecodevices.const import (
     CONF_C1_ENABLED,
     CONF_C2_ENABLED,
     CONF_T1_ENABLED,
-    CONF_T1_NAME,
     CONF_T1_UNIT_OF_MEASUREMENT,
     CONF_T2_ENABLED,
     DOMAIN,
@@ -45,8 +44,6 @@ async def test_complete_form_user(hass):
         "homeassistant.components.ecodevices.config_flow.EcoDevices.get_info",
         return_value=MagicMock(),
     ), patch(
-        "homeassistant.components.ecodevices.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.ecodevices.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -61,30 +58,40 @@ async def test_complete_form_user(hass):
         "homeassistant.components.ecodevices.config_flow.EcoDevices.get_info",
         return_value=MagicMock(),
     ), patch(
-        "homeassistant.components.ecodevices.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.ecodevices.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_T1_NAME: "Teleinfo"},
         )
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result3["title"] == "127.0.0.1"
-    assert result3["data"] == {
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result3["step_id"] == "params"
+
+    with patch(
+        "homeassistant.components.ecodevices.config_flow.EcoDevices.get_info",
+        return_value=MagicMock(),
+    ), patch(
+        "homeassistant.components.ecodevices.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result4 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_T1_UNIT_OF_MEASUREMENT: "kWh"},
+        )
+
+    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result4["title"] == "127.0.0.1"
+    assert result4["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 80,
         CONF_C1_ENABLED: False,
         CONF_C2_ENABLED: False,
         CONF_T1_ENABLED: True,
         CONF_T2_ENABLED: False,
-        CONF_T1_NAME: "Teleinfo",
-        CONF_T1_UNIT_OF_MEASUREMENT: "VA",
+        CONF_T1_UNIT_OF_MEASUREMENT: "kWh",
         CONF_SCAN_INTERVAL: 5,
     }
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
