@@ -273,7 +273,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     host=self.host,
                     port=self.port,
                     token=self.token,
-                    timeout=8,
+                    timeout=5,
                     name=VALUE_CONF_NAME,
                 )
                 if not avoid_open:
