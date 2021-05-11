@@ -24,6 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.deprecation import deprecated_function
 from homeassistant.helpers.entityfilter import (
     CONF_ENTITY_GLOBS,
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -52,59 +53,40 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+@deprecated_function("homeassistant.components.recorder.history.get_significant_states")
 def get_significant_states(hass, *args, **kwargs):
     """Wrap _get_significant_states with a sql session."""
-    _LOGGER.warning(
-        (
-            "homeassistant.components.history.get_significant_states, call",
-            "homeassistant.components.recorder.history.get_significant_states instead",
-        )
-    )
-    history.get_significant_states(hass, *args, **kwargs)
+    return history.get_significant_states(hass, *args, **kwargs)
 
 
+@deprecated_function(
+    "homeassistant.components.recorder.history.state_changes_during_period"
+)
 def state_changes_during_period(hass, start_time, end_time=None, entity_id=None):
     """Return states changes during UTC period start_time - end_time."""
-    _LOGGER.warning(
-        (
-            "homeassistant.components.history.state_changes_during_period, call",
-            "homeassistant.components.recorder.history.state_changes_during_period instead",
-        )
+    return history.state_changes_during_period(
+        hass, start_time, end_time=None, entity_id=None
     )
-    history.state_changes_during_period(hass, start_time, end_time=None, entity_id=None)
 
 
+@deprecated_function("homeassistant.components.recorder.history.get_last_state_changes")
 def get_last_state_changes(hass, number_of_states, entity_id):
     """Return the last number_of_states."""
-    _LOGGER.warning(
-        (
-            "homeassistant.components.history.get_last_state_changes, call",
-            "homeassistant.components.recorder.history.get_last_state_changes instead",
-        )
-    )
-    history.get_last_state_changes(hass, number_of_states, entity_id)
+    return history.get_last_state_changes(hass, number_of_states, entity_id)
 
 
+@deprecated_function("homeassistant.components.recorder.history.get_states")
 def get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None):
     """Return the states at a specific point in time."""
-    _LOGGER.warning(
-        (
-            "homeassistant.components.history.get_states, call",
-            "homeassistant.components.recorder.history.get_states instead",
-        )
+    return history.get_states(
+        hass, utc_point_in_time, entity_ids=None, run=None, filters=None
     )
-    history.get_states(hass, utc_point_in_time, entity_ids=None, run=None, filters=None)
 
 
+@deprecated_function("homeassistant.components.recorder.history.get_state")
 def get_state(hass, utc_point_in_time, entity_id, run=None):
     """Return a state at a specific point in time."""
-    _LOGGER.warning(
-        (
-            "homeassistant.components.history.get_state, call",
-            "homeassistant.components.recorder.history.get_state instead",
-        )
-    )
-    history.get_state(hass, utc_point_in_time, entity_id, run=None)
+    return history.get_state(hass, utc_point_in_time, entity_id, run=None)
 
 
 async def async_setup(hass, config):
