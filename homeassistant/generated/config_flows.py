@@ -172,6 +172,7 @@ FLOWS = [
     "netatmo",
     "nexia",
     "nightscout",
+    "nmap_tracker",
     "notion",
     "nuheat",
     "nuki",
