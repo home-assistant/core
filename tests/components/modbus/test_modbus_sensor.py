@@ -11,6 +11,7 @@ from homeassistant.components.modbus.const import (
     CONF_INPUT_TYPE,
     CONF_PRECISION,
     CONF_REGISTER,
+    CONF_REGISTER_SIZE,
     CONF_REGISTER_TYPE,
     CONF_REGISTERS,
     CONF_REVERSE_ORDER,
@@ -545,6 +546,37 @@ async def test_all_sensor(hass, cfg, regs, expected):
             },
             [0x0101],
             "257",
+        ),
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_REGISTER_SIZE: 4,
+                CONF_PRECISION: 0,
+                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_STRUCTURE: ">L",
+            },
+            [0xAABBCCDD],
+            "2864434397",
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_REGISTER_SIZE: 4,
+                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_STRUCTURE: ">2L",
+            },
+            [0xAABBCCDD, 0xFFBBCCDD],
+            "2864434397,4290497757",
+        ),
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_REGISTER_SIZE: 8,
+                CONF_DATA_TYPE: DATA_TYPE_CUSTOM,
+                CONF_STRUCTURE: ">2L",
+            },
+            [0xAABBCCDDFFBBCCDD],
+            "2864434397,4290497757",
         ),
     ],
 )

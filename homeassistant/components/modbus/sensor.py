@@ -301,7 +301,10 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
             return
 
         registers = self._swap_registers(result.registers)
-        byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
+        regsize = self._register_size
+        byte_string = b"".join(
+            [x.to_bytes(regsize, byteorder="big") for x in registers]
+        )
         if self._data_type == DATA_TYPE_STRING:
             self._value = byte_string.decode()
         else:
