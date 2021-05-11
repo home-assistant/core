@@ -106,10 +106,27 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator):
             update_method=self._async_update_data,
         )
         self.data = APPS
+        self.fail_count = 0
+        self.fail_threshold = 10
 
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Update data via library."""
         data = await gen_apps_list_from_url(session=async_get_clientsession(self.hass))
         if not data:
+            if self.fail_count == self.fail_threshold:
+                _LOGGER.warning(
+                    (
+                        "Unable to retrieve the apps list from the external server "
+                        "for %s days straight. Please open a GH issue so the codeowner"
+                        "can investigate."
+                    ),
+                    self.fail_threshold,
+                )
+                self.fail_count = 0
+                self.fail_threshold += 10
+            else:
+                self.fail_count += 1
             return APPS
+        self.fail_count = 0
+        self.fail_threshold = 10
         return sorted(data, key=lambda app: app["name"])
