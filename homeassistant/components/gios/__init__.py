@@ -24,8 +24,8 @@ PLATFORMS = ["air_quality"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up GIOS as config entry."""
-    station_id = entry.data[CONF_STATION_ID]
-    _LOGGER.debug("Using station_id: %s", station_id)
+    station_id: int = entry.data[CONF_STATION_ID]
+    _LOGGER.debug("Using station_id: %d", station_id)
 
     # We used to use int as config_entry unique_id, convert this to str.
     if isinstance(entry.unique_id, int):  # type: ignore[unreachable]
@@ -34,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # We used to use int in device_entry identifiers, convert this to str.
     device_registry = await async_get_registry(hass)
     old_ids = (DOMAIN, station_id)
-    device_entry = device_registry.async_get_device({old_ids})
+    device_entry = device_registry.async_get_device({old_ids})  # type: ignore[arg-type]
     if device_entry and entry.entry_id in device_entry.config_entries:
         new_ids = (DOMAIN, str(station_id))
         device_registry.async_update_device(device_entry.id, new_identifiers={new_ids})

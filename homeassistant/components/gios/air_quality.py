@@ -51,7 +51,7 @@ async def async_setup_entry(
             old_entity_id, new_unique_id=str(coordinator.gios.station_id)
         )
 
-    async_add_entities([GiosAirQuality(coordinator, name)], False)
+    async_add_entities([GiosAirQuality(coordinator, name)])
 
 
 class GiosAirQuality(CoordinatorEntity, AirQualityEntity):
@@ -71,7 +71,7 @@ class GiosAirQuality(CoordinatorEntity, AirQualityEntity):
         return self._name
 
     @property
-    def icon(self) -> str | None:
+    def icon(self) -> str:
         """Return the icon."""
         if cast(str, self.air_quality_index) in ICONS_MAP:
             return ICONS_MAP[cast(str, self.air_quality_index)]
@@ -133,7 +133,7 @@ class GiosAirQuality(CoordinatorEntity, AirQualityEntity):
         }
 
     @property
-    def extra_state_attributes(self) -> dict | None:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         # Different measuring stations have different sets of sensors. We don't know
         # what data we will get.
@@ -154,7 +154,4 @@ class GiosAirQuality(CoordinatorEntity, AirQualityEntity):
 
 def round_state(state: float | None) -> float | None:
     """Round state."""
-    if isinstance(state, float):
-        return round(state)
-
-    return state
+    return round(state) if state is not None else None
