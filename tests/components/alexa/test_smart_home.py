@@ -2484,7 +2484,7 @@ async def test_alarm_control_panel_disarmed(hass):
     properties = ReportedProperties(msg["context"]["properties"])
     properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_AWAY")
 
-    call, msg = await assert_request_calls_service(
+    _, msg = await assert_request_calls_service(
         "Alexa.SecurityPanelController",
         "Arm",
         "alarm_control_panel#test_1",

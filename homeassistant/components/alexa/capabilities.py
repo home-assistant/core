@@ -1155,8 +1155,6 @@ class AlexaPowerLevelController(AlexaCapability):
         if self.entity.domain == fan.DOMAIN:
             return self.entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
 
-        return None
-
 
 class AlexaSecurityPanelController(AlexaCapability):
     """Implements Alexa.SecurityPanelController.
