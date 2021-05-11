@@ -7,7 +7,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     CONF_MOUNT_DIR,
-    CONF_TYPE_OWFS,
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
     DEFAULT_OWSERVER_HOST,
@@ -165,20 +164,6 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             if CONF_PORT not in platform_config:
                 platform_config[CONF_PORT] = DEFAULT_OWSERVER_PORT
             return await self.async_step_owserver(platform_config)
-
-        # OWFS
-        if platform_config[CONF_TYPE] == CONF_TYPE_OWFS:  # pragma: no cover
-            # This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
-            # https://developers.home-assistant.io/docs/creating_platform_code_review/#5-communication-with-devicesservices
-            await self.async_set_unique_id(
-                f"{CONF_TYPE_OWFS}:{platform_config[CONF_MOUNT_DIR]}"
-            )
-            self._abort_if_unique_id_configured(
-                updates=platform_config, reload_on_update=True
-            )
-            return self.async_create_entry(
-                title=platform_config[CONF_MOUNT_DIR], data=platform_config
-            )
 
         # SysBus
         if CONF_MOUNT_DIR not in platform_config:

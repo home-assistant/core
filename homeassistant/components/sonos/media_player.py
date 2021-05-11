@@ -151,7 +151,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sonos from a config entry."""
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     @callback
     def async_create_entities(speaker: SonosSpeaker) -> None:
@@ -488,7 +488,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Update information about currently playing media."""
         variables = event and event.variables
 
-        if variables:
+        if variables and "transport_state" in variables:
+            # If the transport has an error then transport_state will
+            # not be set
             new_status = variables["transport_state"]
         else:
             transport_info = self.soco.get_current_transport_info()
@@ -498,7 +500,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         if new_status == "TRANSITIONING":
             return
 
-        self._play_mode = event.current_play_mode if event else self.soco.play_mode
+        self._play_mode = (
+            variables["current_play_mode"] if variables else self.soco.play_mode
+        )
         self._uri = None
         self._media_duration = None
         self._media_image_url = None

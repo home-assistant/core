@@ -1,7 +1,8 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "\u00dchendamine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "powered_off": "Kas projektor on sisse l\u00fclitatud? Esmaseks seadistamiseks pead projektori sisse l\u00fclitama."
         },
         "step": {
             "user": {

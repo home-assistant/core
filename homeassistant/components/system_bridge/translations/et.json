@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus",
+            "unknown": "Tundmatu t\u00f5rge"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu t\u00f5rge"
+        },
+        "flow_title": "S\u00fcsteemi sild: {name}",
+        "step": {
+            "authenticate": {
+                "data": {
+                    "api_key": "API v\u00f5ti"
+                },
+                "description": "Sisesta API-v\u00f5ti mille m\u00e4\u00e4rasid {name} s\u00e4tetes."
+            },
+            "user": {
+                "data": {
+                    "api_key": "API v\u00f5ti",
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Sisesta oma \u00fchenduse \u00fcksikasjad."
+            }
+        }
+    },
+    "title": "S\u00fcsteemi sild"
+}

@@ -1,4 +1,4 @@
-"""Config flow to configure the Elgato Key Light integration."""
+"""Config flow to configure the Elgato Light integration."""
 from __future__ import annotations
 
 from typing import Any
@@ -16,7 +16,7 @@ from .const import CONF_SERIAL_NUMBER, DOMAIN
 
 
 class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Handle a Elgato Key Light config flow."""
+    """Handle a Elgato Light config flow."""
 
     VERSION = 1
 
@@ -91,7 +91,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def _get_elgato_serial_number(self, raise_on_progress: bool = True) -> None:
-        """Get device information from an Elgato Key Light device."""
+        """Get device information from an Elgato Light device."""
         session = async_get_clientsession(self.hass)
         elgato = Elgato(
             host=self.host,

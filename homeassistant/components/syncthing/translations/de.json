@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Der Dienst ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "url": "URL",
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
+                }
+            }
+        }
+    },
+    "title": "Syncthing"
+}

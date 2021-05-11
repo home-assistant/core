@@ -1,15 +1,16 @@
 """Support for Rituals Perfume Genie switches."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any
 
 from pyrituals import Diffuser
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import RitualsDataUpdateCoordinator
 from .const import ATTRIBUTES, COORDINATORS, DEVICES, DOMAIN
 from .entity import DiffuserEntity
 
@@ -21,7 +22,9 @@ ON_STATE = "1"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the diffuser switch."""
     diffusers = hass.data[DOMAIN][config_entry.entry_id][DEVICES]
@@ -37,7 +40,9 @@ async def async_setup_entry(
 class DiffuserSwitch(SwitchEntity, DiffuserEntity):
     """Representation of a diffuser switch."""
 
-    def __init__(self, diffuser: Diffuser, coordinator: CoordinatorEntity) -> None:
+    def __init__(
+        self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
+    ) -> None:
         """Initialize the diffuser switch."""
         super().__init__(diffuser, coordinator, "")
         self._is_on = self._diffuser.is_on

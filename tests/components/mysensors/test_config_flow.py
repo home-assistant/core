@@ -381,6 +381,9 @@ async def test_config_invalid(
     with patch(
         "homeassistant.components.mysensors.config_flow.try_connect", return_value=True
     ), patch(
+        "homeassistant.components.mysensors.gateway.socket.getaddrinfo",
+        side_effect=OSError,
+    ), patch(
         "homeassistant.components.mysensors.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.mysensors.async_setup_entry",

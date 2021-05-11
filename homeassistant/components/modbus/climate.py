@@ -242,7 +242,7 @@ class ModbusThermostat(ClimateEntity):
             )
         if result is None:
             self._available = False
-            return
+            return -1
 
         byte_string = b"".join(
             [x.to_bytes(2, byteorder="big") for x in result.registers]
@@ -255,11 +255,11 @@ class ModbusThermostat(ClimateEntity):
             )
             return -1
 
-        val = val[0]
+        val2 = val[0]
         register_value = format(
-            (self._scale * val) + self._offset, f".{self._precision}f"
+            (self._scale * val2) + self._offset, f".{self._precision}f"
         )
-        register_value = float(register_value)
+        register_value2 = float(register_value)
         self._available = True
 
-        return register_value
+        return register_value2

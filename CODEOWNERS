@@ -76,7 +76,7 @@ homeassistant/components/brother/* @bieniu
 homeassistant/components/brunt/* @eavanvalkenburg
 homeassistant/components/bsblan/* @liudger
 homeassistant/components/bt_smarthub/* @jxwolstenholme
-homeassistant/components/buienradar/* @mjj4791 @ties
+homeassistant/components/buienradar/* @mjj4791 @ties @Robbie1221
 homeassistant/components/cast/* @emontnemery
 homeassistant/components/cert_expiry/* @Cereal2nd @jjlawren
 homeassistant/components/circuit/* @braam
@@ -179,7 +179,7 @@ homeassistant/components/gios/* @bieniu
 homeassistant/components/gitter/* @fabaff
 homeassistant/components/glances/* @fabaff @engrbm87
 homeassistant/components/goalzero/* @tkdrob
-homeassistant/components/gogogate2/* @vangorra
+homeassistant/components/gogogate2/* @vangorra @bdraco
 homeassistant/components/google_assistant/* @home-assistant/cloud
 homeassistant/components/google_cloud/* @lufton
 homeassistant/components/gpsd/* @fabaff
@@ -308,6 +308,7 @@ homeassistant/components/my/* @home-assistant/core
 homeassistant/components/myq/* @bdraco
 homeassistant/components/mysensors/* @MartinHjelmare @functionpointer
 homeassistant/components/mystrom/* @fabaff
+homeassistant/components/nam/* @bieniu
 homeassistant/components/neato/* @dshokouhi @Santobert
 homeassistant/components/nederlandse_spoorwegen/* @YarmoM
 homeassistant/components/nello/* @pschmitt
@@ -477,10 +478,12 @@ homeassistant/components/swiss_public_transport/* @fabaff
 homeassistant/components/switchbot/* @danielhiversen
 homeassistant/components/switcher_kis/* @tomerfi
 homeassistant/components/switchmate/* @danielhiversen
+homeassistant/components/syncthing/* @zhulik
 homeassistant/components/syncthru/* @nielstron
 homeassistant/components/synology_dsm/* @hacf-fr @Quentame @mib1185
 homeassistant/components/synology_srm/* @aerialls
 homeassistant/components/syslog/* @fabaff
+homeassistant/components/system_bridge/* @timmo001
 homeassistant/components/tado/* @michaelarnauts @bdraco @noltari
 homeassistant/components/tag/* @balloob @dmulcahey
 homeassistant/components/tahoma/* @philklei

@@ -4,6 +4,7 @@ from __future__ import annotations
 from asyncio import gather
 import contextlib
 import datetime
+from functools import partial
 import logging
 from typing import Any, Callable
 
@@ -223,7 +224,11 @@ class SonosSpeaker:
             return
 
         self._poll_timer = self.hass.helpers.event.async_track_time_interval(
-            async_dispatcher_send(self.hass, f"{SONOS_ENTITY_UPDATE}-{self.soco.uid}"),
+            partial(
+                async_dispatcher_send,
+                self.hass,
+                f"{SONOS_ENTITY_UPDATE}-{self.soco.uid}",
+            ),
             SCAN_INTERVAL,
         )
 
