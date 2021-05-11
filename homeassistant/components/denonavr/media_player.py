@@ -100,6 +100,10 @@ async def async_setup_entry(
         else:
             unique_id = f"{config_entry.entry_id}-{receiver_zone.zone}"
         await receiver_zone.async_setup()
+       
+        if receiver_zone.receiver_type is "avr":
+            await receiver_zone.async_update()
+        
         entities.append(
             DenonDevice(
                 receiver_zone,
