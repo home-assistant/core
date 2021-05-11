@@ -1,0 +1,36 @@
+{
+  "title": "Nmap Tracker",
+  "options": {
+    "step": {
+        "init": {
+            "data": {
+                "hosts": "[%key:component::nmap_tracker::config::step::user::data::hosts%]",
+                "home_interval": "[%key:component::nmap_tracker::config::step::user::data::home_interval%]",
+                "exclude": "[%key:component::nmap_tracker::config::step::user::data::exclude%]",
+                "scan_options": "[%key:component::nmap_tracker::config::step::user::data::scan_options%]"
+            }
+        }
+    },
+    "error": {
+      "invalid_hosts": "[%key:component::nmap_tracker::config::error::invalid_hosts%]"
+    }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "hosts": "The network address (comma seperated) to scan (in any supported Nmap format). Mixing subnets and IPs is possible.",
+          "home_interval": "The number of minutes Nmap will not scan this device, assuming it is home, in order to preserve the device battery.",
+          "exclude": "Hosts (comma seperated) not to include in Nmap scanning.",
+          "scan_options": "Configurable scan options for Nmap."
+        }
+      }
+    },
+    "error": {
+      "invalid_hosts": "Invalid Hosts"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    }
+  }
+}

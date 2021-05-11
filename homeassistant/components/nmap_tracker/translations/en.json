@@ -18,6 +18,9 @@
         }
     },
     "options": {
+        "error": {
+            "invalid_hosts": "Invalid Hosts"
+        },
         "step": {
             "init": {
                 "data": {

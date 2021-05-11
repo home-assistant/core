@@ -32,20 +32,16 @@ def get_network():
 def get_ip_prefix_from_adapters(local_ip, adapters):
     """Find the network prefix for an adapter."""
     for adapter in adapters:
-        for ip in adapter.ips:
-            if local_ip == ip.ip:
-                return ip.network_prefix
+        for ip_cfg in adapter.ips:
+            if local_ip == ip_cfg.ip:
+                return ip_cfg.network_prefix
 
 
 def _normalize_ips_and_network(hosts_str):
     """Check if a list of hosts are all ips or ip networks."""
 
     normalized_hosts = []
-
-    try:
-        hosts = [host for host in cv.ensure_list_csv(hosts_str) if host != ""]
-    except (vol.MultipleInvalid, vol.Invalid):
-        return None
+    hosts = [host for host in cv.ensure_list_csv(hosts_str) if host != ""]
 
     for host in sorted(hosts):
         try:
@@ -68,17 +64,20 @@ def _normalize_ips_and_network(hosts_str):
 
 def normalize_input(user_input):
     """Validate hosts and exclude are valid."""
+    errors = {}
     normalized_hosts = _normalize_ips_and_network(user_input[CONF_HOSTS])
     if not normalized_hosts:
-        return {CONF_HOSTS: "invalid_hosts"}
-    user_input[CONF_HOSTS] = ",".join(normalized_hosts)
+        errors[CONF_HOSTS] = "invalid_hosts"
+    else:
+        user_input[CONF_HOSTS] = ",".join(normalized_hosts)
 
     normalized_exclude = _normalize_ips_and_network(user_input[CONF_EXCLUDE])
     if normalized_exclude is None:
-        return {CONF_EXCLUDE: "invalid_hosts"}
-    user_input[CONF_EXCLUDE] = ",".join(normalized_exclude)
+        errors[CONF_EXCLUDE] = "invalid_hosts"
+    else:
+        user_input[CONF_EXCLUDE] = ",".join(normalized_exclude)
 
-    return {}
+    return errors
 
 
 async def _async_build_schema_with_user_input(hass, user_input):
@@ -105,15 +104,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry):
         """Initialize options flow."""
-        self.config_entry = config_entry
         self.options = dict(config_entry.options)
 
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
         errors = {}
         if user_input is not None:
-            self.options.update(user_input)
             errors = normalize_input(user_input)
+            self.options.update(user_input)
 
             if not errors:
                 return self.async_create_entry(
@@ -144,8 +142,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            self.options.update(user_input)
             errors = normalize_input(user_input)
+            self.options.update(user_input)
 
             if not errors:
                 return self.async_create_entry(
@@ -173,6 +171,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle import from yaml."""
         if not self._async_is_unique_host_list(user_input):
             return self.async_abort(reason="already_configured")
+
+        normalize_input(user_input)
+
         return self.async_create_entry(
             title=f"Nmap Tracker {user_input[CONF_HOSTS]}", data={}, options=user_input
         )
