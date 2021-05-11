@@ -30,24 +30,25 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Configure Heatzy API using Home Assistant configuration and fetch all Heatzy devices."""
-    heatzy_devices = hass.data[DOMAIN][HEATZY_DEVICES]
-    api = hass.data[DOMAIN][HEATZY_API]
+    # heatzy_devices = hass.data[DOMAIN][HEATZY_DEVICES]
+    # api = hass.data[DOMAIN][HEATZY_API]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
     devices = []
-    for device in heatzy_devices:
+    for device in coordinator.data:
         product_key = device.get("product_key")
         if product_key in PILOTEV1:
-            devices.append(HeatzyPiloteV1Thermostat(api, device))
+            devices.append(HeatzyPiloteV1Thermostat(coordinator, device))
         elif product_key in PILOTEV2:
-            devices.append(HeatzyPiloteV2Thermostat(api, device))
+            devices.append(HeatzyPiloteV2Thermostat(coordinator, device))
     async_add_entities(devices, True)
 
 
 class HeatzyThermostat(ClimateEntity):
     """Heatzy."""
 
-    def __init__(self, api, device):
+    def __init__(self, coordinator, device):
         """Init."""
-        self._api = api
+        self._coordinator = coordinator
         self._heater = device
         self._heater_data = {}
         self._available = True
@@ -129,26 +130,26 @@ class HeatzyThermostat(ClimateEntity):
         """Turn device off."""
         await self.async_set_preset_mode(PRESET_NONE)
 
-    async def async_update_heater(self, force_update=False):
-        """Get the latest state from the thermostat."""
-        if force_update is True:
-            # Updated temperature to HA state to avoid flapping (API confirmation is slow)
-            await asyncio.sleep(1)
-        try:
-            data_status = await self.hass.async_add_executor_job(
-                self._api.get_device, self.unique_id
-            )
-            if data_status:
-                self._heater_data = data_status
-                self._available = True
-        except HeatzyException:
-            _LOGGER.error("Device data no retrieve %s", self.name)
-            self._available = False
+    # async def async_update_heater(self, force_update=False):
+    #     """Get the latest state from the thermostat."""
+    #     if force_update is True:
+    #         # Updated temperature to HA state to avoid flapping (API confirmation is slow)
+    #         await asyncio.sleep(1)
+    #     try:
+    #         data_status = await self.hass.async_add_executor_job(
+    #             self._coordinator.get_device, self.unique_id
+    #         )
+    #         if data_status:
+    #             self._heater_data = data_status
+    #             self._available = True
+    #     except HeatzyException:
+    #         _LOGGER.error("Device data no retrieve %s", self.name)
+    #         self._available = False
 
-    @Throttle(SCAN_INTERVAL)
-    async def async_update(self):
-        """Update device."""
-        await self.async_update_heater()
+    # @Throttle(SCAN_INTERVAL)
+    # async def async_update(self):
+    #     """Update device."""
+    #     await self.async_update_heater()
 
 
 class HeatzyPiloteV1Thermostat(HeatzyThermostat):
@@ -181,13 +182,14 @@ class HeatzyPiloteV1Thermostat(HeatzyThermostat):
         """Set new preset mode."""
         try:
             await self.hass.async_add_executor_job(
-                self._api.control_device,
+                self._coordinator.control_device,
                 self.unique_id,
                 {"raw": self.HA_TO_HEATZY_STATE.get(preset_mode)},
             )
         except HeatzyException as error:
             _LOGGER.error("Error to set preset mode : %s", error)
-        await self.async_update_heater(True)
+        # await self.async_update_heater(True)
+        await self.coordinator.async_request_refresh()
 
 
 class HeatzyPiloteV2Thermostat(HeatzyThermostat):
@@ -221,10 +223,11 @@ class HeatzyPiloteV2Thermostat(HeatzyThermostat):
         """Set new preset mode."""
         try:
             await self.hass.async_add_executor_job(
-                self._api.control_device,
+                self._coordinator.control_device,
                 self.unique_id,
                 {"attrs": {"mode": self.HA_TO_HEATZY_STATE.get(preset_mode)}},
             )
         except HeatzyException as error:
             _LOGGER.error("Error to set preset mode : %s", error)
-        await self.async_update_heater(True)
+        # await self.async_update_heater(True)
+        await self.coordinator.async_request_refresh()
