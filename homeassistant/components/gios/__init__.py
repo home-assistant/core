@@ -27,9 +27,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     station_id = entry.data[CONF_STATION_ID]
     _LOGGER.debug("Using station_id: %s", station_id)
 
+    # We used to use int as config_entry unique_id, convert this to str.
     if isinstance(entry.unique_id, int):  # type: ignore[unreachable]
         hass.config_entries.async_update_entry(entry, unique_id=str(station_id))  # type: ignore[unreachable]
 
+    # We used to use int in device_entry identifiers, convert this to str.
     device_registry = await async_get_registry(hass)
     old_ids = (DOMAIN, station_id)
     device_entry = device_registry.async_get_device({old_ids})

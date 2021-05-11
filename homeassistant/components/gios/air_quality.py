@@ -41,6 +41,7 @@ async def async_setup_entry(
 
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
+    # We used to use int as entity unique_id, convert this to str.
     entity_registry = await async_get_registry(hass)
     old_entity_id = entity_registry.async_get_entity_id(
         "air_quality", DOMAIN, coordinator.gios.station_id
