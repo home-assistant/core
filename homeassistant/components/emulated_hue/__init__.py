@@ -191,6 +191,7 @@ class Config:
         self.hass = hass
         self.type = conf.get(CONF_TYPE)
         self.numbers = None
+        self.store = None
         self.cached_states = {}
         self._exposed_cache = {}
 
