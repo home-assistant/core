@@ -10,10 +10,10 @@
         "step": {
             "config": {
                 "data": {
-                    "known_hosts": "Valgfri liste over kjente verter hvis mDNS-oppdagelse ikke fungerer."
+                    "known_hosts": "Kjente verter"
                 },
-                "description": "Angi Google Cast-konfigurasjonen.",
-                "title": "Google Cast"
+                "description": "Kjente verter - En kommaseparert liste over vertsnavn eller IP-adresser til cast-enheter, bruk hvis mDNS discovery ikke fungerer.",
+                "title": "Google Cast-konfigurasjon"
             },
             "confirm": {
                 "description": "Vil du starte oppsettet?"
@@ -25,6 +25,21 @@
             "invalid_known_hosts": "Kjente verter m\u00e5 v\u00e6re en kommaseparert liste over verter."
         },
         "step": {
+            "advanced_options": {
+                "data": {
+                    "ignore_cec": "Ignorer CEC",
+                    "uuid": "Tillatte UUIDer"
+                },
+                "description": "Tillatte UUID-er - En komma-separert liste over UUID-er for Cast-enheter \u00e5 legge til i Home Assistant. Bruk bare hvis du ikke vil legge til alle tilgjengelige cast-enheter.\n Ignorer CEC - En kommaseparert liste over Chromecasts som b\u00f8r ignorere CEC-data for \u00e5 bestemme den aktive inngangen. Dette vil bli sendt til pychromecast.IGNORE_CEC.",
+                "title": "Avansert Google Cast-konfigurasjon"
+            },
+            "basic_options": {
+                "data": {
+                    "known_hosts": "Kjente verter"
+                },
+                "description": "Kjente verter - En kommaseparert liste over vertsnavn eller IP-adresser til cast-enheter, bruk hvis mDNS discovery ikke fungerer.",
+                "title": "Google Cast-konfigurasjon"
+            },
             "options": {
                 "data": {
                     "ignore_cec": "Valgfri liste som sendes til pychromecast.IGNORE_CEC.",
