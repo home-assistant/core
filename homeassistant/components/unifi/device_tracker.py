@@ -431,7 +431,12 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         if self.device.state == 0:
             return {}
 
-        attributes = {}
+        attributes = {
+            CONNECTION_NETWORK_MAC: self.device.mac,
+            "manufacturer": ATTR_MANUFACTURER,
+            "model": self.device.model,
+            "sw_version": self.device.version,
+        }
 
         if self.device.has_fan:
             attributes["fan_level"] = self.device.fan_level

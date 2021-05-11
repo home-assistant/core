@@ -24,6 +24,7 @@ from homeassistant.components.unifi.const import (
 )
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 import homeassistant.util.dt as dt_util
 
 from .test_controller import ENTRY_CONFIG, setup_unifi_integration
@@ -256,8 +257,21 @@ async def test_tracked_devices(hass, aioclient_mock, mock_unifi_websocket):
     )
 
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
-    assert hass.states.get("device_tracker.device_1").state == STATE_HOME
-    assert hass.states.get("device_tracker.device_2").state == STATE_NOT_HOME
+    device_state = hass.states.get("device_tracker.device_1")
+    assert device_state.state == STATE_HOME
+    assert device_state.attributes[CONNECTION_NETWORK_MAC] == device_1["mac"]
+    assert device_state.attributes["model"] == device_1["model"]
+    assert device_state.attributes["sw_version"] == device_1["version"]
+    assert device_state.attributes["overheating"] is True
+    assert device_state.attributes["upgradable"] is True
+
+    device2_state = hass.states.get("device_tracker.device_2")
+    assert device2_state.state == STATE_NOT_HOME
+    assert CONNECTION_NETWORK_MAC not in device2_state.attributes
+    assert "model" not in device2_state.attributes
+    assert "sw_version" not in device2_state.attributes
+    assert "overheating" not in device2_state.attributes
+    assert "upgradable" not in device2_state.attributes
 
     # State change signalling work
 
