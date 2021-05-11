@@ -2,7 +2,6 @@
 import aiohttp
 
 from homeassistant import data_entry_flow
-from homeassistant.components.twentemilieu import config_flow
 from homeassistant.components.twentemilieu.const import (
     CONF_HOUSE_LETTER,
     CONF_HOUSE_NUMBER,
@@ -17,7 +16,6 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 FIXTURE_USER_INPUT = {
-    CONF_ID: "12345",
     CONF_POST_CODE: "1234AB",
     CONF_HOUSE_NUMBER: "1",
     CONF_HOUSE_LETTER: "A",
@@ -74,9 +72,9 @@ async def test_address_already_set_up(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort if address has already been set up."""
-    MockConfigEntry(domain=DOMAIN, data=FIXTURE_USER_INPUT, title="12345").add_to_hass(
-        hass
-    )
+    MockConfigEntry(
+        domain=DOMAIN, data={**FIXTURE_USER_INPUT, CONF_ID: "12345"}, title="12345"
+    ).add_to_hass(hass)
 
     aioclient_mock.post(
         "https://twentemilieuapi.ximmio.com/api/FetchAdress",
@@ -102,13 +100,18 @@ async def test_full_flow_implementation(
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
-    flow = config_flow.TwenteMilieuFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_user(user_input=None)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        FIXTURE_USER_INPUT,
+    )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "12345"
     assert result["data"][CONF_POST_CODE] == FIXTURE_USER_INPUT[CONF_POST_CODE]
