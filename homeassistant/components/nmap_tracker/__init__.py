@@ -240,6 +240,7 @@ class NmapDeviceScanner:
                     arguments=options,
                     timeout=TRACKER_SCAN_INTERVAL * 10,
                 )
+                break
             except PortScannerError as ex:
                 if attempt < (MAX_SCAN_ATTEMPTS - 1) and NMAP_TRANSIENT_FAILURE in str(
                     ex
