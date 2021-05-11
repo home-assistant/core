@@ -122,11 +122,9 @@ async def async_setup_platform(
             del entry[CONF_REGISTER_TYPE]
 
     for entry in discovery_info[CONF_SENSORS]:
-
-        regtsize = entry[CONF_COUNT] * entry.get(CONF_REGISTER_SIZE, 2)
-
+        sizeofbytes = entry[CONF_COUNT] * entry.get(CONF_REGISTER_SIZE, 2)
         if entry[CONF_DATA_TYPE] == DATA_TYPE_STRING:
-            structure = str(regtsize) + "s"
+            structure = str(sizeofbytes) + "s"
         elif entry[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
             try:
                 structure = f">{DEFAULT_STRUCT_FORMAT[entry[CONF_DATA_TYPE]][entry[CONF_COUNT]]}"
@@ -145,11 +143,11 @@ async def async_setup_platform(
             _LOGGER.error("Error in sensor %s structure: %s", entry[CONF_NAME], err)
             continue
 
-        if regtsize != size:
+        if sizeofbytes != size:
             _LOGGER.error(
                 "Structure size (%d bytes) mismatch registers size (%d bytes)",
                 size,
-                regtsize,
+                sizeofbytes,
             )
             continue
 
@@ -164,13 +162,17 @@ async def async_setup_platform(
                 size_needed = 2
             else:  # CONF_SWAP_WORD_BYTE, CONF_SWAP_WORD
                 size_needed = 4
-            if regtsize < size_needed or (regtsize % size_needed) != 0 or regtsize > 4:
+            if (
+                sizeofbytes < size_needed
+                or (sizeofbytes % size_needed) != 0
+                or sizeofbytes > 8
+            ):
                 _LOGGER.error(
                     "Error in sensor %s swap(%s) not possible due to count (%d) or total size (%d bytes)",
                     entry[CONF_NAME],
                     entry[CONF_SWAP],
                     entry[CONF_COUNT],
-                    regtsize,
+                    sizeofbytes,
                 )
                 continue
         if CONF_HUB in entry:
@@ -299,9 +301,8 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
             return
 
         registers = self._swap_registers(result.registers)
-        regsize = self._register_size
         byte_string = b"".join(
-            [x.to_bytes(regsize, byteorder="big") for x in registers]
+            [x.to_bytes(self._register_size, byteorder="big") for x in registers]
         )
         if self._data_type == DATA_TYPE_STRING:
             self._value = byte_string.decode()
