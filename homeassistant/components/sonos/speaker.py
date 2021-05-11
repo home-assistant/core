@@ -722,12 +722,11 @@ class SonosSpeaker:
         update_position = new_status != self.media.playback_status
         self.media.playback_status = new_status
 
-        if variables:
+        if variables and "transport_state" in variables:
             self.media.play_mode = variables["current_play_mode"]
             track_uri = variables["current_track_uri"]
             music_source = self.soco.music_source_from_uri(track_uri)
         else:
-            # This causes a network round-trip so we avoid it when possible
             self.media.play_mode = self.soco.play_mode
             music_source = self.soco.music_source
 
@@ -765,7 +764,7 @@ class SonosSpeaker:
         self.media.title = source
         self.media.source_name = source
 
-    def update_media_radio(self, variables: dict) -> None:
+    def update_media_radio(self, variables: dict | None) -> None:
         """Update state when streaming radio."""
         self.media.clear_position()
 
