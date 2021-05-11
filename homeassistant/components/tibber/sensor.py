@@ -261,7 +261,7 @@ class TibberSensorRT(TibberSensor):
         async_dispatcher_connect(
             self.hass,
             SIGNAL_UPDATE_ENTITY.format(self._sensor_name),
-            self.set_state,
+            self._set_state,
         )
 
     @property
@@ -279,7 +279,7 @@ class TibberSensorRT(TibberSensor):
         """Return the name of the sensor."""
         return f"{self._sensor_name} {self._name}"
 
-    def set_state(self, state):
+    def _set_state(self, state):
         """Set sensor state."""
         self._state = state
         self.async_write_ha_state()
