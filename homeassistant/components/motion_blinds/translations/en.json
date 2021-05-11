@@ -8,7 +8,6 @@
         "error": {
             "discovery_error": "Failed to discover a Motion Gateway"
         },
-        "flow_title": "Motion Blinds",
         "step": {
             "connect": {
                 "data": {
@@ -26,7 +25,6 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API Key",
                     "host": "IP Address"
                 },
                 "description": "Connect to your Motion Gateway, if the IP address is not set, auto-discovery is used",
