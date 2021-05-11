@@ -63,7 +63,9 @@ class Messaging(ZigbeeChannel):
 class Metering(ZigbeeChannel):
     """Metering channel."""
 
-    REPORT_CONFIG = [{"attr": "current_summ_delivered", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG = [
+        {"attr": "current_summ_delivered", "config": REPORT_CONFIG_DEFAULT}
+    ]
 
     unit_of_measure_map = {
         0x00: ENERGY_KILO_WATT_HOUR,
