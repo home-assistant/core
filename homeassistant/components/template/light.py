@@ -57,6 +57,7 @@ CONF_EFFECT_ACTION = "set_effect"
 CONF_EFFECT_LIST_TEMPLATE = "effect_list_template"
 CONF_MAX_MIREDS_TEMPLATE = "max_mireds_template"
 CONF_MIN_MIREDS_TEMPLATE = "min_mireds_template"
+CONF_SUPPORTS_TRANSITION = "supports_transition_template"
 
 LIGHT_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
@@ -78,10 +79,11 @@ LIGHT_SCHEMA = vol.All(
             vol.Optional(CONF_COLOR_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_WHITE_VALUE_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_EFFECT_LIST_TEMPLATE): cv.template,
-            vol.Optional(CONF_EFFECT_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Inclusive(CONF_EFFECT_LIST_TEMPLATE, "effect"): cv.template,
+            vol.Inclusive(CONF_EFFECT_ACTION, "effect"): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_MAX_MIREDS_TEMPLATE): cv.template,
             vol.Optional(CONF_MIN_MIREDS_TEMPLATE): cv.template,
+            vol.Optional(CONF_SUPPORTS_TRANSITION): cv.template,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
     ),
@@ -126,6 +128,8 @@ async def _async_create_entities(hass, config):
         max_mireds_template = device_config.get(CONF_MAX_MIREDS_TEMPLATE)
         min_mireds_template = device_config.get(CONF_MIN_MIREDS_TEMPLATE)
 
+        supports_transition_template = device_config.get(CONF_SUPPORTS_TRANSITION)
+
         lights.append(
             LightTemplate(
                 hass,
@@ -149,6 +153,7 @@ async def _async_create_entities(hass, config):
                 effect_list_template,
                 max_mireds_template,
                 min_mireds_template,
+                supports_transition_template,
                 unique_id,
             )
         )
@@ -187,6 +192,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         effect_list_template,
         max_mireds_template,
         min_mireds_template,
+        supports_transition_template,
         unique_id,
     ):
         """Initialize the light."""
@@ -229,6 +235,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         self._effect_list_template = effect_list_template
         self._max_mireds_template = max_mireds_template
         self._min_mireds_template = min_mireds_template
+        self._supports_transition_template = supports_transition_template
 
         self._state = False
         self._brightness = None
@@ -239,6 +246,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         self._effect_list = None
         self._max_mireds = None
         self._min_mireds = None
+        self._supports_transition = False
         self._unique_id = unique_id
 
     @property
@@ -302,7 +310,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         """Flag supported features."""
         supported_features = 0
         if self._level_script is not None:
-            supported_features |= SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+            supported_features |= SUPPORT_BRIGHTNESS
         if self._temperature_script is not None:
             supported_features |= SUPPORT_COLOR_TEMP
         if self._color_script is not None:
@@ -311,6 +319,10 @@ class LightTemplate(TemplateEntity, LightEntity):
             supported_features |= SUPPORT_WHITE_VALUE
         if self._effect_script is not None:
             supported_features |= SUPPORT_EFFECT
+        if self._effect_script is not None:
+            supported_features |= SUPPORT_EFFECT
+        if self._supports_transition == True:
+            supported_features |= SUPPORT_TRANSITION
         return supported_features
 
     @property
@@ -380,6 +392,14 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._update_effect_list,
                 none_on_template_error=True,
             )
+        if self._supports_transition_template:
+            self.add_template_attribute(
+                "_supports_transition_template",
+                self._supports_transition_template,
+                None,
+                self._update_supports_transition,
+                none_on_template_error=True,
+            )
         await super().async_added_to_hass()
 
     async def async_turn_on(self, **kwargs):
@@ -402,13 +422,6 @@ class LightTemplate(TemplateEntity, LightEntity):
                 "Optimistically setting white value to %s", kwargs[ATTR_WHITE_VALUE]
             )
             self._white_value = kwargs[ATTR_WHITE_VALUE]
-            optimistic_set = True
-
-        if self._effect_list_template is None and ATTR_EFFECT in kwargs:
-            _LOGGER.info(
-                "Optimistically setting effect list to %s", kwargs[ATTR_EFFECT]
-            )
-            self._effect = kwargs[ATTR_EFFECT]
             optimistic_set = True
 
         if self._temperature_template is None and ATTR_COLOR_TEMP in kwargs:
@@ -440,7 +453,16 @@ class LightTemplate(TemplateEntity, LightEntity):
                 common_params, context=self._context
             )
         elif ATTR_EFFECT in kwargs and self._effect_script:
-            common_params["effect"] = kwargs[ATTR_EFFECT]
+            effect = kwargs[ATTR_EFFECT]
+            if effect not in self._effect_list:
+                _LOGGER.error(
+                    "Received invalid effect: %s. Expected one of: %s",
+                    effect,
+                    self._effect_list,
+                    exc_info=True,
+                )
+
+            common_params["effect"] = effect
 
             await self._effect_script.async_run(common_params, context=self._context)
         elif ATTR_HS_COLOR in kwargs and self._color_script:
@@ -641,3 +663,19 @@ class LightTemplate(TemplateEntity, LightEntity):
                 exc_info=True,
             )
             self._min_mireds = None
+
+    @callback
+    def _update_supports_transition(self, render):
+        """Update the supports transition from the template."""
+
+        try:
+            if render in ("None", ""):
+                self._supports_transition = False
+                return
+            self._supports_transition = bool(render)
+        except ValueError:
+            _LOGGER.error(
+                "Template must supply an boolean value",
+                exc_info=True,
+            )
+            self._supports_transition = False

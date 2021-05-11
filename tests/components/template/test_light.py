@@ -1336,6 +1336,56 @@ async def test_color_template(hass, expected_hs, template):
         assert state is not None
         assert state.attributes.get("max_mireds") == expected_max_mireds
 
+    @pytest.mark.parametrize(
+        "expected_supports_transition,template",
+        [
+            (True, "{{true}}"),
+            (True, "{{1 == 1}}"),
+            (False, "{{false}}"),
+            (False, "{{ none }}"),
+        ],
+    )
+    def test_supports_transition_template(self, expected_supports_transition, template):
+        """Test the template for the supports transition."""
+        with assert_setup_component(1, "light"):
+            assert setup.setup_component(
+                self.hass,
+                "light",
+                {
+                    "light": {
+                        "platform": "template",
+                        "lights": {
+                            "test_template_light": {
+                                "value_template": "{{ 1 == 1 }}",
+                                "turn_on": {
+                                    "service": "light.turn_on",
+                                    "entity_id": "light.test_state",
+                                },
+                                "turn_off": {
+                                    "service": "light.turn_off",
+                                    "entity_id": "light.test_state",
+                                },
+                                "set_temperature": {
+                                    "service": "light.turn_on",
+                                    "data_template": {
+                                        "entity_id": "light.test_state",
+                                        "color_temp": "{{color_temp}}",
+                                    },
+                                },
+                                "supports_transition_template": template,
+                            }
+                        },
+                    }
+                },
+            )
+
+        self.hass.block_till_done()
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("light.test_template_light")
+        assert state is not None
+        assert state.attributes.get("supports_transition") == expected_supports_transition
 
 async def test_available_template_with_entities(hass):
     """Test availability templates with values from other entities."""
