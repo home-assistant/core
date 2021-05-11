@@ -60,6 +60,7 @@ jobs:
     needs: init
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
         tag:
@@ -100,6 +101,7 @@ jobs:
     needs: init
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
         tag:
