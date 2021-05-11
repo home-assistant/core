@@ -377,9 +377,21 @@ class LightSchema:
                 vol.Optional(CONF_BRIGHTNESS_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): ga_list_validator,
                 vol.Exclusive(CONF_INDIVIDUAL_COLORS, "color"): {
-                    vol.Inclusive(CONF_RED, "colors"): COLOR_SCHEMA,
-                    vol.Inclusive(CONF_GREEN, "colors"): COLOR_SCHEMA,
-                    vol.Inclusive(CONF_BLUE, "colors"): COLOR_SCHEMA,
+                    vol.Inclusive(
+                        CONF_RED,
+                        "individual_colors",
+                        msg="'red', 'green' and 'blue' are required for individual colors configuration",
+                    ): COLOR_SCHEMA,
+                    vol.Inclusive(
+                        CONF_GREEN,
+                        "individual_colors",
+                        msg="'red', 'green' and 'blue' are required for individual colors configuration",
+                    ): COLOR_SCHEMA,
+                    vol.Inclusive(
+                        CONF_BLUE,
+                        "individual_colors",
+                        msg="'red', 'green' and 'blue' are required for individual colors configuration",
+                    ): COLOR_SCHEMA,
                     vol.Optional(CONF_WHITE): COLOR_SCHEMA,
                 },
                 vol.Exclusive(CONF_COLOR_ADDRESS, "color"): ga_list_validator,
@@ -400,14 +412,11 @@ class LightSchema:
             }
         ),
         vol.Any(
-            # either global "address" or all addresses for individual colors are required
+            # either global "address" "individual_colors" is required
             vol.Schema(
                 {
-                    vol.Required(CONF_INDIVIDUAL_COLORS): {
-                        vol.Required(CONF_RED): {vol.Required(KNX_ADDRESS): object},
-                        vol.Required(CONF_GREEN): {vol.Required(KNX_ADDRESS): object},
-                        vol.Required(CONF_BLUE): {vol.Required(KNX_ADDRESS): object},
-                    },
+                    # brightness addresses are required in COLOR_SCHEMA
+                    vol.Required(CONF_INDIVIDUAL_COLORS): object,
                 },
                 extra=vol.ALLOW_EXTRA,
             ),
