@@ -316,7 +316,7 @@ class TibberRtDataHandler:
         self._async_add_entities = async_add_entities
         self._tibber_home = tibber_home
         self.hass = hass
-        self._sensors = set()
+        self._entities = set()
 
     async def hass_started(self, _):
         """Start listen for real time data."""
@@ -335,25 +335,23 @@ class TibberRtDataHandler:
         if live_measurement is None:
             return
 
-        new_sensors = []
+        new_entities = []
         for sensor_type, state in live_measurement.items():
-            if state is None:
+            if state is None or sensor_type not in RT_SENSOR_MAP:
                 continue
-            if sensor_type not in RT_SENSOR_MAP:
-                continue
-            if sensor_type not in self._sensors:
+            if sensor_type not in self._entities:
                 sensor_name, device_class, unit = RT_SENSOR_MAP[sensor_type]
                 if sensor_type == "accumulatedCost":
                     unit = self._tibber_home.currency
                 entity = TibberSensorRT(
                     self._tibber_home, sensor_name, device_class, unit
                 )
-                new_sensors.append(entity)
-                self._sensors.add(sensor_type)
+                new_entities.append(entity)
+                self._entities.add(sensor_type)
             async_dispatcher_send(
                 self.hass,
                 SIGNAL_UPDATE_ENTITY.format(RT_SENSOR_MAP[sensor_type][0]),
                 state,
             )
-        if new_sensors:
-            self._async_add_entities(new_sensors)
+        if new_entities:
+            self._async_add_entities(new_entities)
