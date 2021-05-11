@@ -50,7 +50,7 @@ class AmbiclimateFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle external yaml configuration."""
-        self._async_abort_entries_match({})
+        self._async_abort_entries_match()
 
         config = self.hass.data.get(DATA_AMBICLIMATE_IMPL, {})
 
