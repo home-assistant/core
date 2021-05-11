@@ -55,6 +55,45 @@ async def test_form(hass: HomeAssistant, hosts: str) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_range(hass: HomeAssistant) -> None:
+    """Test we get the form and can take an ip range."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.nmap_tracker.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOSTS: "192.168.0.5-12",
+                CONF_HOME_INTERVAL: 3,
+                CONF_OPTIONS: DEFAULT_OPTIONS,
+                CONF_EXCLUDE: "4.4.4.4",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert (
+        result2["title"]
+        == "Nmap Tracker 192.168.0.5/32,192.168.0.6/31,192.168.0.8/30,192.168.0.12/32"
+    )
+    assert result2["data"] == {}
+    assert result2["options"] == {
+        CONF_HOSTS: "192.168.0.5/32,192.168.0.6/31,192.168.0.8/30,192.168.0.12/32",
+        CONF_HOME_INTERVAL: 3,
+        CONF_OPTIONS: DEFAULT_OPTIONS,
+        CONF_EXCLUDE: "4.4.4.4",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_form_invalid_hosts(hass: HomeAssistant) -> None:
     """Test invalid hosts passed in."""
     await setup.async_setup_component(hass, "persistent_notification", {})
