@@ -279,6 +279,7 @@ class TibberSensorRT(TibberSensor):
         """Return the name of the sensor."""
         return f"{self._sensor_name} {self._name}"
 
+    @callback
     def _set_state(self, state):
         """Set sensor state."""
         self._state = state
