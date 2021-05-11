@@ -23,6 +23,10 @@ from homeassistant.const import (
     VOLT,
 )
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.util import Throttle, dt as dt_util
 
 from .const import DOMAIN as TIBBER_DOMAIN, MANUFACTURER
@@ -33,6 +37,56 @@ ICON = "mdi:currency-usd"
 SCAN_INTERVAL = timedelta(minutes=1)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 PARALLEL_UPDATES = 0
+SIGNAL_UPDATE_ENTITY = "tibber_rt_update_{}"
+
+RT_SENSOR_MAP = {
+    "averagePower": ["average power", DEVICE_CLASS_POWER, POWER_WATT],
+    "power": ["power", DEVICE_CLASS_POWER, POWER_WATT],
+    "minPower": ["min power", DEVICE_CLASS_POWER, POWER_WATT],
+    "maxPower": ["max power", DEVICE_CLASS_POWER, POWER_WATT],
+    "accumulatedConsumption": [
+        "accumulated consumption",
+        DEVICE_CLASS_ENERGY,
+        ENERGY_KILO_WATT_HOUR,
+    ],
+    "accumulatedConsumptionLastHour": [
+        "accumulated consumption last hour",
+        DEVICE_CLASS_ENERGY,
+        ENERGY_KILO_WATT_HOUR,
+    ],
+    "accumulatedProduction": [
+        "accumulated production",
+        DEVICE_CLASS_ENERGY,
+        ENERGY_KILO_WATT_HOUR,
+    ],
+    "accumulatedProductionLastHour": [
+        "accumulated production last hour",
+        DEVICE_CLASS_ENERGY,
+        ENERGY_KILO_WATT_HOUR,
+    ],
+    "lastMeterConsumption": [
+        "last meter consumption",
+        DEVICE_CLASS_ENERGY,
+        ENERGY_KILO_WATT_HOUR,
+    ],
+    "lastMeterProduction": [
+        "last meter production",
+        DEVICE_CLASS_ENERGY,
+        ENERGY_KILO_WATT_HOUR,
+    ],
+    "voltagePhase1": ["voltage phase1", DEVICE_CLASS_VOLTAGE, VOLT],
+    "voltagePhase2": ["voltage phase2", DEVICE_CLASS_VOLTAGE, VOLT],
+    "voltagePhase3": ["voltage phase3", DEVICE_CLASS_VOLTAGE, VOLT],
+    "currentL1": ["current L1", DEVICE_CLASS_CURRENT, ELECTRICAL_CURRENT_AMPERE],
+    "currentL2": ["current L2", DEVICE_CLASS_CURRENT, ELECTRICAL_CURRENT_AMPERE],
+    "currentL3": ["current L3", DEVICE_CLASS_CURRENT, ELECTRICAL_CURRENT_AMPERE],
+    "signalStrength": [
+        "signal strength",
+        DEVICE_CLASS_SIGNAL_STRENGTH,
+        SIGNAL_STRENGTH_DECIBELS,
+    ],
+    "accumulatedCost": ["accumulated cost", None, None],
+}
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -198,12 +252,20 @@ class TibberSensorElPrice(TibberSensor):
 class TibberSensorRT(TibberSensor):
     """Representation of a Tibber sensor for real time consumption."""
 
-    def __init__(self, tibber_home, sensor, device_class, unit):
+    def __init__(self, tibber_home, sensor_name, device_class, unit):
         """Initialize the sensor."""
         super().__init__(tibber_home)
-        self._sensor = sensor
+        self._sensor_name = sensor_name
         self._device_class = device_class
         self._unit = unit
+
+    async def async_added_to_hass(self):
+        """Start listen for real time data."""
+        async_dispatcher_connect(
+            self.hass,
+            SIGNAL_UPDATE_ENTITY.format(self._sensor_name),
+            self.set_state,
+        )
 
     @property
     def available(self):
@@ -218,13 +280,11 @@ class TibberSensorRT(TibberSensor):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._sensor} {self._name}"
+        return f"{self._sensor_name} {self._name}"
 
     def set_state(self, state):
         """Set sensor state."""
         self._state = state
-        if self.hass is None:
-            return
         self.async_write_ha_state()
 
     @property
@@ -240,7 +300,7 @@ class TibberSensorRT(TibberSensor):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f"{self.device_id}_rt_{self._sensor}"
+        return f"{self.device_id}_rt_{self._sensor_name}"
 
     @property
     def device_class(self):
@@ -256,7 +316,7 @@ class TibberRtDataHandler:
         self._async_add_entities = async_add_entities
         self._tibber_home = tibber_home
         self.hass = hass
-        self._sensors = {}
+        self._sensors = set()
 
     async def hass_started(self, _):
         """Start listen for real time data."""
@@ -276,50 +336,22 @@ class TibberRtDataHandler:
             return
 
         new_sensors = []
-        for sensor, state in live_measurement.items():
+        for sensor_type, state in live_measurement.items():
             if state is None:
                 continue
-            if sensor not in self._sensors:
-                if sensor in [
-                    "averagePower",
-                    "power",
-                    "powerProduction",
-                    "minPower",
-                    "maxPower",
-                ]:
-                    device_class = DEVICE_CLASS_POWER
-                    unit = POWER_WATT
-                elif sensor in [
-                    "accumulatedConsumption",
-                    "accumulatedConsumptionLastHour",
-                    "accumulatedProduction",
-                    "accumulatedProductionLastHour",
-                    "lastMeterConsumption",
-                    "lastMeterProduction",
-                ]:
-                    device_class = DEVICE_CLASS_ENERGY
-                    unit = ENERGY_KILO_WATT_HOUR
-                elif sensor in [
-                    "voltagePhase1",
-                    "voltagePhase2",
-                    "voltagePhase3",
-                ]:
-                    device_class = DEVICE_CLASS_VOLTAGE
-                    unit = VOLT
-                elif sensor in ["currentL1", "currentL2", "currentL3"]:
-                    device_class = DEVICE_CLASS_CURRENT
-                    unit = ELECTRICAL_CURRENT_AMPERE
-                elif sensor in ["signalStrength"]:
-                    device_class = DEVICE_CLASS_SIGNAL_STRENGTH
-                    unit = SIGNAL_STRENGTH_DECIBELS
-                elif sensor in ["accumulatedCost"]:
-                    device_class = None
-                    unit = self._tibber_home.currency
-                else:
-                    continue
-                entity = TibberSensorRT(self._tibber_home, sensor, device_class, unit)
-                new_sensors.append(dev)
-                self._sensors[sensor] = dev
-            self._sensors[sensor].set_state(state)
+            if sensor_type not in RT_SENSOR_MAP:
+                continue
+            sensor_name, device_class, unit = RT_SENSOR_MAP[sensor_type]
+            if sensor_type == "accumulatedCost":
+                unit = self._tibber_home.currency
+            if sensor_type not in self._sensors:
+                entity = TibberSensorRT(
+                    self._tibber_home, sensor_name, device_class, unit
+                )
+                new_sensors.append(entity)
+                self._sensors.add(sensor_type)
+            async_dispatcher_send(
+                self.hass, SIGNAL_UPDATE_ENTITY.format(sensor_name), state
+            )
         if new_sensors:
             self._async_add_entities(new_sensors)
