@@ -9,6 +9,7 @@ from homeassistant.components.twentemilieu.const import (
     CONF_POST_CODE,
     DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ID, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
@@ -25,9 +26,9 @@ FIXTURE_USER_INPUT = {
 
 async def test_show_set_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
-    flow = config_flow.TwenteMilieuFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_user(user_input=None)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
