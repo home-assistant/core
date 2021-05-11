@@ -5,7 +5,7 @@ from contextlib import suppress
 import datetime as dt
 import re
 import sys
-from typing import Any
+from typing import Any, cast
 
 if sys.version_info[:2] >= (3, 9):
     import zoneinfo
@@ -49,7 +49,8 @@ def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
     Async friendly.
     """
     try:
-        return zoneinfo.ZoneInfo(time_zone_str)  # type: ignore
+        # Cast can be removed when mypy is switched to Python 3.9.
+        return cast(dt.tzinfo, zoneinfo.ZoneInfo(time_zone_str))
     except zoneinfo.ZoneInfoNotFoundError:
         return None
 
