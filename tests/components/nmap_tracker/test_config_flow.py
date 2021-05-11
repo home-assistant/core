@@ -80,13 +80,10 @@ async def test_form_range(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert (
-        result2["title"]
-        == "Nmap Tracker 192.168.0.5/32,192.168.0.6/31,192.168.0.8/30,192.168.0.12/32"
-    )
+    assert result2["title"] == "Nmap Tracker 192.168.0.5-12"
     assert result2["data"] == {}
     assert result2["options"] == {
-        CONF_HOSTS: "192.168.0.5/32,192.168.0.6/31,192.168.0.8/30,192.168.0.12/32",
+        CONF_HOSTS: "192.168.0.5-12",
         CONF_HOME_INTERVAL: 3,
         CONF_OPTIONS: DEFAULT_OPTIONS,
         CONF_EXCLUDE: "4.4.4.4",
