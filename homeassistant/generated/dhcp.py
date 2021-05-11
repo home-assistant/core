@@ -77,6 +77,10 @@ DHCP = [
         "macaddress": "30AEA4*"
     },
     {
+        "domain": "gogogate2",
+        "hostname": "ismartgate*"
+    },
+    {
         "domain": "hunterdouglas_powerview",
         "hostname": "hunter*",
         "macaddress": "002674*"
