@@ -2,7 +2,7 @@
 import asyncio
 from unittest.mock import MagicMock, patch
 
-from gogogate2_api import GogoGate2Api
+from ismartgate import GogoGate2Api
 import pytest
 
 from homeassistant.components.gogogate2 import DEVICE_TYPE_GOGOGATE2, async_setup_entry

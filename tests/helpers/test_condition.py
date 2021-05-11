@@ -27,7 +27,7 @@ def calls(hass):
 @pytest.fixture(autouse=True)
 def setup_comp(hass):
     """Initialize components."""
-    dt_util.set_default_time_zone(hass.config.time_zone)
+    hass.config.set_time_zone(hass.config.time_zone)
     hass.loop.run_until_complete(
         async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
     )

@@ -1,4 +1,4 @@
-"""Support for AVM Fritz!Box smarthome thermostate devices."""
+"""Support for AVM FRITZ!SmartHome thermostate devices."""
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
@@ -54,7 +54,7 @@ OFF_REPORT_SET_TEMPERATURE = 0.0
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Fritzbox smarthome thermostat from ConfigEntry."""
+    """Set up the FRITZ!SmartHome thermostat from ConfigEntry."""
     entities = []
     coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
 
@@ -79,7 +79,7 @@ async def async_setup_entry(
 
 
 class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
-    """The thermostat class for Fritzbox smarthome thermostates."""
+    """The thermostat class for FRITZ!SmartHome thermostates."""
 
     @property
     def supported_features(self):
@@ -159,6 +159,7 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
             return PRESET_COMFORT
         if self.device.target_temperature == self.device.eco_temperature:
             return PRESET_ECO
+        return None
 
     @property
     def preset_modes(self):

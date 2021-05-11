@@ -119,19 +119,6 @@ async def test_zeroconf_confirm_connection_error(
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
-@patch("homeassistant.components.wled.WLED.update", side_effect=WLEDConnectionError)
-async def test_zeroconf_no_data(
-    update_mock: MagicMock, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test we abort if zeroconf provides no data."""
-    flow = config_flow.WLEDFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_zeroconf()
-
-    assert result["reason"] == "cannot_connect"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-
-
 async def test_user_device_exists_abort(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:

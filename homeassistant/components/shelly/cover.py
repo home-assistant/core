@@ -83,24 +83,24 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
-        self.control_result = await self.block.set_state(go="close")
+        self.control_result = await self.set_state(go="close")
         self.async_write_ha_state()
 
     async def async_open_cover(self, **kwargs):
         """Open cover."""
-        self.control_result = await self.block.set_state(go="open")
+        self.control_result = await self.set_state(go="open")
         self.async_write_ha_state()
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        self.control_result = await self.block.set_state(
+        self.control_result = await self.set_state(
             go="to_pos", roller_pos=kwargs[ATTR_POSITION]
         )
         self.async_write_ha_state()
 
     async def async_stop_cover(self, **_kwargs):
         """Stop the cover."""
-        self.control_result = await self.block.set_state(go="stop")
+        self.control_result = await self.set_state(go="stop")
         self.async_write_ha_state()
 
     @callback
