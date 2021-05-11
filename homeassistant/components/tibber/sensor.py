@@ -17,7 +17,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
-    EVENT_HOMEASSISTANT_START,
     POWER_WATT,
     SIGNAL_STRENGTH_DECIBELS,
     VOLT,
@@ -107,9 +106,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         if home.has_active_subscription:
             dev.append(TibberSensorElPrice(home))
         if home.has_real_time_consumption:
-            hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START,
-                TibberRtDataHandler(async_add_entities, home, hass).hass_started,
+            await home.rt_subscribe(
+                TibberRtDataHandler(async_add_entities, home, hass).async_callback
             )
 
     async_add_entities(dev, True)
@@ -317,11 +315,7 @@ class TibberRtDataHandler:
         self.hass = hass
         self._entities = set()
 
-    async def hass_started(self, _):
-        """Start listen for real time data."""
-        await self._tibber_home.rt_subscribe(self._async_callback)
-
-    async def _async_callback(self, payload):
+    async def async_callback(self, payload):
         """Handle received data."""
         errors = payload.get("errors")
         if errors:
