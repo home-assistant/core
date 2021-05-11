@@ -84,9 +84,9 @@ async def test_address_already_set_up(
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
-    flow = config_flow.TwenteMilieuFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=FIXTURE_USER_INPUT
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
