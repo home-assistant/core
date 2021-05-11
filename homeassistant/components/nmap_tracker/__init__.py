@@ -29,6 +29,10 @@ from .const import (
     TRACKER_SCAN_INTERVAL,
 )
 
+# Some version of nmap will fail with 'Assertion failed: htn.toclock_running == true (Target.cc: stopTimeOutClock: 503)\n'
+NMAP_TRANSIENT_FAILURE = "Assertion failed: htn.toclock_running == true"
+MAX_SCAN_ATTEMPTS = 10
+
 
 @dataclass
 class NmapDevice:
@@ -229,11 +233,20 @@ class NmapDeviceScanner:
         if not self._scanner:
             self._scanner = PortScanner()
         _LOGGER.debug("Scanning %s with args: %s", self._hosts, options)
-        result = self._scanner.scan(
-            hosts=" ".join(self._hosts),
-            arguments=options,
-            timeout=TRACKER_SCAN_INTERVAL * 10,
-        )
+        for attempt in range(MAX_SCAN_ATTEMPTS):
+            try:
+                result = self._scanner.scan(
+                    hosts=" ".join(self._hosts),
+                    arguments=options,
+                    timeout=TRACKER_SCAN_INTERVAL * 10,
+                )
+            except PortScannerError as ex:
+                if attempt < (MAX_SCAN_ATTEMPTS - 1) and NMAP_TRANSIENT_FAILURE in str(
+                    ex
+                ):
+                    _LOGGER.debug("Nmap saw transient error %s", NMAP_TRANSIENT_FAILURE)
+                    continue
+                raise
         _LOGGER.debug(
             "Finished scanning %s with args: %s",
             self._hosts,
