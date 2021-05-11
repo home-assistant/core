@@ -268,7 +268,9 @@ class SamsungTVWSBridge(SamsungTVBridge):
         if self._remote is None:
             # We need to create a new instance to reconnect.
             try:
-                LOGGER.debug("Create SamsungTVWS")
+                LOGGER.debug(
+                    "Create SamsungTVWS for %s (%s)", VALUE_CONF_NAME, self.host
+                )
                 self._remote = SamsungTVWS(
                     host=self.host,
                     port=self.port,
