@@ -55,7 +55,7 @@ async def test_air_quality(hass):
 
     entry = registry.async_get("air_quality.home")
     assert entry
-    assert entry.unique_id == 123
+    assert entry.unique_id == "123"
 
 
 async def test_air_quality_with_incomplete_data(hass):
@@ -83,7 +83,7 @@ async def test_air_quality_with_incomplete_data(hass):
 
     entry = registry.async_get("air_quality.home")
     assert entry
-    assert entry.unique_id == 123
+    assert entry.unique_id == "123"
 
 
 async def test_availability(hass):
