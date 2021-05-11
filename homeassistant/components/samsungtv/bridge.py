@@ -168,7 +168,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         except UnhandledResponse:
             LOGGER.debug("Working but unsupported config: %s", config)
             return RESULT_NOT_SUPPORTED
-        except OSError as err:
+        except (ConnectionClosed, OSError) as err:
             LOGGER.debug("Failing config: %s, error: %s", config, err)
             return RESULT_CANNOT_CONNECT
 
@@ -268,7 +268,9 @@ class SamsungTVWSBridge(SamsungTVBridge):
         if self._remote is None:
             # We need to create a new instance to reconnect.
             try:
-                LOGGER.debug("Create SamsungTVWS")
+                LOGGER.debug(
+                    "Create SamsungTVWS for %s (%s)", VALUE_CONF_NAME, self.host
+                )
                 self._remote = SamsungTVWS(
                     host=self.host,
                     port=self.port,
