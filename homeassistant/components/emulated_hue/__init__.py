@@ -106,7 +106,6 @@ ATTR_EMULATED_HUE_NAME = "emulated_hue_name"
 async def async_setup(hass, yaml_config):
     """Activate the emulated_hue component."""
     config = Config(hass, yaml_config.get(DOMAIN, {}))
-    await config.async_setup()
 
     app = web.Application()
     app["hass"] = hass
@@ -157,6 +156,7 @@ async def async_setup(hass, yaml_config):
         nonlocal protocol
         nonlocal site
         nonlocal runner
+        await config.async_setup()
 
         _, protocol = await listen
 
