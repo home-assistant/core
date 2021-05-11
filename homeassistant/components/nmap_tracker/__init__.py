@@ -29,6 +29,29 @@ from .const import (
     TRACKER_SCAN_INTERVAL,
 )
 
+
+@dataclass
+class NmapDevice:
+    """Class for keeping track of an nmap tracked device."""
+
+    mac_address: str
+    hostname: str
+    ipv4: str
+    manufacturer: str
+    reason: str
+    last_update: datetime.datetime
+
+
+class NmapTrackedDevices:
+    """Storage class for all nmap trackers."""
+
+    def __init__(self) -> None:
+        """Initialize the data."""
+        self.tracked: dict = {}
+        self.ipv4_last_mac: dict = {}
+        self.config_entry_owner: dict = {}
+
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -74,26 +97,9 @@ def _async_untrack_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
         del devices.config_entry_owner[mac_address]
 
 
-@dataclass
-class NmapDevice:
-    """Class for keeping track of an nmap tracked device."""
-
-    mac_address: str
-    hostname: str
-    ipv4: str
-    manufacturer: str
-    reason: str
-    last_update: datetime.datetime
-
-
-class NmapTrackedDevices:
-    """Storage class for all nmap trackers."""
-
-    def __init__(self) -> None:
-        """Initialize the data."""
-        self.tracked: dict = {}
-        self.ipv4_last_mac: dict = {}
-        self.config_entry_owner: dict = {}
+def signal_device_update(mac_address) -> str:
+    """Signal specific per nmap tracker entry to signal updates in device."""
+    return f"{DOMAIN}-device-update-{mac_address}"
 
 
 class NmapDeviceScanner:
@@ -106,11 +112,16 @@ class NmapDeviceScanner:
 
         self._hass = hass
         self._entry = entry
+
         self._scan_lock = None
         self._stopping = False
+        self._scanner = None
+
         self._entry_id = entry.entry_id
         self._hosts = None
+        self._options = None
         self._exclude = None
+
         self._last_results = []
         self._mac_vendor_lookup = None
 
@@ -138,10 +149,6 @@ class NmapDeviceScanner:
     def signal_device_new(self) -> str:
         """Signal specific per nmap tracker entry to signal new device."""
         return f"{DOMAIN}-device-new-{self._entry_id}"
-
-    def signal_device_update(self, mac_address) -> str:
-        """Signal specific per nmap tracker entry to signal updates in device."""
-        return f"{DOMAIN}-device-update-{mac_address}"
 
     @lru_cache(maxsize=4096)
     def _get_vendor(self, oui):
@@ -237,7 +244,7 @@ class NmapDeviceScanner:
         """Mark an IP offline."""
         if formatted_mac := self.devices.ipv4_last_mac.pop(ipv4, None):
             self.devices.tracked[formatted_mac].reason = reason
-            dispatches.append((self.signal_device_update(formatted_mac), False))
+            dispatches.append((signal_device_update(formatted_mac), False))
 
     def _start_nmap_scan(self):
         """Scan the network for devices.

@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import NmapDeviceScanner
+from . import NmapDeviceScanner, signal_device_update
 from .const import CONF_HOME_INTERVAL, CONF_OPTIONS, DEFAULT_OPTIONS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -169,7 +169,7 @@ class NmapTrackerEntity(ScannerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                self._nmap_tracker.signal_device_update(self._mac_address),
+                signal_device_update(self._mac_address),
                 self.async_on_demand_update,
             )
         )
