@@ -1,6 +1,5 @@
 """The tests for the Modbus cover component."""
 import logging
-from unittest import mock
 
 import pytest
 
@@ -29,6 +28,8 @@ from homeassistant.const import (
 from homeassistant.core import State
 
 from .conftest import ReadResult, base_config_test, base_test, prepare_service_update
+
+from tests.common import mock_restore_cache
 
 
 @pytest.mark.parametrize(
@@ -231,18 +232,17 @@ async def test_restore_state_cover(hass, state):
         CONF_STATUS_REGISTER: 1234,
         CONF_STATUS_REGISTER_TYPE: CALL_TYPE_REGISTER_HOLDING,
     }
-    with mock.patch(
-        "homeassistant.components.modbus.cover.ModbusCover.async_get_last_state"
-    ) as mock_get_last_state:
-        mock_get_last_state.return_value = State(entity_id, f"{state}")
-
-        await base_config_test(
-            hass,
-            config,
-            cover_name,
-            COVER_DOMAIN,
-            CONF_COVERS,
-            None,
-            method_discovery=True,
-        )
-        assert hass.states.get(entity_id).state == state
+    mock_restore_cache(
+        hass,
+        (State(f"{entity_id}", state),),
+    )
+    await base_config_test(
+        hass,
+        config,
+        cover_name,
+        COVER_DOMAIN,
+        CONF_COVERS,
+        None,
+        method_discovery=True,
+    )
+    assert hass.states.get(entity_id).state == state
