@@ -75,7 +75,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow start."""
         flows = self.hass.data.get(DATA_FLOW_IMPL, {})
 
-        self._async_abort_entries_match({})
+        self._async_abort_entries_match()
 
         if not flows:
             return self.async_abort(reason="missing_configuration")
