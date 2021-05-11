@@ -109,15 +109,16 @@ class MediaGroup(MediaPlayerEntity):
         }
 
     @callback
-    def _on_state_change(self, event: EventType) -> None:
+    def async_on_state_change(self, event: EventType) -> None:
+        """Update supported features and state when a new state is received."""
         self.async_set_context(event.context)
-        self.update_supported_features(
+        self.async_update_supported_features(
             event.data.get("entity_id"), event.data.get("new_state")  # type: ignore
         )
-        self.update_state()
+        self.async_update_state()
 
     @callback
-    def update_supported_features(
+    def async_update_supported_features(
         self,
         entity_id: str,
         new_state: State | None,
@@ -168,9 +169,11 @@ class MediaGroup(MediaPlayerEntity):
         """Register listeners."""
         for entity_id in self._entities:
             new_state = self.hass.states.get(entity_id)
-            self.update_supported_features(entity_id, new_state)
-        async_track_state_change_event(self.hass, self._entities, self._on_state_change)
-        self.update_state()
+            self.async_update_supported_features(entity_id, new_state)
+        async_track_state_change_event(
+            self.hass, self._entities, self.async_on_state_change
+        )
+        self.async_update_state()
 
     @property
     def name(self) -> str:
@@ -360,7 +363,7 @@ class MediaGroup(MediaPlayerEntity):
                 await self.async_set_volume_level(max(0, volume_level - 0.1))
 
     @callback
-    def update_state(self) -> None:
+    def async_update_state(self) -> None:
         """Query all members and determine the media group state."""
         states = [self.hass.states.get(entity) for entity in self._entities]
         states_values = [state.state for state in states if state is not None]
