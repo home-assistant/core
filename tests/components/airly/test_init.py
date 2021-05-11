@@ -1,6 +1,8 @@
 """Test init of Airly integration."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.airly import set_update_interval
 from homeassistant.components.airly.const import DOMAIN
 from homeassistant.config_entries import (
@@ -188,7 +190,8 @@ async def test_unload_entry(hass, aioclient_mock):
     assert not hass.data.get(DOMAIN)
 
 
-async def test_migrate_device_entry(hass, aioclient_mock):
+@pytest.mark.parametrize("old_identifier", ((DOMAIN, 123, 456), (DOMAIN, "123", "456")))
+async def test_migrate_device_entry(hass, aioclient_mock, old_identifier):
     """Test device_info identifiers migration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -207,13 +210,13 @@ async def test_migrate_device_entry(hass, aioclient_mock):
 
     device_reg = mock_device_registry(hass)
     device_entry = device_reg.async_get_or_create(
-        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, 123, 456)}
+        config_entry_id=config_entry.entry_id, identifiers={old_identifier}
     )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     migrated_device_entry = device_reg.async_get_or_create(
-        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "123", "456")}
+        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "123-456")}
     )
     assert device_entry.id == migrated_device_entry.id

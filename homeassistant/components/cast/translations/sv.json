@@ -9,5 +9,14 @@
                 "description": "Vill du konfigurera Google Cast?"
             }
         }
+    },
+    "options": {
+        "step": {
+            "advanced_options": {
+                "data": {
+                    "ignore_cec": "Ignorera CEC"
+                }
+            }
+        }
     }
 }

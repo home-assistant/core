@@ -31,7 +31,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.bluetooth_tracker.*",
     "homeassistant.components.bmw_connected_drive.*",
     "homeassistant.components.bsblan.*",
-    "homeassistant.components.camera.*",
     "homeassistant.components.canary.*",
     "homeassistant.components.cast.*",
     "homeassistant.components.cert_expiry.*",
@@ -70,11 +69,9 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.fortios.*",
     "homeassistant.components.foscam.*",
     "homeassistant.components.freebox.*",
-    "homeassistant.components.fritz.*",
     "homeassistant.components.fritzbox.*",
     "homeassistant.components.garmin_connect.*",
     "homeassistant.components.geniushub.*",
-    "homeassistant.components.gios.*",
     "homeassistant.components.glances.*",
     "homeassistant.components.gogogate2.*",
     "homeassistant.components.google_assistant.*",
@@ -154,7 +151,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.omnilogic.*",
     "homeassistant.components.onboarding.*",
     "homeassistant.components.ondilo_ico.*",
-    "homeassistant.components.onewire.*",
     "homeassistant.components.onvif.*",
     "homeassistant.components.ovo_energy.*",
     "homeassistant.components.ozw.*",
@@ -187,7 +183,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.sentry.*",
     "homeassistant.components.sesame.*",
     "homeassistant.components.sharkiq.*",
-    "homeassistant.components.shelly.*",
     "homeassistant.components.sma.*",
     "homeassistant.components.smart_meter_texas.*",
     "homeassistant.components.smartthings.*",
@@ -207,7 +202,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.surepetcare.*",
     "homeassistant.components.switchbot.*",
     "homeassistant.components.switcher_kis.*",
-    "homeassistant.components.synology_dsm.*",
     "homeassistant.components.synology_srm.*",
     "homeassistant.components.system_health.*",
     "homeassistant.components.system_log.*",
@@ -237,7 +231,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.wemo.*",
     "homeassistant.components.wink.*",
     "homeassistant.components.withings.*",
-    "homeassistant.components.wled.*",
     "homeassistant.components.wunderground.*",
     "homeassistant.components.xbox.*",
     "homeassistant.components.xiaomi_aqara.*",
@@ -260,10 +253,13 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "python_version": "3.8",
     "show_error_codes": "true",
     "follow_imports": "silent",
+    # Enable some checks globally.
     "ignore_missing_imports": "true",
+    "strict_equality": "true",
     "warn_incomplete_stub": "true",
     "warn_redundant_casts": "true",
     "warn_unused_configs": "true",
+    "warn_unused_ignores": "true",
 }
 
 # This is basically the list of checks which is enabled for "strict=true".
@@ -276,10 +272,8 @@ STRICT_SETTINGS: Final[list[str]] = [
     "disallow_untyped_decorators",
     "disallow_untyped_defs",
     "no_implicit_optional",
-    "strict_equality",
     "warn_return_any",
     "warn_unreachable",
-    "warn_unused_ignores",
     # TODO: turn these on, address issues
     # "disallow_any_generics",
     # "no_implicit_reexport",
@@ -311,7 +305,9 @@ def generate_and_validate(config: Config) -> str:
                 "mypy_config", f"Only components should be added: {module}"
             )
         if module in ignored_modules_set:
-            config.add_error("mypy_config", f"Module '{module}' is in ignored list")
+            config.add_error(
+                "mypy_config", f"Module '{module}' is in ignored list in mypy_config.py"
+            )
 
     # Validate that all modules exist.
     all_modules = strict_modules + IGNORED_MODULES
@@ -328,6 +324,10 @@ def generate_and_validate(config: Config) -> str:
             module_path = Path(module) / "__init__.py"
             if not module_path.is_file():
                 config.add_error("mypy_config", f"Module '{module} doesn't exist")
+
+    # Don't generate mypy.ini if there're errors found because it will likely crash.
+    if config.errors:
+        return ""
 
     mypy_config = configparser.ConfigParser()
 
@@ -371,6 +371,9 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate mypy config."""
     config_path = config.root / "mypy.ini"
     config.cache["mypy_config"] = content = generate_and_validate(config)
+
+    if config.errors:
+        return
 
     with open(str(config_path)) as fp:
         if fp.read().strip() != content:

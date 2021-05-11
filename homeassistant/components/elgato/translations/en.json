@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Failed to connect"
         },
-        "flow_title": "Elgato Light: {serial_number}",
+        "flow_title": "{serial_number}",
         "step": {
             "user": {
                 "data": {

@@ -1,13 +1,18 @@
 """Helper methods to handle the time in Home Assistant."""
 from __future__ import annotations
 
+import bisect
 from contextlib import suppress
 import datetime as dt
 import re
 from typing import Any
 
+try:
+    import zoneinfo
+except ImportError:
+    from backports import zoneinfo
+
 import ciso8601
-from dateutil import tz
 
 from homeassistant.const import MATCH_ALL
 
@@ -43,7 +48,10 @@ def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
 
     Async friendly.
     """
-    return tz.gettz(time_zone_str)
+    try:
+        return zoneinfo.ZoneInfo(time_zone_str)  # type: ignore
+    except zoneinfo.ZoneInfoNotFoundError:
+        return None
 
 
 def utcnow() -> dt.datetime:
@@ -258,15 +266,7 @@ def find_next_time_expression_time(
 
         Return None if no such value exists.
         """
-        left = 0
-        right = len(arr)
-        while left < right:
-            mid = (left + right) // 2
-            if arr[mid] < cmp:
-                left = mid + 1
-            else:
-                right = mid
-
+        left = bisect.bisect_left(arr, cmp)
         if left == len(arr):
             return None
         return arr[left]
@@ -311,7 +311,7 @@ def find_next_time_expression_time(
     if result.tzinfo in (None, UTC):
         return result
 
-    if tz.datetime_ambiguous(result):
+    if _datetime_ambiguous(result):
         # This happens when we're leaving daylight saving time and local
         # clocks are rolled back. In this case, we want to trigger
         # on both the DST and non-DST time. So when "now" is in the DST
@@ -320,7 +320,7 @@ def find_next_time_expression_time(
         if result.fold != fold:
             result = result.replace(fold=fold)
 
-    if not tz.datetime_exists(result):
+    if not _datetime_exists(result):
         # This happens when we're entering daylight saving time and local
         # clocks are rolled forward, thus there are local times that do
         # not exist. In this case, we want to trigger on the next time
@@ -337,11 +337,26 @@ def find_next_time_expression_time(
     # For example: if triggering on 2:30 and now is 28.10.2018 2:30 (in DST)
     # we should trigger next on 28.10.2018 2:30 (out of DST), but our
     # algorithm above would produce 29.10.2018 2:30 (out of DST)
-    if tz.datetime_ambiguous(now):
+    if _datetime_ambiguous(now):
         check_result = find_next_time_expression_time(
             now + _dst_offset_diff(now), seconds, minutes, hours
         )
-        if tz.datetime_ambiguous(check_result):
+        if _datetime_ambiguous(check_result):
             return check_result
 
     return result
+
+
+def _datetime_exists(dattim: dt.datetime) -> bool:
+    """Check if a datetime exists."""
+    assert dattim.tzinfo is not None
+    original_tzinfo = dattim.tzinfo
+    # Check if we can round trip to UTC
+    return dattim == dattim.astimezone(UTC).astimezone(original_tzinfo)
+
+
+def _datetime_ambiguous(dattim: dt.datetime) -> bool:
+    """Check whether a datetime is ambiguous."""
+    assert dattim.tzinfo is not None
+    opposite_fold = dattim.replace(fold=not dattim.fold)
+    return _datetime_exists(dattim) and dattim.utcoffset() != opposite_fold.utcoffset()
