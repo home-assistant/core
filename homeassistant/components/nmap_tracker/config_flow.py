@@ -1,7 +1,7 @@
 """Config flow for Nmap Tracker integration."""
 from __future__ import annotations
 
-from ipaddress import ip_address, ip_network
+from ipaddress import ip_address, ip_network, summarize_address_range
 from typing import Any
 
 import ifaddr
@@ -44,6 +44,18 @@ def _normalize_ips_and_network(hosts_str):
     hosts = [host for host in cv.ensure_list_csv(hosts_str) if host != ""]
 
     for host in sorted(hosts):
+        try:
+            start, end = host.split("-", 1)
+            if "." not in end:
+                a1, a2, a3, _ = start.split(".", 3)
+                end = ".".join([a1, a2, a3, end])
+            networks = summarize_address_range(ip_address(start), ip_address(end))
+        except ValueError:
+            pass
+        else:
+            normalized_hosts.extend(str(network) for network in networks)
+            continue
+
         try:
             ip = ip_address(host)
         except ValueError:
