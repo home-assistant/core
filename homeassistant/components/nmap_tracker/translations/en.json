@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Location is already configured"
+        },
+        "error": {
+            "invalid_hosts": "Invalid Hosts"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "Hosts (comma seperated) not to include in Nmap scanning.",
+                    "home_interval": "The number of minutes Nmap will not scan this device, assuming it is home, in order to preserve the device battery.",
+                    "hosts": "The network address (comma seperated) to scan (in any supported Nmap format). Mixing subnets and IPs is possible.",
+                    "scan_options": "Configurable scan options for Nmap."
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_hosts": "Invalid Hosts"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "exclude": "Hosts (comma seperated) not to include in Nmap scanning.",
+                    "home_interval": "The number of minutes Nmap will not scan this device, assuming it is home, in order to preserve the device battery.",
+                    "hosts": "The network address (comma seperated) to scan (in any supported Nmap format). Mixing subnets and IPs is possible.",
+                    "scan_options": "Configurable scan options for Nmap."
+                }
+            }
+        }
+    },
+    "title": "Nmap Tracker"
+}

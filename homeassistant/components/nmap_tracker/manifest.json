@@ -2,7 +2,13 @@
   "domain": "nmap_tracker",
   "name": "Nmap Tracker",
   "documentation": "https://www.home-assistant.io/integrations/nmap_tracker",
-  "requirements": ["python-nmap==0.6.1", "getmac==0.8.2"],
-  "codeowners": [],
-  "iot_class": "local_polling"
+  "requirements": [
+    "python-nmap==0.6.4",
+    "getmac==0.8.2",
+    "ifaddr==0.1.7",
+    "mac-vendor-lookup==0.1.11"
+  ],
+  "codeowners": ["@bdraco"],
+  "iot_class": "local_polling",
+  "config_flow": true
 }
