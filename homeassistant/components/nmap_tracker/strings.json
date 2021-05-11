@@ -23,7 +23,7 @@
         "data": {
           "hosts": "Network addresses (comma seperated) to scan.",
           "home_interval": "Minimum number of minutes between scans of active devices (preserve battery).",
-          "exclude": "Hosts (comma seperated) to exclude from scanning.",
+          "exclude": "Network addresses (comma seperated) to exclude from scanning.",
           "scan_options": "Raw configurable scan options for Nmap."
         }
       }
