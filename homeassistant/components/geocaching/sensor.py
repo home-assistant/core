@@ -30,7 +30,7 @@ async def async_setup_entry(
 
     coordinator = hass.data[DOMAIN][entry.entry_id]["COORD"]
     async_add_entities(
-        [GeocachingSensor(coordinator, key=key) for key in SENSOR_ENTITIES], True
+        [GeocachingSensor(coordinator, key=key) for key in SENSOR_ENTITIES]
     )
 
 
