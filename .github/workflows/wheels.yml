@@ -3,6 +3,11 @@ name: Build wheels
 # yamllint disable-line rule:truthy
 on:
   workflow_dispatch:
+    inputs:
+      ignore_diff:
+        description: "Ignore checking requirements_diff.txt"
+        default: "false"
+        required: true
   schedule:
     - cron: "0 4 * * *"
   push:
@@ -28,7 +33,14 @@ jobs:
         uses: home-assistant/actions/helpers/info@master
 
       - name: Create requirements_diff file
-        run: curl -s -o requirements_diff.txt https://raw.githubusercontent.com/home-assistant/core/dev/requirements.txt
+        run: |
+          curl -s -o requirements_diff.txt https://raw.githubusercontent.com/home-assistant/core/dev/requirements.txt
+
+          if [[ ${{ github.event_name }} == "workflow_dispatch" ]]; then
+            if [[ ${{ github.event.inputs.ignore_diff }} == "true" ]]; then
+              echo "" > requirements_diff.txt
+            fi
+          fi
 
       - name: Write env-file
         run: |
