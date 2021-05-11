@@ -10,7 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get_registry
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import GiosDataUpdateCoordinator
@@ -73,14 +72,14 @@ class GiosAirQuality(CoordinatorEntity, AirQualityEntity):
     @property
     def icon(self) -> str | None:
         """Return the icon."""
-        if self.air_quality_index in ICONS_MAP:
+        if cast(str, self.air_quality_index) in ICONS_MAP:
             return ICONS_MAP[cast(str, self.air_quality_index)]
         return "mdi:blur"
 
     @property
-    def air_quality_index(self) -> float | None:
+    def air_quality_index(self) -> Any:
         """Return the air quality index."""
-        return self._get_sensor_value(API_AQI)
+        return self.coordinator.data.get(API_AQI, {}).get("value")
 
     @property
     def particulate_matter_2_5(self) -> float | None:
@@ -145,10 +144,10 @@ class GiosAirQuality(CoordinatorEntity, AirQualityEntity):
         self._attrs[ATTR_STATION] = self.coordinator.gios.station_name
         return self._attrs
 
-    def _get_sensor_value(self, sensor: str) -> StateType:
+    def _get_sensor_value(self, sensor: str) -> float | None:
         """Return value of specified sensor."""
         if sensor in self.coordinator.data:
-            return self.coordinator.data[sensor]["value"]
+            return cast(float, self.coordinator.data[sensor]["value"])
         return None
 
 
