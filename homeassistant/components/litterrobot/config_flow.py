@@ -27,9 +27,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            for entry in self._async_current_entries():
-                if entry.data[CONF_USERNAME] == user_input[CONF_USERNAME]:
-                    return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
 
             hub = LitterRobotHub(self.hass, user_input)
             try:
