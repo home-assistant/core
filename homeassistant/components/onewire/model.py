@@ -13,7 +13,7 @@ class DeviceComponentDescription(TypedDict, total=False):
     default_disabled: bool
 
 
-class OWServerDeviceDescription(TypedDict, total=False):
+class OWServerDeviceDescription(TypedDict):
     """OWServer device description class."""
 
     path: str
