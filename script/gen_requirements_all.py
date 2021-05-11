@@ -27,7 +27,6 @@ COMMENT_REQUIREMENTS = (
     "face_recognition",
     "i2csense",
     "opencv-python-headless",
-    "py_noaa",
     "pybluez",
     "pycups",
     "PySwitchbot",
