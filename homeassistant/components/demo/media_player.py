@@ -17,6 +17,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
+    SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
@@ -66,6 +67,7 @@ YOUTUBE_PLAYER_SUPPORT = (
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_SELECT_SOUND_MODE
     | SUPPORT_SEEK
+    | SUPPORT_STOP
 )
 
 MUSIC_PLAYER_SUPPORT = (
@@ -83,6 +85,7 @@ MUSIC_PLAYER_SUPPORT = (
     | SUPPORT_PREVIOUS_TRACK
     | SUPPORT_NEXT_TRACK
     | SUPPORT_SELECT_SOUND_MODE
+    | SUPPORT_STOP
 )
 
 NETFLIX_PLAYER_SUPPORT = (
@@ -95,6 +98,7 @@ NETFLIX_PLAYER_SUPPORT = (
     | SUPPORT_PREVIOUS_TRACK
     | SUPPORT_NEXT_TRACK
     | SUPPORT_SELECT_SOUND_MODE
+    | SUPPORT_STOP
 )
 
 
@@ -197,6 +201,11 @@ class AbstractDemoPlayer(MediaPlayerEntity):
     def media_pause(self):
         """Send pause command."""
         self._player_state = STATE_PAUSED
+        self.schedule_update_ha_state()
+
+    def media_stop(self):
+        """Send stop command."""
+        self._player_state = STATE_OFF
         self.schedule_update_ha_state()
 
     def set_shuffle(self, shuffle):
