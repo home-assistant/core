@@ -42,6 +42,8 @@ from .const import (
     SONOS_ENTITY_UPDATE,
     SONOS_GROUP_UPDATE,
     SONOS_SEEN,
+    SONOS_STATE_PLAYING,
+    SONOS_STATE_TRANSITIONING,
     SONOS_STATE_UPDATED,
     SOURCE_LINEIN,
     SOURCE_TV,
@@ -577,7 +579,7 @@ class SonosSpeaker:
         ) -> list[list[SonosSpeaker]]:
             """Pause all current coordinators and restore groups."""
             for speaker in (s for s in speakers if s.is_coordinator):
-                if speaker.media.playback_status == "PLAYING":
+                if speaker.media.playback_status == SONOS_STATE_PLAYING:
                     hass.async_create_task(speaker.soco.pause())
 
             groups = []
@@ -714,7 +716,7 @@ class SonosSpeaker:
             new_status = transport_info["current_transport_state"]
 
         # Ignore transitions, we should get the target state soon
-        if new_status == "TRANSITIONING":
+        if new_status == SONOS_STATE_TRANSITIONING:
             return
 
         self.media.clear()
@@ -782,7 +784,7 @@ class SonosSpeaker:
         try:
             uri_meta_data = variables["enqueued_transport_uri_meta_data"]
             if isinstance(uri_meta_data, DidlAudioBroadcast) and (
-                self.media.playback_status != "PLAYING"
+                self.media.playback_status != SONOS_STATE_PLAYING
                 or self.soco.music_source_from_uri(self.media.title) == MUSIC_SRC_RADIO
                 or (
                     isinstance(self.media.title, str)
@@ -814,7 +816,7 @@ class SonosSpeaker:
 
         # position jumped?
         if current_position is not None and self.media.position is not None:
-            if self.media.playback_status == "PLAYING":
+            if self.media.playback_status == SONOS_STATE_PLAYING:
                 assert self.media.position_updated_at is not None
                 time_delta = dt_util.utcnow() - self.media.position_updated_at
                 time_diff = time_delta.total_seconds()
