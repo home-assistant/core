@@ -693,26 +693,27 @@ class MqttCover(MqttEntity, CoverEntity):
             position = max_range - position + offset
         return position
 
-    def tilt_payload_received(self, payload):
+    def tilt_payload_received(self, _payload):
         """Set the tilt value."""
-        if type(payload) in [int, float] or payload.isnumeric():
-            if (
-                self._config[CONF_TILT_MIN]
-                <= int(payload)
-                <= self._config[CONF_TILT_MAX]
-                or self._config[CONF_TILT_MAX]
-                <= int(payload)
-                <= self._config[CONF_TILT_MIN]
-            ):
-                level = self.find_percentage_in_range(float(payload))
-                self._tilt_value = level
-                self.async_write_ha_state()
-            else:
-                _LOGGER.warning(
-                    "Payload '%s' is out of range, must be between '%s' and '%s' inclusive",
-                    payload,
-                    self._config[CONF_TILT_MIN],
-                    self._config[CONF_TILT_MAX],
-                )
+        try:
+            payload = float(_payload)
+        except ValueError:
+            _LOGGER.warning("Payload '%s' is not numeric", _payload)
+            return
+
+        if (
+            self._config[CONF_TILT_MIN] <= int(payload) <= self._config[CONF_TILT_MAX]
+            or self._config[CONF_TILT_MAX]
+            <= int(payload)
+            <= self._config[CONF_TILT_MIN]
+        ):
+            level = self.find_percentage_in_range(payload)
+            self._tilt_value = level
+            self.async_write_ha_state()
         else:
-            _LOGGER.warning("Payload '%s' is not numeric", payload)
+            _LOGGER.warning(
+                "Payload '%s' is out of range, must be between '%s' and '%s' inclusive",
+                payload,
+                self._config[CONF_TILT_MIN],
+                self._config[CONF_TILT_MAX],
+            )
