@@ -78,37 +78,37 @@ class GiosAirQuality(CoordinatorEntity, AirQualityEntity):
         return "mdi:blur"
 
     @property
-    def air_quality_index(self) -> StateType:
+    def air_quality_index(self) -> float | None:
         """Return the air quality index."""
         return self._get_sensor_value(API_AQI)
 
     @property
-    def particulate_matter_2_5(self) -> StateType:
+    def particulate_matter_2_5(self) -> float | None:
         """Return the particulate matter 2.5 level."""
         return round_state(self._get_sensor_value(API_PM25))
 
     @property
-    def particulate_matter_10(self) -> StateType:
+    def particulate_matter_10(self) -> float | None:
         """Return the particulate matter 10 level."""
         return round_state(self._get_sensor_value(API_PM10))
 
     @property
-    def ozone(self) -> StateType:
+    def ozone(self) -> float | None:
         """Return the O3 (ozone) level."""
         return round_state(self._get_sensor_value(API_O3))
 
     @property
-    def carbon_monoxide(self) -> StateType:
+    def carbon_monoxide(self) -> float | None:
         """Return the CO (carbon monoxide) level."""
         return round_state(self._get_sensor_value(API_CO))
 
     @property
-    def sulphur_dioxide(self) -> StateType:
+    def sulphur_dioxide(self) -> float | None:
         """Return the SO2 (sulphur dioxide) level."""
         return round_state(self._get_sensor_value(API_SO2))
 
     @property
-    def nitrogen_dioxide(self) -> StateType:
+    def nitrogen_dioxide(self) -> float | None:
         """Return the NO2 (nitrogen dioxide) level."""
         return round_state(self._get_sensor_value(API_NO2))
 
@@ -152,7 +152,7 @@ class GiosAirQuality(CoordinatorEntity, AirQualityEntity):
         return None
 
 
-def round_state(state: StateType) -> StateType:
+def round_state(state: float | None) -> float | None:
     """Round state."""
     if isinstance(state, float):
         return round(state)
