@@ -51,8 +51,6 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
-
 
 @pytest.fixture(name="mock_media_seek")
 def media_player_media_seek_fixture():
@@ -420,16 +418,16 @@ async def test_service_calls(hass, mock_media_seek):
     await hass.async_block_till_done()
     assert hass.states.get("media_player.kitchen").state == STATE_OFF
 
-    calls = async_mock_service(hass, MEDIA_DOMAIN, SERVICE_MEDIA_STOP)
-    assert len(calls) == 0
-
     await hass.services.async_call(
         MEDIA_DOMAIN,
         SERVICE_MEDIA_STOP,
         {ATTR_ENTITY_ID: "media_player.media_group"},
+        blocking=True,
     )
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert hass.states.get("media_player.bedroom").state == STATE_OFF
+    assert hass.states.get("media_player.kitchen").state == STATE_OFF
+    assert hass.states.get("media_player.living_room").state == STATE_OFF
 
 
 async def test_nested_group(hass):
