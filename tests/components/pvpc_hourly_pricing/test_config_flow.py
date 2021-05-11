@@ -2,12 +2,11 @@
 from datetime import datetime
 from unittest.mock import patch
 
-from pytz import timezone
-
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.pvpc_hourly_pricing import ATTR_TARIFF, DOMAIN
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .conftest import check_valid_state
 
@@ -26,7 +25,7 @@ async def test_config_flow(
     - Check abort when trying to config another with same tariff
     - Check removal and add again to check state restoration
     """
-    hass.config.time_zone = timezone("Europe/Madrid")
+    hass.config.time_zone = dt_util.get_time_zone("Europe/Madrid")
     mock_data = {"return_time": datetime(2019, 10, 26, 14, 0, tzinfo=date_util.UTC)}
 
     def mock_now():

@@ -2,12 +2,11 @@
 import dataclasses
 import re
 
-from gogogate2_api.common import AbstractInfoResponse, ApiError
-from gogogate2_api.const import GogoGate2ApiErrorCode, ISmartGateApiErrorCode
+from ismartgate.common import AbstractInfoResponse, ApiError
+from ismartgate.const import GogoGate2ApiErrorCode, ISmartGateApiErrorCode
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_IP_ADDRESS,
@@ -23,18 +22,11 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
     """Gogogate2 config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the config flow."""
         self._ip_address = None
         self._device_type = None
-
-    async def async_step_import(self, config_data: dict = None):
-        """Handle importing of configuration."""
-        result = await self.async_step_user(config_data)
-        self._abort_if_unique_id_configured()
-        return result
 
     async def async_step_homekit(self, discovery_info):
         """Handle homekit discovery."""
@@ -57,7 +49,7 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
-            api = get_api(user_input)
+            api = get_api(self.hass, user_input)
             try:
                 data: AbstractInfoResponse = await api.async_info()
                 data_dict = dataclasses.asdict(data)
@@ -92,9 +84,6 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
 
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "cannot_connect"
-
-        if errors and self.source == SOURCE_IMPORT:
-            return self.async_abort(reason="cannot_connect")
 
         return self.async_show_form(
             step_id="user",

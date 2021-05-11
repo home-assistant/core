@@ -10,7 +10,7 @@
         "flow_title": "SiteSage {name}",
         "step": {
             "confirm": {
-                "description": "Wilt u {name} ( {host} ) instellen?",
+                "description": "Wilt u {name} ({host}) instellen?",
                 "title": "SiteSage Emonitor instellen"
             },
             "user": {

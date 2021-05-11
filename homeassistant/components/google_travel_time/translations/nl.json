@@ -11,6 +11,7 @@
                 "data": {
                     "api_key": "API-sleutel",
                     "destination": "Bestemming",
+                    "name": "Naam",
                     "origin": "Vertrekpunt"
                 },
                 "description": "Wanneer u de oorsprong en bestemming opgeeft, kunt u een of meer locaties opgeven, gescheiden door het pijp-symbool, in de vorm van een adres, lengte- / breedtegraadco\u00f6rdinaten of een Google-plaats-ID. Wanneer u de locatie opgeeft met behulp van een Google-plaats-ID, moet de ID worden voorafgegaan door `place_id:`."
@@ -26,11 +27,11 @@
                     "mode": "Reiswijze",
                     "time": "Tijd",
                     "time_type": "Tijd Type",
-                    "transit_mode": "Transitmodus",
-                    "transit_routing_preference": "Transit Route Voorkeur",
+                    "transit_mode": "Vervoersmodus",
+                    "transit_routing_preference": "Voorkeur vervoer route",
                     "units": "Eenheden"
                 },
-                "description": "U kunt optioneel een vertrektijd of aankomsttijd opgeven. Als u een vertrektijd opgeeft, kunt u 'nu', een Unix-tijdstempel of een 24-uurs tijdreeks zoals '08: 00: 00' invoeren. Als u een aankomsttijd specificeert, kunt u een Unix-tijdstempel of een 24-uurs tijdreeks gebruiken, zoals '08: 00: 00'"
+                "description": "U kunt optioneel een vertrektijd of aankomsttijd opgeven. Als u een vertrektijd opgeeft, kunt u 'now', een Unix-tijdstempel of een 24-uurs tijdreeks zoals '08:00:00' invoeren. Als u een aankomsttijd specificeert, kunt u een Unix-tijdstempel of een 24-uurs tijdreeks gebruiken, zoals '08:00:00'"
             }
         }
     },

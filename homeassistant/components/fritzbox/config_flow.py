@@ -1,4 +1,4 @@
-"""Config flow for AVM Fritz!Box."""
+"""Config flow for AVM FRITZ!SmartHome."""
 from urllib.parse import urlparse
 
 from pyfritzhome import Fritzhome, LoginError
@@ -37,10 +37,9 @@ RESULT_SUCCESS = "success"
 
 
 class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a AVM Fritz!Box config flow."""
+    """Handle a AVM FRITZ!SmartHome config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize flow."""

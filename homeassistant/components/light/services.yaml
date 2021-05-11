@@ -20,9 +20,23 @@ turn_on:
           mode: slider
     rgb_color:
       name: RGB-color
-      description: Color for the light in RGB-format.
+      description: A list containing three integers between 0 and 255 representing the RGB (red, green, blue) color for the light.
       advanced: true
       example: "[255, 100, 100]"
+      selector:
+        object:
+    rgbw_color:
+      name: RGBW-color
+      description: A list containing four integers between 0 and 255 representing the RGBW (red, green, blue, white) color for the light.
+      advanced: true
+      example: "[255, 100, 100, 50]"
+      selector:
+        object:
+    rgbww_color:
+      name: RGBWW-color
+      description: A list containing five integers between 0 and 255 representing the RGBWW (red, green, blue, cold white, warm white) color for the light.
+      advanced: true
+      example: "[255, 100, 100, 50, 70]"
       selector:
         object:
     color_name:
@@ -220,17 +234,6 @@ turn_on:
           max: 6500
           step: 100
           unit_of_measurement: K
-          mode: slider
-    white_value:
-      name: White level
-      description: Number between 0..255 indicating level of white.
-      advanced: true
-      example: "250"
-      selector:
-        number:
-          min: 0
-          max: 255
-          step: 1
           mode: slider
     brightness:
       name: Brightness value

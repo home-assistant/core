@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Der Dienst ist bereits konfiguriert"
+            "already_configured": "Der Dienst ist bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
@@ -9,6 +10,11 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Passwort",

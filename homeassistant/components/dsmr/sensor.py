@@ -7,7 +7,6 @@ from contextlib import suppress
 from datetime import timedelta
 from functools import partial
 import logging
-from typing import Any
 
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
@@ -24,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import Throttle
 
 from .const import (
@@ -362,7 +362,7 @@ class DSMREntity(SensorEntity):
         return self._unique_id
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._device_serial)},

@@ -5,8 +5,9 @@
             "incomplete_discovery": "Incomplete discovery",
             "no_devices_found": "No devices found on the network"
         },
-        "flow_title": "UPnP/IGD: {name}",
+        "flow_title": "{name}",
         "step": {
+            "init": {},
             "ssdp_confirm": {
                 "description": "Do you want to set up this UPnP/IGD device?"
             },

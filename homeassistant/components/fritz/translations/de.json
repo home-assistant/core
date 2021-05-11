@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+        },
+        "error": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "connection_error": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+        },
+        "flow_title": "FRITZ! Box Tools: {name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Entdeckte FRITZ! Box: {name} \n\n Richten Sie FRITZ! Box Tools ein, um {name} zu kontrollieren",
+                "title": "FRITZ! Box Tools einrichten"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Aktualisieren Sie die Anmeldeinformationen von FRITZ! Box Tools f\u00fcr: {host} . \n\n FRITZ! Box Tools kann sich nicht bei Ihrer FRITZ! Box anmelden.",
+                "title": "Aktualisieren der FRITZ! Box Tools - Anmeldeinformationen"
+            },
+            "start_config": {
+                "data": {
+                    "host": "Host",
+                    "password": "Passwort",
+                    "port": "Port",
+                    "username": "Benutzername"
+                },
+                "description": "Einrichten der FRITZ! Box Tools zur Steuerung Ihrer FRITZ! Box.\n Ben\u00f6tigt: Benutzername, Passwort.",
+                "title": "Setup FRITZ! Box Tools - obligatorisch"
+            }
+        }
+    }
+}

@@ -12,11 +12,14 @@
         "step": {
             "user": {
                 "data": {
+                    "group": "Gruppe",
                     "host": "Host",
                     "password": "Passwort",
                     "ssl": "Verwendet ein SSL-Zertifikat",
                     "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
-                }
+                },
+                "description": "Geben Sie Ihre SMA-Ger\u00e4teinformationen ein.",
+                "title": "Richten Sie SMA Solar ein"
             }
         }
     }

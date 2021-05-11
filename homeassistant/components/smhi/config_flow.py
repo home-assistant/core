@@ -21,12 +21,10 @@ def smhi_locations(hass: HomeAssistant):
     }
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class SmhiFlowHandler(config_entries.ConfigFlow):
+class SmhiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for SMHI component."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self) -> None:
         """Initialize SMHI forecast configuration flow."""
