@@ -1,8 +1,5 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 from datetime import timedelta
-from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.core import HomeAssistant
 import logging
 
 import requests
@@ -11,7 +8,10 @@ import voluptuous as vol
 
 from homeassistant.components.honeywell.sensor import HoneywellUSSensor
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from .const import (
@@ -40,14 +40,14 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(
                     CONF_HEAT_AWAY_TEMPERATURE, default=DEFAULT_HEAT_AWAY_TEMPERATURE
                 ): vol.Coerce(int),
-                vol.Optional(CONF_REGION): cv.string,
                 vol.Optional(CONF_DEV_ID): cv.string,
-                vol.Optional(CONF_LOC_ID): cv.string
+                vol.Optional(CONF_LOC_ID): cv.string,
             }
         )
     },
     extra=vol.ALLOW_EXTRA,
 )
+
 
 def setup(hass: HomeAssistant, config: ConfigType):
     """Set up the Honeywell thermostat."""
@@ -67,14 +67,13 @@ def setup(hass: HomeAssistant, config: ConfigType):
         )
         return
 
-    dev_id = None #config[DOMAIN][CONF_DEV_ID]
-    loc_id = None #config[DOMAIN][CONF_LOC_ID]
+    loc_id = config[DOMAIN].get(CONF_LOC_ID)
+    dev_id = config[DOMAIN].get(CONF_DEV_ID)
 
     for location in client.locations_by_id.values():
         for device in location.devices_by_id.values():
-            if (
-                (not loc_id or location.locationid == loc_id)
-                and (not dev_id or device.deviceid == dev_id)
+            if (not loc_id or location.locationid == loc_id) and (
+                not dev_id or device.deviceid == dev_id
             ):
                 hass.data[DOMAIN] = {}
                 hass.data[DOMAIN]["device"] = device
@@ -82,6 +81,7 @@ def setup(hass: HomeAssistant, config: ConfigType):
                 load_platform(hass, "sensor", DOMAIN, {}, config)
 
     return True
+
 
 class HoneywellData:
     """Get the latest data and update."""

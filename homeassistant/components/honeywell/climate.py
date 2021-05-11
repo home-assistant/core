@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import datetime
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.core import HomeAssistant
 import logging
 from typing import Any
 
@@ -39,8 +37,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,34 +83,20 @@ SENSOR_TYPES = {
     "humidity": ["Humidity", PERCENTAGE],
 }
 
+
 def setup_platform(
     hass: HomeAssistant, config: ConfigType, add_entities, discovery_info=None
 ) -> None:
     """Set up the Honeywell thermostat."""
-    # TODO: Find out how to default these optional config items
-    # cool_away_temp = None #config[DOMAIN][CONF_COOL_AWAY_TEMPERATURE]
-    # heat_away_temp = None #config[DOMAIN][CONF_HEAT_AWAY_TEMPERATURE]
+    add_entities([HoneywellUSThermostat(hass.data[DOMAIN]["device"])])
 
-    add_entities(
-        [
-            HoneywellUSThermostat(
-                hass.data[DOMAIN]["device"],
-                None,
-                None
-            )
-        ]
-    )
 
 class HoneywellUSThermostat(ClimateEntity):
     """Representation of a Honeywell US Thermostat."""
 
-    def __init__(
-        self, device, cool_away_temp, heat_away_temp
-    ):
+    def __init__(self, device):
         """Initialize the thermostat."""
         self._device = device
-        self._cool_away_temp = cool_away_temp
-        self._heat_away_temp = heat_away_temp
         self._away = False
 
         _LOGGER.debug("latestData = %s ", device._data)
