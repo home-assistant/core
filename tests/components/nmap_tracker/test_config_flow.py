@@ -115,6 +115,41 @@ async def test_form_invalid_hosts(hass: HomeAssistant) -> None:
     assert result2["errors"] == {CONF_HOSTS: "invalid_hosts"}
 
 
+async def test_form_already_configured(hass: HomeAssistant) -> None:
+    """Test duplicate host list."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={
+            CONF_HOSTS: "192.168.0.0/20",
+            CONF_HOME_INTERVAL: 3,
+            CONF_OPTIONS: DEFAULT_OPTIONS,
+            CONF_EXCLUDE: "4.4.4.4",
+        },
+    )
+    config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOSTS: "192.168.0.0/20",
+            CONF_HOME_INTERVAL: 3,
+            CONF_OPTIONS: DEFAULT_OPTIONS,
+            CONF_EXCLUDE: "",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_configured"
+
+
 async def test_form_invalid_excludes(hass: HomeAssistant) -> None:
     """Test invalid excludes passed in."""
     await setup.async_setup_component(hass, "persistent_notification", {})
