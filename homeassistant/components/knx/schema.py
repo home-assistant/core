@@ -175,9 +175,6 @@ class ClimateSchema:
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(
-                    CONF_SETPOINT_SHIFT_MODE, default=DEFAULT_SETPOINT_SHIFT_MODE
-                ): vol.All(vol.Upper, cv.enum(SetpointShiftMode)),
-                vol.Optional(
                     CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX
                 ): vol.All(int, vol.Range(min=0, max=32)),
                 vol.Optional(
@@ -189,8 +186,21 @@ class ClimateSchema:
                 vol.Required(CONF_TEMPERATURE_ADDRESS): ga_list_validator,
                 vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): ga_list_validator,
-                vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): ga_list_validator,
-                vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): ga_list_validator,
+                vol.Inclusive(
+                    CONF_SETPOINT_SHIFT_ADDRESS,
+                    "setpoint_shift",
+                    msg="'setpoint_shift_address' and 'setpoint_shift_state_address' "
+                    "are required for setpoint_shift configuration",
+                ): ga_list_validator,
+                vol.Inclusive(
+                    CONF_SETPOINT_SHIFT_STATE_ADDRESS,
+                    "setpoint_shift",
+                    msg="'setpoint_shift_address' and 'setpoint_shift_state_address' "
+                    "are required for setpoint_shift configuration",
+                ): ga_list_validator,
+                vol.Optional(CONF_SETPOINT_SHIFT_MODE): vol.Maybe(
+                    vol.All(vol.Upper, cv.enum(SetpointShiftMode))
+                ),
                 vol.Optional(CONF_OPERATION_MODE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): ga_list_validator,
