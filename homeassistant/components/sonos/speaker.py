@@ -8,6 +8,7 @@ import datetime
 from functools import partial
 import logging
 from typing import Any, Callable
+import urllib.parse
 
 import async_timeout
 from pysonos.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
@@ -792,7 +793,10 @@ class SonosSpeaker:
                 or (
                     isinstance(self.media.title, str)
                     and isinstance(self.media.uri, str)
-                    and self.media.title in self.media.uri
+                    and (
+                        self.media.title in self.media.uri
+                        or self.media.title in urllib.parse.unquote(self.media.uri)
+                    )
                 )
             ):
                 self.media.title = uri_meta_data.title
