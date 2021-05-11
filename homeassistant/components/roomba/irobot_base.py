@@ -100,6 +100,7 @@ class IRobotEntity(Entity):
             "sw_version": self._version,
             "model": self._sku,
         }
+        _LOGGER.warning("vacuum_state: %s", self.vacuum_state)
         if mac_address := self.vacuum_state.get("mac"):
             info["connections"] = {(dr.CONNECTION_NETWORK_MAC, mac_address)}
         return info
