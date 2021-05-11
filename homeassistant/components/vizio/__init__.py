@@ -117,7 +117,7 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator):
                 _LOGGER.warning(
                     (
                         "Unable to retrieve the apps list from the external server "
-                        "for %s days straight. Please open a GH issue so the codeowner"
+                        "for %s days straight. Please open an issue so the codeowner"
                         "can investigate."
                     ),
                     self.fail_threshold,
