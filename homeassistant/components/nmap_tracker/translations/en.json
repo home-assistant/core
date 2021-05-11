@@ -9,7 +9,7 @@
         "step": {
             "user": {
                 "data": {
-                    "exclude": "Hosts (comma seperated) to exclude from scanning.",
+                    "exclude": "Network addresses (comma seperated) to exclude from scanning.",
                     "home_interval": "Minimum number of minutes between scans of active devices (preserve battery).",
                     "hosts": "Network addresses (comma seperated) to scan.",
                     "scan_options": "Raw configurable scan options for Nmap."
@@ -25,7 +25,7 @@
         "step": {
             "init": {
                 "data": {
-                    "exclude": "Hosts (comma seperated) to exclude from scanning.",
+                    "exclude": "Network addresses (comma seperated) to exclude from scanning.",
                     "home_interval": "Minimum number of minutes between scans of active devices (preserve battery).",
                     "hosts": "Network addresses (comma seperated) to scan.",
                     "scan_options": "Raw configurable scan options for Nmap."
