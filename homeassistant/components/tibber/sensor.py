@@ -107,7 +107,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         if home.has_active_subscription:
             dev.append(TibberSensorElPrice(home))
         if home.has_real_time_consumption:
-            dev.append(TibberSensorRT(home))
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START,
                 TibberRtDataHandler(async_add_entities, home, hass).hass_started,
