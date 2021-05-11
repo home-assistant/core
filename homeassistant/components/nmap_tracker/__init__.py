@@ -32,6 +32,7 @@ from .const import (
 # Some version of nmap will fail with 'Assertion failed: htn.toclock_running == true (Target.cc: stopTimeOutClock: 503)\n'
 NMAP_TRANSIENT_FAILURE = "Assertion failed: htn.toclock_running == true"
 MAX_SCAN_ATTEMPTS = 10
+OFFLINE_SCANS_TO_MARK_UNAVAILABLE = 3
 
 
 @dataclass
@@ -44,6 +45,7 @@ class NmapDevice:
     manufacturer: str
     reason: str
     last_update: datetime.datetime
+    offline_scans: int
 
 
 class NmapTrackedDevices:
@@ -255,11 +257,18 @@ class NmapDeviceScanner:
         )
         return result
 
-    def _mark_ip_offline(self, ipv4, reason, dispatches):
+    def _increment_device_offline(self, ipv4, reason, dispatches):
         """Mark an IP offline."""
-        if formatted_mac := self.devices.ipv4_last_mac.pop(ipv4, None):
-            self.devices.tracked[formatted_mac].reason = reason
-            dispatches.append((signal_device_update(formatted_mac), False))
+        if ipv4 not in self.devices.ipv4_last_mac:
+            return
+        formatted_mac = self.devices.ipv4_last_mac[ipv4]
+        device = self.devices.tracked[formatted_mac]
+        device.offline_scans += 1
+        if device.offline_scans < OFFLINE_SCANS_TO_MARK_UNAVAILABLE:
+            return
+        device.reason = reason
+        dispatches.append((signal_device_update(formatted_mac), False))
+        del self.devices.ipv4_last_mac[ipv4]
 
     def _start_nmap_scan(self):
         """Scan the network for devices.
@@ -278,12 +287,12 @@ class NmapDeviceScanner:
             status = info["status"]
             reason = status["reason"]
             if status["state"] != "up":
-                self._mark_ip_offline(ipv4, reason, dispatches)
+                self._increment_device_offline(ipv4, reason, dispatches)
                 continue
             # Mac address only returned if nmap ran as root
             mac = info["addresses"].get("mac") or get_mac_address(ip=ipv4)
             if mac is None:
-                self._mark_ip_offline(ipv4, "No MAC address found", dispatches)
+                self._increment_device_offline(ipv4, "No MAC address found", dispatches)
                 _LOGGER.info("No MAC address found for %s", ipv4)
                 continue
 
@@ -299,7 +308,7 @@ class NmapDeviceScanner:
             vendor = info.get("vendor", {}).get(mac) or self._get_vendor(
                 self._mac_vendor_lookup.sanitise(mac)[:6]
             )
-            device = NmapDevice(formatted_mac, name, ipv4, vendor, reason, now)
+            device = NmapDevice(formatted_mac, name, ipv4, vendor, reason, now, 0)
             if formatted_mac not in devices.tracked:
                 dispatches.append((self.signal_device_new, formatted_mac))
             dispatches.append((signal_device_update(formatted_mac), True))
