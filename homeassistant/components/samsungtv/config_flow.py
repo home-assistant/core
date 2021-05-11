@@ -65,6 +65,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Samsung TV config flow."""
 
     VERSION = 2
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize flow."""
@@ -100,8 +101,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Set device unique_id."""
 
         await self._async_get_and_check_device_info()
-
-        LOGGER.debug("_device_info: %s", self._device_info)
 
         if uuid := self._device_info.get("device", {}).get(ATTR_UPNP_UDN.lower()):
             self._id = uuid
@@ -146,7 +145,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
         self._model = dev_info.get("modelName")
         self._manufacturer = "Samsung"
-        self._name = dev_info.get("name")
+        self._name = dev_info.get("name").replace("[TV]", "")
         self._title = f"{self._name} ({self._model})"
         if dev_info.get("networkType") == "wireless":
             self._mac = dev_info.get("wifiMac")
