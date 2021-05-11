@@ -6,7 +6,7 @@ from collections.abc import Coroutine
 import zigpy.zcl.clusters.smartenergy as smartenergy
 
 from homeassistant.const import (
-    POWER_WATT,
+    ENERGY_KILO_WATT_HOUR,
     TIME_HOURS,
     TIME_SECONDS,
     VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
@@ -63,10 +63,10 @@ class Messaging(ZigbeeChannel):
 class Metering(ZigbeeChannel):
     """Metering channel."""
 
-    REPORT_CONFIG = [{"attr": "instantaneous_demand", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG = [{"attr": "current_summ_delivered", "config": REPORT_CONFIG_DEFAULT}]
 
     unit_of_measure_map = {
-        0x00: POWER_WATT,
+        0x00: ENERGY_KILO_WATT_HOUR,
         0x01: VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
         0x02: VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE,
         0x03: f"ccf/{TIME_HOURS}",
@@ -122,16 +122,18 @@ class Metering(ZigbeeChannel):
     async def fetch_config(self, from_cache: bool) -> None:
         """Fetch config from device and updates format specifier."""
         results = await self.get_attributes(
-            ["divisor", "multiplier", "unit_of_measure", "demand_formatting"],
+            ["divisor", "multiplier", "unit_of_measure", "summa_formatting"],
             from_cache=from_cache,
         )
 
         fmting = results.get(
-            "demand_formatting", 0xF9
+            "summa_formatting", 0xF9
         )  # 1 digit to the right, 15 digits to the left
 
         r_digits = int(fmting & 0x07)  # digits to the right of decimal point
         l_digits = (fmting >> 3) & 0x0F  # digits to the left of decimal point
+        if r_digits == 0:
+            r_digits = 2
         if l_digits == 0:
             l_digits = 15
         width = r_digits + l_digits + (1 if r_digits > 0 else 0)
