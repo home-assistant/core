@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -196,6 +197,7 @@ class RainMachineEntity(CoordinatorEntity):
         """Return device registry information for this entity."""
         return {
             "identifiers": {(DOMAIN, self._controller.mac)},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self._controller.mac)},
             "name": self._controller.name,
             "manufacturer": "RainMachine",
             "model": (
