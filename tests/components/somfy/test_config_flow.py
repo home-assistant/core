@@ -44,8 +44,7 @@ async def test_full_flow(
             DOMAIN: {
                 CONF_CLIENT_ID: CLIENT_ID_VALUE,
                 CONF_CLIENT_SECRET: CLIENT_SECRET_VALUE,
-            },
-            "http": {"base_url": "https://example.com"},
+            }
         },
     )
 
