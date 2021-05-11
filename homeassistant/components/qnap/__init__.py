@@ -47,13 +47,13 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set the config entry up."""
     host = config_entry.data[CONF_HOST]
-    protocol = "https" if config_entry.options.get(CONF_SSL) else "http"
+    protocol = "https" if config_entry.data.get(CONF_SSL) else "http"
     api = QNAPStats(
         host=f"{protocol}://{host}",
         port=config_entry.data.get(CONF_PORT, DEFAULT_PORT),
         username=config_entry.data[CONF_USERNAME],
         password=config_entry.data[CONF_PASSWORD],
-        verify_ssl=config_entry.options.get(CONF_VERIFY_SSL),
+        verify_ssl=config_entry.data.get(CONF_VERIFY_SSL),
         timeout=DEFAULT_TIMEOUT,
     )
 
