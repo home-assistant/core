@@ -12,6 +12,7 @@ from zwave_js_server import dump
 from zwave_js_server.client import Client
 from zwave_js_server.const import CommandClass, LogLevel
 from zwave_js_server.exceptions import InvalidNewValue, NotFoundError, SetValueFailed
+from zwave_js_server.firmware import begin_firmware_update
 from zwave_js_server.model.firmware import (
     FirmwareUpdateFinished,
     FirmwareUpdateProgress,
@@ -1129,6 +1130,7 @@ class FirmwareUploadView(HomeAssistantView):
         if config_entry_id not in hass.data[DOMAIN]:
             raise web_exceptions.HTTPBadRequest
 
+        entry = hass.config_entries.async_get_entry(config_entry_id)
         client = hass.data[DOMAIN][config_entry_id][DATA_CLIENT]
         node = client.driver.controller.nodes.get(int(node_id))
         if not node:
@@ -1144,9 +1146,12 @@ class FirmwareUploadView(HomeAssistantView):
 
         uploaded_file: web_request.FileField = data["file"]
 
-        status = await node.async_begin_firmware_update_guess_format(
+        status = await begin_firmware_update(
+            entry.data[CONF_URL],
+            node,
             uploaded_file.filename,
             await hass.async_add_executor_job(uploaded_file.file.read),
+            async_get_clientsession(hass),
         )
 
         return self.json(status)

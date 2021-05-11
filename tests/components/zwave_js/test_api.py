@@ -1130,14 +1130,14 @@ async def test_firmware_upload_view(
     """Test the HTTP firmware upload view."""
     client = await hass_client()
     with patch(
-        "zwave_js_server.model.node.Node.async_begin_firmware_update_guess_format",
+        "homeassistant.components.zwave_js.api.begin_firmware_update",
         return_value={"hello": "world"},
     ) as mock_cmd:
         resp = await client.post(
             f"/api/zwave_js/firmware/upload/{integration.entry_id}/{multisensor_6.node_id}",
             data={"file": firmware_file},
         )
-        assert mock_cmd.call_args[0] == ("file", bytes(10))
+        assert mock_cmd.call_args[0][1:4] == (multisensor_6, "file", bytes(10))
         assert json.loads(await resp.text()) == {"hello": "world"}
 
 
