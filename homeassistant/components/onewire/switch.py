@@ -185,7 +185,7 @@ def get_entities(onewirehub: OneWireHub) -> list[OneWireBaseEntity]:
         }
         for entity_specs in DEVICE_SWITCHES[family]:
             entity_path = os.path.join(
-                os.path.split(device["path"])[0], str(entity_specs["path"])
+                os.path.split(device["path"])[0], entity_specs["path"]
             )
             entities.append(
                 OneWireProxySwitch(
@@ -207,9 +207,7 @@ class OneWireProxySwitch(OneWireProxyEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
-        if self._state:
-            return True
-        return False
+        return bool(self._state)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""

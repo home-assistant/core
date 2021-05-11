@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_MOUNT_DIR, CONF_TYPE_OWSERVER, CONF_TYPE_SYSBUS
+from .model import OWServerDeviceDescription
 
 DEVICE_COUPLERS = {
     # Family : [branches]
@@ -69,7 +70,9 @@ class OneWireHub:
                     self._discover_devices_owserver
                 )
 
-    def _discover_devices_owserver(self, path: str = "/") -> list:
+    def _discover_devices_owserver(
+        self, path: str = "/"
+    ) -> list[OWServerDeviceDescription]:
         """Discover all owserver devices."""
         devices = []
         assert self.owproxy

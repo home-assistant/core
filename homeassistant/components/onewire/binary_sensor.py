@@ -120,7 +120,7 @@ def get_entities(onewirehub: OneWireHub) -> list[OneWireBaseEntity]:
         }
         for entity_specs in DEVICE_BINARY_SENSORS[family]:
             entity_path = os.path.join(
-                os.path.split(device["path"])[0], str(entity_specs["path"])
+                os.path.split(device["path"])[0], entity_specs["path"]
             )
             entities.append(
                 OneWireProxyBinarySensor(
@@ -142,6 +142,4 @@ class OneWireProxyBinarySensor(OneWireProxyEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if sensor is on."""
-        if self._state:
-            return True
-        return False
+        return bool(self._state)

@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.typing import DiscoveryInfoType, StateType
 
 from .const import (
     CONF_MOUNT_DIR,
@@ -244,7 +244,7 @@ async def async_setup_platform(
     hass: HomeAssistant,
     config: dict[str, Any],
     async_add_entities: AddEntitiesCallback,
-    discovery_info: None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Old way of setting up 1-Wire platform."""
     _LOGGER.warning(
