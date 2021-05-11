@@ -96,7 +96,11 @@ class NmapTrackerEntity(ScannerEntity):
     @property
     def name(self) -> str:
         """Return device name."""
-        return self._device.hostname
+        if self._device.hostname:
+            return short_hostname(self._device.hostname)
+        if self._device.manufacturer:
+            return f"{self._device.manufacturer} {self._mac_address[:6]}"
+        return f"Nmap Tracker {self._mac_address}"
 
     @property
     def unique_id(self) -> str:
