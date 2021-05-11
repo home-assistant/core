@@ -46,6 +46,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_REPEAT_SET,
     SUPPORT_SELECT_SOUND_MODE,
@@ -485,6 +486,9 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         ):
             flags |= SUPPORT_SELECT_SOURCE
 
+        if SERVICE_PLAY_MEDIA in self._cmds:
+            flags |= SUPPORT_PLAY_MEDIA
+
         if SERVICE_CLEAR_PLAYLIST in self._cmds:
             flags |= SUPPORT_CLEAR_PLAYLIST
 
@@ -561,7 +565,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     async def async_media_seek(self, position):
         """Send seek command."""
         data = {ATTR_MEDIA_SEEK_POSITION: position}
-        await self._async_call_service(SERVICE_MEDIA_SEEK, data, allow_override=True)
+        await self._async_call_service(SERVICE_MEDIA_SEEK, data)
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
