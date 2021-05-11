@@ -126,7 +126,7 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator):
                 self.fail_threshold += 10
             else:
                 self.fail_count += 1
-            return APPS
+            return self.data
         self.fail_count = 0
         self.fail_threshold = 10
         return sorted(data, key=lambda app: app["name"])
