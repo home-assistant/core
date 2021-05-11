@@ -136,7 +136,6 @@ class NmapDeviceScanner:
             minutes=cv.positive_int(config[CONF_HOME_INTERVAL])
         )
         self._scan_lock = asyncio.Lock()
-        self._scanner = PortScanner()
         if self._hass.state == CoreState.running:
             self._async_start_scanner()
             return
@@ -227,6 +226,8 @@ class NmapDeviceScanner:
         options = self._build_options()
         if not self._mac_vendor_lookup:
             self._mac_vendor_lookup = MacLookup()
+        if not self._scanner:
+            self._scanner = PortScanner()
         _LOGGER.debug("Scanning %s with args: %s", self._hosts, options)
         result = self._scanner.scan(
             hosts=" ".join(self._hosts),
