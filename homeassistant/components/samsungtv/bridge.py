@@ -176,10 +176,6 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         """Try to gather infos of this device."""
         return None
 
-    def device_info(self):
-        """Try to gather infos of this device."""
-        return None
-
     def _get_remote(self, avoid_open: bool = False):
         """Create or return a remote control instance."""
         if self._remote is None:
@@ -252,14 +248,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 return result
 
         return RESULT_CANNOT_CONNECT
-
-    def device_info(self):
-        """Try to gather infos of this TV."""
-        remote = self._get_remote(avoid_open=True)
-        if not remote:
-            return None
-        with contextlib.suppress(HttpApiError):
-            return remote.rest_device_info()
 
     def device_info(self):
         """Try to gather infos of this TV."""

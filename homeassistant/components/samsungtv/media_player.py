@@ -114,18 +114,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     bridge.stop()
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Unload Samsung TV config entry."""
-    data = config_entry.data.copy()
-    bridge = SamsungTVBridge.get_bridge(
-        data[CONF_METHOD],
-        data[CONF_HOST],
-        data[CONF_PORT],
-        data.get(CONF_TOKEN),
-    )
-    bridge.stop()
-
-
 class SamsungTVDevice(MediaPlayerEntity):
     """Representation of a Samsung TV."""
 
