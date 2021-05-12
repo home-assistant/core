@@ -182,7 +182,7 @@ aiohomekit==0.2.61
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==2.3.0
+aiohue==2.3.1
 
 # homeassistant.components.imap
 aioimaplib==0.7.15
@@ -1822,7 +1822,7 @@ python-izone==1.1.4
 python-join-api==0.0.6
 
 # homeassistant.components.juicenet
-python-juicenet==1.0.1
+python-juicenet==1.0.2
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3

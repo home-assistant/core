@@ -119,7 +119,7 @@ aiohomekit==0.2.61
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==2.3.0
+aiohue==2.3.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
@@ -998,7 +998,7 @@ python-forecastio==1.4.0
 python-izone==1.1.4
 
 # homeassistant.components.juicenet
-python-juicenet==1.0.1
+python-juicenet==1.0.2
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.6
