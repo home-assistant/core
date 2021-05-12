@@ -1,5 +1,6 @@
 """Constants for the motionEye integration."""
 from datetime import timedelta
+from typing import Final
 
 from motioneye_client.const import (
     KEY_WEB_HOOK_CS_CAMERA_ID,
@@ -22,15 +23,15 @@ from motioneye_client.const import (
     KEY_WEB_HOOK_CS_WIDTH,
 )
 
-DOMAIN = "motioneye"
+DOMAIN: Final = "motioneye"
 
-API_PATH_ROOT = f"/api/{DOMAIN}"
-API_PATH_DEVICE_ROOT = f"{API_PATH_ROOT}/device/"
+API_PATH_ROOT: Final = f"/api/{DOMAIN}"
+API_PATH_DEVICE_ROOT: Final = f"{API_PATH_ROOT}/device/"
 
-EVENT_MOTION_DETECTED = "motion_detected"
-EVENT_FILE_STORED = "file_stored"
+EVENT_MOTION_DETECTED: Final = "motion_detected"
+EVENT_FILE_STORED: Final = "file_stored"
 
-API_PATH_EVENT_REGEXP = (
+API_PATH_EVENT_REGEXP: Final = (
     API_PATH_DEVICE_ROOT
     + r"{device_id:[-:_a-zA-Z0-9]+}/"
     + r"{event:"
@@ -38,20 +39,20 @@ API_PATH_EVENT_REGEXP = (
     + r"}"
 )
 
-CONF_CLIENT = "client"
-CONF_COORDINATOR = "coordinator"
-CONF_ADMIN_PASSWORD = "admin_password"
-CONF_ADMIN_USERNAME = "admin_username"
-CONF_SURVEILLANCE_USERNAME = "surveillance_username"
-CONF_SURVEILLANCE_PASSWORD = "surveillance_password"
-CONF_WEBHOOK_SET = "webhook_set"
-CONF_WEBHOOK_SET_OVERWRITE = "webhook_set_overwrite"
+CONF_CLIENT: Final = "client"
+CONF_COORDINATOR: Final = "coordinator"
+CONF_ADMIN_PASSWORD: Final = "admin_password"
+CONF_ADMIN_USERNAME: Final = "admin_username"
+CONF_SURVEILLANCE_USERNAME: Final = "surveillance_username"
+CONF_SURVEILLANCE_PASSWORD: Final = "surveillance_password"
+CONF_WEBHOOK_SET: Final = "webhook_set"
+CONF_WEBHOOK_SET_OVERWRITE: Final = "webhook_set_overwrite"
 
-DEFAULT_WEBHOOK_SET = True
-DEFAULT_WEBHOOK_SET_OVERWRITE = False
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
+DEFAULT_WEBHOOK_SET: Final = True
+DEFAULT_WEBHOOK_SET_OVERWRITE: Final = False
+DEFAULT_SCAN_INTERVAL: Final = timedelta(seconds=30)
 
-EVENT_MOTION_DETECTED_KEYS = [
+EVENT_MOTION_DETECTED_KEYS: Final = [
     KEY_WEB_HOOK_CS_EVENT,
     KEY_WEB_HOOK_CS_FRAME_NUMBER,
     KEY_WEB_HOOK_CS_CAMERA_ID,
@@ -70,7 +71,7 @@ EVENT_MOTION_DETECTED_KEYS = [
     KEY_WEB_HOOK_CS_MOTION_VERSION,
 ]
 
-EVENT_FILE_STORED_KEYS = [
+EVENT_FILE_STORED_KEYS: Final = [
     KEY_WEB_HOOK_CS_EVENT,
     KEY_WEB_HOOK_CS_FRAME_NUMBER,
     KEY_WEB_HOOK_CS_CAMERA_ID,
@@ -85,12 +86,12 @@ EVENT_FILE_STORED_KEYS = [
     KEY_WEB_HOOK_CS_MOTION_VERSION,
 ]
 
-MOTIONEYE_MANUFACTURER = "motionEye"
+MOTIONEYE_MANUFACTURER: Final = "motionEye"
 
-SIGNAL_CAMERA_ADD = f"{DOMAIN}_camera_add_signal." "{}"
-SIGNAL_CAMERA_REMOVE = f"{DOMAIN}_camera_remove_signal." "{}"
+SIGNAL_CAMERA_ADD: Final = f"{DOMAIN}_camera_add_signal." "{}"
+SIGNAL_CAMERA_REMOVE: Final = f"{DOMAIN}_camera_remove_signal." "{}"
 
-TYPE_MOTIONEYE_MJPEG_CAMERA = "motioneye_mjpeg_camera"
+TYPE_MOTIONEYE_MJPEG_CAMERA: Final = "motioneye_mjpeg_camera"
 
-WEB_HOOK_SENTINEL_KEY = "src"
-WEB_HOOK_SENTINEL_VALUE = "hass-motioneye"
+WEB_HOOK_SENTINEL_KEY: Final = "src"
+WEB_HOOK_SENTINEL_VALUE: Final = "hass-motioneye"

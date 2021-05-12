@@ -199,7 +199,7 @@ class MotionEyeOptionsFlow(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        schema: dict[Any, Any] = {
+        schema: dict[vol.Marker, type] = {
             vol.Required(
                 CONF_WEBHOOK_SET,
                 default=self._config_entry.options.get(
