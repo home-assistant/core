@@ -1,0 +1,115 @@
+"""The tests for sensor recorder platform."""
+# pylint: disable=protected-access,invalid-name
+from datetime import timedelta
+from unittest.mock import patch, sentinel
+
+import pytest
+
+from homeassistant.components.recorder import history
+from homeassistant.components.recorder.const import DATA_INSTANCE
+from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
+from homeassistant.components.recorder.statistics import statistics_during_period
+from homeassistant.setup import setup_component
+import homeassistant.util.dt as dt_util
+
+from tests.common import get_test_home_assistant, init_recorder_component
+from tests.components.recorder.common import wait_recording_done
+
+
+@pytest.fixture
+def hass_recorder():
+    """Home Assistant fixture with in-memory recorder."""
+    hass = get_test_home_assistant()
+
+    def setup_recorder(config=None):
+        """Set up with params."""
+        init_recorder_component(hass, config)
+        hass.start()
+        hass.block_till_done()
+        hass.data[DATA_INSTANCE].block_till_done()
+        return hass
+
+    yield setup_recorder
+    hass.stop()
+
+
+def test_compile_hourly_statistics(hass_recorder):
+    """Test compiling hourly statistics."""
+    # TODO: Test what happens if state is unchanged, or if state is unavailable
+    hass = hass_recorder()
+    setup_component(hass, "sensor", {})
+    zero, four, states = record_states(hass)
+    hist = history.get_significant_states(hass, zero, four)
+    assert dict(states) == dict(hist)
+
+    hass.services.call(
+        "recorder",
+        "statistics",
+        {"period": "hourly", "start": zero},
+        blocking=True,
+    )
+    wait_recording_done(hass)
+    stats = statistics_during_period(hass, zero)
+    assert stats == {
+        "sensor.test1": [
+            {
+                "statistic_id": "sensor.test1",
+                "period": "hourly",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "mean": 15.0,
+                "min": 10.0,
+                "max": 20.0,
+            }
+        ]
+    }
+
+
+def record_states(hass):
+    """Record some test states.
+
+    We inject a bunch of state updates from media player, zone and
+    thermostat.
+    """
+    mp = "media_player.test"
+    sns1 = "sensor.test1"
+    sns2 = "sensor.test2"
+    sns3 = "sensor.test3"
+    sns1_attr = {"device_class": "temperature", "state_class": "measurement"}
+    sns2_attr = {"device_class": "temperature"}
+    sns3_attr = {}
+
+    def set_state(entity_id, state, **kwargs):
+        """Set the state."""
+        hass.states.set(entity_id, state, **kwargs)
+        wait_recording_done(hass)
+        return hass.states.get(entity_id)
+
+    zero = dt_util.utcnow()
+    one = zero + timedelta(minutes=1)
+    two = one + timedelta(minutes=15)
+    three = two + timedelta(minutes=30)
+    four = three + timedelta(minutes=15)
+
+    states = {mp: [], sns1: [], sns2: [], sns3: []}
+    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=one):
+        states[mp].append(
+            set_state(mp, "idle", attributes={"media_title": str(sentinel.mt1)})
+        )
+        states[mp].append(
+            set_state(mp, "YouTube", attributes={"media_title": str(sentinel.mt2)})
+        )
+        states[sns1].append(set_state(sns1, "10", attributes=sns1_attr))
+        states[sns2].append(set_state(sns2, "10", attributes=sns2_attr))
+        states[sns3].append(set_state(sns3, "10", attributes=sns3_attr))
+
+    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=two):
+        states[sns1].append(set_state(sns1, "15", attributes=sns1_attr))
+        states[sns2].append(set_state(sns2, "15", attributes=sns2_attr))
+        states[sns3].append(set_state(sns3, "15", attributes=sns3_attr))
+
+    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=three):
+        states[sns1].append(set_state(sns1, "20", attributes=sns1_attr))
+        states[sns2].append(set_state(sns2, "20", attributes=sns2_attr))
+        states[sns3].append(set_state(sns3, "20", attributes=sns3_attr))
+
+    return zero, four, states

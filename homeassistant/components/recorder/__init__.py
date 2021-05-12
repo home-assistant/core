@@ -235,6 +235,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     instance.start()
     _async_register_services(hass, instance)
     history.async_setup(hass)
+    statistics.async_setup(hass)
     await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)
 
     return await instance.async_db_ready
