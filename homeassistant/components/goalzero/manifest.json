@@ -5,7 +5,7 @@
   "documentation": "https://www.home-assistant.io/integrations/goalzero",
   "requirements": ["goalzero==0.1.7"],
   "dhcp": [
-    {"hostname": "yeti*", "macaddress": "A4CF12*"}
+    {"hostname": "yeti*"}
   ],
   "codeowners": ["@tkdrob"],
   "iot_class": "local_polling"

@@ -68,8 +68,7 @@ DHCP = [
     },
     {
         "domain": "goalzero",
-        "hostname": "yeti*",
-        "macaddress": "A4CF12*"
+        "hostname": "yeti*"
     },
     {
         "domain": "guardian",
