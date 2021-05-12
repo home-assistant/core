@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import datetime
-import homeassistant
 import logging
 from typing import Any
 
 import somecomfort
 
+import homeassistant
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
@@ -91,7 +91,13 @@ def setup_platform(
     """Set up the Honeywell thermostat."""
     cool_away_temp = discovery_info.get(CONF_COOL_AWAY_TEMPERATURE)
     heat_away_temp = discovery_info.get(CONF_HEAT_AWAY_TEMPERATURE)
-    add_entities([HoneywellUSThermostat(hass.data[DOMAIN]["device"], cool_away_temp, heat_away_temp)])
+    add_entities(
+        [
+            HoneywellUSThermostat(
+                hass.data[DOMAIN]["device"], cool_away_temp, heat_away_temp
+            )
+        ]
+    )
 
 
 class HoneywellUSThermostat(ClimateEntity):
@@ -134,7 +140,9 @@ class HoneywellUSThermostat(ClimateEntity):
     @property
     def unique_id(self) -> str | None:
         """Return a unique ID."""
-        return homeassistant.helpers.device_registry.format_mac(self._device.mac_address)
+        return homeassistant.helpers.device_registry.format_mac(
+            self._device.mac_address
+        )
 
     @property
     def name(self) -> str | None:

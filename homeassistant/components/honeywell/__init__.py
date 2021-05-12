@@ -82,7 +82,7 @@ def setup(hass: HomeAssistant, config: ConfigType):
     return True
 
 
-class HoneywellData:
+class HoneywellService:
     """Get the latest data and update."""
 
     def __init__(self, client, username, password):

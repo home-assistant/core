@@ -1,9 +1,9 @@
 """Support for Honeywell (US) Total Connect Comfort sensors."""
 from __future__ import annotations
-import homeassistant
 
 import logging
 
+import homeassistant
 from homeassistant.components.honeywell.const import DOMAIN
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
