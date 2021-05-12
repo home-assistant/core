@@ -85,7 +85,7 @@ jobs:
         with:
           tag: ${{ matrix.tag }}
           arch: ${{ matrix.arch }}
-          wheels-host: ${{ secrets.WHEELS_HOST }}
+          wheels-host: wheels.hass.io
           wheels-key: ${{ secrets.WHEELS_KEY }}
           wheels-user: wheels
           env-file: true
@@ -155,7 +155,7 @@ jobs:
         with:
           tag: ${{ matrix.tag }}
           arch: ${{ matrix.arch }}
-          wheels-host: ${{ secrets.WHEELS_HOST }}
+          wheels-host: wheels.hass.io
           wheels-key: ${{ secrets.WHEELS_KEY }}
           wheels-user: wheels
           env-file: true
