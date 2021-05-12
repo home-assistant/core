@@ -11,7 +11,7 @@
             "connection_error": "Failed to connect",
             "invalid_auth": "Invalid authentication"
         },
-        "flow_title": "FRITZ!Box Tools: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {

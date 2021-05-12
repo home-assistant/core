@@ -54,11 +54,11 @@ MOCK_SSDP_DATA = {
 
 
 @pytest.fixture()
-def fc_class_mock(mocker):
+def fc_class_mock():
     """Fixture that sets up a mocked FritzConnection class."""
-    result = mocker.patch("fritzconnection.FritzConnection", autospec=True)
-    result.return_value = FritzConnectionMock()
-    yield result
+    with patch("fritzconnection.FritzConnection", autospec=True) as result:
+        result.return_value = FritzConnectionMock()
+        yield result
 
 
 async def test_user(hass: HomeAssistant, fc_class_mock):

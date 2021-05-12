@@ -193,6 +193,9 @@ async def trace_action(hass, script_run, stop, variables):
 
     try:
         yield trace_element
+    except _StopScript as ex:
+        trace_element.set_error(ex.__cause__ or ex)
+        raise ex
     except Exception as ex:
         trace_element.set_error(ex)
         raise ex

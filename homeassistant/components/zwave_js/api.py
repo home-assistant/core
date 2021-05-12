@@ -22,7 +22,6 @@ from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.const import (
     ERR_NOT_FOUND,
-    ERR_NOT_LOADED,
     ERR_NOT_SUPPORTED,
     ERR_UNKNOWN_ERROR,
 )
@@ -45,6 +44,7 @@ from .helpers import async_enable_statistics, update_data_collection_preference
 # general API constants
 ID = "id"
 ENTRY_ID = "entry_id"
+ERR_NOT_LOADED = "not_loaded"
 NODE_ID = "node_id"
 COMMAND_CLASS_ID = "command_class_id"
 TYPE = "type"

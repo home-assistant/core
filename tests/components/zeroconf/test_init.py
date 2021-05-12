@@ -346,6 +346,38 @@ async def test_zeroconf_match_manufacturer(hass, mock_zeroconf):
     assert mock_config_flow.mock_calls[0][1][0] == "samsungtv"
 
 
+async def test_zeroconf_match_manufacturer_not_present(hass, mock_zeroconf):
+    """Test matchers reject when a property is missing."""
+
+    def http_only_service_update_mock(zeroconf, services, handlers):
+        """Call service update handler."""
+        handlers[0](
+            zeroconf,
+            "_airplay._tcp.local.",
+            "s1000._airplay._tcp.local.",
+            ServiceStateChange.Added,
+        )
+
+    with patch.dict(
+        zc_gen.ZEROCONF,
+        {"_airplay._tcp.local.": [{"domain": "samsungtv", "manufacturer": "samsung*"}]},
+        clear=True,
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow, patch.object(
+        zeroconf, "HaServiceBrowser", side_effect=http_only_service_update_mock
+    ) as mock_service_browser:
+        mock_zeroconf.get_service_info.side_effect = get_zeroconf_info_mock(
+            "aa:bb:cc:dd:ee:ff"
+        )
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert len(mock_service_browser.mock_calls) == 1
+    assert len(mock_config_flow.mock_calls) == 0
+
+
 async def test_zeroconf_no_match(hass, mock_zeroconf):
     """Test configured options for a device are loaded via config entry."""
 

@@ -1,4 +1,6 @@
 """Constants for 1-Wire component."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -44,7 +46,7 @@ SENSOR_TYPE_WETNESS = "wetness"
 SWITCH_TYPE_LATCH = "latch"
 SWITCH_TYPE_PIO = "pio"
 
-SENSOR_TYPES = {
+SENSOR_TYPES: dict[str, list[str | None]] = {
     # SensorType: [ Unit, DeviceClass ]
     SENSOR_TYPE_TEMPERATURE: [TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE],
     SENSOR_TYPE_HUMIDITY: [PERCENTAGE, DEVICE_CLASS_HUMIDITY],

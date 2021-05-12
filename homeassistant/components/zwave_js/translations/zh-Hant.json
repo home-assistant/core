@@ -4,7 +4,6 @@
             "addon_get_discovery_info_failed": "\u53d6\u5f97 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u63a2\u7d22\u8cc7\u8a0a\u5931\u6557\u3002",
             "addon_info_failed": "\u53d6\u5f97 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u8cc7\u8a0a\u5931\u6557\u3002",
             "addon_install_failed": "Z-Wave JS \u9644\u52a0\u5143\u4ef6\u5b89\u88dd\u5931\u6557\u3002",
-            "addon_missing_discovery_info": "\u7f3a\u5c11 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u63a2\u7d22\u8cc7\u8a0a\u3002",
             "addon_set_config_failed": "Z-Wave JS \u9644\u52a0\u5143\u4ef6\u8a2d\u5b9a\u5931\u6557\u3002",
             "addon_start_failed": "Z-Wave JS \u9644\u52a0\u5143\u4ef6\u555f\u59cb\u5931\u6557\u3002",
             "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
@@ -49,11 +48,6 @@
             },
             "start_addon": {
                 "title": "Z-Wave JS \u9644\u52a0\u5143\u4ef6\u555f\u59cb\u4e2d\u3002"
-            },
-            "user": {
-                "data": {
-                    "url": "\u7db2\u5740"
-                }
             }
         }
     },

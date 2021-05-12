@@ -10,13 +10,6 @@
             "invalid_api_key": "Neplatn\u00fd kl\u00ed\u010d API"
         },
         "step": {
-            "geography": {
-                "data": {
-                    "api_key": "Kl\u00ed\u010d API",
-                    "latitude": "Zem\u011bpisn\u00e1 \u0161\u00ed\u0159ka",
-                    "longitude": "Zem\u011bpisn\u00e1 d\u00e9lka"
-                }
-            },
             "geography_by_coords": {
                 "data": {
                     "api_key": "Kl\u00ed\u010d API",
@@ -45,11 +38,6 @@
                 "title": "Znovu ov\u011b\u0159it AirVisual"
             },
             "user": {
-                "data": {
-                    "cloud_api": "Geografick\u00e1 poloha",
-                    "node_pro": "AirVisual Node Pro",
-                    "type": "Typ integrace"
-                },
                 "description": "Vyberte, jak\u00fd typ dat AirVisual chcete sledovat.",
                 "title": "Nastaven\u00ed AirVisual"
             }

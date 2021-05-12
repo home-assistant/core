@@ -622,7 +622,7 @@ async def test_delay_template_invalid(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": script._StopScript}],
+            "1": [{"error_type": vol.MultipleInvalid}],
         },
         expected_script_execution="aborted",
     )
@@ -683,7 +683,7 @@ async def test_delay_template_complex_invalid(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": script._StopScript}],
+            "1": [{"error_type": vol.MultipleInvalid}],
         },
         expected_script_execution="aborted",
     )
@@ -1138,7 +1138,7 @@ async def test_wait_continue_on_timeout(
     }
     if continue_on_timeout is False:
         expected_trace["0"][0]["result"]["timeout"] = True
-        expected_trace["0"][0]["error_type"] = script._StopScript
+        expected_trace["0"][0]["error_type"] = asyncio.TimeoutError
         expected_script_execution = "aborted"
     else:
         expected_trace["1"] = [

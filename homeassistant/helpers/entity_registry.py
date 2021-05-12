@@ -10,7 +10,7 @@ timer.
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 import logging
 from typing import TYPE_CHECKING, Any, Callable, cast
 
@@ -96,7 +96,7 @@ class RegistryEntry:
             )
         ),
     )
-    capabilities: dict[str, Any] | None = attr.ib(default=None)
+    capabilities: Mapping[str, Any] | None = attr.ib(default=None)
     supported_features: int = attr.ib(default=0)
     device_class: str | None = attr.ib(default=None)
     unit_of_measurement: str | None = attr.ib(default=None)
@@ -232,7 +232,7 @@ class EntityRegistry:
         config_entry: ConfigEntry | None = None,
         device_id: str | None = None,
         area_id: str | None = None,
-        capabilities: dict[str, Any] | None = None,
+        capabilities: Mapping[str, Any] | None = None,
         supported_features: int | None = None,
         device_class: str | None = None,
         unit_of_measurement: str | None = None,
@@ -392,7 +392,7 @@ class EntityRegistry:
         area_id: str | None | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
         disabled_by: str | None | UndefinedType = UNDEFINED,
-        capabilities: dict[str, Any] | None | UndefinedType = UNDEFINED,
+        capabilities: Mapping[str, Any] | None | UndefinedType = UNDEFINED,
         supported_features: int | UndefinedType = UNDEFINED,
         device_class: str | None | UndefinedType = UNDEFINED,
         unit_of_measurement: str | None | UndefinedType = UNDEFINED,
