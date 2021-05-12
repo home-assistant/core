@@ -182,7 +182,7 @@ aiohomekit==0.2.61
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==2.3.0
+aiohue==2.3.1
 
 # homeassistant.components.imap
 aioimaplib==0.7.15
@@ -254,7 +254,7 @@ ambiclimate==0.2.1
 amcrest==1.7.2
 
 # homeassistant.components.androidtv
-androidtv[async]==0.0.58
+androidtv[async]==0.0.59
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -479,7 +479,7 @@ defusedxml==0.6.0
 deluge-client==1.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.10.6
+denonavr==0.10.8
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.17.3
@@ -720,7 +720,7 @@ guppy3==3.1.0
 ha-ffmpeg==3.0.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==2.7.0
+ha-philipsjs==2.7.3
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -735,7 +735,7 @@ hass-nabucasa==0.43.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.2.11
+hatasmota==0.2.12
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.2
@@ -1088,7 +1088,7 @@ oru==0.1.11
 orvibo==1.1.1
 
 # homeassistant.components.ovo_energy
-ovoenergy==1.1.11
+ovoenergy==1.1.12
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
@@ -1744,7 +1744,7 @@ pysnmp==4.4.12
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.44
+pysonos==0.0.45
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
