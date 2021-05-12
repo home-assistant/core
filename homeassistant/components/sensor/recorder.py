@@ -5,6 +5,7 @@ import datetime
 import statistics
 
 from homeassistant.components import history
+from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
 from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
 
@@ -20,6 +21,9 @@ def _get_entities(hass: HomeAssistant) -> list[tuple[str, str]]:
 
     for state in all_sensors:
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        state_class = state.attributes.get(ATTR_STATE_CLASS)
+        if not state_class or state_class != STATE_CLASS_MEASUREMENT:
+            continue
         if not device_class or device_class not in DEVICE_CLASS_STATISTICS:
             continue
         entity_ids.append((state.entity_id, device_class))
