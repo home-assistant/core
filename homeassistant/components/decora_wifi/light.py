@@ -103,7 +103,7 @@ class DecoraWifiLight(LightEntity):
 
     @property
     def unique_id(self):
-        """Return the display name of this switch."""
+        """Return the unique id of the sensor."""
         return self._unique_id
 
     @property
