@@ -324,6 +324,11 @@ def _drop_foreign_key_constraints(connection, engine, table, columns):
         ):
             drops.append(ForeignKeyConstraint((), (), name=foreign_key["name"]))
 
+    # Bind the ForeignKeyConstraints to the table
+    old_table = Table(  # noqa: F841 pylint: disable=unused-variable
+        table, MetaData(), *drops
+    )
+
     for drop in drops:
         try:
             connection.execute(DropConstraint(drop))
