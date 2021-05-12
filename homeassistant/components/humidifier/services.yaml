@@ -29,7 +29,7 @@ set_humidity:
         number:
           min: 0
           max: 100
-          unit_of_measurement: percent
+          unit_of_measurement: "%"
 
 turn_on:
   name: Turn on
