@@ -501,7 +501,7 @@ async def test_config_wrong_struct_sensor(hass, do_config):
                 CONF_SWAP: CONF_SWAP_BYTE,
             },
             [0x01020304],
-            str(int(0x02010403)),
+            "1027,513",
         ),
         (
             {
@@ -512,7 +512,7 @@ async def test_config_wrong_struct_sensor(hass, do_config):
                 CONF_SWAP: CONF_SWAP_WORD,
             },
             [0x01020304],
-            str(int(0x03040102)),
+            "258,772",
         ),
         (
             {
@@ -523,7 +523,7 @@ async def test_config_wrong_struct_sensor(hass, do_config):
                 CONF_SWAP: CONF_SWAP_WORD_BYTE,
             },
             [0x01020304],
-            str(int(0x04030201)),
+            "1027,513",
         ),
     ],
 )
