@@ -69,11 +69,9 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.fortios.*",
     "homeassistant.components.foscam.*",
     "homeassistant.components.freebox.*",
-    "homeassistant.components.fritz.*",
     "homeassistant.components.fritzbox.*",
     "homeassistant.components.garmin_connect.*",
     "homeassistant.components.geniushub.*",
-    "homeassistant.components.gios.*",
     "homeassistant.components.glances.*",
     "homeassistant.components.gogogate2.*",
     "homeassistant.components.google_assistant.*",
@@ -153,7 +151,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.omnilogic.*",
     "homeassistant.components.onboarding.*",
     "homeassistant.components.ondilo_ico.*",
-    "homeassistant.components.onewire.*",
     "homeassistant.components.onvif.*",
     "homeassistant.components.ovo_energy.*",
     "homeassistant.components.ozw.*",
@@ -329,7 +326,7 @@ def generate_and_validate(config: Config) -> str:
                 config.add_error("mypy_config", f"Module '{module} doesn't exist")
 
     # Don't generate mypy.ini if there're errors found because it will likely crash.
-    if config.errors:
+    if any(not err.fixable for err in config.errors):
         return ""
 
     mypy_config = configparser.ConfigParser()

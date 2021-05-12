@@ -45,7 +45,7 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             device = info[CONF_DEVICE]
             gw_id = cv.slugify(info.get(CONF_ID, name))
 
-            entries = [e.data for e in self.hass.config_entries.async_entries(DOMAIN)]
+            entries = [e.data for e in self._async_current_entries()]
 
             if gw_id in [e[CONF_ID] for e in entries]:
                 return self._show_form({"base": "id_exists"})

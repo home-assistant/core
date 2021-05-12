@@ -9,7 +9,7 @@
             "invalid_auth": "Tuvastamise viga",
             "invalid_zone": "Sobimatu ala"
         },
-        "flow_title": "Cloudflare: {name}",
+        "flow_title": "{name}",
         "step": {
             "records": {
                 "data": {

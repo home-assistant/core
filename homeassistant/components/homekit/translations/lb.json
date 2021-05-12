@@ -10,7 +10,6 @@
             },
             "user": {
                 "data": {
-                    "auto_start": "Autostart (d\u00e9aktiv\u00e9ier falls Z-Wave oder een aanere verz\u00f6gerte Start System benotzt g\u00ebtt)",
                     "include_domains": "Domaine d\u00e9i solle abegraff ginn."
                 },
                 "description": "HomeKit Integratioun erlaabt et Home Assistant Entit\u00e9iten am HomeKit z'acc\u00e9d\u00e9ieren. HomeKit Bridges sinn op 150 Accessoire limit\u00e9iert, mat der Bridge selwer. Falls d'Bridge m\u00e9i w\u00e9i d\u00e9i max. Unzuel vun Accessoire soll \u00ebnnerst\u00ebtzen ass et recommand\u00e9iert verschidden HomeKit Bridges fir verschidden Domaine anzesetzen. Eng detaill\u00e9iert Konfiguratioun ass n\u00ebmme via YAML fir d\u00e9i prim\u00e4r Bridge verf\u00fcgbar.",
@@ -22,8 +21,7 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (d\u00e9aktiv\u00e9ier falls Z-Wave oder een aanere verz\u00f6gerte Start System benotzt g\u00ebtt)",
-                    "safe_mode": "Safe Mode (n\u00ebmmen aktiv\u00e9ieren wann Kopplung net geht)"
+                    "auto_start": "Autostart (d\u00e9aktiv\u00e9ier falls Z-Wave oder een aanere verz\u00f6gerte Start System benotzt g\u00ebtt)"
                 },
                 "description": "D\u00ebs Astellungen brauche n\u00ebmmen ajust\u00e9iert ze ginn falls HomeKit net funktion\u00e9iert.",
                 "title": "Erweidert Konfiguratioun"

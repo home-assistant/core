@@ -160,7 +160,7 @@ aioeafm==0.1.2
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==2.6.6
+aioesphomeapi==2.7.0
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -182,7 +182,7 @@ aiohomekit==0.2.61
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==2.3.0
+aiohue==2.3.1
 
 # homeassistant.components.imap
 aioimaplib==0.7.15
@@ -482,7 +482,7 @@ defusedxml==0.6.0
 deluge-client==1.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.10.7
+denonavr==0.10.8
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.17.3
@@ -1250,7 +1250,7 @@ pyRFXtrx==0.26.1
 # pySwitchmate==0.4.6
 
 # homeassistant.components.tibber
-pyTibber==0.16.3
+pyTibber==0.16.2
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1813,7 +1813,7 @@ python-izone==1.1.4
 python-join-api==0.0.6
 
 # homeassistant.components.juicenet
-python-juicenet==1.0.1
+python-juicenet==1.0.2
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3

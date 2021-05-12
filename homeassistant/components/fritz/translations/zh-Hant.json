@@ -11,7 +11,7 @@
             "connection_error": "\u9023\u7dda\u5931\u6557",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
         },
-        "flow_title": "FRITZ!Box Tools\uff1a{name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {

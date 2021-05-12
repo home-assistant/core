@@ -4,7 +4,6 @@
             "addon_get_discovery_info_failed": "Ophalen van ontdekkingsinformatie voor Z-Wave JS-add-on is mislukt.",
             "addon_info_failed": "Ophalen van Z-Wave JS add-on-info is mislukt.",
             "addon_install_failed": "Kan de Z-Wave JS add-on niet installeren.",
-            "addon_missing_discovery_info": "De Z-Wave JS addon mist ontdekkings informatie",
             "addon_set_config_failed": "Instellen van de Z-Wave JS configuratie is mislukt.",
             "addon_start_failed": "Kan de Z-Wave JS add-on niet starten.",
             "already_configured": "Apparaat is al geconfigureerd",
@@ -49,11 +48,6 @@
             },
             "start_addon": {
                 "title": "De add-on Z-Wave JS wordt gestart."
-            },
-            "user": {
-                "data": {
-                    "url": "URL"
-                }
             }
         }
     },
