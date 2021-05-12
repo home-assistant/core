@@ -10,7 +10,7 @@
             "otp_failed": "\u96d9\u91cd\u8a8d\u8b49\u5931\u6557\uff0c\u8acb\u91cd\u65b0\u53d6\u5f97\u4ee3\u78bc\u5f8c\u91cd\u8a66",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
-        "flow_title": "\u7fa4\u6689 DSM {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "2sa": {
                 "data": {

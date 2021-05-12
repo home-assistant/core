@@ -77,9 +77,18 @@ DHCP = [
         "macaddress": "30AEA4*"
     },
     {
+        "domain": "gogogate2",
+        "hostname": "ismartgate*"
+    },
+    {
         "domain": "hunterdouglas_powerview",
         "hostname": "hunter*",
         "macaddress": "002674*"
+    },
+    {
+        "domain": "isy994",
+        "hostname": "isy*",
+        "macaddress": "0021B9*"
     },
     {
         "domain": "lyric",
@@ -172,6 +181,26 @@ DHCP = [
         "domain": "sense",
         "hostname": "sense-*",
         "macaddress": "DCEFCA*"
+    },
+    {
+        "domain": "smartthings",
+        "hostname": "st*",
+        "macaddress": "24FD5B*"
+    },
+    {
+        "domain": "smartthings",
+        "hostname": "smartthings*",
+        "macaddress": "24FD5B*"
+    },
+    {
+        "domain": "smartthings",
+        "hostname": "hub*",
+        "macaddress": "24FD5B*"
+    },
+    {
+        "domain": "smartthings",
+        "hostname": "hub*",
+        "macaddress": "D052A8*"
     },
     {
         "domain": "solaredge",

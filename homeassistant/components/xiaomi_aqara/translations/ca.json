@@ -12,7 +12,7 @@
             "invalid_key": "Clau de la passarel\u00b7la no v\u00e0lida",
             "invalid_mac": "Adre\u00e7a MAC no v\u00e0lida"
         },
-        "flow_title": "Passarel\u00b7la Xiaomi Aqara: {name}",
+        "flow_title": "{name}",
         "step": {
             "select": {
                 "data": {

@@ -93,19 +93,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            if user_input.get(CONF_HOST):
-                try:
-                    model = await self._async_try_connect(user_input[CONF_HOST])
-                except CannotConnect:
-                    errors["base"] = "cannot_connect"
-                else:
-                    self._abort_if_unique_id_configured()
-                    return self.async_create_entry(
-                        title=f"{model} {self.unique_id}",
-                        data=user_input,
-                    )
-            else:
+            if not user_input.get(CONF_HOST):
                 return await self.async_step_pick_device()
+            try:
+                model = await self._async_try_connect(user_input[CONF_HOST])
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            else:
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=f"{model} {self.unique_id}",
+                    data=user_input,
+                )
 
         user_input = user_input or {}
         return self.async_show_form(
@@ -174,9 +173,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_try_connect(self, host):
         """Set up with options."""
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_HOST) == host:
-                raise AbortFlow("already_configured")
+        self._async_abort_entries_match({CONF_HOST: host})
 
         bulb = yeelight.Bulb(host)
         try:

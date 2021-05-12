@@ -70,7 +70,8 @@
                     "discovery": "Erkennung aktivieren",
                     "will_enable": "Letzten Willen aktivieren"
                 },
-                "description": "Bitte die MQTT-Einstellungen ausw\u00e4hlen."
+                "description": "Bitte die MQTT-Einstellungen ausw\u00e4hlen.",
+                "title": "MQTT-Optionen"
             }
         }
     }

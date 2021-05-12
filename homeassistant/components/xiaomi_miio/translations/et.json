@@ -9,7 +9,7 @@
             "no_device_selected": "Seadmeid pole valitud, vali \u00fcks seade.",
             "unknown_device": "Seadme mudel pole teada, seadet ei saa seadistamisvoo abil seadistada."
         },
-        "flow_title": "Xiaomi Miio: {name}",
+        "flow_title": "{name}",
         "step": {
             "device": {
                 "data": {
