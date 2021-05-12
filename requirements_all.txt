@@ -1813,7 +1813,7 @@ python-izone==1.1.4
 python-join-api==0.0.6
 
 # homeassistant.components.juicenet
-python-juicenet==1.0.1
+python-juicenet==1.0.2
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
