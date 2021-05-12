@@ -42,7 +42,7 @@ async def test_user(hass: HomeAssistant, test_api: Mock) -> None:
     assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
     assert result.get("step_id") == "user"
 
-    # tets with all provided
+    # test with all provided
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
