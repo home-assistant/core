@@ -58,7 +58,7 @@ def compile_statistics(
         if entity_id not in history_list:
             continue
 
-        result[entity_id] = {"statistic_type": "min_max"}
+        result[entity_id] = {}
 
         entity_history = history_list[entity_id]
         fstates = [float(el.state) for el in entity_history if _is_number(el.state)]

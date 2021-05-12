@@ -11,14 +11,6 @@ from .const import DOMAIN
 from .models import Statistics
 from .util import retriable_database_job, session_scope
 
-STATISTIC_COLUMN_MAP = {
-    "min_max": {
-        "max": "value_1",
-        "min": "value_2",
-        "mean": "value_3",
-    }
-}
-
 if TYPE_CHECKING:
     from . import Recorder
 
@@ -63,14 +55,7 @@ def compile_statistics(
 
     with session_scope(session=instance.get_session()) as session:  # type: ignore
         for stats in platform_stats:
-            for entity_id, data in stats.items():
-                statistic_type = data.pop("statistic_type")
-                column_map = STATISTIC_COLUMN_MAP[statistic_type]
-                stat = {column: data.get(key) for (key, column) in column_map.items()}
-                session.add(
-                    Statistics.from_stats(
-                        entity_id, period, start, statistic_type, stat
-                    )
-                )
+            for entity_id, stat in stats.items():
+                session.add(Statistics.from_stats(entity_id, period, start, stat))
 
     return True
