@@ -96,6 +96,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     tibber_connection = hass.data.get(TIBBER_DOMAIN)
 
+    entity_registry = async_get_entity_reg(hass)
+    device_registry = async_get_dev_reg(hass)
+
     entities = []
     for home in tibber_connection.get_homes(only_active=False):
         try:
@@ -120,7 +123,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
             continue
 
         # migrate to new device ids
-        entity_registry = async_get_entity_reg(hass)
         old_entity_id = entity_registry.async_get_entity_id(
             "sensor", TIBBER_DOMAIN, old_id
         )
@@ -130,7 +132,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
             )
 
         # migrate to new device ids
-        device_registry = async_get_dev_reg(hass)
         device_entry = device_registry.async_get_device({(TIBBER_DOMAIN, old_id)})
         if device_entry and entry.entry_id in device_entry.config_entries:
             device_registry.async_update_device(
