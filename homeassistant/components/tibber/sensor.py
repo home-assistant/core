@@ -96,7 +96,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     tibber_connection = hass.data.get(TIBBER_DOMAIN)
 
-    devices = []
+    entities = []
     for home in tibber_connection.get_homes(only_active=False):
         try:
             await home.update_info()
