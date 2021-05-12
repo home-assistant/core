@@ -85,12 +85,6 @@ SERVICE_PURGE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_APPLY_FILTER, default=False): cv.boolean,
     }
 )
-SERVICE_STATISTICS_SCHEMA = vol.Schema(
-    {
-        vol.Required("period"): vol.In(STATISTIC_PERIODS),
-        vol.Optional("start"): cv.datetime,
-    }
-)
 SERVICE_ENABLE_SCHEMA = vol.Schema({})
 SERVICE_DISABLE_SCHEMA = vol.Schema({})
 
@@ -267,11 +261,17 @@ def _async_register_services(hass, instance):
         """Handle calls to the statistics service."""
         instance.do_adhoc_statistics(**service.data)
 
+    # Register a service for testing purpose
     hass.services.async_register(
         DOMAIN,
         SERVICE_STATISTICS,
         async_handle_statistics_service,
-        schema=SERVICE_STATISTICS_SCHEMA,
+        schema=vol.Schema(
+            {
+                vol.Required("period"): vol.In(STATISTIC_PERIODS),
+                vol.Optional("start"): cv.datetime,
+            }
+        ),
     )
 
     async def async_handle_enable_sevice(service):
