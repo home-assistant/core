@@ -8,6 +8,7 @@ import datetime
 from functools import partial
 import logging
 from typing import Any, Callable
+import urllib.parse
 
 import async_timeout
 from pysonos.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
@@ -20,7 +21,6 @@ from pysonos.snapshot import Snapshot
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as ent_reg
 from homeassistant.helpers.dispatcher import (
@@ -43,6 +43,8 @@ from .const import (
     SONOS_ENTITY_UPDATE,
     SONOS_GROUP_UPDATE,
     SONOS_SEEN,
+    SONOS_STATE_PLAYING,
+    SONOS_STATE_TRANSITIONING,
     SONOS_STATE_UPDATED,
     SOURCE_LINEIN,
     SOURCE_TV,
@@ -578,7 +580,7 @@ class SonosSpeaker:
         ) -> list[list[SonosSpeaker]]:
             """Pause all current coordinators and restore groups."""
             for speaker in (s for s in speakers if s.is_coordinator):
-                if speaker.media.playback_status == STATE_PLAYING:
+                if speaker.media.playback_status == SONOS_STATE_PLAYING:
                     hass.async_create_task(speaker.soco.pause())
 
             groups = []
@@ -715,7 +717,7 @@ class SonosSpeaker:
             new_status = transport_info["current_transport_state"]
 
         # Ignore transitions, we should get the target state soon
-        if new_status == "TRANSITIONING":
+        if new_status == SONOS_STATE_TRANSITIONING:
             return
 
         self.media.clear()
@@ -724,7 +726,7 @@ class SonosSpeaker:
 
         if variables and "transport_state" in variables:
             self.media.play_mode = variables["current_play_mode"]
-            track_uri = variables["current_track_uri"]
+            track_uri = variables["enqueued_transport_uri"]
             music_source = self.soco.music_source_from_uri(track_uri)
         else:
             self.media.play_mode = self.soco.play_mode
@@ -743,6 +745,22 @@ class SonosSpeaker:
                 self.media.artist = track_info.get("artist")
                 self.media.album_name = track_info.get("album")
                 self.media.title = track_info.get("title")
+
+                # Handle metadata where the title is still encoded
+                if self.media.title.startswith("TYPE=SNG|"):
+                    tags = dict(
+                        [
+                            p.split(" ", 1)
+                            for p in self.media.title.split("|")
+                            if " " in p
+                        ]
+                    )
+                    if "TITLE" in tags:
+                        self.media.title = tags["TITLE"]
+                    if "ARTIST" in tags:
+                        self.media.artist = tags["ARTIST"]
+                    if "ALBUM" in tags:
+                        self.media.album_name = tags["ALBUM"]
 
                 if music_source == MUSIC_SRC_RADIO:
                     self.update_media_radio(variables)
@@ -776,18 +794,25 @@ class SonosSpeaker:
         except (TypeError, KeyError, AttributeError):
             pass
 
-        # Non-playing radios will not have a current title. Radios without tagging
-        # can have part of the radio URI as title. In these cases we try to use the
-        # radio name instead.
+        if not self.media.artist:
+            try:
+                self.media.artist = variables["current_track_meta_data"].creator
+            except (KeyError, AttributeError):
+                pass
+
+        # Radios without tagging can have part of the radio URI as title.
+        # In this case we try to use the radio name instead.
         try:
             uri_meta_data = variables["enqueued_transport_uri_meta_data"]
             if isinstance(uri_meta_data, DidlAudioBroadcast) and (
-                self.media.playback_status != STATE_PLAYING
-                or self.soco.music_source_from_uri(self.media.title) == MUSIC_SRC_RADIO
+                self.soco.music_source_from_uri(self.media.title) == MUSIC_SRC_RADIO
                 or (
                     isinstance(self.media.title, str)
                     and isinstance(self.media.uri, str)
-                    and self.media.title in self.media.uri
+                    and (
+                        self.media.title in self.media.uri
+                        or self.media.title in urllib.parse.unquote(self.media.uri)
+                    )
                 )
             ):
                 self.media.title = uri_meta_data.title
@@ -814,7 +839,7 @@ class SonosSpeaker:
 
         # position jumped?
         if current_position is not None and self.media.position is not None:
-            if self.media.playback_status == STATE_PLAYING:
+            if self.media.playback_status == SONOS_STATE_PLAYING:
                 assert self.media.position_updated_at is not None
                 time_delta = dt_util.utcnow() - self.media.position_updated_at
                 time_diff = time_delta.total_seconds()
