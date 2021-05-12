@@ -115,6 +115,7 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.kodi.*",
     "homeassistant.components.konnected.*",
     "homeassistant.components.kostal_plenticore.*",
+    "homeassistant.components.kraken.*",
     "homeassistant.components.kulersky.*",
     "homeassistant.components.lifx.*",
     "homeassistant.components.litejet.*",
