@@ -23,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -111,6 +112,18 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 TibberRtDataHandler(async_add_entities, home, hass).async_callback
             )
 
+        # migrate to new device ids
+        old_id = home.info["viewer"]["home"]["meteringPointData"]["consumptionEan"]
+        if old_id is None:
+            continue
+        device_registry = await async_get_registry(hass)
+        device_entry = device_registry.async_get_device({(TIBBER_DOMAIN, old_id)})
+
+        if device_entry and entry.entry_id in device_entry.config_entries:
+            device_registry.async_update_device(
+                device_entry.id, new_identifiers={(TIBBER_DOMAIN, home.home_id)}
+            )
+
     async_add_entities(dev, True)
 
 
@@ -141,7 +154,7 @@ class TibberSensor(SensorEntity):
     @property
     def device_id(self):
         """Return the ID of the physical device this sensor is part of."""
-        return self._tibber_home.home_id
+        return self._tibber_home.home_id.replace("-", "")
 
     @property
     def device_info(self):
