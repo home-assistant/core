@@ -923,3 +923,21 @@ async def test_entity_max_length_exceeded(hass, registry):
     assert exc_info.value.property_name == "preferred_entity_id"
     assert exc_info.value.max_length == 255
     assert exc_info.value.value == f"sensor.{long_entity_id_name}"
+
+    # Try again but force a number to get added to the entity ID to check the second
+    # check
+    long_entity_id_name = (
+        "1234567890123456789012345678901234567890123456789012345678901234567890"
+        "1234567890123456789012345678901234567890123456789012345678901234567890"
+        "1234567890123456789012345678901234567890123456789012345678901234567890"
+        "1234567890123456789012345678901234567"
+    )
+
+    with pytest.raises(MaxLengthExceeded) as exc_info:
+        registry.async_generate_entity_id(
+            "sensor", long_entity_id_name, [f"sensor.{long_entity_id_name}"]
+        )
+
+    assert exc_info.value.property_name == "generated_entity_id"
+    assert exc_info.value.max_length == 255
+    assert exc_info.value.value == f"sensor.{long_entity_id_name}_2"

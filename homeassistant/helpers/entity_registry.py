@@ -225,6 +225,11 @@ class EntityRegistry:
             tries += 1
             test_string = f"{preferred_string}_{tries}"
 
+        if len(test_string) > MAX_LENGTH_STATE_ENTITY_ID:
+            raise MaxLengthExceeded(
+                test_string, "generated_entity_id", MAX_LENGTH_STATE_ENTITY_ID
+            )
+
         return test_string
 
     @callback
