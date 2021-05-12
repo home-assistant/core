@@ -128,13 +128,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
             entity_registry.async_update_entity(
                 old_entity_id, new_unique_id=home.home_id
             )
-        old_entity_id = entity_registry.async_get_entity_id(
-            "sensor", TIBBER_DOMAIN, old_id
-        )
-        if old_entity_id is not None:
-            entity_registry.async_update_entity(
-                old_entity_id, new_unique_id=home.home_id
-            )
 
         # migrate to new device ids
         device_registry = async_get_dev_reg(hass)
