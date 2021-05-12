@@ -315,23 +315,18 @@ def _update_states_table_with_foreign_key_options(connection, engine):
 def _drop_foreign_key_constraints(connection, engine, table, columns):
     """Drop froeign key constraints for a table on specific columns."""
     inspector = sqlalchemy.inspect(engine)
-    alters = []
+    drops = []
     for foreign_key in inspector.get_foreign_keys(table):
         if (
             foreign_key["name"]
             and foreign_key["options"].get("ondelete")
             and foreign_key["constrained_columns"] == columns
         ):
-            alters.append(
-                {
-                    "old_fk": ForeignKeyConstraint((), (), name=foreign_key["name"]),
-                    "columns": foreign_key["constrained_columns"],
-                }
-            )
+            drops.append(ForeignKeyConstraint((), (), name=foreign_key["name"]))
 
-    for alter in alters:
+    for drop in drops:
         try:
-            connection.execute(DropConstraint(alter["old_fk"]))
+            connection.execute(DropConstraint(drop))
         except (InternalError, OperationalError):
             _LOGGER.exception(
                 "Could not drop foreign constraints in %s table on %s",
