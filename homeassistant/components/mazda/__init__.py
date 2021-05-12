@@ -28,7 +28,7 @@ from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["device_tracker", "sensor"]
+PLATFORMS = ["device_tracker", "lock", "sensor"]
 
 
 async def with_timeout(task, timeout_seconds=10):
@@ -117,11 +117,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class MazdaEntity(CoordinatorEntity):
     """Defines a base Mazda entity."""
 
-    def __init__(self, coordinator, index):
+    def __init__(self, client, coordinator, index):
         """Initialize the Mazda entity."""
         super().__init__(coordinator)
+        self.client = client
         self.index = index
         self.vin = self.coordinator.data[self.index]["vin"]
+        self.vehicle_id = self.coordinator.data[self.index]["id"]
 
     @property
     def device_info(self):

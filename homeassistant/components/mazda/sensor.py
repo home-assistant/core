@@ -9,23 +9,24 @@ from homeassistant.const import (
 )
 
 from . import MazdaEntity
-from .const import DATA_COORDINATOR, DOMAIN
+from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the sensor platform."""
+    client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
 
     entities = []
 
     for index, _ in enumerate(coordinator.data):
-        entities.append(MazdaFuelRemainingSensor(coordinator, index))
-        entities.append(MazdaFuelDistanceSensor(coordinator, index))
-        entities.append(MazdaOdometerSensor(coordinator, index))
-        entities.append(MazdaFrontLeftTirePressureSensor(coordinator, index))
-        entities.append(MazdaFrontRightTirePressureSensor(coordinator, index))
-        entities.append(MazdaRearLeftTirePressureSensor(coordinator, index))
-        entities.append(MazdaRearRightTirePressureSensor(coordinator, index))
+        entities.append(MazdaFuelRemainingSensor(client, coordinator, index))
+        entities.append(MazdaFuelDistanceSensor(client, coordinator, index))
+        entities.append(MazdaOdometerSensor(client, coordinator, index))
+        entities.append(MazdaFrontLeftTirePressureSensor(client, coordinator, index))
+        entities.append(MazdaFrontRightTirePressureSensor(client, coordinator, index))
+        entities.append(MazdaRearLeftTirePressureSensor(client, coordinator, index))
+        entities.append(MazdaRearRightTirePressureSensor(client, coordinator, index))
 
     async_add_entities(entities)
 
