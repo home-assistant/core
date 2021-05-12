@@ -160,7 +160,7 @@ aioeafm==0.1.2
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==2.6.6
+aioesphomeapi==2.7.0
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -1250,7 +1250,7 @@ pyRFXtrx==0.26.1
 # pySwitchmate==0.4.6
 
 # homeassistant.components.tibber
-pyTibber==0.16.2
+pyTibber==0.17.0
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1437,7 +1437,7 @@ pygtfs==0.1.5
 pygti==0.9.2
 
 # homeassistant.components.version
-pyhaversion==21.3.0
+pyhaversion==21.5.0
 
 # homeassistant.components.heos
 pyheos==0.7.2

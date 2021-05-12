@@ -146,16 +146,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if new_state is None:
             return
         entity_id = event.data.get("entity_id")
-        await cli.send_home_assistant_state(entity_id, new_state.state)
+        await cli.send_home_assistant_state(entity_id, None, new_state.state)
 
     async def _send_home_assistant_state(
         entity_id: str, new_state: State | None
     ) -> None:
         """Forward Home Assistant states to ESPHome."""
-        await cli.send_home_assistant_state(entity_id, new_state.state)
+        await cli.send_home_assistant_state(entity_id, None, new_state.state)
 
     @callback
-    def async_on_state_subscription(entity_id: str) -> None:
+    def async_on_state_subscription(
+        entity_id: str, attribute: str | None = None
+    ) -> None:
         """Subscribe and forward states for requested entities."""
         unsub = async_track_state_change_event(
             hass, [entity_id], send_home_assistant_state_event
