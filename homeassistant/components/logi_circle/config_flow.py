@@ -95,7 +95,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_auth(self, user_input=None):
         """Create an entry for auth."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="external_setup")
 
         external_error = self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]
