@@ -1,12 +1,26 @@
 teach_face:
+  name: Teach face
   description: Teach facebox a face using a file.
   fields:
     entity_id:
+      name: Entity
       description: The facebox entity to teach.
       example: "image_processing.facebox"
+      selector:
+        entity:
+          integration: facebox
+          domain: image_processing
     name:
+      name: Name
       description: The name of the face to teach.
+      required: true
       example: "my_name"
+      selector:
+        text:
     file_path:
+      name: File path
       description: The path to the image file.
+      required: true
       example: "/images/my_image.jpg"
+      selector:
+        text:

@@ -1,22 +1,48 @@
 ptz:
+  name: PTZ
   description: Pan/Tilt service for Foscam camera.
+  target:
+    entity:
+      integration: foscam
+      domain: camera
   fields:
-    entity_id:
-      description: Name(s) of entities to move.
-      example: "camera.living_room_camera"
     movement:
-      description: "Direction of the movement. Allowed values: up, down, left, right, top_left, top_right, bottom_left, bottom_right."
+      description: "Direction of the movement."
+      required: true
       example: "up"
+      selector:
+        select:
+          options:
+            - 'bottom_left'
+            - 'bottom_right'
+            - 'down'
+            - 'left'
+            - 'right'
+            - 'top_left'
+            - 'top_right'
+            - 'up'
     travel_time:
-      description: "(Optional) Travel time in seconds. Allowed values: float from 0 to 1. Default: 0.125"
+      description: "Travel time in seconds."
       example: 0.125
+      default: 0.125
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.005
+          unit_of_measurement: seconds
 
 ptz_preset:
+  name: PTZ preset
   description: PTZ Preset service for Foscam camera.
+  target:
+    entity:
+      integration: foscam
+      domain: camera
   fields:
-    entity_id:
-      description: Name(s) of entities to move.
-      example: "camera.living_room_camera"
     preset_name:
-      description: "The name of the preset to move to.  Presets can be created from within the official Foscam apps."
+      description: "The name of the preset to move to. Presets can be created from within the official Foscam apps."
+      required: true
       example: "TopMost"
+      selector:
+        text:
