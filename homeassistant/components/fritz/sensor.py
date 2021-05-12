@@ -141,7 +141,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
         _LOGGER.debug("Updating FRITZ!Box sensors")
 
         try:
-            status = self._fritzbox_tools.fritz_status
+            status: FritzStatus = self._fritzbox_tools.fritz_status
             self._is_available = True
         except FritzConnectionException:
             _LOGGER.error("Error getting the state from the FRITZ!Box", exc_info=True)
