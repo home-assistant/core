@@ -5,24 +5,29 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, ENERGY_KILO_WATT_HOUR, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    ATTR_NAME,
+    ATTR_TEMPERATURE,
+    ATTR_UNIT_OF_MEASUREMENT,
+    ENERGY_KILO_WATT_HOUR,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxEntity
 from .const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_NAME,
     ATTR_STATE_DEVICE_LOCKED,
     ATTR_STATE_LOCKED,
     ATTR_TEMPERATURE_UNIT,
     ATTR_TOTAL_CONSUMPTION,
     ATTR_TOTAL_CONSUMPTION_UNIT,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_COORDINATOR,
     DOMAIN as FRITZBOX_DOMAIN,
 )
+from .model import SwitchExtraAttributes
 
 ATTR_TOTAL_CONSUMPTION_UNIT_VALUE = ENERGY_KILO_WATT_HOUR
 
@@ -78,11 +83,12 @@ class FritzboxSwitch(FritzBoxEntity, SwitchEntity):
         await self.coordinator.async_refresh()
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> SwitchExtraAttributes:
         """Return the state attributes of the device."""
-        attrs = {}
-        attrs[ATTR_STATE_DEVICE_LOCKED] = self.device.device_lock
-        attrs[ATTR_STATE_LOCKED] = self.device.lock
+        attrs: SwitchExtraAttributes = {
+            ATTR_STATE_DEVICE_LOCKED: self.device.device_lock,
+            ATTR_STATE_LOCKED: self.device.lock,
+        }
 
         if self.device.has_powermeter:
             attrs[

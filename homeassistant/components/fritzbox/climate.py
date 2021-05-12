@@ -16,7 +16,11 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    ATTR_NAME,
     ATTR_TEMPERATURE,
+    ATTR_UNIT_OF_MEASUREMENT,
     PRECISION_HALVES,
     TEMP_CELSIUS,
 )
@@ -25,19 +29,16 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxEntity
 from .const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_NAME,
     ATTR_STATE_BATTERY_LOW,
     ATTR_STATE_DEVICE_LOCKED,
     ATTR_STATE_HOLIDAY_MODE,
     ATTR_STATE_LOCKED,
     ATTR_STATE_SUMMER_MODE,
     ATTR_STATE_WINDOW_OPEN,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_COORDINATOR,
     DOMAIN as FRITZBOX_DOMAIN,
 )
+from .model import ClimateExtraAttributes
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
@@ -190,9 +191,9 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
         return MAX_TEMPERATURE
 
     @property
-    def extra_state_attributes(self) -> dict[str, str | int | bool | None]:
+    def extra_state_attributes(self) -> ClimateExtraAttributes:
         """Return the device specific state attributes."""
-        attrs = {
+        attrs: ClimateExtraAttributes = {
             ATTR_STATE_BATTERY_LOW: self.device.battery_low,
             ATTR_STATE_DEVICE_LOCKED: self.device.device_lock,
             ATTR_STATE_LOCKED: self.device.lock,

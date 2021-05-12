@@ -3,21 +3,26 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    ATTR_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_BATTERY,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxEntity
 from .const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_NAME,
     ATTR_STATE_DEVICE_LOCKED,
     ATTR_STATE_LOCKED,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_COORDINATOR,
     DOMAIN as FRITZBOX_DOMAIN,
 )
+from .model import SensorExtraAttributes
 
 
 async def async_setup_entry(
@@ -81,9 +86,9 @@ class FritzBoxTempSensor(FritzBoxEntity, SensorEntity):
         return self.device.temperature  # type: ignore [no-any-return]
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> SensorExtraAttributes:
         """Return the state attributes of the device."""
-        attrs = {
+        attrs: SensorExtraAttributes = {
             ATTR_STATE_DEVICE_LOCKED: self.device.device_lock,
             ATTR_STATE_LOCKED: self.device.lock,
         }

@@ -6,18 +6,17 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-from . import FritzBoxEntity
-from .const import (
+from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    CONF_COORDINATOR,
-    DOMAIN as FRITZBOX_DOMAIN,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from . import FritzBoxEntity
+from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
 
 
 async def async_setup_entry(
