@@ -343,5 +343,9 @@ DHCP = [
     {
         "domain": "verisure",
         "macaddress": "0023C1*"
+    },
+    {
+        "domain": "yeelight",
+        "hostname": "yeelink-*"
     }
 ]
