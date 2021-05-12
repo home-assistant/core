@@ -498,9 +498,14 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         if new_status == "TRANSITIONING":
             return
 
-        self._play_mode = (
-            variables["current_play_mode"] if variables else self.soco.play_mode
-        )
+        if variables and "transport_state" in variables:
+            self._play_mode = variables["current_play_mode"]
+            track_uri = variables["current_track_uri"]
+            music_source = self.soco.music_source_from_uri(track_uri)
+        else:
+            self._play_mode = self.soco.play_mode
+            music_source = self.soco.music_source
+
         self._uri = None
         self._media_duration = None
         self._media_image_url = None
@@ -513,13 +518,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         update_position = new_status != self._status
         self._status = new_status
-
-        if variables:
-            track_uri = variables["current_track_uri"]
-            music_source = self.soco.music_source_from_uri(track_uri)
-        else:
-            # This causes a network round-trip so we avoid it when possible
-            music_source = self.soco.music_source
 
         if music_source == MUSIC_SRC_TV:
             self.update_media_linein(SOURCE_TV)
@@ -556,7 +554,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self._media_title = source
         self._source_name = source
 
-    def update_media_radio(self, variables: dict) -> None:
+    def update_media_radio(self, variables: dict | None) -> None:
         """Update state when streaming radio."""
         self._clear_media_position()
 
