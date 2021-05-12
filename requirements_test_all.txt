@@ -989,7 +989,7 @@ python-forecastio==1.4.0
 python-izone==1.1.4
 
 # homeassistant.components.juicenet
-python-juicenet==1.0.1
+python-juicenet==1.0.2
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.6
