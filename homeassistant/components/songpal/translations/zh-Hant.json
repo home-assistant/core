@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
-        "flow_title": "Sony Songpal {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "init": {
                 "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name} ({host})\uff1f"

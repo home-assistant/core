@@ -5,9 +5,6 @@
         },
         "step": {
             "user": {
-                "data": {
-                    "name": "Sensorname"
-                },
                 "description": "M\u00f6chten Sie mit der Einrichtung beginnen?",
                 "title": "Lokale IP-Adresse"
             }

@@ -9,7 +9,6 @@
         "step": {
             "user": {
                 "data": {
-                    "home_control_url": "URL de Home Control",
                     "mydevolo_url": "URL de mydevolo",
                     "password": "Contrase\u00f1a",
                     "username": "Correo electr\u00f3nico / ID de devolo"

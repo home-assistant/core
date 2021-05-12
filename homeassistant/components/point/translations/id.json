@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_setup": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan.",
-            "authorize_url_fail": "Kesalahan tidak dikenal terjadi ketika menghasilkan URL otorisasi.",
             "authorize_url_timeout": "Tenggang waktu pembuatan URL otorisasi habis.",
             "external_setup": "Point berhasil dikonfigurasi dari alur konfigurasi lainnya.",
             "no_flows": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",

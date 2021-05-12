@@ -14,5 +14,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "country_code": "L\u00e4ndercode des Landes, in dem Kamerabilder angezeigt werden sollen.",
+                    "delta": "Zeitintervall in Sekunden zwischen Kamerabildaktualisierungen"
+                }
+            }
+        }
     }
 }
