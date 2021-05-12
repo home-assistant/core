@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.device_registry import async_get_registry
+from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
