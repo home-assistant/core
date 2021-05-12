@@ -219,6 +219,8 @@ class Statistics(Base):  # type: ignore
     }
     __tablename__ = TABLE_STATISTICS
     id = Column(Integer, primary_key=True)
+    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    source = Column(String(255), index=True)
     statistic_id = Column(String(255), index=True)
     period = Column(Enum(*STATISTIC_PERIODS))
     start = Column(DATETIME_TYPE, index=True)
@@ -227,9 +229,10 @@ class Statistics(Base):  # type: ignore
     max = Column(Float())
 
     @staticmethod
-    def from_stats(statistic_id, period, start, stats):
+    def from_stats(source, statistic_id, period, start, stats):
         """Create object from a statistics."""
         return Statistics(
+            source=source,
             statistic_id=statistic_id,
             period=period,
             start=start,

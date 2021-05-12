@@ -56,6 +56,8 @@ def compile_statistics(
     with session_scope(session=instance.get_session()) as session:  # type: ignore
         for stats in platform_stats:
             for entity_id, stat in stats.items():
-                session.add(Statistics.from_stats(entity_id, period, start, stat))
+                session.add(
+                    Statistics.from_stats(DOMAIN, entity_id, period, start, stat)
+                )
 
     return True
