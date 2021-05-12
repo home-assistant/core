@@ -34,7 +34,7 @@ from .const import (
     STREAM_RESTART_INCREMENT,
     STREAM_RESTART_RESET_TIME,
 )
-from .core import PROVIDERS, IdleTimer
+from .core import PROVIDERS, IdleTimer, StreamOutput
 from .hls import async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,7 +118,7 @@ class Stream:
         self.access_token = None
         self._thread = None
         self._thread_quit = threading.Event()
-        self._outputs = {}
+        self._outputs: dict[str, StreamOutput] = {}
         self._fast_restart_once = False
 
         if self.options is None:
@@ -274,4 +274,4 @@ class Stream:
             num_segments = min(int(lookback // hls.target_duration), MAX_SEGMENTS)
             # Wait for latest segment, then add the lookback
             await hls.recv()
-            recorder.prepend(list(hls.get_segment())[-num_segments:])
+            recorder.prepend(list(hls.get_segments())[-num_segments:])

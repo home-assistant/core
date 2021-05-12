@@ -15,7 +15,7 @@ from .const import (
     SEGMENT_CONTAINER_FORMAT,
     STREAM_TIMEOUT,
 )
-from .core import Segment, StreamBuffer
+from .core import Segment, StreamBuffer, StreamOutput
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,8 +56,7 @@ class SegmentBuffer:
         self._video_stream = None
         self._audio_stream = None
         self._outputs_callback = outputs_callback
-        # Each element is a StreamOutput
-        self._outputs = []
+        self._outputs: list[StreamOutput] = []
         self._sequence = 0
         self._segment_start_pts = None
         self._stream_buffer = None

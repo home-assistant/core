@@ -75,7 +75,7 @@ class HlsPlaylistView(StreamView):
     @staticmethod
     def render_playlist(track):
         """Render playlist."""
-        segments = list(track.get_segment())[-NUM_PLAYLIST_SEGMENTS:]
+        segments = list(track.get_segments())[-NUM_PLAYLIST_SEGMENTS:]
 
         if not segments:
             return []
@@ -125,7 +125,7 @@ class HlsInitView(StreamView):
     async def handle(self, request, stream, sequence):
         """Return init.mp4."""
         track = stream.add_provider("hls")
-        segments = track.get_segment()
+        segments = track.get_segments()
         if not segments:
             return web.HTTPNotFound()
         headers = {"Content-Type": "video/mp4"}
