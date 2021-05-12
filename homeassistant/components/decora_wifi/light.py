@@ -27,6 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
 )
 
+DOMAIN = "decora_wifi"
 NOTIFICATION_ID = "leviton_notification"
 NOTIFICATION_TITLE = "myLeviton Decora Setup"
 
@@ -86,6 +87,7 @@ class DecoraWifiLight(LightEntity):
     def __init__(self, switch):
         """Initialize the switch."""
         self._switch = switch
+        self._unique_id = f"{DOMAIN}_{switch}"
 
     @property
     def supported_features(self):
@@ -98,6 +100,11 @@ class DecoraWifiLight(LightEntity):
     def name(self):
         """Return the display name of this switch."""
         return self._switch.name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the switch."""
+        return self._unique_id
 
     @property
     def brightness(self):
