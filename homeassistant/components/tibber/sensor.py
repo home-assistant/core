@@ -28,6 +28,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity_registry import async_get as async_get_entity_reg
 from homeassistant.util import Throttle, dt as dt_util
 
 from .const import DOMAIN as TIBBER_DOMAIN, MANUFACTURER
@@ -95,7 +96,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     tibber_connection = hass.data.get(TIBBER_DOMAIN)
 
-    dev = []
+    devices = []
     for home in tibber_connection.get_homes(only_active=False):
         try:
             await home.update_info()
@@ -105,26 +106,45 @@ async def async_setup_entry(hass, entry, async_add_entities):
         except aiohttp.ClientError as err:
             _LOGGER.error("Error connecting to Tibber home: %s ", err)
             raise PlatformNotReady() from err
+
         if home.has_active_subscription:
-            dev.append(TibberSensorElPrice(home))
+            devices.append(TibberSensorElPrice(home))
         if home.has_real_time_consumption:
             await home.rt_subscribe(
                 TibberRtDataHandler(async_add_entities, home, hass).async_callback
             )
 
-        # migrate to new device ids
+        # migrate
         old_id = home.info["viewer"]["home"]["meteringPointData"]["consumptionEan"]
         if old_id is None:
             continue
+
+        # migrate to new device ids
+        entity_registry = async_get_entity_reg(hass)
+        old_entity_id = entity_registry.async_get_entity_id(
+            "sensor", TIBBER_DOMAIN, old_id
+        )
+        if old_entity_id is not None:
+            entity_registry.async_update_entity(
+                old_entity_id, new_unique_id=home.home_id
+            )
+        old_entity_id = entity_registry.async_get_entity_id(
+            "sensor", TIBBER_DOMAIN, old_id
+        )
+        if old_entity_id is not None:
+            entity_registry.async_update_entity(
+                old_entity_id, new_unique_id=home.home_id
+            )
+
+        # migrate to new device ids
         device_registry = async_get_dev_reg(hass)
         device_entry = device_registry.async_get_device({(TIBBER_DOMAIN, old_id)})
-
         if device_entry and entry.entry_id in device_entry.config_entries:
             device_registry.async_update_device(
                 device_entry.id, new_identifiers={(TIBBER_DOMAIN, home.home_id)}
             )
 
-    async_add_entities(dev, True)
+    async_add_entities(devices, True)
 
 
 class TibberSensor(SensorEntity):
@@ -154,7 +174,7 @@ class TibberSensor(SensorEntity):
     @property
     def device_id(self):
         """Return the ID of the physical device this sensor is part of."""
-        return self._tibber_home.home_id.replace("-", "")
+        return self._tibber_home.home_id
 
     @property
     def device_info(self):
