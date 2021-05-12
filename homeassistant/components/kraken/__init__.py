@@ -35,13 +35,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     await kraken_data.async_setup()
     hass.data[DOMAIN] = kraken_data
     config_entry.add_update_listener(async_options_updated)
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
     if unload_ok:
         for unsub_listener in hass.data[DOMAIN].unsub_listeners:
             unsub_listener()
