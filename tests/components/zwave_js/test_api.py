@@ -1138,7 +1138,7 @@ async def test_firmware_upload_view(
             data={"file": firmware_file},
         )
         assert mock_cmd.call_args[0][1:4] == (multisensor_6, "file", bytes(10))
-        assert json.loads(await resp.text()) == {"hello": "world"}
+        assert json.loads(await resp.text()) == {"success": True}
 
 
 async def test_firmware_upload_view_server_failure(
@@ -1159,8 +1159,8 @@ async def test_firmware_upload_view_server_failure(
             data={"file": firmware_file},
         )
         assert mock_cmd.call_args[0][1:4] == (multisensor_6, "file", bytes(10))
-        # assert json.loads(await resp.text()) == {"hello": "world"}
         assert resp.status == 422
+        assert resp.reason == "test (10)"
 
 
 async def test_firmware_upload_view_invalid_payload(

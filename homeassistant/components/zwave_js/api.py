@@ -1156,7 +1156,7 @@ class FirmwareUploadView(HomeAssistantView):
 
         if not status["success"]:
             raise web_exceptions.HTTPUnprocessableEntity(
-                reason=f"{status['zwaveErrorCode']}: {status['zwaveErrorMessage']}"
+                reason=f"{status['zwaveErrorMessage']} ({status['zwaveErrorCode']})"
             )
 
         return self.json(status)
