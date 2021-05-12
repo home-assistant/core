@@ -67,6 +67,10 @@ DHCP = [
         "hostname": "flume-gw-*"
     },
     {
+        "domain": "gogogate2",
+        "hostname": "ismartgate*"
+    },
+    {
         "domain": "guardian",
         "hostname": "gvc*",
         "macaddress": "30AEA4*"
@@ -75,10 +79,6 @@ DHCP = [
         "domain": "guardian",
         "hostname": "guardian*",
         "macaddress": "30AEA4*"
-    },
-    {
-        "domain": "gogogate2",
-        "hostname": "ismartgate*"
     },
     {
         "domain": "hunterdouglas_powerview",
