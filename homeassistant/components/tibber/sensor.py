@@ -108,7 +108,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             raise PlatformNotReady() from err
 
         if home.has_active_subscription:
-            devices.append(TibberSensorElPrice(home))
+            entities.append(TibberSensorElPrice(home))
         if home.has_real_time_consumption:
             await home.rt_subscribe(
                 TibberRtDataHandler(async_add_entities, home, hass).async_callback
