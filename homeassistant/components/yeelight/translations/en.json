@@ -10,8 +10,7 @@
         "flow_title": "{model} {host}",
         "step": {
             "discovery_confirm": {
-                "description": "Do you want to setup {model} ({host})?",
-                "title": "Setup Yeelight"
+                "description": "Do you want to setup {model} ({host})?"
             },
             "pick_device": {
                 "data": {
