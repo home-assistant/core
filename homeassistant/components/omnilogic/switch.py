@@ -57,7 +57,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 
 class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
-    """Define an Omnilogic Base Switch entity which will be instantiated through specific switch type entities."""
+    """Define an Omnilogic Base Switch entity to be extended."""
 
     def __init__(
         self,
@@ -121,7 +121,7 @@ class OmniLogicRelayControl(OmniLogicSwitch):
         """Turn off the relay."""
         self._state = False
         self._last_action = time.time()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         await self.coordinator.api.set_relay_valve(
             int(self._item_id[1]),
