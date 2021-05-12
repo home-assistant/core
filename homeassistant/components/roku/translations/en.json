@@ -11,7 +11,10 @@
         "flow_title": "{name}",
         "step": {
             "discovery_confirm": {
-                "data": {},
+                "description": "Do you want to set up {name}?",
+                "title": "Roku"
+            },
+            "ssdp_confirm": {
                 "description": "Do you want to set up {name}?",
                 "title": "Roku"
             },

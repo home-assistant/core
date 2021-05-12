@@ -5,8 +5,7 @@
             "reauth_successful": "La r\u00e9-authentification a \u00e9t\u00e9 un succ\u00e8s"
         },
         "error": {
-            "invalid_auth": "Authentification invalide",
-            "unknown": "Erreur inattendue"
+            "invalid_auth": "Authentification invalide"
         },
         "step": {
             "reauth_confirm": {

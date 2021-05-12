@@ -4,29 +4,13 @@
             "port_name_in_use": "Sama nime v\u00f5i pordiga tarvik v\u00f5i sild on juba konfigureeritud."
         },
         "step": {
-            "accessory_mode": {
-                "data": {
-                    "entity_id": "Olem"
-                },
-                "description": "Vali kaasatav olem. Lisare\u017eiimis on kaasatav ainult \u00fcks olem.",
-                "title": "Vali kaasatav olem"
-            },
-            "bridge_mode": {
-                "data": {
-                    "include_domains": "Kaasatavad domeenid"
-                },
-                "description": "Vali kaasatavad domeenid. Kaasatakse k\u00f5ik domeenis toetatud olemid.",
-                "title": "Vali kaasatavad domeenid"
-            },
             "pairing": {
                 "description": "Sidumise l\u00f5puleviimiseks j\u00e4rgi jaotises \"HomeKiti sidumine\" toodud juhiseid alajaotises \"Teatised\".",
                 "title": "HomeKiti sidumine"
             },
             "user": {
                 "data": {
-                    "auto_start": "Autostart (keela, kui kasutad Z-Wave'i v\u00f5i muud viivitatud k\u00e4ivituss\u00fcsteemi)",
-                    "include_domains": "Kaasatavad domeenid",
-                    "mode": "Re\u017eiim"
+                    "include_domains": "Kaasatavad domeenid"
                 },
                 "description": "Vali kaasatavad domeenid. Kaasatakse k\u00f5ik domeenis toetatud olemid. Iga telemeedia pleieri ja kaamera jaoks luuakse eraldi HomeKiti eksemplar tarvikure\u017eiimis.",
                 "title": "Vali kaasatavad domeenid"
@@ -37,8 +21,7 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (keela kui kasutad homekit.start teenust k\u00e4sitsi)",
-                    "safe_mode": "Turvare\u017eiim (luba ainult siis, kui sidumine nurjub)"
+                    "auto_start": "Autostart (keela kui kasutad homekit.start teenust k\u00e4sitsi)"
                 },
                 "description": "Neid s\u00e4tteid tuleb muuta ainult siis kui HomeKit ei t\u00f6\u00f6ta.",
                 "title": "T\u00e4psem seadistamine"
