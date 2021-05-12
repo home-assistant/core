@@ -116,7 +116,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         old_id = home.info["viewer"]["home"]["meteringPointData"]["consumptionEan"]
         if old_id is None:
             continue
-        device_registry = await async_get_registry(hass)
+        device_registry = async_get_dev_reg(hass)
         device_entry = device_registry.async_get_device({(TIBBER_DOMAIN, old_id)})
 
         if device_entry and entry.entry_id in device_entry.config_entries:
