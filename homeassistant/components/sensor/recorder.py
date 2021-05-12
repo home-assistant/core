@@ -4,7 +4,7 @@ from __future__ import annotations
 import datetime
 import statistics
 
-from homeassistant.components import history
+from homeassistant.components.recorder import history
 from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
 from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
