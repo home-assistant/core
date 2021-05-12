@@ -4,29 +4,13 @@
             "port_name_in_use": "Un accessorio o un bridge con lo stesso nome o porta \u00e8 gi\u00e0 configurato."
         },
         "step": {
-            "accessory_mode": {
-                "data": {
-                    "entity_id": "Entit\u00e0"
-                },
-                "description": "Scegli l'entit\u00e0 da includere. In modalit\u00e0 accessorio, \u00e8 inclusa solo una singola entit\u00e0.",
-                "title": "Seleziona l'entit\u00e0 da includere"
-            },
-            "bridge_mode": {
-                "data": {
-                    "include_domains": "Domini da includere"
-                },
-                "description": "Scegli i domini da includere. Verranno incluse tutte le entit\u00e0 supportate nel dominio.",
-                "title": "Seleziona i domini da includere"
-            },
             "pairing": {
                 "description": "Per completare l'associazione, seguire le istruzioni in \"Notifiche\" sotto \"Associazione HomeKit\".",
                 "title": "Associa HomeKit"
             },
             "user": {
                 "data": {
-                    "auto_start": "Avvio automatico (disabilitare se si utilizza Z-Wave o un altro sistema di avvio ritardato)",
-                    "include_domains": "Domini da includere",
-                    "mode": "Modalit\u00e0"
+                    "include_domains": "Domini da includere"
                 },
                 "description": "Scegli i domini da includere. Verranno incluse tutte le entit\u00e0 supportate nel dominio. Verr\u00e0 creata un'istanza HomeKit separata in modalit\u00e0 accessorio per ogni lettore multimediale TV e telecamera.",
                 "title": "Seleziona i domini da includere"
@@ -37,8 +21,7 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Avvio automatico (disabilitare se stai chiamando manualmente il servizio homekit.start)",
-                    "safe_mode": "Modalit\u00e0 provvisoria (attivare solo in caso di errore di associazione)"
+                    "auto_start": "Avvio automatico (disabilitare se stai chiamando manualmente il servizio homekit.start)"
                 },
                 "description": "Queste impostazioni devono essere regolate solo se HomeKit non funziona.",
                 "title": "Configurazione Avanzata"
