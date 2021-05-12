@@ -1,6 +1,7 @@
 """The kraken integration."""
+from __future__ import annotations
+
 import logging
-from typing import Dict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -73,7 +74,7 @@ class KrakenSensor(CoordinatorEntity):
         self,
         kraken_data: KrakenData,
         tracked_asset_pair: str,
-        sensor_type: Dict[str, bool],
+        sensor_type: dict[str, bool],
     ) -> None:
         """Initialize."""
         super().__init__(kraken_data.coordinator)

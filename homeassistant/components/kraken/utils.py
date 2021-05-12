@@ -1,10 +1,10 @@
 """Utility functions for the kraken integration."""
-from typing import Dict
+from __future__ import annotations
 
 from pykrakenapi.pykrakenapi import KrakenAPI
 
 
-def get_tradable_asset_pairs(kraken_api: KrakenAPI) -> Dict[str, str]:
+def get_tradable_asset_pairs(kraken_api: KrakenAPI) -> dict[str, str]:
     """Get a list of tradable asset pairs."""
     tradable_asset_pairs = {}
     asset_pairs_df = kraken_api.get_tradable_asset_pairs()
