@@ -50,14 +50,13 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize flow."""
         self._entry: ConfigEntry | None = None
         self._host: str | None = None
-        self._name: str | None = None
+        self._name: str = ""
         self._password: str | None = None
         self._username: str | None = None
 
-    def _get_entry(self) -> FlowResult:
-        assert self._name is not None
+    def _get_entry(self, name: str) -> FlowResult:
         return self.async_create_entry(
-            title=self._name,
+            title=name,
             data={
                 CONF_HOST: self._host,
                 CONF_PASSWORD: self._password,
@@ -111,7 +110,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             result = await self.hass.async_add_executor_job(self._try_connect)
 
             if result == RESULT_SUCCESS:
-                return self._get_entry()
+                return self._get_entry(self._name)
             if result != RESULT_INVALID_AUTH:
                 return self.async_abort(reason=result)
             errors["base"] = result
@@ -162,7 +161,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             result = await self.hass.async_add_executor_job(self._try_connect)
 
             if result == RESULT_SUCCESS:
-                return self._get_entry()
+                return self._get_entry(self._name)
             if result != RESULT_INVALID_AUTH:
                 return self.async_abort(reason=result)
             errors["base"] = result
