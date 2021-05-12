@@ -1,6 +1,6 @@
 set_state:
   name: Set State
-  description: Set a color/brightness and possibility turn the light on/off.
+  description: Set a color/brightness and possibly turn the light on/off.
   target:
     entity:
       integration: lifx
@@ -31,13 +31,13 @@ set_state:
           unit_of_measurement: seconds
     power:
       name: Power
-      description: Turn the light on (True) or off (False). Leave out to keep the power as it is.
+      description: Turn the light on or off. Leave out to keep the power as it is.
       example: false
       selector:
         boolean:
 
 effect_pulse:
-  name: Effect Pulse
+  name: Pulse effect
   description: Run a flash effect by changing to a color and back.
   target:
     entity:
@@ -105,7 +105,7 @@ effect_pulse:
         boolean:
 
 effect_colorloop:
-  name: Effect color loop
+  name: Color loop effect
   description: Run an effect with looping colors.
   target:
     entity:
