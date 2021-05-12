@@ -422,7 +422,7 @@ class LightSchema:
             }
         ),
         vol.Any(
-            # either global "address" "individual_colors" is required
+            # either global "address" or "individual_colors" is required
             vol.Schema(
                 {
                     # brightness addresses are required in COLOR_SCHEMA
