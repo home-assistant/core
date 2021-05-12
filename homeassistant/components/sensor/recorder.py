@@ -32,7 +32,7 @@ def _get_entities(hass: HomeAssistant) -> list[tuple[str, str]]:
 
 # Faster than try/except
 # From https://stackoverflow.com/a/23639915
-def _is_number(s: str) -> bool:
+def _is_number(s: str) -> bool:  # pylint: disable=invalid-name
     """Return True if string is a number."""
     return s.replace(".", "", 1).isdigit()
 
@@ -79,8 +79,8 @@ def compile_statistics(
             except ValueError:
                 pass
 
-        # TODO: The average calculation will be incorrect for unevenly spaced readings,
-        # to be improved by weighting with time between measurements
+        # Note: The average calculation will be incorrect for unevenly spaced readings,
+        # this needs to be improved by weighting with time between measurements
         if "mean" in wanted_statistics:
             try:
                 result[entity_id]["mean"] = statistics.fmean(fstates)
