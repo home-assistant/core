@@ -1,12 +1,11 @@
 """The Bosch Smart Home Controller integration."""
-import asyncio
 import logging
 
 from boschshcpy import SHCSession
 from boschshcpy.exceptions import SHCAuthenticationError, SHCConnectionError
 
 from homeassistant.components.zeroconf import async_get_instance
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -59,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(shc_info.unique_id))},
-        identifiers={(DOMAIN, shc_info.name)},
+        identifiers={(DOMAIN, shc_info.unique_id)},
         manufacturer="Bosch",
         name=entry.title,
         model="SmartHomeController",
@@ -84,10 +83,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     session: SHCSession = hass.data[DOMAIN][entry.entry_id][DATA_SESSION]
 
-    if hass.data[DOMAIN][entry.entry_id][DATA_POLLING_HANDLER]:
-        hass.data[DOMAIN][entry.entry_id][DATA_POLLING_HANDLER]()
-        hass.data[DOMAIN][entry.entry_id].pop(DATA_POLLING_HANDLER)
-        await hass.async_add_executor_job(session.stop_polling)
+    hass.data[DOMAIN][entry.entry_id][DATA_POLLING_HANDLER]()
+    hass.data[DOMAIN][entry.entry_id].pop(DATA_POLLING_HANDLER)
+    await hass.async_add_executor_job(session.stop_polling)
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

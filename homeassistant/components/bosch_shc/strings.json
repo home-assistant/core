@@ -25,7 +25,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "pairing_failed": "Pairing failed",
+      "pairing_failed": "Pairing failed. Please press the Bosch Smart Home Controller button until LED starts blinking.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

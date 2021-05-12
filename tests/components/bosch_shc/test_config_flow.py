@@ -537,12 +537,14 @@ async def test_reauth(hass):
         assert result2["errors"] == {}
 
     with patch(
-        "homeassistant.components.bosch_shc.config_flow.create_credentials_and_validate",
+        "boschshcpy.register_client.SHCRegisterClient.register",
         return_value={
             "token": "abc:123",
             "cert": b"content_cert",
             "key": b"content_key",
         },
+    ), patch("homeassistant.components.bosch_shc.config_flow.write_tls_asset",), patch(
+        "boschshcpy.session.SHCSession.authenticate"
     ), patch(
         "homeassistant.components.bosch_shc.async_setup_entry",
         return_value=True,

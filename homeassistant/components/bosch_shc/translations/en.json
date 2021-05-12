@@ -29,7 +29,7 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
-            "pairing_failed": "Pairing failed",
+            "pairing_failed": "Pairing failed. Please press the Bosch Smart Home Controller button until LED starts blinking.",
             "unknown": "Unexpected error"
         },
         "abort": {

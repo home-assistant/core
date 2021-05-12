@@ -123,8 +123,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the credentials step."""
         errors = {}
         if user_input is not None:
+            zeroconf = await async_get_instance(self.hass)
             try:
-                zeroconf = await async_get_instance(self.hass)
                 result = await self.hass.async_add_executor_job(
                     create_credentials_and_validate,
                     self.hass,
@@ -132,13 +132,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input,
                     zeroconf,
                 )
-                entry_data = {
-                    CONF_SSL_CERTIFICATE: self.hass.config.path(DOMAIN, CONF_SHC_CERT),
-                    CONF_SSL_KEY: self.hass.config.path(DOMAIN, CONF_SHC_KEY),
-                    CONF_HOST: self.host,
-                    CONF_TOKEN: result["token"],
-                    CONF_HOSTNAME: result["token"].split(":", 1)[1],
-                }
             except SHCAuthenticationError:
                 errors["base"] = "invalid_auth"
             except SHCConnectionError:
@@ -147,14 +140,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.warning("API call returned non-OK result. Wrong password?")
                 errors["base"] = "unknown"
             except SHCRegistrationError:
-                _LOGGER.warning(
-                    "SHC not in pairing mode! Please press the Bosch Smart Home Controller button until LED starts blinking"
-                )
+                _LOGGER.warning("SHC not in pairing mode!")
                 errors["base"] = "pairing_failed"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                entry_data = {
+                    CONF_SSL_CERTIFICATE: self.hass.config.path(DOMAIN, CONF_SHC_CERT),
+                    CONF_SSL_KEY: self.hass.config.path(DOMAIN, CONF_SHC_KEY),
+                    CONF_HOST: self.host,
+                    CONF_TOKEN: result["token"],
+                    CONF_HOSTNAME: result["token"].split(":", 1)[1],
+                }
                 existing_entry = await self.async_set_unique_id(self.info["unique_id"])
                 if existing_entry:
                     self.hass.config_entries.async_update_entry(
