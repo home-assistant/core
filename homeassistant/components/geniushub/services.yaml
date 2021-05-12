@@ -14,7 +14,7 @@ set_zone_mode:
       selector:
         entity:
           integration: geniushub
-          domain: switch
+          domain: climate
     mode:
       name: Mode
       description: "One of: off, timer or footprint."
@@ -40,7 +40,7 @@ set_zone_override:
       selector:
         entity:
           integration: geniushub
-          domain: switch
+          domain: climate
     temperature:
       name: Temperature
       description: The target temperature.

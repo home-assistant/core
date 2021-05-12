@@ -41,13 +41,20 @@ activate_vacation:
     endtime:
       name: Endtime
       description: The time when the vacation mode should automatically be disabled.
+      required: true
       example: 2019-09-17 14:00
       selector:
         text:
     temperature:
       name: Temperature
       description: the set temperature during the vacation mode.
+      required: true
       example: 18.5
+      default: 18
+      selector:
+        number:
+          min: 0
+          max: 55
     accesspoint_id:
       name: Accesspoint ID
       description: The ID of the Homematic IP Access Point
