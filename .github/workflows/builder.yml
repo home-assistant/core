@@ -23,7 +23,7 @@ jobs:
       publish: ${{ steps.version.outputs.publish }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0
 
@@ -54,7 +54,7 @@ jobs:
     if: needs.init.outputs.publish == 'true'
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v2.2.2
@@ -84,7 +84,7 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
@@ -151,7 +151,7 @@ jobs:
           - tinker
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
@@ -182,7 +182,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Initialize git
         uses: home-assistant/actions/helpers/git-init@master
@@ -214,7 +214,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
