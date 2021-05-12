@@ -3,7 +3,7 @@ from datetime import timedelta
 from functools import partial
 import logging
 
-from nexia.const import NEXIA_BRAND
+from nexia.const import BRAND_NEXIA
 from nexia.home import NexiaHome
 from requests.exceptions import ConnectTimeout, HTTPError
 
@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     conf = entry.data
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
-    brand = conf.get(CONF_BRAND, NEXIA_BRAND)
+    brand = conf.get(CONF_BRAND, BRAND_NEXIA)
 
     state_file = hass.config.path(f"nexia_config_{username}.conf")
 
