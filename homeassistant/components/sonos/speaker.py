@@ -96,7 +96,7 @@ class SonosSpeaker:
             self.hass, f"{SONOS_SEEN}-{self.soco.uid}", self.async_seen
         )
 
-        if (battery_info := fetch_battery_info_or_none(self.soco)) is not None:
+        if battery_info := fetch_battery_info_or_none(self.soco):
             # Battery events can be infrequent, polling is still necessary
             self.battery_info = battery_info
             self._battery_poll_timer = self.hass.helpers.event.track_time_interval(
