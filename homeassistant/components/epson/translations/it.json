@@ -8,8 +8,7 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "name": "Nome",
-                    "port": "Porta"
+                    "name": "Nome"
                 }
             }
         }

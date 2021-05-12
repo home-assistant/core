@@ -17,7 +17,7 @@
             "unable_to_pair": "No s'ha pogut vincular, torna-ho a provar.",
             "unknown_error": "El dispositiu ha em\u00e8s un error desconegut. Vinculaci\u00f3 fallida."
         },
-        "flow_title": "{name} a trav\u00e9s de HomeKit Accessory Protocol",
+        "flow_title": "{name}",
         "step": {
             "busy_error": {
                 "description": "Atura la vinculaci\u00f3 a tots els controladors o prova de reiniciar el dispositiu, despr\u00e9s, segueix amb la vinculaci\u00f3.",

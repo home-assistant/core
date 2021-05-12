@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
-            "authorize_url_fail": "Nieznany b\u0142\u0105d podczas generowania URL autoryzacji",
             "authorize_url_timeout": "Przekroczono limit czasu generowania URL autoryzacji",
             "unknown": "Nieoczekiwany b\u0142\u0105d",
             "unknown_authorize_url_generation": "Nieznany b\u0142\u0105d podczas generowania URL autoryzacji"
