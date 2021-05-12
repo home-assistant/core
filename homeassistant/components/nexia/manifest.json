@@ -1,6 +1,6 @@
 {
   "domain": "nexia",
-  "name": "Nexia",
+  "name": "Nexia/American Standard",
   "requirements": ["nexia==0.9.7"],
   "codeowners": ["@bdraco"],
   "documentation": "https://www.home-assistant.io/integrations/nexia",
