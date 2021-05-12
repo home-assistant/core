@@ -8,7 +8,6 @@ from homeassistant import config_entries, exceptions
 from homeassistant.components.dhcp import IP_ADDRESS
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
 import homeassistant.helpers.config_validation as cv
 
 from . import (
