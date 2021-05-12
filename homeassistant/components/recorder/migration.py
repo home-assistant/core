@@ -278,7 +278,6 @@ def _update_states_table_with_foreign_key_options(connection, engine):
     inspector = sqlalchemy.inspect(engine)
     alters = []
     for foreign_key in inspector.get_foreign_keys(TABLE_STATES):
-        _LOGGER.warning("Old FK: %s", foreign_key)
         if foreign_key["name"] and (
             # MySQL/MariaDB will have empty options
             not foreign_key["options"]
@@ -294,7 +293,6 @@ def _update_states_table_with_foreign_key_options(connection, engine):
             )
 
     if not alters:
-        _LOGGER.warning("no alters to run.")
         return
 
     states_key_constraints = Base.metadata.tables[TABLE_STATES].foreign_key_constraints
@@ -311,6 +309,34 @@ def _update_states_table_with_foreign_key_options(connection, engine):
         except (InternalError, OperationalError):
             _LOGGER.exception(
                 "Could not update foreign options in %s table", TABLE_STATES
+            )
+
+
+def _drop_foreign_key_constraints(connection, engine, table, columns):
+    """Drop froeign key constraints for a table on specific columns."""
+    inspector = sqlalchemy.inspect(engine)
+    alters = []
+    for foreign_key in inspector.get_foreign_keys(table):
+        if (
+            foreign_key["name"]
+            and foreign_key["options"].get("ondelete")
+            and foreign_key["constrained_columns"] == columns
+        ):
+            alters.append(
+                {
+                    "old_fk": ForeignKeyConstraint((), (), name=foreign_key["name"]),
+                    "columns": foreign_key["constrained_columns"],
+                }
+            )
+
+    for alter in alters:
+        try:
+            connection.execute(DropConstraint(alter["old_fk"]))
+        except (InternalError, OperationalError):
+            _LOGGER.exception(
+                "Could not drop foreign constraints in %s table on %s",
+                TABLE_STATES,
+                columns,
             )
 
 
@@ -417,6 +443,10 @@ def _apply_update(engine, session, new_version, old_version):
             )
     elif new_version == 14:
         _modify_columns(connection, engine, "events", ["event_type VARCHAR(64)"])
+    elif new_version == 15:
+        _drop_foreign_key_constraints(
+            connection, engine, TABLE_STATES, ["old_state_id"]
+        )
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
