@@ -8,8 +8,7 @@
             "user": {
                 "data": {
                     "host": "Vert",
-                    "name": "Navn",
-                    "port": "Port"
+                    "name": "Navn"
                 }
             }
         }

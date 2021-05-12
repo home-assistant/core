@@ -5,9 +5,6 @@
         },
         "step": {
             "user": {
-                "data": {
-                    "name": "Sens\u00f6r Ad\u0131"
-                },
                 "description": "Kuruluma ba\u015flamak ister misiniz?",
                 "title": "Yerel IP Adresi"
             }

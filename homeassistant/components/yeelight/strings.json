@@ -14,7 +14,6 @@
         }
       },
       "discovery_confirm": {
-        "title": "Setup Yeelight",
         "description": "Do you want to setup {model} ({host})?"
       }
     },

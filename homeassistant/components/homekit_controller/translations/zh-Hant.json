@@ -17,7 +17,7 @@
             "unable_to_pair": "\u7121\u6cd5\u914d\u5c0d\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002",
             "unknown_error": "\u88dd\u7f6e\u56de\u5831\u672a\u77e5\u932f\u8aa4\u3002\u914d\u5c0d\u5931\u6557\u3002"
         },
-        "flow_title": "{name} \u4f7f\u7528 HomeKit \u914d\u4ef6\u901a\u8a0a\u5354\u5b9a",
+        "flow_title": "{name}",
         "step": {
             "busy_error": {
                 "description": "\u53d6\u6d88\u6240\u6709\u63a7\u5236\u5668\u914d\u5c0d\uff0c\u6216\u8005\u91cd\u555f\u88dd\u7f6e\u3001\u7136\u5f8c\u518d\u7e7c\u7e8c\u914d\u5c0d\u3002",

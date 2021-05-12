@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
-        "flow_title": "Elgato \u7167\u660e\uff1a{serial_number}",
+        "flow_title": "{serial_number}",
         "step": {
             "user": {
                 "data": {

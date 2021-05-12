@@ -5,7 +5,6 @@
             "already_in_progress": "Configuration flow is already in progress",
             "cannot_connect": "Failed to connect"
         },
-        "error": {},
         "flow_title": "{host}",
         "step": {
             "confirm": {

@@ -48,10 +48,10 @@ set_persons_home:
   fields:
     persons:
       description: List of names
-      example: Bob
+      example: "[Alice, Bob]"
       required: true
       selector:
-        text:
+        object:
 
 set_person_away:
   name: Set person away
