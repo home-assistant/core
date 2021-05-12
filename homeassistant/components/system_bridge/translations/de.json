@@ -14,14 +14,16 @@
             "authenticate": {
                 "data": {
                     "api_key": "API-Schl\u00fcssel"
-                }
+                },
+                "description": "Bitte gib den API-Schl\u00fcssel ein, den du in deiner Konfiguration f\u00fcr {Name} festgelegt hast."
             },
             "user": {
                 "data": {
                     "api_key": "API-Schl\u00fcssel",
                     "host": "Host",
                     "port": "Port"
-                }
+                },
+                "description": "Bitte gib Verbindungsdaten ein."
             }
         }
     }

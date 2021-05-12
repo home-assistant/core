@@ -8,6 +8,7 @@
         "error": {
             "invalid_auth": "Invalid authentication"
         },
+        "flow_title": "Tuya configuration",
         "step": {
             "user": {
                 "data": {

@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus"
         },
-        "flow_title": "Canary {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

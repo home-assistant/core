@@ -13,7 +13,6 @@
             "is_pressure": "\u76ee\u524d{entity_name}\u58d3\u529b",
             "is_signal_strength": "\u76ee\u524d{entity_name}\u8a0a\u865f\u5f37\u5ea6",
             "is_temperature": "\u76ee\u524d{entity_name}\u6eab\u5ea6",
-            "is_timestamp": "\u76ee\u524d{entity_name}\u6642\u9593\u6a19\u8a18",
             "is_value": "\u76ee\u524d{entity_name}\u503c",
             "is_voltage": "\u76ee\u524d{entity_name}\u96fb\u58d3"
         },
@@ -30,7 +29,6 @@
             "pressure": "{entity_name}\u58d3\u529b\u8b8a\u66f4",
             "signal_strength": "{entity_name}\u8a0a\u865f\u5f37\u5ea6\u8b8a\u66f4",
             "temperature": "{entity_name}\u6eab\u5ea6\u8b8a\u66f4",
-            "timestamp": "{entity_name}\u6642\u9593\u6a19\u8a18\u8b8a\u66f4",
             "value": "{entity_name}\u503c\u8b8a\u66f4",
             "voltage": "\u76ee\u524d{entity_name}\u96fb\u58d3\u8b8a\u66f4"
         }
