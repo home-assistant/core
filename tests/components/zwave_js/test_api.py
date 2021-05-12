@@ -1131,7 +1131,7 @@ async def test_firmware_upload_view(
     client = await hass_client()
     with patch(
         "homeassistant.components.zwave_js.api.begin_firmware_update",
-        return_value={"hello": "world"},
+        return_value={"success": True},
     ) as mock_cmd:
         resp = await client.post(
             f"/api/zwave_js/firmware/upload/{integration.entry_id}/{multisensor_6.node_id}",
@@ -1139,6 +1139,28 @@ async def test_firmware_upload_view(
         )
         assert mock_cmd.call_args[0][1:4] == (multisensor_6, "file", bytes(10))
         assert json.loads(await resp.text()) == {"hello": "world"}
+
+
+async def test_firmware_upload_view_server_failure(
+    hass, multisensor_6, integration, hass_client, firmware_file
+):
+    """Test the HTTP firmware upload view when serveer returns an error."""
+    client = await hass_client()
+    with patch(
+        "homeassistant.components.zwave_js.api.begin_firmware_update",
+        return_value={
+            "success": False,
+            "zwaveErrorCode": 10,
+            "zwaveErrorMessage": "test",
+        },
+    ) as mock_cmd:
+        resp = await client.post(
+            f"/api/zwave_js/firmware/upload/{integration.entry_id}/{multisensor_6.node_id}",
+            data={"file": firmware_file},
+        )
+        assert mock_cmd.call_args[0][1:4] == (multisensor_6, "file", bytes(10))
+        # assert json.loads(await resp.text()) == {"hello": "world"}
+        assert resp.status == 422
 
 
 async def test_firmware_upload_view_invalid_payload(
