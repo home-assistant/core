@@ -6,8 +6,7 @@ import requests
 import somecomfort
 import voluptuous as vol
 
-from homeassistant.components.honeywell.sensor import HoneywellUSSensor
-from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -77,7 +76,7 @@ def setup(hass: HomeAssistant, config: ConfigType):
             ):
                 hass.data[DOMAIN] = {}
                 hass.data[DOMAIN]["device"] = device
-                load_platform(hass, "climate", DOMAIN, {}, config)
+                load_platform(hass, "climate", DOMAIN, config[DOMAIN], config)
                 load_platform(hass, "sensor", DOMAIN, {}, config)
 
     return True

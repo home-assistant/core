@@ -8,7 +8,7 @@ from typing import Any
 
 import somecomfort
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -89,15 +89,19 @@ def setup_platform(
     hass: HomeAssistant, config: ConfigType, add_entities, discovery_info=None
 ) -> None:
     """Set up the Honeywell thermostat."""
-    add_entities([HoneywellUSThermostat(hass.data[DOMAIN]["device"])])
+    cool_away_temp = discovery_info.get(CONF_COOL_AWAY_TEMPERATURE)
+    heat_away_temp = discovery_info.get(CONF_HEAT_AWAY_TEMPERATURE)
+    add_entities([HoneywellUSThermostat(hass.data[DOMAIN]["device"], cool_away_temp, heat_away_temp)])
 
 
 class HoneywellUSThermostat(ClimateEntity):
     """Representation of a Honeywell US Thermostat."""
 
-    def __init__(self, device):
+    def __init__(self, device, cool_away_temp, heat_away_temp):
         """Initialize the thermostat."""
         self._device = device
+        self._cool_away_temp = cool_away_temp
+        self._heat_away_temp = heat_away_temp
         self._away = False
 
         _LOGGER.debug("latestData = %s ", device._data)

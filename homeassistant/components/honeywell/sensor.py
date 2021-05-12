@@ -26,13 +26,13 @@ def setup_platform(
     device = hass.data[DOMAIN]["device"]
     sensors = []
 
-    if device.current_temperature != None:
+    if device.current_temperature is not None:
         sensors.append(HoneywellUSSensor(device, "indoor", "temperature"))
-    if device.current_humidity != None and device.current_humidity != 128:
+    if device.current_humidity is not None and device.current_humidity != 128:
         sensors.append(HoneywellUSSensor(device, "indoor", "humidity"))
-    if device.outdoor_temperature != None:
+    if device.outdoor_temperature is not None:
         sensors.append(HoneywellUSSensor(device, "outdoor", "temperature"))
-    if device.outdoor_humidity != None:
+    if device.outdoor_humidity is not None:
         sensors.append(HoneywellUSSensor(device, "outdoor", "humidity"))
 
     add_entities(sensors)
