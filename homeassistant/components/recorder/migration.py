@@ -313,7 +313,7 @@ def _update_states_table_with_foreign_key_options(connection, engine):
 
 
 def _drop_foreign_key_constraints(connection, engine, table, columns):
-    """Drop froeign key constraints for a table on specific columns."""
+    """Drop foreign key constraints for a table on specific columns."""
     inspector = sqlalchemy.inspect(engine)
     drops = []
     for foreign_key in inspector.get_foreign_keys(table):
