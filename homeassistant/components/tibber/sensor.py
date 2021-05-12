@@ -137,7 +137,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 device_entry.id, new_identifiers={(TIBBER_DOMAIN, home.home_id)}
             )
 
-    async_add_entities(devices, True)
+    async_add_entities(entities, True)
 
 
 class TibberSensor(SensorEntity):
