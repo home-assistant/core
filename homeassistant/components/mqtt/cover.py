@@ -453,8 +453,10 @@ class MqttCover(MqttEntity, CoverEntity):
         """Flag supported features."""
         supported_features = 0
         if self._config.get(CONF_COMMAND_TOPIC) is not None:
-            supported_features = OPEN_CLOSE_FEATURES
-
+            if self._config.get(CONF_PAYLOAD_OPEN) is not None:
+                supported_features |= SUPPORT_OPEN
+            if self._config.get(CONF_PAYLOAD_CLOSE) is not None:
+                supported_features |= SUPPORT_CLOSE
             if self._config.get(CONF_PAYLOAD_STOP) is not None:
                 supported_features |= SUPPORT_STOP
 
