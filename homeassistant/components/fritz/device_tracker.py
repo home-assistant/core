@@ -19,7 +19,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
 
-from .common import FritzBoxTools, FritzDevice, device_name
+from .common import FritzBoxTools, FritzDevice, fritz_device_name
 from .const import (
     CONF_ADD_NEW_TRACKER,
     CONF_SELECTED_DEVICES,
@@ -88,7 +88,7 @@ async def async_setup_entry(
         if new_device:
             for mac, device in router.devices.items():
                 if mac not in known_devices:
-                    _LOGGER.info("New device %s discovered", device_name(device))
+                    _LOGGER.info("New device %s discovered", fritz_device_name(device))
                     entry.options[CONF_SELECTED_DEVICES].append(mac)
 
         for mac, device in router.devices.items():
@@ -98,7 +98,7 @@ async def async_setup_entry(
             if mac in entry.options[CONF_SELECTED_DEVICES] and not active_tracker.get(
                 mac
             ):
-                _LOGGER.info("Add device %s to be tracked", device_name(device))
+                _LOGGER.info("Add device %s to be tracked", fritz_device_name(device))
                 entities.append(FritzBoxTracker(router, device))
                 active_tracker.update({mac: True})
             elif active_tracker.get(mac) is not None:

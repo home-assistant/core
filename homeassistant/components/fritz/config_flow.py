@@ -19,7 +19,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from .common import FritzBoxTools, device_name
+from .common import FritzBoxTools, fritz_device_name
 from .const import (
     CONF_ADD_ALL_TRACKER,
     CONF_ADD_NEW_TRACKER,
@@ -97,7 +97,8 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Async create flow handler entry."""
         if self._add_all_tracker:
             devices = [
-                device_name(device) for mac, device in self.fritz_tools.devices.items()
+                fritz_device_name(device)
+                for mac, device in self.fritz_tools.devices.items()
             ]
             add_new_tracker = True
         else:
@@ -303,7 +304,8 @@ class FritzBoxToolsOptionsHandler(OptionsFlow):
             FRITZ_TOOLS
         ]
         devices: dict[str, str] = {
-            mac: device_name(device) for mac, device in fritz_tools.devices.items()
+            mac: fritz_device_name(device)
+            for mac, device in fritz_tools.devices.items()
         }
         data_schema = vol.Schema(
             {

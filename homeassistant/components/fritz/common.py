@@ -37,7 +37,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def device_name(device: FritzDevice):
+def fritz_device_name(device: FritzDevice):
     """Return commun used device name."""
     return f"{device.hostname or DEFAULT_DEVICE_NAME} ({device.mac_address})"
 
