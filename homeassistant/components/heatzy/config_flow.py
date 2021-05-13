@@ -1,13 +1,13 @@
 """Config flow to configure Heatzy."""
 import logging
 
+from heatzypy import HeatzyClient
 from heatzypy.exception import HeatzyException
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from . import async_connect_heatzy
 from .const import DOMAIN
 
 DATA_SCHEMA = vol.Schema(
@@ -27,10 +27,10 @@ class HeatzyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                unique_id = user_input[CONF_USERNAME]
-                await self.async_set_unique_id(unique_id)
+                await self.async_set_unique_id(user_input[CONF_USERNAME])
                 self._abort_if_unique_id_configured()
-                await async_connect_heatzy(self.hass, user_input)
+                api = HeatzyClient(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+                await self.hass.async_add_executor_job(api.is_connected)
             except HeatzyException:
                 errors["base"] = "cannot_connect"
             else:
