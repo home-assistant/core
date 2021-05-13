@@ -142,7 +142,7 @@ class Scanner:
         await self._ssdp_listener.async_stop()
         self._ssdp_listener = None
 
-    async def async_scan(self):
+    async def async_scan(self, *_):
         """Scan for new entries."""
         if self._ssdp_listener:
             await self._ssdp_listener.async_search()
