@@ -5,10 +5,14 @@ from fritzconnection.core.exceptions import FritzConnectionException, FritzSecur
 import pytest
 
 from homeassistant.components.fritz.const import (
+    CONF_ADD_NEW_TRACKER,
+    CONF_SELECTED_DEVICES,
+    DEFAULT_ADD_NEW_TRACKER,
     DOMAIN,
     ERROR_AUTH_INVALID,
     ERROR_CANNOT_CONNECT,
     ERROR_UNKNOWN,
+    FRITZ_TOOLS,
 )
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
@@ -29,7 +33,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from . import MOCK_CONFIG, FritzConnectionMock
+from . import MOCK_CONFIG, FritzConnectionMock, FritzDeviceMock
 
 from tests.common import MockConfigEntry
 
@@ -416,3 +420,42 @@ async def test_import(hass: HomeAssistant, fc_class_mock):
         await hass.async_block_till_done()
 
     assert mock_setup_entry.called
+
+
+async def test_optionsflow(hass: HomeAssistant, fc_class_mock):
+    """Test options flow."""
+
+    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config.add_to_hass(hass)
+
+    devices = {
+        "00:11:22:33:44:55": FritzDeviceMock("Device A", "00:11:22:33:44:55"),
+        "00:11:22:AA:BB:CC": FritzDeviceMock("Device B", "00:11:22:AA:BB:CC"),
+    }
+
+    with patch(
+        "homeassistant.components.fritz.common.FritzConnection",
+        side_effect=fc_class_mock,
+    ), patch("homeassistant.components.fritz.common.FritzStatus"), patch(
+        "homeassistant.components.fritz.common.FritzBoxTools", devices=devices
+    ) as FritzBoxToolsMock:
+
+        hass.data[DOMAIN] = {}
+        hass.data[DOMAIN][mock_config.entry_id] = {FRITZ_TOOLS: FritzBoxToolsMock}
+
+        # init optionsflow
+        result = await hass.config_entries.options.async_init(mock_config.entry_id)
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_init(mock_config.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_ADD_NEW_TRACKER: DEFAULT_ADD_NEW_TRACKER,
+                CONF_SELECTED_DEVICES: list(devices.keys()),
+            },
+        )
+        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert mock_config.options[CONF_ADD_NEW_TRACKER] == DEFAULT_ADD_NEW_TRACKER
+        assert mock_config.options[CONF_SELECTED_DEVICES] == list(devices.keys())

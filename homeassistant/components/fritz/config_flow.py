@@ -280,6 +280,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_USERNAME: import_config[CONF_USERNAME],
                 CONF_PASSWORD: import_config.get(CONF_PASSWORD),
                 CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
+                CONF_ADD_ALL_TRACKER: DEFAULT_ADD_ALL_TRACKER,
             }
         )
 
