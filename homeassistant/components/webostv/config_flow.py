@@ -47,7 +47,7 @@ class FlowHandler(config_entries.ConfigFlow):
 
     def __init__(self):
         """Initialize workflow."""
-        self.user_input = {}
+        self._user_input = {}
 
     @staticmethod
     @callback
@@ -62,11 +62,7 @@ class FlowHandler(config_entries.ConfigFlow):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         errors = {}
-
         if user_input is not None:
-
-            name = user_input.get(CONF_NAME, CONF_HOST)
-            self.context["title_placeholders"] = {"name": name}
             if is_ip_address(user_input[CONF_HOST]):
                 unique_id = await self.hass.async_add_executor_job(
                     functools.partial(get_mac_address, ip=user_input[CONF_HOST])
@@ -76,12 +72,13 @@ class FlowHandler(config_entries.ConfigFlow):
                     functools.partial(get_mac_address, hostname=user_input[CONF_HOST])
                 )
 
-            # check exist
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
-            # save for pairing
-            self.user_input = user_input
+            self._user_input = user_input
+            self.context["title_placeholders"] = {
+                "name": user_input.get(CONF_NAME, CONF_HOST)
+            }
 
             return await self.async_step_pairing()
 
@@ -92,20 +89,17 @@ class FlowHandler(config_entries.ConfigFlow):
     async def async_step_pairing(self, user_input=None):
         """Display pairing form."""
         errors = {}
-
-        host = self.user_input.get(CONF_HOST)
-        _LOGGER.debug("LG webOS TV %s needs to be paired", host)
-
         if user_input is not None:
             try:
-                client = await async_control_connect(self.hass, host, None)
+                client = await async_control_connect(
+                    self.hass, self._user_input[CONF_HOST], None
+                )
             except PyLGTVPairException:
                 return self.async_abort(reason="error_pairing")
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-
-            if "base" not in errors:
-                return await self.async_step_register(self.user_input, client)
+            else:
+                return await self.async_step_register(self._user_input, client)
 
         return self.async_show_form(
             step_id="pairing",
@@ -130,7 +124,7 @@ class FlowHandler(config_entries.ConfigFlow):
         """Handle a discovered Webostv device."""
         user_input = {
             CONF_HOST: urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname,
-            CONF_NAME: discovery_info["friendlyName"],
+            CONF_NAME: discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME],
         }
         self.context["title_placeholders"] = {"name": user_input[CONF_NAME]}
 
@@ -150,7 +144,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         errors = {}
-
         if user_input is not None:
             try:
                 data_input = {}

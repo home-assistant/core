@@ -73,9 +73,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     client = hass.data[DOMAIN][host]["client"]
     on_script = Script(hass, turn_on_action, name, DOMAIN) if turn_on_action else None
-
-    entity = LgWebOSMediaPlayerEntity(client, name, sources, uid, on_script)
-    async_add_entities([entity], update_before_add=False)
+    async_add_entities(
+        [LgWebOSMediaPlayerEntity(client, name, sources, uid, on_script)],
+        update_before_add=False,
+    )
 
 
 def cmd(func):
