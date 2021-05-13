@@ -157,13 +157,13 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
         )
 
         if success:
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs):
         """Turn on the light."""
         self._state = True
         self._last_action = time.time()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         if kwargs.get(ATTR_EFFECT):
             await self.async_set_effect(kwargs[ATTR_EFFECT])
@@ -179,7 +179,7 @@ class OmniLogicLightControl(OmniLogicEntity, LightEntity):
         """Turn off the light."""
         self._state = False
         self._last_action = time.time()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         await self.coordinator.api.set_relay_valve(
             int(self._item_id[1]),
