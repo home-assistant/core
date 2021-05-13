@@ -205,12 +205,8 @@ class EntityRegistry:
         """
         preferred_string = f"{domain}.{slugify(suggested_object_id)}"
 
-        for param, param_name, max_length in (
-            (domain, "domain", MAX_LENGTH_STATE_DOMAIN),
-            (preferred_string, "preferred_entity_id", MAX_LENGTH_STATE_ENTITY_ID),
-        ):
-            if len(param) > max_length:
-                raise MaxLengthExceeded(param, param_name, max_length)
+        if len(domain) > MAX_LENGTH_STATE_DOMAIN:
+            raise MaxLengthExceeded(domain, "domain", MAX_LENGTH_STATE_DOMAIN)
 
         test_string = preferred_string
         if not known_object_ids:

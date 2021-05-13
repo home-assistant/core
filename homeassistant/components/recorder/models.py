@@ -20,8 +20,6 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.const import (
     MAX_LENGTH_EVENT_CONTEXT_ID,
-    MAX_LENGTH_EVENT_CONTEXT_PARENT_ID,
-    MAX_LENGTH_EVENT_CONTEXT_USER_ID,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_EVENT_ORIGIN,
     MAX_LENGTH_STATE_DOMAIN,
@@ -69,8 +67,8 @@ class Events(Base):  # type: ignore
     time_fired = Column(DATETIME_TYPE, index=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
     context_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
-    context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_USER_ID), index=True)
-    context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_PARENT_ID), index=True)
+    context_user_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
+    context_parent_id = Column(String(MAX_LENGTH_EVENT_CONTEXT_ID), index=True)
 
     __table_args__ = (
         # Used for fetching events at a specific time
