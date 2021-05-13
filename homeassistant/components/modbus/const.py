@@ -16,6 +16,7 @@ from homeassistant.const import (
 CONF_BAUDRATE = "baudrate"
 CONF_BYTESIZE = "bytesize"
 CONF_CLIMATES = "climates"
+CONF_CLOSE_COMM_ON_ERROR = "close_comm_on_error"
 CONF_COILS = "coils"
 CONF_CURRENT_TEMP = "current_temp_register"
 CONF_CURRENT_TEMP_REGISTER_TYPE = "current_temp_register_type"
