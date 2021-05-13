@@ -164,6 +164,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async def send_home_assistant_state_event(event: Event) -> None:
             """Forward Home Assistant states updates to ESPHome."""
+
+            # Only communicate changes to the state or attribute tracked
+            if (
+                "old_state" in event.data
+                and "new_state" in event.data
+                and (
+                    (
+                        not attribute
+                        and event.data["old_state"].state
+                        == event.data["new_state"].state
+                    )
+                    or (
+                        attribute
+                        and attribute in event.data["old_state"].attributes
+                        and attribute in event.data["new_state"].attributes
+                        and event.data["old_state"].attributes[attribute]
+                        == event.data["new_state"].attributes[attribute]
+                    )
+                )
+            ):
+                return
+
             await _send_home_assistant_state(
                 event.data["entity_id"], attribute, event.data.get("new_state")
             )
