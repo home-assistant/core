@@ -1,6 +1,7 @@
 """Test the Qnap config flow."""
 from unittest.mock import patch
 
+import pytest
 from requests.exceptions import ConnectTimeout
 
 from homeassistant import config_entries, setup
@@ -163,50 +164,33 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
+@pytest.mark.parametrize(
+    "error",
+    [
+        (ConnectTimeout, "cannot_connect"),
+        (TypeError, "invalid_auth"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_form_errors(hass, error):
+    """Test we handle errors."""
+    exc, base_error = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
     with patch(
         "homeassistant.components.qnap.config_flow.QNAPStats.get_system_stats",
-        side_effect=ConnectTimeout,
+        side_effect=exc,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=MANUAL_CONFIG,
         )
-
     assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-    with patch(
-        "homeassistant.components.qnap.config_flow.QNAPStats.get_system_stats",
-        side_effect=TypeError,
-    ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=MANUAL_CONFIG,
-        )
-
-    assert result3["type"] == RESULT_TYPE_FORM
-    assert result3["errors"] == {"base": "invalid_auth"}
-
-    with patch(
-        "homeassistant.components.qnap.config_flow.QNAPStats.get_system_stats",
-        side_effect=Exception,
-    ):
-        result4 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=MANUAL_CONFIG,
-        )
-
-    assert result4["type"] == RESULT_TYPE_FORM
-    assert result4["errors"] == {"base": "unknown"}
+    assert result2["errors"] == {"base": base_error}
 
 
-async def test_form_updates_unique_id(hass):
+async def test_form_already_configured(hass):
     """Test a duplicate id aborts and updates existing entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
