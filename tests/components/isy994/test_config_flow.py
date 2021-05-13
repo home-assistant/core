@@ -61,7 +61,8 @@ MOCK_IMPORT_FULL_CONFIG = {
 }
 
 MOCK_DEVICE_NAME = "Name of the device"
-MOCK_UUID = "CE:FB:72:31:B7:B9"
+MOCK_UUID = "ce:fb:72:31:b7:b9"
+MOCK_MAC = "cefb7231b7b9"
 MOCK_VALIDATED_RESPONSE = {"name": MOCK_DEVICE_NAME, "uuid": MOCK_UUID}
 
 PATCH_CONFIGURATION = "homeassistant.components.isy994.config_flow.Configuration"
@@ -331,7 +332,7 @@ async def test_form_dhcp(hass: HomeAssistant):
         data={
             dhcp.IP_ADDRESS: "1.2.3.4",
             dhcp.HOSTNAME: "isy994-ems",
-            dhcp.MAC_ADDRESS: MOCK_UUID,
+            dhcp.MAC_ADDRESS: MOCK_MAC,
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
