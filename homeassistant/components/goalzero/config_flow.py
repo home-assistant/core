@@ -25,11 +25,15 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_dhcp(self, dhcp_discovery):
-        """Handle dhcp discovery."""
-        self.ip_address = dhcp_discovery[IP_ADDRESS]
+    def __init__(self):
+        """Initialize a Goal Zero Yeti flow."""
+        self.ip_address = None
 
-        await self.async_set_unique_id(dhcp_discovery[MAC_ADDRESS])
+    async def async_step_dhcp(self, discovery_info):
+        """Handle dhcp discovery."""
+        self.ip_address = discovery_info[IP_ADDRESS]
+
+        await self.async_set_unique_id(discovery_info[MAC_ADDRESS])
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.ip_address})
         self._async_abort_entries_match({CONF_HOST: self.ip_address})
         try:
