@@ -2,14 +2,15 @@
 import logging
 from typing import Dict, List, Optional
 
-from bitvavo.BitvavoClient import BitvavoClient
-from bitvavo.BitvavoExceptions import BitvavoException
 import voluptuous as vol
 
 from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+
+from bitvavo.BitvavoClient import BitvavoClient
+from bitvavo.BitvavoExceptions import BitvavoException
 
 from .const import CONF_API_SECRET, CONF_MARKETS
 from .const import DOMAIN  # pylint:disable=unused-import

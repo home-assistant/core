@@ -3,14 +3,15 @@ import asyncio
 import logging
 from typing import List, Optional
 
-from bitvavo.BitvavoClient import BitvavoClient
-from bitvavo.BitvavoExceptions import BitvavoException
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from bitvavo.BitvavoClient import BitvavoClient
+from bitvavo.BitvavoExceptions import BitvavoException
+
 
 from .const import (
     ASSET_VALUE_BASE,
@@ -23,6 +24,11 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup(hass, config):
+    """Set up the Bitvavo component."""
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
