@@ -1,5 +1,4 @@
 """Climate sensors for Heatzy."""
-from datetime import timedelta
 import logging
 
 from heatzypy.exception import HeatzyException
@@ -24,11 +23,9 @@ PRESET_LIST = [PRESET_NONE, PRESET_COMFORT, PRESET_ECO, PRESET_AWAY]
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=5)
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Configure Heatzy API using Home Assistant configuration and fetch all Heatzy devices."""
+    """Load all Heatzy devices."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     devices = []
     for device in coordinator.data.values():
@@ -41,7 +38,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class HeatzyThermostat(CoordinatorEntity, ClimateEntity):
-    """Heatzy."""
+    """Heatzy climate."""
 
     def __init__(self, coordinator, unique_id):
         """Init."""
@@ -148,7 +145,6 @@ class HeatzyPiloteV1Thermostat(HeatzyThermostat):
             )
         except HeatzyException as error:
             _LOGGER.error("Error to set preset mode : %s", error)
-        # await self.async_update_heater(True)
         await self.coordinator.async_request_refresh()
 
 
