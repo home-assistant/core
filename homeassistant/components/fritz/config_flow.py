@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 from urllib.parse import urlparse
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
@@ -12,18 +13,26 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_UDN,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
+import homeassistant.helpers.config_validation as cv
 
-from .common import FritzBoxTools
+from .common import FritzBoxTools, device_name
 from .const import (
+    CONF_ADD_ALL_TRACKER,
+    CONF_ADD_NEW_TRACKER,
+    CONF_SELECTED_DEVICES,
+    DEFAULT_ADD_ALL_TRACKER,
+    DEFAULT_ADD_NEW_TRACKER,
     DEFAULT_HOST,
     DEFAULT_PORT,
     DOMAIN,
     ERROR_AUTH_INVALID,
     ERROR_CANNOT_CONNECT,
     ERROR_UNKNOWN,
+    FRITZ_TOOLS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,6 +43,14 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> FritzBoxToolsOptionsHandler:
+        """Get the options flow for this handler."""
+        return FritzBoxToolsOptionsHandler(config_entry)
+
     def __init__(self):
         """Initialize FRITZ!Box Tools flow."""
         self._host = None
@@ -42,6 +59,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._password = None
         self._port = None
         self._username = None
+        self._add_all_tracker = DEFAULT_ADD_ALL_TRACKER
         self.import_schema = None
         self.fritz_tools = None
 
@@ -77,6 +95,15 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry(self):
         """Async create flow handler entry."""
+        if self._add_all_tracker:
+            devices = [
+                device_name(device) for mac, device in self.fritz_tools.devices.items()
+            ]
+            add_new_tracker = True
+        else:
+            devices = []
+            add_new_tracker = False
+
         return self.async_create_entry(
             title=self._name,
             data={
@@ -84,6 +111,10 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: self.fritz_tools.password,
                 CONF_PORT: self.fritz_tools.port,
                 CONF_USERNAME: self.fritz_tools.username,
+            },
+            options={
+                CONF_ADD_NEW_TRACKER: add_new_tracker,
+                CONF_SELECTED_DEVICES: devices,
             },
         )
 
@@ -143,6 +174,9 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Required(
+                        CONF_ADD_ALL_TRACKER, default=DEFAULT_ADD_ALL_TRACKER
+                    ): bool,
                 }
             ),
             errors=errors or {},
@@ -156,6 +190,9 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Required(
+                        CONF_ADD_ALL_TRACKER, default=DEFAULT_ADD_ALL_TRACKER
+                    ): bool,
                 }
             ),
             description_placeholders={"name": self._name},
@@ -170,6 +207,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._port = user_input[CONF_PORT]
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
+        self._add_all_tracker = user_input[CONF_ADD_ALL_TRACKER]
 
         if not (error := await self.fritz_tools_init()):
             self._name = self.fritz_tools.model
@@ -244,3 +282,42 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
             }
         )
+
+
+class FritzBoxToolsOptionsHandler(OptionsFlow):
+    """Handle a option flow."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        fritz_tools: FritzBoxTools = self.hass.data[DOMAIN][self.config_entry.entry_id][
+            FRITZ_TOOLS
+        ]
+        devices: dict[str, str] = {
+            mac: device_name(device) for mac, device in fritz_tools.devices.items()
+        }
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_ADD_NEW_TRACKER,
+                    default=self.config_entry.options.get(
+                        CONF_ADD_NEW_TRACKER, DEFAULT_ADD_NEW_TRACKER
+                    ),
+                ): bool,
+                vol.Required(
+                    CONF_SELECTED_DEVICES,
+                    default=self.config_entry.options.get(
+                        CONF_SELECTED_DEVICES, devices
+                    ),
+                ): cv.multi_select(devices),
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)

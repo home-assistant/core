@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .common import FritzBoxBaseEntity, FritzBoxTools
-from .const import DOMAIN
+from .const import DOMAIN, FRITZ_TOOLS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up FRITZ!Box binary sensors")
-    fritzbox_tools: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
+    fritzbox_tools: FritzBoxTools = hass.data[DOMAIN][entry.entry_id][FRITZ_TOOLS]
 
     if "WANIPConn1" in fritzbox_tools.connection.services:
         # Only routers are supported at the moment

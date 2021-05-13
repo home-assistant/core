@@ -5,7 +5,13 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
-from .const import DOMAIN, FRITZ_SERVICES, SERVICE_REBOOT, SERVICE_RECONNECT
+from .const import (
+    DOMAIN,
+    FRITZ_SERVICES,
+    FRITZ_TOOLS,
+    SERVICE_REBOOT,
+    SERVICE_RECONNECT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +37,7 @@ async def async_setup_services(hass: HomeAssistant):
 
         for entry in fritzbox_entry_ids:
             _LOGGER.debug("Executing service %s", service_call.service)
-            fritz_tools = hass.data[DOMAIN][entry]
+            fritz_tools = hass.data[DOMAIN][entry][FRITZ_TOOLS]
             await fritz_tools.service_fritzbox(service_call.service)
 
     for service in [SERVICE_REBOOT, SERVICE_RECONNECT]:

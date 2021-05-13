@@ -24,6 +24,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    DEFAULT_DEVICE_NAME,
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_USERNAME,
@@ -34,6 +35,11 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def device_name(device: FritzDevice):
+    """Return commun used device name."""
+    return f"{device.hostname or DEFAULT_DEVICE_NAME} ({device.mac_address})"
 
 
 @dataclass
@@ -183,14 +189,6 @@ class FritzBoxTools:
             raise HomeAssistantError("Service or parameter unknown") from ex
         except FritzConnectionException as ex:
             raise HomeAssistantError("Service not supported") from ex
-
-
-class FritzData:
-    """Storage class for platform global data."""
-
-    def __init__(self) -> None:
-        """Initialize the data."""
-        self.tracked: dict = {}
 
 
 class FritzDevice:

@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from .common import FritzBoxBaseEntity, FritzBoxTools
-from .const import DOMAIN, UPTIME_DEVIATION
+from .const import DOMAIN, FRITZ_TOOLS, UPTIME_DEVIATION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up FRITZ!Box sensors")
-    fritzbox_tools: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
+    fritzbox_tools: FritzBoxTools = hass.data[DOMAIN][entry.entry_id][FRITZ_TOOLS]
 
     if "WANIPConn1" not in fritzbox_tools.connection.services:
         # Only routers are supported at the moment

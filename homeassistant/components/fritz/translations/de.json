@@ -29,16 +29,27 @@
                 "description": "Aktualisiere die Anmeldeinformationen von FRITZ! Box Tools f\u00fcr: {host} . \n\nFRITZ! Box Tools kann sich nicht bei deiner FRITZ! Box anmelden.",
                 "title": "Aktualisieren der FRITZ! Box Tools - Anmeldeinformationen"
             },
-            "start_config": {
+            "user": {
                 "data": {
                     "host": "Host",
                     "password": "Passwort",
                     "port": "Port",
-                    "username": "Benutzername"
+                    "username": "Benutzername",
+                    "add_all_tracker": "Alle Ger\u00e4te als zu verfolgendes Ger\u00e4t hinzufügren"
                 },
                 "description": "Einrichten der FRITZ! Box Tools zur Steuerung Ihrer FRITZ! Box.\n Ben\u00f6tigt: Benutzername, Passwort.",
-                "title": "Setup FRITZ! Box Tools - obligatorisch"
+                "title": "Setup FRITZ! Box Tools"
             }
         }
+    },
+    "options": {
+      "step": {
+        "init": {
+          "data": {
+            "add_new_tracker": "neue Ger\u00e4te automatisch hinzufügen",
+            "selected_devices": "Ger\u00e4te welche verfolgt werden"
+          }
+        }
+      }
     }
 }

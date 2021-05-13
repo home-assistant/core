@@ -19,8 +19,17 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
 
-from .common import FritzBoxTools, FritzDevice
-from .const import DATA_FRITZ, DEFAULT_DEVICE_NAME, DOMAIN
+from .common import FritzBoxTools, FritzDevice, device_name
+from .const import (
+    CONF_ADD_NEW_TRACKER,
+    CONF_SELECTED_DEVICES,
+    DATA_ACTIVE_TRACKER,
+    DATA_KNOWN_DEVICES,
+    DEFAULT_DEVICE_NAME,
+    DOMAIN,
+    FRITZ_TOOLS,
+    UNDO_UPDATE_LISTENER_TRACKER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,45 +76,43 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for FRITZ!Box component."""
     _LOGGER.debug("Starting FRITZ!Box device tracker")
-    router = hass.data[DOMAIN][entry.entry_id]
-    data_fritz = hass.data[DATA_FRITZ]
+    data = hass.data[DOMAIN][entry.entry_id]
+    router: FritzBoxTools = data[FRITZ_TOOLS]
 
-    @callback
-    def update_router():
-        """Update the values of the router."""
-        _async_add_entities(router, async_add_entities, data_fritz)
+    def _async_add_entities(new_device: bool = True) -> None:
+        """Add new tracker entities from the router."""
+        entities = []
+        active_tracker: dict[str, bool] = data[DATA_ACTIVE_TRACKER]
+        known_devices: list[str] = data[DATA_KNOWN_DEVICES]
 
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, router.signal_device_new, update_router)
-    )
+        if new_device:
+            for mac, device in router.devices.items():
+                if mac not in known_devices:
+                    _LOGGER.info("New device %s discovered", device_name(device))
+                    entry.options[CONF_SELECTED_DEVICES].append(mac)
 
-    update_router()
+        for mac, device in router.devices.items():
+            if mac not in known_devices:
+                known_devices.append(mac)
 
+            if mac in entry.options[CONF_SELECTED_DEVICES] and not active_tracker.get(
+                mac
+            ):
+                _LOGGER.info("Add device %s to be tracked", device_name(device))
+                entities.append(FritzBoxTracker(router, device))
+                active_tracker.update({mac: True})
+            elif active_tracker.get(mac) is not None:
+                active_tracker.pop(mac)
 
-@callback
-def _async_add_entities(router, async_add_entities, data_fritz):
-    """Add new tracker entities from the router."""
+        async_add_entities(entities)
 
-    def _is_tracked(mac, device):
-        for tracked in data_fritz.tracked.values():
-            if mac in tracked:
-                return True
+    if entry.options[CONF_ADD_NEW_TRACKER]:
+        _LOGGER.debug("Listen for new devices to be automatically added")
+        data[UNDO_UPDATE_LISTENER_TRACKER] = async_dispatcher_connect(
+            hass, router.signal_device_new, _async_add_entities
+        )
 
-        return False
-
-    new_tracked = []
-    if router.unique_id not in data_fritz.tracked:
-        data_fritz.tracked[router.unique_id] = set()
-
-    for mac, device in router.devices.items():
-        if device.ip_address == "" or _is_tracked(mac, device):
-            continue
-
-        new_tracked.append(FritzBoxTracker(router, device))
-        data_fritz.tracked[router.unique_id].add(mac)
-
-    if new_tracked:
-        async_add_entities(new_tracked)
+    _async_add_entities(new_device=False)
 
 
 class FritzBoxTracker(ScannerEntity):
