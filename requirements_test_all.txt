@@ -693,7 +693,7 @@ pyMetno==0.8.3
 pyRFXtrx==0.26.1
 
 # homeassistant.components.tibber
-pyTibber==0.16.2
+pyTibber==0.17.0
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.4
@@ -793,7 +793,7 @@ pygatt[GATTTOOL]==4.0.5
 pygti==0.9.2
 
 # homeassistant.components.version
-pyhaversion==21.3.0
+pyhaversion==21.5.0
 
 # homeassistant.components.heos
 pyheos==0.7.2
@@ -977,7 +977,7 @@ pysmartthings==0.7.6
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.45
+pysonos==0.0.46
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
