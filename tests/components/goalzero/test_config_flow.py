@@ -89,7 +89,7 @@ async def test_flow_user_cannot_connect(hass):
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
-        assert result["errors"] == "cannot_connect"
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_flow_user_invalid_host(hass):
@@ -102,7 +102,7 @@ async def test_flow_user_invalid_host(hass):
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
-        assert result["errors"] == "invalid_host"
+        assert result["errors"] == {"base": "invalid_host"}
 
 
 async def test_flow_user_unknown_error(hass):
@@ -115,7 +115,7 @@ async def test_flow_user_unknown_error(hass):
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
-        assert result["errors"] == "unknown"
+        assert result["errors"] == {"base": "unknown"}
 
 
 async def test_dhcp_discovery(hass):

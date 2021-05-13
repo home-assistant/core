@@ -67,8 +67,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
-        error = {}
-
+        errors = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
             name = user_input[CONF_NAME]
@@ -81,6 +80,8 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     title=name,
                     data={CONF_HOST: host, CONF_NAME: name},
                 )
+            else:
+                errors["base"] = error
 
         user_input = user_input or {}
         return self.async_show_form(
@@ -95,7 +96,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     ): str,
                 }
             ),
-            errors=error,
+            errors=errors,
         )
 
     async def _async_try_connect(self, host):
