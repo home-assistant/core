@@ -14,6 +14,8 @@ from homeassistant.components.samsungtv.const import (
     RESULT_AUTH_MISSING,
     RESULT_CANNOT_CONNECT,
     RESULT_NOT_SUPPORTED,
+    TIMEOUT_REQUEST,
+    TIMEOUT_WEBSOCKET,
 )
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
@@ -88,27 +90,27 @@ AUTODETECT_LEGACY = {
     "method": "legacy",
     "port": None,
     "host": "fake_host",
-    "timeout": 31,
+    "timeout": TIMEOUT_REQUEST,
 }
 AUTODETECT_WEBSOCKET_PLAIN = {
     "host": "fake_host",
     "name": "HomeAssistant",
     "port": 8001,
-    "timeout": 31,
+    "timeout": TIMEOUT_REQUEST,
     "token": None,
 }
 AUTODETECT_WEBSOCKET_SSL = {
     "host": "fake_host",
     "name": "HomeAssistant",
     "port": 8002,
-    "timeout": 31,
+    "timeout": TIMEOUT_REQUEST,
     "token": None,
 }
 DEVICEINFO_WEBSOCKET_SSL = {
     "host": "fake_host",
     "name": "HomeAssistant",
     "port": 8002,
-    "timeout": 8,
+    "timeout": TIMEOUT_WEBSOCKET,
     "token": "123456789",
 }
 

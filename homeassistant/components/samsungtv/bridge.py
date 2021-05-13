@@ -26,6 +26,8 @@ from .const import (
     RESULT_CANNOT_CONNECT,
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
+    TIMEOUT_REQUEST,
+    TIMEOUT_WEBSOCKET,
     VALUE_CONF_ID,
     VALUE_CONF_NAME,
     WEBSOCKET_PORTS,
@@ -155,7 +157,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             CONF_METHOD: self.method,
             CONF_PORT: None,
             # We need this high timeout because waiting for auth popup is just an open socket
-            CONF_TIMEOUT: 31,
+            CONF_TIMEOUT: TIMEOUT_REQUEST,
         }
         try:
             LOGGER.debug("Try config: %s", config)
@@ -218,7 +220,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 CONF_METHOD: self.method,
                 CONF_PORT: self.port,
                 # We need this high timeout because waiting for auth popup is just an open socket
-                CONF_TIMEOUT: 31,
+                CONF_TIMEOUT: TIMEOUT_REQUEST,
             }
 
             result = None
@@ -275,7 +277,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                     host=self.host,
                     port=self.port,
                     token=self.token,
-                    timeout=5,
+                    timeout=TIMEOUT_WEBSOCKET,
                     name=VALUE_CONF_NAME,
                 )
                 if not avoid_open:

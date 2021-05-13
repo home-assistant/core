@@ -25,6 +25,8 @@ from homeassistant.components.samsungtv.const import (
     CONF_ON_ACTION,
     DOMAIN as SAMSUNGTV_DOMAIN,
     METHOD_WEBSOCKET,
+    TIMEOUT_REQUEST,
+    TIMEOUT_WEBSOCKET,
 )
 from homeassistant.components.samsungtv.media_player import SUPPORT_SAMSUNGTV
 from homeassistant.const import (
@@ -86,14 +88,14 @@ MOCK_CALLS_WS = {
     "host": "fake",
     "port": 8002,
     "token": None,
-    "timeout": 31,
+    "timeout": TIMEOUT_REQUEST,
     "name": "HomeAssistant",
 }
 MOCK_CALLS_DEVICEINFO = {
     "host": "fake",
     "port": 8002,
     "token": "987654321",
-    "timeout": 8,
+    "timeout": TIMEOUT_WEBSOCKET,
     "name": "HomeAssistant",
 }
 
@@ -109,7 +111,7 @@ MOCK_CALLS_ENTRY_WS = {
     "host": "fake",
     "name": "HomeAssistant",
     "port": 8001,
-    "timeout": 8,
+    "timeout": TIMEOUT_WEBSOCKET,
     "token": "abcde",
 }
 
