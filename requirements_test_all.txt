@@ -1201,7 +1201,7 @@ systembridge==1.1.5
 tellduslive==0.10.11
 
 # homeassistant.components.powerwall
-tesla-powerwall==0.3.5
+tesla-powerwall==0.3.10
 
 # homeassistant.components.tesla
 teslajsonpy==0.18.3
