@@ -36,16 +36,11 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info[MAC_ADDRESS])
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.ip_address})
         self._async_abort_entries_match({CONF_HOST: self.ip_address})
-        try:
-            await self._async_try_connect(self.ip_address)
-        except exceptions.ConnectError:
-            return self.async_abort(reason="cannot_connect")
-        except exceptions.InvalidHost:
-            return self.async_abort(reason="invalid_host")
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.debug("Unexpected exception", exc_info=True)
-            return self.async_abort(reason="unknown")
 
+        errors = await self._async_try_connect(self.ip_address)
+
+        if errors is not None:
+            return self.async_abort(reason=errors)
         return await self.async_step_confirm_discovery()
 
     async def async_step_confirm_discovery(
@@ -81,18 +76,8 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             self._async_abort_entries_match({CONF_HOST: host})
 
-            try:
-                await self._async_try_connect(host)
-            except exceptions.ConnectError:
-                errors["base"] = "cannot_connect"
-                _LOGGER.error("Error connecting to device at %s", host)
-            except exceptions.InvalidHost:
-                errors["base"] = "invalid_host"
-                _LOGGER.error("Invalid host at %s", host)
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            errors = await self._async_try_connect(host)
+            if errors is None:
                 return self.async_create_entry(
                     title=name,
                     data={CONF_HOST: host, CONF_NAME: name},
@@ -115,6 +100,21 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_try_connect(self, host):
-        session = async_get_clientsession(self.hass)
-        api = Yeti(host, self.hass.loop, session)
-        await api.sysinfo()
+        """Try connecting to Goal Zero Yeti."""
+        errors = {}
+        try:
+            session = async_get_clientsession(self.hass)
+            api = Yeti(host, self.hass.loop, session)
+            await api.sysinfo()
+        except exceptions.ConnectError:
+            errors["base"] = "cannot_connect"
+            _LOGGER.error("Error connecting to device at %s", host)
+            return errors
+        except exceptions.InvalidHost:
+            errors["base"] = "invalid_host"
+            _LOGGER.error("Invalid host at %s", host)
+            return errors
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+            return errors
