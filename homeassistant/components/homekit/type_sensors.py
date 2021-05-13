@@ -180,9 +180,9 @@ class AirQualitySensor(HomeAccessory):
                 _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
 
 
-@TYPES.register("AirQualitySensor_PM10")
-class AirQualitySensor_PM10(AirQualitySensor):
-    """Generate a AirQualitySensor_PM10 accessory as PM 10 sensor."""
+@TYPES.register("PM10Sensor")
+class PM10Sensor(AirQualitySensor):
+    """Generate a PM10Sensor accessory as PM 10 sensor."""
 
     def __init__(self, *args):
         """Initialize a AirQualitySensor accessory object."""
@@ -210,9 +210,9 @@ class AirQualitySensor_PM10(AirQualitySensor):
                 _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
 
 
-@TYPES.register("AirQualitySensor_PM25")
-class AirQualitySensor_PM25(AirQualitySensor):
-    """Generate a AirQualitySensor_PM25 accessory as PM 2.5 sensor."""
+@TYPES.register("PM25Sensor")
+class PM25Sensor(AirQualitySensor):
+    """Generate a PM25Sensor accessory as PM 2.5 sensor."""
 
     def __init__(self, *args):
         """Initialize a AirQualitySensor accessory object."""
