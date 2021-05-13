@@ -70,15 +70,6 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
         """Get light brightness."""
         return round((int(self.device.brightness) / 100) * 255)
 
-
-class VeSyncDimmableLightHA(VeSyncBaseLight, LightEntity):
-    """Representation of a VeSync dimmable light device."""
-
-    def __init__(self, device):
-        """Initialize the VeSync dimmable light device."""
-        super().__init__(device)
-        self.device = device
-
     def turn_on(self, **kwargs):
         """Turn the device on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -89,9 +80,33 @@ class VeSyncDimmableLightHA(VeSyncBaseLight, LightEntity):
             # clamp to 1-100
             brightness = max(1, min(brightness, 100))
             self.device.set_brightness(brightness)
+        # set white temperature
+        if ATTR_COLOR_TEMP in kwargs:
+            # get white temperature from HA data
+            color_temp = int(kwargs[ATTR_COLOR_TEMP])
+            # convert Mireds to Percent value that api expects
+            color_temp = round(
+                ((color_temp - self.min_mireds) / (self.max_mireds - self.min_mireds))
+                * 100
+            )
+            # flip cold/warm to what pyvesync api expects
+            color_temp = 100 - color_temp
+            # ensure value between 0-100
+            color_temp = max(0, min(color_temp, 100))
+            # pass value to pyvesync library api
+            self.device.set_color_temp(color_temp)
         # Avoid turning device back on if this is just a brightness adjustment
         if not self.is_on:
             self.device.turn_on()
+
+
+class VeSyncDimmableLightHA(VeSyncBaseLight, LightEntity):
+    """Representation of a VeSync dimmable light device."""
+
+    def __init__(self, device):
+        """Initialize the VeSync dimmable light device."""
+        super().__init__(device)
+        self.device = device
 
     @property
     def color_mode(self):
@@ -112,63 +127,22 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
         super().__init__(device)
         self.device = device
 
-    def turn_on(self, **kwargs):
-        """Turn the device on."""
-        if ATTR_BRIGHTNESS in kwargs:
-            # get brightness from HA data
-            brightness = int(kwargs[ATTR_BRIGHTNESS])
-            # convert to percent that vesync api expects
-            brightness = round((brightness / 255) * 100)
-            # clamp to 1-100
-            brightness = max(1, min(brightness, 100))
-            # pass value to pyvesync library api
-            self.device.set_brightness(brightness)
-
-        # set white temperature
-        if ATTR_COLOR_TEMP in kwargs:
-            # get white temperature from HA data
-            color_temp = int(kwargs[ATTR_COLOR_TEMP])
-
-            # convert Mireds to Percent value that api expects
-            color_temp = round(
-                ((color_temp - self.min_mireds) / (self.max_mireds - self.min_mireds))
-                * 100
-            )
-
-            # flip cold/warm to what pyvesync api expects
-            color_temp = 100 - color_temp
-
-            # ensure value between 0-100
-            color_temp = max(0, min(color_temp, 100))
-
-            # pass value to pyvesync library api
-            self.device.set_color_temp(color_temp)
-
-        # Avoid turning device back on if this is just a brightness adjustment
-        if not self.is_on:
-            self.device.turn_on()
-
     @property
     def color_temp(self):
         """Get device white temperature."""
         # get value from pyvesync library api,
         color_temp_value = int(self.device.color_temp_pct)
-
         # flip cold/warm
         color_temp_value = 100 - color_temp_value
-
         # ensure value between 0-100
         color_temp_value = max(0, min(color_temp_value, 100))
-
         # convert percent value to Mireds
         color_temp_value = round(
             self.min_mireds
             + ((self.max_mireds - self.min_mireds) / 100 * color_temp_value)
         )
-
         # ensure value between minimum and maximum Mireds
         color_temp_value = max(self.min_mireds, min(color_temp_value, self.max_mireds))
-
         return color_temp_value
 
     @property
