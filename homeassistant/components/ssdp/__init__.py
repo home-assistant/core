@@ -92,6 +92,7 @@ class SSDPListener:
         await self._async_callback(headers)
 
     async def _async_on_connect(self, transport):
+        self._transport = transport
         self.async_search()
 
     async def async_start(self):
@@ -101,13 +102,12 @@ class SSDPListener:
         sock, source, self.target = get_ssdp_socket(source_ip, target_ip)
         sock.bind(source)
         loop = asyncio.get_running_loop()
-        connect = loop.create_datagram_endpoint(
+        await loop.create_datagram_endpoint(
             lambda: SsdpProtocol(
                 loop, on_connect=self._async_on_connect, on_data=self._async_on_data
             ),
             sock=sock,
         )
-        self._transport, _ = await connect
 
     @callback
     def async_stop(self):
