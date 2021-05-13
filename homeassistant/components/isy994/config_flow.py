@@ -155,7 +155,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         friendly_name = discovery_info[HOSTNAME]
         url = f"http://{discovery_info[IP_ADDRESS]}"
         mac = discovery_info[MAC_ADDRESS]
-        await self.async_set_unique_id(mac)
+        isy_mac = (
+            f"{mac[0:2]}:{mac[2:4]}:{mac[4:6]}:{mac[6:8]}:{mac[8:10]}:{mac[10:12]}"
+        )
+        await self.async_set_unique_id(isy_mac)
         self._abort_if_unique_id_configured()
 
         self.discovered_conf = {
