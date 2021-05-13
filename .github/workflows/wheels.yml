@@ -162,6 +162,6 @@ jobs:
           apk: "build-base;cmake;git;linux-headers;libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev"
           pip: "Cython;numpy;scikit-build"
           skip-binary: aiohttp
-          constraints: "requirements_all.txt"
+          constraints: "homeassistant/package_constraints.txt"
           requirements-diff: 'requirements_diff.txt'
           requirements: "requirements_all.txt"
