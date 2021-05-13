@@ -94,7 +94,7 @@ class SSDPListener:
     async def _async_on_connect(self, transport):
         self.async_search()
 
-    async def async_start(self, target_ip, source_ip):
+    async def async_start(self):
         """Start the listener."""
         target_ip = IPv4Address(SSDP_IP_V4)
         source_ip = get_source_ip_from_target_ip(target_ip)
