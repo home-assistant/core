@@ -37,9 +37,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.ip_address})
         self._async_abort_entries_match({CONF_HOST: self.ip_address})
 
-        error = await self._async_try_connect(self.ip_address)
-
-        if error is not None:
+        if error := await self._async_try_connect(self.ip_address):
             return self.async_abort(reason=error)
         return await self.async_step_confirm_discovery()
 
@@ -114,3 +112,4 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return "unknown"
+        return None
