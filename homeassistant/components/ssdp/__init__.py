@@ -140,7 +140,7 @@ class Scanner:
 
     async def async_stop(self):
         """Stop the scanner."""
-        await self._ssdp_listener.async_stop()
+        self._ssdp_listener.async_stop()
         self._ssdp_listener = None
 
     async def async_scan(self, *_):
