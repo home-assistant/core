@@ -128,8 +128,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     _LOGGER.debug("Adding new speaker: %s", speaker_info)
                     speaker = SonosSpeaker(hass, soco, speaker_info)
                     data.discovered[soco.uid] = speaker
-                    data.favorites.setdefault(soco.household_id, SonosFavorites(soco))
-                    data.favorites[soco.household_id].update()
+                    if soco.household_id not in data.favorites:
+                        data.favorites[soco.household_id] = SonosFavorites(hass, soco)
+                        data.favorites[soco.household_id].update()
                     speaker.setup()
                 else:
                     dispatcher_send(hass, f"{SONOS_SEEN}-{soco.uid}", soco)

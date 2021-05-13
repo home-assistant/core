@@ -661,8 +661,7 @@ class SonosSpeaker:
     def async_update_content(self, event: SonosEvent | None = None) -> None:
         """Update information about available content."""
         if event and "favorites_update_id" in event.variables:
-            self.hass.async_add_job(self.favorites.update, event)
-            self.async_write_entity_states()
+            self.hass.async_add_job(self.favorites.async_delayed_update, event)
 
     def update_volume(self) -> None:
         """Update information about current volume settings."""

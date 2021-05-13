@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+import datetime
 import logging
 
 from pysonos.core import SoCo
@@ -9,39 +10,49 @@ from pysonos.data_structures import DidlFavorite
 from pysonos.events_base import Event as SonosEvent
 from pysonos.exceptions import SoCoException
 
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import dispatcher_send
+
+from .const import SONOS_HOUSEHOLD_UPDATED
+
 _LOGGER = logging.getLogger(__name__)
 
 
 class SonosFavorites:
     """Storage class for Sonos favorites."""
 
-    def __init__(self, soco: SoCo) -> None:
+    def __init__(self, hass: HomeAssistant, soco: SoCo) -> None:
         """Initialize the data."""
+        self.hass = hass
         self.soco = soco
         self._favorites: list[DidlFavorite] = []
         self._event_version: str | None = None
-        self._poll_version: int | None = None
 
     def __iter__(self) -> Iterator:
         """Return an iterator for the known favorites."""
         return iter(self._favorites)
 
-    def update(self, event: SonosEvent | None = None) -> None:
-        """Update favorites with an event or by polling."""
-        if event and "favorites_update_id" in event.variables:
-            event_id = event.variables["favorites_update_id"]
-            if self._event_version == event_id:
-                _LOGGER.debug("favorites haven't changed (event_id: %s)", event_id)
-                return
-            self._event_version = event_id
+    async def async_delayed_update(self, event: SonosEvent) -> None:
+        """Add a delay when triggered by an event.
 
-        new_favorites = self.soco.music_library.get_sonos_favorites()
-        if self._poll_version == new_favorites.update_id:
-            _LOGGER.debug(
-                "Favorites haven't changed (poll_id: %s)", new_favorites.update_id
-            )
+        Updated favorites are not always immediately available.
+
+        """
+        event_id = event.variables["favorites_update_id"]
+        if not self._event_version:
+            self._event_version = event_id
             return
-        self._poll_version = new_favorites.update_id
+
+        if self._event_version == event_id:
+            _LOGGER.debug("Favorites haven't changed (event_id: %s)", event_id)
+            return
+
+        self._event_version = event_id
+        self.hass.helpers.event.async_call_later(5, self.update)
+
+    def update(self, now: datetime.datetime | None = None) -> None:
+        """Request new Sonos favorites from a speaker."""
+        new_favorites = self.soco.music_library.get_sonos_favorites()
 
         self._favorites = []
         for fav in new_favorites:
@@ -56,4 +67,7 @@ class SonosFavorites:
             "Cached %s favorites for household %s",
             len(self._favorites),
             self.soco.household_id,
+        )
+        dispatcher_send(
+            self.hass, f"{SONOS_HOUSEHOLD_UPDATED}-{self.soco.household_id}"
         )
