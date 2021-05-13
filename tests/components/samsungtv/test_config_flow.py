@@ -494,7 +494,11 @@ async def test_zeroconf_device_info(hass: HomeAssistant, remote: Mock):
     """Test starting a flow from discovery."""
     with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote:
         remote().rest_device_info.return_value = {
-            "device": {"modelName": "fake_model2"}
+            "device": {
+                "modelName": "fake_model2",
+                "name": "[TV] Fake Name",
+                "udn": "uuid:fake_serial",
+            }
         }
 
         # confirm to add the entry
@@ -511,9 +515,9 @@ async def test_zeroconf_device_info(hass: HomeAssistant, remote: Mock):
             result["flow_id"], user_input="whatever"
         )
         assert result["type"] == "create_entry"
-        assert result["title"] == "fake_model2"
+        assert result["title"] == "Fake Name (fake_model2)"
         assert result["data"][CONF_HOST] == "fake_host"
-        assert result["data"][CONF_NAME] == "fake_manufacturer fake_model2"
+        assert result["data"][CONF_NAME] == "Fake Name"
         assert result["data"][CONF_MAC] == "fake_mac"
         assert result["data"][CONF_MANUFACTURER] == "fake_manufacturer"
         assert result["data"][CONF_MODEL] == "fake_model2"

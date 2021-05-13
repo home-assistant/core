@@ -144,7 +144,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
         self._model = dev_info.get("modelName")
         self._manufacturer = "Samsung"
-        self._name = dev_info.get("name").replace("[TV]", "")
+        self._name = dev_info.get("name").replace("[TV] ", "")
         self._title = f"{self._name} ({self._model})"
         if dev_info.get("networkType") == "wireless":
             self._mac = dev_info.get("wifiMac")
