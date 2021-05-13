@@ -100,7 +100,7 @@ class SSDPListener:
         """Start the listener."""
         target_ip = IPv4Address(SSDP_IP_V4)
         source_ip = get_source_ip_from_target_ip(target_ip)
-        sock, source, self.target = get_ssdp_socket(source_ip, target_ip)
+        sock, source, self._target = get_ssdp_socket(source_ip, target_ip)
         sock.bind(source)
         loop = asyncio.get_running_loop()
         await loop.create_datagram_endpoint(
