@@ -140,34 +140,65 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
             )
 
-    async def send_home_assistant_state_event(event: Event) -> None:
-        """Forward Home Assistant states updates to ESPHome."""
-        new_state = event.data.get("new_state")
-        if new_state is None:
-            return
-        entity_id = event.data.get("entity_id")
-        await cli.send_home_assistant_state(entity_id, None, new_state.state)
-
     async def _send_home_assistant_state(
-        entity_id: str, new_state: State | None
+        entity_id: str, attribute: str | None, state: State | None
     ) -> None:
         """Forward Home Assistant states to ESPHome."""
-        await cli.send_home_assistant_state(entity_id, None, new_state.state)
+        if state is None or (attribute and attribute not in state.attributes):
+            return
+
+        send_state = state.state
+        if attribute:
+            send_state = state.attributes[attribute]
+            # ESPHome only handles "on"/"off" for boolean values
+            if isinstance(send_state, bool):
+                send_state = "on" if send_state else "off"
+
+        await cli.send_home_assistant_state(entity_id, attribute, str(send_state))
 
     @callback
     def async_on_state_subscription(
         entity_id: str, attribute: str | None = None
     ) -> None:
         """Subscribe and forward states for requested entities."""
+
+        async def send_home_assistant_state_event(event: Event) -> None:
+            """Forward Home Assistant states updates to ESPHome."""
+
+            # Only communicate changes to the state or attribute tracked
+            if (
+                "old_state" in event.data
+                and "new_state" in event.data
+                and (
+                    (
+                        not attribute
+                        and event.data["old_state"].state
+                        == event.data["new_state"].state
+                    )
+                    or (
+                        attribute
+                        and attribute in event.data["old_state"].attributes
+                        and attribute in event.data["new_state"].attributes
+                        and event.data["old_state"].attributes[attribute]
+                        == event.data["new_state"].attributes[attribute]
+                    )
+                )
+            ):
+                return
+
+            await _send_home_assistant_state(
+                event.data["entity_id"], attribute, event.data.get("new_state")
+            )
+
         unsub = async_track_state_change_event(
             hass, [entity_id], send_home_assistant_state_event
         )
         entry_data.disconnect_callbacks.append(unsub)
-        new_state = hass.states.get(entity_id)
-        if new_state is None:
-            return
+
         # Send initial state
-        hass.async_create_task(_send_home_assistant_state(entity_id, new_state))
+        hass.async_create_task(
+            _send_home_assistant_state(entity_id, attribute, hass.states.get(entity_id))
+        )
 
     async def on_login() -> None:
         """Subscribe to states and list entities on successful API login."""
