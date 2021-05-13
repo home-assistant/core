@@ -184,10 +184,6 @@ class AirQualitySensor(HomeAccessory):
 class PM10Sensor(AirQualitySensor):
     """Generate a PM10Sensor accessory as PM 10 sensor."""
 
-    def __init__(self, *args):
-        """Initialize a AirQualitySensor accessory object."""
-        super().__init__(*args)
-
     def init(self):
         """Override the init function for PM 10 Sensor."""
         serv_air_quality = self.add_preload_service(
@@ -213,10 +209,6 @@ class PM10Sensor(AirQualitySensor):
 @TYPES.register("PM25Sensor")
 class PM25Sensor(AirQualitySensor):
     """Generate a PM25Sensor accessory as PM 2.5 sensor."""
-
-    def __init__(self, *args):
-        """Initialize a AirQualitySensor accessory object."""
-        super().__init__(*args)
 
     def init(self):
         """Override the init function for PM 2.5 Sensor."""
