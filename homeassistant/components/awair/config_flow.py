@@ -19,7 +19,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, conf: dict):
         """Import a configuration from config.yaml."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="already_setup")
 
         user, error = await self._check_connection(conf[CONF_ACCESS_TOKEN])

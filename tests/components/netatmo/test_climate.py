@@ -1,8 +1,6 @@
 """The tests for the Netatmo climate platform."""
 from unittest.mock import Mock, patch
 
-import pytest
-
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
@@ -21,12 +19,7 @@ from homeassistant.components.climate.const import (
     PRESET_BOOST,
 )
 from homeassistant.components.netatmo import climate
-from homeassistant.components.netatmo.climate import (
-    NA_THERM,
-    NA_VALVE,
-    PRESET_FROST_GUARD,
-    PRESET_SCHEDULE,
-)
+from homeassistant.components.netatmo.climate import PRESET_FROST_GUARD, PRESET_SCHEDULE
 from homeassistant.components.netatmo.const import (
     ATTR_SCHEDULE_NAME,
     SERVICE_SET_SCHEDULE,
@@ -651,28 +644,6 @@ async def test_valves_service_turn_on(hass, climate_entry):
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_entrada).state == "auto"
-
-
-@pytest.mark.parametrize(
-    "batterylevel, module_type, expected",
-    [
-        (4101, NA_THERM, 100),
-        (3601, NA_THERM, 80),
-        (3450, NA_THERM, 65),
-        (3301, NA_THERM, 50),
-        (3001, NA_THERM, 20),
-        (2799, NA_THERM, 0),
-        (3201, NA_VALVE, 100),
-        (2701, NA_VALVE, 80),
-        (2550, NA_VALVE, 65),
-        (2401, NA_VALVE, 50),
-        (2201, NA_VALVE, 20),
-        (2001, NA_VALVE, 0),
-    ],
-)
-async def test_interpolate(batterylevel, module_type, expected):
-    """Test interpolation of battery levels depending on device type."""
-    assert climate.interpolate(batterylevel, module_type) == expected
 
 
 async def test_get_all_home_ids():

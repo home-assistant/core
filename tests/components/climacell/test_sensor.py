@@ -7,7 +7,6 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-import pytz
 
 from homeassistant.components.climacell.config_flow import (
     _get_config_schema,
@@ -18,6 +17,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_registry import async_get
+from homeassistant.util import dt as dt_util
 
 from .const import API_V3_ENTRY_DATA, API_V4_ENTRY_DATA
 
@@ -59,7 +59,7 @@ async def _setup(hass: HomeAssistant, config: dict[str, Any]) -> State:
     """Set up entry and return entity state."""
     with patch(
         "homeassistant.util.dt.utcnow",
-        return_value=datetime(2021, 3, 6, 23, 59, 59, tzinfo=pytz.UTC),
+        return_value=datetime(2021, 3, 6, 23, 59, 59, tzinfo=dt_util.UTC),
     ):
         data = _get_config_schema(hass)(config)
         config_entry = MockConfigEntry(
@@ -119,9 +119,9 @@ async def test_v3_sensor(
     check_sensor_state(hass, EPA_HEALTH_CONCERN, "Good")
     check_sensor_state(hass, EPA_PRIMARY_POLLUTANT, "pm25")
     check_sensor_state(hass, FIRE_INDEX, "9")
-    check_sensor_state(hass, GRASS_POLLEN, "0")
-    check_sensor_state(hass, WEED_POLLEN, "0")
-    check_sensor_state(hass, TREE_POLLEN, "0")
+    check_sensor_state(hass, GRASS_POLLEN, "minimal_to_none")
+    check_sensor_state(hass, WEED_POLLEN, "minimal_to_none")
+    check_sensor_state(hass, TREE_POLLEN, "minimal_to_none")
 
 
 async def test_v4_sensor(

@@ -1,14 +1,14 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Kan geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken",
+            "powered_off": "Is de projector ingeschakeld? U moet de projector inschakelen voor de eerste configuratie."
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
-                    "name": "Naam",
-                    "port": "Poort"
+                    "name": "Naam"
                 }
             }
         }

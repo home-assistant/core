@@ -8,8 +8,7 @@
             "bad_pin_format": "Die PIN sollte 4-stellig sein",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "incorrect_pin": "Falsche PIN",
-            "invalid_auth": "Ung\u00fcltige Authentifizierung",
-            "unknown": "Unerwarteter Fehler"
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
         "step": {
             "pin": {

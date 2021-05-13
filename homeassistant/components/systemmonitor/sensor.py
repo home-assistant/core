@@ -204,7 +204,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the system monitor sensors."""
     entities = []
-    sensor_registry: dict[str, SensorData] = {}
+    sensor_registry: dict[tuple[str, str], SensorData] = {}
 
     for resource in config[CONF_RESOURCES]:
         type_ = resource[CONF_TYPE]
@@ -226,7 +226,9 @@ async def async_setup_platform(
             _LOGGER.warning("Cannot read CPU / processor temperature information")
             continue
 
-        sensor_registry[type_] = SensorData(argument, None, None, None, None)
+        sensor_registry[(type_, argument)] = SensorData(
+            argument, None, None, None, None
+        )
         entities.append(SystemMonitorSensor(sensor_registry, type_, argument))
 
     scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -237,7 +239,7 @@ async def async_setup_platform(
 
 async def async_setup_sensor_registry_updates(
     hass: HomeAssistant,
-    sensor_registry: dict[str, SensorData],
+    sensor_registry: dict[tuple[str, str], SensorData],
     scan_interval: datetime.timedelta,
 ) -> None:
     """Update the registry and create polling."""
@@ -246,11 +248,11 @@ async def async_setup_sensor_registry_updates(
 
     def _update_sensors() -> None:
         """Update sensors and store the result in the registry."""
-        for type_, data in sensor_registry.items():
+        for (type_, argument), data in sensor_registry.items():
             try:
                 state, value, update_time = _update(type_, data)
             except Exception as ex:  # pylint: disable=broad-except
-                _LOGGER.exception("Error updating sensor: %s", type_)
+                _LOGGER.exception("Error updating sensor: %s (%s)", type_, argument)
                 data.last_exception = ex
             else:
                 data.state = state
@@ -296,7 +298,7 @@ class SystemMonitorSensor(SensorEntity):
 
     def __init__(
         self,
-        sensor_registry: dict[str, SensorData],
+        sensor_registry: dict[tuple[str, str], SensorData],
         sensor_type: str,
         argument: str = "",
     ) -> None:
@@ -305,6 +307,7 @@ class SystemMonitorSensor(SensorEntity):
         self._name: str = f"{self.sensor_type[SENSOR_TYPE_NAME]} {argument}".rstrip()
         self._unique_id: str = slugify(f"{sensor_type}_{argument}")
         self._sensor_registry = sensor_registry
+        self._argument: str = argument
 
     @property
     def name(self) -> str:
@@ -354,7 +357,7 @@ class SystemMonitorSensor(SensorEntity):
     @property
     def data(self) -> SensorData:
         """Return registry entry for the data."""
-        return self._sensor_registry[self._type]
+        return self._sensor_registry[(self._type, self._argument)]
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""

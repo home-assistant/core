@@ -6,8 +6,8 @@ from datetime import timedelta
 import logging
 from typing import Callable, NamedTuple
 
-from gogogate2_api import AbstractGateApi, GogoGate2Api, ISmartGateApi
-from gogogate2_api.common import AbstractDoor, get_door_by_id
+from ismartgate import AbstractGateApi, GogoGate2Api, ISmartGateApi
+from ismartgate.common import AbstractDoor, get_door_by_id
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -112,7 +113,7 @@ def get_data_update_coordinator(
     config_entry_data = hass.data[DOMAIN][config_entry.entry_id]
 
     if DATA_UPDATE_COORDINATOR not in config_entry_data:
-        api = get_api(config_entry.data)
+        api = get_api(hass, config_entry.data)
 
         async def async_update_data():
             try:
@@ -148,7 +149,7 @@ def sensor_unique_id(
     return f"{config_entry.unique_id}_{door.door_id}_{sensor_type}"
 
 
-def get_api(config_data: dict) -> AbstractGateApi:
+def get_api(hass: HomeAssistant, config_data: dict) -> AbstractGateApi:
     """Get an api object for config data."""
     gate_class = GogoGate2Api
 
@@ -159,4 +160,5 @@ def get_api(config_data: dict) -> AbstractGateApi:
         config_data[CONF_IP_ADDRESS],
         config_data[CONF_USERNAME],
         config_data[CONF_PASSWORD],
+        httpx_async_client=get_async_client(hass),
     )
