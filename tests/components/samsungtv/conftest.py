@@ -5,6 +5,9 @@ import pytest
 
 import homeassistant.util.dt as dt_util
 
+RESULT_ALREADY_CONFIGURED = "already_in_progres"
+RESULT_ALREADY_IN_PROGRESS = "already_configured"
+
 
 @pytest.fixture(name="remote")
 def remote_fixture():

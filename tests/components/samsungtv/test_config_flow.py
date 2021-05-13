@@ -11,6 +11,9 @@ from homeassistant.components.samsungtv.const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
     DOMAIN,
+    RESULT_AUTH_MISSING,
+    RESULT_CANNOT_CONNECT,
+    RESULT_NOT_SUPPORTED,
 )
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
@@ -33,6 +36,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.components.samsungtv.conftest import (
+    RESULT_ALREADY_CONFIGURED,
+    RESULT_ALREADY_IN_PROGRESS,
+)
 
 MOCK_USER_DATA = {CONF_HOST: "fake_host", CONF_NAME: "fake_name"}
 MOCK_SSDP_DATA = {
@@ -168,7 +175,7 @@ async def test_user_legacy_missing_auth(hass: HomeAssistant, remote: Mock):
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "auth_missing"
+        assert result["reason"] == RESULT_AUTH_MISSING
 
 
 async def test_user_legacy_not_supported(hass: HomeAssistant, remote: Mock):
@@ -182,7 +189,7 @@ async def test_user_legacy_not_supported(hass: HomeAssistant, remote: Mock):
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_supported"
+        assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
 async def test_user_websocket_not_supported(hass: HomeAssistant, remotews: Mock):
@@ -199,7 +206,7 @@ async def test_user_websocket_not_supported(hass: HomeAssistant, remotews: Mock)
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_supported"
+        assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
 async def test_user_not_successful(hass: HomeAssistant, remotews: Mock):
@@ -215,7 +222,7 @@ async def test_user_not_successful(hass: HomeAssistant, remotews: Mock):
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_successful"
+        assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
 async def test_user_not_successful_2(hass: HomeAssistant, remotews: Mock):
@@ -231,7 +238,7 @@ async def test_user_not_successful_2(hass: HomeAssistant, remotews: Mock):
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_successful"
+        assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
 async def test_ssdp(hass: HomeAssistant, remote: Mock):
@@ -301,7 +308,7 @@ async def test_ssdp_legacy_missing_auth(hass: HomeAssistant, remote: Mock):
             result["flow_id"], user_input="whatever"
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "auth_missing"
+        assert result["reason"] == RESULT_AUTH_MISSING
 
 
 async def test_ssdp_legacy_not_supported(hass: HomeAssistant, remote: Mock):
@@ -323,7 +330,7 @@ async def test_ssdp_legacy_not_supported(hass: HomeAssistant, remote: Mock):
             result["flow_id"], user_input="whatever"
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_supported"
+        assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
 async def test_ssdp_websocket_not_supported(hass: HomeAssistant, remote: Mock):
@@ -347,7 +354,7 @@ async def test_ssdp_websocket_not_supported(hass: HomeAssistant, remote: Mock):
             result["flow_id"], user_input="whatever"
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_supported"
+        assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
 async def test_ssd_model_not_supported(hass: HomeAssistant, remote: Mock):
@@ -358,7 +365,7 @@ async def test_ssd_model_not_supported(hass: HomeAssistant, remote: Mock):
         DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA_WRONGMODEL
     )
     assert result["type"] == "abort"
-    assert result["reason"] == "not_supported"
+    assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
 async def test_ssdp_not_successful(hass: HomeAssistant, remote: Mock):
@@ -383,7 +390,7 @@ async def test_ssdp_not_successful(hass: HomeAssistant, remote: Mock):
             result["flow_id"], user_input="whatever"
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_successful"
+        assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
 async def test_ssdp_not_successful_2(hass: HomeAssistant, remote: Mock):
@@ -408,7 +415,7 @@ async def test_ssdp_not_successful_2(hass: HomeAssistant, remote: Mock):
             result["flow_id"], user_input="whatever"
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_successful"
+        assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
 async def test_ssdp_already_in_progress(hass: HomeAssistant, remote: Mock):
@@ -426,7 +433,7 @@ async def test_ssdp_already_in_progress(hass: HomeAssistant, remote: Mock):
         DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
     )
     assert result["type"] == "abort"
-    assert result["reason"] == "already_in_progress"
+    assert result["reason"] == RESULT_ALREADY_IN_PROGRESS
 
 
 async def test_ssdp_already_configured(hass: HomeAssistant, remote: Mock):
@@ -447,7 +454,7 @@ async def test_ssdp_already_configured(hass: HomeAssistant, remote: Mock):
         DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
     )
     assert result2["type"] == "abort"
-    assert result2["reason"] == "already_configured"
+    assert result2["reason"] == RESULT_ALREADY_CONFIGURED
 
     # check updated device info
     assert entry.unique_id == "fake_uuid"
@@ -542,7 +549,7 @@ async def test_autodetect_auth_missing(hass: HomeAssistant, remote: Mock):
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "auth_missing"
+        assert result["reason"] == RESULT_AUTH_MISSING
         assert remote.call_count == 1
         assert remote.call_args_list == [call(AUTODETECT_LEGACY)]
 
@@ -557,7 +564,7 @@ async def test_autodetect_not_supported(hass: HomeAssistant, remote: Mock):
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_supported"
+        assert result["reason"] == RESULT_NOT_SUPPORTED
         assert remote.call_count == 1
         assert remote.call_args_list == [call(AUTODETECT_LEGACY)]
 
@@ -588,7 +595,7 @@ async def test_autodetect_none(hass: HomeAssistant, remote: Mock, remotews: Mock
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_successful"
+        assert result["reason"] == RESULT_CANNOT_CONNECT
         assert remote.call_count == 1
         assert remote.call_args_list == [
             call(AUTODETECT_LEGACY),
@@ -620,7 +627,7 @@ async def test_update_old_entry(hass: HomeAssistant, remote: Mock):
         DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
     )
     assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == RESULT_ALREADY_CONFIGURED
 
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
