@@ -38,8 +38,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE, DOMAIN
 
@@ -85,19 +83,21 @@ SENSOR_TYPES = {
 }
 
 
-def setup_platform(
-    hass: HomeAssistant, config: ConfigType, add_entities, discovery_info=None
+async def async_setup_entry(
+    hass, config, async_add_entities, discovery_info=None
 ) -> None:
     """Set up the Honeywell thermostat."""
-    cool_away_temp = discovery_info.get(CONF_COOL_AWAY_TEMPERATURE)
-    heat_away_temp = discovery_info.get(CONF_HEAT_AWAY_TEMPERATURE)
-    add_entities(
+    cool_away_temp = config.data.get(CONF_COOL_AWAY_TEMPERATURE)
+    heat_away_temp = config.data.get(CONF_HEAT_AWAY_TEMPERATURE)
+    async_add_entities(
         [
             HoneywellUSThermostat(
                 hass.data[DOMAIN]["device"], cool_away_temp, heat_away_temp
             )
         ]
     )
+
+    return True
 
 
 class HoneywellUSThermostat(ClimateEntity):

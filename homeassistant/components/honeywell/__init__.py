@@ -2,15 +2,11 @@
 from datetime import timedelta
 import logging
 
-import requests
 import somecomfort
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from .const import (
@@ -47,27 +43,31 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = ["climate", "sensor"]
 
-def setup(hass: HomeAssistant, config: ConfigType):
+
+async def async_setup_entry(hass, config):
     """Set up the Honeywell thermostat."""
-    username = config[DOMAIN][CONF_USERNAME]
-    password = config[DOMAIN][CONF_PASSWORD]
+    username = config.data[CONF_USERNAME]
+    password = config.data[CONF_PASSWORD]
 
     try:
-        client = somecomfort.SomeComfort(username, password)
+        client = await hass.async_add_executor_job(
+            somecomfort.SomeComfort, username, password
+        )
     except somecomfort.AuthError:
         _LOGGER.error("Failed to login to honeywell account %s", username)
-        return
+        return False
     except somecomfort.SomeComfortError:
         _LOGGER.error(
             "Failed to initialize the Honeywell client: "
             "Check your configuration (username, password), "
             "or maybe you have exceeded the API rate limit?"
         )
-        return
+        return False
 
-    loc_id = config[DOMAIN].get(CONF_LOC_ID)
-    dev_id = config[DOMAIN].get(CONF_DEV_ID)
+    loc_id = config.data.get(CONF_LOC_ID)
+    dev_id = config.data.get(CONF_DEV_ID)
 
     for location in client.locations_by_id.values():
         for device in location.devices_by_id.values():
@@ -76,8 +76,7 @@ def setup(hass: HomeAssistant, config: ConfigType):
             ):
                 hass.data[DOMAIN] = {}
                 hass.data[DOMAIN]["device"] = device
-                load_platform(hass, "climate", DOMAIN, config[DOMAIN], config)
-                load_platform(hass, "sensor", DOMAIN, {}, config)
+                hass.config_entries.async_setup_platforms(config, PLATFORMS)
 
     return True
 
@@ -133,7 +132,7 @@ class HoneywellService:
             except (
                 somecomfort.client.APIRateLimited,
                 OSError,
-                requests.exceptions.ReadTimeout,
+                somecomfort.client.ConnectionTimeout,
             ) as exp:
                 retries -= 1
                 if retries == 0:

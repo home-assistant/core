@@ -13,14 +13,12 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(
-    hass: HomeAssistant, config: ConfigType, add_entities, discovery_info=None
+async def async_setup_entry(
+    hass, config, async_add_entities, discovery_info=None
 ) -> None:
     """Set up the Honeywell thermostat."""
     device = hass.data[DOMAIN]["device"]
@@ -35,7 +33,9 @@ def setup_platform(
     if device.outdoor_humidity is not None:
         sensors.append(HoneywellUSSensor(device, "outdoor", "humidity"))
 
-    add_entities(sensors)
+    async_add_entities(sensors)
+
+    return True
 
 
 class HoneywellUSSensor(SensorEntity):

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "auth_error": "Login was unsuccessful."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "away_cool_temperature": "Cool Away Temperature (\u00b0F)",
+                    "away_heat_temperature": "Heat Away Temperature (\u00b0F)",
+                    "location": "Location ID",
+                    "password": "Password",
+                    "thermostat": "Thermostat ID",
+                    "username": "Username"
+                },
+                "description": "If you need help with the configuration please see the documentation: https://www.home-assistant.io/integrations/honeywell/.\n\nAdditional sensors (e.g. Honeywell Wireless Outdoor Sensor) will be enabled by default.",
+                "title": "Honeywell Total Connect Comfort (US)"
+            }
+        }
+    }
+}
