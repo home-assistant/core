@@ -108,7 +108,7 @@ class OmniLogicRelayControl(OmniLogicSwitch):
         """Turn on the relay."""
         self._state = True
         self._last_action = time.time()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         await self.coordinator.api.set_relay_valve(
             int(self._item_id[1]),
@@ -167,7 +167,7 @@ class OmniLogicPumpControl(OmniLogicSwitch):
         """Turn on the pump."""
         self._state = True
         self._last_action = time.time()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         on_value = 100
 
@@ -185,7 +185,7 @@ class OmniLogicPumpControl(OmniLogicSwitch):
         """Turn off the pump."""
         self._state = False
         self._last_action = time.time()
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         if self._pump_type != "SINGLE":
             if "filterSpeed" in self.coordinator.data[self._item_id]:
@@ -213,7 +213,7 @@ class OmniLogicPumpControl(OmniLogicSwitch):
                 )
 
                 if success:
-                    self.async_schedule_update_ha_state()
+                    self.async_write_ha_state()
 
             else:
                 raise OmniLogicException(
