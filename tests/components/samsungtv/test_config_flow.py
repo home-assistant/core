@@ -359,12 +359,14 @@ async def test_ssdp_websocket_not_supported(hass: HomeAssistant, remote: Mock):
         assert result["reason"] == RESULT_NOT_SUPPORTED
 
 
-async def test_ssd_model_not_supported(hass: HomeAssistant, remote: Mock):
+async def test_ssdp_model_not_supported(hass: HomeAssistant, remote: Mock):
     """Test starting a flow from discovery."""
 
     # confirm to add the entry
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA_WRONGMODEL
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_SSDP_DATA_WRONGMODEL,
     )
     assert result["type"] == "abort"
     assert result["reason"] == RESULT_NOT_SUPPORTED
@@ -467,7 +469,9 @@ async def test_zeroconf(hass: HomeAssistant, remote: Mock):
 
     # confirm to add the entry
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "zeroconf"}, data=MOCK_ZEROCONF_DATA
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DATA,
     )
     assert result["type"] == "form"
     assert result["step_id"] == "confirm"
@@ -495,7 +499,9 @@ async def test_zeroconf_device_info(hass: HomeAssistant, remote: Mock):
 
         # confirm to add the entry
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "zeroconf"}, data=MOCK_ZEROCONF_DATA
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=MOCK_ZEROCONF_DATA,
         )
         assert result["type"] == "form"
         assert result["step_id"] == "confirm"
@@ -546,7 +552,10 @@ async def test_autodetect_auth_missing(hass: HomeAssistant, remote: Mock):
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[AccessDenied("Boom")],
-    ) as remote:
+    ) as remote, patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        return_value="fake_host",
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
         )
@@ -614,9 +623,9 @@ async def test_update_old_entry(hass: HomeAssistant, remote: Mock):
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY)
     entry.add_to_hass(hass)
 
-    config_entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(config_entries) == 1
-    assert entry is config_entries[0]
+    config_entries_domain = hass.config_entries.async_entries(DOMAIN)
+    assert len(config_entries_domain) == 1
+    assert entry is config_entries_domain[0]
     assert entry.data[CONF_ID] == "fake_uuid_old"
     assert entry.data[CONF_IP_ADDRESS] == "fake_ip_old"
     assert not entry.unique_id
@@ -626,14 +635,14 @@ async def test_update_old_entry(hass: HomeAssistant, remote: Mock):
 
     # failed as already configured
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
+        DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
     )
     assert result["type"] == "abort"
     assert result["reason"] == RESULT_ALREADY_CONFIGURED
 
-    config_entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(config_entries) == 1
-    entry2 = config_entries[0]
+    config_entries_domain = hass.config_entries.async_entries(DOMAIN)
+    assert len(config_entries_domain) == 1
+    entry2 = config_entries_domain[0]
 
     # check updated device info
     assert CONF_ID not in entry2.data
