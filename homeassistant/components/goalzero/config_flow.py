@@ -78,8 +78,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     title=name,
                     data={CONF_HOST: host, CONF_NAME: name},
                 )
-            else:
-                errors["base"] = error
+            errors["base"] = error
 
         user_input = user_input or {}
         return self.async_show_form(
