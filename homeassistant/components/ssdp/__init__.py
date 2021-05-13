@@ -4,11 +4,21 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from datetime import timedelta
+from ipaddress import IPv4Address
 import logging
 from typing import Any
 
 import aiohttp
-from async_upnp_client.search import async_search
+from async_upnp_client.ssdp import (
+    SSDP_IP_V4,
+    SSDP_MX,
+    SSDP_ST_ALL,
+    SSDP_TARGET_V4,
+    SsdpProtocol,
+    build_ssdp_search_packet,
+    get_source_ip_from_target_ip,
+    get_ssdp_socket,
+)
 from defusedxml import ElementTree
 from netdisco import ssdp, util
 
@@ -51,15 +61,58 @@ async def async_setup(hass, config):
         await scanner.async_scan(None)
         cancel_scan = async_track_time_interval(hass, scanner.async_scan, SCAN_INTERVAL)
 
-        @callback
-        def _async_stop_scans(event):
+        async def _async_stop_scans(event):
             cancel_scan()
+            await scanner.async_stop()
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_scans)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_initialize)
 
     return True
+
+
+class SSDPListener:
+    """Class to listen for SSDP."""
+
+    def __init__(self, async_callback):
+        """Init the ssdp listener class."""
+        self._async_callback = async_callback
+        self._target = None
+        self._transport = None
+
+    @callback
+    def async_search(self) -> None:
+        """Start an SSDP search."""
+        self._transport.sendto(
+            build_ssdp_search_packet(SSDP_TARGET_V4, SSDP_MX, SSDP_ST_ALL), self._target
+        )
+
+    async def _async_on_data(self, request_line, headers) -> None:
+        await self._async_callback(headers)
+
+    async def _async_on_connect(self, transport):
+        self.async_search()
+
+    async def async_start(self, target_ip, source_ip):
+        """Start the listener."""
+        target_ip = IPv4Address(SSDP_IP_V4)
+        source_ip = get_source_ip_from_target_ip(target_ip)
+        sock, source, self.target = get_ssdp_socket(source_ip, target_ip)
+        sock.bind(source)
+        loop = asyncio.get_running_loop()
+        connect = loop.create_datagram_endpoint(
+            lambda: SsdpProtocol(
+                loop, on_connect=self._async_on_connect, on_data=self._async_on_data
+            ),
+            sock=sock,
+        )
+        self._transport, _ = await connect
+
+    @callback
+    def async_stop(self):
+        """Stop the listener."""
+        self.transport.close()
 
 
 class Scanner:
@@ -69,13 +122,13 @@ class Scanner:
         """Initialize class."""
         self.hass = hass
         self.seen = set()
-        self._entries = []
         self._integration_matchers = integration_matchers
         self._description_cache = {}
+        self._ssdp_listener = None
 
-    async def _on_ssdp_response(self, data: Mapping[str, Any]) -> None:
+    async def _async_on_ssdp_response(self, data: Mapping[str, Any]) -> None:
         """Process an ssdp response."""
-        self.async_store_entry(
+        self._async_process_entry(
             ssdp.UPNPEntry({key.lower(): item for key, item in data.items()})
         )
 
@@ -84,79 +137,44 @@ class Scanner:
         """Save an entry for later processing."""
         self._entries.append(entry)
 
-    async def async_scan(self, _):
+    async def async_stop(self):
+        """Stop the scanner."""
+        await self._ssdp_listener.async_stop()
+        self._ssdp_listener = None
+
+    async def async_scan(self):
         """Scan for new entries."""
-
-        await async_search(async_callback=self._on_ssdp_response)
-        await self._process_entries()
-
-        # We clear the cache after each run. We track discovered entries
-        # so will never need a description twice.
-        self._description_cache.clear()
-        self._entries.clear()
-
-    async def _process_entries(self):
-        """Process SSDP entries."""
-        entries_to_process = []
-        unseen_locations = set()
-
-        for entry in self._entries:
-            key = (entry.st, entry.location)
-
-            if key in self.seen:
-                continue
-
-            self.seen.add(key)
-
-            entries_to_process.append(entry)
-
-            if (
-                entry.location is not None
-                and entry.location not in self._description_cache
-            ):
-                unseen_locations.add(entry.location)
-
-        if not entries_to_process:
+        if self._ssdp_listener:
+            await self._ssdp_listener.async_search()
             return
 
-        if unseen_locations:
-            await self._fetch_descriptions(list(unseen_locations))
+        self._ssdp_listener = SSDPListener(async_callback=self._async_on_ssdp_response)
+        await self._ssdp_listener.async_start()
 
-        tasks = []
+    async def _async_process_entry(self, entry):
+        """Process SSDP entries."""
+        key = (entry.st, entry.location)
+        if key in self.seen:
+            return
+        self.seen.add(key)
 
-        for entry in entries_to_process:
-            info, domains = self._process_entry(entry)
-            for domain in domains:
-                _LOGGER.debug("Discovered %s at %s", domain, entry.location)
-                tasks.append(
-                    self.hass.config_entries.flow.async_init(
-                        domain, context={"source": DOMAIN}, data=info
-                    )
-                )
+        if entry.location is not None and entry.location not in self._description_cache:
+            try:
+                result = self._fetch_description(entry.location)
+            except Exception:
+                _LOGGER.exception("Failed to fetch ssdp data from: %s", entry.location)
+                return
+            else:
+                self._description_cache[entry.location] = result
 
-        if tasks:
-            await asyncio.gather(*tasks)
-
-    async def _fetch_descriptions(self, locations):
-        """Fetch descriptions from locations."""
-
-        for idx, result in enumerate(
-            await asyncio.gather(
-                *[self._fetch_description(location) for location in locations],
-                return_exceptions=True,
+        info, domains = self._info_domains(entry)
+        for domain in domains:
+            _LOGGER.debug("Discovered %s at %s", domain, entry.location)
+            await self.hass.config_entries.flow.async_init(
+                domain, context={"source": DOMAIN}, data=info
             )
-        ):
-            location = locations[idx]
 
-            if isinstance(result, Exception):
-                _LOGGER.exception(
-                    "Failed to fetch ssdp data from: %s", location, exc_info=result
-                )
-                continue
-
-            self._description_cache[location] = result
-
-    def _process_entry(self, entry):
+    def _info_domains(self, entry):
         """Process a single entry."""
 
         info = {"st": entry.st}
