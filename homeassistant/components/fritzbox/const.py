@@ -14,14 +14,14 @@ ATTR_TEMPERATURE_UNIT: Final = "temperature_unit"
 ATTR_TOTAL_CONSUMPTION: Final = "total_consumption"
 ATTR_TOTAL_CONSUMPTION_UNIT: Final = "total_consumption_unit"
 
-CONF_CONNECTIONS = "connections"
-CONF_COORDINATOR = "coordinator"
+CONF_CONNECTIONS: Final = "connections"
+CONF_COORDINATOR: Final = "coordinator"
 
-DEFAULT_HOST = "fritz.box"
-DEFAULT_USERNAME = "admin"
+DEFAULT_HOST: Final = "fritz.box"
+DEFAULT_USERNAME: Final = "admin"
 
-DOMAIN = "fritzbox"
+DOMAIN: Final = "fritzbox"
 
 LOGGER: logging.Logger = logging.getLogger(__package__)
 
-PLATFORMS = ["binary_sensor", "climate", "switch", "sensor"]
+PLATFORMS: Final = ["binary_sensor", "climate", "switch", "sensor"]

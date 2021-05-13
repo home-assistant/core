@@ -50,7 +50,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize flow."""
         self._entry: ConfigEntry | None = None
         self._host: str | None = None
-        self._name: str = ""
+        self._name: str | None = None
         self._password: str | None = None
         self._username: str | None = None
 
@@ -103,7 +103,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
             self._host = user_input[CONF_HOST]
-            self._name = user_input[CONF_HOST]
+            self._name = str(user_input[CONF_HOST])
             self._password = user_input[CONF_PASSWORD]
             self._username = user_input[CONF_USERNAME]
 
@@ -144,7 +144,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
 
         self._host = host
-        self._name = discovery_info.get(ATTR_UPNP_FRIENDLY_NAME) or host
+        self._name = str(discovery_info.get(ATTR_UPNP_FRIENDLY_NAME) or host)
 
         self.context["title_placeholders"] = {"name": self._name}
         return await self.async_step_confirm()
@@ -161,6 +161,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             result = await self.hass.async_add_executor_job(self._try_connect)
 
             if result == RESULT_SUCCESS:
+                assert isinstance(self._name, str)
                 return self._get_entry(self._name)
             if result != RESULT_INVALID_AUTH:
                 return self.async_abort(reason=result)
@@ -179,7 +180,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         assert entry is not None
         self._entry = entry
         self._host = data[CONF_HOST]
-        self._name = data[CONF_HOST]
+        self._name = str(data[CONF_HOST])
         self._username = data[CONF_USERNAME]
 
         return await self.async_step_reauth_confirm()
