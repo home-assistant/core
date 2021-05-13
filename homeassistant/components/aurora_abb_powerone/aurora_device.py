@@ -32,7 +32,7 @@ class AuroraDevice(Entity):
     @property
     def unique_id(self) -> str:
         """Return the unique id for this device."""
-        serial = self.config_entry.data.get(ATTR_SERIAL_NUMBER, "dummy sn")
+        serial = self.config_entry.data[ATTR_SERIAL_NUMBER]
         return f"{serial}_{self.type}"
 
     @property
@@ -45,9 +45,9 @@ class AuroraDevice(Entity):
         """Return device specific attributes."""
         return {
             "config_entry_id": self.config_entry.entry_id,
-            "identifiers": {(DOMAIN, self.config_entry.data.get(ATTR_SERIAL_NUMBER))},
+            "identifiers": {(DOMAIN, self.config_entry.data[ATTR_SERIAL_NUMBER])},
             "manufacturer": MANUFACTURER,
-            "model": self.config_entry.data.get(ATTR_MODEL),
+            "model": self.config_entry.data[ATTR_MODEL],
             "name": self.config_entry.data.get(ATTR_DEVICE_NAME, DEFAULT_DEVICE_NAME),
-            "sw_version": self.config_entry.data.get(ATTR_FIRMWARE),
+            "sw_version": self.config_entry.data[ATTR_FIRMWARE],
         }
