@@ -51,9 +51,9 @@ class MazdaDeviceTracker(MazdaEntity, TrackerEntity):
     @property
     def latitude(self):
         """Return latitude value of the device."""
-        return self.coordinator.data[self.index]["status"]["latitude"]
+        return self.data["status"]["latitude"]
 
     @property
     def longitude(self):
         """Return longitude value of the device."""
-        return self.coordinator.data[self.index]["status"]["longitude"]
+        return self.data["status"]["longitude"]

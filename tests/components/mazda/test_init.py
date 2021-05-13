@@ -12,7 +12,12 @@ from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
 )
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_REGION
+from homeassistant.const import (
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    CONF_REGION,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
@@ -138,7 +143,7 @@ async def test_update_general_failure(hass: HomeAssistant):
 
     entity = hass.states.get("sensor.my_mazda3_fuel_remaining_percentage")
     assert entity is not None
-    assert entity.state == "unavailable"
+    assert entity.state == STATE_UNAVAILABLE
 
 
 async def test_unload_config_entry(hass: HomeAssistant) -> None:

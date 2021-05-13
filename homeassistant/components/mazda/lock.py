@@ -45,9 +45,7 @@ class MazdaLock(MazdaEntity, LockEntity):
     @property
     def is_locked(self):
         """Return true if lock is locked."""
-        api_last_updated_timestamp_str = self.coordinator.data[self.index]["status"][
-            "lastUpdatedTimestamp"
-        ]
+        api_last_updated_timestamp_str = self.data["status"]["lastUpdatedTimestamp"]
         api_last_updated_timestamp = datetime.datetime.strptime(
             api_last_updated_timestamp_str, "%Y%m%d%H%M%S"
         ).replace(tzinfo=datetime.timezone.utc)
@@ -68,7 +66,7 @@ class MazdaLock(MazdaEntity, LockEntity):
             return self._assumed_lock_state == STATE_LOCKED
 
         # We didn't use self._assumed_lock_state, so use the value from the most recent API response
-        door_lock_status = self.coordinator.data[self.index]["status"]["doorLocks"]
+        door_lock_status = self.data["status"]["doorLocks"]
 
         vehicle_is_unlocked = (
             door_lock_status["driverDoorUnlocked"]
@@ -85,7 +83,7 @@ class MazdaLock(MazdaEntity, LockEntity):
         self._assumed_lock_state = STATE_LOCKED
         self._assumed_lock_state_timestamp = dt_util.utcnow()
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
         await self.client.lock_doors(self.vehicle_id)
 
@@ -95,6 +93,6 @@ class MazdaLock(MazdaEntity, LockEntity):
         self._assumed_lock_state = STATE_UNLOCKED
         self._assumed_lock_state_timestamp = dt_util.utcnow()
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
         await self.client.unlock_doors(self.vehicle_id)

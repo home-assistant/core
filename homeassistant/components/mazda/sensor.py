@@ -58,7 +58,7 @@ class MazdaFuelRemainingSensor(MazdaEntity, SensorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.coordinator.data[self.index]["status"]["fuelRemainingPercent"]
+        return self.data["status"]["fuelRemainingPercent"]
 
 
 class MazdaFuelDistanceSensor(MazdaEntity, SensorEntity):
@@ -90,9 +90,7 @@ class MazdaFuelDistanceSensor(MazdaEntity, SensorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        fuel_distance_km = self.coordinator.data[self.index]["status"][
-            "fuelDistanceRemainingKm"
-        ]
+        fuel_distance_km = self.data["status"]["fuelDistanceRemainingKm"]
         return (
             None
             if fuel_distance_km is None
@@ -131,7 +129,7 @@ class MazdaOdometerSensor(MazdaEntity, SensorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        odometer_km = self.coordinator.data[self.index]["status"]["odometerKm"]
+        odometer_km = self.data["status"]["odometerKm"]
         return (
             None
             if odometer_km is None
@@ -166,9 +164,7 @@ class MazdaFrontLeftTirePressureSensor(MazdaEntity, SensorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        tire_pressure = self.coordinator.data[self.index]["status"]["tirePressure"][
-            "frontLeftTirePressurePsi"
-        ]
+        tire_pressure = self.data["status"]["tirePressure"]["frontLeftTirePressurePsi"]
         return None if tire_pressure is None else round(tire_pressure)
 
 
@@ -199,9 +195,7 @@ class MazdaFrontRightTirePressureSensor(MazdaEntity, SensorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        tire_pressure = self.coordinator.data[self.index]["status"]["tirePressure"][
-            "frontRightTirePressurePsi"
-        ]
+        tire_pressure = self.data["status"]["tirePressure"]["frontRightTirePressurePsi"]
         return None if tire_pressure is None else round(tire_pressure)
 
 
@@ -232,9 +226,7 @@ class MazdaRearLeftTirePressureSensor(MazdaEntity, SensorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        tire_pressure = self.coordinator.data[self.index]["status"]["tirePressure"][
-            "rearLeftTirePressurePsi"
-        ]
+        tire_pressure = self.data["status"]["tirePressure"]["rearLeftTirePressurePsi"]
         return None if tire_pressure is None else round(tire_pressure)
 
 
@@ -265,7 +257,5 @@ class MazdaRearRightTirePressureSensor(MazdaEntity, SensorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        tire_pressure = self.coordinator.data[self.index]["status"]["tirePressure"][
-            "rearRightTirePressurePsi"
-        ]
+        tire_pressure = self.data["status"]["tirePressure"]["rearRightTirePressurePsi"]
         return None if tire_pressure is None else round(tire_pressure)

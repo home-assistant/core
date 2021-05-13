@@ -126,19 +126,22 @@ class MazdaEntity(CoordinatorEntity):
         self.vehicle_id = self.coordinator.data[self.index]["id"]
 
     @property
+    def data(self):
+        """Shortcut to access coordinator data for the entity."""
+        return self.coordinator.data[self.index]
+
+    @property
     def device_info(self):
         """Return device info for the Mazda entity."""
-        data = self.coordinator.data[self.index]
         return {
             "identifiers": {(DOMAIN, self.vin)},
             "name": self.get_vehicle_name(),
             "manufacturer": "Mazda",
-            "model": f"{data['modelYear']} {data['carlineName']}",
+            "model": f"{self.data['modelYear']} {self.data['carlineName']}",
         }
 
     def get_vehicle_name(self):
         """Return the vehicle name, to be used as a prefix for names of other entities."""
-        data = self.coordinator.data[self.index]
-        if "nickname" in data and len(data["nickname"]) > 0:
-            return data["nickname"]
-        return f"{data['modelYear']} {data['carlineName']}"
+        if "nickname" in self.data and len(self.data["nickname"]) > 0:
+            return self.data["nickname"]
+        return f"{self.data['modelYear']} {self.data['carlineName']}"
