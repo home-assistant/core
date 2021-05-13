@@ -146,7 +146,7 @@ class Scanner:
     async def async_scan(self, *_):
         """Scan for new entries."""
         if self._ssdp_listener:
-            await self._ssdp_listener.async_search()
+            self._ssdp_listener.async_search()
             return
 
         self._ssdp_listener = SSDPListener(async_callback=self._async_on_ssdp_response)
