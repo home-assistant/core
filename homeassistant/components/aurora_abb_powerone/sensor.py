@@ -20,7 +20,13 @@ from homeassistant.exceptions import InvalidStateError
 import homeassistant.helpers.config_validation as cv
 
 from .aurora_device import AuroraDevice
-from .const import DEFAULT_ADDRESS, DOMAIN
+from .const import (
+    ATTR_FIRMWARE,
+    ATTR_MODEL,
+    ATTR_SERIAL_NUMBER,
+    DEFAULT_ADDRESS,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +55,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     _LOGGER.debug("Intitialising com port=%s address=%s", comport, address)
     client = AuroraSerialClient(address, comport, parity="N", timeout=1)
 
-    config.data = {"device_name": name}
+    config.data = {
+        "device_name": name,
+        ATTR_SERIAL_NUMBER: None,
+        ATTR_FIRMWARE: None,
+        ATTR_MODEL: None,
+    }
     config.entry_id = "undefined_entry_id"
     devices.append(AuroraSensor(client, config, "Power", "instantaneouspower"))
     add_entities(devices, True)
