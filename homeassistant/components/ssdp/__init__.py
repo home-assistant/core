@@ -112,7 +112,7 @@ class SSDPListener:
     @callback
     def async_stop(self):
         """Stop the listener."""
-        self.transport.close()
+        self._transport.close()
 
 
 class Scanner:
