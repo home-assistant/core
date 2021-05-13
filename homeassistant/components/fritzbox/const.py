@@ -1,4 +1,6 @@
 """Constants for the AVM FRITZ!SmartHome integration."""
+from __future__ import annotations
+
 import logging
 from typing import Final
 
@@ -22,6 +24,6 @@ DEFAULT_USERNAME: Final = "admin"
 
 DOMAIN: Final = "fritzbox"
 
-LOGGER: logging.Logger = logging.getLogger(__package__)
+LOGGER: Final[logging.Logger] = logging.getLogger(__package__)
 
-PLATFORMS: Final = ["binary_sensor", "climate", "switch", "sensor"]
+PLATFORMS: Final[list[str]] = ["binary_sensor", "climate", "switch", "sensor"]

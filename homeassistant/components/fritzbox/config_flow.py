@@ -161,7 +161,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             result = await self.hass.async_add_executor_job(self._try_connect)
 
             if result == RESULT_SUCCESS:
-                assert isinstance(self._name, str)
+                assert self._name is not None
                 return self._get_entry(self._name)
             if result != RESULT_INVALID_AUTH:
                 return self.async_abort(reason=result)
