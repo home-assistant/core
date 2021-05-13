@@ -45,7 +45,9 @@ async def test_form(hass, client):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {}
 
-    with patch("homeassistant.components.heatzy.HeatzyClient", return_value=client):
+    with patch(
+        "homeassistant.components.heatzy.config_flow.HeatzyClient", return_value=client
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={CONF_SOURCE: config_entries.SOURCE_USER},
@@ -78,7 +80,8 @@ async def test_form_updates_unique_id(hass, client):
 async def test_form_exception(hass, client):
     """Test client exception."""
     with patch(
-        "homeassistant.components.heatzy.HeatzyClient", side_effect=HeatzyException
+        "homeassistant.components.heatzy.config_flow.HeatzyClient",
+        side_effect=HeatzyException,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
