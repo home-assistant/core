@@ -9,9 +9,10 @@ from heatzypy.exception import HeatzyException, HttpRequestFailed
 from homeassistant.components.climate.const import DOMAIN as CLIM_DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DEBOUNCE_COOLDOWN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = timedelta(minutes=1)
@@ -53,7 +54,13 @@ class HeatzyDataUpdateCoordinator(DataUpdateCoordinator):
             config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD]
         )
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=60)
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=60),
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=DEBOUNCE_COOLDOWN, immediate=False
+            ),
         )
 
     async def _async_update_data(self) -> dict:
@@ -62,8 +69,6 @@ class HeatzyDataUpdateCoordinator(DataUpdateCoordinator):
                 devices = await self.hass.async_add_executor_job(
                     self.heatzy_client.get_devices
                 )
-                sensors = {device["did"]: device for device in devices}
-                _LOGGER.debug(sensors)
-                return sensors
+                return {device["did"]: device for device in devices}
             except (HttpRequestFailed, HeatzyException) as error:
                 raise UpdateFailed from error
