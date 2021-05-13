@@ -43,6 +43,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except exceptions.InvalidHost:
             return self.async_abort(reason="invalid_host")
         except Exception:  # pylint: disable=broad-except
+            _LOGGER.debug("Unexpected exception", exc_info=True)
             return self.async_abort(reason="unknown")
 
         return await self.async_step_confirm_discovery()

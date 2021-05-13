@@ -131,9 +131,7 @@ async def test_dhcp_discovery(hass):
         assert result["type"] == "form"
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-            },
+            {},
         )
         await hass.async_block_till_done()
 
@@ -163,6 +161,7 @@ async def test_dhcp_discovery_failed(hass):
             data=CONF_DHCP_FLOW,
         )
         assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "cannot_connect"
 
     with _patch_config_flow_yeti(mocked_yeti) as yetimock:
         yetimock.side_effect = exceptions.InvalidHost
@@ -172,6 +171,7 @@ async def test_dhcp_discovery_failed(hass):
             data=CONF_DHCP_FLOW,
         )
         assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "invalid_host"
 
     with _patch_config_flow_yeti(mocked_yeti) as yetimock:
         yetimock.side_effect = Exception
@@ -181,3 +181,4 @@ async def test_dhcp_discovery_failed(hass):
             data=CONF_DHCP_FLOW,
         )
         assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "unknown"
