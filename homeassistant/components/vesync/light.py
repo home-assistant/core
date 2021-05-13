@@ -68,36 +68,57 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
     @property
     def brightness(self):
         """Get light brightness."""
-        return round((int(self.device.brightness) / 100) * 255)
+        # get value from pyvesync library api,
+        r = self.device.brightness
+        try:
+            # check for validity of brightness value received
+            brightness_value = int(r)
+            # convert percent brightness to ha expected range
+            brightness_value = round((max(1, brightness_value) / 100) * 255)
+            return brightness_value
+        except ValueError:
+            # deal if any unexpected value
+            _LOGGER.debug(
+                "VeSync - received brightness level from pyvesync api out of range: %d",
+                brightness_value,
+            )
+            return 0
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        if ATTR_BRIGHTNESS in kwargs:
-            # get brightness from HA data
-            brightness = int(kwargs[ATTR_BRIGHTNESS])
-            # convert to percent that vesync api expects
-            brightness = round((brightness / 255) * 100)
-            # clamp to 1-100
-            brightness = max(1, min(brightness, 100))
-            self.device.set_brightness(brightness)
+        # set brightness level
+        if self.color_mode in (COLOR_MODE_BRIGHTNESS, COLOR_MODE_COLOR_TEMP):
+            if ATTR_BRIGHTNESS in kwargs:
+                # get brightness from HA data
+                brightness = int(kwargs[ATTR_BRIGHTNESS])
+                # convert to percent that vesync api expects
+                brightness = round((max(1, brightness) / 255) * 100)
+                # ensure value between 0-100
+                brightness = max(1, min(brightness, 100))
+                self.device.set_brightness(brightness)
+                return
         # set white temperature
-        if ATTR_COLOR_TEMP in kwargs:
-            # get white temperature from HA data
-            color_temp = int(kwargs[ATTR_COLOR_TEMP])
-            # convert Mireds to Percent value that api expects
-            color_temp = round(
-                ((color_temp - self.min_mireds) / (self.max_mireds - self.min_mireds))
-                * 100
-            )
-            # flip cold/warm to what pyvesync api expects
-            color_temp = 100 - color_temp
-            # ensure value between 0-100
-            color_temp = max(0, min(color_temp, 100))
-            # pass value to pyvesync library api
-            self.device.set_color_temp(color_temp)
-        # Avoid turning device back on if this is just a brightness adjustment
-        if not self.is_on:
-            self.device.turn_on()
+        if self.color_mode in (COLOR_MODE_COLOR_TEMP):
+            if ATTR_COLOR_TEMP in kwargs:
+                # get white temperature from HA data
+                color_temp = int(kwargs[ATTR_COLOR_TEMP])
+                # convert Mireds to Percent value that api expects
+                color_temp = round(
+                    (
+                        (color_temp - self.min_mireds)
+                        / (self.max_mireds - self.min_mireds)
+                    )
+                    * 100
+                )
+                # flip cold/warm to what pyvesync api expects
+                color_temp = 100 - color_temp
+                # ensure value between 0-100
+                color_temp = max(0, min(color_temp, 100))
+                # pass value to pyvesync library api
+                self.device.set_color_temp(color_temp)
+                return
+        # send turn_on command to pyvesync api
+        self.device.turn_on()
 
 
 class VeSyncDimmableLightHA(VeSyncBaseLight, LightEntity):
