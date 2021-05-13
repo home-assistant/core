@@ -92,7 +92,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         """Build the Proxmox client connection."""
         hass.data[PROXMOX_CLIENTS] = {}
 
-        for entry in config[DOMAIN]:
+        for index, entry in enumerate(config[DOMAIN]):
             host = entry[CONF_HOST]
             port = entry[CONF_PORT]
             user = entry[CONF_USERNAME]
@@ -100,7 +100,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
             password = entry[CONF_PASSWORD]
             verify_ssl = entry[CONF_VERIFY_SSL]
 
-            hass.data[PROXMOX_CLIENTS][host] = None
+            hass.data[PROXMOX_CLIENTS][host + str(index)] = None
 
             try:
                 # Construct an API client with the given data for the given host
@@ -125,15 +125,15 @@ async def async_setup(hass: HomeAssistant, config: dict):
                 _LOGGER.warning("Connection to host %s timed out during setup", host)
                 continue
 
-            hass.data[PROXMOX_CLIENTS][host] = proxmox_client
+            hass.data[PROXMOX_CLIENTS][host + str(index)] = proxmox_client
 
     await hass.async_add_executor_job(build_client)
 
     coordinators = hass.data[DOMAIN][COORDINATORS] = {}
 
     # Create a coordinator for each vm/container
-    for host_config in config[DOMAIN]:
-        host_name = host_config["host"]
+    for index, host_config in enumerate(config[DOMAIN]):
+        host_name = host_config["host"] + str(index)
         coordinators[host_name] = {}
 
         proxmox_client = hass.data[PROXMOX_CLIENTS][host_name]

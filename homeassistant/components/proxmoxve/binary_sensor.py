@@ -13,8 +13,8 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 
     sensors = []
 
-    for host_config in discovery_info["config"][DOMAIN]:
-        host_name = host_config["host"]
+    for index, host_config in enumerate(discovery_info["config"][DOMAIN]):
+        host_name = host_config["host"] + str(index)
         host_name_coordinators = hass.data[DOMAIN][COORDINATORS][host_name]
 
         if hass.data[PROXMOX_CLIENTS][host_name] is None:
