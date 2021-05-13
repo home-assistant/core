@@ -32,6 +32,7 @@ from .const import (
     SONOS_GROUP_UPDATE,
     SONOS_SEEN,
 )
+from .favorites import SonosFavorites
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,6 +67,7 @@ class SonosData:
     def __init__(self) -> None:
         """Initialize the data."""
         self.discovered: dict[str, SonosSpeaker] = {}
+        self.favorites: dict[str, SonosFavorites] = {}
         self.topology_condition = asyncio.Condition()
         self.discovery_thread = None
         self.hosts_heartbeat = None
@@ -122,10 +124,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 data = hass.data[DATA_SONOS]
 
                 if soco.uid not in data.discovered:
-                    _LOGGER.debug("Adding new speaker")
                     speaker_info = soco.get_speaker_info(True)
+                    _LOGGER.debug("Adding new speaker: %s", speaker_info)
                     speaker = SonosSpeaker(hass, soco, speaker_info)
                     data.discovered[soco.uid] = speaker
+                    data.favorites.setdefault(soco.household_id, SonosFavorites(soco))
+                    data.favorites[soco.household_id].update()
                     speaker.setup()
                 else:
                     dispatcher_send(hass, f"{SONOS_SEEN}-{soco.uid}", soco)
