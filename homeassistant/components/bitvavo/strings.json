@@ -6,22 +6,22 @@
                 "description": "This integration requires an API Key from Bitvavo with at least 'Read' permissions.",
                 "data": {
                     "api_key": "[%key:common::config_flow::data::api_key%]",
-                    "api_secret": "API Secret",
-                },
+                    "api_secret": "API Secret"
+                }
             },
             "markets": {
                 "title": "Select the cryptocurrency markets",
                 "description": "Select the markets that you would like to track.",
-                "data": {"markets": "markets"},
-            },
+                "data": {"markets": "markets"}
+            }
         },
         "error": {
             "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-            "invalid_market": "Invalid market(s)",
+            "invalid_market": "Invalid market(s)"
         },
         "abort": {
             "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-            "unknown": "[%key:common::config_flow::error::unknown%]",
-        },
+            "unknown": "[%key:common::config_flow::error::unknown%]"
+        }
     }
 }
