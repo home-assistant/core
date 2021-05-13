@@ -136,11 +136,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except SHCConnectionError:
                 errors["base"] = "cannot_connect"
-            except SHCSessionError:
-                _LOGGER.warning("API call returned non-OK result. Wrong password?")
+            except SHCSessionError as err:
+                _LOGGER.warning("Session error: %s", err.message)
                 errors["base"] = "unknown"
-            except SHCRegistrationError:
-                _LOGGER.warning("SHC not in pairing mode!")
+            except SHCRegistrationError as err:
+                _LOGGER.warning("Registration error: %s", err.message)
                 errors["base"] = "pairing_failed"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
