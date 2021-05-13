@@ -2,6 +2,8 @@
 from unittest.mock import patch
 
 from homeassistant.components.aurora_abb_powerone.const import (
+    ATTR_FIRMWARE,
+    ATTR_MODEL,
     ATTR_SERIAL_NUMBER,
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
@@ -17,7 +19,13 @@ async def test_sensors(hass):
         version=1,
         domain=DOMAIN,
         title=DEFAULT_INTEGRATION_TITLE,
-        data={CONF_PORT: "/dev/usb999", CONF_ADDRESS: 3, ATTR_SERIAL_NUMBER: "123456"},
+        data={
+            CONF_PORT: "/dev/usb999",
+            CONF_ADDRESS: 3,
+            ATTR_MODEL: "mymodel",
+            ATTR_SERIAL_NUMBER: "123456",
+            ATTR_FIRMWARE: "1.2.3.4",
+        },
         source="dummysource",
         system_options={},
         entry_id="13579",
