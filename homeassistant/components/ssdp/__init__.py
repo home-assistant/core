@@ -89,6 +89,7 @@ class SSDPListener:
         )
 
     async def _async_on_data(self, request_line, headers) -> None:
+        _LOGGER.debug("New data: %s %s", request_line, headers)
         await self._async_callback(headers)
 
     async def _async_on_connect(self, transport):
