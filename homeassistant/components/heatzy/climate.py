@@ -1,5 +1,4 @@
 """Climate sensors for Heatzy."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -16,9 +15,9 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
 )
 from homeassistant.const import TEMP_CELSIUS
-from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, HEATZY_API, HEATZY_DEVICES, PILOTEV1, PILOTEV2
+from .const import DOMAIN, PILOTEV1, PILOTEV2
 
 MODE_LIST = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 PRESET_LIST = [PRESET_NONE, PRESET_COMFORT, PRESET_ECO, PRESET_AWAY]
@@ -30,28 +29,25 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Configure Heatzy API using Home Assistant configuration and fetch all Heatzy devices."""
-    # heatzy_devices = hass.data[DOMAIN][HEATZY_DEVICES]
-    # api = hass.data[DOMAIN][HEATZY_API]
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     devices = []
-    for device in coordinator.data:
+    for device in coordinator.data.values():
         product_key = device.get("product_key")
         if product_key in PILOTEV1:
-            devices.append(HeatzyPiloteV1Thermostat(coordinator, device))
+            devices.append(HeatzyPiloteV1Thermostat(coordinator, device["did"]))
         elif product_key in PILOTEV2:
-            devices.append(HeatzyPiloteV2Thermostat(coordinator, device))
-    async_add_entities(devices, True)
+            devices.append(HeatzyPiloteV2Thermostat(coordinator, device["did"]))
+    async_add_entities(devices)
 
 
-class HeatzyThermostat(ClimateEntity):
+class HeatzyThermostat(CoordinatorEntity, ClimateEntity):
     """Heatzy."""
 
-    def __init__(self, coordinator, device):
+    def __init__(self, coordinator, unique_id):
         """Init."""
+        super().__init__(coordinator)
         self._coordinator = coordinator
-        self._heater = device
-        self._heater_data = {}
-        self._available = True
+        self._unique_id = unique_id
 
     @property
     def temperature_unit(self):
@@ -66,17 +62,12 @@ class HeatzyThermostat(ClimateEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._heater.get("did")
+        return self._unique_id
 
     @property
     def name(self):
         """Return a name."""
-        return self._heater.get("dev_alias")
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._available
+        return self._coordinator.data[self.unique_id]["dev_alias"]
 
     @property
     def device_info(self):
@@ -85,34 +76,27 @@ class HeatzyThermostat(ClimateEntity):
             "name": self.name,
             "identifiers": {(DOMAIN, self.unique_id)},
             "manufacturer": DOMAIN,
-            "model": self._heater.get("product_name"),
-            "sw_version": self._heater.get("wifi_soft_version"),
+            "model": self._coordinator.data[self.unique_id].get("product_name"),
+            "sw_version": self._coordinator.data[self.unique_id].get(
+                "wifi_soft_version"
+            ),
         }
 
     @property
     def hvac_modes(self):
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
+        """Return the list of available hvac operation modes."""
         return MODE_LIST
 
     @property
     def hvac_mode(self):
-        """Return hvac operation ie. heat, cool mode.
-
-        Need to be one of HVAC_MODE_*.
-        """
+        """Return hvac operation ie. heat, cool mode."""
         if self.preset_mode == PRESET_NONE:
             return HVAC_MODE_OFF
         return HVAC_MODE_HEAT
 
     @property
     def preset_modes(self):
-        """Return a list of available preset modes.
-
-        Requires SUPPORT_PRESET_MODE.
-        """
+        """Return a list of available preset modes."""
         return PRESET_LIST
 
     async def async_set_hvac_mode(self, hvac_mode):
@@ -129,27 +113,6 @@ class HeatzyThermostat(ClimateEntity):
     async def async_turn_off(self):
         """Turn device off."""
         await self.async_set_preset_mode(PRESET_NONE)
-
-    # async def async_update_heater(self, force_update=False):
-    #     """Get the latest state from the thermostat."""
-    #     if force_update is True:
-    #         # Updated temperature to HA state to avoid flapping (API confirmation is slow)
-    #         await asyncio.sleep(1)
-    #     try:
-    #         data_status = await self.hass.async_add_executor_job(
-    #             self._coordinator.get_device, self.unique_id
-    #         )
-    #         if data_status:
-    #             self._heater_data = data_status
-    #             self._available = True
-    #     except HeatzyException:
-    #         _LOGGER.error("Device data no retrieve %s", self.name)
-    #         self._available = False
-
-    # @Throttle(SCAN_INTERVAL)
-    # async def async_update(self):
-    #     """Update device."""
-    #     await self.async_update_heater()
 
 
 class HeatzyPiloteV1Thermostat(HeatzyThermostat):
@@ -170,19 +133,16 @@ class HeatzyPiloteV1Thermostat(HeatzyThermostat):
 
     @property
     def preset_mode(self):
-        """Return the current preset mode, e.g., home, away, temp.
-
-        Requires SUPPORT_PRESET_MODE.
-        """
+        """Return the current preset mode, e.g., home, away, temp."""
         return self.HEATZY_TO_HA_STATE.get(
-            self._heater_data.get("attr", {}).get("mode")
+            self._coordinator.data[self.unique_id].get("attr", {}).get("mode")
         )
 
     async def async_set_preset_mode(self, preset_mode):
         """Set new preset mode."""
         try:
             await self.hass.async_add_executor_job(
-                self._coordinator.control_device,
+                self._coordinator.heatzy_client.control_device,
                 self.unique_id,
                 {"raw": self.HA_TO_HEATZY_STATE.get(preset_mode)},
             )
@@ -195,39 +155,38 @@ class HeatzyPiloteV1Thermostat(HeatzyThermostat):
 class HeatzyPiloteV2Thermostat(HeatzyThermostat):
     """Heaty Pilote v2."""
 
+    # spell-checker:disable
     HEATZY_TO_HA_STATE = {
         "cft": PRESET_COMFORT,
         "eco": PRESET_ECO,
-        "fro": PRESET_AWAY,  # codespell: ignore-words fro
+        "fro": PRESET_AWAY,
         "stop": PRESET_NONE,
     }
 
     HA_TO_HEATZY_STATE = {
         PRESET_COMFORT: "cft",
         PRESET_ECO: "eco",
-        PRESET_AWAY: "fro",  # codespell: ignore-words fro
+        PRESET_AWAY: "fro",
         PRESET_NONE: "stop",
     }
+    # spell-checker:enable
 
     @property
     def preset_mode(self):
-        """Return the current preset mode, e.g., home, away, temp.
-
-        Requires SUPPORT_PRESET_MODE.
-        """
+        """Return the current preset mode, e.g., home, away, temp."""
         return self.HEATZY_TO_HA_STATE.get(
-            self._heater_data.get("attr", {}).get("mode")
+            self._coordinator.data[self.unique_id].get("attr", {}).get("mode")
         )
 
     async def async_set_preset_mode(self, preset_mode):
         """Set new preset mode."""
         try:
             await self.hass.async_add_executor_job(
-                self._coordinator.control_device,
+                self._coordinator.heatzy_client.control_device,
                 self.unique_id,
                 {"attrs": {"mode": self.HA_TO_HEATZY_STATE.get(preset_mode)}},
             )
         except HeatzyException as error:
             _LOGGER.error("Error to set preset mode : %s", error)
-        # await self.async_update_heater(True)
+
         await self.coordinator.async_request_refresh()
