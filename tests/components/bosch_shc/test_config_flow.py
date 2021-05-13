@@ -165,7 +165,7 @@ async def test_form_pairing_error(hass):
 
     with patch(
         "boschshcpy.register_client.SHCRegisterClient.register",
-        side_effect=SHCRegistrationError,
+        side_effect=SHCRegistrationError(""),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -312,7 +312,7 @@ async def test_form_validate_session_error(hass):
         },
     ), patch("os.mkdir"), patch("builtins.open"), patch(
         "boschshcpy.session.SHCSession.authenticate",
-        side_effect=SHCSessionError,
+        side_effect=SHCSessionError(""),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
