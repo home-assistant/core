@@ -31,7 +31,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_secret = entry.data[CONF_API_SECRET]
     markets = entry.data[CONF_MARKETS]
 
-    coordinator = BitvavoDataUpdateCoordinator(hass, api_key, api_secret, markets)
+    try:
+        client = BitvavoClient(api_key, api_secret)
+    except BitvavoException as error:
+        _LOGGER.error("Bitvavo API error: %s", error)
+        raise ConfigEntryNotReady from error
+
+    coordinator = BitvavoDataUpdateCoordinator(hass, client, markets)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
@@ -55,12 +61,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to get the latest data from Bitvavo."""
 
-    def __init__(
-        self, hass, api_key, api_secret, markets, balances: list | None = None
-    ):
+    def __init__(self, hass, client, markets, balances: list | None = None):
         """Initialize the data object."""
-        self._api_key = api_key
-        self._api_secret = api_secret
+        self._client = client
 
         self.markets = markets
         self.asset_currencies = ASSET_VALUE_CURRENCIES
@@ -158,34 +161,25 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Fetch Bitvavo data."""
-        try:
-            client = BitvavoClient(self._api_key, self._api_secret)
+        tickers = await self._client.get_price_ticker()
+        orderbook_tickers = await self._client.get_best_orderbook_ticker()
+        markets = await self._client.get_markets()
+        balances = await self._client.get_balance()
+        open_orders = await self._client.get_open_orders()
 
-            tickers = await client.get_price_ticker()
-            orderbook_tickers = await client.get_best_orderbook_ticker()
-            markets = await client.get_markets()
-            balances = await client.get_balance()
-            open_orders = await client.get_open_orders()
-
-            result_dict = {
-                "tickers": self._prep_markets(
-                    self.markets, tickers, markets, orderbook_tickers
-                )
-            }
-            result_dict["asset_tickers"] = self._prep_tickers(
-                self.asset_currencies, tickers
+        result_dict = {
+            "tickers": self._prep_markets(
+                self.markets, tickers, markets, orderbook_tickers
             )
-            result_dict["balances"] = self._prep_balances(balances, tickers)
+        }
+        result_dict["asset_tickers"] = self._prep_tickers(
+            self.asset_currencies, tickers
+        )
+        result_dict["balances"] = self._prep_balances(balances, tickers)
 
-            if open_orders:
-                result_dict["open_orders"] = open_orders
-            else:
-                result_dict["open_orders"] = []
+        if open_orders:
+            result_dict["open_orders"] = open_orders
+        else:
+            result_dict["open_orders"] = []
 
-            return result_dict
-
-        except BitvavoException as error:
-            _LOGGER.error("Bitvavo API error: %s", error)
-            raise ConfigEntryNotReady from error
-        finally:
-            await client.close()
+        return result_dict
