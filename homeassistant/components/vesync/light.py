@@ -60,11 +60,6 @@ def _async_setup_entities(devices, async_add_entities):
 class VeSyncBaseLight(VeSyncDevice, LightEntity):
     """Base class for VeSync Light Devices Representations."""
 
-    def __init__(self, device):
-        """Initialize the VeSync LightDevice."""
-        super().__init__(device)
-        self.device = device
-
     @property
     def brightness(self):
         """Get light brightness."""
@@ -132,11 +127,6 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
 class VeSyncDimmableLightHA(VeSyncBaseLight, LightEntity):
     """Representation of a VeSync dimmable light device."""
 
-    def __init__(self, device):
-        """Initialize the VeSync dimmable light device."""
-        super().__init__(device)
-        self.device = device
-
     @property
     def color_mode(self):
         """Set color mode for this entity."""
@@ -150,11 +140,6 @@ class VeSyncDimmableLightHA(VeSyncBaseLight, LightEntity):
 
 class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
     """Representation of a VeSync Tunable White Light device."""
-
-    def __init__(self, device):
-        """Initialize the VeSync Tunable White Light device."""
-        super().__init__(device)
-        self.device = device
 
     @property
     def color_temp(self):
@@ -181,8 +166,7 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
             + ((self.max_mireds - self.min_mireds) / 100 * color_temp_value)
         )
         # ensure value between minimum and maximum Mireds
-        color_temp_value = max(self.min_mireds, min(color_temp_value, self.max_mireds))
-        return color_temp_value
+        return max(self.min_mireds, min(color_temp_value, self.max_mireds))
 
     @property
     def min_mireds(self):
