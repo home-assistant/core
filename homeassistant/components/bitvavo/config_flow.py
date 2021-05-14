@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import List
 
 from bitvavo.BitvavoClient import BitvavoClient
 from bitvavo.BitvavoExceptions import BitvavoException
@@ -27,7 +26,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-def _markets_schema(markets: List | None):
+def _markets_schema(markets: list | None):
     """Markets selection schema."""
     markets_dict = {}
 
