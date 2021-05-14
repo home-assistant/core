@@ -440,6 +440,11 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self._media_position = None
         self._media_position_updated_at = None
 
+    async def async_set_favorites(self) -> None:
+        """Wrap favorites update method with an async lock."""
+        async with self.data.topology_condition:
+            await self.hass.async_add_executor_job(self._set_favorites)
+
     def _set_favorites(self) -> None:
         """Set available favorites."""
         self._favorites = []
@@ -741,7 +746,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     def async_update_content(self, event: SonosEvent | None = None) -> None:
         """Update information about available content."""
         if event and "favorites_update_id" in event.variables:
-            self.hass.async_add_job(self._set_favorites)
+            self.hass.async_add_job(self.async_set_favorites)
             self.async_write_ha_state()
 
     @property
