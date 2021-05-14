@@ -281,7 +281,6 @@ class PurgeTask(NamedTuple):
 class StatisticsTask(NamedTuple):
     """An object to insert into the recorder queue to run a statistics task."""
 
-    period: str
     start: datetime.datetime
 
 
@@ -413,11 +412,10 @@ class Recorder(threading.Thread):
 
     def do_adhoc_statistics(self, **kwargs):
         """Trigger an adhoc statistics run."""
-        period = kwargs.get("period")
         start = kwargs.get("start")
         if not start:
-            start = statistics.get_start_time(period)
-        self.queue.put(StatisticsTask(period, start))
+            start = statistics.get_start_time()
+        self.queue.put(StatisticsTask(start))
 
     @callback
     def async_register(self, shutdown_task, hass_started):
@@ -491,16 +489,10 @@ class Recorder(threading.Thread):
         self.queue.put(PurgeTask(self.keep_days, repack=False, apply_filter=False))
 
     @callback
-    def async_daily_statistics(self, now):
-        """Trigger the daily statistics run."""
-        start = statistics.get_start_time("daily")
-        self.queue.put(StatisticsTask("daily", start))
-
-    @callback
     def async_hourly_statistics(self, now):
         """Trigger the hourly statistics run."""
-        start = statistics.get_start_time("hourly")
-        self.queue.put(StatisticsTask("hourly", start))
+        start = statistics.get_start_time()
+        self.queue.put(StatisticsTask(start))
 
     def _async_setup_periodic_tasks(self):
         """Prepare periodic tasks."""
@@ -509,13 +501,9 @@ class Recorder(threading.Thread):
             async_track_time_change(
                 self.hass, self.async_purge, hour=4, minute=12, second=0
             )
-        # Compile daily statistics every night at 12:12am
-        async_track_time_change(
-            self.hass, self.async_daily_statistics, hour=12, minute=12, second=0
-        )
         # Compile hourly statistics every hour at *:12
         async_track_time_change(
-            self.hass, self.async_hourly_statistics, hour=12, minute=12, second=0
+            self.hass, self.async_hourly_statistics, minute=12, second=0
         )
 
     def run(self):
@@ -662,12 +650,12 @@ class Recorder(threading.Thread):
         # Schedule a new purge task if this one didn't finish
         self.queue.put(PurgeTask(keep_days, repack, apply_filter))
 
-    def _run_statistics(self, period, start):
+    def _run_statistics(self, start):
         """Run statistics task."""
-        if statistics.compile_statistics(self, period, start):
+        if statistics.compile_statistics(self, start):
             return
         # Schedule a new statistics task if this one didn't finish
-        self.queue.put(StatisticsTask(period, start))
+        self.queue.put(StatisticsTask(start))
 
     def _process_one_event(self, event):
         """Process one event."""
@@ -675,7 +663,7 @@ class Recorder(threading.Thread):
             self._run_purge(event.keep_days, event.repack, event.apply_filter)
             return
         if isinstance(event, StatisticsTask):
-            self._run_statistics(event.period, event.start)
+            self._run_statistics(event.start)
             return
         if isinstance(event, WaitTask):
             self._queue_watch.set()

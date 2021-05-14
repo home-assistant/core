@@ -6,7 +6,6 @@ from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
-    Enum,
     Float,
     ForeignKey,
     Index,
@@ -24,8 +23,6 @@ from homeassistant.const import MAX_LENGTH_EVENT_TYPE
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
 from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
-
-from .const import STATISTIC_PERIODS
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
@@ -222,19 +219,17 @@ class Statistics(Base):  # type: ignore
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
     source = Column(String(32))
     statistic_id = Column(String(255), index=True)
-    period = Column(Enum(*STATISTIC_PERIODS), index=True)
     start = Column(DATETIME_TYPE, index=True)
     mean = Column(Float())
     min = Column(Float())
     max = Column(Float())
 
     @staticmethod
-    def from_stats(source, statistic_id, period, start, stats):
+    def from_stats(source, statistic_id, start, stats):
         """Create object from a statistics."""
         return Statistics(
             source=source,
             statistic_id=statistic_id,
-            period=period,
             start=start,
             **stats,
         )

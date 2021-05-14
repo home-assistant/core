@@ -50,7 +50,6 @@ def test_compile_hourly_statistics(hass_recorder):
         "sensor.test1": [
             {
                 "statistic_id": "sensor.test1",
-                "period": "hourly",
                 "start": process_timestamp_to_utc_isoformat(zero),
                 "mean": 15.0,
                 "min": 10.0,
@@ -76,7 +75,6 @@ def test_compile_hourly_statistics_unchanged(hass_recorder):
         "sensor.test1": [
             {
                 "statistic_id": "sensor.test1",
-                "period": "hourly",
                 "start": process_timestamp_to_utc_isoformat(four),
                 "mean": 20.0,
                 "min": 20.0,
@@ -102,7 +100,6 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder):
         "sensor.test1": [
             {
                 "statistic_id": "sensor.test1",
-                "period": "hourly",
                 "start": process_timestamp_to_utc_isoformat(zero),
                 "mean": 17.5,
                 "min": 10.0,

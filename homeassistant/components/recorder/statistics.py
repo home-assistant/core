@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from itertools import groupby
 import logging
 from typing import TYPE_CHECKING
@@ -21,7 +21,6 @@ if TYPE_CHECKING:
 
 QUERY_STATISTICS = [
     Statistics.statistic_id,
-    Statistics.period,
     Statistics.start,
     Statistics.mean,
     Statistics.min,
@@ -38,28 +37,18 @@ def async_setup(hass):
     hass.data[STATISTICS_BAKERY] = baked.bakery()
 
 
-def get_start_time(period: str) -> datetime.datetime:
-    """Return start time give a period."""
-    if period == "daily":
-        # Get start and end times at local midnight. This will result in a period of
-        # 23 hours at start of DST and a period of 25 hours at end of DST
-        start = dt_util.start_of_local_day(date.today() - timedelta(days=1))
-    else:
-        last_hour = dt_util.utcnow() - timedelta(hours=1)
-        start = last_hour.replace(minute=0, second=0, microsecond=0)
+def get_start_time() -> datetime.datetime:
+    """Return start time."""
+    last_hour = dt_util.utcnow() - timedelta(hours=1)
+    start = last_hour.replace(minute=0, second=0, microsecond=0)
     return start
 
 
 @retryable_database_job("statistics")
-def compile_statistics(
-    instance: Recorder, period: str, start: datetime.datetime
-) -> bool:
+def compile_statistics(instance: Recorder, start: datetime.datetime) -> bool:
     """Compile statistics."""
     start = dt_util.as_utc(start)
-    if period == "daily":
-        end = start + timedelta(days=1)
-    else:
-        end = start + timedelta(hours=1)
+    end = start + timedelta(hours=1)
     _LOGGER.debug(
         "Compiling statistics for %s-%s",
         start,
@@ -77,9 +66,7 @@ def compile_statistics(
     with session_scope(session=instance.get_session()) as session:  # type: ignore
         for stats in platform_stats:
             for entity_id, stat in stats.items():
-                session.add(
-                    Statistics.from_stats(DOMAIN, entity_id, period, start, stat)
-                )
+                session.add(Statistics.from_stats(DOMAIN, entity_id, start, stat))
 
     return True
 
@@ -139,7 +126,6 @@ def _sorted_statistics_to_dict(
         ent_results.extend(
             {
                 "statistic_id": db_state.statistic_id,
-                "period": db_state.period,
                 "start": _process_timestamp_to_utc_isoformat(db_state.start),
                 "mean": db_state.mean,
                 "min": db_state.min,
