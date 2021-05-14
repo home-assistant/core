@@ -12,8 +12,9 @@ from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 
-from .const import DEFAULT_NAME, DOMAIN, ERRORS
+from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,10 +38,12 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.ip_address})
         self._async_abort_entries_match({CONF_HOST: self.ip_address})
 
-        result = await self._async_try_connect(self.ip_address)
-        if result in ERRORS:
-            return self.async_abort(reason=result)
-        return await self.async_step_confirm_discovery()
+        mac_address, error = await self._async_try_connect(
+            self.ip_address
+        )  # pylint: disable=unused-variable
+        if error is None:
+            return await self.async_step_confirm_discovery()
+        return self.async_abort(reason=error)
 
     async def async_step_confirm_discovery(
         self, user_input: dict[str, Any] | None = None
@@ -73,15 +76,15 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             self._async_abort_entries_match({CONF_HOST: host})
 
-            result = await self._async_try_connect(host)
-            if result not in ERRORS:
-                await self.async_set_unique_id(str(result))
+            mac_address, error = await self._async_try_connect(host)
+            if error is None:
+                await self.async_set_unique_id(format_mac(mac_address))
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 return self.async_create_entry(
                     title=name,
                     data={CONF_HOST: host, CONF_NAME: name},
                 )
-            errors["base"] = result
+            errors["base"] = error
 
         user_input = user_input or {}
         return self.async_show_form(
@@ -107,11 +110,11 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await api.sysinfo()
         except exceptions.ConnectError:
             _LOGGER.error("Error connecting to device at %s", host)
-            return "cannot_connect"
+            return None, "cannot_connect"
         except exceptions.InvalidHost:
             _LOGGER.error("Invalid host at %s", host)
-            return "invalid_host"
+            return None, "invalid_host"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
-            return "unknown"
-        return api.sysdata["macAddress"]
+            return None, "unknown"
+        return str(api.sysdata["macAddress"]), None

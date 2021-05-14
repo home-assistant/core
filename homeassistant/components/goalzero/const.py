@@ -11,7 +11,6 @@ DATA_KEY_COORDINATOR = "coordinator"
 DOMAIN = "goalzero"
 DEFAULT_NAME = "Yeti"
 DATA_KEY_API = "api"
-ERRORS = ["cannot_connect", "invalid_host", "unknown"]
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
