@@ -119,7 +119,7 @@ def async_match_state(
 
 @callback
 def async_test_feature(state: State, feature: int, feature_name: str) -> None:
-    """Test is state supports a feature."""
+    """Test if state supports a feature."""
     if state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & feature == 0:
         raise IntentHandleError(f"Entity {state.name} does not support {feature_name}")
 

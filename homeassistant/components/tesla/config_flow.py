@@ -149,7 +149,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
 
     config = {}
-    async_client = httpx.AsyncClient(headers={USER_AGENT: SERVER_SOFTWARE})
+    async_client = httpx.AsyncClient(headers={USER_AGENT: SERVER_SOFTWARE}, timeout=60)
 
     try:
         controller = TeslaAPI(

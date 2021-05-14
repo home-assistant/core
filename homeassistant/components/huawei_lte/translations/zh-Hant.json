@@ -15,7 +15,7 @@
             "response_error": "\u4f86\u81ea\u88dd\u7f6e\u672a\u77e5\u932f\u8aa4",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
-        "flow_title": "\u83ef\u70ba LTE\uff1a{name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

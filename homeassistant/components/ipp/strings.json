@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Printer: {name}",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "title": "Link your printer",

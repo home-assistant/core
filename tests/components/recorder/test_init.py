@@ -604,7 +604,7 @@ def test_auto_purge(hass_recorder):
     #
     # The clock is started at 4:15am then advanced forward below
     now = dt_util.utcnow()
-    test_time = tz.localize(datetime(now.year + 2, 1, 1, 4, 15, 0))
+    test_time = datetime(now.year + 2, 1, 1, 4, 15, 0, tzinfo=tz)
     run_tasks_at_time(hass, test_time)
 
     with patch(

@@ -38,7 +38,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util import Throttle, slugify
 
-from .const import ATTR_SMHI_CLOUDINESS, ENTITY_ID_SENSOR_FORMAT
+from .const import (
+    ATTR_SMHI_CLOUDINESS,
+    ATTR_SMHI_THUNDER_PROBABILITY,
+    ATTR_SMHI_WIND_GUST_SPEED,
+    ENTITY_ID_SENSOR_FORMAT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -168,6 +173,14 @@ class SmhiWeather(WeatherEntity):
         return None
 
     @property
+    def wind_gust_speed(self) -> float:
+        """Return the wind gust speed."""
+        if self._forecasts is not None:
+            # Convert from m/s to km/h
+            return round(self._forecasts[0].wind_gust * 18 / 5)
+        return None
+
+    @property
     def wind_bearing(self) -> int:
         """Return the wind bearing."""
         if self._forecasts is not None:
@@ -193,6 +206,13 @@ class SmhiWeather(WeatherEntity):
         """Return the cloudiness."""
         if self._forecasts is not None:
             return self._forecasts[0].cloudiness
+        return None
+
+    @property
+    def thunder_probability(self) -> int:
+        """Return the chance of thunder, unit Percent."""
+        if self._forecasts is not None:
+            return self._forecasts[0].thunder
         return None
 
     @property
@@ -238,5 +258,11 @@ class SmhiWeather(WeatherEntity):
     @property
     def extra_state_attributes(self) -> dict:
         """Return SMHI specific attributes."""
-        if self.cloudiness:
-            return {ATTR_SMHI_CLOUDINESS: self.cloudiness}
+        extra_attributes = {}
+        if self.cloudiness is not None:
+            extra_attributes[ATTR_SMHI_CLOUDINESS] = self.cloudiness
+        if self.wind_gust_speed is not None:
+            extra_attributes[ATTR_SMHI_WIND_GUST_SPEED] = self.wind_gust_speed
+        if self.thunder_probability is not None:
+            extra_attributes[ATTR_SMHI_THUNDER_PROBABILITY] = self.thunder_probability
+        return extra_attributes

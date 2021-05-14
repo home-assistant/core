@@ -10,7 +10,7 @@
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
-        "flow_title": "System Bridge: {name}",
+        "flow_title": "{name}",
         "step": {
             "authenticate": {
                 "data": {

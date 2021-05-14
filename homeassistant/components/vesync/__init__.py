@@ -10,7 +10,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .common import async_process_devices
-from .config_flow import configured_instances
 from .const import (
     DOMAIN,
     SERVICE_UPDATE_DEVS,
@@ -46,7 +45,7 @@ async def async_setup(hass, config):
     if conf is None:
         return True
 
-    if not configured_instances(hass):
+    if not hass.config_entries.async_entries(DOMAIN):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,

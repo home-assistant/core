@@ -13,7 +13,6 @@
             "is_pressure": "Pressi\u00f3 actual de {entity_name}",
             "is_signal_strength": "Pot\u00e8ncia de senyal actual de {entity_name}",
             "is_temperature": "Temperatura actual de {entity_name}",
-            "is_timestamp": "Marca temporal actual de {entity_name}",
             "is_value": "Valor actual de {entity_name}",
             "is_voltage": "Voltatge actual de {entity_name}"
         },
@@ -30,7 +29,6 @@
             "pressure": "Canvia la pressi\u00f3 de {entity_name}",
             "signal_strength": "Canvia la pot\u00e8ncia de senyal de {entity_name}",
             "temperature": "Canvia la temperatura de {entity_name}",
-            "timestamp": "Canvia la marca temporal de {entity_name}",
             "value": "Canvia el valor de {entity_name}",
             "voltage": "Canvia el voltatge de {entity_name}"
         }

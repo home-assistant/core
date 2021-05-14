@@ -19,7 +19,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
 
-from .common import FritzBoxTools
+from .common import FritzBoxTools, FritzDevice
 from .const import DATA_FRITZ, DEFAULT_DEVICE_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,7 +75,9 @@ async def async_setup_entry(
         """Update the values of the router."""
         _async_add_entities(router, async_add_entities, data_fritz)
 
-    async_dispatcher_connect(hass, router.signal_device_new, update_router)
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, router.signal_device_new, update_router)
+    )
 
     update_router()
 
@@ -109,7 +111,7 @@ def _async_add_entities(router, async_add_entities, data_fritz):
 class FritzBoxTracker(ScannerEntity):
     """This class queries a FRITZ!Box router."""
 
-    def __init__(self, router: FritzBoxTools, device):
+    def __init__(self, router: FritzBoxTools, device: FritzDevice) -> None:
         """Initialize a FRITZ!Box device."""
         self._router = router
         self._mac = device.mac_address
@@ -158,9 +160,9 @@ class FritzBoxTracker(ScannerEntity):
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
             "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "AVM",
-            "model": "FRITZ!Box Tracked device",
+            "default_name": self.name,
+            "default_manufacturer": "AVM",
+            "default_model": "FRITZ!Box Tracked device",
             "via_device": (
                 DOMAIN,
                 self._router.unique_id,

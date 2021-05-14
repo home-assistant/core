@@ -11,15 +11,6 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "email": "E-Mail",
-                    "password": "Passwort",
-                    "region": "Region"
-                },
-                "description": "Die Authentifizierung f\u00fcr Mazda Connected Services ist fehlgeschlagen. Bitte geben Sie Ihre aktuellen Anmeldedaten ein.",
-                "title": "Mazda Connected Services - Authentifizierung fehlgeschlagen"
-            },
             "user": {
                 "data": {
                     "email": "E-Mail",
