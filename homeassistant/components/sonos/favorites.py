@@ -32,7 +32,8 @@ class SonosFavorites:
 
     def __iter__(self) -> Iterator:
         """Return an iterator for the known favorites."""
-        return iter(self._favorites)
+        favorites = self._favorites.copy()
+        return iter(favorites)
 
     async def async_delayed_update(self, event: SonosEvent) -> None:
         """Add a delay when triggered by an event.
