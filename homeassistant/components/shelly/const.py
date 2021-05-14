@@ -75,17 +75,24 @@ INPUTS_EVENTS_SUBTYPES = {
     "button3": 3,
 }
 
-RGB_EFFECTS = {
+SHBTN_MODELS = ["SHBTN-1", "SHBTN-2"]
+
+STANDARD_RGB_EFFECTS = {
     0: "Off",
-    1: "Meteor shower",
-    2: "Gradual change",
-    3: "Breath",
-    4: "Flash",
-    5: "On/off gradual",
-    6: "Red/green change",
+    1: "Meteor Shower",
+    2: "Gradual Change",
+    3: "Flash",
 }
 
-RGB_EFFECTS_INDEX = {"DEFAULT": 6, "SHRGBW2": 3, "SHRGBWW-01": 3}
+SHBLB_1_RGB_EFFECTS = {
+    0: "Off",
+    1: "Meteor Shower",
+    2: "Gradual Change",
+    3: "Flash",
+    4: "Breath",
+    5: "On/Off Gradual",
+    6: "Red/Green Change",
+}
 
 # Kelvin value for colorTemp
 KELVIN_MAX_VALUE = 6500
