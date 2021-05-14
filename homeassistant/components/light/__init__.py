@@ -95,21 +95,21 @@ def valid_supported_color_modes(color_modes: Iterable[str]) -> set[str]:
     return color_modes
 
 
-def brightness_supported(color_modes: Iterable[str]) -> bool:
+def brightness_supported(color_modes: Iterable[str] | None) -> bool:
     """Test if brightness is supported."""
     if not color_modes:
         return False
     return any(mode in COLOR_MODES_BRIGHTNESS for mode in color_modes)
 
 
-def color_supported(color_modes: Iterable[str]) -> bool:
+def color_supported(color_modes: Iterable[str] | None) -> bool:
     """Test if color is supported."""
     if not color_modes:
         return False
     return any(mode in COLOR_MODES_COLOR for mode in color_modes)
 
 
-def color_temp_supported(color_modes: Iterable[str]) -> bool:
+def color_temp_supported(color_modes: Iterable[str] | None) -> bool:
     """Test if color temperature is supported."""
     if not color_modes:
         return False
