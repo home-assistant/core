@@ -12,7 +12,7 @@ class AsyncConfigEntryNetatmoAuth(pyatmo.auth.AbstractAsyncAuth):
         self,
         websession: ClientSession,
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
-    ):
+    ) -> None:
         """Initialize the auth."""
         super().__init__(websession)
         self._oauth_session = oauth_session

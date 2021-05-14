@@ -54,38 +54,32 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
     data_class = data_handler.data.get(CAMERA_DATA_CLASS_NAME)
 
-    if not data_class or data_class.raw_data == {}:
+    if not data_class or not data_class.raw_data:
         raise PlatformNotReady
 
-    async def get_entities():
-        """Retrieve Netatmo entities."""
-        entities = []
-        all_cameras = []
+    all_cameras = []
+    for home in data_class.cameras.values():
+        for camera in home.values():
+            all_cameras.append(camera)
 
-        for home in data_class.cameras.values():
-            for camera in home.values():
-                all_cameras.append(camera)
+    entities = [
+        NetatmoCamera(
+            data_handler,
+            camera["id"],
+            camera["type"],
+            camera["home_id"],
+            DEFAULT_QUALITY,
+        )
+        for camera in all_cameras
+    ]
 
-        for camera in all_cameras:
-            _LOGGER.debug("Adding camera %s %s", camera["id"], camera["name"])
-            entities.append(
-                NetatmoCamera(
-                    data_handler,
-                    camera["id"],
-                    camera["type"],
-                    camera["home_id"],
-                    DEFAULT_QUALITY,
-                )
-            )
+    for person_id, person_data in data_handler.data[
+        CAMERA_DATA_CLASS_NAME
+    ].persons.items():
+        hass.data[DOMAIN][DATA_PERSONS][person_id] = person_data.get(ATTR_PSEUDO)
 
-        for person_id, person_data in data_handler.data[
-            CAMERA_DATA_CLASS_NAME
-        ].persons.items():
-            hass.data[DOMAIN][DATA_PERSONS][person_id] = person_data.get(ATTR_PSEUDO)
-
-        return entities
-
-    async_add_entities(await get_entities(), True)
+    _LOGGER.debug("Adding cameras %s", entities)
+    async_add_entities(entities, True)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -186,6 +180,7 @@ class NetatmoCamera(NetatmoBase, Camera):
             aiohttp.ContentTypeError,
         ) as err:
             _LOGGER.debug("Could not fetch live camera image (%s)", err)
+        return None
 
     @property
     def extra_state_attributes(self):

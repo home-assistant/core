@@ -157,11 +157,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 _LOGGER.debug("Skipping module %s", module.get("module_name"))
                 continue
 
-            _LOGGER.debug(
-                "Adding module %s %s",
-                module.get("module_name"),
-                module.get("_id"),
-            )
             conditions = [
                 c.lower()
                 for c in data_class.get_monitored_conditions(module_id=module["_id"])
@@ -178,6 +173,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     NetatmoSensor(data_handler, data_class_name, module, condition)
                 )
 
+        _LOGGER.debug("Adding weather sensors %s", entities)
         return entities
 
     for data_class_name in [
@@ -189,6 +185,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         if not data_class or data_class.raw_data == {}:
             raise PlatformNotReady
+
         async_add_entities(await find_entities(data_class_name), True)
 
     device_registry = await hass.helpers.device_registry.async_get_registry()

@@ -122,42 +122,33 @@ async def async_setup_entry(hass, entry, async_add_entities):
     if HOMEDATA_DATA_CLASS_NAME not in data_handler.data:
         raise PlatformNotReady
 
-    async def get_entities():
-        """Retrieve Netatmo entities."""
-        entities = []
+    entities = []
+    for home_id in get_all_home_ids(home_data):
+        for room_id in home_data.rooms[home_id].keys():
+            signal_name = f"{HOMESTATUS_DATA_CLASS_NAME}-{home_id}"
+            await data_handler.register_data_class(
+                HOMESTATUS_DATA_CLASS_NAME, signal_name, None, home_id=home_id
+            )
+            home_status = data_handler.data.get(signal_name)
+            if home_status and room_id in home_status.rooms:
+                entities.append(NetatmoThermostat(data_handler, home_id, room_id))
 
-        for home_id in get_all_home_ids(home_data):
-            _LOGGER.debug("Setting up home %s", home_id)
-            for room_id in home_data.rooms[home_id].keys():
-                room_name = home_data.rooms[home_id][room_id]["name"]
-                _LOGGER.debug("Setting up room %s (%s)", room_name, room_id)
-                signal_name = f"{HOMESTATUS_DATA_CLASS_NAME}-{home_id}"
-                await data_handler.register_data_class(
-                    HOMESTATUS_DATA_CLASS_NAME, signal_name, None, home_id=home_id
-                )
-                home_status = data_handler.data.get(signal_name)
-                if home_status and room_id in home_status.rooms:
-                    entities.append(NetatmoThermostat(data_handler, home_id, room_id))
-
-            hass.data[DOMAIN][DATA_SCHEDULES][home_id] = {
-                schedule_id: schedule_data.get("name")
-                for schedule_id, schedule_data in (
-                    data_handler.data[HOMEDATA_DATA_CLASS_NAME]
-                    .schedules[home_id]
-                    .items()
-                )
-            }
-
-        hass.data[DOMAIN][DATA_HOMES] = {
-            home_id: home_data.get("name")
-            for home_id, home_data in (
-                data_handler.data[HOMEDATA_DATA_CLASS_NAME].homes.items()
+        hass.data[DOMAIN][DATA_SCHEDULES][home_id] = {
+            schedule_id: schedule_data.get("name")
+            for schedule_id, schedule_data in (
+                data_handler.data[HOMEDATA_DATA_CLASS_NAME].schedules[home_id].items()
             )
         }
 
-        return entities
+    hass.data[DOMAIN][DATA_HOMES] = {
+        home_id: home_data.get("name")
+        for home_id, home_data in (
+            data_handler.data[HOMEDATA_DATA_CLASS_NAME].homes.items()
+        )
+    }
 
-    async_add_entities(await get_entities(), True)
+    _LOGGER.debug("Adding climate devices %s", entities)
+    async_add_entities(entities, True)
 
     platform = entity_platform.async_get_current_platform()
 
