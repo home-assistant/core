@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 import datetime
 import logging
+from typing import Callable
 
 from pysonos.core import SoCo
 from pysonos.data_structures import DidlFavorite
@@ -27,6 +28,7 @@ class SonosFavorites:
         self.soco = soco
         self._favorites: list[DidlFavorite] = []
         self._event_version: str | None = None
+        self._next_update: Callable | None = None
 
     def __iter__(self) -> Iterator:
         """Return an iterator for the known favorites."""
@@ -48,7 +50,11 @@ class SonosFavorites:
             return
 
         self._event_version = event_id
-        self.hass.helpers.event.async_call_later(5, self.update)
+
+        if self._next_update:
+            self._next_update()
+
+        self._next_update = self.hass.helpers.event.async_call_later(3, self.update)
 
     def update(self, now: datetime.datetime | None = None) -> None:
         """Request new Sonos favorites from a speaker."""
