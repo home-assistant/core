@@ -1,4 +1,6 @@
 """Gather the market details from Bitvavo."""
+from __future__ import annotations
+
 import asyncio
 import logging
 
@@ -15,7 +17,6 @@ from .const import (
     ASSET_VALUE_BASE,
     ASSET_VALUE_CURRENCIES,
     CONF_API_SECRET,
-    CONF_BALANCES,
     CONF_MARKETS,
     DOMAIN,
     PLATFORMS,
@@ -35,11 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_key = entry.data[CONF_API_KEY]
     api_secret = entry.data[CONF_API_SECRET]
     markets = entry.data[CONF_MARKETS]
-    balances = entry.data[CONF_BALANCES]
 
-    coordinator = BitvavoDataUpdateCoordinator(
-        hass, api_key, api_secret, markets, balances
-    )
+    coordinator = BitvavoDataUpdateCoordinator(hass, api_key, api_secret, markets)
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
@@ -76,7 +74,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to get the latest data from Bitvavo."""
 
-    def __init__(self, hass, api_key, api_secret, markets, balances):
+    def __init__(
+        self, hass, api_key, api_secret, markets, balances: list | None = None
+    ):
         """Initialize the data object."""
         self._api_key = api_key
         self._api_secret = api_secret
