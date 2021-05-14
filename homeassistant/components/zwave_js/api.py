@@ -1119,7 +1119,7 @@ async def websocket_subscribe_firmware_update_status(
 class FirmwareUploadView(HomeAssistantView):
     """View to upload firmware."""
 
-    url = "/api/zwave_js/firmware/upload/{config_entry_id}/{node_id:\d+}"
+    url = r"/api/zwave_js/firmware/upload/{config_entry_id}/{node_id:\d+}"
     name = "api:zwave_js:firmware:upload"
 
     async def post(
@@ -1146,7 +1146,7 @@ class FirmwareUploadView(HomeAssistantView):
 
         uploaded_file: web_request.FileField = data["file"]
 
-        status = await begin_firmware_update(
+        await begin_firmware_update(
             entry.data[CONF_URL],
             node,
             uploaded_file.filename,
@@ -1154,9 +1154,4 @@ class FirmwareUploadView(HomeAssistantView):
             async_get_clientsession(hass),
         )
 
-        if not status["success"]:
-            raise web_exceptions.HTTPUnprocessableEntity(
-                reason=f"{status['zwaveErrorMessage']} ({status['zwaveErrorCode']})"
-            )
-
-        return self.json(status)
+        return self.json(None)
