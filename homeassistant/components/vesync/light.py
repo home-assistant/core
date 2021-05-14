@@ -81,8 +81,7 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
             )
             return 0
         # convert percent brightness to ha expected range
-        brightness_value = round((max(1, brightness_value) / 100) * 255)
-        return brightness_value
+        return round((max(1, brightness_value) / 100) * 255)
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
