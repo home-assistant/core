@@ -220,6 +220,7 @@ class TotalAssetValue(CoordinatorEntity):
 
         self._name = f"Bitvavo Total Asset Value - {self._currency.upper()}"
         self._unique_id = f"bitvavo_total_asset_value_{self._currency.lower()}"
+        self._icon = CURRENCY_ICONS.get(self.unit_of_measurement, DEFAULT_COIN_ICON)
 
     @property
     def name(self):
@@ -268,7 +269,7 @@ class TotalAssetValue(CoordinatorEntity):
     @property
     def icon(self):
         """Icon to use in the frontend."""
-        return CURRENCY_ICONS.get(self.unit_of_measurement, DEFAULT_COIN_ICON)
+        return self._icon
 
     @property
     def extra_state_attributes(self):
