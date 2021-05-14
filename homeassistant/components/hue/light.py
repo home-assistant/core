@@ -448,6 +448,15 @@ class HueLight(CoordinatorEntity, LightEntity):
 
         return info
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity being added to Home Assistant."""
+        self.async_on_remove(
+            self.bridge.listen_updates(
+                self.light.ITEM_TYPE, self.light.id, self.async_write_ha_state
+            )
+        )
+        await super().async_added_to_hass()
+
     async def async_turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
         command = {"on": True}

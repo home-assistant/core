@@ -16,7 +16,6 @@ class SmartHabConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """SmartHab config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""

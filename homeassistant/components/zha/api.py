@@ -61,7 +61,7 @@ from .core.const import (
 )
 from .core.group import GroupMember
 from .core.helpers import (
-    async_input_cluster_exists,
+    async_cluster_exists,
     async_is_bindable_target,
     convert_install_code,
     get_matched_clusters,
@@ -897,7 +897,7 @@ async def websocket_get_configuration(hass, connection, msg):
 
     data = {"schemas": {}, "data": {}}
     for section, schema in ZHA_CONFIG_SCHEMAS.items():
-        if section == ZHA_ALARM_OPTIONS and not async_input_cluster_exists(
+        if section == ZHA_ALARM_OPTIONS and not async_cluster_exists(
             hass, IasAce.cluster_id
         ):
             continue

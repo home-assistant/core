@@ -33,6 +33,9 @@ SONOS_ALBUM_ARTIST = "album_artists"
 SONOS_TRACKS = "tracks"
 SONOS_COMPOSER = "composers"
 
+SONOS_STATE_PLAYING = "PLAYING"
+SONOS_STATE_TRANSITIONING = "TRANSITIONING"
+
 EXPANDABLE_MEDIA_TYPES = [
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
@@ -128,17 +131,16 @@ PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_TRACK,
 ]
 
-SONOS_CONTENT_UPDATE = "sonos_content_update"
 SONOS_CREATE_BATTERY = "sonos_create_battery"
 SONOS_CREATE_MEDIA_PLAYER = "sonos_create_media_player"
 SONOS_ENTITY_CREATED = "sonos_entity_created"
 SONOS_ENTITY_UPDATE = "sonos_entity_update"
 SONOS_GROUP_UPDATE = "sonos_group_update"
-SONOS_MEDIA_UPDATE = "sonos_media_update"
-SONOS_PLAYER_RECONNECTED = "sonos_player_reconnected"
 SONOS_STATE_UPDATED = "sonos_state_updated"
-SONOS_VOLUME_UPDATE = "sonos_properties_update"
 SONOS_SEEN = "sonos_seen"
+
+SOURCE_LINEIN = "Line-in"
+SOURCE_TV = "TV"
 
 BATTERY_SCAN_INTERVAL = datetime.timedelta(minutes=15)
 SCAN_INTERVAL = datetime.timedelta(seconds=10)

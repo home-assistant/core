@@ -604,7 +604,7 @@ def test_auto_purge(hass_recorder):
     #
     # The clock is started at 4:15am then advanced forward below
     now = dt_util.utcnow()
-    test_time = tz.localize(datetime(now.year + 2, 1, 1, 4, 15, 0))
+    test_time = datetime(now.year + 2, 1, 1, 4, 15, 0, tzinfo=tz)
     run_tasks_at_time(hass, test_time)
 
     with patch(
@@ -931,3 +931,38 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     hass.stop()
+
+
+def test_entity_id_filter(hass_recorder):
+    """Test that entity ID filtering filters string and list."""
+    hass = hass_recorder(
+        {"include": {"domains": "hello"}, "exclude": {"domains": "hidden_domain"}}
+    )
+
+    for idx, data in enumerate(
+        (
+            {},
+            {"entity_id": "hello.world"},
+            {"entity_id": ["hello.world"]},
+            {"entity_id": ["hello.world", "hidden_domain.person"]},
+            {"entity_id": {"unexpected": "data"}},
+        )
+    ):
+        hass.bus.fire("hello", data)
+        wait_recording_done(hass)
+
+        with session_scope(hass=hass) as session:
+            db_events = list(session.query(Events).filter_by(event_type="hello"))
+            assert len(db_events) == idx + 1, data
+
+    for data in (
+        {"entity_id": "hidden_domain.person"},
+        {"entity_id": ["hidden_domain.person"]},
+    ):
+        hass.bus.fire("hello", data)
+        wait_recording_done(hass)
+
+        with session_scope(hass=hass) as session:
+            db_events = list(session.query(Events).filter_by(event_type="hello"))
+            # Keep referring idx + 1, as no new events are being added
+            assert len(db_events) == idx + 1, data

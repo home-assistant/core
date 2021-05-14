@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_setup": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
-            "authorize_url_fail": "Tundmatu viga tuvastamise URL-i loomisel.",
             "authorize_url_timeout": "Tuvastamise URL'i loomise ajal\u00f5pp.",
             "external_setup": "Point on teisest voost edukalt seadistatud.",
             "no_flows": "Osis pole seadistatud. Palun vaata dokumentatsiooni.",

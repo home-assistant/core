@@ -32,9 +32,30 @@
             "button_2": "Zweite Taste",
             "button_3": "Dritte Taste",
             "button_4": "Vierte Taste",
+            "lower_all": "Alle senken",
             "off": "Aus",
             "on": "An",
+            "open_1": "\u00d6ffnen 1",
+            "open_2": "\u00d6ffnen 2",
+            "open_3": "\u00d6ffnen 3",
+            "open_4": "\u00d6ffnen 4",
+            "open_all": "Alle \u00f6ffnen",
+            "raise": "Raise",
+            "raise_1": "Anheben 1",
+            "raise_2": "Anheben 2",
+            "raise_3": "Anheben 3",
+            "raise_4": "Anheben 4",
+            "raise_all": "Erhebe alle",
+            "stop": "Stop (Favorit)",
+            "stop_1": "Stop 1",
+            "stop_2": "Stop 2",
+            "stop_3": "Stop 3",
+            "stop_4": "Stop 4",
             "stop_all": "Alle anhalten"
+        },
+        "trigger_type": {
+            "press": "\"{subtype}\" gedr\u00fcckt",
+            "release": "\" {subtype} \" freigegeben"
         }
     }
 }

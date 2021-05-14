@@ -144,7 +144,10 @@ async def test_device_setup_update_authorization_error(hass):
     """Test we handle an authorization error in the update step."""
     device = get_device("Office")
     mock_api = device.get_mock_api()
-    mock_api.check_sensors.side_effect = (blke.AuthorizationError(), None)
+    mock_api.check_sensors.side_effect = (
+        blke.AuthorizationError(),
+        {"temperature": 30},
+    )
 
     with patch.object(
         hass.config_entries, "async_forward_entry_setup"

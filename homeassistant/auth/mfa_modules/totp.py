@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.auth.models import User
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 
 from . import (
     MULTI_FACTOR_AUTH_MODULE_SCHEMA,
@@ -190,7 +190,7 @@ class TotpSetupFlow(SetupFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle the first step of setup flow.
 
         Return self.async_show_form(step_id='init') if user_input is None.

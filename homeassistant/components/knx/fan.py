@@ -1,15 +1,14 @@
 """Support for KNX/IP fans."""
 from __future__ import annotations
 
-from collections.abc import Iterable
 import math
-from typing import Any, Callable
+from typing import Any
 
 from xknx.devices import Fan as XknxFan
 
 from homeassistant.components.fan import SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.percentage import (
     int_states_in_range,
@@ -26,7 +25,7 @@ DEFAULT_PERCENTAGE = 50
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: Callable[[Iterable[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up fans for KNX platform."""

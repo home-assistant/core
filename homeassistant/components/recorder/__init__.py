@@ -40,7 +40,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
-from . import migration, purge
+from . import history, migration, purge
 from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
 from .models import Base, Events, RecorderRuns, States
 from .pool import RecorderPool
@@ -220,6 +220,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     instance.async_initialize()
     instance.start()
     _async_register_services(hass, instance)
+    history.async_setup(hass)
 
     return await instance.async_db_ready
 
@@ -358,13 +359,27 @@ class Recorder(threading.Thread):
             self._event_listener = None
 
     @callback
-    def _async_event_filter(self, event):
+    def _async_event_filter(self, event) -> bool:
         """Filter events."""
         if event.event_type in self.exclude_t:
             return False
 
         entity_id = event.data.get(ATTR_ENTITY_ID)
-        return bool(entity_id is None or self.entity_filter(entity_id))
+
+        if entity_id is None:
+            return True
+
+        if isinstance(entity_id, str):
+            return self.entity_filter(entity_id)
+
+        if isinstance(entity_id, list):
+            for eid in entity_id:
+                if self.entity_filter(eid):
+                    return True
+            return False
+
+        # Unknown what it is.
+        return True
 
     def do_adhoc_purge(self, **kwargs):
         """Trigger an adhoc purge retaining keep_days worth of data."""
