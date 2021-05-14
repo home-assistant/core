@@ -155,7 +155,50 @@ async def test_add_node(
     msg = await ws_client.receive_json()
     assert msg["event"]["event"] == "device registered"
     # Check the keys of the device item
-    assert list(msg["event"]["device"]) == ["name", "id"]
+    assert list(msg["event"]["device"]) == ["name", "id", "manufacturer", "model"]
+
+    # Test receiving interview events
+    event = Event(
+        type="interview started",
+        data={"source": "node", "event": "interview started", "nodeId": 53},
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview started"
+
+    event = Event(
+        type="interview stage completed",
+        data={
+            "source": "node",
+            "event": "interview stage completed",
+            "stageName": "NodeInfo",
+            "nodeId": 53,
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview stage completed"
+    assert msg["event"]["stage"] == "NodeInfo"
+
+    event = Event(
+        type="interview completed",
+        data={"source": "node", "event": "interview completed", "nodeId": 53},
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview completed"
+
+    event = Event(
+        type="interview failed",
+        data={"source": "node", "event": "interview failed", "nodeId": 53},
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "interview failed"
 
     # Test sending command with not loaded entry fails
     await hass.config_entries.async_unload(entry.entry_id)
