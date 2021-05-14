@@ -47,12 +47,12 @@ async def async_modbus_setup(
 
     hass.data[DOMAIN] = hub_collect = {}
     for conf_hub in config[DOMAIN]:
-        myHub = ModbusHub(hass, conf_hub)
-        hub_collect[conf_hub[CONF_NAME]] = myHub
+        my_hub = ModbusHub(hass, conf_hub)
+        hub_collect[conf_hub[CONF_NAME]] = my_hub
 
         # modbus needs to be activated before components are loaded
         # to avoid a racing problem
-        await myHub.async_setup()
+        await my_hub.async_setup()
 
         # load platforms
         for component, conf_key in PLATFORMS:
