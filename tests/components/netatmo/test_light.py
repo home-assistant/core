@@ -1,22 +1,18 @@
 """The tests for Netatmo light."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+from homeassistant.components.netatmo import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, CONF_WEBHOOK_ID
 
-from .common import (
-    FAKE_WEBHOOK_ACTIVATION,
-    fake_post_request_no_data,
-    selected_platforms,
-    simulate_webhook,
-)
+from .common import FAKE_WEBHOOK_ACTIVATION, selected_platforms, simulate_webhook
 
 
-async def test_light_setup_and_services(hass, config_entry):
+async def test_light_setup_and_services(hass, config_entry, netatmo_auth):
     """Test setup and services."""
     with selected_platforms(["light"]):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -87,18 +83,39 @@ async def test_light_setup_and_services(hass, config_entry):
 
 async def test_setup_component_no_devices(hass, config_entry):
     """Test setup with no devices."""
+    fake_post_hits = 0
+
+    async def fake_post_request_no_data(*args, **kwargs):
+        """Fake error during requesting backend data."""
+        nonlocal fake_post_hits
+        fake_post_hits += 1
+        return "{}"
+
     with patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth.async_post_request"
-    ) as mock_post, patch(
+        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+    ) as mock_auth, patch(
         "homeassistant.components.netatmo.PLATFORMS", ["light"]
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
         "homeassistant.components.webhook.async_generate_url"
     ):
-        mock_post.side_effect = fake_post_request_no_data
+        mock_auth.return_value.async_post_request.side_effect = (
+            fake_post_request_no_data
+        )
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
 
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        mock_post.assert_called()
+        # Fake webhook activation
+        await simulate_webhook(
+            hass, config_entry.data[CONF_WEBHOOK_ID], FAKE_WEBHOOK_ACTIVATION
+        )
+        await hass.async_block_till_done()
+
+        assert fake_post_hits == 1
+
+        assert hass.config_entries.async_entries(DOMAIN)
+        assert len(hass.states.async_all()) == 0

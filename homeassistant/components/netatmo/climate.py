@@ -159,8 +159,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(await get_entities(), True)
 
-    await data_handler.unregister_data_class(HOMEDATA_DATA_CLASS_NAME, None)
-
     platform = entity_platform.async_get_current_platform()
 
     if home_data is not None:
@@ -208,7 +206,6 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 self._model = NA_THERM
                 break
 
-        self._state = None
         self._device_name = self._data.rooms[home_id][room_id]["name"]
         self._name = f"{MANUFACTURER} {self._device_name}"
         self._current_temperature = None
@@ -484,6 +481,11 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
     def async_update_callback(self):
         """Update the entity's state."""
         self._home_status = self.data_handler.data[self._home_status_class]
+        if self._home_status is None:
+            if self.available:
+                self._connected = False
+            return
+
         self._room_status = self._home_status.rooms.get(self._id)
         self._room_data = self._data.rooms.get(self._home_id, {}).get(self._id)
 

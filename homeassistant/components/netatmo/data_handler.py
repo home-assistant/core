@@ -173,6 +173,9 @@ class NetatmoDataHandler:
 
     async def unregister_data_class(self, data_class_entry, update_callback):
         """Unregister data class."""
+        if data_class_entry not in self._data_classes:
+            return
+
         if update_callback not in self._data_classes[data_class_entry]["subscriptions"]:
             return
 
@@ -181,6 +184,7 @@ class NetatmoDataHandler:
         if not self._data_classes[data_class_entry].get("subscriptions"):
             self._queue.remove(self._data_classes[data_class_entry])
             self._data_classes.pop(data_class_entry)
+            self.data.pop(data_class_entry)
             _LOGGER.debug("Data class %s removed", data_class_entry)
 
     @property

@@ -1,7 +1,7 @@
 """Common methods used across tests for Netatmo."""
 from contextlib import contextmanager
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from homeassistant.components.webhook import async_handle_webhook
 from homeassistant.util.aiohttp import MockRequest
@@ -82,12 +82,6 @@ async def simulate_webhook(hass, webhook_id, response):
 def selected_platforms(platforms):
     """Restrict loaded platforms to list given."""
     with patch("homeassistant.components.netatmo.PLATFORMS", platforms), patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
-    ) as mock_auth, patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-    ), patch(
-        "homeassistant.components.webhook.async_generate_url"
-    ):
-        mock_auth.return_value.async_post_request.side_effect = fake_post_request
-        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+    ), patch("homeassistant.components.webhook.async_generate_url"):
         yield

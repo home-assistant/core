@@ -27,7 +27,6 @@
                     "type": "NATherm1",
                     "firmware_revision": 65,
                     "rf_strength": 58,
-                    "battery_level": 3793,
                     "boiler_valve_comfort_boost": false,
                     "boiler_status": false,
                     "anticipating": false,
@@ -40,7 +39,6 @@
                     "type": "NRV",
                     "firmware_revision": 79,
                     "rf_strength": 51,
-                    "battery_level": 3025,
                     "bridge": "12:34:56:00:fa:d0",
                     "battery_state": "full"
                 },
@@ -50,7 +48,6 @@
                     "type": "NRV",
                     "firmware_revision": 79,
                     "rf_strength": 59,
-                    "battery_level": 2329,
                     "bridge": "12:34:56:00:fa:d0",
                     "battery_state": "full"
                 }

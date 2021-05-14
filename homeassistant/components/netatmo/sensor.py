@@ -178,8 +178,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     NetatmoSensor(data_handler, data_class_name, module, condition)
                 )
 
-        await data_handler.unregister_data_class(data_class_name, None)
-
         return entities
 
     for data_class_name in [

@@ -87,8 +87,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(await get_entities(), True)
 
-    await data_handler.unregister_data_class(CAMERA_DATA_CLASS_NAME, None)
-
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
@@ -182,8 +180,12 @@ class NetatmoCamera(NetatmoBase, Camera):
         """Return a still image response from the camera."""
         try:
             return await self._data.async_get_live_snapshot(camera_id=self._id)
-        except (aiohttp.ClientPayloadError, pyatmo.exceptions.ApiError) as err:
-            _LOGGER.error(err)
+        except (
+            aiohttp.ClientPayloadError,
+            pyatmo.exceptions.ApiError,
+            aiohttp.ContentTypeError,
+        ) as err:
+            _LOGGER.debug("Could not fetch live camera image (%s)", err)
 
     @property
     def extra_state_attributes(self):
@@ -306,7 +308,7 @@ class NetatmoCamera(NetatmoBase, Camera):
                 if data.get("pseudo") == person:
                     person_id = pid
 
-        if person_id is not None:
+        if person_id:
             await self._data.async_set_persons_away(
                 person_id=person_id,
                 home_id=self._home_id,

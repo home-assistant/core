@@ -62,8 +62,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(await get_entities(), True)
 
-    await data_handler.unregister_data_class(CAMERA_DATA_CLASS_NAME, None)
-
 
 class NetatmoLight(NetatmoBase, LightEntity):
     """Representation of a Netatmo Presence camera light."""

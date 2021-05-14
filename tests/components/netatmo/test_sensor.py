@@ -10,7 +10,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import TEST_TIME, selected_platforms
 
 
-async def test_weather_sensor(hass, config_entry):
+async def test_weather_sensor(hass, config_entry, netatmo_auth):
     """Test weather sensor setup."""
     with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -25,7 +25,7 @@ async def test_weather_sensor(hass, config_entry):
     assert hass.states.get(f"{prefix}pressure").state == "1017.3"
 
 
-async def test_public_weather_sensor(hass, config_entry):
+async def test_public_weather_sensor(hass, config_entry, netatmo_auth):
     """Test public weather sensor setup."""
     with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -213,7 +213,9 @@ async def test_fix_angle(angle, expected):
         ),
     ],
 )
-async def test_weather_sensor_enabling(hass, config_entry, uid, name, expected):
+async def test_weather_sensor_enabling(
+    hass, config_entry, uid, name, expected, netatmo_auth
+):
     """Test enabling of by default disabled sensors."""
     with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
         states_before = len(hass.states.async_all())

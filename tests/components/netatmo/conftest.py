@@ -1,9 +1,10 @@
 """Provide common Netatmo fixtures."""
 from time import time
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from .common import ALL_SCOPES
+from .common import ALL_SCOPES, fake_post_request
 
 from tests.common import MockConfigEntry
 
@@ -50,3 +51,15 @@ def mock_config_entry_fixture(hass):
     mock_entry.add_to_hass(hass)
 
     return mock_entry
+
+
+@pytest.fixture
+def netatmo_auth():
+    """Restrict loaded platforms to list given."""
+    with patch(
+        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+    ) as mock_auth:
+        mock_auth.return_value.async_post_request.side_effect = fake_post_request
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        yield

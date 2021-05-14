@@ -129,6 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             {"type": "None", "data": {"push_type": "webhook_deactivation"}},
         )
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+        await hass.data[DOMAIN][entry.entry_id][AUTH].async_dropwebhook()
 
     async def register_webhook(event):
         if CONF_WEBHOOK_ID not in entry.data:
@@ -207,6 +208,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     if CONF_WEBHOOK_ID in entry.data:
+        webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
         await hass.data[DOMAIN][entry.entry_id][AUTH].async_dropwebhook()
         _LOGGER.info("Unregister Netatmo webhook")
 
