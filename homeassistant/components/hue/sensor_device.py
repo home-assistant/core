@@ -1,8 +1,10 @@
 """Support for the Philips Hue sensor devices."""
+from homeassistant.helpers import entity
+
 from .const import DOMAIN as HUE_DOMAIN
 
 
-class GenericHueDevice:
+class GenericHueDevice(entity.Entity):
     """Representation of a Hue device."""
 
     def __init__(self, sensor, name, bridge, primary_sensor=None):
