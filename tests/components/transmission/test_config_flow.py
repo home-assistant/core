@@ -3,7 +3,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
-from transmissionrpc.error import TransmissionError
+from transmission_rpc.error import TransmissionError
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import transmission
@@ -47,7 +47,7 @@ MOCK_ENTRY = {
 @pytest.fixture(name="api")
 def mock_transmission_api():
     """Mock an api."""
-    with patch("transmissionrpc.Client"):
+    with patch("transmission_rpc.Client"):
         yield
 
 
@@ -55,7 +55,7 @@ def mock_transmission_api():
 def mock_api_authentication_error():
     """Mock an api."""
     with patch(
-        "transmissionrpc.Client", side_effect=TransmissionError("401: Unauthorized")
+        "transmission_rpc.Client", side_effect=TransmissionError("401: Unauthorized")
     ):
         yield
 
@@ -64,7 +64,7 @@ def mock_api_authentication_error():
 def mock_api_connection_error():
     """Mock an api."""
     with patch(
-        "transmissionrpc.Client",
+        "transmission_rpc.Client",
         side_effect=TransmissionError("111: Connection refused"),
     ):
         yield
@@ -73,7 +73,7 @@ def mock_api_connection_error():
 @pytest.fixture(name="unknown_error")
 def mock_api_unknown_error():
     """Mock an api."""
-    with patch("transmissionrpc.Client", side_effect=TransmissionError):
+    with patch("transmission_rpc.Client", side_effect=TransmissionError):
         yield
 
 

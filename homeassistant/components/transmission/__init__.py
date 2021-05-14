@@ -4,8 +4,8 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-import transmissionrpc
-from transmissionrpc.error import TransmissionError
+import transmission_rpc
+from transmission_rpc.error import TransmissionError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -149,7 +149,7 @@ async def get_api(hass, entry):
 
     try:
         api = await hass.async_add_executor_job(
-            transmissionrpc.Client, host, port, username, password
+            transmission_rpc.Client, host, port, username, password
         )
         _LOGGER.debug("Successfully connected to %s", host)
         return api
@@ -173,7 +173,7 @@ class TransmissionClient:
         """Initialize the Transmission RPC API."""
         self.hass = hass
         self.config_entry = config_entry
-        self.tm_api: transmissionrpc.Client = None
+        self.tm_api: transmission_rpc.Client = None
         self._tm_data: TransmissionData = None
         self.unsub_timer = None
 
@@ -336,18 +336,18 @@ class TransmissionClient:
 class TransmissionData:
     """Get the latest data and update the states."""
 
-    def __init__(self, hass, config, api: transmissionrpc.Client):
+    def __init__(self, hass, config, api: transmission_rpc.Client):
         """Initialize the Transmission RPC API."""
         self.hass = hass
         self.config = config
-        self.data: transmissionrpc.Session = None
+        self.data: transmission_rpc.Session = None
         self.available: bool = True
-        self._all_torrents: list[transmissionrpc.Torrent] = []
-        self._api: transmissionrpc.Client = api
-        self._completed_torrents: list[transmissionrpc.Torrent] = []
-        self._session: transmissionrpc.Session = None
-        self._started_torrents: list[transmissionrpc.Torrent] = []
-        self._torrents: list[transmissionrpc.Torrent] = []
+        self._all_torrents: list[transmission_rpc.Torrent] = []
+        self._api: transmission_rpc.Client = api
+        self._completed_torrents: list[transmission_rpc.Torrent] = []
+        self._session: transmission_rpc.Session = None
+        self._started_torrents: list[transmission_rpc.Torrent] = []
+        self._torrents: list[transmission_rpc.Torrent] = []
 
     @property
     def host(self):
@@ -360,7 +360,7 @@ class TransmissionData:
         return f"{DATA_UPDATED}-{self.host}"
 
     @property
-    def torrents(self) -> list[transmissionrpc.Torrent]:
+    def torrents(self) -> list[transmission_rpc.Torrent]:
         """Get the list of torrents."""
         return self._torrents
 

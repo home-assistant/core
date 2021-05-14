@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 import pytest
-from transmissionrpc.error import TransmissionError
+from transmission_rpc.error import TransmissionError
 
 from homeassistant.components import transmission
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -26,7 +26,7 @@ MOCK_ENTRY = MockConfigEntry(
 @pytest.fixture(name="api")
 def mock_transmission_api():
     """Mock an api."""
-    with patch("transmissionrpc.Client"):
+    with patch("transmission_rpc.Client"):
         yield
 
 
@@ -34,7 +34,7 @@ def mock_transmission_api():
 def mock_api_authentication_error():
     """Mock an api."""
     with patch(
-        "transmissionrpc.Client", side_effect=TransmissionError("401: Unauthorized")
+        "transmission_rpc.Client", side_effect=TransmissionError("401: Unauthorized")
     ):
         yield
 
@@ -42,7 +42,7 @@ def mock_api_authentication_error():
 @pytest.fixture(name="unknown_error")
 def mock_api_unknown_error():
     """Mock an api."""
-    with patch("transmissionrpc.Client", side_effect=TransmissionError):
+    with patch("transmission_rpc.Client", side_effect=TransmissionError):
         yield
 
 
@@ -95,7 +95,7 @@ async def test_setup_failed(hass):
 
     # test connection error raising ConfigEntryNotReady
     with patch(
-        "transmissionrpc.Client",
+        "transmission_rpc.Client",
         side_effect=TransmissionError("111: Connection refused"),
     ), pytest.raises(ConfigEntryNotReady):
 
@@ -104,7 +104,7 @@ async def test_setup_failed(hass):
     # test Authentication error returning false
 
     with patch(
-        "transmissionrpc.Client", side_effect=TransmissionError("401: Unauthorized")
+        "transmission_rpc.Client", side_effect=TransmissionError("401: Unauthorized")
     ):
 
         assert await transmission.async_setup_entry(hass, entry) is False
