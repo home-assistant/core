@@ -220,9 +220,9 @@ class Statistics(Base):  # type: ignore
     __tablename__ = TABLE_STATISTICS
     id = Column(Integer, primary_key=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
-    source = Column(String(255), index=True)
+    source = Column(String(32))
     statistic_id = Column(String(255), index=True)
-    period = Column(Enum(*STATISTIC_PERIODS))
+    period = Column(Enum(*STATISTIC_PERIODS), index=True)
     start = Column(DATETIME_TYPE, index=True)
     mean = Column(Float())
     min = Column(Float())

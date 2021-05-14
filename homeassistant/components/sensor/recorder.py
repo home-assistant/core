@@ -54,37 +54,28 @@ def compile_statistics(
     )
 
     for entity_id, device_class in entities:
-        wanted_statistics = DEVICE_CLASS_STATISTICS.get(device_class)
-
-        if not wanted_statistics:
-            continue
+        wanted_statistics = DEVICE_CLASS_STATISTICS[device_class]
 
         if entity_id not in history_list:
             continue
 
-        result[entity_id] = {}
-
         entity_history = history_list[entity_id]
         fstates = [float(el.state) for el in entity_history if _is_number(el.state)]
 
+        if not fstates:
+            continue
+
+        result[entity_id] = {}
+
         # Make calculations
         if "max" in wanted_statistics:
-            try:
-                result[entity_id]["max"] = max(fstates)
-            except ValueError:
-                pass
+            result[entity_id]["max"] = max(fstates)
         if "min" in wanted_statistics:
-            try:
-                result[entity_id]["min"] = min(fstates)
-            except ValueError:
-                pass
+            result[entity_id]["min"] = min(fstates)
 
         # Note: The average calculation will be incorrect for unevenly spaced readings,
         # this needs to be improved by weighting with time between measurements
         if "mean" in wanted_statistics:
-            try:
-                result[entity_id]["mean"] = statistics.fmean(fstates)
-            except ValueError:
-                pass
+            result[entity_id]["mean"] = statistics.fmean(fstates)
 
     return result
