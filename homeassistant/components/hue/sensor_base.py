@@ -182,6 +182,7 @@ class GenericHueSensor(GenericHueDevice, entity.Entity):
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""
+        await super().async_added_to_hass()
         self.async_on_remove(
             self.bridge.sensor_manager.coordinator.async_add_listener(
                 self.async_write_ha_state

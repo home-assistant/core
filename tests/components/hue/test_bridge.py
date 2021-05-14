@@ -305,7 +305,10 @@ async def test_event_updates(hass):
 
     async def iterate_queue():
         while True:
-            yield await events.get()
+            event = await events.get()
+            if event is None:
+                return
+            yield event
 
     async def wait_empty_queue():
         count = 0
@@ -341,4 +344,5 @@ async def test_event_updates(hass):
     await wait_empty_queue()
     assert len(calls) == 1
 
-    subscription_task.cancel()
+    events.put_nowait(None)
+    await subscription_task
