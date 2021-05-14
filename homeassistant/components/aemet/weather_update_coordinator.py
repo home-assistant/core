@@ -149,8 +149,6 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         return weather
 
     def _get_weather_station(self):
-        if not self._station_updates:
-            return None
         if not self._station:
             self._station = (
                 self._aemet.get_conventional_observation_station_by_coordinates(
@@ -213,7 +211,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             )
 
         station = None
-        if self._get_weather_station():
+        if self._station_updates and self._get_weather_station():
             station = self._aemet.get_conventional_observation_station_data(
                 self._station[AEMET_ATTR_IDEMA]
             )

@@ -13,7 +13,6 @@ from .const import (
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
     PLATFORMS,
-    UPDATE_LISTENER,
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
@@ -43,13 +42,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
-    update_listener = config_entry.add_update_listener(async_update_options)
-    hass.data[DOMAIN][config_entry.entry_id][UPDATE_LISTENER] = update_listener
+    config_entry.async_on_unload(config_entry.add_update_listener(async_update_options))
 
     return True
 
 
-async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
@@ -61,8 +59,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     )
 
     if unload_ok:
-        update_listener = hass.data[DOMAIN][config_entry.entry_id][UPDATE_LISTENER]
-        update_listener()
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
