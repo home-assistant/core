@@ -4,10 +4,13 @@ from __future__ import annotations
 from pathlib import Path
 from urllib.parse import urlparse
 
+from awesomeversion import (
+    AwesomeVersion,
+    AwesomeVersionException,
+    AwesomeVersionStrategy,
+)
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
-
-from homeassistant.loader import validate_custom_integration_version
 
 from .model import Config, Integration
 
@@ -142,7 +145,18 @@ def verify_uppercase(value: str):
 
 def verify_version(value: str):
     """Verify the version."""
-    if not validate_custom_integration_version(value):
+    try:
+        AwesomeVersion(
+            value,
+            [
+                AwesomeVersionStrategy.CALVER,
+                AwesomeVersionStrategy.SEMVER,
+                AwesomeVersionStrategy.SIMPLEVER,
+                AwesomeVersionStrategy.BUILDVER,
+                AwesomeVersionStrategy.PEP440,
+            ],
+        )
+    except AwesomeVersionException:
         raise vol.Invalid(f"'{value}' is not a valid version.")
     return value
 
