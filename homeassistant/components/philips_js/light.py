@@ -17,8 +17,7 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     LightEntity,
 )
-from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.helpers.event import async_call_later
+from homeassistant.core import callback
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import color_hsv_to_RGB, color_RGB_to_hsv
@@ -136,7 +135,6 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
         self._system = system
         self._unique_id = unique_id
         self._coordinator = coordinator
-        self._delayed_restore: CALLBACK_TYPE | None = None
         super().__init__(coordinator)
 
         self._update_from_coordinator()
@@ -361,23 +359,6 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
         if await self._tv.setAmbilightCurrentConfiguration(config) is False:
             raise Exception("Failed to set ambilight mode")
 
-    def _restore_ambilight(self):
-        """Restore ambilight after a delay."""
-        self._restore_ambilight_cancel()
-
-        async def _restore(_):
-            await self._set_ambilight_config("FOLLOW_VIDEO", "STANDARD")
-            self._update_from_coordinator()
-            self.async_write_ha_state()
-
-        self._delayed_restore = async_call_later(self.hass, 5.0, _restore)
-
-    def _restore_ambilight_cancel(self):
-        """Cancel delayed restore."""
-        if self._delayed_restore:
-            self._delayed_restore()
-            self._delayed_restore = None
-
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the bulb on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
@@ -386,8 +367,6 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
 
         if not self._tv.on:
             raise Exception("TV is not available")
-
-        self._restore_ambilight_cancel()
 
         mode, style, setting = _parse_effect(effect)
 
@@ -423,8 +402,6 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
         if not self._tv.on:
             raise Exception("TV is not available")
 
-        self._restore_ambilight_cancel()
-
         if await self._tv.setAmbilightMode("internal") is False:
             raise Exception("Failed to set ambilight mode")
 
@@ -432,6 +409,3 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
 
         self._update_from_coordinator()
         self.async_write_ha_state()
-
-        if self._tv.powerstate not in ("On", None):
-            self._restore_ambilight()
