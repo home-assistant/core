@@ -322,7 +322,7 @@ async def test_form_validate_session_error(hass):
 
     assert result3["type"] == "form"
     assert result3["step_id"] == "credentials"
-    assert result3["errors"] == {"base": "unknown"}
+    assert result3["errors"] == {"base": "session_error"}
 
 
 async def test_form_validate_exception(hass):
