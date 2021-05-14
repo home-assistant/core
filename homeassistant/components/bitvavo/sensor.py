@@ -271,7 +271,7 @@ class TotalAssetValue(CoordinatorEntity):
         return CURRENCY_ICONS.get(self.unit_of_measurement, DEFAULT_COIN_ICON)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return additional sensor state attributes."""
         return {
             "note": f"Value is based on the last {self._currency}-{ASSET_VALUE_BASE} price of every coin in balance",
