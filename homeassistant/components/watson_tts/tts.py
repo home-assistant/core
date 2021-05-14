@@ -2,9 +2,12 @@
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_watson import TextToSpeechV1
 import voluptuous as vol
+import logging
 
 from homeassistant.components.tts import PLATFORM_SCHEMA, Provider
 import homeassistant.helpers.config_validation as cv
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_URL = "watson_url"
 CONF_APIKEY = "watson_apikey"
@@ -55,6 +58,7 @@ SUPPORTED_VOICES = [
     "es-LA_SofiaVoice",
     "es-US_SofiaV3Voice",
     "es-US_SofiaVoice",
+    "fr-CA_LouiseV3Voice",
     "fr-FR_NicolasV3Voice",
     "fr-FR_ReneeV3Voice",
     "fr-FR_ReneeVoice",
@@ -74,6 +78,25 @@ SUPPORTED_VOICES = [
     "zh-CN_LiNaVoice",
     "zh-CN_WangWeiVoice",
     "zh-CN_ZhangJingVoice",
+]
+
+DEPRECATED_VOICES = [
+    "ar-AR_OmarVoice",
+    "de-DE_BirgitVoice",
+    "de-DE_DieterVoice",
+    "en-GB_KateVoice",
+    "en-GB_KateV3Voice",
+    "en-US_AllisonVoice",
+    "en-US_LisaVoice",
+    "en-US_MichaelVoice",
+    "es-ES_EnriqueVoice",
+    "es-ES_LauraVoice",
+    "es-LA_SofiaVoice",
+    "es-US_SofiaVoice",
+    "fr-FR_ReneeVoice",
+    "it-IT_FrancescaVoice",
+    "ja-JP_EmiVoice",
+    "pt-BR_IsabelaVoice",
 ]
 
 SUPPORTED_OUTPUT_FORMATS = [
@@ -137,6 +160,12 @@ class WatsonTTSProvider(Provider):
         self.default_voice = default_voice
         self.output_format = output_format
         self.name = "Watson TTS"
+
+        if self.default_voice in DEPRECATED_VOICES:
+            _LOGGER.warning(
+                "Watson TTS voice %s is deprecated, it may be removed in the future.",
+                self.default_voice,
+            )
 
     @property
     def supported_languages(self):
