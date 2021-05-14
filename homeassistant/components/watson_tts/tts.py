@@ -119,7 +119,7 @@ CONTENT_TYPE_EXTENSIONS = {
     "audio/wav": "wav",
 }
 
-DEFAULT_VOICE = "en-US_AllisonVoice"
+DEFAULT_VOICE = "en-US_AllisonV3Voice"
 DEFAULT_OUTPUT_FORMAT = "audio/mp3"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
