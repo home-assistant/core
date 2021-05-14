@@ -24,8 +24,8 @@ class SonosFavorites:
 
     def __init__(self, hass: HomeAssistant, soco: SoCo) -> None:
         """Initialize the data."""
-        self.hass = hass
-        self.soco = soco
+        self.hass: HomeAssistant = hass
+        self.soco: SoCo = soco
         self._favorites: list[DidlFavorite] = []
         self._event_version: str | None = None
         self._next_update: Callable | None = None
