@@ -84,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload FRITZ!Box Tools config entry."""
-    _LOGGER.debug("async_unload_entry()")
+    _LOGGER.debug("Unload config entry %s (%s)", entry.title, entry.data[CONF_HOST])
 
     entry_data = hass.data[DOMAIN][entry.entry_id]
 
@@ -94,6 +94,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         if callable(entry_data[UNDO_UPDATE_LISTENER_TRACKER]):
+            _LOGGER.debug("Unsub from dispatcher for new devices")
             entry_data[UNDO_UPDATE_LISTENER_TRACKER]()
         entry_data[UNDO_UPDATE_LISTENER_OPTIONS]()
         hass.data[DOMAIN].pop(entry.entry_id)
@@ -121,6 +122,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
             if entity_id:
                 entity = ent_reg.async_get(entity_id)
                 if entity and entity.device_id is not None:
+                    _LOGGER.debug("Remove unselected device with mac %s", tracker)
                     await hass.async_add_executor_job(
                         dev_reg.async_remove_device, entity.device_id
                     )
