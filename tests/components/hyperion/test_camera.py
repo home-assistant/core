@@ -72,7 +72,7 @@ async def test_camera_image(hass: HomeAssistant) -> None:
 
     await setup_test_config_entry(hass, hyperion_client=client)
 
-    get_image_coro = async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=None)  # type: ignore[no-untyped-call]
+    get_image_coro = async_get_image(hass, TEST_CAMERA_ENTITY_ID)
     image_stream_update_coro = async_call_registered_callback(
         client, "ledcolors-imagestream-update", TEST_IMAGE_UPDATE
     )
@@ -91,21 +91,21 @@ async def test_camera_invalid_image(hass: HomeAssistant) -> None:
 
     await setup_test_config_entry(hass, hyperion_client=client)
 
-    get_image_coro = async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=0)  # type: ignore[no-untyped-call]
+    get_image_coro = async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=0)
     image_stream_update_coro = async_call_registered_callback(
         client, "ledcolors-imagestream-update", None
     )
     with pytest.raises(HomeAssistantError):
         await asyncio.gather(get_image_coro, image_stream_update_coro)
 
-    get_image_coro = async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=0)  # type: ignore[no-untyped-call]
+    get_image_coro = async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=0)
     image_stream_update_coro = async_call_registered_callback(
         client, "ledcolors-imagestream-update", {"garbage": 1}
     )
     with pytest.raises(HomeAssistantError):
         await asyncio.gather(get_image_coro, image_stream_update_coro)
 
-    get_image_coro = async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=0)  # type: ignore[no-untyped-call]
+    get_image_coro = async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=0)
     image_stream_update_coro = async_call_registered_callback(
         client,
         "ledcolors-imagestream-update",
@@ -123,7 +123,7 @@ async def test_camera_image_failed_start_stream_call(hass: HomeAssistant) -> Non
     await setup_test_config_entry(hass, hyperion_client=client)
 
     with pytest.raises(HomeAssistantError):
-        await async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=None)  # type: ignore[no-untyped-call]
+        await async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=0)
 
     assert client.async_send_image_stream_start.called
     assert not client.async_send_image_stream_stop.called
@@ -155,7 +155,7 @@ async def test_camera_stream(hass: HomeAssistant) -> None:
     ) as fake:
         fake.side_effect = fake_get_still_stream
 
-        get_stream_coro = async_get_mjpeg_stream(hass, request, TEST_CAMERA_ENTITY_ID)  # type: ignore[no-untyped-call]
+        get_stream_coro = async_get_mjpeg_stream(hass, request, TEST_CAMERA_ENTITY_ID)
         image_stream_update_coro = async_call_registered_callback(
             client, "ledcolors-imagestream-update", TEST_IMAGE_UPDATE
         )
@@ -174,7 +174,9 @@ async def test_camera_stream_failed_start_stream_call(hass: HomeAssistant) -> No
     await setup_test_config_entry(hass, hyperion_client=client)
 
     request = Mock()
-    assert not await async_get_mjpeg_stream(hass, request, TEST_CAMERA_ENTITY_ID)  # type: ignore[no-untyped-call]
+
+    with pytest.raises(web.HTTPBadGateway):
+        await async_get_mjpeg_stream(hass, request, TEST_CAMERA_ENTITY_ID)
 
     assert client.async_send_image_stream_start.called
     assert not client.async_send_image_stream_stop.called

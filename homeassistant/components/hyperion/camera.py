@@ -7,7 +7,7 @@ import base64
 import binascii
 import functools
 import logging
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable
 
 from aiohttp import web
 from hyperion import client
@@ -115,7 +115,7 @@ class HyperionCamera(Camera):
         hyperion_client: client.HyperionClient,
     ) -> None:
         """Initialize the switch."""
-        super().__init__()  # type: ignore[no-untyped-call]
+        super().__init__()
 
         self._unique_id = get_hyperion_unique_id(
             server_id, instance_num, TYPE_HYPERION_CAMERA
@@ -210,17 +210,17 @@ class HyperionCamera(Camera):
 
     async def handle_async_mjpeg_stream(
         self, request: web.Request
-    ) -> web.StreamResponse | None:
+    ) -> web.StreamResponse:
         """Serve an HTTP MJPEG stream from the camera."""
         if not await self._start_image_streaming_for_client():
-            return None
+            raise web.HTTPBadGateway()
         try:
             response = await async_get_still_stream(
                 request, self._async_wait_for_camera_image, DEFAULT_CONTENT_TYPE, 0.0
-            )  # type: ignore[no-untyped-call]
+            )
         finally:
             await self._stop_image_streaming_for_client()
-        return cast(Optional[web.StreamResponse], response)
+        return response
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity added to hass."""

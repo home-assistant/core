@@ -102,7 +102,7 @@ TEST_SSDP_SERVICE_INFO = {
 
 async def _create_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Add a test Hyperion entity to hass."""
-    entry: MockConfigEntry = MockConfigEntry(  # type: ignore[no-untyped-call]
+    entry: MockConfigEntry = MockConfigEntry(
         entry_id=TEST_CONFIG_ENTRY_ID,
         domain=DOMAIN,
         unique_id=TEST_SYSINFO_ID,
@@ -113,7 +113,7 @@ async def _create_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
             "instance": TEST_INSTANCE,
         },
     )
-    entry.add_to_hass(hass)  # type: ignore[no-untyped-call]
+    entry.add_to_hass(hass)
 
     # Setup
     client = create_mock_client()
