@@ -26,11 +26,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
-    """Set up the Bitvavo component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bitvavo from a config entry."""
     api_key = entry.data[CONF_API_KEY]
