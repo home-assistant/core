@@ -73,16 +73,16 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
         try:
             # check for validity of brightness value received
             brightness_value = int(result)
-            # convert percent brightness to ha expected range
-            brightness_value = round((max(1, brightness_value) / 100) * 255)
-            return brightness_value
         except ValueError:
-            # deal if any unexpected value
+            # deal if any unexpected/non numeric value
             _LOGGER.debug(
-                "VeSync - received brightness level from pyvesync api out of range: %d",
+                "VeSync - received unexpected 'brightness' value from pyvesync api: %s",
                 result,
             )
             return 0
+        # convert percent brightness to ha expected range
+        brightness_value = round((max(1, brightness_value) / 100) * 255)
+        return brightness_value
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
@@ -165,27 +165,25 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
         try:
             # check for validity of brightness value received
             color_temp_value = int(result)
-            # flip cold/warm
-            color_temp_value = 100 - color_temp_value
-            # ensure value between 0-100
-            color_temp_value = max(0, min(color_temp_value, 100))
-            # convert percent value to Mireds
-            color_temp_value = round(
-                self.min_mireds
-                + ((self.max_mireds - self.min_mireds) / 100 * color_temp_value)
-            )
-            # ensure value between minimum and maximum Mireds
-            color_temp_value = max(
-                self.min_mireds, min(color_temp_value, self.max_mireds)
-            )
-            return color_temp_value
         except ValueError:
-            # deal if any unexpected value
+            # deal if any unexpected/non numeric value
             _LOGGER.debug(
-                "VeSync - received color_temp_pct level from pyvesync api out of range: %d",
+                "VeSync - received unexpected 'color_temp_pct' value from pyvesync api: %s",
                 result,
             )
             return 0
+        # flip cold/warm
+        color_temp_value = 100 - color_temp_value
+        # ensure value between 0-100
+        color_temp_value = max(0, min(color_temp_value, 100))
+        # convert percent value to Mireds
+        color_temp_value = round(
+            self.min_mireds
+            + ((self.max_mireds - self.min_mireds) / 100 * color_temp_value)
+        )
+        # ensure value between minimum and maximum Mireds
+        color_temp_value = max(self.min_mireds, min(color_temp_value, self.max_mireds))
+        return color_temp_value
 
     @property
     def min_mireds(self):
