@@ -2286,7 +2286,7 @@ unifiled==0.11
 upb_lib==0.4.12
 
 # homeassistant.components.upcloud
-upcloud-api==1.0.1
+upcloud-api==2.0.0
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
