@@ -299,7 +299,7 @@ async def test_hue_activate_scene_scene_not_found(hass, mock_api):
         assert await hue_bridge.hue_activate_scene(call.data) is False
 
 
-async def test_event_updates(hass):
+async def test_event_updates(hass, caplog):
     """Test calling reset while the entry has been setup."""
     events = asyncio.Queue()
 
@@ -343,6 +343,32 @@ async def test_event_updates(hass):
 
     await wait_empty_queue()
     assert len(calls) == 1
+
+    # Test we can override update listener.
+    def obj_updated_false():
+        calls.append(False)
+
+    unsub = hue_bridge.listen_updates("lights", "2", obj_updated)
+    unsub_false = hue_bridge.listen_updates("lights", "2", obj_updated_false)
+
+    assert "Overwriting update callback" in caplog.text
+
+    events.put_nowait(Mock(ITEM_TYPE="lights", id="2"))
+
+    await wait_empty_queue()
+    assert len(calls) == 2
+    assert calls[-1] is False
+
+    # Also call multiple times to make sure that works.
+    unsub()
+    unsub()
+    unsub_false()
+    unsub_false()
+
+    events.put_nowait(Mock(ITEM_TYPE="lights", id="2"))
+
+    await wait_empty_queue()
+    assert len(calls) == 2
 
     events.put_nowait(None)
     await subscription_task

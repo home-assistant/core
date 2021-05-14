@@ -251,11 +251,16 @@ class HueBridge:
         """Listen to updates."""
         callbacks = self._update_callbacks
         key = (item_type, item_id)
+
+        if key in callbacks:
+            _LOGGER.warning("Overwriting update callback for %s", key)
+
         callbacks[key] = update_callback
 
         @core.callback
         def unsub():
-            callbacks.pop(key)
+            if callbacks.get(key) == update_callback:
+                callbacks.pop(key)
 
         return unsub
 
