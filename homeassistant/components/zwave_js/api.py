@@ -1119,7 +1119,7 @@ async def websocket_subscribe_firmware_update_status(
 class FirmwareUploadView(HomeAssistantView):
     """View to upload firmware."""
 
-    url = "/api/zwave_js/firmware/upload/{config_entry_id}/{node_id}"
+    url = "/api/zwave_js/firmware/upload/{config_entry_id}/{node_id:\d+}"
     name = "api:zwave_js:firmware:upload"
 
     async def post(
