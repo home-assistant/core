@@ -42,19 +42,18 @@ async def async_setup_entry(hass, entry, async_add_entities):
         for camera in home.values():
             all_cameras.append(camera)
 
-    entities = []
-    for camera in all_cameras:
-        if camera["type"] == "NOC":
-            _LOGGER.debug("Adding camera light %s %s", camera["id"], camera["name"])
-            entities.append(
-                NetatmoLight(
-                    data_handler,
-                    camera["id"],
-                    camera["type"],
-                    camera["home_id"],
-                )
-            )
+    entities = [
+        NetatmoLight(
+            data_handler,
+            camera["id"],
+            camera["type"],
+            camera["home_id"],
+        )
+        for camera in all_cameras
+        if camera["type"] == "NOC"
+    ]
 
+    _LOGGER.debug("Adding camera lights %s", entities)
     async_add_entities(entities, True)
 
 
