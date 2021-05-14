@@ -9,6 +9,7 @@ from pyiqvia.errors import IQVIAError
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -55,7 +56,7 @@ async def async_setup_entry(hass, entry):
         try:
             return await api_coro()
         except IQVIAError as err:
-            raise UpdateFailed from err
+            raise UpdateFailed(err)
 
     init_data_update_tasks = []
     for sensor_type, api_coro in [
@@ -74,9 +75,11 @@ async def async_setup_entry(hass, entry):
             update_interval=DEFAULT_SCAN_INTERVAL,
             update_method=partial(async_get_data_from_api, api_coro),
         )
-        init_data_update_tasks.append(coordinator.async_config_entry_first_refresh())
+        init_data_update_tasks.append(coordinator.async_refresh())
 
-    await asyncio.gather(*init_data_update_tasks)
+    results = await asyncio.gather(*init_data_update_tasks, return_exceptions=True)
+    if all(isinstance(result, Exception) for result in results):
+        raise ConfigEntryNotReady()
 
     hass.data[DOMAIN].setdefault(DATA_COORDINATOR, {})[entry.entry_id] = coordinators
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
