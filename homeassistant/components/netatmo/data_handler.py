@@ -58,7 +58,7 @@ class NetatmoDataHandler:
         self.hass = hass
         self._auth = hass.data[DOMAIN][entry.entry_id][AUTH]
         self.listeners: list[CALLBACK_TYPE] = []
-        self._data_classes: dict = {}
+        self.data_classes: dict = {}
         self.data = {}
         self._queue = deque()
         self._webhook: bool = False
@@ -88,7 +88,7 @@ class NetatmoDataHandler:
         for data_class in islice(self._queue, 0, BATCH_SIZE):
             if data_class[NEXT_SCAN] > time():
                 continue
-            self._data_classes[data_class["name"]][NEXT_SCAN] = (
+            self.data_classes[data_class["name"]][NEXT_SCAN] = (
                 time() + data_class["interval"]
             )
 
@@ -99,8 +99,8 @@ class NetatmoDataHandler:
     @callback
     def async_force_update(self, data_class_entry):
         """Prioritize data retrieval for given data class entry."""
-        self._data_classes[data_class_entry][NEXT_SCAN] = time()
-        self._queue.rotate(-(self._queue.index(self._data_classes[data_class_entry])))
+        self.data_classes[data_class_entry][NEXT_SCAN] = time()
+        self._queue.rotate(-(self._queue.index(self.data_classes[data_class_entry])))
 
     async def async_cleanup(self):
         """Clean up the Netatmo data handler."""
@@ -140,7 +140,7 @@ class NetatmoDataHandler:
             _LOGGER.debug(err)
             return
 
-        for update_callback in self._data_classes[data_class_entry]["subscriptions"]:
+        for update_callback in self.data_classes[data_class_entry]["subscriptions"]:
             if update_callback:
                 update_callback()
 
@@ -148,13 +148,11 @@ class NetatmoDataHandler:
         self, data_class_name, data_class_entry, update_callback, **kwargs
     ):
         """Register data class."""
-        if data_class_entry in self._data_classes:
-            self._data_classes[data_class_entry]["subscriptions"].append(
-                update_callback
-            )
+        if data_class_entry in self.data_classes:
+            self.data_classes[data_class_entry]["subscriptions"].append(update_callback)
             return
 
-        self._data_classes[data_class_entry] = {
+        self.data_classes[data_class_entry] = {
             "name": data_class_entry,
             "interval": DEFAULT_INTERVALS[data_class_name],
             NEXT_SCAN: time() + DEFAULT_INTERVALS[data_class_name],
@@ -168,22 +166,22 @@ class NetatmoDataHandler:
 
         await self.async_fetch_data(data_class_entry)
 
-        self._queue.append(self._data_classes[data_class_entry])
+        self._queue.append(self.data_classes[data_class_entry])
         _LOGGER.debug("Data class %s added", data_class_entry)
 
     async def unregister_data_class(self, data_class_entry, update_callback):
         """Unregister data class."""
-        if data_class_entry not in self._data_classes:
+        if data_class_entry not in self.data_classes:
             return
 
-        if update_callback not in self._data_classes[data_class_entry]["subscriptions"]:
+        if update_callback not in self.data_classes[data_class_entry]["subscriptions"]:
             return
 
-        self._data_classes[data_class_entry]["subscriptions"].remove(update_callback)
+        self.data_classes[data_class_entry]["subscriptions"].remove(update_callback)
 
-        if not self._data_classes[data_class_entry].get("subscriptions"):
-            self._queue.remove(self._data_classes[data_class_entry])
-            self._data_classes.pop(data_class_entry)
+        if not self.data_classes[data_class_entry].get("subscriptions"):
+            self._queue.remove(self.data_classes[data_class_entry])
+            self.data_classes.pop(data_class_entry)
             self.data.pop(data_class_entry)
             _LOGGER.debug("Data class %s removed", data_class_entry)
 
