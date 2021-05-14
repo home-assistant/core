@@ -115,7 +115,7 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
             if self._description["device_class"] == DEVICE_CLASS_TEMPERATURE:
                 return cast(float, self._sensor_data["Value"])
             if self.kind == "UVIndex":
-                return cast(int, self._sensor_data)
+                return cast(int, self._sensor_data["Value"])
         if self.kind in ["Grass", "Mold", "Ragweed", "Tree", "Ozone"]:
             return cast(int, self._sensor_data["Value"])
         if self.kind == "Ceiling":
@@ -158,13 +158,9 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
         """Return the state attributes."""
         if self.forecast_day is not None:
             if self.kind in ["WindDay", "WindNight", "WindGustDay", "WindGustNight"]:
-                self._attrs["direction"] = self.coordinator.data[ATTR_FORECAST][
-                    self.forecast_day
-                ][self.kind]["Direction"]["English"]
+                self._attrs["direction"] = self._sensor_data["Direction"]["English"]
             elif self.kind in ["Grass", "Mold", "Ragweed", "Tree", "UVIndex", "Ozone"]:
-                self._attrs["level"] = self.coordinator.data[ATTR_FORECAST][
-                    self.forecast_day
-                ][self.kind]["Category"]
+                self._attrs["level"] = self._sensor_data["Category"]
             return self._attrs
         if self.kind == "UVIndex":
             self._attrs["level"] = self.coordinator.data["UVIndexText"]
