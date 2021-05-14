@@ -79,6 +79,9 @@ async def async_setup_entry(hass, entry):
 
     results = await asyncio.gather(*init_data_update_tasks, return_exceptions=True)
     if all(isinstance(result, Exception) for result in results):
+        # The IQVIA API can be selectively flaky, meaning that any number of the setup
+        # API calls could fail. We only retry integration setup if *all* of the initial
+        # API calls fail:
         raise ConfigEntryNotReady()
 
     hass.data[DOMAIN].setdefault(DATA_COORDINATOR, {})[entry.entry_id] = coordinators
