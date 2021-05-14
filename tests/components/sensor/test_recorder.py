@@ -37,17 +37,13 @@ def test_compile_hourly_statistics(hass_recorder):
     """Test compiling hourly statistics."""
     # TODO: Test what happens if state is unchanged, or if state is unavailable
     hass = hass_recorder()
+    recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
     assert dict(states) == dict(hist)
 
-    hass.services.call(
-        "recorder",
-        "statistics",
-        {"period": "hourly", "start": zero},
-        blocking=True,
-    )
+    recorder.do_adhoc_statistics(period="hourly", start=zero)
     wait_recording_done(hass)
     stats = statistics_during_period(hass, zero)
     assert stats == {

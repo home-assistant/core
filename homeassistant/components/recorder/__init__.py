@@ -47,13 +47,7 @@ from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 
 from . import history, migration, purge, statistics
-from .const import (
-    CONF_DB_INTEGRITY_CHECK,
-    DATA_INSTANCE,
-    DOMAIN,
-    SQLITE_URL_PREFIX,
-    STATISTIC_PERIODS,
-)
+from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, DOMAIN, SQLITE_URL_PREFIX
 from .models import Base, Events, RecorderRuns, States
 from .pool import RecorderPool
 from .util import (
@@ -256,23 +250,6 @@ def _async_register_services(hass, instance):
 
     hass.services.async_register(
         DOMAIN, SERVICE_PURGE, async_handle_purge_service, schema=SERVICE_PURGE_SCHEMA
-    )
-
-    async def async_handle_statistics_service(service):
-        """Handle calls to the statistics service."""
-        instance.do_adhoc_statistics(**service.data)
-
-    # Register a service for testing purpose
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_STATISTICS,
-        async_handle_statistics_service,
-        schema=vol.Schema(
-            {
-                vol.Required("period"): vol.In(STATISTIC_PERIODS),
-                vol.Optional("start"): cv.datetime,
-            }
-        ),
     )
 
     async def async_handle_enable_sevice(service):
