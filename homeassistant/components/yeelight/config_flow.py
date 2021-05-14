@@ -61,7 +61,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if progress.get("context", {}).get(CONF_HOST) == self._discovered_ip:
                 return self.async_abort(reason="already_in_progress")
 
-        self._discovered_model = await self._async_try_connect(self._discovered_ip)
+        try:
+            self._discovered_model = await self._async_try_connect(self._discovered_ip)
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+
         if not self.unique_id:
             return self.async_abort(reason="cannot_connect")
 
