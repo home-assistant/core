@@ -119,7 +119,7 @@ aiohomekit==0.2.61
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==2.4.0
+aiohue==2.4.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
