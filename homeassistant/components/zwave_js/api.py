@@ -33,6 +33,7 @@ from homeassistant.components.websocket_api.const import (
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -1126,6 +1127,8 @@ class FirmwareUploadView(HomeAssistantView):
         self, request: web.Request, config_entry_id: str, node_id: str
     ) -> web.Response:
         """Handle upload."""
+        if not request["hass_user"].is_admin:
+            raise Unauthorized()
         hass = request.app["hass"]
         if config_entry_id not in hass.data[DOMAIN]:
             raise web_exceptions.HTTPBadRequest
