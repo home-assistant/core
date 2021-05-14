@@ -1,11 +1,13 @@
 """Example integration using DataUpdateCoordinator."""
 import logging
 
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ASSET_VALUE_BASE,
     ASSET_VALUE_CURRENCIES,
+    ATTRIBUTION,
     CONF_ASSET_TICKERS,
     CONF_BALANCES,
     CONF_OPEN_ORDERS,
@@ -82,7 +84,7 @@ class Ticker(CoordinatorEntity):
         return self._icon
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return additional sensor state attributes."""
         return {
             "symbol": self._symbol,
@@ -93,7 +95,7 @@ class Ticker(CoordinatorEntity):
             "currency": self._get_data_property("base"),
             "quote_asset": self._get_data_property("quote"),
             "unit_of_measurement": self.unit_of_measurement,
-            "source": "Bitvavo",
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
 
@@ -142,7 +144,7 @@ class Balance(CoordinatorEntity):
         return self._icon
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return additional sensor state attributes."""
         return {
             "available": self._get_data_property("available"),
@@ -151,7 +153,7 @@ class Balance(CoordinatorEntity):
                 self._get_data_property("asset_value_in_base_asset")
             ),
             "unit_of_measurement": self._get_data_property("symbol"),
-            "source": "Bitvavo",
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
 
@@ -170,10 +172,10 @@ class Order(CoordinatorEntity):
         return self._icon
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return additional sensor state attributes."""
         return {
-            "source": "Bitvavo",
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
 
@@ -210,6 +212,13 @@ class OpenOrder(Order):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return "Orders"
+
+    @property
+    def extra_state_attributes(self):
+        """Return additional sensor state attributes."""
+        return {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
 
 
 class TotalAssetValue(CoordinatorEntity):
@@ -277,6 +286,6 @@ class TotalAssetValue(CoordinatorEntity):
     def extra_state_attributes(self):
         """Return additional sensor state attributes."""
         return {
-            "note": f"Value is based on the last {self._currency}-{ASSET_VALUE_BASE} price of every coin in balance",
-            "source": "Bitvavo",
+            "note": f"Value is based on the last {self._currency}-{ASSET_VALUE_BASE} price of all coins in balance",
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }

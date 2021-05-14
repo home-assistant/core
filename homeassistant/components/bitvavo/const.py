@@ -27,6 +27,7 @@ DEFAULT_COIN_ICON = "mdi:currency-usd"
 
 ASSET_VALUE_CURRENCIES = {"USDT", "EUR", "BTC"}
 ASSET_VALUE_BASE = "EUR"
+ATTRIBUTION = "Bitvavo.com"
 
 # Setup
 SCAN_INTERVAL = timedelta(seconds=20)
