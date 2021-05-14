@@ -323,23 +323,31 @@ async def test_send_key_connection_closed_retry_succeed(
     hass: HomeAssistant, remote: Mock
 ):
     """Test retry on connection closed."""
-    await setup_samsungtv(hass, MOCK_CONFIG)
-    remote.control = Mock(
-        side_effect=[exceptions.ConnectionClosed("Boom"), DEFAULT_MOCK, DEFAULT_MOCK]
-    )
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
-    state = hass.states.get(ENTITY_ID)
-    # key because of retry two times and update called
-    assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [
-        call("KEY_VOLUP"),
-        call("KEY_VOLUP"),
-    ]
-    assert remote.close.call_count == 1
-    assert remote.close.call_args_list == [call()]
-    assert state.state == STATE_ON
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        return_value="fake_host",
+    ):
+        await setup_samsungtv(hass, MOCK_CONFIG)
+        remote.control = Mock(
+            side_effect=[
+                exceptions.ConnectionClosed("Boom"),
+                DEFAULT_MOCK,
+                DEFAULT_MOCK,
+            ]
+        )
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+        state = hass.states.get(ENTITY_ID)
+        # key because of retry two times and update called
+        assert remote.control.call_count == 2
+        assert remote.control.call_args_list == [
+            call("KEY_VOLUP"),
+            call("KEY_VOLUP"),
+        ]
+        assert remote.close.call_count == 1
+        assert remote.close.call_args_list == [call()]
+        assert state.state == STATE_ON
 
 
 async def test_send_key_unhandled_response(hass: HomeAssistant, remote: Mock):
