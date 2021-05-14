@@ -19,6 +19,7 @@ from homeassistant.components.yeelight import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
+from homeassistant.components.yeelight.config_flow import CannotConnect
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
@@ -322,6 +323,15 @@ async def test_discovered_by_homekit_and_dhcp(hass):
         )
     assert result3["type"] == RESULT_TYPE_ABORT
     assert result3["reason"] == "already_in_progress"
+
+    with patch(f"{MODULE_CONFIG_FLOW}.yeelight.Bulb", side_effect=CannotConnect):
+        result3 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data={"ip": "1.2.3.5", "macaddress": "00:00:00:00:00:01"},
+        )
+    assert result3["type"] == RESULT_TYPE_ABORT
+    assert result3["reason"] == "cannot_connect"
 
 
 @pytest.mark.parametrize(
