@@ -1,30 +1,60 @@
 join:
+  name: Join
   description: Group player together.
   fields:
     master:
+      name: Master
       description: Entity ID of the player that should become the master of the group.
+      required: true
       example: "media_player.bluesound_livingroom"
+      selector:
+        entity:
+          integration: bluesound
+          domain: media_player
     entity_id:
-      description: Name(s) of entities that will coordinate the grouping. Platform dependent.
+      name: Entity
+      description: Name of entity that will coordinate the grouping. Platform dependent.
       example: "media_player.bluesound_livingroom"
+      selector:
+        entity:
+          integration: bluesound
+          domain: media_player
 
 unjoin:
+  name: Unjoin
   description: Unjoin the player from a group.
   fields:
     entity_id:
-      description: Name(s) of entities that will be unjoined from their group. Platform dependent.
+      name: Entity
+      description: Name of entity that will be unjoined from their group. Platform dependent.
       example: "media_player.bluesound_livingroom"
+      selector:
+        entity:
+          integration: bluesound
+          domain: media_player
 
 set_sleep_timer:
+  name: Set sleep timer
   description: "Set a Bluesound timer. It will increase timer in steps: 15, 30, 45, 60, 90, 0"
   fields:
     entity_id:
+      name: Entity
       description: Name(s) of entities that will have a timer set.
       example: "media_player.bluesound_livingroom"
+      selector:
+        entity:
+          integration: bluesound
+          domain: media_player
 
 clear_sleep_timer:
+  name: Clear sleep timer
   description: Clear a Bluesound timer.
   fields:
     entity_id:
+      name: Entity
       description: Name(s) of entities that will have the timer cleared.
       example: "media_player.bluesound_livingroom"
+      selector:
+        entity:
+          integration: bluesound
+          domain: media_player
