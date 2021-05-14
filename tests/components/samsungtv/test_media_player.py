@@ -4,7 +4,6 @@ from datetime import timedelta
 import logging
 from unittest.mock import DEFAULT as DEFAULT_MOCK, Mock, PropertyMock, call, patch
 
-import pytest
 from samsungctl import exceptions
 from samsungtvws.exceptions import ConnectionFailure
 from websocket import WebSocketException
@@ -25,6 +24,9 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.samsungtv.const import (
     CONF_ON_ACTION,
     DOMAIN as SAMSUNGTV_DOMAIN,
+    METHOD_WEBSOCKET,
+    TIMEOUT_REQUEST,
+    TIMEOUT_WEBSOCKET,
 )
 from homeassistant.components.samsungtv.media_player import SUPPORT_SAMSUNGTV
 from homeassistant.const import (
@@ -53,7 +55,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+
+from . import setup_samsungtv
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -65,6 +68,7 @@ MOCK_CONFIG = {
             CONF_NAME: "fake",
             CONF_PORT: 55000,
             CONF_ON_ACTION: [{"delay": "00:00:01"}],
+            CONF_METHOD: METHOD_WEBSOCKET,
         }
     ]
 }
@@ -76,6 +80,7 @@ MOCK_CONFIGWS = {
             CONF_PORT: 8001,
             CONF_TOKEN: "123456789",
             CONF_ON_ACTION: [{"delay": "00:00:01"}],
+            CONF_METHOD: METHOD_WEBSOCKET,
         }
     ]
 }
@@ -83,14 +88,14 @@ MOCK_CALLS_WS = {
     "host": "fake",
     "port": 8002,
     "token": None,
-    "timeout": 31,
+    "timeout": TIMEOUT_REQUEST,
     "name": "HomeAssistant",
 }
 MOCK_CALLS_DEVICEINFO = {
     "host": "fake",
     "port": 8002,
     "token": "987654321",
-    "timeout": 8,
+    "timeout": TIMEOUT_WEBSOCKET,
     "name": "HomeAssistant",
 }
 
@@ -106,69 +111,21 @@ MOCK_CALLS_ENTRY_WS = {
     "host": "fake",
     "name": "HomeAssistant",
     "port": 8001,
-    "timeout": 8,
+    "timeout": TIMEOUT_WEBSOCKET,
     "token": "abcde",
 }
 
 ENTITY_ID_NOTURNON = f"{DOMAIN}.fake_noturnon"
 MOCK_CONFIG_NOTURNON = {
     SAMSUNGTV_DOMAIN: [
-        {CONF_HOST: "fake_noturnon", CONF_NAME: "fake_noturnon", CONF_PORT: 55000}
+        {
+            CONF_HOST: "fake_noturnon",
+            CONF_NAME: "fake_noturnon",
+            CONF_PORT: 55000,
+            CONF_METHOD: METHOD_WEBSOCKET,
+        }
     ]
 }
-
-
-@pytest.fixture(name="remote")
-def remote_fixture():
-    """Patch the samsungctl Remote."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.Remote"
-    ) as remote_class, patch(
-        "homeassistant.components.samsungtv.config_flow.gethostbyname"
-    ):
-        remote = Mock()
-        remote.__enter__ = Mock()
-        remote.__exit__ = Mock()
-        remote_class.return_value = remote
-        yield remote
-
-
-@pytest.fixture(name="remotews")
-def remotews_fixture():
-    """Patch the samsungtvws SamsungTVWS."""
-    with patch(
-        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
-    ) as remote_class, patch(
-        "homeassistant.components.samsungtv.config_flow.gethostbyname"
-    ):
-        remote = Mock()
-        remote.__enter__ = Mock()
-        remote.__exit__ = Mock()
-        remote.rest_device_info.return_value = {"device": {"type": "Samsung SmartTV"}}
-        remote_class.return_value = remote
-        remote_class().__enter__().token = "FAKE_TOKEN"
-        yield remote
-
-
-@pytest.fixture(name="delay")
-def delay_fixture():
-    """Patch the delay script function."""
-    with patch(
-        "homeassistant.components.samsungtv.media_player.Script.async_run"
-    ) as delay:
-        yield delay
-
-
-@pytest.fixture
-def mock_now():
-    """Fixture for dtutil.now."""
-    return dt_util.utcnow()
-
-
-async def setup_samsungtv(hass: HomeAssistant, config: dict):
-    """Set up mock Samsung TV."""
-    await async_setup_component(hass, SAMSUNGTV_DOMAIN, config)
-    await hass.async_block_till_done()
 
 
 async def test_setup_with_turnon(hass: HomeAssistant, remote: Mock):
@@ -188,7 +145,7 @@ async def test_setup_websocket(hass: HomeAssistant, remotews: Mock, mock_now: Mo
     with patch(
         "homeassistant.components.samsungtv.bridge.SamsungTVWS"
     ) as remote_class, patch(
-        "homeassistant.components.samsungtv.config_flow.gethostbyname"
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname"
     ):
         enter = Mock()
         type(enter).token = PropertyMock(return_value="987654321")

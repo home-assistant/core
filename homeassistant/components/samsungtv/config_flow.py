@@ -65,7 +65,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Samsung TV config flow."""
 
     VERSION = 2
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize flow."""
@@ -145,7 +144,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
         self._model = dev_info.get("modelName")
         self._manufacturer = "Samsung"
-        self._name = dev_info.get("name").replace("[TV]", "")
+        self._name = dev_info.get("name").replace("[TV] ", "")
         self._title = f"{self._name} ({self._model})"
         if dev_info.get("networkType") == "wireless":
             self._mac = dev_info.get("wifiMac")
