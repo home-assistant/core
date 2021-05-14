@@ -14,6 +14,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_NIGHT,
     SUPPORT_ALARM_TRIGGER,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ARMING_TIME,
     CONF_CODE,
@@ -31,7 +32,7 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -145,6 +146,37 @@ PLATFORM_SCHEMA = vol.Schema(
         _state_validator,
     )
 )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
+    async_add_entities(
+        [
+            ManualAlarm(
+                hass,
+                entry.data[CONF_NAME],
+                entry.data.get(CONF_CODE),
+                entry.data.get(CONF_CODE_TEMPLATE),
+                entry.data.get(CONF_CODE_ARM_REQUIRED),
+                entry.data.get(CONF_DISARM_AFTER_TRIGGER, DEFAULT_DISARM_AFTER_TRIGGER),
+                {
+                    state: {
+                        delay_name: datetime.timedelta(
+                            seconds=entry.data[f"{state}_{delay_name}"]
+                        )
+                        for (delay_name, allowed_states) in [
+                            (CONF_DELAY_TIME, SUPPORTED_PRETRIGGER_STATES),
+                            (CONF_TRIGGER_TIME, SUPPORTED_PRETRIGGER_STATES),
+                            (CONF_ARMING_TIME, SUPPORTED_ARMING_STATES),
+                        ]
+                        if state in allowed_states
+                    }
+                    for state in SUPPORTED_STATES
+                },
+            )
+        ]
+    )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

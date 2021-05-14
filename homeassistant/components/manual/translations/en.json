@@ -1,0 +1,34 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Set up the Manual Alarm",
+                "data": {
+                    "name": "Name",
+                    "code": "Code",
+                    "code_template": "Code Template",
+                    "code_arm_required": "Code Arm Required",
+                    "disarm_after_trigger": "Disarm After Trigger",
+                    "disarmed_delay_time": "Disarmed Delay Time",
+                    "disarmed_trigger_time": "Disarmed Trigger Time",
+                    "disarmed_arming_time": "Disarmed Arming Time",
+                    "armed_away_delay_time": "Armed Away Delay Time",
+                    "armed_away_trigger_time": "Armed Away Trigger Time",
+                    "armed_away_arming_time": "Armed Away Arming Time",
+                    "armed_home_delay_time": "Armed Home Delay Time",
+                    "armed_home_trigger_time": "Armed Home Trigger Time",
+                    "armed_home_arming_time": "Armed Home Arming Time",
+                    "armed_night_delay_time": "Armed Night Delay Time",
+                    "armed_night_trigger_time": "Armed Night Trigger Time",
+                    "armed_night_arming_time": "Armed Night Arming Time",
+                    "armed_custom_bypass_delay_time": "Armed Custom Bypass Delay Time",
+                    "armed_custom_bypass_trigger_time": "Armed Custom Bypass Trigger Time",
+                    "armed_custom_bypass_arming_time": "Armed Custom Bypass Arming Time",
+                    "triggered_delay_time": "Triggered Delay Time",
+                    "triggered_trigger_time": "Triggered Trigger Time",
+                    "triggered_arming_time": "Triggered Arming Time"
+                }
+            }
+        }
+    }
+}
