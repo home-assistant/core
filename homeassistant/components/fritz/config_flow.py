@@ -22,7 +22,7 @@ from .const import (
     DEFAULT_PORT,
     DOMAIN,
     ERROR_AUTH_INVALID,
-    ERROR_CONNECTION_ERROR,
+    ERROR_CANNOT_CONNECT,
     ERROR_UNKNOWN,
 )
 
@@ -60,7 +60,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         except FritzSecurityError:
             return ERROR_AUTH_INVALID
         except FritzConnectionException:
-            return ERROR_CONNECTION_ERROR
+            return ERROR_CANNOT_CONNECT
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return ERROR_UNKNOWN
