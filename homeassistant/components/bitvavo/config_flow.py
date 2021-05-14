@@ -1,6 +1,8 @@
 """Config flow for Bitvavo integration."""
+from __future__ import annotations
+
 import logging
-from typing import Dict, List, Optional
+from typing import List
 
 from bitvavo.BitvavoClient import BitvavoClient
 from bitvavo.BitvavoExceptions import BitvavoException
@@ -25,7 +27,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-def _markets_schema(markets: Optional[List] = None):
+def _markets_schema(markets: List | None):
     """Markets selection schema."""
     markets_dict = {}
 
@@ -35,7 +37,7 @@ def _markets_schema(markets: Optional[List] = None):
     return vol.Schema({vol.Required(CONF_MARKETS): cv.multi_select(markets_dict)})
 
 
-async def validate_input(hass: HomeAssistant, data: Dict):
+async def validate_input(hass: HomeAssistant, data: dict):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -80,7 +82,7 @@ class BitvavoConfigFlow(ConfigFlow, domain=DOMAIN):
         self.markets = None
         self.balances = None
 
-    async def async_step_user(self, user_input: Optional[Dict] = None):
+    async def async_step_user(self, user_input: dict | None = None):
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -102,7 +104,7 @@ class BitvavoConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_markets(self, user_input: Optional[Dict] = None):
+    async def async_step_markets(self, user_input: dict | None = None):
         """Handle the picking of the markets."""
         errors = {}
 
