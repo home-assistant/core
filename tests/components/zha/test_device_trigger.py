@@ -8,7 +8,7 @@ import zigpy.zcl.clusters.general as general
 
 import homeassistant.components.automation as automation
 import homeassistant.components.zha.core.device as zha_core_device
-from homeassistant.helpers.device_registry import async_get_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -19,7 +19,7 @@ from tests.common import (
     async_get_device_automations,
     async_mock_service,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 ON = 1
 OFF = 0
@@ -86,7 +86,7 @@ async def test_triggers(hass, mock_devices):
 
     ieee_address = str(zha_device.ieee)
 
-    ha_device_registry = await async_get_registry(hass)
+    ha_device_registry = dr.async_get(hass)
     reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
     triggers = await async_get_device_automations(hass, "trigger", reg_device.id)
@@ -144,7 +144,7 @@ async def test_no_triggers(hass, mock_devices):
     _, zha_device = mock_devices
     ieee_address = str(zha_device.ieee)
 
-    ha_device_registry = await async_get_registry(hass)
+    ha_device_registry = dr.async_get(hass)
     reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
     triggers = await async_get_device_automations(hass, "trigger", reg_device.id)
@@ -173,7 +173,7 @@ async def test_if_fires_on_event(hass, mock_devices, calls):
     }
 
     ieee_address = str(zha_device.ieee)
-    ha_device_registry = await async_get_registry(hass)
+    ha_device_registry = dr.async_get(hass)
     reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
     assert await async_setup_component(
@@ -282,7 +282,7 @@ async def test_exception_no_triggers(hass, mock_devices, calls, caplog):
     _, zha_device = mock_devices
 
     ieee_address = str(zha_device.ieee)
-    ha_device_registry = await async_get_registry(hass)
+    ha_device_registry = dr.async_get(hass)
     reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
     await async_setup_component(
@@ -324,7 +324,7 @@ async def test_exception_bad_trigger(hass, mock_devices, calls, caplog):
     }
 
     ieee_address = str(zha_device.ieee)
-    ha_device_registry = await async_get_registry(hass)
+    ha_device_registry = dr.async_get(hass)
     reg_device = ha_device_registry.async_get_device({("zha", ieee_address)})
 
     await async_setup_component(

@@ -16,6 +16,7 @@
                     "latitude": "Breitengrad",
                     "longitude": "L\u00e4ngengrad"
                 },
+                "description": "Richten Sie die AirNow-Luftqualit\u00e4tsintegration ein. Um den API-Schl\u00fcssel zu generieren, besuchen Sie https://docs.airnowapi.org/account/request/.",
                 "title": "AirNow"
             }
         }

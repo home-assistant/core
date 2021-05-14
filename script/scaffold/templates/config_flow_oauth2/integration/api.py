@@ -4,7 +4,7 @@ from asyncio import run_coroutine_threadsafe
 from aiohttp import ClientSession
 import my_pypi_package
 
-from homeassistant import core
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 # TODO the following two API examples are based on our suggested best practices
@@ -17,9 +17,9 @@ class ConfigEntryAuth(my_pypi_package.AbstractAuth):
 
     def __init__(
         self,
-        hass: core.HomeAssistant,
+        hass: HomeAssistant,
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
-    ):
+    ) -> None:
         """Initialize NEW_NAME Auth."""
         self.hass = hass
         self.session = oauth_session
@@ -41,7 +41,7 @@ class AsyncConfigEntryAuth(my_pypi_package.AbstractAuth):
         self,
         websession: ClientSession,
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
-    ):
+    ) -> None:
         """Initialize NEW_NAME auth."""
         super().__init__(websession)
         self._oauth_session = oauth_session

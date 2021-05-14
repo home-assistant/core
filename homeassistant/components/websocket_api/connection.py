@@ -1,6 +1,9 @@
 """Connection session."""
+from __future__ import annotations
+
 import asyncio
-from typing import Any, Callable, Dict, Hashable, Optional
+from collections.abc import Hashable
+from typing import Any, Callable
 
 import voluptuous as vol
 
@@ -26,7 +29,7 @@ class ActiveConnection:
         else:
             self.refresh_token_id = None
 
-        self.subscriptions: Dict[Hashable, Callable[[], Any]] = {}
+        self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
 
     def context(self, msg):
@@ -37,7 +40,7 @@ class ActiveConnection:
         return Context(user_id=user.id)
 
     @callback
-    def send_result(self, msg_id: int, result: Optional[Any] = None) -> None:
+    def send_result(self, msg_id: int, result: Any | None = None) -> None:
         """Send a result message."""
         self.send_message(messages.result_message(msg_id, result))
 

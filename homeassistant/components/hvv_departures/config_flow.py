@@ -11,12 +11,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 
-from .const import (  # pylint:disable=unused-import
-    CONF_FILTER,
-    CONF_REAL_TIME,
-    CONF_STATION,
-    DOMAIN,
-)
+from .const import CONF_FILTER, CONF_REAL_TIME, CONF_STATION, DOMAIN
 from .hub import GTIHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +39,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HVV."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize component."""

@@ -6,26 +6,10 @@
   "status": 4,
   "ready": true,
   "deviceClass": {
-    "basic": "Routing Slave",
-    "generic": "Entry Control",
-    "specific": "Secure Barrier Add-on",
-    "mandatorySupportedCCs": [
-      "Application Status",
-      "Association",
-      "Association Group Information",
-      "Barrier Operator",
-      "Battery",
-      "Device Reset Locally",
-      "Manufacturer Specific",
-      "Notification",
-      "Powerlevel",
-      "Security",
-      "Security 2",
-      "Supervision",
-      "Transport Service",
-      "Version",
-      "Z-Wave Plus Info"
-    ],
+    "basic": {"key": 4, "label":"Routing Slave"},
+    "generic": {"key": 64, "label":"Entry Control"},
+    "specific": {"key": 7, "label":"Secure Barrier Add-on"},
+    "mandatorySupportedCCs": [],
     "mandatoryControlCCs": []
   },
   "isListening": true,
@@ -94,6 +78,7 @@
       "userIcon": 7680
     }
   ],
+  "commandClasses": [],
   "values": [
     {
       "endpoint": 0,

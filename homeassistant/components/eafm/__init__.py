@@ -2,22 +2,16 @@
 
 from .const import DOMAIN
 
-
-async def async_setup(hass, config):
-    """Set up devices."""
-    hass.data[DOMAIN] = {}
-    return True
+PLATFORMS = ["sensor"]
 
 
 async def async_setup_entry(hass, entry):
     """Set up flood monitoring sensors for this config entry."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
-
+    hass.data.setdefault(DOMAIN, {})
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass, entry):
     """Unload flood monitoring sensors."""
-    return await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -14,8 +14,8 @@
         "flow_title": "Br\u00e1na deCONZ ZigBee ({host})",
         "step": {
             "hassio_confirm": {
-                "description": "Chcete nakonfigurovat slu\u017ebu Home Assistant pro p\u0159ipojen\u00ed k deCONZ br\u00e1n\u011b pomoc\u00ed hass.io {addon}?",
-                "title": "deCONZ Zigbee br\u00e1na prost\u0159ednictv\u00edm dopl\u0148ku Hass.io"
+                "description": "Chcete nakonfigurovat slu\u017ebu Home Assistant pro p\u0159ipojen\u00ed k deCONZ br\u00e1n\u011b pomoc\u00ed dopl\u0148ku {addon}?",
+                "title": "deCONZ Zigbee br\u00e1na prost\u0159ednictv\u00edm Home Assistant dopl\u0148ku"
             },
             "link": {
                 "description": "Odemkn\u011bte br\u00e1nu deCONZ pro registraci v Home Assistant.\n\n 1. P\u0159ejd\u011bte na Nastaven\u00ed deCONZ - > Br\u00e1na - > Pokro\u010dil\u00e9\n 2. Stiskn\u011bte tla\u010d\u00edtko \"Ov\u011b\u0159it aplikaci\"",
@@ -42,6 +42,10 @@
             "button_2": "Druh\u00e9 tla\u010d\u00edtko",
             "button_3": "T\u0159et\u00ed tla\u010d\u00edtko",
             "button_4": "\u010ctvrt\u00e9 tla\u010d\u00edtko",
+            "button_5": "P\u00e1t\u00e9 tla\u010d\u00edtko",
+            "button_6": "\u0160est\u00e9 tla\u010d\u00edtko",
+            "button_7": "Sedm\u00e9 tla\u010d\u00edtko",
+            "button_8": "Osm\u00e9 tla\u010d\u00edtko",
             "close": "Zav\u0159\u00edt",
             "dim_down": "Sn\u00ed\u017eit ztlumen\u00ed",
             "dim_up": "Zv\u00fd\u0161it ztlumen\u00ed",

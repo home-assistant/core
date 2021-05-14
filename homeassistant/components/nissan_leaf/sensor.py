@@ -1,6 +1,7 @@
 """Battery Charge and Range Support for the Nissan Leaf."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util.distance import LENGTH_KILOMETERS, LENGTH_MILES
@@ -35,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devices, True)
 
 
-class LeafBatterySensor(LeafEntity):
+class LeafBatterySensor(LeafEntity, SensorEntity):
     """Nissan Leaf Battery Sensor."""
 
     @property
@@ -65,7 +66,7 @@ class LeafBatterySensor(LeafEntity):
         return icon_for_battery_level(battery_level=self.state, charging=chargestate)
 
 
-class LeafRangeSensor(LeafEntity):
+class LeafRangeSensor(LeafEntity, SensorEntity):
     """Nissan Leaf Range Sensor."""
 
     def __init__(self, car, ac_on):

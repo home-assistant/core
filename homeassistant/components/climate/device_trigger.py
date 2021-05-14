@@ -1,5 +1,5 @@
 """Provides device automations for Climate."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -58,7 +58,7 @@ CURRENT_TRIGGER_SCHEMA = vol.All(
 TRIGGER_SCHEMA = vol.Any(HVAC_MODE_TRIGGER_SCHEMA, CURRENT_TRIGGER_SCHEMA)
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Climate devices."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = []
@@ -71,12 +71,16 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
         state = hass.states.get(entry.entity_id)
 
         # Add triggers for each entity that belongs to this integration
+        base_trigger = {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+
         triggers.append(
             {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
+                **base_trigger,
                 CONF_TYPE: "hvac_mode_changed",
             }
         )
@@ -84,10 +88,7 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
         if state and const.ATTR_CURRENT_TEMPERATURE in state.attributes:
             triggers.append(
                 {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
+                    **base_trigger,
                     CONF_TYPE: "current_temperature_changed",
                 }
             )
@@ -95,10 +96,7 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
         if state and const.ATTR_CURRENT_HUMIDITY in state.attributes:
             triggers.append(
                 {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
+                    **base_trigger,
                     CONF_TYPE: "current_humidity_changed",
                 }
             )
@@ -113,7 +111,6 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
     trigger_type = config[CONF_TYPE]
 
     if trigger_type == "hvac_mode_changed":

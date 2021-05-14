@@ -28,9 +28,11 @@ python3 -m pip install -e . --constraint homeassistant/package_constraints.txt
 
 hass --script ensure_config -c config
 
+if ! grep -R "logger" config/configuration.yaml >> /dev/null;then
 echo "
 logger:
   default: info
   logs:
     homeassistant.components.cloud: debug
 " >> config/configuration.yaml
+fi

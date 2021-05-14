@@ -1,5 +1,4 @@
 """Support for the (unofficial) Tado API."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -31,20 +30,12 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-TADO_COMPONENTS = ["binary_sensor", "sensor", "climate", "water_heater"]
+PLATFORMS = ["binary_sensor", "sensor", "climate", "water_heater"]
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
-SCAN_INTERVAL = timedelta(seconds=15)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Tado component."""
-
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -86,16 +77,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     update_listener = entry.add_update_listener(_async_update_listener)
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA: tadoconnector,
         UPDATE_TRACK: update_track,
         UPDATE_LISTENER: update_listener,
     }
 
-    for component in TADO_COMPONENTS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -115,14 +104,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in TADO_COMPONENTS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     hass.data[DOMAIN][entry.entry_id][UPDATE_TRACK]()
     hass.data[DOMAIN][entry.entry_id][UPDATE_LISTENER]()
@@ -144,11 +126,13 @@ class TadoConnector:
         self._fallback = fallback
 
         self.home_id = None
+        self.home_name = None
         self.tado = None
         self.zones = None
         self.devices = None
         self.data = {
             "device": {},
+            "weather": {},
             "zone": {},
         }
 
@@ -164,7 +148,9 @@ class TadoConnector:
         # Load zones and devices
         self.zones = self.tado.getZones()
         self.devices = self.tado.getDevices()
-        self.home_id = self.tado.getMe()["homes"][0]["id"]
+        tado_home = self.tado.getMe()["homes"][0]
+        self.home_id = tado_home["id"]
+        self.home_name = tado_home["name"]
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -173,6 +159,11 @@ class TadoConnector:
             self.update_sensor("device", device["shortSerialNo"])
         for zone in self.zones:
             self.update_sensor("zone", zone["id"])
+        self.data["weather"] = self.tado.getWeather()
+        dispatcher_send(
+            self.hass,
+            SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "weather", "data"),
+        )
 
     def update_sensor(self, sensor_type, sensor):
         """Update the internal data from Tado."""

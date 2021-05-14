@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "link_local_address": "Tautan alamat lokal tidak didukung",
+            "not_doorbird_device": "Perangkat ini bukan DoorBird"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "flow_title": "DoorBird {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nama Perangkat",
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "title": "Hubungkan ke DoorBird"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "events": "Daftar event yang dipisahkan koma."
+                },
+                "description": "Tambahkan nama event yang dipisahkan koma untuk setiap event yang ingin dilacak. Setelah memasukkannya di sini, gunakan aplikasi DoorBird untuk menetapkannya ke event tertentu. Baca dokumentasi di https://www.home-assistant.io/integrations/doorbird/#events. Contoh: somebody_pressed_the_button, motion"
+            }
+        }
+    }
+}

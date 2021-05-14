@@ -34,6 +34,7 @@ from .const import (
     DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    GDM_DEBOUNCER,
     GDM_SCANNER,
     PLAYER_SOURCE,
     PLEX_NEW_MP_SIGNAL,
@@ -189,7 +190,7 @@ class PlexServer:
                 _connect_with_url()
             except requests.exceptions.SSLError as error:
                 while error and not isinstance(error, ssl.SSLCertVerificationError):
-                    error = error.__context__  # pylint: disable=no-member
+                    error = error.__context__
                 if isinstance(error, ssl.SSLCertVerificationError):
                     domain = urlparse(self._url).netloc.split(":")[0]
                     if domain.endswith("plex.direct") and error.args[0].startswith(
@@ -213,21 +214,27 @@ class PlexServer:
 
         try:
             system_accounts = self._plex_server.systemAccounts()
+            shared_users = self.account.users() if self.account else []
         except Unauthorized:
             _LOGGER.warning(
                 "Plex account has limited permissions, shared account filtering will not be available"
             )
         else:
-            self._accounts = [
-                account.name for account in system_accounts if account.name
-            ]
+            self._accounts = []
+            for user in shared_users:
+                for shared_server in user.servers:
+                    if shared_server.machineIdentifier == self.machine_identifier:
+                        self._accounts.append(user.title)
+
             _LOGGER.debug("Linked accounts: %s", self.accounts)
 
-            owner_account = [
-                account.name for account in system_accounts if account.accountID == 1
-            ]
+            owner_account = next(
+                (account.name for account in system_accounts if account.accountID == 1),
+                None,
+            )
             if owner_account:
-                self._owner_username = owner_account[0]
+                self._owner_username = owner_account
+                self._accounts.append(owner_account)
                 _LOGGER.debug("Server owner found: '%s'", self._owner_username)
 
         self._version = self._plex_server.version
@@ -250,11 +257,7 @@ class PlexServer:
 
     async def async_update_session(self, payload):
         """Process a session payload received from a websocket callback."""
-        try:
-            session_payload = payload["PlaySessionStateNotification"][0]
-        except KeyError:
-            await self.async_update_platforms()
-            return
+        session_payload = payload["PlaySessionStateNotification"][0]
 
         state = session_payload["state"]
         if state == "buffering":
@@ -313,9 +316,11 @@ class PlexServer:
             self.plextv_clients(),
         )
 
-    async def _async_update_platforms(self):
+    async def _async_update_platforms(self):  # noqa: C901
         """Update the platform entities."""
         _LOGGER.debug("Updating devices")
+
+        await self.hass.data[DOMAIN][GDM_DEBOUNCER]()
 
         available_clients = {}
         ignored_clients = set()
@@ -360,17 +365,20 @@ class PlexServer:
                 PLAYER_SOURCE, source
             )
 
-            if device.machineIdentifier not in ignored_clients:
-                if self.option_ignore_plexweb_clients and device.product == "Plex Web":
-                    ignored_clients.add(device.machineIdentifier)
-                    if device.machineIdentifier not in self._known_clients:
-                        _LOGGER.debug(
-                            "Ignoring %s %s: %s",
-                            "Plex Web",
-                            source,
-                            device.machineIdentifier,
-                        )
-                    return
+            if (
+                device.machineIdentifier not in ignored_clients
+                and self.option_ignore_plexweb_clients
+                and device.product == "Plex Web"
+            ):
+                ignored_clients.add(device.machineIdentifier)
+                if device.machineIdentifier not in self._known_clients:
+                    _LOGGER.debug(
+                        "Ignoring %s %s: %s",
+                        "Plex Web",
+                        source,
+                        device.machineIdentifier,
+                    )
+                return
 
             if device.machineIdentifier not in (
                 self._created_clients | ignored_clients | new_clients
@@ -389,9 +397,10 @@ class PlexServer:
                 client = PlexClient(
                     server=self._plex_server,
                     baseurl=baseurl,
+                    identifier=machine_identifier,
                     token=self._plex_server.createToken(),
                 )
-            except requests.exceptions.ConnectionError:
+            except (NotFound, requests.exceptions.ConnectionError):
                 _LOGGER.error(
                     "Direct client connection failed, will try again: %s (%s)",
                     name,
@@ -412,9 +421,11 @@ class PlexServer:
             """Connect to a plex.tv resource and return a Plex client."""
             try:
                 client = resource.connect(timeout=3)
-                _LOGGER.debug("plex.tv resource connection successful: %s", client)
+                _LOGGER.debug("Resource connection successful to plex.tv: %s", client)
             except NotFound:
-                _LOGGER.error("plex.tv resource connection failed: %s", resource.name)
+                _LOGGER.error(
+                    "Resource connection failed to plex.tv: %s", resource.name
+                )
             else:
                 client.proxyThroughServer(value=False, server=self._plex_server)
                 self._client_device_cache[client.machineIdentifier] = client

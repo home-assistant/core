@@ -26,9 +26,11 @@ from pycomfoconnect import (
 )
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_ICON,
+    ATTR_ID,
     CONF_RESOURCES,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
@@ -43,7 +45,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
 
@@ -71,8 +72,6 @@ ATTR_SUPPLY_TEMPERATURE = "supply_temperature"
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ICON = "icon"
-ATTR_ID = "id"
 ATTR_LABEL = "label"
 ATTR_MULTIPLIER = "multiplier"
 ATTR_UNIT = "unit"
@@ -258,7 +257,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class ComfoConnectSensor(Entity):
+class ComfoConnectSensor(SensorEntity):
     """Representation of a ComfoConnect sensor."""
 
     def __init__(self, name, ccb: ComfoConnectBridge, sensor_type) -> None:

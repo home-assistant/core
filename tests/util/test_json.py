@@ -153,7 +153,7 @@ def test_find_unserializable_data():
             [State("mock_domain.mock_entity", "on", {"bad": bad_data})],
             dump=partial(dumps, cls=MockJSONEncoder),
         )
-        == {"$[0](state: mock_domain.mock_entity).attributes.bad": bad_data}
+        == {"$[0](State: mock_domain.mock_entity).attributes.bad": bad_data}
     )
 
     assert (
@@ -161,5 +161,20 @@ def test_find_unserializable_data():
             [Event("bad_event", {"bad_attribute": bad_data})],
             dump=partial(dumps, cls=MockJSONEncoder),
         )
-        == {"$[0](event: bad_event).data.bad_attribute": bad_data}
+        == {"$[0](Event: bad_event).data.bad_attribute": bad_data}
+    )
+
+    class BadData:
+        def __init__(self):
+            self.bla = bad_data
+
+        def as_dict(self):
+            return {"bla": self.bla}
+
+    assert (
+        find_paths_unserializable_data(
+            BadData(),
+            dump=partial(dumps, cls=MockJSONEncoder),
+        )
+        == {"$(BadData).bla": bad_data}
     )

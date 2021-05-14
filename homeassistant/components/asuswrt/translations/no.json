@@ -1,0 +1,45 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_host": "Ugyldig vertsnavn eller IP-adresse",
+            "pwd_and_ssh": "Oppgi bare passord eller SSH-n\u00f8kkelfil",
+            "pwd_or_ssh": "Oppgi passord eller SSH-n\u00f8kkelfil",
+            "ssh_not_file": "Finner ikke SSH-n\u00f8kkelfilen",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "mode": "Modus",
+                    "name": "Navn",
+                    "password": "Passord",
+                    "port": "Port",
+                    "protocol": "Kommunikasjonsprotokoll som skal brukes",
+                    "ssh_key": "Bane til SSH-n\u00f8kkelfilen (i stedet for passord)",
+                    "username": "Brukernavn"
+                },
+                "description": "Sett \u00f8nsket parameter for \u00e5 koble til ruteren",
+                "title": "AsusWRT"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Sekunder \u00e5 vente f\u00f8r du vurderer en enhet borte",
+                    "dnsmasq": "Plasseringen i ruteren til dnsmasq.leases-filene",
+                    "interface": "Grensesnittet du vil ha statistikk fra (f.eks. Eth0, eth1 osv.)",
+                    "require_ip": "Enheter m\u00e5 ha IP (for tilgangspunktmodus)",
+                    "track_unknown": "Spor ukjente / ikke-navngitte enheter"
+                },
+                "title": "AsusWRT-alternativer"
+            }
+        }
+    }
+}

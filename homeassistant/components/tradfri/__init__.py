@@ -1,5 +1,4 @@
 """Support for IKEA Tradfri."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -10,10 +9,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import load_json
 
 from .const import (
@@ -55,7 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType):
     """Set up the Tradfri component."""
     conf = config.get(DOMAIN)
 
@@ -100,7 +100,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Create a gateway."""
     # host, identity, key, allow_tradfri_groups
     tradfri_data = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
@@ -148,10 +148,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         sw_version=gateway_info.firmware_version,
     )
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def async_keep_alive(now):
         if hass.is_stopping:
@@ -169,16 +166,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         tradfri_data = hass.data[DOMAIN].pop(entry.entry_id)
         factory = tradfri_data[FACTORY]

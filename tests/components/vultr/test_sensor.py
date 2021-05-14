@@ -73,7 +73,7 @@ class TestVultrSensorSetup(unittest.TestCase):
 
             assert setup is None
 
-        assert 5 == len(self.DEVICES)
+        assert len(self.DEVICES) == 5
 
         tested = 0
 
@@ -87,34 +87,34 @@ class TestVultrSensorSetup(unittest.TestCase):
 
             if device.unit_of_measurement == DATA_GIGABYTES:  # Test Bandwidth Used
                 if device.subscription == "576965":
-                    assert "Vultr my new server Current Bandwidth Used" == device.name
-                    assert "mdi:chart-histogram" == device.icon
-                    assert 131.51 == device.state
-                    assert "mdi:chart-histogram" == device.icon
+                    assert device.name == "Vultr my new server Current Bandwidth Used"
+                    assert device.icon == "mdi:chart-histogram"
+                    assert device.state == 131.51
+                    assert device.icon == "mdi:chart-histogram"
                     tested += 1
 
                 elif device.subscription == "123456":
-                    assert "Server Current Bandwidth Used" == device.name
-                    assert 957.46 == device.state
+                    assert device.name == "Server Current Bandwidth Used"
+                    assert device.state == 957.46
                     tested += 1
 
             elif device.unit_of_measurement == "US$":  # Test Pending Charges
 
                 if device.subscription == "576965":  # Default 'Vultr {} {}'
-                    assert "Vultr my new server Pending Charges" == device.name
-                    assert "mdi:currency-usd" == device.icon
-                    assert 46.67 == device.state
-                    assert "mdi:currency-usd" == device.icon
+                    assert device.name == "Vultr my new server Pending Charges"
+                    assert device.icon == "mdi:currency-usd"
+                    assert device.state == 46.67
+                    assert device.icon == "mdi:currency-usd"
                     tested += 1
 
                 elif device.subscription == "123456":  # Custom name with 1 {}
-                    assert "Server Pending Charges" == device.name
-                    assert "not a number" == device.state
+                    assert device.name == "Server Pending Charges"
+                    assert device.state == "not a number"
                     tested += 1
 
                 elif device.subscription == "555555":  # No {} in name
-                    assert "VPS Charges" == device.name
-                    assert 5.45 == device.state
+                    assert device.name == "VPS Charges"
+                    assert device.state == 5.45
                     tested += 1
 
         assert tested == 5
@@ -161,4 +161,4 @@ class TestVultrSensorSetup(unittest.TestCase):
         )
 
         assert no_sub_setup is None
-        assert 0 == len(self.DEVICES)
+        assert len(self.DEVICES) == 0

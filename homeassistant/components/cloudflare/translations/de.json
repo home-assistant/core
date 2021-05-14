@@ -14,18 +14,21 @@
             "records": {
                 "data": {
                     "records": "Datens\u00e4tze"
-                }
+                },
+                "title": "W\u00e4hle die Records, die aktualisiert werden sollen"
             },
             "user": {
                 "data": {
                     "api_token": "API Token"
                 },
+                "description": "F\u00fcr diese Integration ist ein API-Token erforderlich, der mit Zone: Zone: Lesen und Zone: DNS: Bearbeiten f\u00fcr alle Zonen in deinem Konto erstellt wurde.",
                 "title": "Mit Cloudflare verbinden"
             },
             "zone": {
                 "data": {
                     "zone": "Zone"
-                }
+                },
+                "title": "W\u00e4hle die Zone, die aktualisiert werden soll"
             }
         }
     }

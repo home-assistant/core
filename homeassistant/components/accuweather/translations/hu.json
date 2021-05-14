@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_api_key": "\u00c9rv\u00e9nytelen API kulcs"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API kulcs",
+                    "latitude": "Sz\u00e9less\u00e9g",
+                    "longitude": "Hossz\u00fas\u00e1g",
+                    "name": "N\u00e9v"
+                },
+                "title": "AccuWeather"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "title": "AccuWeather be\u00e1ll\u00edt\u00e1sok"
+            }
+        }
+    }
+}

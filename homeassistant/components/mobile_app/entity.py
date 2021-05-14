@@ -34,13 +34,14 @@ class MobileAppEntity(RestoreEntity):
         self._registration = entry.data
         self._unique_id = config[CONF_UNIQUE_ID]
         self._entity_type = config[ATTR_SENSOR_TYPE]
-        self.unsub_dispatcher = None
         self._name = config[CONF_NAME]
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.unsub_dispatcher = async_dispatcher_connect(
-            self.hass, SIGNAL_SENSOR_UPDATE, self._handle_update
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_SENSOR_UPDATE, self._handle_update
+            )
         )
         state = await self.async_get_last_state()
 
@@ -48,11 +49,6 @@ class MobileAppEntity(RestoreEntity):
             return
 
         self.async_restore_last_state(state)
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listener when removed."""
-        if self.unsub_dispatcher is not None:
-            self.unsub_dispatcher()
 
     @callback
     def async_restore_last_state(self, last_state):
@@ -81,7 +77,7 @@ class MobileAppEntity(RestoreEntity):
         return self._config.get(ATTR_SENSOR_DEVICE_CLASS)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return self._config[ATTR_SENSOR_ATTRIBUTES]
 

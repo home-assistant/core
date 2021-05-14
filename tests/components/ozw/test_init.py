@@ -31,7 +31,6 @@ async def test_setup_entry_without_mqtt(hass):
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="OpenZWave",
-        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
     )
     entry.add_to_hass(hass)
 
@@ -64,7 +63,6 @@ async def test_unload_entry(hass, generic_data, switch_msg, caplog):
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave",
-        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
     )
     entry.add_to_hass(hass)
     assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
@@ -112,7 +110,6 @@ async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave",
-        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         data={"integration_created_addon": False},
     )
     entry.add_to_hass(hass)
@@ -128,7 +125,6 @@ async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave",
-        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         data={"integration_created_addon": True},
     )
     entry.add_to_hass(hass)
@@ -178,7 +174,6 @@ async def test_setup_entry_with_addon(hass, get_addon_discovery_info):
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="OpenZWave",
-        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         data={"use_addon": True},
     )
     entry.add_to_hass(hass)
@@ -205,7 +200,6 @@ async def test_setup_entry_without_addon_info(hass, get_addon_discovery_info):
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="OpenZWave",
-        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         data={"use_addon": True},
     )
     entry.add_to_hass(hass)
@@ -226,7 +220,6 @@ async def test_unload_entry_with_addon(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="OpenZWave",
-        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         data={"use_addon": True},
     )
     entry.add_to_hass(hass)

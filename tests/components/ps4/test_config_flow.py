@@ -4,7 +4,7 @@ from unittest.mock import patch
 from pyps4_2ndscreen.errors import CredentialTimeout
 import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ps4
 from homeassistant.components.ps4.config_flow import LOCAL_UDP_PORT
 from homeassistant.components.ps4.const import (
@@ -101,7 +101,7 @@ async def test_full_flow_implementation(hass):
     # User Step Started, results in Step Creds
     with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "creds"
@@ -142,7 +142,7 @@ async def test_multiple_flow_implementation(hass):
     # User Step Started, results in Step Creds
     with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "creds"
@@ -194,7 +194,7 @@ async def test_multiple_flow_implementation(hass):
         return_value=[{"host-ip": MOCK_HOST}, {"host-ip": MOCK_HOST_ADDITIONAL}],
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "creds"
@@ -247,7 +247,7 @@ async def test_port_bind_abort(hass):
     with patch("pyps4_2ndscreen.Helper.port_bind", return_value=MOCK_UDP_PORT):
         reason = "port_987_bind_error"
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == reason
@@ -255,7 +255,7 @@ async def test_port_bind_abort(hass):
     with patch("pyps4_2ndscreen.Helper.port_bind", return_value=MOCK_TCP_PORT):
         reason = "port_997_bind_error"
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == reason
@@ -267,7 +267,7 @@ async def test_duplicate_abort(hass):
 
     with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "creds"
@@ -297,7 +297,7 @@ async def test_additional_device(hass):
 
     with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "creds"
@@ -370,7 +370,7 @@ async def test_no_devices_found_abort(hass):
     """Test that failure to find devices aborts flow."""
     with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "creds"
@@ -395,7 +395,7 @@ async def test_manual_mode(hass):
     """Test host specified in manual mode is passed to Step Link."""
     with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "creds"
@@ -423,7 +423,7 @@ async def test_credential_abort(hass):
     """Test that failure to get credentials aborts flow."""
     with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "creds"
@@ -441,7 +441,7 @@ async def test_credential_timeout(hass):
     """Test that Credential Timeout shows error."""
     with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "creds"
@@ -460,7 +460,7 @@ async def test_wrong_pin_error(hass):
     """Test that incorrect pin throws an error."""
     with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "creds"
@@ -492,7 +492,7 @@ async def test_device_connection_error(hass):
     """Test that device not connected or on throws an error."""
     with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "creds"
@@ -524,7 +524,7 @@ async def test_manual_mode_no_ip_error(hass):
     """Test no IP specified in manual mode throws an error."""
     with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "creds"

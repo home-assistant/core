@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 from .router import get_api
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,7 +17,6 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize Freebox config flow."""
@@ -106,6 +105,8 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry."""
         return await self.async_step_user(user_input)
 
-    async def async_step_discovery(self, discovery_info):
-        """Initialize step from discovery."""
-        return await self.async_step_user(discovery_info)
+    async def async_step_zeroconf(self, discovery_info: dict):
+        """Initialize flow from zeroconf."""
+        host = discovery_info["properties"]["api_domain"]
+        port = discovery_info["properties"]["https_port"]
+        return await self.async_step_user({CONF_HOST: host, CONF_PORT: port})

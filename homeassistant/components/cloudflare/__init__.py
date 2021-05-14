@@ -1,7 +1,8 @@
 """Update the IP addresses of your Cloudflare DNS records."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Dict
 
 from pycfdns import CloudflareUpdater
 from pycfdns.exceptions import (
@@ -9,11 +10,9 @@ from pycfdns.exceptions import (
     CloudflareConnectionException,
     CloudflareException,
 )
-import voluptuous as vol
 
-from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_EMAIL, CONF_ZONE
+from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -30,43 +29,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.deprecated(CONF_EMAIL),
-            cv.deprecated(CONF_API_KEY),
-            cv.deprecated(CONF_ZONE),
-            cv.deprecated(CONF_RECORDS),
-            vol.Schema(
-                {
-                    vol.Optional(CONF_EMAIL): cv.string,
-                    vol.Optional(CONF_API_KEY): cv.string,
-                    vol.Optional(CONF_ZONE): cv.string,
-                    vol.Optional(CONF_RECORDS): vol.All(cv.ensure_list, [cv.string]),
-                }
-            ),
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
-    """Set up the component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    if len(hass.config_entries.async_entries(DOMAIN)) > 0:
-        return True
-
-    if DOMAIN in config and CONF_API_KEY in config[DOMAIN]:
-        persistent_notification.async_create(
-            hass,
-            "Cloudflare integration now requires an API Token. Please go to the integrations page to setup.",
-            "Cloudflare Setup",
-            "cloudflare_setup",
-        )
-
-    return True
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -103,6 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     update_interval = timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
     undo_interval = async_track_time_interval(hass, update_records, update_interval)
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_UNDO_UPDATE_INTERVAL: undo_interval,
     }

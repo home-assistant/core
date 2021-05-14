@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "region": "ConnectedDrive-regio",
+                    "username": "Gebruikersnaam"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "account_options": {
+                "data": {
+                    "read_only": "Alleen-lezen (alleen sensoren en notificatie, geen uitvoering van diensten, geen vergrendeling)",
+                    "use_location": "Gebruik Home Assistant locatie voor auto locatie peilingen (vereist voor niet i3/i8 voertuigen geproduceerd voor 7/2014)"
+                }
+            }
+        }
+    }
+}

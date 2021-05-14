@@ -6,10 +6,9 @@ import re
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_MODE, HTTP_OK, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -32,9 +31,7 @@ CONF_DESTINATION = "destination"
 
 _QUERY_SCHEME = vol.Schema(
     {
-        vol.Required(CONF_MODE): vol.All(
-            cv.ensure_list, [vol.In(list(["bus", "train"]))]
-        ),
+        vol.Required(CONF_MODE): vol.All(cv.ensure_list, [vol.In(["bus", "train"])]),
         vol.Required(CONF_ORIGIN): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
     }
@@ -85,7 +82,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class UkTransportSensor(Entity):
+class UkTransportSensor(SensorEntity):
     """
     Sensor that reads the UK transport web API.
 
@@ -191,7 +188,7 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
                 self._state = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         attrs = {}
         if self._data is not None:
@@ -261,7 +258,7 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
                     self._state = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         attrs = {}
         if self._data is not None:
@@ -282,5 +279,5 @@ def _delta_mins(hhmm_time_str):
     if hhmm_datetime < now:
         hhmm_datetime += timedelta(days=1)
 
-    delta_mins = (hhmm_datetime - now).seconds // 60
+    delta_mins = (hhmm_datetime - now).total_seconds() // 60
     return delta_mins

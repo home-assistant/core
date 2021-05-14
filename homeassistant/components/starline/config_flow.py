@@ -1,5 +1,5 @@
 """Config flow to configure StarLine component."""
-from typing import Optional
+from __future__ import annotations
 
 from starline import StarlineAuth
 import voluptuous as vol
@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     _LOGGER,
     CONF_APP_ID,
     CONF_APP_SECRET,
@@ -28,15 +28,14 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a StarLine config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize flow."""
-        self._app_id: Optional[str] = None
-        self._app_secret: Optional[str] = None
-        self._username: Optional[str] = None
-        self._password: Optional[str] = None
-        self._mfa_code: Optional[str] = None
+        self._app_id: str | None = None
+        self._app_secret: str | None = None
+        self._username: str | None = None
+        self._password: str | None = None
+        self._mfa_code: str | None = None
 
         self._app_code = None
         self._app_token = None

@@ -1,5 +1,7 @@
 """Vera tests."""
-from typing import Any, Callable, Tuple
+from __future__ import annotations
+
+from typing import Any, Callable
 from unittest.mock import MagicMock
 
 import pyvera as pv
@@ -15,12 +17,12 @@ async def run_sensor_test(
     vera_component_factory: ComponentFactory,
     category: int,
     class_property: str,
-    assert_states: Tuple[Tuple[Any, Any]],
+    assert_states: tuple[tuple[Any, Any]],
     assert_unit_of_measurement: str = None,
     setup_callback: Callable[[pv.VeraController], None] = None,
 ) -> None:
     """Test generic sensor."""
-    vera_device = MagicMock(spec=pv.VeraSensor)  # type: pv.VeraSensor
+    vera_device: pv.VeraSensor = MagicMock(spec=pv.VeraSensor)
     vera_device.device_id = 1
     vera_device.vera_device_id = vera_device.device_id
     vera_device.comm_failure = False
@@ -176,7 +178,7 @@ async def test_scene_controller_sensor(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device = MagicMock(spec=pv.VeraSensor)  # type: pv.VeraSensor
+    vera_device: pv.VeraSensor = MagicMock(spec=pv.VeraSensor)
     vera_device.device_id = 1
     vera_device.vera_device_id = vera_device.device_id
     vera_device.comm_failure = False

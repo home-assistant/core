@@ -4,14 +4,14 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
         "step": {
             "user": {
                 "data": {
-                    "email": "E-mailadres",
+                    "email": "E-mail",
                     "password": "Wachtwoord"
                 },
                 "title": "Maak verbinding met uw Sense Energy Monitor"

@@ -4,10 +4,11 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/plex",
   "requirements": [
-      "plexapi==4.3.1",
-      "plexauth==0.0.6",
-      "plexwebsocket==0.0.12"
+    "plexapi==4.5.1",
+    "plexauth==0.0.6",
+    "plexwebsocket==0.0.13"
   ],
   "dependencies": ["http"],
-  "codeowners": ["@jjlawren"]
+  "codeowners": ["@jjlawren"],
+  "iot_class": "local_push"
 }

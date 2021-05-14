@@ -20,7 +20,8 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import (
     HOST,
@@ -55,7 +56,7 @@ def mock_dummy_device_from_host_light_fan():
 
 
 async def test_loading_cover(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     dummy_device_from_host_cover,
 ) -> None:
     """Test the WiLight configuration entry loading."""
@@ -64,7 +65,7 @@ async def test_loading_cover(
     assert entry
     assert entry.unique_id == WILIGHT_ID
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     # First segment of the strip
     state = hass.states.get("cover.wl000000000099_1")
@@ -77,7 +78,7 @@ async def test_loading_cover(
 
 
 async def test_open_close_cover_state(
-    hass: HomeAssistantType, dummy_device_from_host_cover
+    hass: HomeAssistant, dummy_device_from_host_cover
 ) -> None:
     """Test the change of state of the cover."""
     await setup_integration(hass)

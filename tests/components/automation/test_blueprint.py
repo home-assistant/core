@@ -84,6 +84,7 @@ async def test_notify_leaving_zone(hass):
         _hass, config, variables, _context = mock_call_action.mock_calls[0][1]
         message_tpl = config.pop("message")
         assert config == {
+            "alias": "Notify that a person has left the zone",
             "domain": "mobile_app",
             "type": "notify",
             "device_id": "abcdefgh",
@@ -155,8 +156,8 @@ async def test_motion_light(hass):
     # Turn on motion
     hass.states.async_set("binary_sensor.kitchen", "on")
     # Can't block till done because delay is active
-    # So wait 5 event loop iterations to process script
-    for _ in range(5):
+    # So wait 10 event loop iterations to process script
+    for _ in range(10):
         await asyncio.sleep(0)
 
     assert len(turn_on_calls) == 1
@@ -164,7 +165,7 @@ async def test_motion_light(hass):
     # Test light doesn't turn off if motion stays
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
 
-    for _ in range(5):
+    for _ in range(10):
         await asyncio.sleep(0)
 
     assert len(turn_off_calls) == 0
@@ -172,7 +173,7 @@ async def test_motion_light(hass):
     # Test light turns off off 120s after last motion
     hass.states.async_set("binary_sensor.kitchen", "off")
 
-    for _ in range(5):
+    for _ in range(10):
         await asyncio.sleep(0)
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=120))
@@ -183,7 +184,7 @@ async def test_motion_light(hass):
     # Test restarting the script
     hass.states.async_set("binary_sensor.kitchen", "on")
 
-    for _ in range(5):
+    for _ in range(10):
         await asyncio.sleep(0)
 
     assert len(turn_on_calls) == 2
@@ -191,7 +192,7 @@ async def test_motion_light(hass):
 
     hass.states.async_set("binary_sensor.kitchen", "off")
 
-    for _ in range(5):
+    for _ in range(10):
         await asyncio.sleep(0)
 
     hass.states.async_set("binary_sensor.kitchen", "on")

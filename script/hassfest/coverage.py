@@ -1,6 +1,7 @@
 """Validate coverage files."""
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Dict
 
 from .model import Config, Integration
 
@@ -50,7 +51,6 @@ ALLOWED_IGNORE_VIOLATIONS = {
     ("sense", "config_flow.py"),
     ("sms", "config_flow.py"),
     ("solarlog", "config_flow.py"),
-    ("somfy", "config_flow.py"),
     ("sonos", "config_flow.py"),
     ("speedtestdotnet", "config_flow.py"),
     ("spider", "config_flow.py"),
@@ -69,7 +69,7 @@ ALLOWED_IGNORE_VIOLATIONS = {
 }
 
 
-def validate(integrations: Dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config):
     """Validate coverage."""
     coverage_path = config.root / ".coveragerc"
 
@@ -105,8 +105,8 @@ def validate(integrations: Dict[str, Integration], config: Config):
 
             if (
                 not line.startswith("homeassistant/components/")
-                or not len(path.parts) == 4
-                or not path.parts[-1] == "*"
+                or len(path.parts) != 4
+                or path.parts[-1] != "*"
             ):
                 continue
 

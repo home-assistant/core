@@ -9,7 +9,7 @@
             "default": "{device_type} Plaato  seade nimega **{device_name}** on edukalt seadistatud!"
         },
         "error": {
-            "invalid_webhook_device": "Oled valinud seadme, mis ei toeta andmete saatmist veebihaagile. See on saadaval ainult Airlocki jaoks",
+            "invalid_webhook_device": "Oled valinud seadme mis ei toeta andmete saatmist veebihaagile. See on saadaval ainult Airlocki jaoks",
             "no_api_method": "Pead lisama autentimisloa v\u00f5i valima veebihaagi",
             "no_auth_token": "Pead lisama autentimisloa"
         },
@@ -24,7 +24,7 @@
             },
             "user": {
                 "data": {
-                    "device_name": "Pang oma seadmele nimi",
+                    "device_name": "Pane oma seadmele nimi",
                     "device_type": "Plaato seadme t\u00fc\u00fcp"
                 },
                 "description": "Kas alustan seadistamist?",

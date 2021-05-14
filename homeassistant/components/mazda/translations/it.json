@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "L'account \u00e8 gi\u00e0 configurato",
-            "reauth_successful": "La riautenticazione ha avuto successo"
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
             "account_locked": "Account bloccato. Per favore riprova pi\u00f9 tardi.",
@@ -11,15 +11,6 @@
             "unknown": "Errore imprevisto"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "email": "E-mail",
-                    "password": "Password",
-                    "region": "Area geografica"
-                },
-                "description": "Autenticazione non riuscita per Mazda Connected Services. Inserisci le tue credenziali attuali.",
-                "title": "Mazda Connected Services - Autenticazione non riuscita"
-            },
             "user": {
                 "data": {
                     "email": "E-mail",

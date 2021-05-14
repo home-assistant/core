@@ -1,4 +1,7 @@
 """SQLAlchemy util functions."""
+from __future__ import annotations
+
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import timedelta
 import logging
@@ -6,11 +9,19 @@ import os
 import time
 
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.orm.session import Session
 
+from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, SQLITE_URL_PREFIX
-from .models import ALL_TABLES, process_timestamp
+from .const import DATA_INSTANCE, SQLITE_URL_PREFIX
+from .models import (
+    ALL_TABLES,
+    TABLE_RECORDER_RUNS,
+    TABLE_SCHEMA_CHANGES,
+    RecorderRuns,
+    process_timestamp,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +36,9 @@ MAX_RESTART_TIME = timedelta(minutes=10)
 
 
 @contextmanager
-def session_scope(*, hass=None, session=None):
+def session_scope(
+    *, hass: HomeAssistant | None = None, session: Session | None = None
+) -> Generator[Session, None, None]:
     """Provide a transactional scope around a series of operations."""
     if session is None and hass is not None:
         session = hass.data[DATA_INSTANCE].get_session()
@@ -36,7 +49,7 @@ def session_scope(*, hass=None, session=None):
     need_rollback = False
     try:
         yield session
-        if session.transaction:
+        if session.get_transaction():
             need_rollback = True
             session.commit()
     except Exception as err:
@@ -110,19 +123,24 @@ def execute(qry, to_native=False, validate_entity_ids=True):
             time.sleep(QUERY_RETRY_WAIT)
 
 
-def validate_or_move_away_sqlite_database(dburl: str, db_integrity_check: bool) -> bool:
+def validate_or_move_away_sqlite_database(dburl: str) -> bool:
     """Ensure that the database is valid or move it away."""
-    dbpath = dburl[len(SQLITE_URL_PREFIX) :]
+    dbpath = dburl_to_path(dburl)
 
     if not os.path.exists(dbpath):
         # Database does not exist yet, this is OK
         return True
 
-    if not validate_sqlite_database(dbpath, db_integrity_check):
-        _move_away_broken_database(dbpath)
+    if not validate_sqlite_database(dbpath):
+        move_away_broken_database(dbpath)
         return False
 
     return True
+
+
+def dburl_to_path(dburl):
+    """Convert the db url into a filesystem path."""
+    return dburl[len(SQLITE_URL_PREFIX) :]
 
 
 def last_run_was_recently_clean(cursor):
@@ -149,51 +167,54 @@ def basic_sanity_check(cursor):
     """Check tables to make sure select does not fail."""
 
     for table in ALL_TABLES:
-        cursor.execute(f"SELECT * FROM {table} LIMIT 1;")  # nosec # not injection
+        if table in (TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES):
+            cursor.execute(f"SELECT * FROM {table};")  # nosec # not injection
+        else:
+            cursor.execute(f"SELECT * FROM {table} LIMIT 1;")  # nosec # not injection
 
     return True
 
 
-def validate_sqlite_database(dbpath: str, db_integrity_check: bool) -> bool:
+def validate_sqlite_database(dbpath: str) -> bool:
     """Run a quick check on an sqlite database to see if it is corrupt."""
     import sqlite3  # pylint: disable=import-outside-toplevel
 
     try:
         conn = sqlite3.connect(dbpath)
-        run_checks_on_open_db(dbpath, conn.cursor(), db_integrity_check)
+        run_checks_on_open_db(dbpath, conn.cursor())
         conn.close()
     except sqlite3.DatabaseError:
-        _LOGGER.exception("The database at %s is corrupt or malformed.", dbpath)
+        _LOGGER.exception("The database at %s is corrupt or malformed", dbpath)
         return False
 
     return True
 
 
-def run_checks_on_open_db(dbpath, cursor, db_integrity_check):
+def run_checks_on_open_db(dbpath, cursor):
     """Run checks that will generate a sqlite3 exception if there is corruption."""
-    if basic_sanity_check(cursor) and last_run_was_recently_clean(cursor):
+    sanity_check_passed = basic_sanity_check(cursor)
+    last_run_was_clean = last_run_was_recently_clean(cursor)
+
+    if sanity_check_passed and last_run_was_clean:
         _LOGGER.debug(
-            "The quick_check will be skipped as the system was restarted cleanly and passed the basic sanity check"
+            "The system was restarted cleanly and passed the basic sanity check"
         )
         return
 
-    if not db_integrity_check:
-        # Always warn so when it does fail they remember it has
-        # been manually disabled
+    if not sanity_check_passed:
         _LOGGER.warning(
-            "The quick_check on the sqlite3 database at %s was skipped because %s was disabled",
+            "The database sanity check failed to validate the sqlite3 database at %s",
             dbpath,
-            CONF_DB_INTEGRITY_CHECK,
         )
-        return
 
-    _LOGGER.debug(
-        "A quick_check is being performed on the sqlite3 database at %s", dbpath
-    )
-    cursor.execute("PRAGMA QUICK_CHECK")
+    if not last_run_was_clean:
+        _LOGGER.warning(
+            "The system could not validate that the sqlite3 database at %s was shutdown cleanly",
+            dbpath,
+        )
 
 
-def _move_away_broken_database(dbfile: str) -> None:
+def move_away_broken_database(dbfile: str) -> None:
     """Move away a broken sqlite3 database."""
 
     isotime = dt_util.utcnow().isoformat()
@@ -210,3 +231,42 @@ def _move_away_broken_database(dbfile: str) -> None:
         if not os.path.exists(path):
             continue
         os.rename(path, f"{path}{corrupt_postfix}")
+
+
+def execute_on_connection(dbapi_connection, statement):
+    """Execute a single statement with a dbapi connection."""
+    cursor = dbapi_connection.cursor()
+    cursor.execute(statement)
+    cursor.close()
+
+
+def setup_connection_for_dialect(dialect_name, dbapi_connection):
+    """Execute statements needed for dialect connection."""
+    # Returns False if the the connection needs to be setup
+    # on the next connection, returns True if the connection
+    # never needs to be setup again.
+    if dialect_name == "sqlite":
+        old_isolation = dbapi_connection.isolation_level
+        dbapi_connection.isolation_level = None
+        execute_on_connection(dbapi_connection, "PRAGMA journal_mode=WAL")
+        dbapi_connection.isolation_level = old_isolation
+        # WAL mode only needs to be setup once
+        # instead of every time we open the sqlite connection
+        # as its persistent and isn't free to call every time.
+        return True
+
+    if dialect_name == "mysql":
+        execute_on_connection(dbapi_connection, "SET session wait_timeout=28800")
+
+    return False
+
+
+def end_incomplete_runs(session, start_time):
+    """End any incomplete recorder runs."""
+    for run in session.query(RecorderRuns).filter_by(end=None):
+        run.closed_incorrect = True
+        run.end = start_time
+        _LOGGER.warning(
+            "Ended unfinished session (id=%s from %s)", run.run_id, run.start
+        )
+        session.add(run)

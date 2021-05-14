@@ -47,7 +47,7 @@ SENSORS = {
         name="Gas",
         device_class=DEVICE_CLASS_GAS,
         value=lambda value: value in ["mild", "heavy"],
-        device_state_attributes=lambda block: {"detected": block.gas},
+        extra_state_attributes=lambda block: {"detected": block.gas},
     ),
     ("sensor", "smoke"): BlockAttributeDescription(
         name="Smoke", device_class=DEVICE_CLASS_SMOKE
@@ -73,6 +73,11 @@ SENSORS = {
         default_enabled=False,
         removal_condition=is_momentary_input,
     ),
+    ("sensor", "extInput"): BlockAttributeDescription(
+        name="External Input",
+        device_class=DEVICE_CLASS_POWER,
+        default_enabled=False,
+    ),
     ("sensor", "motion"): BlockAttributeDescription(
         name="Motion", device_class=DEVICE_CLASS_MOTION
     ),
@@ -86,11 +91,11 @@ REST_SENSORS = {
         default_enabled=False,
     ),
     "fwupdate": RestAttributeDescription(
-        name="Firmware update",
+        name="Firmware Update",
         icon="mdi:update",
         value=lambda status, _: status["update"]["has_update"],
         default_enabled=False,
-        device_state_attributes=lambda status: {
+        extra_state_attributes=lambda status: {
             "latest_stable_version": status["update"]["new_version"],
             "installed_version": status["update"]["old_version"],
         },

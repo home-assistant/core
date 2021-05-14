@@ -1,5 +1,5 @@
 """Provides device conditions for lights."""
-from typing import Dict, List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -28,7 +28,7 @@ def async_condition_from_config(
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> List[Dict[str, str]]:
+) -> list[dict[str, str]]:
     """List device conditions."""
     return await toggle_entity.async_get_conditions(hass, device_id, DOMAIN)
 

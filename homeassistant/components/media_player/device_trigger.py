@@ -1,5 +1,5 @@
 """Provides device automations for Media player."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_FOR,
     CONF_PLATFORM,
     CONF_TYPE,
     STATE_IDLE,
@@ -30,11 +31,12 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
+        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Media player entities."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = []
@@ -59,6 +61,15 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
     return triggers
 
 
+async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
+    """List trigger capabilities."""
+    return {
+        "extra_fields": vol.Schema(
+            {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+        )
+    }
+
+
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
@@ -66,8 +77,6 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
-
     if config[CONF_TYPE] == "turned_on":
         to_state = STATE_ON
     elif config[CONF_TYPE] == "turned_off":
@@ -84,6 +93,8 @@ async def async_attach_trigger(
         CONF_ENTITY_ID: config[CONF_ENTITY_ID],
         state_trigger.CONF_TO: to_state,
     }
+    if CONF_FOR in config:
+        state_config[CONF_FOR] = config[CONF_FOR]
     state_config = state_trigger.TRIGGER_SCHEMA(state_config)
     return await state_trigger.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"

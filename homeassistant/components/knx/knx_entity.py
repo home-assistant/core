@@ -1,38 +1,50 @@
 """Base class for KNX devices."""
+from __future__ import annotations
+
+from typing import cast
+
 from xknx.devices import Climate as XknxClimate, Device as XknxDevice
 
 from homeassistant.helpers.entity import Entity
 
+from . import KNXModule
 from .const import DOMAIN
 
 
 class KnxEntity(Entity):
     """Representation of a KNX entity."""
 
-    def __init__(self, device: XknxDevice):
+    def __init__(self, device: XknxDevice) -> None:
         """Set up device."""
         self._device = device
+        self._unique_id: str | None = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the KNX device."""
         return self._device.name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
-        return self.hass.data[DOMAIN].connected
+        knx_module = cast(KNXModule, self.hass.data[DOMAIN])
+        return knx_module.connected
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """No polling needed within KNX."""
         return False
 
-    async def async_update(self):
+    @property
+    def unique_id(self) -> str | None:
+        """Return the unique id of the device."""
+        return self._unique_id
+
+    async def async_update(self) -> None:
         """Request a state update from KNX bus."""
         await self._device.sync()
 
-    async def after_update_callback(self, device: XknxDevice):
+    async def after_update_callback(self, device: XknxDevice) -> None:
         """Call after device was updated."""
         self.async_write_ha_state()
 

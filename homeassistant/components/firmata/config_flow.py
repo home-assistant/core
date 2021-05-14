@@ -8,7 +8,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 
 from .board import get_board
-from .const import CONF_SERIAL_PORT, DOMAIN  # pylint: disable=unused-import
+from .const import CONF_SERIAL_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +17,6 @@ class FirmataFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a firmata config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     async def async_step_import(self, import_config: dict):
         """Import a firmata board as a config entry.

@@ -32,10 +32,8 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
 
-from .const import DOMAIN, PLATFORMS
 from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,7 +111,6 @@ async def _async_create_entities(hass, config):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Template Alarm Control Panels."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     async_add_entities(await _async_create_entities(hass, config))
 
 

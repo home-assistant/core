@@ -9,10 +9,16 @@
         "step": {
             "user": {
                 "data": {
-                    "home_control_url": "URL di Home Control",
                     "mydevolo_url": "URL di mydevolo",
                     "password": "Password",
                     "username": "E-mail / devolo ID"
+                }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "mydevolo_url": "URL mydevolo",
+                    "password": "Password",
+                    "username": "E-mail / ID devolo"
                 }
             }
         }

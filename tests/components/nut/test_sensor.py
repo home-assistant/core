@@ -1,6 +1,7 @@
 """The sensor tests for the nut platform."""
 
 from homeassistant.const import PERCENTAGE
+from homeassistant.helpers import entity_registry as er
 
 from .util import async_init_integration
 
@@ -9,7 +10,7 @@ async def test_pr3000rt2u(hass):
     """Test creation of PR3000RT2U sensors."""
 
     await async_init_integration(hass, "PR3000RT2U", ["battery.charge"])
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get("sensor.ups1_battery_charge")
     assert entry
     assert entry.unique_id == "CPS_PR3000RT2U_PYVJO2000034_battery.charge"
@@ -35,7 +36,7 @@ async def test_cp1350c(hass):
 
     config_entry = await async_init_integration(hass, "CP1350C", ["battery.charge"])
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get("sensor.ups1_battery_charge")
     assert entry
     assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
@@ -60,7 +61,7 @@ async def test_5e850i(hass):
     """Test creation of 5E850I sensors."""
 
     config_entry = await async_init_integration(hass, "5E850I", ["battery.charge"])
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get("sensor.ups1_battery_charge")
     assert entry
     assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
@@ -85,7 +86,7 @@ async def test_5e650i(hass):
     """Test creation of 5E650I sensors."""
 
     config_entry = await async_init_integration(hass, "5E650I", ["battery.charge"])
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get("sensor.ups1_battery_charge")
     assert entry
     assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
@@ -110,7 +111,7 @@ async def test_backupsses600m1(hass):
     """Test creation of BACKUPSES600M1 sensors."""
 
     await async_init_integration(hass, "BACKUPSES600M1", ["battery.charge"])
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get("sensor.ups1_battery_charge")
     assert entry
     assert (
@@ -140,7 +141,7 @@ async def test_cp1500pfclcd(hass):
     config_entry = await async_init_integration(
         hass, "CP1500PFCLCD", ["battery.charge"]
     )
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get("sensor.ups1_battery_charge")
     assert entry
     assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
@@ -165,7 +166,7 @@ async def test_dl650elcd(hass):
     """Test creation of DL650ELCD sensors."""
 
     config_entry = await async_init_integration(hass, "DL650ELCD", ["battery.charge"])
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get("sensor.ups1_battery_charge")
     assert entry
     assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
@@ -190,7 +191,7 @@ async def test_blazer_usb(hass):
     """Test creation of blazer_usb sensors."""
 
     config_entry = await async_init_integration(hass, "blazer_usb", ["battery.charge"])
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get("sensor.ups1_battery_charge")
     assert entry
     assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"

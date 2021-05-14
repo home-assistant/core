@@ -1,15 +1,18 @@
 """Helper functions for mysensors package."""
+from __future__ import annotations
+
 from collections import defaultdict
 from enum import IntEnum
 import logging
-from typing import DefaultDict, Dict, List, Optional, Set
+from typing import Callable
 
 from mysensors import BaseAsyncGateway, Message
 from mysensors.sensor import ChildSensor
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.decorator import Registry
@@ -20,6 +23,7 @@ from .const import (
     DOMAIN,
     FLAT_PLATFORM_TYPES,
     MYSENSORS_DISCOVERY,
+    MYSENSORS_ON_UNLOAD,
     TYPE_TO_PLATFORMS,
     DevId,
     GatewayId,
@@ -31,9 +35,26 @@ _LOGGER = logging.getLogger(__name__)
 SCHEMAS = Registry()
 
 
+async def on_unload(
+    hass: HomeAssistant, entry: ConfigEntry | GatewayId, fnct: Callable
+) -> None:
+    """Register a callback to be called when entry is unloaded.
+
+    This function is used by platforms to cleanup after themselves.
+    """
+    if isinstance(entry, GatewayId):
+        uniqueid = entry
+    else:
+        uniqueid = entry.entry_id
+    key = MYSENSORS_ON_UNLOAD.format(uniqueid)
+    if key not in hass.data[DOMAIN]:
+        hass.data[DOMAIN][key] = []
+    hass.data[DOMAIN][key].append(fnct)
+
+
 @callback
 def discover_mysensors_platform(
-    hass, gateway_id: GatewayId, platform: str, new_devices: List[DevId]
+    hass: HomeAssistant, gateway_id: GatewayId, platform: str, new_devices: list[DevId]
 ) -> None:
     """Discover a MySensors platform."""
     _LOGGER.debug("Discovering platform %s with devIds: %s", platform, new_devices)
@@ -130,7 +151,7 @@ def invalid_msg(
     )
 
 
-def validate_set_msg(gateway_id: GatewayId, msg: Message) -> Dict[str, List[DevId]]:
+def validate_set_msg(gateway_id: GatewayId, msg: Message) -> dict[str, list[DevId]]:
     """Validate a set message."""
     if not validate_node(msg.gateway, msg.node_id):
         return {}
@@ -151,34 +172,34 @@ def validate_child(
     gateway: BaseAsyncGateway,
     node_id: int,
     child: ChildSensor,
-    value_type: Optional[int] = None,
-) -> DefaultDict[str, List[DevId]]:
+    value_type: int | None = None,
+) -> defaultdict[str, list[DevId]]:
     """Validate a child. Returns a dict mapping hass platform names to list of DevId."""
-    validated: DefaultDict[str, List[DevId]] = defaultdict(list)
+    validated: defaultdict[str, list[DevId]] = defaultdict(list)
     pres: IntEnum = gateway.const.Presentation
     set_req: IntEnum = gateway.const.SetReq
-    child_type_name: Optional[SensorType] = next(
+    child_type_name: SensorType | None = next(
         (member.name for member in pres if member.value == child.type), None
     )
-    value_types: Set[int] = {value_type} if value_type else {*child.values}
-    value_type_names: Set[ValueType] = {
+    value_types: set[int] = {value_type} if value_type else {*child.values}
+    value_type_names: set[ValueType] = {
         member.name for member in set_req if member.value in value_types
     }
-    platforms: List[str] = TYPE_TO_PLATFORMS.get(child_type_name, [])
+    platforms: list[str] = TYPE_TO_PLATFORMS.get(child_type_name, [])
     if not platforms:
         _LOGGER.warning("Child type %s is not supported", child.type)
         return validated
 
     for platform in platforms:
-        platform_v_names: Set[ValueType] = FLAT_PLATFORM_TYPES[
+        platform_v_names: set[ValueType] = FLAT_PLATFORM_TYPES[
             platform, child_type_name
         ]
-        v_names: Set[ValueType] = platform_v_names & value_type_names
+        v_names: set[ValueType] = platform_v_names & value_type_names
         if not v_names:
-            child_value_names: Set[ValueType] = {
+            child_value_names: set[ValueType] = {
                 member.name for member in set_req if member.value in child.values
             }
-            v_names: Set[ValueType] = platform_v_names & child_value_names
+            v_names: set[ValueType] = platform_v_names & child_value_names
 
         for v_name in v_names:
             child_schema_gen = SCHEMAS.get((platform, v_name), default_schema)

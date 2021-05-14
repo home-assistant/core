@@ -1,7 +1,10 @@
 """Lovelace dashboard support."""
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 import logging
 import os
+from pathlib import Path
 import time
 from typing import Optional, cast
 
@@ -12,7 +15,7 @@ from homeassistant.const import CONF_FILENAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, storage
-from homeassistant.util.yaml import load_yaml
+from homeassistant.util.yaml import Secrets, load_yaml
 
 from .const import (
     CONF_ICON,
@@ -201,7 +204,7 @@ class LovelaceYAML(LovelaceConfig):
         is_updated = self._cache is not None
 
         try:
-            config = load_yaml(self.path)
+            config = load_yaml(self.path, Secrets(Path(self.hass.config.config_dir)))
         except FileNotFoundError:
             raise ConfigNotFound from None
 
@@ -230,7 +233,7 @@ class DashboardsCollection(collection.StorageCollection):
             _LOGGER,
         )
 
-    async def _async_load_data(self) -> Optional[dict]:
+    async def _async_load_data(self) -> dict | None:
         """Load the data."""
         data = await self.store.async_load()
 

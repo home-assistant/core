@@ -1,6 +1,5 @@
 """Switch representing the shutoff valve for the Flo by Moen integration."""
-
-from typing import List
+from __future__ import annotations
 
 from aioflo.location import SLEEP_MINUTE_OPTIONS, SYSTEM_MODE_HOME, SYSTEM_REVERT_MODES
 import voluptuous as vol
@@ -23,12 +22,16 @@ SERVICE_RUN_HEALTH_TEST = "run_health_test"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Flo switches from config entry."""
-    devices: List[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
+    devices: list[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
         config_entry.entry_id
     ]["devices"]
-    async_add_entities([FloSwitch(device) for device in devices])
+    entities = []
+    for device in devices:
+        if device.device_type != "puck_oem":
+            entities.append(FloSwitch(device))
+    async_add_entities(entities)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_SET_AWAY_MODE, {}, "async_set_mode_away"

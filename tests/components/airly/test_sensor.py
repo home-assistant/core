@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -29,7 +30,7 @@ from tests.components.airly import init_integration
 async def test_sensor(hass, aioclient_mock):
     """Test states of the sensor."""
     await init_integration(hass, aioclient_mock)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     state = hass.states.get("sensor.home_humidity")
     assert state

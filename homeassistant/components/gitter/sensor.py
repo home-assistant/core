@@ -5,10 +5,9 @@ from gitterpy.client import GitterClient
 from gitterpy.errors import GitterRoomError, GitterTokenError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_ROOM
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([GitterSensor(gitter, room, name, username)], True)
 
 
-class GitterSensor(Entity):
+class GitterSensor(SensorEntity):
     """Representation of a Gitter sensor."""
 
     def __init__(self, data, room, name, username):
@@ -76,7 +75,7 @@ class GitterSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_USERNAME: self._username,

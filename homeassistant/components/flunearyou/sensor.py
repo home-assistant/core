@@ -1,4 +1,5 @@
 """Support for user- and CDC-based flu info sensors from Flu Near You."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_STATE,
@@ -85,7 +86,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors)
 
 
-class FluNearYouSensor(CoordinatorEntity):
+class FluNearYouSensor(CoordinatorEntity, SensorEntity):
     """Define a base Flu Near You sensor."""
 
     def __init__(self, coordinator, config_entry, sensor_type, name, icon, unit):
@@ -100,7 +101,7 @@ class FluNearYouSensor(CoordinatorEntity):
         self._unit = unit
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return self._attrs
 

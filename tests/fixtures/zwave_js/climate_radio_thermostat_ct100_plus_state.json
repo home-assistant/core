@@ -6,16 +6,10 @@
   "status": 4,
   "ready": true,
   "deviceClass": {
-    "basic": "Static Controller",
-    "generic": "Thermostat",
-    "specific": "Thermostat General V2",
-    "mandatorySupportedCCs": [
-      "Basic",
-      "Manufacturer Specific",
-      "Thermostat Mode",
-      "Thermostat Setpoint",
-      "Version"
-    ],
+    "basic": {"key": 2, "label":"Static Controller"},
+    "generic": {"key": 8, "label":"Thermostat"},
+    "specific": {"key": 6, "label":"Thermostat General V2"},
+    "mandatorySupportedCCs": [],
     "mandatoryControlCCs": []
   },
   "isListening": true,
@@ -63,6 +57,7 @@
     },
     { "nodeId": 13, "index": 2 }
   ],
+  "commandClasses": [],
   "values": [
     {
       "commandClassName": "Manufacturer Specific",
@@ -593,6 +588,52 @@
       "property": "manufacturerData",
       "propertyName": "manufacturerData",
       "metadata": { "type": "any", "readable": true, "writeable": true }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 68,
+      "commandClassName": "Thermostat Fan Mode",
+      "property": "mode",
+      "propertyName": "mode",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "min": 0,
+        "max": 255,
+        "states": { "0": "Auto low", "1": "Low" },
+        "label": "Thermostat fan mode"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 69,
+      "commandClassName": "Thermostat Fan State",
+      "property": "state",
+      "propertyName": "state",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Idle / off",
+          "1": "Running / running low",
+          "2": "Running high",
+          "3": "Running medium",
+          "4": "Circulation mode",
+          "5": "Humidity circulation mode",
+          "6": "Right - left circulation mode",
+          "7": "Up - down circulation mode",
+          "8": "Quiet circulation mode"
+        },
+        "label": "Thermostat fan state"
+      },
+      "value": 0
     },
     {
       "commandClassName": "Thermostat Operating State",

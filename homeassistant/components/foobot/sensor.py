@@ -7,6 +7,7 @@ import aiohttp
 from foobot_async import FoobotClient
 import voluptuous as vol
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_TIME,
@@ -91,7 +92,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(dev, True)
 
 
-class FoobotSensor(Entity):
+class FoobotSensor(SensorEntity):
     """Implementation of a Foobot sensor."""
 
     def __init__(self, data, device, sensor_type):

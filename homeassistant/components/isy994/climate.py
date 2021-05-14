@@ -1,5 +1,5 @@
 """Support for Insteon Thermostats via ISY994 Platform."""
-from typing import Callable, List, Optional
+from __future__ import annotations
 
 from pyisy.constants import (
     CMD_CLIMATE_FAN_SETTING,
@@ -32,7 +32,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     _LOGGER,
@@ -59,9 +60,9 @@ ISY_SUPPORTED_FEATURES = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> bool:
     """Set up the ISY994 thermostat platform."""
     entities = []
@@ -114,7 +115,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
             return TEMP_FAHRENHEIT
 
     @property
-    def current_humidity(self) -> Optional[int]:
+    def current_humidity(self) -> int | None:
         """Return the current humidity."""
         humidity = self._node.aux_properties.get(PROP_HUMIDITY)
         if not humidity:
@@ -122,7 +123,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         return int(humidity.value)
 
     @property
-    def hvac_mode(self) -> Optional[str]:
+    def hvac_mode(self) -> str | None:
         """Return hvac operation ie. heat, cool mode."""
         hvac_mode = self._node.aux_properties.get(CMD_CLIMATE_MODE)
         if not hvac_mode:
@@ -140,12 +141,12 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         return UOM_TO_STATES[uom].get(hvac_mode.value)
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes."""
         return ISY_HVAC_MODES
 
     @property
-    def hvac_action(self) -> Optional[str]:
+    def hvac_action(self) -> str | None:
         """Return the current running hvac operation if supported."""
         hvac_action = self._node.aux_properties.get(PROP_HEAT_COOL_STATE)
         if not hvac_action:
@@ -153,19 +154,19 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         return UOM_TO_STATES[UOM_HVAC_ACTIONS].get(hvac_action.value)
 
     @property
-    def current_temperature(self) -> Optional[float]:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return convert_isy_value_to_hass(
             self._node.status, self._uom, self._node.prec, 1
         )
 
     @property
-    def target_temperature_step(self) -> Optional[float]:
+    def target_temperature_step(self) -> float | None:
         """Return the supported step of target temperature."""
         return 1.0
 
     @property
-    def target_temperature(self) -> Optional[float]:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_COOL:
             return self.target_temperature_high
@@ -174,7 +175,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         return None
 
     @property
-    def target_temperature_high(self) -> Optional[float]:
+    def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         target = self._node.aux_properties.get(PROP_SETPOINT_COOL)
         if not target:
@@ -182,7 +183,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
         return convert_isy_value_to_hass(target.value, target.uom, target.prec, 1)
 
     @property
-    def target_temperature_low(self) -> Optional[float]:
+    def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         target = self._node.aux_properties.get(PROP_SETPOINT_HEAT)
         if not target:

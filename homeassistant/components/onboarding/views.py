@@ -14,6 +14,7 @@ from homeassistant.core import callback
 from .const import (
     DEFAULT_AREAS,
     DOMAIN,
+    STEP_ANALYTICS,
     STEP_CORE_CONFIG,
     STEP_INTEGRATION,
     STEP_USER,
@@ -27,6 +28,7 @@ async def async_setup(hass, data, store):
     hass.http.register_view(UserOnboardingView(data, store))
     hass.http.register_view(CoreConfigOnboardingView(data, store))
     hass.http.register_view(IntegrationOnboardingView(data, store))
+    hass.http.register_view(AnalyticsOnboardingView(data, store))
 
 
 class OnboardingView(HomeAssistantView):
@@ -215,6 +217,28 @@ class IntegrationOnboardingView(_BaseOnboardingView):
                 data["client_id"], refresh_token.credential
             )
             return self.json({"auth_code": auth_code})
+
+
+class AnalyticsOnboardingView(_BaseOnboardingView):
+    """View to finish analytics onboarding step."""
+
+    url = "/api/onboarding/analytics"
+    name = "api:onboarding:analytics"
+    step = STEP_ANALYTICS
+
+    async def post(self, request):
+        """Handle finishing analytics step."""
+        hass = request.app["hass"]
+
+        async with self._lock:
+            if self._async_is_done():
+                return self.json_message(
+                    "Analytics config step already done", HTTP_FORBIDDEN
+                )
+
+            await self._async_mark_done(hass)
+
+            return self.json({})
 
 
 @callback

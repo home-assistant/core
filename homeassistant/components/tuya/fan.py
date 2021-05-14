@@ -1,4 +1,6 @@
 """Support for Tuya fans."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from homeassistant.components.fan import (
@@ -102,6 +104,13 @@ class TuyaFanDevice(TuyaDevice, FanEntity):
         self._tuya.oscillate(oscillating)
 
     @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        if self.speeds is None:
+            return super().speed_count
+        return len(self.speeds)
+
+    @property
     def oscillating(self):
         """Return current oscillating status."""
         if self.supported_features & SUPPORT_OSCILLATE == 0:
@@ -116,7 +125,7 @@ class TuyaFanDevice(TuyaDevice, FanEntity):
         return self._tuya.state()
 
     @property
-    def percentage(self) -> str:
+    def percentage(self) -> int | None:
         """Return the current speed."""
         if not self.is_on:
             return 0

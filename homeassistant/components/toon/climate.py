@@ -1,5 +1,7 @@
 """Support for Toon thermostat."""
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from toonapi import (
     ACTIVE_STATE_AWAY,
@@ -22,7 +24,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN
 from .helpers import toon_exception_handler
@@ -30,7 +32,7 @@ from .models import ToonDisplayDeviceEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up a Toon binary sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -61,12 +63,12 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         return HVAC_MODE_HEAT
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes."""
         return [HVAC_MODE_HEAT]
 
     @property
-    def hvac_action(self) -> Optional[str]:
+    def hvac_action(self) -> str | None:
         """Return the current running hvac operation."""
         if self.coordinator.data.thermostat.heating:
             return CURRENT_HVAC_HEAT
@@ -78,7 +80,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         return TEMP_CELSIUS
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         mapping = {
             ACTIVE_STATE_AWAY: PRESET_AWAY,
@@ -89,17 +91,17 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         return mapping.get(self.coordinator.data.thermostat.active_state)
 
     @property
-    def preset_modes(self) -> List[str]:
+    def preset_modes(self) -> list[str]:
         """Return a list of available preset modes."""
         return [PRESET_AWAY, PRESET_COMFORT, PRESET_HOME, PRESET_SLEEP]
 
     @property
-    def current_temperature(self) -> Optional[float]:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.coordinator.data.thermostat.current_display_temperature
 
     @property
-    def target_temperature(self) -> Optional[float]:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self.coordinator.data.thermostat.current_setpoint
 
@@ -114,7 +116,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         return DEFAULT_MAX_TEMP
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the current state of the burner."""
         return {"heating_type": self.coordinator.data.agreement.heating_type}
 

@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "password": "Mot de passe",
+                    "port": "Port",
+                    "username": "Nom d'utilisateur"
+                },
+                "title": "Configurer le routeur Keenetic NDMS2"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "consider_home": "Consid\u00e9rez l'intervalle de home assistant",
+                    "include_arp": "Utiliser les donn\u00e9es ARP (ignor\u00e9es si les donn\u00e9es du hotspot sont utilis\u00e9es)",
+                    "include_associated": "Utiliser les donn\u00e9es d'associations WiFi AP (ignor\u00e9es si les donn\u00e9es du hotspot sont utilis\u00e9es)",
+                    "interfaces": "Choisissez les interfaces \u00e0 analyser",
+                    "scan_interval": "Intervalle d\u2019analyse",
+                    "try_hotspot": "Utiliser les donn\u00e9es 'ip hotspot' (plus pr\u00e9cis)"
+                }
+            }
+        }
+    }
+}

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host is al geconfigureerd."
+            "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -21,8 +21,8 @@
             "link": {
                 "data": {
                     "password": "Wachtwoord",
-                    "port": "Poort (optioneel)",
-                    "ssl": "Gebruik SSL/TLS om verbinding te maken met uw NAS",
+                    "port": "Poort",
+                    "ssl": "Gebruik een SSL-certificaat",
                     "username": "Gebruikersnaam",
                     "verify_ssl": "Controleer het SSL-certificaat"
                 },
@@ -33,8 +33,8 @@
                 "data": {
                     "host": "Host",
                     "password": "Wachtwoord",
-                    "port": "Poort (optioneel)",
-                    "ssl": "Gebruik SSL/TLS om verbinding te maken met uw NAS",
+                    "port": "Poort",
+                    "ssl": "Gebruik een SSL-certificaat",
                     "username": "Gebruikersnaam",
                     "verify_ssl": "Controleer het SSL-certificaat"
                 },

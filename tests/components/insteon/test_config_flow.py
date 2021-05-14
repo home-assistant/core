@@ -35,7 +35,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .const import (
     MOCK_HOSTNAME,
@@ -93,7 +93,7 @@ async def _device_form(hass, flow_id, connection, user_input):
     return result, mock_setup, mock_setup_entry
 
 
-async def test_form_select_modem(hass: HomeAssistantType):
+async def test_form_select_modem(hass: HomeAssistant):
     """Test we get a modem form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await _init_form(hass, HUB2)
@@ -101,7 +101,7 @@ async def test_form_select_modem(hass: HomeAssistantType):
     assert result["type"] == "form"
 
 
-async def test_fail_on_existing(hass: HomeAssistantType):
+async def test_fail_on_existing(hass: HomeAssistant):
     """Test we fail if the integration is already configured."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -121,7 +121,7 @@ async def test_fail_on_existing(hass: HomeAssistantType):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_form_select_plm(hass: HomeAssistantType):
+async def test_form_select_plm(hass: HomeAssistant):
     """Test we set up the PLM correctly."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await _init_form(hass, PLM)
@@ -136,7 +136,7 @@ async def test_form_select_plm(hass: HomeAssistantType):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_select_hub_v1(hass: HomeAssistantType):
+async def test_form_select_hub_v1(hass: HomeAssistant):
     """Test we set up the Hub v1 correctly."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await _init_form(hass, HUB1)
@@ -154,7 +154,7 @@ async def test_form_select_hub_v1(hass: HomeAssistantType):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_select_hub_v2(hass: HomeAssistantType):
+async def test_form_select_hub_v2(hass: HomeAssistant):
     """Test we set up the Hub v2 correctly."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await _init_form(hass, HUB2)
@@ -172,7 +172,7 @@ async def test_form_select_hub_v2(hass: HomeAssistantType):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_failed_connection_plm(hass: HomeAssistantType):
+async def test_failed_connection_plm(hass: HomeAssistant):
     """Test a failed connection with the PLM."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await _init_form(hass, PLM)
@@ -184,7 +184,7 @@ async def test_failed_connection_plm(hass: HomeAssistantType):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_failed_connection_hub(hass: HomeAssistantType):
+async def test_failed_connection_hub(hass: HomeAssistant):
     """Test a failed connection with a Hub."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await _init_form(hass, HUB2)
@@ -206,7 +206,7 @@ async def _import_config(hass, config):
         )
 
 
-async def test_import_plm(hass: HomeAssistantType):
+async def test_import_plm(hass: HomeAssistant):
     """Test importing a minimum PLM config from yaml."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -233,7 +233,7 @@ async def _options_init_form(hass, entry_id, step):
     return result2
 
 
-async def test_import_min_hub_v2(hass: HomeAssistantType):
+async def test_import_min_hub_v2(hass: HomeAssistant):
     """Test importing a minimum Hub v2 config from yaml."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -251,7 +251,7 @@ async def test_import_min_hub_v2(hass: HomeAssistantType):
         assert entry.data[CONF_HUB_VERSION] == 2
 
 
-async def test_import_min_hub_v1(hass: HomeAssistantType):
+async def test_import_min_hub_v1(hass: HomeAssistant):
     """Test importing a minimum Hub v1 config from yaml."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -267,7 +267,7 @@ async def test_import_min_hub_v1(hass: HomeAssistantType):
         assert entry.data[CONF_HUB_VERSION] == 1
 
 
-async def test_import_existing(hass: HomeAssistantType):
+async def test_import_existing(hass: HomeAssistant):
     """Test we fail on an existing config imported."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -285,7 +285,7 @@ async def test_import_existing(hass: HomeAssistantType):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_import_failed_connection(hass: HomeAssistantType):
+async def test_import_failed_connection(hass: HomeAssistant):
     """Test a failed connection on import."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -310,7 +310,7 @@ async def _options_form(hass, flow_id, user_input):
         return result, mock_setup_entry
 
 
-async def test_options_change_hub_config(hass: HomeAssistantType):
+async def test_options_change_hub_config(hass: HomeAssistant):
     """Test changing Hub v2 config."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -337,7 +337,7 @@ async def test_options_change_hub_config(hass: HomeAssistantType):
     assert config_entry.data == {**user_input, CONF_HUB_VERSION: 2}
 
 
-async def test_options_add_device_override(hass: HomeAssistantType):
+async def test_options_add_device_override(hass: HomeAssistant):
     """Test adding a device override."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -369,15 +369,18 @@ async def test_options_add_device_override(hass: HomeAssistantType):
         CONF_CAT: "05",
         CONF_SUBCAT: "bb",
     }
-    await _options_form(hass, result2["flow_id"], user_input)
+    result3, _ = await _options_form(hass, result2["flow_id"], user_input)
 
     assert len(config_entry.options[CONF_OVERRIDE]) == 2
     assert config_entry.options[CONF_OVERRIDE][1][CONF_ADDRESS] == "4D.5E.6F"
     assert config_entry.options[CONF_OVERRIDE][1][CONF_CAT] == 5
     assert config_entry.options[CONF_OVERRIDE][1][CONF_SUBCAT] == 187
 
+    # If result1 eq result2 the changes will not save
+    assert result["data"] != result3["data"]
 
-async def test_options_remove_device_override(hass: HomeAssistantType):
+
+async def test_options_remove_device_override(hass: HomeAssistant):
     """Test removing a device override."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -401,7 +404,7 @@ async def test_options_remove_device_override(hass: HomeAssistantType):
     assert len(config_entry.options[CONF_OVERRIDE]) == 1
 
 
-async def test_options_remove_device_override_with_x10(hass: HomeAssistantType):
+async def test_options_remove_device_override_with_x10(hass: HomeAssistant):
     """Test removing a device override when an X10 device is configured."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -434,7 +437,7 @@ async def test_options_remove_device_override_with_x10(hass: HomeAssistantType):
     assert len(config_entry.options[CONF_X10]) == 1
 
 
-async def test_options_add_x10_device(hass: HomeAssistantType):
+async def test_options_add_x10_device(hass: HomeAssistant):
     """Test adding an X10 device."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -477,8 +480,11 @@ async def test_options_add_x10_device(hass: HomeAssistantType):
     assert config_entry.options[CONF_X10][1][CONF_PLATFORM] == "binary_sensor"
     assert config_entry.options[CONF_X10][1][CONF_DIM_STEPS] == 15
 
+    # If result2 eq result3 the changes will not save
+    assert result2["data"] != result3["data"]
 
-async def test_options_remove_x10_device(hass: HomeAssistantType):
+
+async def test_options_remove_x10_device(hass: HomeAssistant):
     """Test removing an X10 device."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -517,7 +523,7 @@ async def test_options_remove_x10_device(hass: HomeAssistantType):
     assert len(config_entry.options[CONF_X10]) == 1
 
 
-async def test_options_remove_x10_device_with_override(hass: HomeAssistantType):
+async def test_options_remove_x10_device_with_override(hass: HomeAssistant):
     """Test removing an X10 device when a device override is configured."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -558,7 +564,7 @@ async def test_options_remove_x10_device_with_override(hass: HomeAssistantType):
     assert len(config_entry.options[CONF_OVERRIDE]) == 1
 
 
-async def test_options_dup_selection(hass: HomeAssistantType):
+async def test_options_dup_selection(hass: HomeAssistant):
     """Test if a duplicate selection was made in options."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -580,7 +586,7 @@ async def test_options_dup_selection(hass: HomeAssistantType):
     assert result2["errors"] == {"base": "select_single"}
 
 
-async def test_options_override_bad_data(hass: HomeAssistantType):
+async def test_options_override_bad_data(hass: HomeAssistant):
     """Test for bad data in a device override."""
 
     config_entry = MockConfigEntry(

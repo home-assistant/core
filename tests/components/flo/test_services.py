@@ -25,8 +25,8 @@ async def test_services(hass, config_entry, aioclient_mock_fixture, aioclient_mo
     )
     await hass.async_block_till_done()
 
-    assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 1
-    assert aioclient_mock.call_count == 4
+    assert len(hass.data[FLO_DOMAIN][config_entry.entry_id]["devices"]) == 2
+    assert aioclient_mock.call_count == 6
 
     await hass.services.async_call(
         FLO_DOMAIN,
@@ -35,7 +35,7 @@ async def test_services(hass, config_entry, aioclient_mock_fixture, aioclient_mo
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 5
+    assert aioclient_mock.call_count == 7
 
     await hass.services.async_call(
         FLO_DOMAIN,
@@ -44,7 +44,7 @@ async def test_services(hass, config_entry, aioclient_mock_fixture, aioclient_mo
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 6
+    assert aioclient_mock.call_count == 8
 
     await hass.services.async_call(
         FLO_DOMAIN,
@@ -53,7 +53,7 @@ async def test_services(hass, config_entry, aioclient_mock_fixture, aioclient_mo
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 7
+    assert aioclient_mock.call_count == 9
 
     await hass.services.async_call(
         FLO_DOMAIN,
@@ -66,4 +66,4 @@ async def test_services(hass, config_entry, aioclient_mock_fixture, aioclient_mo
         blocking=True,
     )
     await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 8
+    assert aioclient_mock.call_count == 10

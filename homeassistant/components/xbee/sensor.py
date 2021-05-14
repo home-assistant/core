@@ -5,14 +5,13 @@ import logging
 import voluptuous as vol
 from xbee_helper.exceptions import ZigBeeException, ZigBeeTxFailure
 
-from homeassistant.const import TEMP_CELSIUS
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import CONF_TYPE, TEMP_CELSIUS
 
 from . import DOMAIN, PLATFORM_SCHEMA, XBeeAnalogIn, XBeeAnalogInConfig, XBeeConfig
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_TYPE = "type"
 CONF_MAX_VOLTS = "max_volts"
 
 DEFAULT_VOLTS = 1.2
@@ -44,7 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([sensor_class(config_class(config), zigbee_device)], True)
 
 
-class XBeeTemperatureSensor(Entity):
+class XBeeTemperatureSensor(SensorEntity):
     """Representation of XBee Pro temperature sensor."""
 
     def __init__(self, config, device):

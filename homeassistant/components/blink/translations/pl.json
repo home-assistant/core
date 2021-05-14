@@ -14,7 +14,7 @@
                 "data": {
                     "2fa": "Kod uwierzytelniania dwusk\u0142adnikowego"
                 },
-                "description": "Wpisz kod PIN wys\u0142any na Tw\u00f3j adres e-mail. Je\u015bli.",
+                "description": "Wprowad\u017a kod PIN wys\u0142any na Tw\u00f3j adres e-mail.",
                 "title": "Uwierzytelnianie dwusk\u0142adnikowe"
             },
             "user": {

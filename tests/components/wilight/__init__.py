@@ -14,7 +14,7 @@ from homeassistant.components.wilight.config_flow import (
     CONF_SERIAL_NUMBER,
 )
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -58,7 +58,7 @@ MOCK_SSDP_DISCOVERY_INFO_MISSING_MANUFACTORER = {
 
 
 async def setup_integration(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> MockConfigEntry:
     """Mock ConfigEntry in Home Assistant."""
 

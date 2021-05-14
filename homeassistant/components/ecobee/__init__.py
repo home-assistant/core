@@ -1,5 +1,4 @@
 """Support for ecobee."""
-import asyncio
 from datetime import timedelta
 
 from pyecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN, Ecobee, ExpiredTokenError
@@ -10,13 +9,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import Throttle
 
-from .const import (
-    _LOGGER,
-    CONF_REFRESH_TOKEN,
-    DATA_ECOBEE_CONFIG,
-    DOMAIN,
-    ECOBEE_PLATFORMS,
-)
+from .const import _LOGGER, CONF_REFRESH_TOKEN, DATA_ECOBEE_CONFIG, DOMAIN, PLATFORMS
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
@@ -32,7 +25,7 @@ async def async_setup(hass, config):
     But, an "ecobee:" entry in configuration.yaml will trigger an import flow
     if a config entry doesn't already exist. If ecobee.conf exists, the import
     flow will attempt to import it and create a config entry, to assist users
-    migrating from the old ecobee component. Otherwise, the user will have to
+    migrating from the old ecobee integration. Otherwise, the user will have to
     continue setting up the integration via the config flow.
     """
     hass.data[DATA_ECOBEE_CONFIG] = config.get(DOMAIN, {})
@@ -66,10 +59,7 @@ async def async_setup_entry(hass, entry):
 
     hass.data[DOMAIN] = data
 
-    for component in ECOBEE_PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -115,14 +105,9 @@ class EcobeeData:
         return False
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass, entry):
     """Unload the config entry and platforms."""
-    hass.data.pop(DOMAIN)
-
-    tasks = []
-    for platform in ECOBEE_PLATFORMS:
-        tasks.append(
-            hass.config_entries.async_forward_entry_unload(config_entry, platform)
-        )
-
-    return all(await asyncio.gather(*tasks))
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data.pop(DOMAIN)
+    return unload_ok

@@ -5,6 +5,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -93,7 +94,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async_add_entities(meters)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_CALIBRATE_METER,
@@ -102,7 +103,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class UtilityMeterSensor(RestoreEntity):
+class UtilityMeterSensor(RestoreEntity, SensorEntity):
     """Representation of an utility meter sensor."""
 
     def __init__(
@@ -324,7 +325,7 @@ class UtilityMeterSensor(RestoreEntity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         state_attr = {
             ATTR_SOURCE_ID: self._sensor_source_id,

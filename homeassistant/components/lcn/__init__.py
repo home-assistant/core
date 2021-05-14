@@ -3,134 +3,150 @@ import logging
 
 import pypck
 
+from homeassistant import config_entries
 from homeassistant.const import (
-    CONF_BINARY_SENSORS,
-    CONF_COVERS,
-    CONF_HOST,
-    CONF_LIGHTS,
+    CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SENSORS,
-    CONF_SWITCHES,
+    CONF_RESOURCE,
     CONF_USERNAME,
 )
-from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
 
-from .const import (
-    CONF_CLIMATES,
-    CONF_CONNECTIONS,
-    CONF_DIM_MODE,
-    CONF_SCENES,
-    CONF_SK_NUM_TRIES,
-    DATA_LCN,
-    DOMAIN,
-)
-from .schemas import CONFIG_SCHEMA  # noqa: 401
-from .services import (
-    DynText,
-    Led,
-    LockKeys,
-    LockRegulator,
-    OutputAbs,
-    OutputRel,
-    OutputToggle,
-    Pck,
-    Relays,
-    SendKeys,
-    VarAbs,
-    VarRel,
-    VarReset,
-)
+from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, CONNECTION, DOMAIN
+from .helpers import generate_unique_id, import_lcn_config
+from .schemas import CONFIG_SCHEMA  # noqa: F401
+from .services import SERVICES
+
+PLATFORMS = ["binary_sensor", "climate", "cover", "light", "scene", "sensor", "switch"]
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):
     """Set up the LCN component."""
-    hass.data[DATA_LCN] = {}
+    if DOMAIN not in config:
+        return True
 
-    conf_connections = config[DOMAIN][CONF_CONNECTIONS]
-    connections = []
-    for conf_connection in conf_connections:
-        connection_name = conf_connection.get(CONF_NAME)
+    # initialize a config_flow for all LCN configurations read from
+    # configuration.yaml
+    config_entries_data = import_lcn_config(config[DOMAIN])
 
-        settings = {
-            "SK_NUM_TRIES": conf_connection[CONF_SK_NUM_TRIES],
-            "DIM_MODE": pypck.lcn_defs.OutputPortDimMode[
-                conf_connection[CONF_DIM_MODE]
-            ],
-        }
-
-        connection = pypck.connection.PchkConnectionManager(
-            conf_connection[CONF_HOST],
-            conf_connection[CONF_PORT],
-            conf_connection[CONF_USERNAME],
-            conf_connection[CONF_PASSWORD],
-            settings=settings,
-            connection_id=connection_name,
-        )
-
-        try:
-            # establish connection to PCHK server
-            await hass.async_create_task(connection.async_connect(timeout=15))
-            connections.append(connection)
-            _LOGGER.info('LCN connected to "%s"', connection_name)
-        except TimeoutError:
-            _LOGGER.error('Connection to PCHK server "%s" failed', connection_name)
-            return False
-
-    hass.data[DATA_LCN][CONF_CONNECTIONS] = connections
-
-    # load platforms
-    for component, conf_key in (
-        ("binary_sensor", CONF_BINARY_SENSORS),
-        ("climate", CONF_CLIMATES),
-        ("cover", CONF_COVERS),
-        ("light", CONF_LIGHTS),
-        ("scene", CONF_SCENES),
-        ("sensor", CONF_SENSORS),
-        ("switch", CONF_SWITCHES),
-    ):
-        if conf_key in config[DOMAIN]:
-            hass.async_create_task(
-                async_load_platform(
-                    hass, component, DOMAIN, config[DOMAIN][conf_key], config
-                )
+    for config_entry_data in config_entries_data:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data=config_entry_data,
             )
+        )
+    return True
+
+
+async def async_setup_entry(hass, config_entry):
+    """Set up a connection to PCHK host from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
+    if config_entry.entry_id in hass.data[DOMAIN]:
+        return False
+
+    settings = {
+        "SK_NUM_TRIES": config_entry.data[CONF_SK_NUM_TRIES],
+        "DIM_MODE": pypck.lcn_defs.OutputPortDimMode[config_entry.data[CONF_DIM_MODE]],
+    }
+
+    # connect to PCHK
+    lcn_connection = pypck.connection.PchkConnectionManager(
+        config_entry.data[CONF_IP_ADDRESS],
+        config_entry.data[CONF_PORT],
+        config_entry.data[CONF_USERNAME],
+        config_entry.data[CONF_PASSWORD],
+        settings=settings,
+        connection_id=config_entry.entry_id,
+    )
+    try:
+        # establish connection to PCHK server
+        await lcn_connection.async_connect(timeout=15)
+    except pypck.connection.PchkAuthenticationError:
+        _LOGGER.warning('Authentication on PCHK "%s" failed', config_entry.title)
+        return False
+    except pypck.connection.PchkLicenseError:
+        _LOGGER.warning(
+            'Maximum number of connections on PCHK "%s" was '
+            "reached. An additional license key is required",
+            config_entry.title,
+        )
+        return False
+    except TimeoutError:
+        _LOGGER.warning('Connection to PCHK "%s" failed', config_entry.title)
+        return False
+
+    _LOGGER.debug('LCN connected to "%s"', config_entry.title)
+    hass.data[DOMAIN][config_entry.entry_id] = {
+        CONNECTION: lcn_connection,
+    }
+
+    # remove orphans from entity registry which are in ConfigEntry but were removed
+    # from configuration.yaml
+    if config_entry.source == config_entries.SOURCE_IMPORT:
+        entity_registry = await er.async_get_registry(hass)
+        entity_registry.async_clear_config_entry(config_entry.entry_id)
+
+    # forward config_entry to components
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     # register service calls
-    for service_name, service in (
-        ("output_abs", OutputAbs),
-        ("output_rel", OutputRel),
-        ("output_toggle", OutputToggle),
-        ("relays", Relays),
-        ("var_abs", VarAbs),
-        ("var_reset", VarReset),
-        ("var_rel", VarRel),
-        ("lock_regulator", LockRegulator),
-        ("led", Led),
-        ("send_keys", SendKeys),
-        ("lock_keys", LockKeys),
-        ("dyn_text", DynText),
-        ("pck", Pck),
-    ):
-        hass.services.async_register(
-            DOMAIN, service_name, service(hass).async_call_service, service.schema
-        )
+    for service_name, service in SERVICES:
+        if not hass.services.has_service(DOMAIN, service_name):
+            hass.services.async_register(
+                DOMAIN, service_name, service(hass).async_call_service, service.schema
+            )
 
     return True
 
 
-class LcnEntity(Entity):
-    """Parent class for all devices associated with the LCN component."""
+async def async_unload_entry(hass, config_entry):
+    """Close connection to PCHK host represented by config_entry."""
+    # forward unloading to platforms
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
 
-    def __init__(self, config, device_connection):
+    if unload_ok and config_entry.entry_id in hass.data[DOMAIN]:
+        host = hass.data[DOMAIN].pop(config_entry.entry_id)
+        await host[CONNECTION].async_close()
+
+    # unregister service calls
+    if unload_ok and not hass.data[DOMAIN]:  # check if this is the last entry to unload
+        for service_name, _ in SERVICES:
+            hass.services.async_remove(DOMAIN, service_name)
+
+    return unload_ok
+
+
+class LcnEntity(Entity):
+    """Parent class for all entities associated with the LCN component."""
+
+    def __init__(self, config, entry_id, device_connection):
         """Initialize the LCN device."""
         self.config = config
+        self.entry_id = entry_id
         self.device_connection = device_connection
+        self._unregister_for_inputs = None
         self._name = config[CONF_NAME]
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        unique_device_id = generate_unique_id(
+            (
+                self.device_connection.seg_id,
+                self.device_connection.addr_id,
+                self.device_connection.is_group,
+            )
+        )
+        return f"{self.entry_id}-{unique_device_id}-{self.config[CONF_RESOURCE]}"
 
     @property
     def should_poll(self):
@@ -140,7 +156,14 @@ class LcnEntity(Entity):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         if not self.device_connection.is_group:
-            self.device_connection.register_for_inputs(self.input_received)
+            self._unregister_for_inputs = self.device_connection.register_for_inputs(
+                self.input_received
+            )
+
+    async def async_will_remove_from_hass(self):
+        """Run when entity will be removed from hass."""
+        if self._unregister_for_inputs is not None:
+            self._unregister_for_inputs()
 
     @property
     def name(self):

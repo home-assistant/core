@@ -1,9 +1,8 @@
 """Config flow for the Huawei LTE platform."""
 from __future__ import annotations
 
-from collections import OrderedDict
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 from urllib.parse import urlparse
 
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
@@ -30,11 +29,17 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import CONNECTION_TIMEOUT, DEFAULT_DEVICE_NAME, DEFAULT_NOTIFY_SERVICE_NAME
-
-# see https://github.com/PyCQA/pylint/issues/3202 about the DOMAIN's pylint issue
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import (
+    CONF_TRACK_WIRED_CLIENTS,
+    CONNECTION_TIMEOUT,
+    DEFAULT_DEVICE_NAME,
+    DEFAULT_NOTIFY_SERVICE_NAME,
+    DEFAULT_TRACK_WIRED_CLIENTS,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +48,6 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle Huawei LTE config flow."""
 
     VERSION = 2
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback
@@ -55,51 +59,40 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_show_user_form(
         self,
-        user_input: Optional[Dict[str, Any]] = None,
-        errors: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, Any]:
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
+    ) -> FlowResult:
         if user_input is None:
             user_input = {}
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                OrderedDict(
-                    (
-                        (
-                            vol.Required(
-                                CONF_URL,
-                                default=user_input.get(
-                                    CONF_URL,
-                                    self.context.get(CONF_URL, ""),
-                                ),
-                            ),
-                            str,
+                {
+                    vol.Required(
+                        CONF_URL,
+                        default=user_input.get(
+                            CONF_URL,
+                            self.context.get(CONF_URL, ""),
                         ),
-                        (
-                            vol.Optional(
-                                CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
-                            ),
-                            str,
-                        ),
-                        (
-                            vol.Optional(
-                                CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
-                            ),
-                            str,
-                        ),
-                    )
-                )
+                    ): str,
+                    vol.Optional(
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
+                    ): str,
+                    vol.Optional(
+                        CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
+                    ): str,
+                }
             ),
             errors=errors or {},
         )
 
     async def async_step_import(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle import initiated config flow."""
         return await self.async_step_user(user_input)
 
-    def _already_configured(self, user_input: Dict[str, Any]) -> bool:
+    def _already_configured(self, user_input: dict[str, Any]) -> bool:
         """See if we already have a router matching user input configured."""
         existing_urls = {
             url_normalize(entry.data[CONF_URL], default_scheme="http")
@@ -107,9 +100,9 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return user_input[CONF_URL] in existing_urls
 
-    async def async_step_user(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    async def async_step_user(  # noqa: C901
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle user initiated config flow."""
         if user_input is None:
             return await self._async_show_user_form()
@@ -129,7 +122,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._already_configured(user_input):
             return self.async_abort(reason="already_configured")
 
-        conn: Optional[Connection] = None
+        conn: Connection | None = None
 
         def logout() -> None:
             if isinstance(conn, AuthorizedConnection):
@@ -138,7 +131,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.debug("Could not logout", exc_info=True)
 
-        def try_connect(user_input: Dict[str, Any]) -> Connection:
+        def try_connect(user_input: dict[str, Any]) -> Connection:
             """Try connecting with given credentials."""
             username = user_input.get(CONF_USERNAME)
             password = user_input.get(CONF_PASSWORD)
@@ -221,9 +214,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=title, data=user_input)
 
-    async def async_step_ssdp(  # type: ignore  # mypy says signature incompatible with supertype, but it's the same?
-        self, discovery_info: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle SSDP initiated config flow."""
         await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_UDN])
         self._abort_if_unique_id_configured()
@@ -263,8 +254,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
 
     async def async_step_init(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle options flow."""
 
         # Recipients are persisted as a list, but handled as comma separated string in UI
@@ -292,6 +283,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         self.config_entry.options.get(CONF_RECIPIENT, [])
                     ),
                 ): str,
+                vol.Optional(
+                    CONF_TRACK_WIRED_CLIENTS,
+                    default=self.config_entry.options.get(
+                        CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
+                    ),
+                ): bool,
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

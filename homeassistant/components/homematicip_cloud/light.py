@@ -1,5 +1,7 @@
 """Support for HomematicIP Cloud lights."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 from homematicip.aio.device import (
     AsyncBrandDimmer,
@@ -24,7 +26,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
@@ -34,7 +36,7 @@ ATTR_CURRENT_POWER_W = "current_power_w"
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP Cloud lights from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
@@ -90,9 +92,9 @@ class HomematicipLightMeasuring(HomematicipLight):
     """Representation of the HomematicIP measuring light."""
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the light."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         current_power_w = self._device.currentPowerConsumption
         if current_power_w > 0.05:
@@ -206,9 +208,9 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
         return self._color_switcher.get(simple_rgb_color, [0.0, 0.0])
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the notification light sensor."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         if self.is_on:
             state_attr[ATTR_COLOR_NAME] = self._func_channel.simpleRGBColorState

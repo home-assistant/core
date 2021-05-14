@@ -9,6 +9,7 @@ import pytest
 import homeassistant.components.sensor as sensor
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
 import homeassistant.core as ha
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -36,6 +37,7 @@ from .test_common import (
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_connection,
     help_test_entity_device_info_with_identifier,
+    help_test_entity_disabled_by_default,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
     help_test_setting_attribute_via_mqtt_json_message,
@@ -574,7 +576,7 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 
 async def test_entity_device_info_with_hub(hass, mqtt_mock):
     """Test MQTT sensor device registry integration."""
-    registry = await hass.helpers.device_registry.async_get_registry()
+    registry = dr.async_get(hass)
     hub = registry.async_get_or_create(
         config_entry_id="123",
         connections=set(),
@@ -629,5 +631,12 @@ async def test_entity_debug_info_remove(hass, mqtt_mock):
 async def test_entity_debug_info_update_entity_id(hass, mqtt_mock):
     """Test MQTT sensor debug info."""
     await help_test_entity_debug_info_update_entity_id(
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_disabled_by_default(hass, mqtt_mock):
+    """Test entity disabled by default."""
+    await help_test_entity_disabled_by_default(
         hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
     )

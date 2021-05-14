@@ -1,50 +1,65 @@
 select_next:
+  name: Next
   description: Select the next options of an input select entity.
+  target:
   fields:
-    entity_id:
-      description: Entity id of the input select to select the next value for.
-      example: input_select.my_select
     cycle:
-      description: If the option should cycle from the last to the first (defaults to true).
+      name: Cycle
+      description: If the option should cycle from the last to the first.
+      default: true
       example: true
+      selector:
+        boolean:
+
 select_option:
+  name: Select
   description: Select an option of an input select entity.
+  target:
   fields:
-    entity_id:
-      description: Entity id of the input select to select the value.
-      example: input_select.my_select
     option:
+      name: Option
       description: Option to be selected.
+      required: true
       example: '"Item A"'
+      selector:
+        text:
+
 select_previous:
+  name: Previous
   description: Select the previous options of an input select entity.
+  target:
   fields:
-    entity_id:
-      description: Entity id of the input select to select the previous value for.
-      example: input_select.my_select
     cycle:
-      description: If the option should cycle from the first to the last (defaults to true).
+      name: Cycle
+      description: If the option should cycle from the first to the last.
+      default: true
       example: true
+      selector:
+        boolean:
+
 select_first:
+  name: First
   description: Select the first option of an input select entity.
-  fields:
-    entity_id:
-      description: Entity id of the input select to select the first value for.
-      example: input_select.my_select
+  target:
+
 select_last:
+  name: Last
   description: Select the last option of an input select entity.
-  fields:
-    entity_id:
-      description: Entity id of the input select to select the last value for.
-      example: input_select.my_select
+  target:
+
 set_options:
+  name: Set options
   description: Set the options of an input select entity.
+  target:
   fields:
-    entity_id:
-      description: Entity id of the input select to set the new options for.
-      example: input_select.my_select
     options:
+      name: Options
       description: Options for the input select entity.
+      required: true
       example: '["Item A", "Item B", "Item C"]'
+      selector:
+        object:
+
 reload:
+  name: Reload
   description: Reload the input_select configuration.

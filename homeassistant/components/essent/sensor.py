@@ -1,14 +1,14 @@
 """Support for Essent API."""
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import Optional
 
 from pyessent import PyEssent
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, ENERGY_KILO_WATT_HOUR
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 SCAN_INTERVAL = timedelta(hours=1)
@@ -81,7 +81,7 @@ class EssentBase:
                 self._meter_data[possible_meter] = meter_data
 
 
-class EssentMeter(Entity):
+class EssentMeter(SensorEntity):
     """Representation of Essent measurements."""
 
     def __init__(self, essent_base, meter, meter_type, tariff, unit):
@@ -94,7 +94,7 @@ class EssentMeter(Entity):
         self._unit = unit
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         return f"{self._meter}-{self._type}-{self._tariff}"
 

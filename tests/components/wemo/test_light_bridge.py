@@ -69,9 +69,10 @@ async def test_async_update_with_timeout_and_recovery(
     hass, pywemo_bridge_light, wemo_entity, pywemo_device
 ):
     """Test that the entity becomes unavailable after a timeout, and that it recovers."""
-    await entity_test_helpers.test_async_update_with_timeout_and_recovery(
-        hass, wemo_entity, pywemo_device
-    )
+    with _bypass_throttling():
+        await entity_test_helpers.test_async_update_with_timeout_and_recovery(
+            hass, wemo_entity, pywemo_device
+        )
 
 
 async def test_async_locked_update_with_exception(

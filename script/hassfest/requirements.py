@@ -1,4 +1,6 @@
 """Validate requirements."""
+from __future__ import annotations
+
 from collections import deque
 import json
 import operator
@@ -6,7 +8,6 @@ import os
 import re
 import subprocess
 import sys
-from typing import Dict, Set
 
 from stdlib_list import stdlib_list
 from tqdm import tqdm
@@ -58,7 +59,7 @@ def normalize_package_name(requirement: str) -> str:
     return package
 
 
-def validate(integrations: Dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config):
     """Handle requirements for integrations."""
     ensure_cache()
 
@@ -153,7 +154,7 @@ def ensure_cache():
     PIPDEPTREE_CACHE = cache
 
 
-def get_requirements(integration: Integration, packages: Set[str]) -> Set[str]:
+def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     """Return all (recursively) requirements for an integration."""
     ensure_cache()
 
@@ -184,7 +185,7 @@ def get_requirements(integration: Integration, packages: Set[str]) -> Set[str]:
     return all_requirements
 
 
-def install_requirements(integration: Integration, requirements: Set[str]) -> bool:
+def install_requirements(integration: Integration, requirements: set[str]) -> bool:
     """Install integration requirements.
 
     Return True if successful.

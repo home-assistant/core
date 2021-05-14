@@ -4,7 +4,6 @@ from datetime import timedelta
 from functools import partial
 import logging
 import math
-import sys
 
 import aiolifx as aiolifx_module
 import aiolifx_effects as aiolifx_effects_module
@@ -166,12 +165,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up LIFX from a config entry."""
-    if sys.platform == "win32":
-        _LOGGER.warning(
-            "The lifx platform is known to not work on Windows. "
-            "Consider using the lifx_legacy platform instead"
-        )
-
     # Priority 1: manual config
     interfaces = hass.data[LIFX_DOMAIN].get(DOMAIN)
     if not interfaces:
@@ -182,7 +175,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             # Priority 3: default interface
             interfaces = [{}]
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     lifx_manager = LIFXManager(hass, platform, async_add_entities)
     hass.data[DATA_LIFX_MANAGER] = lifx_manager
 
@@ -207,6 +200,12 @@ def find_hsbk(hass, **kwargs):
 
     if ATTR_HS_COLOR in kwargs:
         hue, saturation = kwargs[ATTR_HS_COLOR]
+    elif ATTR_RGB_COLOR in kwargs:
+        hue, saturation = color_util.color_RGB_to_hs(*kwargs[ATTR_RGB_COLOR])
+    elif ATTR_XY_COLOR in kwargs:
+        hue, saturation = color_util.color_xy_to_hs(*kwargs[ATTR_XY_COLOR])
+
+    if hue is not None:
         hue = int(hue / 360 * 65535)
         saturation = int(saturation / 100 * 65535)
         kelvin = 3500
@@ -608,9 +607,13 @@ class LIFXLight(LightEntity):
             if not self.is_on:
                 if power_off:
                     await self.set_power(ack, False)
-                if hsbk:
+                # If fading on with color, set color immediately
+                if hsbk and power_on:
                     await self.set_color(ack, hsbk, kwargs)
-                if power_on:
+                    await self.set_power(ack, True, duration=fade)
+                elif hsbk:
+                    await self.set_color(ack, hsbk, kwargs, duration=fade)
+                elif power_on:
                     await self.set_power(ack, True, duration=fade)
             else:
                 if power_on:

@@ -65,7 +65,7 @@ class LutronLight(LutronDevice, LightEntity):
         self._lutron_device.level = 0
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {"lutron_integration_id": self._lutron_device.id}
 

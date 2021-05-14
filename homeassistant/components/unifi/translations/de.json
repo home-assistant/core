@@ -1,13 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Controller-Site ist bereits konfiguriert"
+            "already_configured": "Controller-Site ist bereits konfiguriert",
+            "configuration_updated": "Konfiguration aktualisiert.",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
             "faulty_credentials": "Ung\u00fcltige Authentifizierung",
             "service_unavailable": "Verbindung fehlgeschlagen",
             "unknown_client_mac": "Unter dieser MAC-Adresse ist kein Client verf\u00fcgbar."
         },
+        "flow_title": "UniFi Netzwerk {site} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -27,6 +30,7 @@
             "client_control": {
                 "data": {
                     "block_client": "Clients mit Netzwerkzugriffskontrolle",
+                    "dpi_restrictions": "Zulassen der Steuerung von DPI-Einschr\u00e4nkungsgruppen",
                     "poe_clients": "POE-Kontrolle von Clients zulassen"
                 },
                 "description": "Konfigurieren Sie Client-Steuerelemente \n\nErstellen Sie Switches f\u00fcr Seriennummern, f\u00fcr die Sie den Netzwerkzugriff steuern m\u00f6chten.",
@@ -35,6 +39,7 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "Zeit in Sekunden vom letzten Gesehenen bis zur Entfernung",
+                    "ignore_wired_bug": "Deaktivieren der kabelgebundenen UniFi-Fehlerlogik",
                     "ssid_filter": "W\u00e4hlen Sie SSIDs zur Verfolgung von drahtlosen Clients aus",
                     "track_clients": "Nachverfolgen von Netzwerkclients",
                     "track_devices": "Verfolgen von Netzwerkger\u00e4ten (Ubiquiti-Ger\u00e4te)",

@@ -5,7 +5,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.mysensors.gateway import is_serial_port
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 
 @pytest.mark.parametrize(
@@ -18,7 +18,7 @@ from homeassistant.helpers.typing import HomeAssistantType
         ("/dev/ttyACM0", False),
     ],
 )
-def test_is_serial_port_windows(hass: HomeAssistantType, port: str, expect_valid: bool):
+def test_is_serial_port_windows(hass: HomeAssistant, port: str, expect_valid: bool):
     """Test windows serial port."""
 
     with patch("sys.platform", "win32"):

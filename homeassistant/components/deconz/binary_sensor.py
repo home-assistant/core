@@ -6,6 +6,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_PROBLEM,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_VIBRATION,
     DOMAIN,
@@ -55,10 +56,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             ):
                 entities.append(DeconzBinarySensor(sensor, gateway))
 
+            if sensor.tampered is not None:
+                known_tampering_sensors = set(gateway.entities[DOMAIN])
+                new_tampering_sensor = DeconzTampering(sensor, gateway)
+                if new_tampering_sensor.unique_id not in known_tampering_sensors:
+                    entities.append(new_tampering_sensor)
+
         if entities:
             async_add_entities(entities)
 
-    gateway.listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass, gateway.async_signal_new_device(NEW_SENSOR), async_add_sensor
         )
@@ -92,7 +99,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
         return DEVICE_CLASS.get(type(self._device))
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         attr = {}
 
@@ -113,3 +120,36 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
             attr[ATTR_VIBRATIONSTRENGTH] = self._device.vibrationstrength
 
         return attr
+
+
+class DeconzTampering(DeconzDevice, BinarySensorEntity):
+    """Representation of a deCONZ tampering sensor."""
+
+    TYPE = DOMAIN
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this device."""
+        return f"{self.serial}-tampered"
+
+    @callback
+    def async_update_callback(self, force_update: bool = False) -> None:
+        """Update the sensor's state."""
+        keys = {"tampered", "reachable"}
+        if force_update or self._device.changed_keys.intersection(keys):
+            super().async_update_callback(force_update=force_update)
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return self._device.tampered
+
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        return f"{self._device.name} Tampered"
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of the sensor."""
+        return DEVICE_CLASS_PROBLEM

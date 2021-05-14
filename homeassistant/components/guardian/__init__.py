@@ -1,6 +1,7 @@
 """The Elexa Guardian integration."""
+from __future__ import annotations
+
 import asyncio
-from typing import Dict
 
 from aioguardian import Client
 
@@ -8,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -104,24 +106,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ].async_add_listener(async_process_paired_sensor_uids)
 
     # Set up all of the Guardian entity platforms:
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
         hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
@@ -241,12 +233,12 @@ class GuardianEntity(CoordinatorEntity):
         return self._device_class
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         return self._device_info
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return self._attrs
 
@@ -314,7 +306,7 @@ class ValveControllerEntity(GuardianEntity):
     def __init__(
         self,
         entry: ConfigEntry,
-        coordinators: Dict[str, DataUpdateCoordinator],
+        coordinators: dict[str, DataUpdateCoordinator],
         kind: str,
         name: str,
         device_class: str,

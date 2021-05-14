@@ -9,13 +9,13 @@
             "old_firmware": "Stare, nieobs\u0142ugiwane oprogramowanie na urz\u0105dzeniu Bond - zaktualizuj przed kontynuowaniem",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
-        "flow_title": "Bond: {bond_id} ({host})",
+        "flow_title": "Bond: {name} ({host})",
         "step": {
             "confirm": {
                 "data": {
                     "access_token": "Token dost\u0119pu"
                 },
-                "description": "Czy chcesz skonfigurowa\u0107 {bond_id}?"
+                "description": "Czy chcesz skonfigurowa\u0107 {name}?"
             },
             "user": {
                 "data": {

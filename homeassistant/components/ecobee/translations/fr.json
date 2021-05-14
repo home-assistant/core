@@ -9,7 +9,7 @@
         },
         "step": {
             "authorize": {
-                "description": "Veuillez autoriser cette application \u00e0 https://www.ecobee.com/consumerportal/index.html avec un code PIN :\n\n{pin}\n\nEnsuite, appuyez sur Soumettre.",
+                "description": "Veuillez autoriser cette application \u00e0 https://www.ecobee.com/consumerportal/index.html avec le code NIP :\n\n{pin}\n\nEnsuite, appuyez sur Soumettre.",
                 "title": "Autoriser l'application sur ecobee.com"
             },
             "user": {

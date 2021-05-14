@@ -13,8 +13,8 @@
         }
       },
       "hassio_confirm": {
-        "title": "AdGuard Home via Hass.io add-on",
-        "description": "Do you want to configure Home Assistant to connect to the AdGuard Home provided by the Hass.io add-on: {addon}?"
+        "title": "AdGuard Home via Home Assistant add-on",
+        "description": "Do you want to configure Home Assistant to connect to the AdGuard Home provided by the add-on: {addon}?"
       }
     },
     "error": {
@@ -22,7 +22,7 @@
     },
     "abort": {
       "existing_instance_updated": "Updated existing configuration.",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   }
 }

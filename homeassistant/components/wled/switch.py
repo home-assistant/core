@@ -1,10 +1,12 @@
 """Support for WLED switches."""
-from typing import Any, Callable, Dict, List, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import WLEDDataUpdateCoordinator, WLEDDeviceEntity, wled_exception_handler
 from .const import (
@@ -19,9 +21,9 @@ PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up WLED switch based on a config entry."""
     coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -72,7 +74,7 @@ class WLEDNightlightSwitch(WLEDSwitch):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         return {
             ATTR_DURATION: self.coordinator.data.state.nightlight.duration,
@@ -110,7 +112,7 @@ class WLEDSyncSendSwitch(WLEDSwitch):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         return {ATTR_UDP_PORT: self.coordinator.data.info.udp_port}
 
@@ -144,7 +146,7 @@ class WLEDSyncReceiveSwitch(WLEDSwitch):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         return {ATTR_UDP_PORT: self.coordinator.data.info.udp_port}
 

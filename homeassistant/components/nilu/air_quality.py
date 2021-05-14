@@ -175,7 +175,7 @@ class NiluSensor(AirQualityEntity):
         return ATTRIBUTION
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return other details about the sensor state."""
         return self._attrs
 

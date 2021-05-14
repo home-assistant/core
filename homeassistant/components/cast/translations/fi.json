@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Verkosta ei l\u00f6ydy Google Cast -laitteita.",
             "single_instance_allowed": "Vain yksi Google Cast -m\u00e4\u00e4ritys on tarpeen."
         },
         "step": {

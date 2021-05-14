@@ -48,6 +48,21 @@ CONF_FALLBACK = "fallback"
 DATA = "data"
 UPDATE_TRACK = "update_track"
 
+# Weather
+CONDITIONS_MAP = {
+    "clear-night": {"NIGHT_CLEAR"},
+    "cloudy": {"CLOUDY", "CLOUDY_MOSTLY", "NIGHT_CLOUDY"},
+    "fog": {"FOGGY"},
+    "hail": {"HAIL", "RAIN_HAIL"},
+    "lightning": {"THUNDERSTORM"},
+    "partlycloudy": {"CLOUDY_PARTLY"},
+    "rainy": {"DRIZZLE", "RAIN", "SCATTERED_RAIN"},
+    "snowy": {"FREEZING", "SCATTERED_SNOW", "SNOW"},
+    "snowy-rainy": {"RAIN_SNOW", "SCATTERED_RAIN_SNOW"},
+    "sunny": {"SUN"},
+    "windy": {"WIND"},
+}
+
 # Types
 TYPE_AIR_CONDITIONING = "AIR_CONDITIONING"
 TYPE_HEATING = "HEATING"
@@ -149,6 +164,7 @@ UNIQUE_ID = "unique_id"
 
 DEFAULT_NAME = "Tado"
 
+TADO_HOME = "Home"
 TADO_ZONE = "Zone"
 
 UPDATE_LISTENER = "update_listener"

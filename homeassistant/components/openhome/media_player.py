@@ -53,7 +53,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([entity])
     openhome_data.add(device.Uuid())
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_INVOKE_PIN,
@@ -139,7 +139,7 @@ class OpenhomeDevice(MediaPlayerEntity):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
-        if not media_type == MEDIA_TYPE_MUSIC:
+        if media_type != MEDIA_TYPE_MUSIC:
             _LOGGER.error(
                 "Invalid media type %s. Only %s is supported",
                 media_type,

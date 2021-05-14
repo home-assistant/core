@@ -6,14 +6,10 @@
     "status": 4,
     "ready": true,
     "deviceClass": {
-        "basic": "Routing Slave",
-        "generic": "Multilevel Switch",
-        "specific": "Multilevel Power Switch",
-        "mandatorySupportedCCs": [
-            "Basic",
-            "Multilevel Switch",
-            "All Switch"
-        ],
+        "basic": {"key": 4, "label":"Routing Slave"},
+        "generic": {"key": 17, "label":"Routing Slave"},
+        "specific": {"key": 1, "label":"Multilevel Power Switch"},
+        "mandatorySupportedCCs": [],
         "mandatoryControlCCs": []
     },
     "isListening": true,
@@ -31,7 +27,7 @@
     "nodeType": 0,
     "roleType": 5,
     "name": "AllLoadDimmer",
-    "location": "",
+    "location": "LivingRoom",
     "deviceConfig": {
         "manufacturerId": 26,
         "manufacturer": "Eaton",
@@ -74,6 +70,7 @@
             "userIcon": 1536
         }
     ],
+    "commandClasses": [],
     "values": [
         {
             "commandClassName": "Multilevel Switch",

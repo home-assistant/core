@@ -1,10 +1,11 @@
 """Support for Ring Doorbell/Chimes."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
 from pathlib import Path
-from typing import Optional
 
 from oauthlib.oauth2 import AccessDeniedError
 import requests
@@ -99,10 +100,7 @@ async def async_setup_entry(hass, entry):
         ),
     }
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     if hass.services.has_service(DOMAIN, "update"):
         return True
@@ -123,15 +121,7 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload Ring entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
-    if not unload_ok:
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
 
     hass.data[DOMAIN].pop(entry.entry_id)
@@ -187,7 +177,7 @@ class GlobalDataUpdater:
             self._unsub_interval()
             self._unsub_interval = None
 
-    async def async_refresh_all(self, _now: Optional[int] = None) -> None:
+    async def async_refresh_all(self, _now: int | None = None) -> None:
         """Time to update."""
         if not self.listeners:
             return

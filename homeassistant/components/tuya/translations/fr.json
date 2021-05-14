@@ -40,8 +40,10 @@
                     "max_temp": "Temp\u00e9rature cible maximale (utilisez min et max = 0 par d\u00e9faut)",
                     "min_kelvin": "Temp\u00e9rature de couleur minimale prise en charge en kelvin",
                     "min_temp": "Temp\u00e9rature cible minimale (utilisez min et max = 0 par d\u00e9faut)",
+                    "set_temp_divided": "Utilisez la valeur de temp\u00e9rature divis\u00e9e pour la commande de temp\u00e9rature d\u00e9finie",
                     "support_color": "Forcer la prise en charge des couleurs",
                     "temp_divider": "Diviseur de valeurs de temp\u00e9rature (0 = utiliser la valeur par d\u00e9faut)",
+                    "temp_step_override": "Pas de temp\u00e9rature cible",
                     "tuya_max_coltemp": "Temp\u00e9rature de couleur maximale rapport\u00e9e par l'appareil",
                     "unit_of_measurement": "Unit\u00e9 de temp\u00e9rature utilis\u00e9e par l'appareil"
                 },

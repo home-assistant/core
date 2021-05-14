@@ -5,11 +5,11 @@ import pymyq
 from pymyq.errors import InvalidCredentialsError, MyQError
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,73 +18,81 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
-    """Validate the user input allows us to connect.
-
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
-
-    websession = aiohttp_client.async_get_clientsession(hass)
-
-    try:
-        await pymyq.login(data[CONF_USERNAME], data[CONF_PASSWORD], websession)
-    except InvalidCredentialsError as err:
-        raise InvalidAuth from err
-    except MyQError as err:
-        raise CannotConnect from err
-
-    return {"title": data[CONF_USERNAME]}
-
-
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for MyQ."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+
+    def __init__(self):
+        """Start a myq config flow."""
+        self._reauth_unique_id = None
+
+    async def _async_validate_input(self, username, password):
+        """Validate the user input allows us to connect."""
+        websession = aiohttp_client.async_get_clientsession(self.hass)
+        try:
+            await pymyq.login(username, password, websession)
+        except InvalidCredentialsError:
+            return {CONF_PASSWORD: "invalid_auth"}
+        except MyQError:
+            return {"base": "cannot_connect"}
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            return {"base": "unknown"}
+
+        return None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-
-            if "base" not in errors:
+            errors = await self._async_validate_input(
+                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+            )
+            if not errors:
                 await self.async_set_unique_id(user_input[CONF_USERNAME])
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_homekit(self, homekit_info):
-        """Handle HomeKit discovery."""
-        if self._async_current_entries():
-            # We can see myq on the network to tell them to configure
-            # it, but since the device will not give up the account it is
-            # bound to and there can be multiple myq gateways on a single
-            # account, we avoid showing the device as discovered once
-            # they already have one configured as they can always
-            # add a new one via "+"
-            return self.async_abort(reason="already_configured")
-        properties = {
-            key.lower(): value for (key, value) in homekit_info["properties"].items()
-        }
-        await self.async_set_unique_id(properties["id"])
-        return await self.async_step_user()
+    async def async_step_reauth(self, user_input=None):
+        """Handle reauth."""
+        self._reauth_unique_id = self.context["unique_id"]
+        return await self.async_step_reauth_confirm()
 
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Handle reauth input."""
+        errors = {}
+        existing_entry = await self.async_set_unique_id(self._reauth_unique_id)
+        if user_input is not None:
+            errors = await self._async_validate_input(
+                existing_entry.data[CONF_USERNAME], user_input[CONF_PASSWORD]
+            )
+            if not errors:
+                self.hass.config_entries.async_update_entry(
+                    existing_entry,
+                    data={
+                        **existing_entry.data,
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+                await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
 
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
+        return self.async_show_form(
+            description_placeholders={
+                CONF_USERNAME: existing_entry.data[CONF_USERNAME]
+            },
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+        )

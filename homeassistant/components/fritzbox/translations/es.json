@@ -23,7 +23,8 @@
                 "data": {
                     "password": "Contrase\u00f1a",
                     "username": "Usuario"
-                }
+                },
+                "description": "Actualice la informaci\u00f3n de inicio de sesi\u00f3n para {name}."
             },
             "user": {
                 "data": {

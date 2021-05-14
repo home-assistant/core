@@ -22,7 +22,9 @@
     },
     "system_health": {
         "info": {
-            "can_reach_server": "N\u00e5 Airly-serveren"
+            "can_reach_server": "N\u00e5 Airly-serveren",
+            "requests_per_day": "Tillatte foresp\u00f8rsler per dag",
+            "requests_remaining": "Gjenv\u00e6rende tillatte foresp\u00f8rsler"
         }
     }
 }

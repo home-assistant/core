@@ -1,8 +1,10 @@
 """Config flow for DSMR integration."""
+from __future__ import annotations
+
 import asyncio
 from functools import partial
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from async_timeout import timeout
 from dsmr_parser import obis_references as obis_ref
@@ -14,7 +16,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 
-from .const import (  # pylint:disable=unused-import
+from .const import (
     CONF_DSMR_VERSION,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
@@ -121,7 +123,6 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for DSMR."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     @staticmethod
     @callback
@@ -133,7 +134,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         port: str,
         host: str = None,
-        updates: Optional[Dict[Any, Any]] = None,
+        updates: dict[Any, Any] | None = None,
         reload_on_update: bool = True,
     ):
         """Test if host and port are already configured."""

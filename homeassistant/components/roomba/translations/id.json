@@ -1,0 +1,63 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "cannot_connect": "Gagal terhubung",
+            "not_irobot_device": "Perangkat yang ditemukan bukan perangkat iRobot",
+            "short_blid": "BLID terpotong"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "flow_title": "iRobot {name} ({host})",
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Pilih Roomba atau Braava.",
+                "title": "Sambungkan secara otomatis ke perangkat"
+            },
+            "link": {
+                "description": "Tekan dan tahan tombol Home pada {name} hingga perangkat mengeluarkan suara (sekitar dua detik).",
+                "title": "Ambil Kata Sandi"
+            },
+            "link_manual": {
+                "data": {
+                    "password": "Kata Sandi"
+                },
+                "description": "Kata sandi tidak dapat diambil dari perangkat secara otomatis. Ikuti langkah-langkah yang diuraikan dalam dokumentasi di: {auth_help_url}",
+                "title": "Masukkan Kata Sandi"
+            },
+            "manual": {
+                "data": {
+                    "blid": "BLID",
+                    "host": "Host"
+                },
+                "description": "Tidak ada Roomba atau Braava yang ditemukan di jaringan Anda. BLID adalah bagian dari nama host perangkat setelah `iRobot-`. Ikuti langkah-langkah yang diuraikan dalam dokumentasi di: {auth_help_url}",
+                "title": "Hubungkan ke perangkat secara manual"
+            },
+            "user": {
+                "data": {
+                    "blid": "BLID",
+                    "continuous": "Terus menerus",
+                    "delay": "Tunda",
+                    "host": "Host",
+                    "password": "Kata Sandi"
+                },
+                "description": "Saat ini proses mengambil BLID dan kata sandi merupakan proses manual. Iikuti langkah-langkah yang diuraikan dalam dokumentasi di: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
+                "title": "Hubungkan ke perangkat"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "continuous": "Terus menerus",
+                    "delay": "Tunda"
+                }
+            }
+        }
+    }
+}

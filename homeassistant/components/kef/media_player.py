@@ -146,7 +146,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         hass.data[DOMAIN][host] = media_player
         async_add_entities([media_player], update_before_add=True)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_MODE,
@@ -395,7 +395,7 @@ class KefMediaPlayer(MediaPlayerEntity):
         self._update_dsp_task_remover = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the DSP settings of the KEF device."""
         return self._dsp or {}
 

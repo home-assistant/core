@@ -2,6 +2,27 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "old_firmware": "Nem t\u00e1mogatott r\u00e9gi firmware a Bond eszk\u00f6z\u00f6n - k\u00e9rj\u00fck friss\u00edtsd, miel\u0151tt folytatn\u00e1d",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "flow_title": "Bond: {name} ({host})",
+        "step": {
+            "confirm": {
+                "data": {
+                    "access_token": "Hozz\u00e1f\u00e9r\u00e9si token"
+                },
+                "description": "Szeretn\u00e9d be\u00e1ll\u00edtani a(z) {name}-t?"
+            },
+            "user": {
+                "data": {
+                    "access_token": "Hozz\u00e1f\u00e9r\u00e9si token",
+                    "host": "Hoszt"
+                }
+            }
         }
     }
 }

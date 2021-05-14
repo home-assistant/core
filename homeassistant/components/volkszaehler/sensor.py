@@ -6,7 +6,7 @@ from volkszaehler import Volkszaehler
 from volkszaehler.exceptions import VolkszaehlerApiConnectionError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
@@ -18,7 +18,6 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,7 +76,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(dev, True)
 
 
-class VolkszaehlerSensor(Entity):
+class VolkszaehlerSensor(SensorEntity):
     """Implementation of a Volkszaehler sensor."""
 
     def __init__(self, vz_api, name, sensor_type):
@@ -90,7 +89,7 @@ class VolkszaehlerSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._name, SENSOR_TYPES[self.type][0])
+        return f"{self._name} {SENSOR_TYPES[self.type][0]}"
 
     @property
     def icon(self):

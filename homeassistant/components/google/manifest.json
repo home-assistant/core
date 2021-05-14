@@ -4,8 +4,9 @@
   "documentation": "https://www.home-assistant.io/integrations/google",
   "requirements": [
     "google-api-python-client==1.6.4",
-    "httplib2==0.18.1",
+    "httplib2==0.19.0",
     "oauth2client==4.0.0"
   ],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

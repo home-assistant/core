@@ -12,12 +12,14 @@
         "step": {
             "confirm": {
                 "data": {
-                    "name": "Name"
+                    "name": "Name",
+                    "url": "Web-Interface-URL"
                 }
             },
             "user": {
                 "data": {
-                    "name": "Name"
+                    "name": "Name",
+                    "url": "Web-Interface-URL"
                 }
             }
         }

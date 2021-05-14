@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_DEFAULT,
+    CONF_DESCRIPTION,
     CONF_DOMAIN,
     CONF_NAME,
     CONF_PATH,
@@ -15,7 +16,6 @@ from homeassistant.helpers import config_validation as cv, selector
 
 from .const import (
     CONF_BLUEPRINT,
-    CONF_DESCRIPTION,
     CONF_HOMEASSISTANT,
     CONF_INPUT,
     CONF_MIN_VERSION,

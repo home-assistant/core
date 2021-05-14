@@ -1,8 +1,9 @@
 """View to accept incoming websocket connection."""
+from __future__ import annotations
+
 import asyncio
 from contextlib import suppress
 import logging
-from typing import Optional
 
 from aiohttp import WSMsgType, web
 import async_timeout
@@ -57,7 +58,7 @@ class WebSocketHandler:
         """Initialize an active connection."""
         self.hass = hass
         self.request = request
-        self.wsock: Optional[web.WebSocketResponse] = None
+        self.wsock: web.WebSocketResponse | None = None
         self._to_write: asyncio.Queue = asyncio.Queue(maxsize=MAX_PENDING_MSG)
         self._handle_task = None
         self._writer_task = None
@@ -74,10 +75,6 @@ class WebSocketHandler:
                     break
 
                 self._logger.debug("Sending %s", message)
-
-                if not isinstance(message, str):
-                    message = message_to_json(message)
-
                 await self.wsock.send_str(message)
 
         # Clean up the peaker checker when we shut down the writer
@@ -93,6 +90,9 @@ class WebSocketHandler:
 
         Async friendly.
         """
+        if not isinstance(message, str):
+            message = message_to_json(message)
+
         try:
             self._to_write.put_nowait(message)
         except asyncio.QueueFull:

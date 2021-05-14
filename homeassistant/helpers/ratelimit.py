@@ -1,8 +1,11 @@
 """Ratelimit helper."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Hashable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Callable, Dict, Hashable, Optional
+from typing import Any, Callable
 
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.util.dt as dt_util
@@ -19,8 +22,8 @@ class KeyedRateLimit:
     ):
         """Initialize ratelimit tracker."""
         self.hass = hass
-        self._last_triggered: Dict[Hashable, datetime] = {}
-        self._rate_limit_timers: Dict[Hashable, asyncio.TimerHandle] = {}
+        self._last_triggered: dict[Hashable, datetime] = {}
+        self._rate_limit_timers: dict[Hashable, asyncio.TimerHandle] = {}
 
     @callback
     def async_has_timer(self, key: Hashable) -> bool:
@@ -30,7 +33,7 @@ class KeyedRateLimit:
         return key in self._rate_limit_timers
 
     @callback
-    def async_triggered(self, key: Hashable, now: Optional[datetime] = None) -> None:
+    def async_triggered(self, key: Hashable, now: datetime | None = None) -> None:
         """Call when the action we are tracking was triggered."""
         self.async_cancel_timer(key)
         self._last_triggered[key] = now or dt_util.utcnow()
@@ -54,11 +57,11 @@ class KeyedRateLimit:
     def async_schedule_action(
         self,
         key: Hashable,
-        rate_limit: Optional[timedelta],
+        rate_limit: timedelta | None,
         now: datetime,
         action: Callable,
         *args: Any,
-    ) -> Optional[datetime]:
+    ) -> datetime | None:
         """Check rate limits and schedule an action if we hit the limit.
 
         If the rate limit is hit:

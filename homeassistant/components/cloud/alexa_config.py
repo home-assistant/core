@@ -1,5 +1,6 @@
 """Alexa configuration for Home Assistant Cloud."""
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
 import logging
 
@@ -8,6 +9,7 @@ import async_timeout
 from hass_nabucasa import Cloud, cloud_api
 
 from homeassistant.components.alexa import (
+    DOMAIN as ALEXA_DOMAIN,
     config as alexa_config,
     entities as alexa_entities,
     errors as alexa_errors,
@@ -17,6 +19,7 @@ from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_BAD_REQUEST
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.event import async_call_later
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from .const import CONF_ENTITY_CONFIG, CONF_FILTER, PREF_SHOULD_EXPOSE, RequireRelink
@@ -62,7 +65,11 @@ class AlexaConfig(alexa_config.AbstractConfig):
     @property
     def enabled(self):
         """Return if Alexa is enabled."""
-        return self._prefs.alexa_enabled
+        return (
+            self._cloud.is_logged_in
+            and not self._cloud.subscription_expired
+            and self._prefs.alexa_enabled
+        )
 
     @property
     def supports_auth(self):
@@ -97,6 +104,11 @@ class AlexaConfig(alexa_config.AbstractConfig):
     def user_identifier(self):
         """Return an identifier for the user that represents this config."""
         return self._cloud_user
+
+    async def async_initialize(self):
+        """Initialize the Alexa config."""
+        if self.enabled and ALEXA_DOMAIN not in self.hass.config.components:
+            await async_setup_component(self.hass, ALEXA_DOMAIN, {})
 
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
@@ -155,6 +167,9 @@ class AlexaConfig(alexa_config.AbstractConfig):
 
     async def _async_prefs_updated(self, prefs):
         """Handle updated preferences."""
+        if ALEXA_DOMAIN not in self.hass.config.components and self.enabled:
+            await async_setup_component(self.hass, ALEXA_DOMAIN, {})
+
         if self.should_report_state != self.is_reporting_states:
             if self.should_report_state:
                 await self.async_enable_proactive_mode()
@@ -318,7 +333,5 @@ class AlexaConfig(alexa_config.AbstractConfig):
             if "old_entity_id" in event.data:
                 to_remove.append(event.data["old_entity_id"])
 
-        try:
+        with suppress(alexa_errors.NoTokenAvailable):
             await self._sync_helper(to_update, to_remove)
-        except alexa_errors.NoTokenAvailable:
-            pass

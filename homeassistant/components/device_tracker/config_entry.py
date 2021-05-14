@@ -1,5 +1,7 @@
 """Code to set up a device tracker platform using a config entry."""
-from typing import Optional
+from __future__ import annotations
+
+from typing import final
 
 from homeassistant.components import zone
 from homeassistant.const import (
@@ -18,7 +20,7 @@ from .const import ATTR_HOST_NAME, ATTR_IP, ATTR_MAC, ATTR_SOURCE_TYPE, DOMAIN, 
 
 async def async_setup_entry(hass, entry):
     """Set up an entry."""
-    component: Optional[EntityComponent] = hass.data.get(DOMAIN)
+    component: EntityComponent | None = hass.data.get(DOMAIN)
 
     if component is None:
         component = hass.data[DOMAIN] = EntityComponent(LOGGER, DOMAIN, hass)
@@ -59,7 +61,7 @@ class BaseTrackerEntity(Entity):
 
 
 class TrackerEntity(BaseTrackerEntity):
-    """Represent a tracked device."""
+    """Base class for a tracked device."""
 
     @property
     def should_poll(self):
@@ -114,6 +116,7 @@ class TrackerEntity(BaseTrackerEntity):
 
         return None
 
+    @final
     @property
     def state_attributes(self):
         """Return the device state attributes."""
@@ -128,35 +131,36 @@ class TrackerEntity(BaseTrackerEntity):
 
 
 class ScannerEntity(BaseTrackerEntity):
-    """Represent a tracked device that is on a scanned network."""
+    """Base class for a tracked device that is on a scanned network."""
 
     @property
-    def ip_address(self) -> str:
+    def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return None
 
     @property
-    def mac_address(self) -> str:
+    def mac_address(self) -> str | None:
         """Return the mac address of the device."""
         return None
 
     @property
-    def hostname(self) -> str:
+    def hostname(self) -> str | None:
         """Return hostname of the device."""
         return None
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the device."""
         if self.is_connected:
             return STATE_HOME
         return STATE_NOT_HOME
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         raise NotImplementedError
 
+    @final
     @property
     def state_attributes(self):
         """Return the device state attributes."""

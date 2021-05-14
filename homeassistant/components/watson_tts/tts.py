@@ -8,7 +8,6 @@ import homeassistant.helpers.config_validation as cv
 
 CONF_URL = "watson_url"
 CONF_APIKEY = "watson_apikey"
-ATTR_CREDENTIALS = "credentials"
 
 DEFAULT_URL = "https://stream.watsonplatform.net/text-to-speech/api"
 

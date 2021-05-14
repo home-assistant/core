@@ -9,7 +9,7 @@ from homeassistant.config_entries import ENTRY_STATE_LOADED
 from .common import MQTTMessage
 
 from tests.common import MockConfigEntry, load_fixture
-from tests.components.light.conftest import mock_light_profiles  # noqa
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
 @pytest.fixture(name="generic_data", scope="session")
