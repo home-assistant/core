@@ -81,7 +81,7 @@ jobs:
           name: requirements_diff
 
       - name: Build wheels
-        uses: home-assistant/wheels@2021.05.2
+        uses: home-assistant/wheels@2021.05.3
         with:
           tag: ${{ matrix.tag }}
           arch: ${{ matrix.arch }}
@@ -151,7 +151,7 @@ jobs:
           done
 
       - name: Build wheels
-        uses: home-assistant/wheels@2021.05.2
+        uses: home-assistant/wheels@2021.05.3
         with:
           tag: ${{ matrix.tag }}
           arch: ${{ matrix.arch }}
