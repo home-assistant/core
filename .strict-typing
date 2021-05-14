@@ -46,6 +46,7 @@ homeassistant.components.switch.*
 homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
 homeassistant.components.tts.*
+homeassistant.components.upcloud.*
 homeassistant.components.vacuum.*
 homeassistant.components.water_heater.*
 homeassistant.components.weather.*
