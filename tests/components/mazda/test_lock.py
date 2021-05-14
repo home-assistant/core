@@ -5,7 +5,6 @@ from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_UNLOCK,
     STATE_LOCKED,
-    STATE_UNLOCKED,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
 from homeassistant.helpers import entity_registry as er
@@ -13,7 +12,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.components.mazda import init_integration
 
 
-async def test_locking_and_unlocking(hass):
+async def test_lock_setup(hass):
     """Test locking and unlocking the vehicle."""
     await init_integration(hass)
 
@@ -28,16 +27,10 @@ async def test_locking_and_unlocking(hass):
 
     assert state.state == STATE_LOCKED
 
-    await hass.services.async_call(
-        LOCK_DOMAIN,
-        SERVICE_UNLOCK,
-        {ATTR_ENTITY_ID: "lock.my_mazda3_lock"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
 
-    state = hass.states.get("lock.my_mazda3_lock")
-    assert state.state == STATE_UNLOCKED
+async def test_locking(hass):
+    """Test locking the vehicle."""
+    client_mock = await init_integration(hass)
 
     await hass.services.async_call(
         LOCK_DOMAIN,
@@ -47,5 +40,19 @@ async def test_locking_and_unlocking(hass):
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("lock.my_mazda3_lock")
-    assert state.state == STATE_LOCKED
+    client_mock.lock_doors.assert_called_once()
+
+
+async def test_unlocking(hass):
+    """Test unlocking the vehicle."""
+    client_mock = await init_integration(hass)
+
+    await hass.services.async_call(
+        LOCK_DOMAIN,
+        SERVICE_UNLOCK,
+        {ATTR_ENTITY_ID: "lock.my_mazda3_lock"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    client_mock.unlock_doors.assert_called_once()

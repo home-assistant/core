@@ -52,4 +52,4 @@ async def init_integration(hass: HomeAssistant, use_nickname=True) -> MockConfig
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    return config_entry
+    return client_mock

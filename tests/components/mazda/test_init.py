@@ -148,12 +148,16 @@ async def test_update_general_failure(hass: HomeAssistant):
 
 async def test_unload_config_entry(hass: HomeAssistant) -> None:
     """Test the Mazda configuration entry unloading."""
-    entry = await init_integration(hass)
+    await init_integration(hass)
     assert hass.data[DOMAIN]
 
-    await hass.config_entries.async_unload(entry.entry_id)
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state == ENTRY_STATE_LOADED
+
+    await hass.config_entries.async_unload(entries[0].entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entries[0].state == ENTRY_STATE_NOT_LOADED
 
 
 async def test_device_nickname(hass):
