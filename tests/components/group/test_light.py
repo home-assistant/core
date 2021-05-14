@@ -657,8 +657,8 @@ async def test_effect_list(hass):
     state = hass.states.get("light.light_group")
     assert set(state.attributes[ATTR_EFFECT_LIST]) == {"None", "Random", "Colorloop"}
     # These ensure the output is sorted as expected
-    assert state.attributes[ATTR_EFFECT_LIST][0] == "Colorloop"
-    assert state.attributes[ATTR_EFFECT_LIST][1] == "None"
+    assert state.attributes[ATTR_EFFECT_LIST][0] == "None"
+    assert state.attributes[ATTR_EFFECT_LIST][1] == "Colorloop"
     assert state.attributes[ATTR_EFFECT_LIST][2] == "Random"
 
     hass.states.async_set(
