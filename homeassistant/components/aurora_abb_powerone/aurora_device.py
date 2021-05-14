@@ -44,7 +44,6 @@ class AuroraDevice(Entity):
     def device_info(self):
         """Return device specific attributes."""
         return {
-            "config_entry_id": self.config_entry.entry_id,
             "identifiers": {(DOMAIN, self.config_entry.data[ATTR_SERIAL_NUMBER])},
             "manufacturer": MANUFACTURER,
             "model": self.config_entry.data[ATTR_MODEL],
