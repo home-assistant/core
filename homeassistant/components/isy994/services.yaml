@@ -148,6 +148,7 @@ set_variable:
       name: Init
       description: If True, the initial (init) value will be updated instead of the current value.
       example: false
+      default: false
       selector:
         boolean:
     value:
