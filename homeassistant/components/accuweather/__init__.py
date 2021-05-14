@@ -119,5 +119,7 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator):
             RequestsExceededError,
         ) as error:
             raise UpdateFailed(error) from error
-        _LOGGER.debug("Requests remaining: %d", self.accuweather.requests_remaining)
+        _LOGGER.debug(
+            "Requests remaining: %s", str(self.accuweather.requests_remaining)
+        )
         return {**current, **{ATTR_FORECAST: forecast}}
