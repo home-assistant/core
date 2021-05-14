@@ -138,7 +138,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except SHCSessionError as err:
                 _LOGGER.warning("Session error: %s", err.message)
-                errors["base"] = "unknown"
+                errors["base"] = "session_error"
             except SHCRegistrationError as err:
                 _LOGGER.warning("Registration error: %s", err.message)
                 errors["base"] = "pairing_failed"

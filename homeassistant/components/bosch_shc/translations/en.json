@@ -29,7 +29,8 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
-            "pairing_failed": "Pairing failed... Please press the Bosch Smart Home Controller button until LED starts blinking and check your password.",
+            "pairing_failed": "Pairing failed; please check the Bosch Smart Home Controller is in pairing mode (LED flashing) as well as your password is correct.",
+            "session_error": "Session error: API return Non-OK result.",
             "unknown": "Unexpected error"
         },
         "abort": {
