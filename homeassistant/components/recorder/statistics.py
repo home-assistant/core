@@ -14,7 +14,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .models import Statistics, process_timestamp_to_utc_isoformat
-from .util import execute, retriable_database_job, session_scope
+from .util import execute, retryable_database_job, session_scope
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -50,7 +50,7 @@ def get_start_time(period: str) -> datetime.datetime:
     return start
 
 
-@retriable_database_job("statistics")
+@retryable_database_job("statistics")
 def compile_statistics(
     instance: Recorder, period: str, start: datetime.datetime
 ) -> bool:

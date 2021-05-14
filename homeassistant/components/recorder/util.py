@@ -286,7 +286,7 @@ def end_incomplete_runs(session, start_time):
         session.add(run)
 
 
-def retriable_database_job(description: str):
+def retryable_database_job(description: str):
     """Try to execute a database job.
 
     The job should return True if it finished, and False if it needs to be rescheduled.
@@ -306,7 +306,7 @@ def retriable_database_job(description: str):
                         "%s; %s not completed, retrying", err.orig.args[1], description
                     )
                     time.sleep(instance.db_retry_wait)
-                    # Failed with retriable error
+                    # Failed with retryable error
                     return False
 
                 _LOGGER.warning("Error executing %s: %s", description, err)

@@ -13,7 +13,7 @@ import homeassistant.util.dt as dt_util
 from .const import MAX_ROWS_TO_PURGE
 from .models import Events, RecorderRuns, States
 from .repack import repack_database
-from .util import retriable_database_job, session_scope
+from .util import retryable_database_job, session_scope
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-@retriable_database_job("purge")
+@retryable_database_job("purge")
 def purge_old_data(
     instance: Recorder, purge_days: int, repack: bool, apply_filter: bool = False
 ) -> bool:
