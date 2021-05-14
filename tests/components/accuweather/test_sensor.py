@@ -13,6 +13,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_PARTS_PER_CUBIC_METER,
     DEVICE_CLASS_TEMPERATURE,
+    LENGTH_FEET,
     LENGTH_METERS,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
@@ -25,6 +26,7 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from tests.common import async_fire_time_changed, load_fixture
 from tests.components.accuweather import init_integration
@@ -650,3 +652,16 @@ async def test_manual_update_entity(hass):
         )
         assert mock_current.call_count == 1
         assert mock_forecast.call_count == 1
+
+
+async def test_sensor_imperial_units(hass):
+    """Test states of the sensor without forecast."""
+    hass.config.units = IMPERIAL_SYSTEM
+    await init_integration(hass)
+
+    state = hass.states.get("sensor.home_cloud_ceiling")
+    assert state
+    assert state.state == "10500"
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_ICON) == "mdi:weather-fog"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_FEET
