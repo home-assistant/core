@@ -2373,7 +2373,7 @@ xmltodict==0.12.0
 xs1-api-client==3.0.0
 
 # homeassistant.components.yale_smart_alarm
-yalesmartalarmclient==0.1.6
+yalesmartalarmclient==0.3.2
 
 # homeassistant.components.august
 yalexs==1.1.11
