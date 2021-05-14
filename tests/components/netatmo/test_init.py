@@ -380,26 +380,19 @@ async def test_setup_component_with_delay(hass, config_entry):
     """Test setup of the netatmo component with delayed startup."""
     hass.state = CoreState.not_running
 
-    fake_post_hits = 0
-
-    async def fake_post(*args, **kwargs):
-        """Fake error during requesting backend data."""
-        nonlocal fake_post_hits
-        fake_post_hits += 1
-        return await fake_post_request(*args, **kwargs)
-
     with patch(
+        "pyatmo.AbstractAsyncAuth.async_addwebhook", side_effect=AsyncMock()
+    ) as mock_addwebhook, patch(
+        "pyatmo.AbstractAsyncAuth.async_dropwebhook", side_effect=AsyncMock()
+    ) as mock_dropwebhook, patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ) as mock_impl, patch(
         "homeassistant.components.webhook.async_generate_url"
     ) as mock_webhook, patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
-    ) as mock_auth, patch(
+        "pyatmo.AbstractAsyncAuth.async_post_request", side_effect=fake_post_request
+    ) as mock_post_request, patch(
         "homeassistant.components.netatmo.PLATFORMS", ["light"]
     ):
-        mock_auth.return_value.async_post_request.side_effect = fake_post
-        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
-        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
 
         assert await async_setup_component(
             hass, "netatmo", {"netatmo": {"client_id": "123", "client_secret": "abc"}}
@@ -407,7 +400,7 @@ async def test_setup_component_with_delay(hass, config_entry):
 
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 5
+        assert mock_post_request.call_count == 5
 
         mock_impl.assert_called_once()
         mock_webhook.assert_not_called()
@@ -422,11 +415,17 @@ async def test_setup_component_with_delay(hass, config_entry):
         )
         await hass.async_block_till_done()
 
+        mock_addwebhook.assert_called_once()
+        mock_dropwebhook.assert_not_awaited()
+
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(seconds=60),
+            dt.utcnow() + timedelta(seconds=60000),
         )
         await hass.async_block_till_done()
 
-    assert hass.config_entries.async_entries(DOMAIN)
-    assert len(hass.states.async_all()) > 0
+        assert hass.config_entries.async_entries(DOMAIN)
+        assert len(hass.states.async_all()) > 0
+
+        await hass.async_stop()
+        mock_dropwebhook.assert_called_once()
