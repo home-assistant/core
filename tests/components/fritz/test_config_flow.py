@@ -7,7 +7,7 @@ import pytest
 from homeassistant.components.fritz.const import (
     DOMAIN,
     ERROR_AUTH_INVALID,
-    ERROR_CONNECTION_ERROR,
+    ERROR_CANNOT_CONNECT,
     ERROR_UNKNOWN,
 )
 from homeassistant.components.ssdp import (
@@ -111,6 +111,7 @@ async def test_user_already_configured(hass: HomeAssistant, fc_class_mock):
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
+        assert result["errors"]["base"] == "already_configured"
 
 
 async def test_exception_security(hass: HomeAssistant):
@@ -156,7 +157,7 @@ async def test_exception_connection(hass: HomeAssistant):
 
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "user"
-        assert result["errors"]["base"] == ERROR_CONNECTION_ERROR
+        assert result["errors"]["base"] == ERROR_CANNOT_CONNECT
 
 
 async def test_exception_unknown(hass: HomeAssistant):
@@ -248,6 +249,7 @@ async def test_reauth_not_successful(hass: HomeAssistant, fc_class_mock):
 
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "reauth_confirm"
+        assert result["errors"]["base"] == "cannot_connect"
 
 
 async def test_ssdp_already_configured(hass: HomeAssistant, fc_class_mock):
