@@ -61,8 +61,8 @@ class FritzBoxTools:
         self._devices: dict[str, Any] = {}
         self._unique_id = None
         self.connection = None
-        self.fritzhosts = None
-        self.fritzstatus = None
+        self.fritz_hosts = None
+        self.fritz_status = None
         self.hass = hass
         self.host = host
         self.password = password
@@ -86,7 +86,7 @@ class FritzBoxTools:
             timeout=60.0,
         )
 
-        self.fritzstatus = FritzStatus(fc=self.connection)
+        self.fritz_status = FritzStatus(fc=self.connection)
         info = self.connection.call_action("DeviceInfo:1", "GetInfo")
         if self._unique_id is None:
             self._unique_id = info["NewSerialNumber"]
@@ -97,7 +97,7 @@ class FritzBoxTools:
 
     async def async_start(self):
         """Start FritzHosts connection."""
-        self.fritzhosts = FritzHosts(fc=self.connection)
+        self.fritz_hosts = FritzHosts(fc=self.connection)
 
         await self.hass.async_add_executor_job(self.scan_devices)
 
@@ -135,7 +135,7 @@ class FritzBoxTools:
 
     def _update_info(self):
         """Retrieve latest information from the FRITZ!Box."""
-        return self.fritzhosts.get_hosts_info()
+        return self.fritz_hosts.get_hosts_info()
 
     def scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new devices and return a list of found device ids."""
