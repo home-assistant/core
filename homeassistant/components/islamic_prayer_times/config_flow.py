@@ -11,7 +11,6 @@ class IslamicPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle the Islamic Prayer config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback

@@ -6,7 +6,6 @@ import ipaddress
 import getmac
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
@@ -18,7 +17,6 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Minecraft Server."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

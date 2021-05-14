@@ -212,7 +212,6 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     DOMAIN = ""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_UNKNOWN
 
     def __init__(self) -> None:
         """Instantiate config flow."""
@@ -335,7 +334,7 @@ def async_register_implementation(
     if isinstance(implementation, LocalOAuth2Implementation) and not hass.data.get(
         DATA_VIEW_REGISTERED, False
     ):
-        hass.http.register_view(OAuth2AuthorizeCallbackView())  # type: ignore
+        hass.http.register_view(OAuth2AuthorizeCallbackView())
         hass.data[DATA_VIEW_REGISTERED] = True
 
     implementations = hass.data.setdefault(DATA_IMPLEMENTATIONS, {})

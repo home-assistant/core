@@ -7,7 +7,6 @@ from typing import Any
 from spotipy import Spotify
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import persistent_notification
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -22,7 +21,6 @@ class SpotifyFlowHandler(
 
     DOMAIN = DOMAIN
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self) -> None:
         """Instantiate config flow."""

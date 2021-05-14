@@ -8,7 +8,7 @@ from canary.api import Api
 from requests import ConnectTimeout, HTTPError
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
@@ -43,7 +43,6 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Canary."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
     @staticmethod
     @callback

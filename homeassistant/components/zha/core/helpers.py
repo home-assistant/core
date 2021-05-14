@@ -139,14 +139,17 @@ def async_get_zha_config_value(config_entry, section, config_key, default):
     )
 
 
-def async_input_cluster_exists(hass, cluster_id):
+def async_cluster_exists(hass, cluster_id):
     """Determine if a device containing the specified in cluster is paired."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     zha_devices = zha_gateway.devices.values()
     for zha_device in zha_devices:
         clusters_by_endpoint = zha_device.async_get_clusters()
         for clusters in clusters_by_endpoint.values():
-            if cluster_id in clusters[CLUSTER_TYPE_IN]:
+            if (
+                cluster_id in clusters[CLUSTER_TYPE_IN]
+                or cluster_id in clusters[CLUSTER_TYPE_OUT]
+            ):
                 return True
     return False
 

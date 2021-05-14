@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "authorize_url_fail": "Tundmatu viga tuvastamise URL-i loomisel.",
             "authorize_url_timeout": "Tuvastamise URL-i loomise ajal\u00f5pp.",
             "missing_configuration": "Osis pole seadistatud. Vaata dokumentatsiooni.",
             "no_url_available": "URL pole saadaval. Selle t\u00f5rke kohta teabe saamiseks vaata [spikrijaotis]({docs_url})",

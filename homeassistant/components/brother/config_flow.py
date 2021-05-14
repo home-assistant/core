@@ -39,7 +39,6 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Brother Printer."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self) -> None:
         """Initialize."""
@@ -84,11 +83,6 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        if not discovery_info.get("name") or not discovery_info["name"].startswith(
-            "Brother"
-        ):
-            return self.async_abort(reason="not_brother_printer")
-
         # Hostname is format: brother.local.
         self.host = discovery_info["hostname"].rstrip(".")
 

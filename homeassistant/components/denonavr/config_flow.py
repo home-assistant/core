@@ -86,7 +86,6 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Denon AVR config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the Denon AVR flow."""
@@ -200,9 +199,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 "unique_id's will not be available",
                 self.host,
             )
-            for entry in self._async_current_entries():
-                if entry.data[CONF_HOST] == self.host:
-                    return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match({CONF_HOST: self.host})
 
         return self.async_create_entry(
             title=receiver.name,

@@ -569,10 +569,15 @@ async def test_default_profiles_group(
 
 
 @pytest.mark.parametrize(
-    "extra_call_params, expected_params",
+    "extra_call_params, expected_params_state_was_off, expected_params_state_was_on",
     (
         (
             {},
+            {
+                light.ATTR_HS_COLOR: (50.353, 100),
+                light.ATTR_BRIGHTNESS: 100,
+                light.ATTR_TRANSITION: 3,
+            },
             {
                 light.ATTR_HS_COLOR: (50.353, 100),
                 light.ATTR_BRIGHTNESS: 100,
@@ -586,6 +591,10 @@ async def test_default_profiles_group(
                 light.ATTR_BRIGHTNESS: 22,
                 light.ATTR_TRANSITION: 3,
             },
+            {
+                light.ATTR_BRIGHTNESS: 22,
+                light.ATTR_TRANSITION: 3,
+            },
         ),
         (
             {light.ATTR_TRANSITION: 22},
@@ -594,10 +603,18 @@ async def test_default_profiles_group(
                 light.ATTR_BRIGHTNESS: 100,
                 light.ATTR_TRANSITION: 22,
             },
+            {
+                light.ATTR_TRANSITION: 22,
+            },
         ),
         (
             {
                 light.ATTR_XY_COLOR: [0.4448, 0.4066],
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+            {
+                light.ATTR_HS_COLOR: (38.88, 49.02),
                 light.ATTR_BRIGHTNESS: 11,
                 light.ATTR_TRANSITION: 1,
             },
@@ -614,6 +631,10 @@ async def test_default_profiles_group(
                 light.ATTR_BRIGHTNESS: 11,
                 light.ATTR_TRANSITION: 1,
             },
+            {
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
         ),
     ),
 )
@@ -621,8 +642,9 @@ async def test_default_profiles_light(
     hass,
     mock_light_profiles,
     extra_call_params,
-    expected_params,
     enable_custom_integrations,
+    expected_params_state_was_off,
+    expected_params_state_was_on,
 ):
     """Test default turn-on light profile for a specific light."""
     platform = getattr(hass.components, "test.light")
@@ -650,14 +672,26 @@ async def test_default_profiles_light(
     )
 
     _, data = dev.last_call("turn_on")
-    assert data == expected_params
+    assert data == expected_params_state_was_off
 
     await hass.services.async_call(
         light.DOMAIN,
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: dev.entity_id,
-            light.ATTR_BRIGHTNESS: 0,
+            **extra_call_params,
+        },
+        blocking=True,
+    )
+
+    _, data = dev.last_call("turn_on")
+    assert data == expected_params_state_was_on
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_OFF,
+        {
+            ATTR_ENTITY_ID: dev.entity_id,
         },
         blocking=True,
     )
@@ -759,9 +793,21 @@ async def test_light_brightness_step(hass, enable_custom_integrations):
     )
 
     _, data = entity0.last_call("turn_on")
-    assert data["brightness"] == 126  # 100 + (255 * 0.10)
+    assert data["brightness"] == 116  # 90 + (255 * 0.10)
     _, data = entity1.last_call("turn_on")
-    assert data["brightness"] == 76  # 50 + (255 * 0.10)
+    assert data["brightness"] == 66  # 40 + (255 * 0.10)
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": entity0.entity_id,
+            "brightness_step": -126,
+        },
+        blocking=True,
+    )
+
+    assert entity0.state == "off"  # 126 - 126; brightness is 0, light should turn off
 
 
 async def test_light_brightness_pct_conversion(hass, enable_custom_integrations):

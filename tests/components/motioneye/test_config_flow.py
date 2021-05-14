@@ -235,7 +235,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
-    assert config_entry.data == new_data
+    assert dict(config_entry.data) == new_data
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert mock_client.async_client_close.called

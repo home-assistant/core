@@ -10,7 +10,6 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "name": "Naam",
                     "password": "Wachtwoord",
                     "port": "Poort",
                     "username": "Gebruikersnaam"

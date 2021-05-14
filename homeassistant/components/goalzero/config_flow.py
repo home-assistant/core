@@ -19,7 +19,6 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Goal Zero Yeti."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
@@ -29,8 +28,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             name = user_input[CONF_NAME]
 
-            if await self._async_endpoint_existed(host):
-                return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match({CONF_HOST: host})
 
             try:
                 await self._async_try_connect(host)
@@ -64,12 +62,6 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def _async_endpoint_existed(self, endpoint):
-        for entry in self._async_current_entries():
-            if endpoint == entry.data.get(CONF_HOST):
-                return True
-        return False
 
     async def _async_try_connect(self, host):
         session = async_get_clientsession(self.hass)

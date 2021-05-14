@@ -13,16 +13,6 @@
             "reauth_validate": {
                 "description": "G\u00ebff Passwuert an fir {username}."
             },
-            "user": {
-                "data": {
-                    "login_method": "Login Method",
-                    "password": "Passwuert",
-                    "timeout": "Z\u00e4itiwwerscheidung (sekonnen)",
-                    "username": "Benotzernumm"
-                },
-                "description": "Wann d'Login Method 'E-Mail' ass, dannn ass de Benotzernumm d'E-Mail Adress. Wann d'Login-Method 'Telefon' ass, ass den Benotzernumm d'Telefonsnummer am Format '+ NNNNNNNNN'.",
-                "title": "August Kont ariichten"
-            },
             "user_validate": {
                 "data": {
                     "login_method": "Login Method"

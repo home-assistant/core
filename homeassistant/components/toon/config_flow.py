@@ -7,7 +7,6 @@ from typing import Any
 from toonapi import Agreement, Toon, ToonError
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
@@ -18,7 +17,6 @@ from .const import CONF_AGREEMENT, CONF_AGREEMENT_ID, CONF_MIGRATE, DOMAIN
 class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Handle a Toon config flow."""
 
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
     DOMAIN = DOMAIN
     VERSION = 2
 
