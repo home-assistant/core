@@ -166,9 +166,6 @@ class GenericHueSensor(GenericHueDevice, entity.Entity):
 
     should_poll = False
 
-    async def _async_update_ha_state(self, *args, **kwargs):
-        raise NotImplementedError
-
     @property
     def available(self):
         """Return if sensor is available."""
