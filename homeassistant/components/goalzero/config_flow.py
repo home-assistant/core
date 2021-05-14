@@ -38,9 +38,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.ip_address})
         self._async_abort_entries_match({CONF_HOST: self.ip_address})
 
-        mac_address, error = await self._async_try_connect(
-            self.ip_address
-        )  # pylint: disable=unused-variable
+        _, error = await self._async_try_connect(self.ip_address)
         if error is None:
             return await self.async_step_confirm_discovery()
         return self.async_abort(reason=error)
