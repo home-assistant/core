@@ -113,12 +113,11 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
         """Return the state."""
         if self.forecast_day is not None:
             if self._description["device_class"] == DEVICE_CLASS_TEMPERATURE:
-                return cast(StateType, self._sensor_data["Value"])
-            if self.kind in ["WindDay", "WindNight", "WindGustDay", "WindGustNight"]:
-                return cast(StateType, self._sensor_data["Speed"]["Value"])
-            if self.kind in ["Grass", "Mold", "Ragweed", "Tree", "UVIndex", "Ozone"]:
-                return cast(StateType, self._sensor_data["Value"])
-            return cast(StateType, self._sensor_data)
+                return cast(float, self._sensor_data["Value"])
+            if self.kind == "UVIndex":
+                return cast(int, self._sensor_data)
+        if self.kind in ["Grass", "Mold", "Ragweed", "Tree", "Ozone"]:
+            return cast(int, self._sensor_data["Value"])
         if self.kind == "Ceiling":
             return round(self._sensor_data[self._unit_system]["Value"])
         if self.kind == "PressureTendency":
@@ -129,6 +128,8 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
             return cast(float, self._sensor_data[self._unit_system]["Value"])
         if self.kind in ["Wind", "WindGust"]:
             return cast(float, self._sensor_data["Speed"][self._unit_system]["Value"])
+        if self.kind in ["WindDay", "WindNight", "WindGustDay", "WindGustNight"]:
+            return cast(StateType, self._sensor_data["Speed"]["Value"])
         return cast(StateType, self._sensor_data)
 
     @property
