@@ -371,6 +371,7 @@ class LightGroup(GroupEntity, light.LightEntity):
         if all_effect_lists:
             # Merge all effects from all effect_lists with a union merge.
             self._effect_list = list(set().union(*all_effect_lists))
+            self._effect_list.sort()
 
         self._effect = None
         all_effects = list(_find_state_attributes(on_states, ATTR_EFFECT))
