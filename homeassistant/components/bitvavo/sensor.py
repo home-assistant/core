@@ -50,6 +50,7 @@ class Ticker(CoordinatorEntity):
 
         self._name = f"Bitvavo Ticker - {self._symbol}"
         self._unique_id = f"bitvavo_ticker_{self._symbol})"
+        self._icon = CURRENCY_ICONS.get(self.unit_of_measurement, DEFAULT_COIN_ICON)
 
     def _get_data_property(self, property_name):
         """Return the property from self.coordinator.data."""
@@ -78,7 +79,7 @@ class Ticker(CoordinatorEntity):
     @property
     def icon(self):
         """Icon to use in the frontend."""
-        return CURRENCY_ICONS.get(self.unit_of_measurement, DEFAULT_COIN_ICON)
+        return self._icon
 
     @property
     def device_state_attributes(self):
@@ -106,6 +107,7 @@ class Balance(CoordinatorEntity):
 
         self._name = f"Bitvavo Balance - {self._balance}"
         self._unique_id = f"bitvavo_balance_{self._balance})"
+        self._icon = CURRENCY_ICONS.get(self.unit_of_measurement, DEFAULT_COIN_ICON)
 
     def _get_data_property(self, property_name):
         """Return the property from self.coordinator.data."""
@@ -137,7 +139,7 @@ class Balance(CoordinatorEntity):
     @property
     def icon(self):
         """Icon to use in the frontend."""
-        return CURRENCY_ICONS.get(self.unit_of_measurement, DEFAULT_COIN_ICON)
+        return self._icon
 
     @property
     def device_state_attributes(self):
