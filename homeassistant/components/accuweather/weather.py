@@ -46,7 +46,7 @@ async def async_setup_entry(
 
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
 
-    async_add_entities([AccuWeatherEntity(name, coordinator)], False)
+    async_add_entities([AccuWeatherEntity(name, coordinator)])
 
 
 class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):

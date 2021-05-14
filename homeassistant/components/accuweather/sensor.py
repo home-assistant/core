@@ -51,7 +51,7 @@ async def async_setup_entry(
                         AccuWeatherSensor(name, sensor, coordinator, forecast_day=day)
                     )
 
-    async_add_entities(sensors, False)
+    async_add_entities(sensors)
 
 
 class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
