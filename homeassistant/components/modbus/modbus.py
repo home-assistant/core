@@ -28,6 +28,7 @@ from .const import (
     ATTR_VALUE,
     CONF_BAUDRATE,
     CONF_BYTESIZE,
+    CONF_CLOSE_COMM_ON_ERROR,
     CONF_PARITY,
     CONF_STOPBITS,
     DEFAULT_HUB,
@@ -125,6 +126,7 @@ class ModbusHub:
         self._config_port = client_config[CONF_PORT]
         self._config_timeout = client_config[CONF_TIMEOUT]
         self._config_delay = client_config[CONF_DELAY]
+        self._config_reset_socket = client_config[CONF_CLOSE_COMM_ON_ERROR]
         Defaults.Timeout = client_config[CONF_TIMEOUT]
         if self._config_type == "serial":
             # serial configuration
@@ -163,6 +165,7 @@ class ModbusHub:
                     parity=self._config_parity,
                     timeout=self._config_timeout,
                     retry_on_empty=True,
+                    reset_socket=self._config_reset_socket,
                 )
             elif self._config_type == "rtuovertcp":
                 self._client = ModbusTcpClient(
@@ -170,18 +173,21 @@ class ModbusHub:
                     port=self._config_port,
                     framer=ModbusRtuFramer,
                     timeout=self._config_timeout,
+                    reset_socket=self._config_reset_socket,
                 )
             elif self._config_type == "tcp":
                 self._client = ModbusTcpClient(
                     host=self._config_host,
                     port=self._config_port,
                     timeout=self._config_timeout,
+                    reset_socket=self._config_reset_socket,
                 )
             elif self._config_type == "udp":
                 self._client = ModbusUdpClient(
                     host=self._config_host,
                     port=self._config_port,
                     timeout=self._config_timeout,
+                    reset_socket=self._config_reset_socket,
                 )
         except ModbusException as exception_error:
             self._log_error(exception_error, error_state=False)
