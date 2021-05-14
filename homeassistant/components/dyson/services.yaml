@@ -9,6 +9,7 @@ set_night_mode:
       domain: fan
   fields:
     night_mode:
+      name: Night mode
       description: Night mode status
       required: true
       example: true
@@ -24,6 +25,7 @@ set_auto_mode:
       domain: fan
   fields:
     auto_mode:
+      name: Auto Mode
       description: Auto mode status
       required: true
       example: true
@@ -39,6 +41,7 @@ set_angle:
       domain: fan
   fields:
     angle_low:
+      name: Angle low
       description: The angle at which the oscillation should start
       required: true
       example: 1
@@ -48,6 +51,7 @@ set_angle:
           max: 355
           unit_of_measurement: '°'
     angle_high:
+      name: Angle high
       description: The angle at which the oscillation should end
       required: true
       example: 255
@@ -82,6 +86,7 @@ set_timer:
       domain: fan
   fields:
     timer:
+      name: Timer
       description: The value in minutes to set the timer to, 0 to disable it
       required: true
       example: 30
@@ -100,6 +105,7 @@ set_speed:
       domain: fan
   fields:
     dyson_speed:
+      name: Speed
       description: Speed
       required: true
       example: 1

@@ -101,9 +101,7 @@ alarm_display_message:
       example: 1
       default: 0
       selector:
-        number:
-          min: 0
-          max: 1
+        boolean:
     timeout:
       name: Timeout
       description: Time to display message, 0=forever, max 65535
@@ -150,6 +148,13 @@ speak_phrase:
       example: 42
       selector:
         text:
+    prefix:
+      name: Prefix
+      description: Prefix to identify panel when multiple panels configured.
+      example: gatehouse
+      default: ""
+      selector:
+        text:
 
 speak_word:
   name: Speak word
@@ -164,6 +169,13 @@ speak_word:
         number:
           min: 1
           max: 473
+    prefix:
+      name: Prefix
+      description: Prefix to identify panel when multiple panels configured.
+      example: gatehouse
+      default: ""
+      selector:
+        text:
 
 sensor_counter_refresh:
   name: Sensor counter refresh
@@ -171,7 +183,7 @@ sensor_counter_refresh:
   target:
     entity:
       integration: elkm1
-      domain: alarm_control_panel
+      domain: sensor
 
 sensor_counter_set:
   name: Sensor counter set
@@ -179,7 +191,7 @@ sensor_counter_set:
   target:
     entity:
       integration: elkm1
-      domain: alarm_control_panel
+      domain: sensor
   fields:
     value:
       name: Value
@@ -197,7 +209,7 @@ sensor_zone_bypass:
   target:
     entity:
       integration: elkm1
-      domain: alarm_control_panel
+      domain: sensor
   fields:
     code:
       name: Code
@@ -213,4 +225,4 @@ sensor_zone_trigger:
   target:
     entity:
       integration: elkm1
-      domain: alarm_control_panel
+      domain: sensor

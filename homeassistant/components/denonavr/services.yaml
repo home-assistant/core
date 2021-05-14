@@ -12,6 +12,7 @@ get_command:
       name: Command
       description: Endpoint of the command, including associated parameters.
       example: "/goform/formiPhoneAppDirect.xml?RCKSK0410370"
+      required: true
       selector:
         text:
 set_dynamic_eq:
