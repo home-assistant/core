@@ -111,7 +111,7 @@ def _async_add_entities(router, async_add_entities, data_fritz):
 class FritzBoxTracker(ScannerEntity):
     """This class queries a FRITZ!Box router."""
 
-    def __init__(self, router: FritzBoxTools, device: FritzDevice):
+    def __init__(self, router: FritzBoxTools, device: FritzDevice) -> None:
         """Initialize a FRITZ!Box device."""
         self._router = router
         self._mac = device.mac_address
