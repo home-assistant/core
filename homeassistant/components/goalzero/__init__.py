@@ -88,10 +88,12 @@ class YetiEntity(CoordinatorEntity):
             sw_version = self.api.data["firmwareVersion"]
         else:
             sw_version = None
+        try:
+            model
+        except NameError:
+            model = None
         if self.api.sysdata:
             model = self.api.sysdata["model"]
-        else:
-            model = model or None
         return {
             "identifiers": {(DOMAIN, self._server_unique_id)},
             "manufacturer": "Goal Zero",

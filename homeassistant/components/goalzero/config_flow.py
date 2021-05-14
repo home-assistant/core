@@ -13,7 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN, ERRORS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,8 +37,9 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.ip_address})
         self._async_abort_entries_match({CONF_HOST: self.ip_address})
 
-        if error := await self._async_try_connect(self.ip_address):
-            return self.async_abort(reason=error)
+        result = await self._async_try_connect(self.ip_address)
+        if result in ERRORS:
+            return self.async_abort(reason=result)
         return await self.async_step_confirm_discovery()
 
     async def async_step_confirm_discovery(
@@ -72,13 +73,15 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             self._async_abort_entries_match({CONF_HOST: host})
 
-            error = await self._async_try_connect(host)
-            if error is None:
+            result = await self._async_try_connect(host)
+            if result not in ERRORS:
+                await self.async_set_unique_id(str(result))
+                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 return self.async_create_entry(
                     title=name,
                     data={CONF_HOST: host, CONF_NAME: name},
                 )
-            errors["base"] = error
+            errors["base"] = result
 
         user_input = user_input or {}
         return self.async_show_form(
@@ -111,4 +114,4 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return "unknown"
-        return None
+        return api.sysdata["macAddress"]
