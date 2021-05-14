@@ -37,30 +37,25 @@ async def async_setup_entry(hass, entry, async_add_entities):
     if not data_class or data_class.raw_data == {}:
         raise PlatformNotReady
 
-    async def get_entities():
-        """Retrieve Netatmo entities."""
-        entities = []
-        all_cameras = []
+    all_cameras = []
+    for home in data_handler.data[CAMERA_DATA_CLASS_NAME].cameras.values():
+        for camera in home.values():
+            all_cameras.append(camera)
 
-        for home in data_handler.data[CAMERA_DATA_CLASS_NAME].cameras.values():
-            for camera in home.values():
-                all_cameras.append(camera)
-
-        for camera in all_cameras:
-            if camera["type"] == "NOC":
-                _LOGGER.debug("Adding camera light %s %s", camera["id"], camera["name"])
-                entities.append(
-                    NetatmoLight(
-                        data_handler,
-                        camera["id"],
-                        camera["type"],
-                        camera["home_id"],
-                    )
+    entities = []
+    for camera in all_cameras:
+        if camera["type"] == "NOC":
+            _LOGGER.debug("Adding camera light %s %s", camera["id"], camera["name"])
+            entities.append(
+                NetatmoLight(
+                    data_handler,
+                    camera["id"],
+                    camera["type"],
+                    camera["home_id"],
                 )
+            )
 
-        return entities
-
-    async_add_entities(await get_entities(), True)
+    async_add_entities(entities, True)
 
 
 class NetatmoLight(NetatmoBase, LightEntity):
