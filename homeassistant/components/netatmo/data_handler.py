@@ -123,9 +123,6 @@ class NetatmoDataHandler:
 
     async def async_fetch_data(self, data_class_entry):
         """Fetch data and notify."""
-        # if self.data[data_class_entry] is None:
-        #     return
-
         try:
             await self.data[data_class_entry].async_update()
 
@@ -171,12 +168,6 @@ class NetatmoDataHandler:
 
     async def unregister_data_class(self, data_class_entry, update_callback):
         """Unregister data class."""
-        # if data_class_entry not in self.data_classes:
-        #     return
-
-        # if update_callback not in self.data_classes[data_class_entry]["subscriptions"]:
-        #     return
-
         self.data_classes[data_class_entry]["subscriptions"].remove(update_callback)
 
         if not self.data_classes[data_class_entry].get("subscriptions"):
