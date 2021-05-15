@@ -73,7 +73,7 @@ link_goto:
   target:
     entity:
       integration: upb
-      domain: light
+      domain: scene
   fields:
     brightness:
       name: Brightness
@@ -106,7 +106,7 @@ link_fade_start:
   target:
     entity:
       integration: upb
-      domain: light
+      domain: scene
   fields:
     brightness:
       name: Brightness
@@ -139,7 +139,7 @@ link_fade_stop:
   target:
     entity:
       integration: upb
-      domain: light
+      domain: scene
 
 link_blink:
   name: Blink link
@@ -147,7 +147,7 @@ link_blink:
   target:
     entity:
       integration: upb
-      domain: light
+      domain: scene
   fields:
     blink_rate:
       name: Blink rate
