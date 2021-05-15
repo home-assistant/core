@@ -4,6 +4,7 @@
 
 homeassistant.components
 homeassistant.components.acer_projector.*
+homeassistant.components.aftership.*
 homeassistant.components.airly.*
 homeassistant.components.automation.*
 homeassistant.components.binary_sensor.*
