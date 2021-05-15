@@ -7,23 +7,17 @@ from bitvavo.BitvavoClient import BitvavoClient
 from bitvavo.BitvavoExceptions import BitvavoException
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow
+from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_API_SECRET, CONF_MARKETS
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import CONF_API_SECRET, CONF_MARKETS, CONF_SHOW_EMPTY_ASSETS, DOMAIN
 from .errors import InvalidAuth, InvalidResponse
 
 _LOGGER = logging.getLogger(__name__)
-
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_API_SECRET): str,
-    }
-)
 
 
 def _markets_schema(markets: list | None):
@@ -37,10 +31,7 @@ def _markets_schema(markets: list | None):
 
 
 async def validate_input(hass: HomeAssistant, data: dict):
-    """Validate the user input allows us to connect.
-
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
+    """Validate the user input allows us to connect."""
     markets_list = []
     balances_list = []
 
@@ -81,12 +72,18 @@ class BitvavoConfigFlow(ConfigFlow, domain=DOMAIN):
         self.markets = None
         self.balances = None
 
-    async def async_step_user(self, user_input: dict | None = None):
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return BitvavoOptionsFlowHandler(config_entry)
+
+    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        assert self.hass
+        # assert self.hass
 
         errors = {}
 
@@ -99,8 +96,13 @@ class BitvavoConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 return await self.async_step_markets()
 
+        data_schema = {
+            vol.Required(CONF_API_KEY): str,
+            vol.Required(CONF_API_SECRET): str,
+        }
+
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=vol.Schema(data_schema), errors=errors
         )
 
     async def async_step_markets(self, user_input: dict | None = None):
@@ -138,3 +140,25 @@ class BitvavoConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         return info, errors
+
+
+class BitvavoOptionsFlowHandler(OptionsFlow):
+    """Handle Bitvavo options."""
+
+    def __init__(self, config_entry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input: ConfigType | None = None):
+        """Manage Bitvavo options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        options = {
+            vol.Optional(
+                CONF_SHOW_EMPTY_ASSETS,
+                default=self.config_entry.options.get(CONF_SHOW_EMPTY_ASSETS, True),
+            ): bool,
+        }
+
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
