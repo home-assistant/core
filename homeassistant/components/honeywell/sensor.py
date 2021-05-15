@@ -21,17 +21,20 @@ async def async_setup_entry(
     hass, config, async_add_entities, discovery_info=None
 ) -> None:
     """Set up the Honeywell thermostat."""
-    device = hass.data[DOMAIN]["device"]
+    data = hass.data[DOMAIN]
     sensors = []
 
-    if device.current_temperature is not None:
-        sensors.append(HoneywellUSSensor(device, "indoor", "temperature"))
-    if device.current_humidity is not None and device.current_humidity != 128:
-        sensors.append(HoneywellUSSensor(device, "indoor", "humidity"))
-    if device.outdoor_temperature is not None:
-        sensors.append(HoneywellUSSensor(device, "outdoor", "temperature"))
-    if device.outdoor_humidity is not None:
-        sensors.append(HoneywellUSSensor(device, "outdoor", "humidity"))
+    if data._device.current_temperature is not None:
+        sensors.append(HoneywellUSSensor(data, "indoor", "temperature"))
+    if (
+        data._device.current_humidity is not None
+        and data._device.current_humidity != 128
+    ):
+        sensors.append(HoneywellUSSensor(data, "indoor", "humidity"))
+    if data._device.outdoor_temperature is not None:
+        sensors.append(HoneywellUSSensor(data, "outdoor", "temperature"))
+    if data._device.outdoor_humidity is not None:
+        sensors.append(HoneywellUSSensor(data, "outdoor", "humidity"))
 
     async_add_entities(sensors)
 
@@ -41,20 +44,20 @@ async def async_setup_entry(
 class HoneywellUSSensor(SensorEntity):
     """Representation of a Honeywell US Sensor."""
 
-    def __init__(self, device, location, sensor_type):
+    def __init__(self, data, location, sensor_type):
         """Initialize the sensor."""
-        self._device = device
+        self._data = data
 
-        self._name = f"{device.name} {location} {sensor_type}"
+        self._name = f"{data._device.name} {location} {sensor_type}"
         self._location = location
         self._type = sensor_type
 
-        _LOGGER.debug("latestData = %s ", device._data)
+        _LOGGER.debug("latestData = %s ", data._device._data)
 
     @property
     def unique_id(self) -> str | None:
         """Return a unique ID."""
-        return f"{homeassistant.helpers.device_registry.format_mac(self._device.mac_address)}_{self._name}"
+        return f"{homeassistant.helpers.device_registry.format_mac(self._data._device.mac_address)}_{self._name}"
 
     @property
     def name(self):
@@ -73,9 +76,9 @@ class HoneywellUSSensor(SensorEntity):
         """Return the state of the sensor."""
 
         if self._type == "temperature":
-            return self.outdoor_temperature
+            return self.temperature
 
-        return self.outdoor_humidity
+        return self.humidity
 
     @property
     def unit_of_measurement(self):
@@ -83,22 +86,26 @@ class HoneywellUSSensor(SensorEntity):
         if self._type == "temperature":
             return (
                 TEMP_CELSIUS
-                if self._device.temperature_unit == "C"
+                if self._data._device.temperature_unit == "C"
                 else TEMP_FAHRENHEIT
             )
 
         return PERCENTAGE
 
     @property
-    def outdoor_humidity(self) -> int | None:
+    def humidity(self) -> int | None:
         """Return the current outdoor humidity."""
         if self._location == "indoor":
-            return self._device.current_humidity
-        return self._device.outdoor_humidity
+            return self._data._device.current_humidity
+        return self._data._device.outdoor_humidity
 
     @property
-    def outdoor_temperature(self) -> float | None:
+    def temperature(self) -> float | None:
         """Return the current outdoor temperature."""
         if self._location == "indoor":
-            return self._device.current_temperature
-        return self._device.outdoor_temperature
+            return self._data._device.current_temperature
+        return self._data._device.outdoor_temperature
+
+    async def async_update(self):
+        """Get the latest state of the sensor."""
+        await self._data.update()

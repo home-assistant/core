@@ -21,7 +21,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -74,8 +74,9 @@ async def async_setup_entry(hass, config):
             if (not loc_id or location.locationid == loc_id) and (
                 not dev_id or device.deviceid == dev_id
             ):
-                hass.data[DOMAIN] = {}
-                hass.data[DOMAIN]["device"] = device
+                data = HoneywellService(hass, client, username, password, device)
+                await data.update()
+                hass.data[DOMAIN] = data
                 hass.config_entries.async_setup_platforms(config, PLATFORMS)
 
     return True
@@ -84,13 +85,13 @@ async def async_setup_entry(hass, config):
 class HoneywellService:
     """Get the latest data and update."""
 
-    def __init__(self, client, username, password):
+    def __init__(self, hass, client, username, password, device):
         """Initialize the data object."""
+        self._hass = hass
         self._client = client
         self._username = username
         self._password = password
-        self._device = None
-        self.update()
+        self._device = device
 
     def _retry(self) -> bool:
         """Recreate a new somecomfort client.
@@ -122,12 +123,12 @@ class HoneywellService:
         return True
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self) -> None:
+    async def update(self) -> None:
         """Update the state."""
         retries = 3
         while retries > 0:
             try:
-                self._device.refresh()
+                await self._hass.async_add_executor_job(self._device.refresh)
                 break
             except (
                 somecomfort.client.APIRateLimited,
