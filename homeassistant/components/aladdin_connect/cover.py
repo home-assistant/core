@@ -61,7 +61,7 @@ def setup_platform(
 class AladdinDevice(CoverEntity):
     """Representation of Aladdin Connect cover."""
 
-    def __init__(self, acc: AladdinConnectClient, device: DoorDevice):
+    def __init__(self, acc: AladdinConnectClient, device: DoorDevice) -> None:
         """Initialize the cover."""
         self._acc = acc
         self._device_id = device["device_id"]
