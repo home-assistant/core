@@ -19,16 +19,13 @@ from homeassistant.const import (
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    discovery,
-)
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     ATTR_BUTTON,
     ATTR_COMMAND,
+    ATTR_CONFIG_ENTRY_ID,
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
     CONF_ON_ACTION,
@@ -135,16 +132,6 @@ async def async_setup_entry(hass, config_entry):
     client = await WebOsClient.create(host, client_key=key)
     await async_connect(client)
 
-    device_registry = await dr.async_get_registry(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, config_entry.unique_id)},
-        manufacturer="LG",
-        name=config_entry.data[CONF_NAME],
-        model=config_entry.data.get("model"),
-        sw_version=config_entry.data.get("sw_version"),
-    )
-
     async def async_service_handler(service):
         method = SERVICE_TO_METHOD.get(service.service)
         data = service.data.copy()
@@ -157,7 +144,7 @@ async def async_setup_entry(hass, config_entry):
             DOMAIN, service, async_service_handler, schema=schema
         )
 
-    hass.data[DOMAIN][host] = {"client": client}
+    hass.data[DOMAIN][config_entry.entry_id] = client
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -172,9 +159,9 @@ async def async_setup_entry(hass, config_entry):
             "notify",
             DOMAIN,
             {
-                CONF_HOST: host,
                 CONF_ICON: config_entry.data.get(CONF_ICON),
                 CONF_NAME: config_entry.data[CONF_NAME],
+                ATTR_CONFIG_ENTRY_ID: config_entry.entry_id,
             },
             hass.data[DOMAIN],
         )
@@ -203,8 +190,7 @@ async def async_update_options(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    host = config_entry.data[CONF_HOST]
-    client = hass.data[DOMAIN][host]["client"]
+    client = hass.data[DOMAIN][config_entry.entry_id]
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )

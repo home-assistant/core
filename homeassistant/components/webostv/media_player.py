@@ -25,7 +25,6 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_HOST,
     CONF_NAME,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
@@ -65,14 +64,14 @@ SCAN_INTERVAL = timedelta(seconds=10)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the LG webOS Smart TV platform."""
-    host = config_entry.data[CONF_HOST]
     uid = config_entry.unique_id
     name = config_entry.data.get(CONF_NAME)
     sources = config_entry.options.get(CONF_SOURCES)
     turn_on_action = [config_entry.options.get(CONF_ON_ACTION)]
+    client = hass.data[DOMAIN][config_entry.entry_id]
 
-    client = hass.data[DOMAIN][host]["client"]
     on_script = Script(hass, turn_on_action, name, DOMAIN) if turn_on_action else None
+
     async_add_entities(
         [LgWebOSMediaPlayerEntity(client, name, sources, uid, on_script)],
         update_before_add=False,
@@ -318,7 +317,15 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @property
     def device_info(self):
         """Return device information."""
-        return {"identifiers": {(DOMAIN, self._uid)}}
+        maj_v = self._client.software_info.get("major_ver")
+        min_v = self._client.software_info.get("minor_ver")
+        return {
+            "identifiers": {(DOMAIN, self._uid)},
+            "manufacturer": "LG",
+            "name": self._name,
+            "model": self._client.software_info.get("model_name"),
+            "sw_version": f"{maj_v}.{min_v}",
+        }
 
     @property
     def extra_state_attributes(self):
