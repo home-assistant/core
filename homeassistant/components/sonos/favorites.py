@@ -6,7 +6,6 @@ import datetime
 import logging
 from typing import Callable
 
-from pysonos.core import SoCo
 from pysonos.data_structures import DidlFavorite
 from pysonos.events_base import Event as SonosEvent
 from pysonos.exceptions import SoCoException
@@ -14,7 +13,7 @@ from pysonos.exceptions import SoCoException
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .const import SONOS_HOUSEHOLD_UPDATED
+from .const import DATA_SONOS, SONOS_HOUSEHOLD_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,10 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 class SonosFavorites:
     """Storage class for Sonos favorites."""
 
-    def __init__(self, hass: HomeAssistant, soco: SoCo) -> None:
+    def __init__(self, hass: HomeAssistant, household_id: str) -> None:
         """Initialize the data."""
         self.hass: HomeAssistant = hass
-        self.soco: SoCo = soco
+        self.household_id: str = household_id
         self._favorites: list[DidlFavorite] = []
         self._event_version: str | None = None
         self._next_update: Callable | None = None
@@ -60,7 +59,24 @@ class SonosFavorites:
 
     def update(self, now: datetime.datetime | None = None) -> None:
         """Request new Sonos favorites from a speaker."""
-        new_favorites = self.soco.music_library.get_sonos_favorites()
+        new_favorites = None
+        discovered = self.hass.data[DATA_SONOS].discovered
+
+        for uid, speaker in discovered.items():
+            try:
+                new_favorites = speaker.soco.music_library.get_sonos_favorites()
+            except SoCoException as err:
+                _LOGGER.warning(
+                    "Error requesting favorites from %s: %s", speaker.soco, err
+                )
+            else:
+                # Prefer this SoCo instance next update
+                discovered.move_to_end(uid, last=False)
+                break
+
+        if new_favorites is None:
+            _LOGGER.error("Could not reach any speakers to update favorites")
+            return
 
         self._favorites = []
         for fav in new_favorites:
@@ -74,8 +90,6 @@ class SonosFavorites:
         _LOGGER.debug(
             "Cached %s favorites for household %s",
             len(self._favorites),
-            self.soco.household_id,
+            self.household_id,
         )
-        dispatcher_send(
-            self.hass, f"{SONOS_HOUSEHOLD_UPDATED}-{self.soco.household_id}"
-        )
+        dispatcher_send(self.hass, f"{SONOS_HOUSEHOLD_UPDATED}-{self.household_id}")

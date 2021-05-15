@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections import OrderedDict
 import datetime
 import logging
 import socket
@@ -66,7 +67,7 @@ class SonosData:
 
     def __init__(self) -> None:
         """Initialize the data."""
-        self.discovered: dict[str, SonosSpeaker] = {}
+        self.discovered: OrderedDict[str, SonosSpeaker] = OrderedDict()
         self.favorites: dict[str, SonosFavorites] = {}
         self.topology_condition = asyncio.Condition()
         self.discovery_thread = None
@@ -129,7 +130,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     speaker = SonosSpeaker(hass, soco, speaker_info)
                     data.discovered[soco.uid] = speaker
                     if soco.household_id not in data.favorites:
-                        data.favorites[soco.household_id] = SonosFavorites(hass, soco)
+                        data.favorites[soco.household_id] = SonosFavorites(
+                            hass, soco.household_id
+                        )
                         data.favorites[soco.household_id].update()
                     speaker.setup()
                 else:
