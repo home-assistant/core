@@ -181,15 +181,18 @@ async def async_setup_entry(hass, config_entry):
     )
 
     if not config_entry.update_listeners:
-        config_entry.add_update_listener(async_update_options)
+        config_entry.async_on_unload(
+            config_entry.add_update_listener(async_update_options)
+        )
 
     async def async_on_stop(event):
         """Unregister callbacks and disconnect."""
         client.clear_state_update_callbacks()
         await client.disconnect()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_stop)
-
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_stop)
+    )
     return True
 
 
