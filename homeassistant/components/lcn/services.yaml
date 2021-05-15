@@ -183,7 +183,11 @@ var_abs:
       name: Variable
       description: Variable or setpoint name
       required: true
+<<<<<<< HEAD
       default: native
+=======
+      default: NATIVE
+>>>>>>> 03b128d982 (Wrap up selectors)
       selector:
         select:
           options:
@@ -350,7 +354,11 @@ var_rel:
     unit_of_measurement:
       name: Unit of measurement
       description: Unit of value
+<<<<<<< HEAD
       default: native
+=======
+      default: NATIVE
+>>>>>>> 03b128d982 (Wrap up selectors)
       selector:
         select:
           options:
@@ -380,7 +388,11 @@ var_rel:
     value_reference:
       name: Reference value
       description: Reference value for setpoint and threshold
+<<<<<<< HEAD
       default: current
+=======
+      default: CURRENT
+>>>>>>> 03b128d982 (Wrap up selectors)
       selector:
         select:
           options:
@@ -450,7 +462,11 @@ send_keys:
     state:
       name: State
       description: "Key state upon sending (must be hit for deferred)"
+<<<<<<< HEAD
       default: hit
+=======
+      default: HIT
+>>>>>>> 03b128d982 (Wrap up selectors)
       selector:
         select:
           options:
@@ -469,7 +485,11 @@ send_keys:
     time_unit:
       name: Time unit
       description: Time unit of send delay.
+<<<<<<< HEAD
       default: s
+=======
+      default: S
+>>>>>>> 03b128d982 (Wrap up selectors)
       selector:
         select:
           options:
@@ -524,7 +544,11 @@ lock_keys:
     time_unit:
       name: Time unit
       description: Time unit of lock interval.
+<<<<<<< HEAD
       default: s
+=======
+      default: S
+>>>>>>> 03b128d982 (Wrap up selectors)
       selector:
         select:
           options:
