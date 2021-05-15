@@ -163,7 +163,7 @@ class WatsonTTSProvider(Provider):
 
         if self.default_voice in DEPRECATED_VOICES:
             _LOGGER.warning(
-                "Watson TTS voice %s is deprecated, it may be removed in the future.",
+                "Watson TTS voice %s is deprecated, it may be removed in the future",
                 self.default_voice,
             )
 
