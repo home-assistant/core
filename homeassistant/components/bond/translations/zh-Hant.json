@@ -9,7 +9,7 @@
             "old_firmware": "Bond \u88dd\u7f6e\u4f7f\u7528\u4e0d\u652f\u63f4\u7684\u820a\u7248\u672c\u97cc\u9ad4 -  \u8acb\u66f4\u65b0\u5f8c\u518d\u7e7c\u7e8c",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
-        "flow_title": "Bond\uff1a{name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "confirm": {
                 "data": {

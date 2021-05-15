@@ -153,7 +153,6 @@ async def setup_onvif_integration(
         domain=config_flow.DOMAIN,
         source=source,
         data={**config},
-        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         options=options or {},
         entry_id=entry_id,
         unique_id=unique_id,

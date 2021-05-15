@@ -33,6 +33,19 @@
             }
         }
     },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "Code f\u00fcr Scharfschaltaktionen erforderlich",
+            "alarm_failed_tries": "Die Anzahl aufeinanderfolgender fehlgeschlagener Codeeintr\u00e4ge, um einen Alarm auszul\u00f6sen",
+            "alarm_master_code": "Mastercode f\u00fcr die Alarmzentrale(n)",
+            "title": "Optionen f\u00fcr die Alarmsteuerung"
+        },
+        "zha_options": {
+            "default_light_transition": "Standardlicht\u00fcbergangszeit (Sekunden)",
+            "enable_identify_on_join": "Aktivieren Sie den Identifikationseffekt, wenn Ger\u00e4te dem Netzwerk beitreten",
+            "title": "Globale Optionen"
+        }
+    },
     "device_automation": {
         "action_type": {
             "squawk": "Kreischen",

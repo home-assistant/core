@@ -4,29 +4,13 @@
             "port_name_in_use": "Ja hi ha un enlla\u00e7 o accessori configurat amb aquest nom o port."
         },
         "step": {
-            "accessory_mode": {
-                "data": {
-                    "entity_id": "Entitat"
-                },
-                "description": "Escull l'entitat que vulguis incloure. En mode accessori, nom\u00e9s s'inclou una sola entitat.",
-                "title": "Selecciona l'entitat a incloure"
-            },
-            "bridge_mode": {
-                "data": {
-                    "include_domains": "Dominis a incloure"
-                },
-                "description": "Escull els dominis que vulguis incloure. S'inclouran totes les entitats del domini que siguin compatibles.",
-                "title": "Selecciona els dominis a incloure"
-            },
             "pairing": {
                 "description": "Per completar la vinculaci\u00f3, segueix les instruccions a \"Configuraci\u00f3 de l'enlla\u00e7 HomeKit\" sota \"Notificacions\".",
                 "title": "Vinculaci\u00f3 HomeKit"
             },
             "user": {
                 "data": {
-                    "auto_start": "Autoarrencada (desactiva-ho si fas servir Z-Wave o algun altre sistema d'inici lent)",
-                    "include_domains": "Dominis a incloure",
-                    "mode": "Mode"
+                    "include_domains": "Dominis a incloure"
                 },
                 "description": "Selecciona els dominis a incloure. S'inclouran totes les entitats del domini compatibles. Es crear\u00e0 una inst\u00e0ncia HomeKit en mode accessori per a cada repoductor multim\u00e8dia/TV i c\u00e0mera.",
                 "title": "Selecciona els dominis a incloure"
@@ -37,8 +21,7 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Inici autom\u00e0tic (desactiva-ho si crides el servei homekit.start manualment)",
-                    "safe_mode": "Mode segur (habilita-ho nom\u00e9s si falla la vinculaci\u00f3)"
+                    "auto_start": "Inici autom\u00e0tic (desactiva-ho si crides el servei homekit.start manualment)"
                 },
                 "description": "Aquests par\u00e0metres nom\u00e9s s'han d'ajustar si HomeKit no \u00e9s funcional.",
                 "title": "Configuraci\u00f3 avan\u00e7ada"

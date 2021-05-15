@@ -11,15 +11,6 @@
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "email": "Email",
-                    "password": "Kata Sandi",
-                    "region": "Wilayah"
-                },
-                "description": "Autentikasi gagal untuk Mazda Connected Services. Masukkan kredensial Anda saat ini.",
-                "title": "Mazda Connected Services - Autentikasi Gagal"
-            },
             "user": {
                 "data": {
                     "email": "Email",

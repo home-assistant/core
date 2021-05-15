@@ -10,7 +10,6 @@
             "is_pressure": "{entity_name} aktu\u00e1lis nyom\u00e1sa",
             "is_signal_strength": "{entity_name} aktu\u00e1lis jeler\u0151ss\u00e9ge",
             "is_temperature": "{entity_name} aktu\u00e1lis h\u0151m\u00e9rs\u00e9klete",
-            "is_timestamp": "{entity_name} aktu\u00e1lis id\u0151b\u00e9lyege",
             "is_value": "{entity_name} aktu\u00e1lis \u00e9rt\u00e9ke"
         },
         "trigger_type": {
@@ -23,7 +22,6 @@
             "pressure": "{entity_name} nyom\u00e1sa v\u00e1ltozik",
             "signal_strength": "{entity_name} jeler\u0151ss\u00e9ge v\u00e1ltozik",
             "temperature": "{entity_name} h\u0151m\u00e9rs\u00e9klete v\u00e1ltozik",
-            "timestamp": "{entity_name} id\u0151b\u00e9lyege v\u00e1ltozik",
             "value": "{entity_name} \u00e9rt\u00e9ke v\u00e1ltozik",
             "voltage": "{entity_name} fesz\u00fclts\u00e9ge v\u00e1ltozik"
         }

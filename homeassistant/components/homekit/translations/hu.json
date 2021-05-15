@@ -1,19 +1,12 @@
 {
     "config": {
         "step": {
-            "accessory_mode": {
-                "data": {
-                    "entity_id": "Entit\u00e1s"
-                },
-                "title": "V\u00e1laszd ki a felvenni k\u00edv\u00e1nt entit\u00e1st"
-            },
             "pairing": {
                 "title": "HomeKit p\u00e1ros\u00edt\u00e1s"
             },
             "user": {
                 "data": {
-                    "include_domains": "Felvenni k\u00edv\u00e1nt domainek",
-                    "mode": "M\u00f3d"
+                    "include_domains": "Felvenni k\u00edv\u00e1nt domainek"
                 },
                 "title": "Felvenni k\u00edv\u00e1nt domainek kiv\u00e1laszt\u00e1sa"
             }

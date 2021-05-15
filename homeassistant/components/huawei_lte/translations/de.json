@@ -34,7 +34,8 @@
                 "data": {
                     "name": "Name des Benachrichtigungsdienstes (\u00c4nderung erfordert Neustart)",
                     "recipient": "SMS-Benachrichtigungsempf\u00e4nger",
-                    "track_new_devices": "Neue Ger\u00e4te verfolgen"
+                    "track_new_devices": "Neue Ger\u00e4te verfolgen",
+                    "track_wired_clients": "Kabelgebundene Netzwerk-Clients verfolgen"
                 }
             }
         }

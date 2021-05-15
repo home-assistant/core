@@ -8,8 +8,7 @@
             "bad_pin_format": "A PIN-nek 4 sz\u00e1mjegy\u0171nek kell lennie",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "incorrect_pin": "Helytelen PIN",
-            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
-            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
         },
         "step": {
             "pin": {

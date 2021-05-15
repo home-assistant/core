@@ -8,7 +8,7 @@
             "syncthru_not_supported": "El dispositiu no \u00e9s compatible amb SyncThru",
             "unknown_state": "Estat de la impressora desconegut, comprova l'URL i la connecci\u00f3 de la xarxa"
         },
-        "flow_title": "Impressora Samsung SyncThru: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {

@@ -8,15 +8,6 @@
             "invalid_api_key": "Vpisan neveljaven API klju\u010d"
         },
         "step": {
-            "geography": {
-                "data": {
-                    "api_key": "Klju\u010d API",
-                    "latitude": "Zemljepisna \u0161irina",
-                    "longitude": "Zemljepisna dol\u017eina"
-                },
-                "description": "Uporabite API oblaka AirVisual za spremljanje geografske lokacije.",
-                "title": "Konfigurirajte lokacijo"
-            },
             "node_pro": {
                 "data": {
                     "ip_address": "IP naslov/ime gostitelja enote",
@@ -26,11 +17,6 @@
                 "title": "Konfigurirajte AirVisual Node/Pro"
             },
             "user": {
-                "data": {
-                    "cloud_api": "Geografska lokacija",
-                    "node_pro": "AirVisual Node Pro",
-                    "type": "Vrsta integracije"
-                },
                 "description": "Spremljajte kakovost zraka na zemljepisni lokaciji.",
                 "title": "Nastavite AirVisual"
             }

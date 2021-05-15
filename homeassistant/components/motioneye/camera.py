@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from typing import Any, Dict, Optional
 
 import aiohttp
 from motioneye_client.client import MotionEyeClient
@@ -30,6 +30,8 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -58,7 +60,7 @@ PLATFORMS = ["camera"]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up motionEye from a config entry."""
     entry_data = hass.data[DOMAIN][entry.entry_id]
@@ -84,7 +86,7 @@ async def async_setup_entry(
     listen_for_new_cameras(hass, entry, camera_add)
 
 
-class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
+class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity[Optional[Dict[str, Any]]]):
     """motionEye mjpeg camera."""
 
     def __init__(
@@ -94,7 +96,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         password: str,
         camera: dict[str, Any],
         client: MotionEyeClient,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, Any] | None],
     ) -> None:
         """Initialize a MJPEG camera."""
         self._surveillance_username = username
@@ -189,7 +191,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
                 self._motion_detection_enabled = camera.get(KEY_MOTION_DETECTION, False)
                 available = True
         self._available = available
-        CoordinatorEntity._handle_coordinator_update(self)
+        super()._handle_coordinator_update()
 
     @property
     def brand(self) -> str:
@@ -202,6 +204,6 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         return self._motion_detection_enabled
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {"identifiers": {self._device_identifier}}

@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
+            "unknown": "Error inesperado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "authenticate": {
+                "data": {
+                    "api_key": "Clave API"
+                },
+                "description": "Escribe la clave API que estableciste en la configuraci\u00f3n para {name}."
+            },
+            "user": {
+                "data": {
+                    "api_key": "Clave API",
+                    "host": "Host",
+                    "port": "Puerto"
+                },
+                "description": "Por favor, introduce tus datos de conexi\u00f3n."
+            }
+        }
+    }
+}

@@ -21,6 +21,7 @@
         "step": {
             "init": {
                 "data": {
+                    "ph_offset": "pH nihe (positiivne v\u00f5i negatiivne)",
                     "polling_interval": "P\u00e4ringute intervall (sekundites)"
                 }
             }

@@ -1,8 +1,7 @@
 """Support for KNX/IP climate devices."""
 from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import Any, Callable
+from typing import Any
 
 from xknx import XKNX
 from xknx.devices import Climate as XknxClimate, ClimateMode as XknxClimateMode
@@ -20,7 +19,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONTROLLER_MODES, DOMAIN, PRESET_MODES
@@ -34,7 +33,7 @@ PRESET_MODES_INV = {value: key for key, value in PRESET_MODES.items()}
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: Callable[[Iterable[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up climate(s) for KNX platform."""
@@ -71,7 +70,24 @@ def _async_migrate_unique_id(
         ga_target_temperature_state = parse_device_group_address(
             entity_config[ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS][0]
         )
-        new_uid = f"{ga_temperature_state}_{ga_target_temperature_state}"
+        target_temp = entity_config.get(ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS)
+        ga_target_temperature = (
+            parse_device_group_address(target_temp[0])
+            if target_temp is not None
+            else None
+        )
+        setpoint_shift = entity_config.get(ClimateSchema.CONF_SETPOINT_SHIFT_ADDRESS)
+        ga_setpoint_shift = (
+            parse_device_group_address(setpoint_shift[0])
+            if setpoint_shift is not None
+            else None
+        )
+        new_uid = (
+            f"{ga_temperature_state}_"
+            f"{ga_target_temperature_state}_"
+            f"{ga_target_temperature}_"
+            f"{ga_setpoint_shift}"
+        )
         entity_registry.async_update_entity(entity_id, new_unique_id=new_uid)
 
 
@@ -85,7 +101,9 @@ class KNXClimate(KnxEntity, ClimateEntity):
 
         self._unique_id = (
             f"{self._device.temperature.group_address_state}_"
-            f"{self._device.target_temperature.group_address_state}"
+            f"{self._device.target_temperature.group_address_state}_"
+            f"{self._device.target_temperature.group_address}_"
+            f"{self._device._setpoint_shift.group_address}"  # pylint: disable=protected-access
         )
         self._unit_of_measurement = TEMP_CELSIUS
 

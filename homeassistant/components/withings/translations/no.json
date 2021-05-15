@@ -12,7 +12,7 @@
         "error": {
             "already_configured": "Kontoen er allerede konfigurert"
         },
-        "flow_title": "",
+        "flow_title": "{profile}",
         "step": {
             "pick_implementation": {
                 "title": "Velg godkjenningsmetode"

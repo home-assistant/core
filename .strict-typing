@@ -3,14 +3,20 @@
 # to enable strict mypy checks.
 
 homeassistant.components
+homeassistant.components.airly.*
 homeassistant.components.automation.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bond.*
+homeassistant.components.brother.*
 homeassistant.components.calendar.*
+homeassistant.components.camera.*
 homeassistant.components.cover.*
 homeassistant.components.device_automation.*
+homeassistant.components.elgato.*
+homeassistant.components.fritzbox.*
 homeassistant.components.frontend.*
 homeassistant.components.geo_location.*
+homeassistant.components.gios.*
 homeassistant.components.group.*
 homeassistant.components.history.*
 homeassistant.components.http.*
@@ -23,8 +29,10 @@ homeassistant.components.light.*
 homeassistant.components.lock.*
 homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
+homeassistant.components.nam.*
 homeassistant.components.notify.*
 homeassistant.components.number.*
+homeassistant.components.onewire.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.proximity.*
 homeassistant.components.recorder.purge
@@ -36,8 +44,10 @@ homeassistant.components.slack.*
 homeassistant.components.sonos.media_player
 homeassistant.components.sun.*
 homeassistant.components.switch.*
+homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
 homeassistant.components.tts.*
+homeassistant.components.upcloud.*
 homeassistant.components.vacuum.*
 homeassistant.components.water_heater.*
 homeassistant.components.weather.*

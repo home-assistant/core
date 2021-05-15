@@ -29,20 +29,25 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_SERVER_ID): cv.positive_int,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=timedelta(minutes=DEFAULT_SCAN_INTERVAL)
-                ): cv.positive_time_period,
-                vol.Optional(CONF_MANUAL, default=False): cv.boolean,
-                vol.Optional(
-                    CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
-                ): vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
-            }
-        )
-    },
+    vol.All(
+        # Deprecated in Home Assistant 2021.6
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Optional(CONF_SERVER_ID): cv.positive_int,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL,
+                        default=timedelta(minutes=DEFAULT_SCAN_INTERVAL),
+                    ): cv.positive_time_period,
+                    vol.Optional(CONF_MANUAL, default=False): cv.boolean,
+                    vol.Optional(
+                        CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)
+                    ): vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 

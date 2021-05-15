@@ -1,7 +1,6 @@
 """Config flow for Ondilo ICO."""
 import logging
 
-from homeassistant import config_entries
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN
@@ -14,7 +13,6 @@ class OAuth2FlowHandler(
     """Config flow to handle Ondilo ICO OAuth2 authentication."""
 
     DOMAIN = DOMAIN
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
