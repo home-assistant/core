@@ -37,7 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(TotalAssetValue(coordinator, currency))
 
     if CONF_OPEN_ORDERS in coordinator.data:
-        entities.append(OpenOrder(coordinator, coordinator.data[CONF_OPEN_ORDERS]))
+        entities.append(OpenOrders(coordinator, coordinator.data[CONF_OPEN_ORDERS]))
 
     async_add_entities(entities, False)
 
@@ -179,17 +179,17 @@ class Order(CoordinatorEntity):
         }
 
 
-class OpenOrder(Order):
-    """Implementation of the open order sensor."""
+class OpenOrders(Order):
+    """Implementation of the open orders sensor."""
 
     def __init__(self, coordinator, order):
         """Initialize the sensor."""
         super().__init__(coordinator, order)
 
-        self._name = "Bitvavo Orders - Open"
+        self._name = "Bitvavo Open Orders"
         self._unique_id = "bitvavo_orders_open"
 
-    def _get_data(self):
+    def _get_orders(self):
         """Return the data from self.coordinator.data."""
         return self.coordinator.data[CONF_OPEN_ORDERS]
 
@@ -201,7 +201,7 @@ class OpenOrder(Order):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return len(self._get_data())
+        return len(self._get_orders())
 
     @property
     def unique_id(self):
