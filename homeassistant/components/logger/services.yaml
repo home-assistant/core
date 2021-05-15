@@ -5,7 +5,6 @@ set_default_level:
     level:
       name: Level
       description: Default severity level for all integrations.
-      example: debug
       selector:
         select:
           options:
@@ -25,7 +24,6 @@ set_level:
       description:
         "Example on how to change the logging level for a Home Assistant Core
         integrations."
-      example: debug
       selector:
         select:
           options:
@@ -40,7 +38,6 @@ set_level:
       name: Home Assistant components mqtt
       description:
         "Example on how to change the logging level for an Integration."
-      example: warning
       selector:
         select:
           options:
@@ -55,7 +52,6 @@ set_level:
       name: Custom components "my_integation"
       description:
         "Example on how to change the logging level for a Custom Integration."
-      example: debug
       selector:
         select:
           options:
@@ -70,7 +66,6 @@ set_level:
       name: aioHttp
       description:
         "Example on how to change the logging level for a Python module."
-      example: error
       selector:
         select:
           options:

@@ -6,7 +6,6 @@ update_file_path:
       name: Entity
       description: Name of the entity_id of the camera to update.
       required: true
-      example: "camera.local_file"
       selector:
         entity:
           domain: camera

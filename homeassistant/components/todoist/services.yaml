@@ -25,7 +25,6 @@ new_task:
     priority:
       name: Priority
       description: The priority of this task, from 1 (normal) to 4 (urgent).
-      example: 2
       selector:
         number:
           min: 1

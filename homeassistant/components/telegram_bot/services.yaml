@@ -44,8 +44,13 @@ send_message:
         boolean:
     timeout:
       name: Timeout
-      description: Timeout for send message. Will help with timeout errors (poor internet connection, etc)
-      example: "1000"
+      description: Timeout for send message. Will help with timeout errors (poor internet connection, etc)s
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+
     keyboard:
       name: Keyboard
       description: List of rows of commands, comma-separated, to make a custom keyboard. Empty list clears a previously set keyboard.
@@ -108,7 +113,6 @@ send_photo:
     parse_mode:
       name: Parse mode
       description: "Parser for the message text."
-      example: "html"
       selector:
         select:
           options:
@@ -128,7 +132,6 @@ send_photo:
     timeout:
       name: Timeout
       description: Timeout for send photo. Will help with timeout errors (poor internet connection, etc)
-      example: "1000"
       selector:
         number:
           min: 1
@@ -276,13 +279,11 @@ send_animation:
     disable_notification:
       name: Disable notification
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
-      example: true
       selector:
         boolean:
     verify_ssl:
       name: Verify SSL
       description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
-      example: false
       selector:
         boolean:
     timeout:
@@ -512,7 +513,6 @@ send_document:
     parse_mode:
       name: Parse mode
       description: "Parser for the message text."
-      example: "html"
       selector:
         select:
           options:
@@ -651,7 +651,6 @@ edit_message:
     parse_mode:
       name: Parse mode
       description: "Parser for the message text."
-      example: "html"
       selector:
         select:
           options:

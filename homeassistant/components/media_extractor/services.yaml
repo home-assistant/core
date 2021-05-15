@@ -16,7 +16,6 @@ play_media:
       name: Media content type
       description: The type of the content to play. Must be one of MUSIC, TVSHOW, VIDEO, EPISODE, CHANNEL or PLAYLIST MUSIC.
       required: true
-      example: "music"
       selector:
         select:
           options:

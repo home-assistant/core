@@ -108,8 +108,6 @@ refresh_value:
     refresh_all_values:
       name: Refresh all values?
       description: Whether to refresh all values (true) or just the primary value (false)
-      required: false
-      example: true
       default: false
       selector:
         boolean:
@@ -159,7 +157,6 @@ set_value:
     wait_for_result:
       name: Wait for result?
       description: Whether or not to wait for a response from the node. If not included in the payload, the integration will decide whether to wait or not. If set to `true`, note that the service call can take a while if setting a value on an asleep battery device.
-      example: false
       required: false
       selector:
         boolean:

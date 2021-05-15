@@ -5,7 +5,6 @@ send_command:
     bridge:
       name: Bridge
       description: The server to send the command to.
-      example: ""
       required: true
       selector:
         device:
@@ -32,7 +31,6 @@ open:
     bridge:
       name: Bridge
       description: The server to talk to.
-      example: ""
       required: true
       selector:
         device:

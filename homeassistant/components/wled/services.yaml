@@ -15,13 +15,10 @@ effect:
     intensity:
       name: Effect intensity
       description: Intensity of the effect. Number between 0 and 255.
-      example: 100
       selector:
         number:
           min: 0
           max: 255
-          step: 1
-          mode: slider
     palette:
       name: Color palette
       description: Name or ID of the WLED light palette.
@@ -30,20 +27,16 @@ effect:
         text:
     speed:
       name: Effect speed
-      description: Speed of the effect. Number between 0 (slow) and 255 (fast).
-      example: 150
+      description: Speed of the effect.
       selector:
         number:
           min: 0
           max: 255
-          step: 1
-          mode: slider
     reverse:
       name: Reverse effect
       description:
         Reverse the effect. Either true to reverse or false otherwise.
       default: false
-      example: false
       selector:
         boolean:
 
@@ -58,7 +51,6 @@ preset:
     preset:
       name: Preset ID
       description: ID of the WLED preset
-      example: 6
       selector:
         number:
           min: -1

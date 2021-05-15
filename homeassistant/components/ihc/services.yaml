@@ -8,8 +8,7 @@ set_runtime_value_bool:
       name: Controller ID
       description: |
         If you have multiple controller, this is the index of you controller
-        starting with 0
-      example: 0
+        starting with 0.
       default: 0
       selector:
         number:
@@ -19,7 +18,6 @@ set_runtime_value_bool:
       name: IHC ID
       description: The integer IHC resource ID.
       required: true
-      example: 123456
       selector:
         number:
           min: 0
@@ -29,7 +27,6 @@ set_runtime_value_bool:
       name: Value
       description: The boolean value to set.
       required: true
-      example: true
       selector:
         boolean:
 
@@ -41,8 +38,7 @@ set_runtime_value_int:
       name: Controller ID
       description: |
         If you have multiple controller, this is the index of you controller
-        starting with 0
-      example: 0
+        starting with 0.
       default: 0
       selector:
         number:
@@ -52,7 +48,6 @@ set_runtime_value_int:
       name: IHC ID
       description: The integer IHC resource ID.
       required: true
-      example: 123456
       selector:
         number:
           min: 0
@@ -62,7 +57,6 @@ set_runtime_value_int:
       name: Value
       description: The integer value to set.
       required: true
-      example: 50
       selector:
         number:
           min: 0
@@ -77,8 +71,7 @@ set_runtime_value_float:
       name: Controller ID
       description: |
         If you have multiple controller, this is the index of you controller
-        starting with 0
-      example: 0
+        starting with 0.
       default: 0
       selector:
         number:
@@ -88,7 +81,6 @@ set_runtime_value_float:
       name: IHC ID
       description: The integer IHC resource ID.
       required: true
-      example: 123456
       selector:
         number:
           min: 0
@@ -98,7 +90,6 @@ set_runtime_value_float:
       name: Value
       description: The float value to set.
       required: true
-      example: 1.47
       selector:
         number:
           min: 0
@@ -114,8 +105,7 @@ pulse:
       name: Controller ID
       description: |
         If you have multiple controller, this is the index of you controller
-        starting with 0
-      example: 0
+        starting with 0.
       default: 0
       selector:
         number:
@@ -125,7 +115,6 @@ pulse:
       name: IHC ID
       description: The integer IHC resource ID.
       required: true
-      example: 123456
       selector:
         number:
           min: 0

@@ -26,7 +26,6 @@ seek_by:
       name: Seconds
       description: Number of seconds to seek by. Negative numbers seek backwards.
       required: true
-      example: 120
       selector:
         number:
           min: -3600

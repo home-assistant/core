@@ -9,7 +9,6 @@ set_aux_heat:
       name: Auxiliary heating
       description: New value of auxiliary heater.
       required: true
-      example: true
       selector:
         boolean:
 
@@ -34,7 +33,6 @@ set_temperature:
     temperature:
       name: Temperature
       description: New target temperature for HVAC.
-      example: 25
       selector:
         number:
           min: 0
@@ -45,7 +43,6 @@ set_temperature:
       name: Target temperature high
       description: New target high temperature for HVAC.
       advanced: true
-      example: 26
       selector:
         number:
           min: 0
@@ -56,7 +53,6 @@ set_temperature:
       name: Target temperature low
       description: New target low temperature for HVAC.
       advanced: true
-      example: 20
       selector:
         number:
           min: 0
@@ -66,7 +62,6 @@ set_temperature:
     hvac_mode:
       name: HVAC mode
       description: HVAC operation mode to set temperature to.
-      example: "heat"
       selector:
         select:
           options:
@@ -87,14 +82,11 @@ set_humidity:
       name: Humidity
       description: New target humidity for climate device.
       required: true
-      example: 60
       selector:
         number:
           min: 30
           max: 99
-          step: 1
           unit_of_measurement: "%"
-          mode: slider
 
 set_fan_mode:
   name: Set fan mode
@@ -117,7 +109,6 @@ set_hvac_mode:
     hvac_mode:
       name: HVAC mode
       description: New value of operation mode.
-      example: "heat"
       selector:
         select:
           options:

@@ -13,7 +13,6 @@ set_lock_state:
       name: Lock state
       description: New lock state.
       required: true
-      example: "unlocked"
       selector:
         select:
           options:

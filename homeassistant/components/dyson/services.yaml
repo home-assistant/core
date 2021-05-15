@@ -12,7 +12,6 @@ set_night_mode:
       name: Night mode
       description: Night mode status
       required: true
-      example: true
       selector:
         boolean:
 
@@ -28,7 +27,6 @@ set_auto_mode:
       name: Auto Mode
       description: Auto mode status
       required: true
-      example: true
       selector:
         boolean:
 
@@ -44,7 +42,6 @@ set_angle:
       name: Angle low
       description: The angle at which the oscillation should start
       required: true
-      example: 1
       selector:
         number:
           min: 5
@@ -54,7 +51,6 @@ set_angle:
       name: Angle high
       description: The angle at which the oscillation should end
       required: true
-      example: 255
       selector:
         number:
           min: 5
@@ -73,7 +69,6 @@ set_flow_direction_front:
       name: Flow direction front
       description: Frontal flow direction
       required: true
-      example: true
       selector:
         boolean:
 
@@ -89,7 +84,6 @@ set_timer:
       name: Timer
       description: The value in minutes to set the timer to, 0 to disable it
       required: true
-      example: 30
       selector:
         number:
           min: 0
@@ -108,7 +102,6 @@ set_speed:
       name: Speed
       description: Speed
       required: true
-      example: 1
       selector:
         number:
           min: 1

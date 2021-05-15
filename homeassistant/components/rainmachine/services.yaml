@@ -11,7 +11,6 @@ disable_program:
       name: Program ID
       description: The program to disable.
       required: true
-      example: 3
       selector:
         number:
           min: 1
@@ -28,7 +27,6 @@ disable_zone:
       name: Zone ID
       description: The zone to disable.
       required: true
-      example: 3
       selector:
         number:
           min: 1
@@ -45,7 +43,6 @@ enable_program:
       name: Program ID
       description: The program to enable.
       required: true
-      example: 3
       selector:
         number:
           min: 1
@@ -62,7 +59,6 @@ enable_zone:
       name: Zone ID
       description: The zone to enable.
       required: true
-      example: 3
       selector:
         number:
           min: 1
@@ -79,7 +75,6 @@ pause_watering:
       name: Seconds
       description: The time to pause.
       required: true
-      example: 30
       selector:
         number:
           min: 1
@@ -97,7 +92,6 @@ start_program:
       name: Program ID
       description: The program to start.
       required: true
-      example: 3
       selector:
         number:
           min: 1
@@ -114,7 +108,6 @@ start_zone:
       name: Zone ID
       description: The zone to start.
       required: true
-      example: 3
       selector:
         number:
           min: 1
@@ -122,8 +115,12 @@ start_zone:
     zone_run_time:
       name: Zone run time
       description: The number of seconds to run the zone.
-      example: 120
       default: 600
+      selector:
+        number:
+          min: 1
+          max: 86400
+          mode: box
 stop_all:
   name: Stop all
   description: Stop all watering activities.
@@ -143,7 +140,6 @@ stop_program:
       name: Program ID
       description: The program to stop.
       required: true
-      example: 3
       selector:
         number:
           min: 1
@@ -160,7 +156,6 @@ stop_zone:
       name: Zone ID
       description: The zone to stop.
       required: true
-      example: 3
       selector:
         number:
           min: 1
