@@ -219,10 +219,10 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
 
     @property
     def effect_list(self) -> list[str] | None:
-        """Return the list of supported effects.""" 
+        """Return the list of supported effects."""
         if not self.supported_features & SUPPORT_EFFECT:
             return None
-            
+
         if self.wrapper.model == "SHBLB-1":
             return list(SHBLB_1_RGB_EFFECTS.values())
 
@@ -230,7 +230,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
 
     @property
     def effect(self) -> str | None:
-        """Return the current effect.""" 
+        """Return the current effect."""
         if not self.supported_features & SUPPORT_EFFECT:
             return None
 
