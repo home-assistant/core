@@ -241,17 +241,7 @@ class TotalAssetValue(CoordinatorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        total_base_asset_value = 0.0
-
-        for i in self.coordinator.data[CONF_BALANCES].keys():
-            try:
-                asset_value = self.coordinator.data[CONF_BALANCES][i][
-                    "asset_value_in_base_asset"
-                ]
-
-                total_base_asset_value += float(asset_value)
-            except KeyError:
-                continue
+        total_base_asset_value = self.coordinator.data["total_base_asset"]
 
         if self._currency == ASSET_VALUE_BASE:
             total_asset_value = total_base_asset_value

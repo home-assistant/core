@@ -159,6 +159,22 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
 
         return balances_dict
 
+    @staticmethod
+    def _prep_total_base_asset(balances):
+        """Prepare total base asset value data."""
+
+        total_base_asset_value = 0.0
+
+        for balance in balances:
+            try:
+                asset_value = balances[balance]["asset_value_in_base_asset"]
+
+                total_base_asset_value += float(asset_value)
+            except KeyError:
+                continue
+
+        return total_base_asset_value
+
     async def _async_update_data(self):
         """Fetch Bitvavo data."""
         tickers = await self._client.get_price_ticker()
@@ -172,10 +188,16 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
                 self.markets, tickers, markets, orderbook_tickers
             )
         }
+
         result_dict["asset_tickers"] = self._prep_tickers(
             self.asset_currencies, tickers
         )
+
         result_dict["balances"] = self._prep_balances(balances, tickers)
+
+        result_dict["total_base_asset"] = self._prep_total_base_asset(
+            result_dict["balances"]
+        )
 
         if open_orders:
             result_dict["open_orders"] = open_orders
