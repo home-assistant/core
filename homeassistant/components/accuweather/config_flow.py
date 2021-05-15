@@ -84,9 +84,11 @@ class AccuWeatherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(entry: ConfigEntry) -> AccuWeatherOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> AccuWeatherOptionsFlowHandler:
         """Options callback for AccuWeather."""
-        return AccuWeatherOptionsFlowHandler(entry)
+        return AccuWeatherOptionsFlowHandler(config_entry)
 
 
 class AccuWeatherOptionsFlowHandler(config_entries.OptionsFlow):
