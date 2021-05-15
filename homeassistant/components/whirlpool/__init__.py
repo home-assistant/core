@@ -1,5 +1,4 @@
 """The Whirlpool Sixth Sense integration."""
-import asyncio
 import logging
 
 import aiohttp

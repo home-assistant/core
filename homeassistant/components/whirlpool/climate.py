@@ -172,8 +172,8 @@ class AirConEntity(ClimateEntity):
             return
 
         mode = None
-        for k, v in AIRCON_MODE_MAP.items():
-            if v == hvac_mode:
+        for k, val in AIRCON_MODE_MAP.items():
+            if val == hvac_mode:
                 mode = k
 
         if not mode:
@@ -198,8 +198,8 @@ class AirConEntity(ClimateEntity):
     async def async_set_fan_mode(self, fan_mode):
         """Set fan mode."""
         fanspeed = None
-        for k, v in AIRCON_FANSPEED_MAP.items():
-            if v == fan_mode:
+        for k, val in AIRCON_FANSPEED_MAP.items():
+            if val == fan_mode:
                 fanspeed = k
 
         if not fanspeed:
