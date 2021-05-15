@@ -1,19 +1,11 @@
 """Tests for the local_ip component."""
-import pytest
-
 from homeassistant.components.local_ip import DOMAIN
 from homeassistant.util import get_local_ip
 
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(name="config")
-def config_fixture():
-    """Create hass config fixture."""
-    return {DOMAIN: {}}
-
-
-async def test_basic_setup(hass, config):
+async def test_basic_setup(hass):
     """Test component setup creates entry from config."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
     entry.add_to_hass(hass)
