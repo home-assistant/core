@@ -1,6 +1,6 @@
 {
-    "title": "Heatzy",
     "config": {
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "title": "Enregistrer votre compte Heatzy.",
@@ -11,7 +11,10 @@
             }
         },
         "error": {
-            "cannot_connect": "Une erreur inconnue s'est produite"
+            "cannot_connect": "Une erreur inconnue s'est produite."
+        },
+        "abort": {
+            "already_configured": "Votre compte est déjà enregistré."
         }
     }
 }

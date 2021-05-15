@@ -1,9 +1,9 @@
 {
-    "title": "Heatzy",
     "config": {
+        "flow_title": "{name}",
         "step": {
             "user": {
-                "title": "Register your heatzy account",
+                "title": "Register your heatzy account.",
                 "data": {
                     "username": "Username",
                     "password": "Password"
@@ -12,6 +12,9 @@
         },
         "error": {
             "cannot_connect": "Can not to connect"
+        },
+        "abort": {
+            "already_configured": "Your account is already configured."
         }
     }
 }
