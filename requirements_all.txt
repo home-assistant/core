@@ -1718,6 +1718,9 @@ pynetio==0.1.9.1
 # homeassistant.components.nina
 pynina==0.1.8
 
+# homeassistant.components.nobo_hub
+pynobo==1.2.0
+
 # homeassistant.components.nuki
 pynuki==1.5.2
 

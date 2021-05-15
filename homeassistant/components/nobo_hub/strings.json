@@ -1,0 +1,66 @@
+{
+  "title": "Nob\u00f8 Ecohub",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nobø Ecohub",
+        "description": "Start by entering the complete serial number (12 digits) of the Nobø Ecohub you want to add. If you have more than one hub, and they have the same serial prefix, you must also specify the IP address. If any devices were automatically found on your network, they are shown below.\n\nIf you cannot see your device or experience any issues, try specifying the device IP address.\n\n{devices}",
+        "data": {
+          "serial": "Serial number",
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_serial": "Invalid serial number",
+      "invalid_ip": "Invalid IP address",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "command_off": "Week profile with 'off' setting",
+          "command_on_zone_1": "Normal week profile for zone 1",
+          "command_on_zone_2": "Normal week profile for zone 2",
+          "command_on_zone_3": "Normal week profile for zone 3",
+          "command_on_zone_4": "Normal week profile for zone 4",
+          "command_on_zone_5": "Normal week profile for zone 5",
+          "command_on_zone_6": "Normal week profile for zone 6",
+          "command_on_zone_7": "Normal week profile for zone 7",
+          "command_on_zone_8": "Normal week profile for zone 8",
+          "command_on_zone_9": "Normal week profile for zone 9",
+          "command_on_zone_10": "Normal week profile for zone 10",
+          "command_on_zone_11": "Normal week profile for zone 11",
+          "command_on_zone_12": "Normal week profile for zone 12",
+          "command_on_zone_13": "Normal week profile for zone 13",
+          "command_on_zone_14": "Normal week profile for zone 14",
+          "command_on_zone_15": "Normal week profile for zone 15",
+          "command_on_zone_16": "Normal week profile for zone 16",
+          "command_on_zone_17": "Normal week profile for zone 17",
+          "command_on_zone_18": "Normal week profile for zone 18",
+          "command_on_zone_19": "Normal week profile for zone 19",
+          "command_on_zone_20": "Normal week profile for zone 20",
+          "command_on_zone_21": "Normal week profile for zone 21",
+          "command_on_zone_22": "Normal week profile for zone 22",
+          "command_on_zone_23": "Normal week profile for zone 23",
+          "command_on_zone_24": "Normal week profile for zone 24",
+          "command_on_zone_25": "Normal week profile for zone 25",
+          "command_on_zone_26": "Normal week profile for zone 26",
+          "command_on_zone_27": "Normal week profile for zone 27",
+          "command_on_zone_28": "Normal week profile for zone 28",
+          "command_on_zone_29": "Normal week profile for zone 29",
+          "command_on_zone_30": "Normal week profile for zone 30",
+          "command_on_zone_31": "Normal week profile for zone 31",
+          "command_on_zone_32": "Normal week profile for zone 32"
+        },
+        "description": "Set week profiles for off and on. Zones:\n\n{zones}"
+      }
+    }
+  }
+}
