@@ -89,7 +89,7 @@ class AcerSwitch(SwitchEntity):
             ECO_MODE: STATE_UNKNOWN,
         }
 
-    def _write_read(self, msg: str) -> str | None:
+    def _write_read(self, msg: str) -> str:
         """Write to the projector and read the return."""
         ret = ""
         # Sometimes the projector won't answer for no reason or the projector
@@ -111,7 +111,7 @@ class AcerSwitch(SwitchEntity):
     def _write_read_format(self, msg: str) -> str:
         """Write msg, obtain answer and format output."""
         # answers are formatted as ***\answer\r***
-        awns = str(self._write_read(msg))
+        awns = self._write_read(msg)
         match = re.search(r"\r(.+)\r", awns)
         if match:
             return match.group(1)
