@@ -1,37 +1,71 @@
 # Describes the format for available Nest services
 
 set_away_mode:
+  name: Set away mode
   description: Set the away mode for a Nest structure.
   fields:
     away_mode:
-      description: New mode to set. Valid modes are "away" or "home".
+      name: Away mode
+      description: New mode to set.
       example: "away"
+      required: true
+      selector:
+        select:
+          options:
+            - 'away'
+            - 'home'
     structure:
+      name: Structure
       description: Name(s) of structure(s) to change. Defaults to all structures if not specified.
       example: "Apartment"
+      selector:
+        object:
 
 set_eta:
+  name: Set estimated time of arrival
   description: Set or update the estimated time of arrival window for a Nest structure.
   fields:
     eta:
+      name: ETA
       description: Estimated time of arrival from now.
       example: "00:10:30"
+      required: true
+      selector:
+        time:
     eta_window:
-      description: Estimated time of arrival window. Default is 1 minute.
+      name: ETA window
+      description: Estimated time of arrival window.
       example: "00:05"
+      default: "00:01"
+      selector:
+        time:
     trip_id:
+      name: Trip ID
       description: Unique ID for the trip. Default is auto-generated using a timestamp.
       example: "Leave Work"
+      selector:
+        text:
     structure:
+      name: Structure
       description: Name(s) of structure(s) to change. Defaults to all structures if not specified.
       example: "Apartment"
+      selector:
+        object:
 
 cancel_eta:
+  name: Cancel ETA
   description: Cancel an existing estimated time of arrival window for a Nest structure.
   fields:
     trip_id:
+      name: Trip ID
       description: Unique ID for the trip.
+      required: true
       example: "Leave Work"
+      selector:
+        text:
     structure:
+      name: Structure
       description: Name(s) of structure(s) to change. Defaults to all structures if not specified.
       example: "Apartment"
+      selector:
+        object:
