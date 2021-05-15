@@ -40,7 +40,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
 async def _async_get_configured_fritz_tools(
     hass: HomeAssistant, service_call: ServiceCall
-) -> list:
+) -> list[str]:
     """Get FritzBoxTools class from config entry."""
 
     list_entry_id: list = []
