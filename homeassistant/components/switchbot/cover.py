@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-# pylint: disable=import-error, no-member
 import switchbot
 
 from homeassistant.components.cover import (
