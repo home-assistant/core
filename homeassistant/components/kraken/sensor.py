@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import async_entries_for_config_entry
+from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -24,24 +25,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add kraken entities from a config_entry."""
 
     @callback
-    async def async_update_sensors(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> None:
-        device_registry = await hass.helpers.device_registry.async_get_registry()
+    def async_update_sensors(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+        dev_reg = device_registry.async_get(hass)
 
         existing_devices = {
             device.name: device.id
-            for device in async_entries_for_config_entry(
-                device_registry, config_entry.entry_id
+            for device in device_registry.async_entries_for_config_entry(
+                dev_reg, config_entry.entry_id
             )
         }
 
+        sensors = []
         for tracked_asset_pair in config_entry.options[CONF_TRACKED_ASSET_PAIRS]:
             # Only create new devices
-            if create_device_name(tracked_asset_pair) in existing_devices:
-                existing_devices.pop(create_device_name(tracked_asset_pair))
+            if (
+                device_name := create_device_name(tracked_asset_pair)
+            ) in existing_devices:
+                existing_devices.pop(device_name)
             else:
-                sensors = []
                 for sensor_type in SENSOR_TYPES:
                     sensors.append(
                         KrakenSensor(
@@ -50,13 +51,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             sensor_type,
                         )
                     )
-                async_add_entities(sensors, True)
+        async_add_entities(sensors, True)
 
         # Remove devices for asset pairs which are no longer tracked
         for device_id in existing_devices.values():
-            device_registry.async_remove_device(device_id)
+            dev_reg.async_remove_device(device_id)
 
-    await async_update_sensors(hass, config_entry)
+    async_update_sensors(hass, config_entry)
 
     hass.data[DOMAIN].unsub_listeners.append(
         async_dispatcher_connect(
@@ -67,7 +68,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class KrakenSensor(CoordinatorEntity):
+class KrakenSensor(CoordinatorEntity, SensorEntity):
     """Define a Kraken sensor."""
 
     def __init__(
@@ -125,7 +126,7 @@ class KrakenSensor(CoordinatorEntity):
 
     def _handle_coordinator_update(self):
         self._update_internal_state()
-        return super()._handle_coordinator_update()
+        super()._handle_coordinator_update()
 
     def _update_internal_state(self):
         try:
@@ -207,6 +208,7 @@ class KrakenSensor(CoordinatorEntity):
         """Return the unit the value is expressed in."""
         if "number_of" not in self._sensor_type:
             return self._unit_of_measurement
+        return None
 
     @property
     def available(self):
@@ -218,7 +220,7 @@ class KrakenSensor(CoordinatorEntity):
         """Return a device description for device registry."""
 
         return {
-            "identifiers": {(DOMAIN, self._source_asset, self._target_asset)},
+            "identifiers": {(DOMAIN, f"{self._source_asset}_{self._target_asset}")},
             "name": self._device_name,
             "manufacturer": "Kraken.com",
             "entry_type": "service",
