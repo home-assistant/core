@@ -73,8 +73,6 @@ async def test_public_weather_sensor(hass, config_entry, netatmo_auth):
 
     assert len(hass.states.async_all()) == entities_before_change
     assert hass.states.get(f"{prefix}temperature").state == "27.4"
-    assert hass.states.get(f"{prefix}humidity").state == "76"
-    assert hass.states.get(f"{prefix}pressure").state == "1014.4"
 
 
 @pytest.mark.parametrize(

@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 from datetime import timedelta
-from functools import partial
 from itertools import islice
 import logging
 from time import time
@@ -156,9 +155,8 @@ class NetatmoDataHandler:
             "subscriptions": [update_callback],
         }
 
-        self.data[data_class_entry] = await self.hass.async_add_executor_job(
-            partial(DATA_CLASSES[data_class_name], **kwargs),
-            self._auth,
+        self.data[data_class_entry] = DATA_CLASSES[data_class_name](
+            self._auth, **kwargs
         )
 
         await self.async_fetch_data(data_class_entry)
