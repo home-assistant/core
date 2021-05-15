@@ -22,36 +22,20 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import (
+    CMD_DICT,
+    CONF_WRITE_TIMEOUT,
+    DEFAULT_NAME,
+    DEFAULT_TIMEOUT,
+    DEFAULT_WRITE_TIMEOUT,
+    ECO_MODE,
+    ICON,
+    INPUT_SOURCE,
+    LAMP,
+    LAMP_HOURS,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-CONF_WRITE_TIMEOUT = "write_timeout"
-
-DEFAULT_NAME = "Acer Projector"
-DEFAULT_TIMEOUT = 1
-DEFAULT_WRITE_TIMEOUT = 1
-
-ECO_MODE = "ECO Mode"
-
-ICON = "mdi:projector"
-
-INPUT_SOURCE = "Input Source"
-
-LAMP = "Lamp"
-LAMP_HOURS = "Lamp Hours"
-
-MODEL = "Model"
-
-# Commands known to the projector
-CMD_DICT = {
-    LAMP: "* 0 Lamp ?\r",
-    LAMP_HOURS: "* 0 Lamp\r",
-    INPUT_SOURCE: "* 0 Src ?\r",
-    ECO_MODE: "* 0 IR 052\r",
-    MODEL: "* 0 IR 035\r",
-    STATE_ON: "* 0 IR 001\r",
-    STATE_OFF: "* 0 IR 002\r",
-}
-
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -142,6 +126,11 @@ class AcerSwitch(SwitchEntity):
     def name(self) -> str:
         """Return name of the projector."""
         return self._name
+
+    @property
+    def icon(self) -> str:
+        """Return the icon."""
+        return ICON
 
     @property
     def is_on(self) -> bool:
