@@ -193,7 +193,7 @@ class FritzBoxTools:
 
     def _update_info(self) -> list[HostInfo]:
         """Retrieve latest information from the FRITZ!Box."""
-        return self.fritz_hosts.get_hosts_info()
+        return self.fritz_hosts.get_hosts_info()  # type: ignore [no-any-return]
 
     def scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new devices and return a list of found device ids."""
