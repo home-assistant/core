@@ -199,11 +199,11 @@ class ModbusHub:
         # Start counting down to allow modbus requests.
         if self._config_delay:
             self._async_cancel_listener = async_call_later(
-                self.hass, self._config_delay, self.callback_end_delay
+                self.hass, self._config_delay, self.async_end_delay
             )
 
     @callback
-    def callback_end_delay(self, args):
+    def async_end_delay(self, args):
         """End startup delay."""
         self._async_cancel_listener = None
         self._config_delay = 0
