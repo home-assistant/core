@@ -127,8 +127,8 @@ class SonosSpeaker:
         self, hass: HomeAssistant, soco: SoCo, speaker_info: dict[str, Any]
     ) -> None:
         """Initialize a SonosSpeaker."""
-        self.hass: HomeAssistant = hass
-        self.soco: SoCo = soco
+        self.hass = hass
+        self.soco = soco
         self.household_id = soco.household_id
         self.media = SonosMedia(soco)
 
