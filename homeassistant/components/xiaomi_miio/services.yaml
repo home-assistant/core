@@ -291,7 +291,7 @@ light_set_scene:
       selector:
         number:
           min: 1
-          max: 4
+          max: 6
 
 light_set_delayed_turn_off:
   name: Light set delayed turn off

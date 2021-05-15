@@ -41,6 +41,7 @@ set_color_scene:
         number:
           min: 0
           max: 100
+          unit_of_measurement: "%"
 set_hsv_scene:
   name: Set HSV scene
   description: Changes the light to the specified HSV color and brightness. If the light is off, it will be turned on.
@@ -62,6 +63,7 @@ set_hsv_scene:
         number:
           min: 0
           max: 100
+          unit_of_measurement: "%"
 set_color_temp_scene:
   name: Set color temperature scene
   description: Changes the light to the specified color temperature. If the light is off, it will be turned on.
@@ -76,8 +78,10 @@ set_color_temp_scene:
       example: 4000
       selector:
         number:
-          min: 0
-          max: 1000000
+          min: 1700
+          max: 6500
+          step: 100
+          unit_of_measurement: K
     brightness:
       name: Brightness
       description: The brightness value to set.
@@ -132,8 +136,8 @@ set_auto_delay_off_scene:
       example: 5
       selector:
         number:
-          min: 0
-          max: 1440
+          min: 1
+          max: 60
           unit_of_measurement: minutes
     brightness:
       name: Brightness
