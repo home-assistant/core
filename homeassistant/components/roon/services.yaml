@@ -1,9 +1,15 @@
 transfer:
+  name: Transfer
   description: Transfer playback from one player to another.
+  target:
+    entity:
+      integration: roon
+      domain: media_player
   fields:
-    entity_id:
-      description: id of the source player.
-      example: "media_player.bedroom"
     transfer_id:
+      name: Transfer ID
       description: id of the destination player.
+      required: true
       example: "media_player.study"
+      selector:
+        text:
