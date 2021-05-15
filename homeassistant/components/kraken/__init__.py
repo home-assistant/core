@@ -34,7 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     kraken_data = KrakenData(hass, config_entry)
     await kraken_data.async_setup()
     hass.data[DOMAIN] = kraken_data
-    config_entry.add_update_listener(async_options_updated)
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(async_options_updated)
+    )
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
     return True
 
