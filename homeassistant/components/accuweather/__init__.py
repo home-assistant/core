@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any, Dict, cast
 
 from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp import ClientSession
@@ -73,7 +73,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator):
+class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
     """Class to manage fetching AccuWeather data API."""
 
     def __init__(
