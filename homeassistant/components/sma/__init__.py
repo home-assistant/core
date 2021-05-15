@@ -169,6 +169,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await sma.close_session()
         raise
 
+    # Add options update listener
+    remove_update_listener = entry.add_update_listener(update_listener)
+
     # Ensure we logout on shutdown
     async def async_close_session(event):
         """Close the session."""
@@ -183,7 +186,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         PYSMA_OBJECT: sma,
         PYSMA_COORDINATOR: coordinator,
         PYSMA_SENSORS: sensor_def,
-        PYSMA_REMOVE_LISTENER: remove_stop_listener,
+        PYSMA_REMOVE_LISTENER: [remove_stop_listener, remove_update_listener],
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -197,6 +200,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         data = hass.data[DOMAIN].pop(entry.entry_id)
         await data[PYSMA_OBJECT].close_session()
-        data[PYSMA_REMOVE_LISTENER]()
+        for remove_listener in data[PYSMA_REMOVE_LISTENER]:
+            remove_listener()
 
     return unload_ok
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    interval = timedelta(
+        seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    )
+    _LOGGER.debug("Updating scan interval to %s", interval)
+
+    coordinator = hass.data[DOMAIN][entry.entry_id][PYSMA_COORDINATOR]
+    coordinator.update_interval = interval

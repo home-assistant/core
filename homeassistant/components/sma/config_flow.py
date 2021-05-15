@@ -12,15 +12,24 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_CUSTOM, CONF_GROUP, DEVICE_INFO, DOMAIN, GROUPS
+from .const import (
+    CONF_CUSTOM,
+    CONF_GROUP,
+    DEFAULT_SCAN_INTERVAL,
+    DEVICE_INFO,
+    DOMAIN,
+    GROUPS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,6 +139,41 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=import_config[CONF_HOST], data=import_config
         )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> SmaOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return SmaOptionsFlowHandler(config_entry)
+
+
+class SmaOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a option flow."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_SCAN_INTERVAL,
+                    default=self.config_entry.options.get(
+                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                    ),
+                ): cv.positive_int,
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
 class InvalidAuth(exceptions.HomeAssistantError):

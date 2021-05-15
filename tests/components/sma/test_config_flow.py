@@ -4,8 +4,9 @@ from unittest.mock import patch
 import aiohttp
 
 from homeassistant import setup
-from homeassistant.components.sma.const import DOMAIN
+from homeassistant.components.sma.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -187,3 +188,30 @@ async def test_import_sensor_dict(hass):
     assert result["title"] == MOCK_USER_INPUT["host"]
     assert result["data"] == MOCK_IMPORT_DICT
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_options_flow(hass, init_integration):
+    """Test the options flow."""
+    assert init_integration.options == {}
+
+    result = await hass.config_entries.options.async_init(init_integration.entry_id)
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    # Scan interval
+    # Default
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert init_integration.options[CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
+
+    # Manual
+    result = await hass.config_entries.options.async_init(init_integration.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SCAN_INTERVAL: 15},
+    )
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert init_integration.options[CONF_SCAN_INTERVAL] == 15

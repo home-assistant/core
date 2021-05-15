@@ -23,5 +23,15 @@
                 "title": "Set up SMA Solar"
             }
         }
+    },
+    "options": {
+      "step": {
+        "init": {
+          "data": {
+            "scan_interval": "Seconds between scans"
+          }
+        }
+      }
     }
-}
+  }
+  
