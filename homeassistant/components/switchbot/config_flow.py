@@ -1,14 +1,23 @@
 """Config flow for ezviz."""
 import logging
 
+from bluepy import btle
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
 
-from .const import ATTR_BOT, ATTR_CURTAIN, DOMAIN
+from .const import ATTR_BOT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _connect(mac_address) -> None:
+    """Try to connect to switchbot device."""
+
+    bl_test = btle.Peripheral(mac_address, btle.ADDR_TYPE_RANDOM)
+
+    return bl_test
 
 
 class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -16,25 +25,50 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    async def _validate_mac(self, data):
+        """Try to login to ezviz cloud account and create entry if successful."""
+        await self.async_set_unique_id(data[CONF_MAC].replace(":", ""))
+        self._abort_if_unique_id_configured()
+
+        # Validate bluetooth device mac.
+        try:
+            await self.hass.async_add_executor_job(_connect, data[CONF_MAC])
+
+        except btle.BTLEException as err:
+            raise btle.BTLEException from err
+
+        except ValueError as err:
+            raise ValueError from err
+
+        return self.async_create_entry(title=data[CONF_NAME], data=data)
+
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
 
         errors = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_MAC].replace(":", ""))
-            self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+            user_input[CONF_SENSOR_TYPE] = ATTR_BOT
+
+            try:
+                return await self._validate_mac(user_input)
+
+            except btle.BTLEException:
+                errors["base"] = "cannot_connect"
+
+            except ValueError:
+                errors["base"] = "invalid_host"
+
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                return self.async_abort(reason="unknown")
 
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_NAME): str,
                 vol.Optional(CONF_PASSWORD): str,
                 vol.Required(CONF_MAC): str,
-                vol.Required(CONF_SENSOR_TYPE, default=ATTR_BOT): vol.In(
-                    [ATTR_BOT, ATTR_CURTAIN]
-                ),
             }
         )
 

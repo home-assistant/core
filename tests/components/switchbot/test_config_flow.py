@@ -1,4 +1,4 @@
-"""Test the Ezviz config flow."""
+"""Test the switchbot config flow."""
 
 from homeassistant.components.switchbot.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
@@ -8,7 +8,7 @@ from homeassistant.setup import async_setup_component
 from . import USER_INPUT, YAML_CONFIG, _patch_async_setup_entry
 
 
-async def test_user_form(hass):
+async def test_user_form(hass, switchbot_config_flow):
     """Test the user initiated form."""
     await async_setup_component(hass, "persistent_notification", {})
 
