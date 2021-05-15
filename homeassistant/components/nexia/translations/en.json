@@ -11,10 +11,10 @@
         "step": {
             "user": {
                 "data": {
+                    "brand": "Brand",
                     "password": "Password",
                     "username": "Username"
-                },
-                "title": "Connect to mynexia.com"
+                }
             }
         }
     }
