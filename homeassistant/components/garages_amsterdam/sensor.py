@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
@@ -44,7 +45,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class GaragesamsterdamSensor(CoordinatorEntity):
+class GaragesamsterdamSensor(CoordinatorEntity, SensorEntity):
     """Sensor representing garages amsterdam data."""
 
     def __init__(
