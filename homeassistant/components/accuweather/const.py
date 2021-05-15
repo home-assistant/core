@@ -71,6 +71,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Cloud Cover Day",
         "unit_metric": PERCENTAGE,
         "unit_imperial": PERCENTAGE,
+        "enabled": False,
     },
     "CloudCoverNight": {
         "device_class": None,
@@ -78,6 +79,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Cloud Cover Night",
         "unit_metric": PERCENTAGE,
         "unit_imperial": PERCENTAGE,
+        "enabled": False,
     },
     "Grass": {
         "device_class": None,
@@ -85,6 +87,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Grass Pollen",
         "unit_metric": CONCENTRATION_PARTS_PER_CUBIC_METER,
         "unit_imperial": CONCENTRATION_PARTS_PER_CUBIC_METER,
+        "enabled": False,
     },
     "HoursOfSun": {
         "device_class": None,
@@ -92,6 +95,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Hours Of Sun",
         "unit_metric": TIME_HOURS,
         "unit_imperial": TIME_HOURS,
+        "enabled": True,
     },
     "Mold": {
         "device_class": None,
@@ -99,6 +103,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Mold Pollen",
         "unit_metric": CONCENTRATION_PARTS_PER_CUBIC_METER,
         "unit_imperial": CONCENTRATION_PARTS_PER_CUBIC_METER,
+        "enabled": False,
     },
     "Ozone": {
         "device_class": None,
@@ -106,6 +111,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Ozone",
         "unit_metric": None,
         "unit_imperial": None,
+        "enabled": False,
     },
     "Ragweed": {
         "device_class": None,
@@ -113,6 +119,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Ragweed Pollen",
         "unit_metric": CONCENTRATION_PARTS_PER_CUBIC_METER,
         "unit_imperial": CONCENTRATION_PARTS_PER_CUBIC_METER,
+        "enabled": False,
     },
     "RealFeelTemperatureMax": {
         "device_class": DEVICE_CLASS_TEMPERATURE,
@@ -120,6 +127,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "RealFeel Temperature Max",
         "unit_metric": TEMP_CELSIUS,
         "unit_imperial": TEMP_FAHRENHEIT,
+        "enabled": True,
     },
     "RealFeelTemperatureMin": {
         "device_class": DEVICE_CLASS_TEMPERATURE,
@@ -127,6 +135,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "RealFeel Temperature Min",
         "unit_metric": TEMP_CELSIUS,
         "unit_imperial": TEMP_FAHRENHEIT,
+        "enabled": True,
     },
     "RealFeelTemperatureShadeMax": {
         "device_class": DEVICE_CLASS_TEMPERATURE,
@@ -134,6 +143,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "RealFeel Temperature Shade Max",
         "unit_metric": TEMP_CELSIUS,
         "unit_imperial": TEMP_FAHRENHEIT,
+        "enabled": False,
     },
     "RealFeelTemperatureShadeMin": {
         "device_class": DEVICE_CLASS_TEMPERATURE,
@@ -141,6 +151,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "RealFeel Temperature Shade Min",
         "unit_metric": TEMP_CELSIUS,
         "unit_imperial": TEMP_FAHRENHEIT,
+        "enabled": False,
     },
     "ThunderstormProbabilityDay": {
         "device_class": None,
@@ -148,6 +159,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Thunderstorm Probability Day",
         "unit_metric": PERCENTAGE,
         "unit_imperial": PERCENTAGE,
+        "enabled": True,
     },
     "ThunderstormProbabilityNight": {
         "device_class": None,
@@ -155,6 +167,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Thunderstorm Probability Night",
         "unit_metric": PERCENTAGE,
         "unit_imperial": PERCENTAGE,
+        "enabled": True,
     },
     "Tree": {
         "device_class": None,
@@ -162,6 +175,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Tree Pollen",
         "unit_metric": CONCENTRATION_PARTS_PER_CUBIC_METER,
         "unit_imperial": CONCENTRATION_PARTS_PER_CUBIC_METER,
+        "enabled": False,
     },
     "UVIndex": {
         "device_class": None,
@@ -169,6 +183,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "UV Index",
         "unit_metric": UV_INDEX,
         "unit_imperial": UV_INDEX,
+        "enabled": True,
     },
     "WindGustDay": {
         "device_class": None,
@@ -176,6 +191,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Wind Gust Day",
         "unit_metric": SPEED_KILOMETERS_PER_HOUR,
         "unit_imperial": SPEED_MILES_PER_HOUR,
+        "enabled": False,
     },
     "WindGustNight": {
         "device_class": None,
@@ -183,6 +199,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Wind Gust Night",
         "unit_metric": SPEED_KILOMETERS_PER_HOUR,
         "unit_imperial": SPEED_MILES_PER_HOUR,
+        "enabled": False,
     },
     "WindDay": {
         "device_class": None,
@@ -190,6 +207,7 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Wind Day",
         "unit_metric": SPEED_KILOMETERS_PER_HOUR,
         "unit_imperial": SPEED_MILES_PER_HOUR,
+        "enabled": True,
     },
     "WindNight": {
         "device_class": None,
@@ -197,29 +215,9 @@ FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Wind Night",
         "unit_metric": SPEED_KILOMETERS_PER_HOUR,
         "unit_imperial": SPEED_MILES_PER_HOUR,
+        "enabled": True,
     },
 }
-
-OPTIONAL_SENSORS: Final[tuple[str, ...]] = (
-    "ApparentTemperature",
-    "CloudCover",
-    "CloudCoverDay",
-    "CloudCoverNight",
-    "DewPoint",
-    "Grass",
-    "Mold",
-    "Ozone",
-    "Ragweed",
-    "RealFeelTemperatureShade",
-    "RealFeelTemperatureShadeMax",
-    "RealFeelTemperatureShadeMin",
-    "Tree",
-    "WetBulbTemperature",
-    "WindChillTemperature",
-    "WindGust",
-    "WindGustDay",
-    "WindGustNight",
-)
 
 SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
     "ApparentTemperature": {
@@ -228,6 +226,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Apparent Temperature",
         "unit_metric": TEMP_CELSIUS,
         "unit_imperial": TEMP_FAHRENHEIT,
+        "enabled": False,
     },
     "Ceiling": {
         "device_class": None,
@@ -235,6 +234,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Cloud Ceiling",
         "unit_metric": LENGTH_METERS,
         "unit_imperial": LENGTH_FEET,
+        "enabled": True,
     },
     "CloudCover": {
         "device_class": None,
@@ -242,6 +242,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Cloud Cover",
         "unit_metric": PERCENTAGE,
         "unit_imperial": PERCENTAGE,
+        "enabled": False,
     },
     "DewPoint": {
         "device_class": DEVICE_CLASS_TEMPERATURE,
@@ -249,6 +250,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Dew Point",
         "unit_metric": TEMP_CELSIUS,
         "unit_imperial": TEMP_FAHRENHEIT,
+        "enabled": False,
     },
     "RealFeelTemperature": {
         "device_class": DEVICE_CLASS_TEMPERATURE,
@@ -256,6 +258,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "RealFeel Temperature",
         "unit_metric": TEMP_CELSIUS,
         "unit_imperial": TEMP_FAHRENHEIT,
+        "enabled": True,
     },
     "RealFeelTemperatureShade": {
         "device_class": DEVICE_CLASS_TEMPERATURE,
@@ -263,6 +266,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "RealFeel Temperature Shade",
         "unit_metric": TEMP_CELSIUS,
         "unit_imperial": TEMP_FAHRENHEIT,
+        "enabled": False,
     },
     "Precipitation": {
         "device_class": None,
@@ -270,6 +274,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Precipitation",
         "unit_metric": LENGTH_MILLIMETERS,
         "unit_imperial": LENGTH_INCHES,
+        "enabled": True,
     },
     "PressureTendency": {
         "device_class": "accuweather__pressure_tendency",
@@ -277,6 +282,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Pressure Tendency",
         "unit_metric": None,
         "unit_imperial": None,
+        "enabled": True,
     },
     "UVIndex": {
         "device_class": None,
@@ -284,6 +290,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "UV Index",
         "unit_metric": UV_INDEX,
         "unit_imperial": UV_INDEX,
+        "enabled": True,
     },
     "WetBulbTemperature": {
         "device_class": DEVICE_CLASS_TEMPERATURE,
@@ -291,6 +298,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Wet Bulb Temperature",
         "unit_metric": TEMP_CELSIUS,
         "unit_imperial": TEMP_FAHRENHEIT,
+        "enabled": False,
     },
     "WindChillTemperature": {
         "device_class": DEVICE_CLASS_TEMPERATURE,
@@ -298,6 +306,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Wind Chill Temperature",
         "unit_metric": TEMP_CELSIUS,
         "unit_imperial": TEMP_FAHRENHEIT,
+        "enabled": False,
     },
     "Wind": {
         "device_class": None,
@@ -305,6 +314,7 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Wind",
         "unit_metric": SPEED_KILOMETERS_PER_HOUR,
         "unit_imperial": SPEED_MILES_PER_HOUR,
+        "enabled": True,
     },
     "WindGust": {
         "device_class": None,
@@ -312,5 +322,6 @@ SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
         "label": "Wind Gust",
         "unit_metric": SPEED_KILOMETERS_PER_HOUR,
         "unit_imperial": SPEED_MILES_PER_HOUR,
+        "enabled": False,
     },
 }

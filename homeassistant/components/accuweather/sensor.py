@@ -22,7 +22,6 @@ from .const import (
     MANUFACTURER,
     MAX_FORECAST_DAYS,
     NAME,
-    OPTIONAL_SENSORS,
     SENSOR_TYPES,
 )
 
@@ -167,4 +166,4 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return bool(self.kind not in OPTIONAL_SENSORS)
+        return self._description["enabled"]
