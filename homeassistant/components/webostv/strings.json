@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "LG webOS Smart TV ({name})",
+    "flow_title": "LG webOS Smart TV",
     "step": {
       "user": {
         "title": "Connect to the device",
@@ -41,5 +41,5 @@
       "encode_json": "Error json encoding",
       "cannot_retrieve": "Unable to retrieve the list of sources.Device must be switched off"
     }
-  }  
+  }
 }
