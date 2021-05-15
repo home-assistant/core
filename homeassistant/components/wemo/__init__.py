@@ -1,5 +1,6 @@
 """Support for WeMo device discovery."""
 import logging
+import typing
 
 import pywemo
 import voluptuous as vol
@@ -179,14 +180,17 @@ class WemoDiscovery:
     MAX_SECONDS_BETWEEN_SCANS = 300
 
     def __init__(
-        self, hass: HomeAssistant, wemo_dispatcher: WemoDispatcher, staticConfig
+        self,
+        hass: HomeAssistant,
+        wemo_dispatcher: WemoDispatcher,
+        static_config: typing.Tuple[str, str],
     ) -> None:
         """Initialize the WemoDiscovery."""
         self._hass = hass
         self._wemo_dispatcher = wemo_dispatcher
         self._stop = None
         self._scan_delay = 0
-        self._static_config = staticConfig
+        self._static_config = static_config
 
     async def async_discover_and_schedule(self, *_) -> None:
         """Periodically scan the network looking for WeMo devices."""
