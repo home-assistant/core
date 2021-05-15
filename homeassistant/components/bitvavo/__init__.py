@@ -17,6 +17,7 @@ from .const import (
     ASSET_VALUE_CURRENCIES,
     CONF_API_SECRET,
     CONF_MARKETS,
+    CONF_SHOW_EMPTY_ASSETS,
     DOMAIN,
     PLATFORMS,
     SCAN_INTERVAL,
@@ -30,6 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_key = entry.data[CONF_API_KEY]
     api_secret = entry.data[CONF_API_SECRET]
     markets = entry.data[CONF_MARKETS]
+    show_empty_assets = entry.options[CONF_SHOW_EMPTY_ASSETS]
 
     try:
         client = BitvavoClient(api_key, api_secret)
@@ -37,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Bitvavo API error: %s", error)
         raise ConfigEntryNotReady from error
 
-    coordinator = BitvavoDataUpdateCoordinator(hass, client, markets)
+    coordinator = BitvavoDataUpdateCoordinator(hass, client, show_empty_assets, markets)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
@@ -61,11 +63,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to get the latest data from Bitvavo."""
 
-    def __init__(self, hass, client, markets, balances: list | None = None):
+    def __init__(
+        self, hass, client, show_empty_assets, markets, balances: list | None = None
+    ):
         """Initialize the data object."""
         self._client = client
+        self._show_empty_assets = show_empty_assets
+        self._markets = markets
 
-        self.markets = markets
         self.asset_currencies = ASSET_VALUE_CURRENCIES
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
@@ -118,18 +123,22 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
         return asset_tickers_dict
 
     @staticmethod
-    def _prep_balances(balances, tickers):
+    def _prep_balances(balances, tickers, show_empty_assets):
         """Prepare balances data."""
 
         balances_dict = {}
 
         for balance in balances:
             if balance["symbol"] not in balances_dict:
+                total_balance = float(balance["available"]) + float(balance["inOrder"])
+
+                if not show_empty_assets:
+                    if total_balance == 0.0:
+                        continue
+
                 balances_dict[balance["symbol"]] = {}
                 balances_dict[balance["symbol"]].update(balance)
                 base_asset_ticker_details = None
-
-                total_balance = float(balance["available"]) + float(balance["inOrder"])
 
                 if ASSET_VALUE_BASE not in balance["symbol"]:
                     # Prevent that we try to search ASSET_VALUE_BASE+ASSET_VALUE_BASE (e.g. BTCBTC)
@@ -185,7 +194,7 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
 
         result_dict = {
             "tickers": self._prep_markets(
-                self.markets, tickers, markets, orderbook_tickers
+                self._markets, tickers, markets, orderbook_tickers
             )
         }
 
@@ -193,7 +202,9 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
             self.asset_currencies, tickers
         )
 
-        result_dict["balances"] = self._prep_balances(balances, tickers)
+        result_dict["balances"] = self._prep_balances(
+            balances, tickers, self._show_empty_assets
+        )
 
         result_dict["total_base_asset"] = self._prep_total_base_asset(
             result_dict["balances"]
