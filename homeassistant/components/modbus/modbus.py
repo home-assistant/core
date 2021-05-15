@@ -57,7 +57,7 @@ async def async_modbus_setup(
         # load platforms
         for component, conf_key in PLATFORMS:
             if conf_key in conf_hub:
-                await hass.async_create_task(
+                hass.async_create_task(
                     async_load_platform(hass, component, DOMAIN, conf_hub, config)
                 )
 
