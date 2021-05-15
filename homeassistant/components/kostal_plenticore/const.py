@@ -120,7 +120,7 @@ SENSOR_PROCESS_DATA = [
         "DC3 Power",
         {ATTR_UNIT_OF_MEASUREMENT: POWER_WATT, ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER},
         "format_round",
-    ),    
+    ),
     (
         "devices:local",
         "PV2Bat_P",
@@ -491,7 +491,7 @@ SENSOR_PROCESS_DATA = [
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
         },
         "format_energy",
-    ),    
+    ),
     (
         "scb:statistic:EnergyFlow",
         "Statistic:Yield:Day",
