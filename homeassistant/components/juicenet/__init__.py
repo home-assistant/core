@@ -22,7 +22,10 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor", "switch"]
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})},
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {DOMAIN: vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})},
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
