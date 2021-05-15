@@ -11,7 +11,7 @@ from pysonos.data_structures import DidlFavorite
 from pysonos.events_base import Event as SonosEvent
 from pysonos.exceptions import SoCoException
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import SONOS_HOUSEHOLD_UPDATED
@@ -35,7 +35,8 @@ class SonosFavorites:
         favorites = self._favorites.copy()
         return iter(favorites)
 
-    async def async_delayed_update(self, event: SonosEvent) -> None:
+    @callback
+    def async_delayed_update(self, event: SonosEvent) -> None:
         """Add a delay when triggered by an event.
 
         Updated favorites are not always immediately available.
