@@ -141,18 +141,7 @@ class TasmotaLight(
                 percent_bright = brightness / TASMOTA_BRIGHTNESS_MAX
                 self._brightness = percent_bright * 255
             if "color" in attributes:
-
-                rgb = attributes["color"]
-                # Tasmota's RGB color is adjusted for brightness, compensate
-                if self._brightness > 0:
-                    red_compensated = clamp(round(rgb[0] / self._brightness * 255))
-                    green_compensated = clamp(round(rgb[1] / self._brightness * 255))
-                    blue_compensated = clamp(round(rgb[2] / self._brightness * 255))
-                else:
-                    red_compensated = 0
-                    green_compensated = 0
-                    blue_compensated = 0
-                self._rgb = [red_compensated, green_compensated, blue_compensated]
+                self._rgb = attributes["color"][0:3]
             if "color_temp" in attributes:
                 self._color_temp = attributes["color_temp"]
             if "effect" in attributes:
@@ -208,20 +197,38 @@ class TasmotaLight(
     @property
     def rgb_color(self):
         """Return the rgb color value."""
-        return self._rgb
+        if self._rgb is None:
+            return None
+        rgb = self._rgb
+        # Tasmota's RGB color is adjusted for brightness, compensate
+        if self._brightness > 0:
+            red_compensated = clamp(round(rgb[0] / self._brightness * 255))
+            green_compensated = clamp(round(rgb[1] / self._brightness * 255))
+            blue_compensated = clamp(round(rgb[2] / self._brightness * 255))
+        else:
+            red_compensated = 0
+            green_compensated = 0
+            blue_compensated = 0
+        return [red_compensated, green_compensated, blue_compensated]
 
     @property
     def rgbw_color(self):
         """Return the rgbw color value."""
         if self._rgb is None or self._white_value is None:
             return None
+        rgb = self._rgb
         # Tasmota's color is adjusted for brightness, compensate
         if self._brightness > 0:
+            red_compensated = clamp(round(rgb[0] / self._brightness * 255))
+            green_compensated = clamp(round(rgb[1] / self._brightness * 255))
+            blue_compensated = clamp(round(rgb[2] / self._brightness * 255))
             white_compensated = clamp(round(self._white_value / self._brightness * 255))
         else:
+            red_compensated = 0
+            green_compensated = 0
+            blue_compensated = 0
             white_compensated = 0
-
-        return [*self._rgb, white_compensated]
+        return [red_compensated, green_compensated, blue_compensated, white_compensated]
 
     @property
     def force_update(self):
