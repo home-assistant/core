@@ -10,6 +10,8 @@ transfer:
       name: Transfer ID
       description: id of the destination player.
       required: true
-      example: "media_player.study"
       selector:
-        text:
+        entity:
+          integration: roon
+          domain: media_player
+
