@@ -21,7 +21,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_full_user_flow_implementation(
-    hass: HomeAssistant, aioclient_mock
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the full manual user flow from start to finish."""
     aioclient_mock.get(
