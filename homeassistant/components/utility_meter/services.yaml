@@ -2,7 +2,7 @@
 
 reset:
   name: Reset
-  description: Resets the counter of an utility meter.
+  description: Resets the counter of a utility meter.
   target:
 
 next_tariff:
@@ -12,7 +12,7 @@ next_tariff:
 
 select_tariff:
   name: Select Tariff
-  description: Selects the current tariff of an utility meter.
+  description: Selects the current tariff of a utility meter.
   target:
   fields:
     tariff:
