@@ -28,6 +28,21 @@ from .const import AUTH_INSTANCE_KEY, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+AIRCON_MODE_MAP = {
+    AirconMode.Cool: HVAC_MODE_COOL,
+    AirconMode.Heat: HVAC_MODE_HEAT,
+    AirconMode.Fan: HVAC_MODE_FAN_ONLY,
+}
+
+AIRCON_FANSPEED_MAP = {
+    AirconFanSpeed.Off: FAN_OFF,
+    AirconFanSpeed.Auto: FAN_AUTO,
+    AirconFanSpeed.Low: FAN_LOW,
+    AirconFanSpeed.Medium: FAN_MEDIUM,
+    AirconFanSpeed.High: FAN_HIGH,
+}
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up entry."""
     auth: Auth = hass.data[DOMAIN][config_entry.entry_id][AUTH_INSTANCE_KEY]
@@ -148,14 +163,7 @@ class AirConEntity(ClimateEntity):
             return HVAC_MODE_OFF
 
         mode: AirconMode = self._aircon.get_mode()
-        if mode == AirconMode.Cool:
-            return HVAC_MODE_COOL
-        if mode == AirconMode.Heat:
-            return HVAC_MODE_HEAT
-        if mode == AirconMode.Fan:
-            return HVAC_MODE_FAN_ONLY
-
-        return None
+        return AIRCON_MODE_MAP.get(mode, None)
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set HVAC mode."""
@@ -164,12 +172,9 @@ class AirConEntity(ClimateEntity):
             return
 
         mode = None
-        if hvac_mode == HVAC_MODE_COOL:
-            mode = AirconMode.Cool
-        elif hvac_mode == HVAC_MODE_HEAT:
-            mode = AirconMode.Heat
-        elif hvac_mode == HVAC_MODE_FAN_ONLY:
-            mode = AirconMode.Fan
+        for k, v in AIRCON_MODE_MAP.items():
+            if v == hvac_mode:
+                mode = k
 
         if not mode:
             _LOGGER.warning("Unexpected hvac mode")
@@ -188,27 +193,15 @@ class AirConEntity(ClimateEntity):
     def fan_mode(self):
         """Return the fan setting."""
         fanspeed = self._aircon.get_fanspeed()
-        if fanspeed == AirconFanSpeed.Auto:
-            return FAN_AUTO
-        if fanspeed == AirconFanSpeed.Low:
-            return FAN_LOW
-        if fanspeed == AirconFanSpeed.Medium:
-            return FAN_MEDIUM
-        if fanspeed == AirconFanSpeed.High:
-            return FAN_HIGH
-        return FAN_OFF
+        return AIRCON_FANSPEED_MAP.get(fanspeed, FAN_OFF)
 
     async def async_set_fan_mode(self, fan_mode):
         """Set fan mode."""
         fanspeed = None
-        if fan_mode == FAN_AUTO:
-            fanspeed = AirconFanSpeed.Auto
-        elif fan_mode == FAN_LOW:
-            fanspeed = AirconFanSpeed.Low
-        elif fan_mode == FAN_MEDIUM:
-            fanspeed = AirconFanSpeed.Medium
-        elif fan_mode == FAN_HIGH:
-            fanspeed = AirconFanSpeed.High
+        for k, v in AIRCON_FANSPEED_MAP.items():
+            if v == fan_mode:
+                fanspeed = k
+
         if not fanspeed:
             return
         await self._aircon.set_fanspeed(fanspeed)
