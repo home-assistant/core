@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import LEASES_REGEX, UNKNOWN_DEVICE_NAME
+from .const import LEASES_REGEX
 from .model import Device
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -57,12 +57,12 @@ class ActiontecDeviceScanner(DeviceScanner):
         self._update_info()
         return [client.mac_address for client in self.last_results]
 
-    def get_device_name(self, device: str) -> str:
+    def get_device_name(self, device: str) -> str | None:  # type: ignore[override]
         """Return the name of the given device or None if we don't know."""
         for client in self.last_results:
             if client.mac_address == device:
                 return client.ip_address
-        return UNKNOWN_DEVICE_NAME
+        return None
 
     def _update_info(self) -> bool:
         """Ensure the information from the router is up to date.

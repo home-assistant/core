@@ -10,5 +10,3 @@ LEASES_REGEX: Final[re.Pattern] = re.compile(
     + r"\svalid\sfor:\s(?P<timevalid>(-?\d+))"
     + r"\ssec"
 )
-
-UNKNOWN_DEVICE_NAME: Final = "unknown device name"
