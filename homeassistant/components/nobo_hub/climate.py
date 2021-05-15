@@ -6,7 +6,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
@@ -21,6 +20,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -35,7 +35,7 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from pynobo import nobo
 
-from .const import CONF_SERIAL, DOMAIN
+from .const import DOMAIN, HUB
 
 SUPPORT_FLAGS = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE_RANGE
 
@@ -51,7 +51,6 @@ _LOGGER = logging.getLogger(__name__)
 
 _ZONE_NORMAL_WEEK_LIST_SCHEMA = vol.Schema({cv.string: cv.string})
 
-# For backwards compatibility of HACS version.
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -64,42 +63,48 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(
     hass: HomeAssistant, config, async_add_entities, discovery_info=None
-):
-    """Set up the Nobø Ecohub platform from configuration.yaml."""
+) -> bool:
+    """
+    Set up the Nobø Ecohub platform from configuration.yaml.
+
+    For backwards compatibility of HACS version.
+    """
 
     serial = config.get(CONF_HOST)
-    config[CONF_SERIAL] = serial
     ip = config.get(CONF_IP_ADDRESS)
-
     if ip == "discover":
-        _LOGGER.info("discovering and connecting to %s", serial)
+        _LOGGER.debug("discovering and connecting to %s", serial)
         hub = nobo(serial=serial)
     else:
-        _LOGGER.info("connecting to %s:%s", ip, serial)
+        _LOGGER.debug("connecting to %s:%s", ip, serial)
         hub = nobo(serial=serial, ip=ip, discover=False)
     await _setup(hass, config, async_add_entities, hub)
 
+    return True
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry, async_add_devices
-):
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_devices
+) -> bool:
     """Set up the Nobø Ecohub platform from UI configuration."""
 
     # Setup connection with hub
-    hub = hass.data[DOMAIN][config_entry.entry_id]
-    await _setup(hass, config_entry, async_add_devices, hub)
+    hub = hass.data[DOMAIN][config_entry.entry_id][HUB]
+    await _setup(hass, config_entry.options, async_add_devices, hub)
+
+    return True
 
 
 async def _setup(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    options,
     async_add_devices,
     hub: nobo,
 ):
     await hub.start()
 
     # Find OFF command (week profile) to use for all zones:
-    command_off_name = config_entry.data.get(CONF_COMMAND_OFF)
+    command_off_name = options.get(CONF_COMMAND_OFF)
     command_on_by_id: dict[str, str] = {}  # By default, nothing can be turned on
     if command_off_name is None or command_off_name == "":
         _LOGGER.debug(
@@ -121,41 +126,46 @@ async def _setup(
             )
 
             # Find ON command (week profile) for the different zones:
-            command_on_dict = config_entry.data.get(CONF_COMMAND_ON)
+            command_on_dict = options.get(CONF_COMMAND_ON)
             if command_on_dict is None or command_on_dict.keys().__len__ == 0:
                 _LOGGER.warning(
                     "Not possible to turn on any zone, because ON week profile was not specified"
                 )
             else:
-                for zone_id, zone in hub.zones.values():
+                for zone_id, zone in hub.zones.items():
                     zone_name = zone["name"].replace("\xa0", " ")
                     if zone_name in command_on_dict:
                         command_on_name = command_on_dict[zone_name]
-                        command_on_id = _get_id_from_name(
-                            command_on_name, hub.week_profiles
-                        )
-                        if command_on_id is None or command_on_id == "":
+                        if command_on_name is None or command_on_name == "":
                             _LOGGER.warning(
-                                "Can not turn on (or off) zone '%s', because the week profile '%s' was not found",
+                                "Can not turn on (or off) zone '%s', because ON week profile was not specified",
                                 zone_name,
-                                command_on_name,
                             )
                         else:
-                            _LOGGER.debug(
-                                "To turn on heater %s '%s', week profile %s '%s' will be used",
-                                zone_id,
-                                zone_name,
-                                command_on_id,
-                                command_on_name,
+                            command_on_id = _get_id_from_name(
+                                command_on_name, hub.week_profiles
                             )
-                            command_on_by_id[zone_id] = command_on_id
+                            if command_on_id is None or command_on_id == "":
+                                _LOGGER.warning(
+                                    "Can not turn on (or off) zone '%s', because ON week profile '%s' was not found",
+                                    zone_name,
+                                    command_on_name,
+                                )
+                            else:
+                                _LOGGER.debug(
+                                    "To turn on heater %s '%s', week profile %s '%s' will be used",
+                                    zone_id,
+                                    zone_name,
+                                    command_on_id,
+                                    command_on_name,
+                                )
+                                command_on_by_id[zone_id] = command_on_id
 
     # Add devices
     async_add_devices(
         NoboZone(zones, hub, command_off_id, command_on_by_id.get(zones))
         for zones in hub.zones
     )
-    _LOGGER.info("component is up and running on %s:%s", hub.hub_ip, hub.hub_serial)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hub.stop)
 

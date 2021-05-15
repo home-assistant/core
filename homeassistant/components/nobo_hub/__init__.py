@@ -1,14 +1,18 @@
 """The Nobø Ecohub integration."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from pynobo import nobo
 
 from ...const import CONF_IP_ADDRESS
-from .const import CONF_SERIAL, DOMAIN
+from .const import CONF_SERIAL, DOMAIN, HUB, UNSUBSCRIBE
 
 PLATFORMS = ["climate"]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -16,23 +20,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     serial = entry.data.get(CONF_SERIAL)
     ip = entry.data.get(CONF_IP_ADDRESS)
-    ip = None if ip == "discover" else ip
     discover = ip is None
     hub = nobo(serial=serial, ip=ip, discover=discover, loop=hass.loop)
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = hub
+    hass.data[DOMAIN][entry.entry_id] = {HUB: hub}
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    unsubscribe = entry.add_update_listener(options_update_listener)
+    hass.data[DOMAIN][entry.entry_id][UNSUBSCRIBE] = unsubscribe
+
+    _LOGGER.info("component is up and running on %s:%s", ip, serial)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+
+    hub = hass.data[DOMAIN][entry.entry_id][HUB]
+    await hub.stop()
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
+        hass.data[DOMAIN][entry.entry_id][UNSUBSCRIBE]()
         hass.data[DOMAIN].pop(entry.entry_id)
+
+    _LOGGER.info("component on %s:%s in stopped", hub.hub_ip, hub.hub_serial)
 
     return unload_ok
 

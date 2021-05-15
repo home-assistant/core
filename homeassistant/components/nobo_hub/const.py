@@ -3,3 +3,6 @@
 DOMAIN = "nobo_hub"
 
 CONF_SERIAL = "serial"
+
+HUB = "hub"
+UNSUBSCRIBE = "unsubscribe"

@@ -14,7 +14,7 @@ from pynobo import nobo
 
 from ...const import CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_IP_ADDRESS
 from ...exceptions import HomeAssistantError
-from .const import CONF_SERIAL, DOMAIN
+from .const import CONF_SERIAL, DOMAIN, HUB
 
 DATA_NOBO_HUB_IMPL = "nobo_hub_flow_implementation"
 DEVICE_INPUT = "device_input"
@@ -136,7 +136,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
 
-        hub = self.hass.data[DOMAIN][self.config_entry.entry_id]
+        hub = self.hass.data[DOMAIN][self.config_entry.entry_id][HUB]
 
         if user_input is not None:
             off_command = (
