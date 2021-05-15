@@ -1,6 +1,9 @@
 """Use serial protocol of Acer projector to obtain state of the projector."""
+from __future__ import annotations
+
 import logging
 import re
+from typing import Any
 
 import serial
 import voluptuous as vol
@@ -14,38 +17,25 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import (
+    CMD_DICT,
+    CONF_WRITE_TIMEOUT,
+    DEFAULT_NAME,
+    DEFAULT_TIMEOUT,
+    DEFAULT_WRITE_TIMEOUT,
+    ECO_MODE,
+    ICON,
+    INPUT_SOURCE,
+    LAMP,
+    LAMP_HOURS,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_WRITE_TIMEOUT = "write_timeout"
-
-DEFAULT_NAME = "Acer Projector"
-DEFAULT_TIMEOUT = 1
-DEFAULT_WRITE_TIMEOUT = 1
-
-ECO_MODE = "ECO Mode"
-
-ICON = "mdi:projector"
-
-INPUT_SOURCE = "Input Source"
-
-LAMP = "Lamp"
-LAMP_HOURS = "Lamp Hours"
-
-MODEL = "Model"
-
-# Commands known to the projector
-CMD_DICT = {
-    LAMP: "* 0 Lamp ?\r",
-    LAMP_HOURS: "* 0 Lamp\r",
-    INPUT_SOURCE: "* 0 Src ?\r",
-    ECO_MODE: "* 0 IR 052\r",
-    MODEL: "* 0 IR 035\r",
-    STATE_ON: "* 0 IR 001\r",
-    STATE_OFF: "* 0 IR 002\r",
-}
-
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -59,7 +49,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType,
+) -> None:
     """Connect with serial port and return Acer Projector."""
     serial_port = config[CONF_FILENAME]
     name = config[CONF_NAME]
@@ -72,10 +67,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AcerSwitch(SwitchEntity):
     """Represents an Acer Projector as a switch."""
 
-    def __init__(self, serial_port, name, timeout, write_timeout, **kwargs):
+    def __init__(
+        self,
+        serial_port: str,
+        name: str,
+        timeout: int,
+        write_timeout: int,
+    ) -> None:
         """Init of the Acer projector."""
         self.ser = serial.Serial(
-            port=serial_port, timeout=timeout, write_timeout=write_timeout, **kwargs
+            port=serial_port, timeout=timeout, write_timeout=write_timeout
         )
         self._serial_port = serial_port
         self._name = name
@@ -87,7 +88,7 @@ class AcerSwitch(SwitchEntity):
             ECO_MODE: STATE_UNKNOWN,
         }
 
-    def _write_read(self, msg):
+    def _write_read(self, msg: str) -> str:
         """Write to the projector and read the return."""
         ret = ""
         # Sometimes the projector won't answer for no reason or the projector
@@ -96,8 +97,7 @@ class AcerSwitch(SwitchEntity):
         try:
             if not self.ser.is_open:
                 self.ser.open()
-            msg = msg.encode("utf-8")
-            self.ser.write(msg)
+            self.ser.write(msg.encode("utf-8"))
             # Size is an experience value there is no real limit.
             # AFAIK there is no limit and no end character so we will usually
             # need to wait for timeout
@@ -107,7 +107,7 @@ class AcerSwitch(SwitchEntity):
         self.ser.close()
         return ret
 
-    def _write_read_format(self, msg):
+    def _write_read_format(self, msg: str) -> str:
         """Write msg, obtain answer and format output."""
         # answers are formatted as ***\answer\r***
         awns = self._write_read(msg)
@@ -117,29 +117,33 @@ class AcerSwitch(SwitchEntity):
         return STATE_UNKNOWN
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if projector is available."""
         return self._available
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return name of the projector."""
         return self._name
 
     @property
-    def is_on(self):
+    def icon(self) -> str:
+        """Return the icon."""
+        return ICON
+
+    @property
+    def is_on(self) -> bool:
         """Return if the projector is turned on."""
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return state attributes."""
         return self._attributes
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest state from the projector."""
-        msg = CMD_DICT[LAMP]
-        awns = self._write_read_format(msg)
+        awns = self._write_read_format(CMD_DICT[LAMP])
         if awns == "Lamp 1":
             self._state = True
             self._available = True
@@ -155,14 +159,14 @@ class AcerSwitch(SwitchEntity):
                 awns = self._write_read_format(msg)
                 self._attributes[key] = awns
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the projector on."""
         msg = CMD_DICT[STATE_ON]
         self._write_read(msg)
-        self._state = STATE_ON
+        self._state = True
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the projector off."""
         msg = CMD_DICT[STATE_OFF]
         self._write_read(msg)
-        self._state = STATE_OFF
+        self._state = False
