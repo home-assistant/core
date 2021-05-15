@@ -1,4 +1,4 @@
-"""Support for Switchbot."""
+"""Support for Switchbot bot."""
 from __future__ import annotations
 
 from typing import Any
@@ -8,11 +8,12 @@ import switchbot
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
-from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
-DEFAULT_NAME = "Switchbot"
+from .const import ATTR_BOT, DEFAULT_NAME, DOMAIN
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -23,18 +24,51 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Perform the setup for Switchbot devices."""
-    name = config.get(CONF_NAME)
-    mac_addr = config[CONF_MAC]
-    password = config.get(CONF_PASSWORD)
-    add_entities([SwitchBot(mac_addr, name, password)])
+def setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Import yaml config and initiates config flow for Switchbot devices."""
+
+    # Check if entry config exists and skips import if it does.
+    if hass.config_entries.async_entries(DOMAIN):
+        return
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Switchbot based on a config entry."""
+
+    switchbot_config_entries = hass.config_entries.async_entries(DOMAIN)
+
+    switchbot_bot_entries = [
+        item
+        for item in switchbot_config_entries
+        if item.data[CONF_SENSOR_TYPE] == ATTR_BOT
+    ]
+
+    devices = []
+
+    for device in switchbot_bot_entries:
+        devices.append(
+            SwitchBot(
+                device.data[CONF_MAC],
+                device.data[CONF_NAME],
+                device.data.get(CONF_PASSWORD, None),
+            )
+        )
+
+    async_add_entities(devices)
 
 
 class SwitchBot(SwitchEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
-    def __init__(self, mac, name, password) -> None:
+    def __init__(self, mac, name, password=None) -> None:
         """Initialize the Switchbot."""
 
         self._state: bool | None = None

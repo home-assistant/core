@@ -269,6 +269,7 @@ FLOWS = [
     "subaru",
     "surepetcare",
     "switcher_kis",
+    "switchbot",
     "syncthing",
     "syncthru",
     "synology_dsm",

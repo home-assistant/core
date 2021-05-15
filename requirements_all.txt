@@ -49,7 +49,7 @@ PyRMVtransport==0.3.2
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-# PySwitchbot==0.8.0
+# PySwitchbot==0.9.1
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
