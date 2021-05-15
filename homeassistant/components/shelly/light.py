@@ -226,8 +226,8 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return list(STANDARD_RGB_EFFECTS.values())
 
     @property
-    def effect(self):
-        """Lights RGB current effect."""
+    def effect(self) -> str | None:
+        """Return the current effect.""" 
         if not self.supported_features & SUPPORT_EFFECT:
             return None
 
