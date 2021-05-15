@@ -34,7 +34,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     aiohttp_client.async_get_clientsession(self.hass)
                 )
             except ClientResponseError:
-                _LOGGER.exception("Unexpected response from server")
+                _LOGGER.error("Unexpected response from server")
                 return self.async_abort(reason="cannot_connect")
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
