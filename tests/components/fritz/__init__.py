@@ -1,7 +1,7 @@
 """Tests for the AVM Fritz!Box integration."""
 from unittest import mock
 
-from homeassistant.components.fritz.const import CONF_ADD_ALL_TRACKER, DOMAIN
+from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -18,7 +18,6 @@ MOCK_CONFIG = {
                 CONF_PORT: "1234",
                 CONF_PASSWORD: "fake_pass",
                 CONF_USERNAME: "fake_user",
-                CONF_ADD_ALL_TRACKER: True,
             }
         ]
     }

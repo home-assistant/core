@@ -5,8 +5,10 @@ from fritzconnection.core.exceptions import FritzConnectionException, FritzSecur
 import pytest
 
 from homeassistant.components.fritz.const import (
+    CONF_ADD_ALL_TRACKER,
     CONF_ADD_NEW_TRACKER,
     CONF_SELECTED_DEVICES,
+    DEFAULT_ADD_ALL_TRACKER,
     DEFAULT_ADD_NEW_TRACKER,
     DOMAIN,
     ERROR_AUTH_INVALID,
@@ -87,6 +89,9 @@ async def test_user(hass: HomeAssistant, fc_class_mock):
         assert result["data"][CONF_HOST] == "fake_host"
         assert result["data"][CONF_PASSWORD] == "fake_pass"
         assert result["data"][CONF_USERNAME] == "fake_user"
+        assert result["options"][CONF_ADD_ALL_TRACKER] == DEFAULT_ADD_ALL_TRACKER
+        assert result["options"][CONF_ADD_NEW_TRACKER] == DEFAULT_ADD_NEW_TRACKER
+        assert result["options"][CONF_SELECTED_DEVICES] == []
         assert not result["result"].unique_id
         await hass.async_block_till_done()
 
@@ -443,7 +448,7 @@ async def test_optionsflow(hass: HomeAssistant, fc_class_mock):
         hass.data[DOMAIN] = {}
         hass.data[DOMAIN][mock_config.entry_id] = {FRITZ_TOOLS: FritzBoxToolsMock}
 
-        # init optionsflow
+        # select devices to be tracked
         result = await hass.config_entries.options.async_init(mock_config.entry_id)
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "init"
@@ -452,10 +457,50 @@ async def test_optionsflow(hass: HomeAssistant, fc_class_mock):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
+                CONF_ADD_ALL_TRACKER: DEFAULT_ADD_ALL_TRACKER,
                 CONF_ADD_NEW_TRACKER: DEFAULT_ADD_NEW_TRACKER,
                 CONF_SELECTED_DEVICES: list(devices.keys()),
             },
         )
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert mock_config.options[CONF_ADD_ALL_TRACKER] == DEFAULT_ADD_ALL_TRACKER
         assert mock_config.options[CONF_ADD_NEW_TRACKER] == DEFAULT_ADD_NEW_TRACKER
+        assert mock_config.options[CONF_SELECTED_DEVICES] == list(devices.keys())
+
+        # automatically select new devices to be tracked
+        result = await hass.config_entries.options.async_init(mock_config.entry_id)
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_init(mock_config.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_ADD_ALL_TRACKER: DEFAULT_ADD_ALL_TRACKER,
+                CONF_ADD_NEW_TRACKER: True,
+                CONF_SELECTED_DEVICES: list(devices.keys()),
+            },
+        )
+        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert mock_config.options[CONF_ADD_ALL_TRACKER] == DEFAULT_ADD_ALL_TRACKER
+        assert mock_config.options[CONF_ADD_NEW_TRACKER] is True
+        assert mock_config.options[CONF_SELECTED_DEVICES] == list(devices.keys())
+
+        # track all devices
+        result = await hass.config_entries.options.async_init(mock_config.entry_id)
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_init(mock_config.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_ADD_ALL_TRACKER: True,
+                CONF_ADD_NEW_TRACKER: DEFAULT_ADD_NEW_TRACKER,
+                CONF_SELECTED_DEVICES: [],
+            },
+        )
+        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert mock_config.options[CONF_ADD_ALL_TRACKER] is True
+        assert mock_config.options[CONF_ADD_NEW_TRACKER] is True
         assert mock_config.options[CONF_SELECTED_DEVICES] == list(devices.keys())

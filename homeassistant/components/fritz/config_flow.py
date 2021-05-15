@@ -95,16 +95,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry(self):
         """Async create flow handler entry."""
-        if self._add_all_tracker:
-            devices = [
-                fritz_device_name(device)
-                for mac, device in self.fritz_tools.devices.items()
-            ]
-            add_new_tracker = True
-        else:
-            devices = []
-            add_new_tracker = False
-
         return self.async_create_entry(
             title=self._name,
             data={
@@ -114,8 +104,9 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_USERNAME: self.fritz_tools.username,
             },
             options={
-                CONF_ADD_NEW_TRACKER: add_new_tracker,
-                CONF_SELECTED_DEVICES: devices,
+                CONF_ADD_ALL_TRACKER: DEFAULT_ADD_ALL_TRACKER,
+                CONF_ADD_NEW_TRACKER: DEFAULT_ADD_NEW_TRACKER,
+                CONF_SELECTED_DEVICES: [],
             },
         )
 
@@ -175,9 +166,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
-                    vol.Required(
-                        CONF_ADD_ALL_TRACKER, default=DEFAULT_ADD_ALL_TRACKER
-                    ): bool,
                 }
             ),
             errors=errors or {},
@@ -191,9 +179,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
-                    vol.Required(
-                        CONF_ADD_ALL_TRACKER, default=DEFAULT_ADD_ALL_TRACKER
-                    ): bool,
                 }
             ),
             description_placeholders={"name": self._name},
@@ -208,7 +193,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._port = user_input[CONF_PORT]
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
-        self._add_all_tracker = user_input[CONF_ADD_ALL_TRACKER]
 
         if not (error := await self.fritz_tools_init()):
             self._name = self.fritz_tools.model
@@ -281,7 +265,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_USERNAME: import_config[CONF_USERNAME],
                 CONF_PASSWORD: import_config.get(CONF_PASSWORD),
                 CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
-                CONF_ADD_ALL_TRACKER: DEFAULT_ADD_ALL_TRACKER,
             }
         )
 
@@ -297,9 +280,6 @@ class FritzBoxToolsOptionsHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle options flow."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
         fritz_tools: FritzBoxTools = self.hass.data[DOMAIN][self.config_entry.entry_id][
             FRITZ_TOOLS
         ]
@@ -307,8 +287,22 @@ class FritzBoxToolsOptionsHandler(OptionsFlow):
             mac: fritz_device_name(device)
             for mac, device in fritz_tools.devices.items()
         }
+
+        if user_input is not None:
+            if user_input[CONF_ADD_ALL_TRACKER]:
+                user_input[CONF_ADD_NEW_TRACKER] = True
+                user_input[CONF_SELECTED_DEVICES] = list(devices.keys())
+                pass
+            return self.async_create_entry(title="", data=user_input)
+
         data_schema = vol.Schema(
             {
+                vol.Required(
+                    CONF_ADD_ALL_TRACKER,
+                    default=self.config_entry.options.get(
+                        CONF_ADD_ALL_TRACKER, DEFAULT_ADD_ALL_TRACKER
+                    ),
+                ): bool,
                 vol.Required(
                     CONF_ADD_NEW_TRACKER,
                     default=self.config_entry.options.get(

@@ -34,8 +34,7 @@
                     "host": "Host",
                     "password": "Passwort",
                     "port": "Port",
-                    "username": "Benutzername",
-                    "add_all_tracker": "Alle Ger\u00e4te als zu verfolgendes Ger\u00e4t hinzufügren"
+                    "username": "Benutzername"
                 },
                 "description": "Einrichten der FRITZ! Box Tools zur Steuerung Ihrer FRITZ! Box.\n Ben\u00f6tigt: Benutzername, Passwort.",
                 "title": "Setup FRITZ! Box Tools"
@@ -46,8 +45,9 @@
       "step": {
         "init": {
           "data": {
-            "add_new_tracker": "neue Ger\u00e4te automatisch hinzufügen",
-            "selected_devices": "Ger\u00e4te welche verfolgt werden"
+            "add_all_tracker": "Alle Ger\u00e4te verfolgen",
+            "add_new_tracker": "Neue Ger\u00e4te automatisch verfolgen",
+            "selected_devices": "Verfolgte Ger\u00e4te"
           }
         }
       }
