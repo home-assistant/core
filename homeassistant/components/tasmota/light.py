@@ -260,7 +260,7 @@ class TasmotaLight(
             attributes["color"] = [rgbw[0], rgbw[1], rgbw[2], rgbw[3]]
             # Tasmota does not support direct RGBW control, the light must be set to
             # either white mode or color mode. Set the mode to white if white channel
-            # is on, and to color otheruse
+            # is on, and to color otherwise
 
         if ATTR_TRANSITION in kwargs:
             attributes["transition"] = kwargs[ATTR_TRANSITION]
