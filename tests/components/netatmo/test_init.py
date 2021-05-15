@@ -420,7 +420,7 @@ async def test_setup_component_with_delay(hass, config_entry):
 
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(seconds=60000),
+            dt.utcnow() + timedelta(seconds=60),
         )
         await hass.async_block_till_done()
 
