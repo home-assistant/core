@@ -59,6 +59,7 @@ from .const import (
     MODBUS_DOMAIN,
 )
 
+PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
