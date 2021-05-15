@@ -42,7 +42,7 @@ omit =
     homeassistant/components/alarmdecoder/const.py
     homeassistant/components/alarmdecoder/sensor.py
     homeassistant/components/alpha_vantage/sensor.py
-    homeassistant/components/amazon_polly/tts.py
+    homeassistant/components/amazon_polly/*
     homeassistant/components/ambiclimate/climate.py
     homeassistant/components/ambient_station/*
     homeassistant/components/amcrest/*
