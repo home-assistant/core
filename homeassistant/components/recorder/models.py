@@ -224,6 +224,11 @@ class Statistics(Base):  # type: ignore
     min = Column(Float())
     max = Column(Float())
 
+    __table_args__ = (
+        # Used for fetching statistics for a certain entity at a specific time
+        Index("ix_statistics_statistic_id_start", "statistic_id", "start"),
+    )
+
     @staticmethod
     def from_stats(source, statistic_id, start, stats):
         """Create object from a statistics."""
