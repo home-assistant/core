@@ -43,7 +43,6 @@ class FlowHandler(config_entries.ConfigFlow):
     """WebosTV configuration flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize workflow."""
