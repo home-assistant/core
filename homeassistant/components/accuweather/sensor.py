@@ -18,9 +18,9 @@ from .const import (
     ATTRIBUTION,
     COORDINATOR,
     DOMAIN,
-    FORECAST_DAYS,
     FORECAST_SENSOR_TYPES,
     MANUFACTURER,
+    MAX_FORECAST_DAYS,
     NAME,
     OPTIONAL_SENSORS,
     SENSOR_TYPES,
@@ -43,7 +43,7 @@ async def async_setup_entry(
 
     if coordinator.forecast:
         for sensor in FORECAST_SENSOR_TYPES:
-            for day in FORECAST_DAYS:
+            for day in range(MAX_FORECAST_DAYS + 1):
                 # Some air quality/allergy sensors are only available for certain
                 # locations.
                 if sensor in coordinator.data[ATTR_FORECAST][0]:

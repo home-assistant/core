@@ -43,6 +43,7 @@ CONF_FORECAST: Final = "forecast"
 COORDINATOR: Final = "coordinator"
 DOMAIN: Final = "accuweather"
 MANUFACTURER: Final = "AccuWeather, Inc."
+MAX_FORECAST_DAYS: Final = 4
 NAME: Final = "AccuWeather"
 UNDO_UPDATE_LISTENER: Final = "undo_update_listener"
 
@@ -62,8 +63,6 @@ CONDITION_CLASSES: Final[dict[str, list[int]]] = {
     ATTR_CONDITION_SUNNY: [1, 2, 5],
     ATTR_CONDITION_WINDY: [32],
 }
-
-FORECAST_DAYS: Final[list[int]] = [0, 1, 2, 3, 4]
 
 FORECAST_SENSOR_TYPES: Final[dict[str, SensorDescription]] = {
     "CloudCoverDay": {
