@@ -46,6 +46,7 @@ from .const import (
 )
 from .modbus import ModbusHub
 
+PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -132,9 +133,7 @@ class ModbusThermostat(ClimateEntity):
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-        async_track_time_interval(
-            self.hass, lambda arg: self.update(), self._scan_interval
-        )
+        async_track_time_interval(self.hass, self.async_update, self._scan_interval)
 
     @property
     def should_poll(self):
@@ -160,7 +159,7 @@ class ModbusThermostat(ClimateEntity):
         """Return the possible HVAC modes."""
         return [HVAC_MODE_AUTO]
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         # Home Assistant expects this method.
         # We'll keep it here to avoid getting exceptions.
@@ -200,7 +199,7 @@ class ModbusThermostat(ClimateEntity):
         """Return the supported step of target temperature."""
         return self._temp_step
 
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             return
@@ -209,35 +208,39 @@ class ModbusThermostat(ClimateEntity):
         )
         byte_string = struct.pack(self._structure, target_temperature)
         register_value = struct.unpack(">h", byte_string[0:2])[0]
-        self._available = self._hub.write_registers(
+        self._available = await self._hub.async_write_registers(
             self._slave,
             self._target_temperature_register,
             register_value,
         )
-        self.update()
+        self.async_update()
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
-    def update(self):
+    async def async_update(self, now=None):
         """Update Target & Current Temperature."""
-        self._target_temperature = self._read_register(
+        # remark "now" is a dummy parameter to avoid problems with
+        # async_track_time_interval
+        self._target_temperature = await self._async_read_register(
             CALL_TYPE_REGISTER_HOLDING, self._target_temperature_register
         )
-        self._current_temperature = self._read_register(
+        self._current_temperature = await self._async_read_register(
             self._current_temperature_register_type, self._current_temperature_register
         )
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def _read_register(self, register_type, register) -> float | None:
+    async def _async_read_register(self, register_type, register) -> float | None:
         """Read register using the Modbus hub slave."""
         if register_type == CALL_TYPE_REGISTER_INPUT:
-            result = self._hub.read_input_registers(self._slave, register, self._count)
+            result = await self._hub.async_read_input_registers(
+                self._slave, register, self._count
+            )
         else:
-            result = self._hub.read_holding_registers(
+            result = await self._hub.async_read_holding_registers(
                 self._slave, register, self._count
             )
         if result is None:
