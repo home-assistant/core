@@ -53,13 +53,13 @@ class ActiontecDeviceScanner(DeviceScanner):
     def scan_devices(self) -> list[str]:
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
-        return [client.mac for client in self.last_results]
+        return [client.mac_address for client in self.last_results]
 
     def get_device_name(self, device: str) -> str:
         """Return the name of the given device or None if we don't know."""
         for client in self.last_results:
-            if client.mac == device:
-                return client.ip
+            if client.mac_address == device:
+                return client.ip_address
         return UNKNOWN_DEVICE_NAME
 
     def _update_info(self) -> bool:

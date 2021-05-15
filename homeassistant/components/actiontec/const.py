@@ -19,6 +19,6 @@ UNKNOWN_DEVICE_NAME: Final = "unknown device name"
 class Device:
     """Actiontec device class."""
 
-    ip: str
-    mac: str
+    ip_address: str
+    mac_address: str
     timevalid: int
