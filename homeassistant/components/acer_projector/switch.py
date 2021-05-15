@@ -73,11 +73,10 @@ class AcerSwitch(SwitchEntity):
         name: str,
         timeout: int,
         write_timeout: int,
-        **kwargs: Any,
     ) -> None:
         """Init of the Acer projector."""
         self.ser = serial.Serial(
-            port=serial_port, timeout=timeout, write_timeout=write_timeout, **kwargs
+            port=serial_port, timeout=timeout, write_timeout=write_timeout
         )
         self._serial_port = serial_port
         self._name = name
