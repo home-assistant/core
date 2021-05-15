@@ -8,6 +8,7 @@ import datetime
 from functools import partial
 import logging
 from typing import Any, Callable
+import urllib.parse
 
 import async_timeout
 from pysonos.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
@@ -725,7 +726,7 @@ class SonosSpeaker:
 
         if variables and "transport_state" in variables:
             self.media.play_mode = variables["current_play_mode"]
-            track_uri = variables["current_track_uri"]
+            track_uri = variables["enqueued_transport_uri"]
             music_source = self.soco.music_source_from_uri(track_uri)
         else:
             self.media.play_mode = self.soco.play_mode
@@ -777,18 +778,25 @@ class SonosSpeaker:
         except (TypeError, KeyError, AttributeError):
             pass
 
-        # Non-playing radios will not have a current title. Radios without tagging
-        # can have part of the radio URI as title. In these cases we try to use the
-        # radio name instead.
+        if not self.media.artist:
+            try:
+                self.media.artist = variables["current_track_meta_data"].creator
+            except (KeyError, AttributeError):
+                pass
+
+        # Radios without tagging can have part of the radio URI as title.
+        # In this case we try to use the radio name instead.
         try:
             uri_meta_data = variables["enqueued_transport_uri_meta_data"]
             if isinstance(uri_meta_data, DidlAudioBroadcast) and (
-                self.media.playback_status != SONOS_STATE_PLAYING
-                or self.soco.music_source_from_uri(self.media.title) == MUSIC_SRC_RADIO
+                self.soco.music_source_from_uri(self.media.title) == MUSIC_SRC_RADIO
                 or (
                     isinstance(self.media.title, str)
                     and isinstance(self.media.uri, str)
-                    and self.media.title in self.media.uri
+                    and (
+                        self.media.title in self.media.uri
+                        or self.media.title in urllib.parse.unquote(self.media.uri)
+                    )
                 )
             ):
                 self.media.title = uri_meta_data.title
