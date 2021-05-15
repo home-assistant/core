@@ -23,7 +23,7 @@ from homeassistant.const import (
 WINDOW_COVER_ENTITY = "cover.zws_12"
 GDC_COVER_ENTITY = "cover.aeon_labs_garage_door_controller_gen5"
 BLIND_COVER_ENTITY = "cover.window_blind_controller"
-SHUTTER_COVER_ENTITY = "cover.window_shutter"
+SHUTTER_COVER_ENTITY = "cover.flush_shutter_dc"
 
 
 async def test_window_cover(hass, client, chain_actuator_zws12, integration):
