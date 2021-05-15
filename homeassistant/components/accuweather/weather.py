@@ -60,7 +60,6 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
         """Initialize."""
         super().__init__(coordinator)
         self._name = name
-        self._attrs: dict[str, Any] = {}
         self._unit_system = "Metric" if self.coordinator.is_metric else "Imperial"
 
     @property
