@@ -158,9 +158,9 @@ class ModbusBinarySensor(BinarySensorEntity):
             )
         if result is None:
             self._available = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
             return
 
         self._value = result.bits[0] & 1
         self._available = True
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

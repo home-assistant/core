@@ -129,14 +129,14 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         )
         if result is False:
             self._available = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
         else:
             self._available = True
             if self._verify_active:
                 self.async_update()
             else:
                 self._is_on = True
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Set switch off."""
@@ -145,14 +145,14 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         )
         if result is False:
             self._available = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
         else:
             self._available = True
             if self._verify_active:
                 self.async_update()
             else:
                 self._is_on = False
-                self.async_schedule_update_ha_state()
+                self.async_write_ha_state()
 
     async def async_update(self, now=None):
         """Update the entity state."""
@@ -160,13 +160,13 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         # async_track_time_interval
         if not self._verify_active:
             self._available = True
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
             return
 
         result = await self._async_read_func(self._slave, self._verify_address, 1)
         if result is None:
             self._available = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
             return
 
         self._available = True
@@ -186,4 +186,4 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
                     self._verify_address,
                     value,
                 )
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

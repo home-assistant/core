@@ -292,7 +292,7 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
             )
         if result is None:
             self._available = False
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
             return
 
         registers = self._swap_registers(result.registers)
@@ -332,4 +332,4 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
                     self._value = f"{float(val):.{self._precision}f}"
 
         self._available = True
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()

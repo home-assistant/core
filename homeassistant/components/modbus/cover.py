@@ -179,7 +179,7 @@ class ModbusCover(CoverEntity, RestoreEntity):
         else:
             self._value = await self._async_read_status_register()
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def _async_read_status_register(self) -> int | None:
         """Read status register using the Modbus hub slave."""

@@ -514,13 +514,13 @@ async def test_delay(hass, mock_pymodbus):
 
     # pass first scan_interval
     start_time = now
-    now = now + timedelta(seconds=test_scan_interval)
+    now = now + timedelta(seconds=(test_scan_interval + 1))
     with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
-    stop_time = start_time + timedelta(seconds=test_delay)
+    stop_time = start_time + timedelta(seconds=(test_delay + 1))
     step_timedelta = timedelta(seconds=1)
     while now < stop_time:
         now = now + step_timedelta
@@ -528,7 +528,7 @@ async def test_delay(hass, mock_pymodbus):
             async_fire_time_changed(hass, now)
             await hass.async_block_till_done()
             assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-    now = now + step_timedelta + step_timedelta
+    now = now + step_timedelta + timedelta(seconds=2)
     with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
@@ -574,3 +574,6 @@ async def test_thread_lock(hass, mock_pymodbus):
         with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
             async_fire_time_changed(hass, now)
             await hass.async_block_till_done()
+    for i in range(200):
+        entity_id = f"{BINARY_SENSOR_DOMAIN}.{TEST_SENSOR_NAME}_{i}"
+        assert hass.states.get(entity_id).state == STATE_ON

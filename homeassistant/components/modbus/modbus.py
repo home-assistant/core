@@ -57,7 +57,9 @@ async def async_modbus_setup(
         # load platforms
         for component, conf_key in PLATFORMS:
             if conf_key in conf_hub:
-                await async_load_platform(hass, component, DOMAIN, conf_hub, config)
+                await hass.async_create_task(
+                    async_load_platform(hass, component, DOMAIN, conf_hub, config)
+                )
 
     async def async_stop_modbus(event):
         """Stop Modbus service."""
@@ -249,7 +251,7 @@ class ModbusHub:
             return None
         async with self._lock:
             return await self.hass.async_add_executor_job(
-                lambda: self._pymodbus_call(unit, address, value, check_attr, func)
+                self._pymodbus_call, unit, address, value, check_attr, func
             )
 
     async def async_read_coils(self, unit, address, count):
