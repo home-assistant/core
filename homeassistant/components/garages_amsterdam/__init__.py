@@ -1,5 +1,4 @@
 """The Garages Amsterdam integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -8,47 +7,33 @@ import garages_amsterdam
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client, update_coordinator
+from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
 PLATFORMS = ["binary_sensor", "sensor"]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Garages Amsterdam component."""
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Garages Amsterdam from a config entry."""
     await get_coordinator(hass)
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
-
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Garages Amsterdam config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if len(hass.config_entries.async_entries(DOMAIN)) == 1:
         hass.data.pop(DOMAIN)
 
     return unload_ok
 
 
-async def get_coordinator(hass):
+async def get_coordinator(
+    hass: HomeAssistant,
+) -> DataUpdateCoordinator:
     """Get the data update coordinator."""
     if DOMAIN in hass.data:
         return hass.data[DOMAIN]
@@ -62,12 +47,14 @@ async def get_coordinator(hass):
                 )
             }
 
-    hass.data[DOMAIN] = update_coordinator.DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator(
         hass,
         logging.getLogger(__name__),
         name=DOMAIN,
         update_method=async_get_garages,
         update_interval=timedelta(minutes=10),
     )
-    await hass.data[DOMAIN].async_refresh()
-    return hass.data[DOMAIN]
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data[DOMAIN] = coordinator
+    return coordinator

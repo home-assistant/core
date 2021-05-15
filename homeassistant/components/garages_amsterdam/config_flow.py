@@ -1,30 +1,40 @@
 """Config flow for Garages Amsterdam integration."""
+from __future__ import annotations
+
+from typing import Any
+
+from aiohttp import ClientResponseError
 import garages_amsterdam
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Garages Amsterdam."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    _options: list[str] | None = None
 
-    _options = None
-
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
-
         if self._options is None:
             self._options = []
-            api_data = await garages_amsterdam.get_garages(
-                aiohttp_client.async_get_clientsession(self.hass)
-            )
+            try:
+                api_data = await garages_amsterdam.get_garages(
+                    aiohttp_client.async_get_clientsession(self.hass)
+                )
+            except ClientResponseError:
+                return self.async_abort(reason="cannot_connect")
+            except Exception:  # pylint: disable=broad-except
+                return self.async_abort(reason="unknown")
+
             for garage in sorted(api_data, key=lambda garage: garage.garage_name):
                 self._options.append(garage.garage_name)
 
@@ -40,5 +50,4 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {vol.Required("garage_name"): vol.In(self._options)}
             ),
-            errors=errors,
         )
