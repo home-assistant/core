@@ -222,6 +222,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         """Return the list of supported effects.""" 
         if not self.supported_features & SUPPORT_EFFECT:
             return None
+            
         if self.wrapper.model == "SHBLB-1":
             return list(SHBLB_1_RGB_EFFECTS.values())
 
