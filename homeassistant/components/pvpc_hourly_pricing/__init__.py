@@ -15,7 +15,8 @@ UI_CONFIG_SCHEMA = vol.Schema(
     }
 )
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: cv.ensure_list(UI_CONFIG_SCHEMA)}, extra=vol.ALLOW_EXTRA
+    vol.All(cv.deprecated(DOMAIN), {DOMAIN: cv.ensure_list(UI_CONFIG_SCHEMA)}),
+    extra=vol.ALLOW_EXTRA,
 )
 
 
