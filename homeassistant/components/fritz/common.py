@@ -111,6 +111,10 @@ class FritzBoxTools:
             timeout=60.0,
         )
 
+        if not self.connection:
+            _LOGGER.error("Unable to establish a connection with %s", self.host)
+            return
+
         self.fritz_status = FritzStatus(fc=self.connection)
         info = self.connection.call_action("DeviceInfo:1", "GetInfo")
         if not self._unique_id:
@@ -207,10 +211,10 @@ class FritzBoxTools:
             if not known_host.get("mac"):
                 continue
 
-            dev_mac = known_host["mac"]
-            dev_name = known_host["name"]
-            dev_ip = known_host["ip"]
-            dev_home = known_host["status"]
+            dev_mac: str = known_host["mac"]
+            dev_name: str = known_host["name"]
+            dev_ip: str = known_host["ip"]
+            dev_home: bool = known_host["status"]
 
             dev_info = Device(dev_mac, dev_ip, dev_name)
 

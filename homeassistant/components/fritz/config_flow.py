@@ -27,6 +27,7 @@ from .common import FritzBoxTools
 from .const import (
     DEFAULT_HOST,
     DEFAULT_PORT,
+    DEFAULT_USERNAME,
     DOMAIN,
     ERROR_AUTH_INVALID,
     ERROR_CANNOT_CONNECT,
@@ -70,6 +71,9 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             username=self._username,
             password=self._password,
         )
+
+        if not self.fritz_tools:
+            return None
 
         try:
             await self.fritz_tools.async_setup()

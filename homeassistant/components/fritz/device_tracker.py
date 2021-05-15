@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import datetime
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -145,7 +146,7 @@ class FritzBoxTracker(ScannerEntity):
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         if self._mac:
-            return self._router.devices[self._mac].ip_address
+            return self._router.devices[self._mac].ip_address  # type: ignore[no-any-return]
         return None
 
     @property
@@ -157,7 +158,7 @@ class FritzBoxTracker(ScannerEntity):
     def hostname(self) -> str | None:
         """Return hostname of the device."""
         if self._mac:
-            return self._router.devices[self._mac].hostname
+            return self._router.devices[self._mac].hostname  # type: ignore[no-any-return]
         return None
 
     @property

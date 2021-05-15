@@ -39,7 +39,7 @@ def _retrieve_uptime_state(status: FritzStatus, last_value: str) -> str:
 
 def _retrieve_external_ip_state(status: FritzStatus, last_value: str) -> str:
     """Return external ip from device."""
-    return status.external_ip
+    return status.external_ip  # type: ignore[no-any-return]
 
 
 def _retrieve_kib_s_sent_state(status: FritzStatus, last_value: str) -> str:
