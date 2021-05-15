@@ -292,7 +292,6 @@ class FritzBoxToolsOptionsHandler(OptionsFlow):
             if user_input[CONF_ADD_ALL_TRACKER]:
                 user_input[CONF_ADD_NEW_TRACKER] = True
                 user_input[CONF_SELECTED_DEVICES] = list(devices.keys())
-                pass
             return self.async_create_entry(title="", data=user_input)
 
         data_schema = vol.Schema(
