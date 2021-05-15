@@ -1,200 +1,612 @@
 # Describes the format for available LCN services
 
 output_abs:
+  name: Output absolute brightness
   description: Set absolute brightness of output port in percent.
   fields:
     address:
+      name: Address
       description: Module address
+      required: true
       example: "myhome.s0.m7"
+      selector:
+        text:
     output:
+      name: Output
       description: Output port
+      required: true
       example: "output1"
+      selector:
+        select:
+          options:
+            - 'OUTPUT1'
+            - 'OUTPUT2'
+            - 'OUTPUT3'
+            - 'OUTPUT4'
     brightness:
-      description: Absolute brightness in percent (0..100)
+      name: Brightness
+      description: Absolute brightness in percent.
+      required: true
       example: 50
+      selector:
+        number:
+          min: 0
+          max: 100
     transition:
-      description: Transition time in seconds
+      name: Transition
+      description: Transition time.
       example: 5
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 486
+          step: 0.1
+          unit_of_measurement: seconds
 
 output_rel:
+  name: Output relative brightness
   description: Set relative brightness of output port in percent.
   fields:
     address:
+      name: Address
       description: Module address
+      required: true
       example: "myhome.s0.m7"
+      selector:
+        text:
     output:
+      name: Output
       description: Output port
+      required: true
       example: "output1"
+      selector:
+        select:
+          options:
+            - 'OUTPUT1'
+            - 'OUTPUT2'
+            - 'OUTPUT3'
+            - 'OUTPUT4'
     brightness:
-      description: Relative brightness in percent (-100..100)
+      name: Brightness
+      description: Relative brightness in percent.
+      required: true
       example: 50
-    transition:
-      description: Transition time in seconds
-      example: 5
+      selector:
+        number:
+          min: -100
+          max: 100
+          unit_of_measurement: '%'
 
 output_toggle:
+  name: Toggle output
   description: Toggle output port.
   fields:
     address:
+      name: Address
       description: Module address
+      required: true
       example: "myhome.s0.m7"
+      selector:
+        text:
     output:
+      name: Output
       description: Output port
+      required: true
       example: "output1"
+      selector:
+        select:
+          options:
+            - 'OUTPUT1'
+            - 'OUTPUT2'
+            - 'OUTPUT3'
+            - 'OUTPUT4'
     transition:
-      description: Transition time in seconds
+      name: Transition
+      description: Transition time.
       example: 5
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 486
+          step: 0.1
+          unit_of_measurement: seconds
 
 relays:
+  name: Relays
   description: Set the relays status.
   fields:
     address:
+      name: Address
       description: Module address
+      required: true
       example: "myhome.s0.m7"
+      selector:
+        text:
     state:
+      name: State
       description: Relays states as string (1=on, 2=off, t=toggle, -=nochange)
+      required: true
       example: "t---001-"
+      selector:
+        text:
 
 led:
+  name: LED
   description: Set the led state.
   fields:
     address:
+      name: Address
       description: Module address
+      required: true
       example: "myhome.s0.m7"
+      selector:
+        text:
     led:
+      name: LED
       description: Led
+      required: true
       example: "led6"
+      selector:
+        select:
+          options:
+            - 'LED1'
+            - 'LED2'
+            - 'LED3'
+            - 'LED4'
+            - 'LED5'
+            - 'LED6'
+            - 'LED7'
+            - 'LED8'
+            - 'LED9'
+            - 'LED10'
+            - 'LED11'
+            - 'LED12'
     state:
+      name: State
       description: Led state
+      required: true
       example: "blink"
-      values:
-        - "on"
-        - "off"
-        - blink
-        - flicker
+      selector:
+        select:
+          options:
+            - 'blink'
+            - 'flicker'
+            - 'off'
+            - 'on'
 
 var_abs:
+  name: Set absolute variable
   description: Set absolute value of a variable or setpoint.
   fields:
     address:
+      name: Address
       description: Module address
+      required: true
       example: "myhome.s0.m7"
+      selector:
+        text:
     variable:
+      name: Variable
       description: Variable or setpoint name
+      required: true
       example: "var1"
+      default: NATIVE
+      selector:
+        select:
+          options:
+            - 'R1VAR'
+            - 'R2VAR'
+            - 'R1VARSETPOINT'
+            - 'R2VARSETPOINT'
+            - 'TVAR'
+            - 'VAR1ORTVAR'
+            - 'VAR2ORR1VAR'
+            - 'VAR3ORR2VAR'
+            - 'VAR1'
+            - 'VAR2'
+            - 'VAR3'
+            - 'VAR4'
+            - 'VAR5'
+            - 'VAR6'
+            - 'VAR7'
+            - 'VAR8'
+            - 'VAR9'
+            - 'VAR10'
+            - 'VAR11'
+            - 'VAR12'
     value:
+      name: Value
       description: Value to set
       example: "50"
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 100000
     unit_of_measurement:
+      name: Unit of measurement
       description: Unit of value
       example: "celsius"
+      selector:
+        select:
+          options:
+            - ''
+            - '%'
+            - '°'
+            - '°C'
+            - '°F'
+            - 'AMPERE'
+            - 'AMP'
+            - 'A'
+            - 'DEGREE'
+            - 'NATIVE'
+            - 'K'
+            - 'LCN'
+            - 'LUX_T'
+            - 'LX_T'
+            - 'LUX_I'
+            - 'LUX'
+            - 'LX'
+            - 'M/S'
+            - 'METERPERSECOND'
+            - 'PERCENT'
+            - 'PPM'
+            - 'V'
+            - 'VOLT'
 
 var_reset:
+  name: Reset variable
   description: Reset value of variable or setpoint.
   fields:
     address:
+      name: Address
       description: Module address
+      required: true
       example: "myhome.s0.m7"
     variable:
+      name: Variable
       description: Variable or setpoint name
+      required: true
       example: "var1"
+      selector:
+        select:
+          options:
+            - 'R1VAR'
+            - 'R2VAR'
+            - 'R1VARSETPOINT'
+            - 'R2VARSETPOINT'
+            - 'TVAR'
+            - 'VAR1ORTVAR'
+            - 'VAR2ORR1VAR'
+            - 'VAR3ORR2VAR'
+            - 'VAR1'
+            - 'VAR2'
+            - 'VAR3'
+            - 'VAR4'
+            - 'VAR5'
+            - 'VAR6'
+            - 'VAR7'
+            - 'VAR8'
+            - 'VAR9'
+            - 'VAR10'
+            - 'VAR11'
+            - 'VAR12'
 
 var_rel:
+  name: Shift variable
   description: Shift value of a variable, setpoint or threshold.
   fields:
     address:
+      name: Address
       description: Module address
+      required: true
       example: "myhome.s0.m7"
+      selector:
+        text:
     variable:
+      name: Variable
       description: Variable or setpoint name
+      required: true
       example: "var1"
+      selector:
+        select:
+          options:
+            - 'R1VAR'
+            - 'R2VAR'
+            - 'R1VARSETPOINT'
+            - 'R2VARSETPOINT'
+            - 'THRS1'
+            - 'THRS2'
+            - 'THRS3'
+            - 'THRS4'
+            - 'THRS5'
+            - 'THRS2_1'
+            - 'THRS2_2'
+            - 'THRS2_3'
+            - 'THRS2_4'
+            - 'THRS3_1'
+            - 'THRS3_2'
+            - 'THRS3_3'
+            - 'THRS3_4'
+            - 'THRS4_1'
+            - 'THRS4_2'
+            - 'THRS4_3'
+            - 'THRS4_4'
+            - 'TVAR'
+            - 'VAR1ORTVAR'
+            - 'VAR2ORR1VAR'
+            - 'VAR3ORR2VAR'
+            - 'VAR1'
+            - 'VAR2'
+            - 'VAR3'
+            - 'VAR4'
+            - 'VAR5'
+            - 'VAR6'
+            - 'VAR7'
+            - 'VAR8'
+            - 'VAR9'
+            - 'VAR10'
+            - 'VAR11'
+            - 'VAR12'
     value:
+      name: Value
       description: Shift value
       example: "50"
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 100000
     unit_of_measurement:
+      name: Unit of measurement
       description: Unit of value
       example: "celsius"
+      default: NATIVE
+      selector:
+        select:
+          options:
+            - ''
+            - '%'
+            - '°'
+            - '°C'
+            - '°F'
+            - 'AMPERE'
+            - 'AMP'
+            - 'A'
+            - 'DEGREE'
+            - 'NATIVE'
+            - 'K'
+            - 'LCN'
+            - 'LUX_T'
+            - 'LX_T'
+            - 'LUX_I'
+            - 'LUX'
+            - 'LX'
+            - 'M/S'
+            - 'METERPERSECOND'
+            - 'PERCENT'
+            - 'PPM'
+            - 'V'
+            - 'VOLT'
     value_reference:
-      description: Reference value (current or programmed) for setpoint and threshold
+      name: Reference value
+      description: Reference value for setpoint and threshold
       example: "current"
-      values:
-        - current
-        - prog
+      default: CURRENT
+      selector:
+        select:
+          options:
+            - 'CURRENT'
+            - 'PROG'
 
 lock_regulator:
+  name: Lock regulator
   description: Lock a regulator setpoint.
   fields:
     address:
+      name: Address
       description: Module address
+      required: true
       example: "myhome.s0.m7"
+      selector:
+        text:
     setpoint:
+      name: Setpoint
       description: Setpoint name
+      required: true
       example: "r1varsetpoint"
+      selector:
+        select:
+          options:
+            - 'THRS1'
+            - 'THRS2'
+            - 'THRS3'
+            - 'THRS4'
+            - 'THRS5'
+            - 'THRS2_1'
+            - 'THRS2_2'
+            - 'THRS2_3'
+            - 'THRS2_4'
+            - 'THRS3_1'
+            - 'THRS3_2'
+            - 'THRS3_3'
+            - 'THRS3_4'
+            - 'THRS4_1'
+            - 'THRS4_2'
+            - 'THRS4_3'
+            - 'THRS4_4'
     state:
+      name: State
       description: New setpoint state
       example: true
+      default: false
+      selector:
+        boolean:
 
 send_keys:
+  name: Send keys
   description: Send keys (which executes bound commands).
   fields:
     address:
+      name: Address
       description: Module address
+      required: true
       example: "myhome.s0.m7"
+      selector:
+        text:
     keys:
+      name: Keys
       description: Keys to send
+      required: true
       example: "a1a5d8"
+      selector:
+        text:
     state:
+      name: State
       description: "Key state upon sending (optional, must be hit for deferred)"
       example: "hit"
-      values:
-        - hit
-        - make
-        - break
+      default: HIT
+      selector:
+        select:
+          options:
+            - 'HIT'
+            - 'MAKE'
+            - 'BREAK'
+            - 'DONTSEND'
     time:
-      description: Send delay (optional)
+      name: Time
+      description: Send delay.
       example: 10
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 60
     time_unit:
-      description: Time unit of send delay (optional)
+      name: Time unit
+      description: Time unit of send delay.
       example: "s"
+      default: S
+      selector:
+        select:
+          options:
+            - 'D'
+            - 'DAY'
+            - 'DAYS'
+            - 'H'
+            - 'HOUR'
+            - 'HOURS'
+            - 'M'
+            - 'MIN'
+            - 'MINUTE'
+            - 'MINUTES'
+            - 'S'
+            - 'SEC'
+            - 'SECOND'
+            - 'SECONDS'
 
 lock_keys:
+  name: Lock keys
   description: Lock keys.
   fields:
     address:
+      name: Address
       description: Module address
+      required: true
       example: "myhome.s0.m7"
+      selector:
+        text:
     table:
-      description: "Table with keys to lock (optional, must be A for interval)."
+      name: Table
+      description: "Table with keys to lock (must be A for interval)."
       example: "A5"
+      default: A
+      selector:
+        text:
     state:
+      name: State
       description: Key lock states as string (1=on, 2=off, T=toggle, -=nochange)
+      required: true
       example: "1---t0--"
+      selector:
+        text:
     time:
-      description: Lock interval (optional)
+      name: Time
+      description: Lock interval.
       example: 10
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 60
     time_unit:
-      description: Time unit of lock interval (optional)
+      name: Time unit
+      description: Time unit of lock interval.
       example: "s"
+      default: S
+      selector:
+        select:
+          options:
+            - 'D'
+            - 'DAY'
+            - 'DAYS'
+            - 'H'
+            - 'HOUR'
+            - 'HOURS'
+            - 'M'
+            - 'MIN'
+            - 'MINUTE'
+            - 'MINUTES'
+            - 'S'
+            - 'SEC'
+            - 'SECOND'
+            - 'SECONDS'
 
 dyn_text:
+  name: Dynamic text
   description: Send dynamic text to LCN-GTxD displays.
   fields:
     address:
+      name: Address
       description: Module address
+      required: true
       example: "myhome.s0.m7"
+      selector:
+        text:
     row:
-      description: Text row 1..4 (support of 4 independent text rows)
+      name: Row
+      description: Text row.
+      required: true
       example: 1
+      selector:
+        number:
+          min: 1
+          max: 4
     text:
+      name: Text
       description: Text to send (up to 60 characters encoded as UTF-8)
+      required: true
       example: "text up to 60 characters"
+      selector:
+        text:
 
 pck:
+  name: PCK
   description: Send arbitrary PCK command.
   fields:
     address:
+      name: Address
       description: Module address
+      required: true
       example: "myhome.s0.m7"
+      selector:
+        text:
     pck:
+      name: PCK
       description: PCK command (without address header)
+      required: true
       example: "PIN4"
+      selector:
+        text:

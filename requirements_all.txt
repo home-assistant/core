@@ -58,7 +58,7 @@ PySocks==1.7.1
 PyTransportNSW==0.1.1
 
 # homeassistant.components.homekit
-PyTurboJPEG==1.4.0
+PyTurboJPEG==1.5.0
 
 # homeassistant.components.vicare
 PyViCare==0.2.5
@@ -93,7 +93,7 @@ WazeRouteCalculator==0.12
 abodepy==1.2.0
 
 # homeassistant.components.accuweather
-accuweather==0.1.1
+accuweather==0.2.0
 
 # homeassistant.components.bmp280
 adafruit-circuitpython-bmp280==3.1.1
@@ -182,7 +182,7 @@ aiohomekit==0.2.61
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==2.4.0
+aiohue==2.3.1
 
 # homeassistant.components.imap
 aioimaplib==0.7.15
@@ -382,6 +382,9 @@ blockchain==1.4.4
 # homeassistant.components.bond
 bond-api==0.1.12
 
+# homeassistant.components.bosch_shc
+boschshcpy==0.2.17
+
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
 boto3==1.16.52
@@ -575,7 +578,7 @@ epsonprinter==0.0.9
 eternalegypt==0.0.12
 
 # homeassistant.components.keyboard_remote
-# evdev==1.1.2
+# evdev==1.4.0
 
 # homeassistant.components.evohome
 evohome-async==0.3.8
@@ -708,7 +711,7 @@ greeneye_monitor==2.1
 greenwavereality==0.5.1
 
 # homeassistant.components.growatt_server
-growattServer==1.0.0
+growattServer==1.0.1
 
 # homeassistant.components.gstreamer
 gstreamer-player==1.1.2
@@ -856,6 +859,9 @@ konnected==1.2.0
 
 # homeassistant.components.kostal_plenticore
 kostal_plenticore==0.2.0
+
+# homeassistant.components.kraken
+krakenex==2.1.0
 
 # homeassistant.components.eufy
 lakeside==0.12
@@ -1505,6 +1511,9 @@ pykmtronic==0.3.0
 # homeassistant.components.kodi
 pykodi==0.2.5
 
+# homeassistant.components.kraken
+pykrakenapi==0.1.8
+
 # homeassistant.components.kulersky
 pykulersky==0.5.2
 
@@ -1548,7 +1557,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.0.9
+pymazda==0.1.5
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.4.1
@@ -1566,7 +1575,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==2.5.1
+pymodbus==2.5.2
 
 # homeassistant.components.monoprice
 pymonoprice==0.3
@@ -2283,7 +2292,7 @@ unifiled==0.11
 upb_lib==0.4.12
 
 # homeassistant.components.upcloud
-upcloud-api==1.0.1
+upcloud-api==2.0.0
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
@@ -2365,7 +2374,6 @@ xboxapi==2.0.1
 xknx==0.18.1
 
 # homeassistant.components.bluesound
-# homeassistant.components.fritz
 # homeassistant.components.rest
 # homeassistant.components.startca
 # homeassistant.components.ted5000

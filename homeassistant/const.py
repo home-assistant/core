@@ -294,7 +294,7 @@ ATTR_ID = "id"
 ATTR_NAME: Final = "name"
 
 # Contains one string or a list of strings, each being an entity id
-ATTR_ENTITY_ID = "entity_id"
+ATTR_ENTITY_ID: Final = "entity_id"
 
 # Contains one string or a list of strings, each being an area id
 ATTR_AREA_ID = "area_id"
@@ -314,7 +314,7 @@ ATTR_IDENTIFIERS: Final = "identifiers"
 ATTR_ICON = "icon"
 
 # The unit of measurement if applicable
-ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
+ATTR_UNIT_OF_MEASUREMENT: Final = "unit_of_measurement"
 
 CONF_UNIT_SYSTEM_METRIC: str = "metric"
 CONF_UNIT_SYSTEM_IMPERIAL: str = "imperial"
@@ -332,7 +332,7 @@ ATTR_MODEL: Final = "model"
 ATTR_SW_VERSION: Final = "sw_version"
 
 ATTR_BATTERY_CHARGING = "battery_charging"
-ATTR_BATTERY_LEVEL = "battery_level"
+ATTR_BATTERY_LEVEL: Final = "battery_level"
 ATTR_WAKEUP = "wake_up_interval"
 
 # For devices which support a code attribute
@@ -379,10 +379,10 @@ ATTR_RESTORED = "restored"
 ATTR_SUPPORTED_FEATURES = "supported_features"
 
 # Class of device within its domain
-ATTR_DEVICE_CLASS = "device_class"
+ATTR_DEVICE_CLASS: Final = "device_class"
 
 # Temperature attribute
-ATTR_TEMPERATURE = "temperature"
+ATTR_TEMPERATURE: Final = "temperature"
 
 # #### UNITS OF MEASUREMENT ####
 # Power units

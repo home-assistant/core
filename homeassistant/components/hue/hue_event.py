@@ -39,11 +39,7 @@ class HueEvent(GenericHueDevice):
                 self.async_update_callback
             )
         )
-        self.bridge.reset_jobs.append(
-            self.bridge.listen_updates(
-                self.sensor.ITEM_TYPE, self.sensor.id, self.async_update_callback
-            )
-        )
+        _LOGGER.debug("Hue event created: %s", self.event_id)
 
     @callback
     def async_update_callback(self):

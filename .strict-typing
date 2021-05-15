@@ -13,6 +13,7 @@ homeassistant.components.camera.*
 homeassistant.components.cover.*
 homeassistant.components.device_automation.*
 homeassistant.components.elgato.*
+homeassistant.components.fritzbox.*
 homeassistant.components.frontend.*
 homeassistant.components.geo_location.*
 homeassistant.components.gios.*
@@ -46,6 +47,7 @@ homeassistant.components.switch.*
 homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
 homeassistant.components.tts.*
+homeassistant.components.upcloud.*
 homeassistant.components.vacuum.*
 homeassistant.components.water_heater.*
 homeassistant.components.weather.*

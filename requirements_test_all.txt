@@ -27,7 +27,7 @@ PyRMVtransport==0.3.2
 PyTransportNSW==0.1.1
 
 # homeassistant.components.homekit
-PyTurboJPEG==1.4.0
+PyTurboJPEG==1.5.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.13.4
@@ -45,7 +45,7 @@ WazeRouteCalculator==0.12
 abodepy==1.2.0
 
 # homeassistant.components.accuweather
-accuweather==0.1.1
+accuweather==0.2.0
 
 # homeassistant.components.androidtv
 adb-shell[async]==0.3.1
@@ -119,7 +119,7 @@ aiohomekit==0.2.61
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==2.4.0
+aiohue==2.3.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
@@ -218,6 +218,9 @@ blinkpy==0.17.0
 
 # homeassistant.components.bond
 bond-api==0.1.12
+
+# homeassistant.components.bosch_shc
+boschshcpy==0.2.17
 
 # homeassistant.components.braviatv
 bravia-tv==1.0.8
@@ -387,7 +390,7 @@ googlemaps==2.5.1
 greeclimate==0.11.4
 
 # homeassistant.components.growatt_server
-growattServer==1.0.0
+growattServer==1.0.1
 
 # homeassistant.components.profiler
 guppy3==3.1.0
@@ -479,6 +482,9 @@ konnected==1.2.0
 
 # homeassistant.components.kostal_plenticore
 kostal_plenticore==0.2.0
+
+# homeassistant.components.kraken
+krakenex==2.1.0
 
 # homeassistant.components.dyson
 libpurecool==0.6.4
@@ -837,6 +843,9 @@ pykmtronic==0.3.0
 # homeassistant.components.kodi
 pykodi==0.2.5
 
+# homeassistant.components.kraken
+pykrakenapi==0.1.8
+
 # homeassistant.components.kulersky
 pykulersky==0.5.2
 
@@ -862,7 +871,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.0.9
+pymazda==0.1.5
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.2
@@ -874,7 +883,7 @@ pymfy==0.9.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==2.5.1
+pymodbus==2.5.2
 
 # homeassistant.components.monoprice
 pymonoprice==0.3
@@ -1231,7 +1240,7 @@ twinkly-client==0.0.2
 upb_lib==0.4.12
 
 # homeassistant.components.upcloud
-upcloud-api==1.0.1
+upcloud-api==2.0.0
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
@@ -1274,7 +1283,6 @@ xbox-webapi==2.0.11
 xknx==0.18.1
 
 # homeassistant.components.bluesound
-# homeassistant.components.fritz
 # homeassistant.components.rest
 # homeassistant.components.startca
 # homeassistant.components.ted5000

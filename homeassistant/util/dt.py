@@ -5,16 +5,17 @@ import bisect
 from contextlib import suppress
 import datetime as dt
 import re
-from typing import Any
-
-try:
-    import zoneinfo
-except ImportError:
-    from backports import zoneinfo
+import sys
+from typing import Any, cast
 
 import ciso8601
 
 from homeassistant.const import MATCH_ALL
+
+if sys.version_info[:2] >= (3, 9):
+    import zoneinfo  # pylint: disable=import-error
+else:
+    from backports import zoneinfo  # pylint: disable=import-error
 
 DATE_STR_FORMAT = "%Y-%m-%d"
 UTC = dt.timezone.utc
@@ -49,7 +50,8 @@ def get_time_zone(time_zone_str: str) -> dt.tzinfo | None:
     Async friendly.
     """
     try:
-        return zoneinfo.ZoneInfo(time_zone_str)  # type: ignore
+        # Cast can be removed when mypy is switched to Python 3.9.
+        return cast(dt.tzinfo, zoneinfo.ZoneInfo(time_zone_str))
     except zoneinfo.ZoneInfoNotFoundError:
         return None
 
