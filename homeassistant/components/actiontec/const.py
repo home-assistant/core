@@ -1,7 +1,6 @@
 """Support for Actiontec MI424WR (Verizon FIOS) routers."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
 from typing import Final
 
@@ -13,12 +12,3 @@ LEASES_REGEX: Final[re.Pattern] = re.compile(
 )
 
 UNKNOWN_DEVICE_NAME: Final = "unknown device name"
-
-
-@dataclass
-class Device:
-    """Actiontec device class."""
-
-    ip_address: str
-    mac_address: str
-    timevalid: int

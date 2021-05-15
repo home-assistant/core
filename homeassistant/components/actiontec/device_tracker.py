@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import telnetlib
+from typing import Final
 
 import voluptuous as vol
 
@@ -16,9 +17,10 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import LEASES_REGEX, UNKNOWN_DEVICE_NAME, Device
+from .const import LEASES_REGEX, UNKNOWN_DEVICE_NAME
+from .model import Device
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -42,9 +44,9 @@ class ActiontecDeviceScanner(DeviceScanner):
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the scanner."""
-        self.host = config[CONF_HOST]
-        self.username = config[CONF_USERNAME]
-        self.password = config[CONF_PASSWORD]
+        self.host: str = config[CONF_HOST]
+        self.username: str = config[CONF_USERNAME]
+        self.password: str = config[CONF_PASSWORD]
         self.last_results: list[Device] = []
         data = self.get_actiontec_data()
         self.success_init = data is not None
