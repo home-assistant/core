@@ -7,6 +7,7 @@ homeassistant.components.acer_projector.*
 homeassistant.components.aftership.*
 homeassistant.components.airly.*
 homeassistant.components.aladdin_connect.*
+homeassistant.components.ampio.*
 homeassistant.components.automation.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bond.*
