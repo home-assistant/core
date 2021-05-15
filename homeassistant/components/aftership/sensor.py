@@ -68,6 +68,7 @@ async def async_setup_platform(
         _LOGGER.error(
             "No tracking data found. Check API key is correct: %s", aftership.meta
         )
+        return
 
     instance = AfterShipSensor(aftership, name)
 
