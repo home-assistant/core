@@ -135,15 +135,11 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     @property
     def icon(self) -> str | None:
         """Return the icon."""
-        if self.forecast_day is not None:
-            return self._description["icon"]
         return self._description["icon"]
 
     @property
     def device_class(self) -> str | None:
         """Return the device_class."""
-        if self.forecast_day is not None:
-            return self._description["device_class"]
         return self._description["device_class"]
 
     @property
