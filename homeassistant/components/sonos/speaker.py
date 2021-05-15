@@ -129,7 +129,7 @@ class SonosSpeaker:
         """Initialize a SonosSpeaker."""
         self.hass = hass
         self.soco = soco
-        self.household_id = soco.household_id
+        self.household_id: str = soco.household_id
         self.media = SonosMedia(soco)
 
         self._is_ready: bool = False

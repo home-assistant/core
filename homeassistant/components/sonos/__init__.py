@@ -67,6 +67,7 @@ class SonosData:
 
     def __init__(self) -> None:
         """Initialize the data."""
+        # OrderedDict behavior used by SonosFavorites
         self.discovered: OrderedDict[str, SonosSpeaker] = OrderedDict()
         self.favorites: dict[str, SonosFavorites] = {}
         self.topology_condition = asyncio.Condition()
