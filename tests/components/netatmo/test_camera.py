@@ -2,6 +2,9 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+import pyatmo
+import pytest
+
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_STREAMING
 from homeassistant.components.netatmo.const import (
@@ -389,3 +392,47 @@ async def test_setup_component_no_devices(hass, config_entry):
         await hass.async_block_till_done()
 
         assert fake_post_hits == 1
+
+
+async def test_camera_image_raises_exception(hass, config_entry, requests_mock):
+    """Test setup with no devices."""
+    fake_post_hits = 0
+
+    async def fake_post(*args, **kwargs):
+        """Return fake data."""
+        nonlocal fake_post_hits
+        fake_post_hits += 1
+
+        if "url" not in kwargs:
+            return "{}"
+
+        endpoint = kwargs["url"].split("/")[-1]
+
+        if "snapshot_720.jpg" in endpoint:
+            raise pyatmo.exceptions.ApiError()
+
+        return await fake_post_request(*args, **kwargs)
+
+    with patch(
+        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+    ) as mock_auth, patch(
+        "homeassistant.components.netatmo.PLATFORMS", ["camera"]
+    ), patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+    ), patch(
+        "homeassistant.components.webhook.async_generate_url"
+    ):
+        mock_auth.return_value.async_post_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    camera_entity_indoor = "camera.netatmo_hall"
+
+    with pytest.raises(Exception) as excinfo:
+        await camera.async_get_image(hass, camera_entity_indoor)
+
+    assert excinfo.value.args == ("Unable to get image",)
+    assert fake_post_hits == 6
