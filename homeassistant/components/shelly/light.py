@@ -218,8 +218,10 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return self._supported_color_modes
 
     @property
-    def effect_list(self):
-        """Lights RGB effects list."""
+    def effect_list(self) -> list[str] | None:
+        """Return the list of supported effects.""" 
+        if not self.supported_features & SUPPORT_EFFECT:
+            return None
         if self.wrapper.model == "SHBLB-1":
             return list(SHBLB_1_RGB_EFFECTS.values())
 
