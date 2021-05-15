@@ -306,8 +306,8 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     assert state.state == "closed"
 
 
-async def test_shutter_cover(hass, client, iblinds_v2, integration):
-    """Test the cover entity."""
+async def test_blind_cover(hass, client, iblinds_v2, integration):
+    """Test a blind cover entity."""
     node = iblinds_v2
     state = hass.states.get(BLIND_COVER_ENTITY)
 
@@ -316,7 +316,7 @@ async def test_shutter_cover(hass, client, iblinds_v2, integration):
 
 
 async def test_shutter_cover(hass, client, qubino_shutter, integration):
-    """Test the cover entity."""
+    """Test a shutter cover entity."""
     node = qubino_shutter
     state = hass.states.get(SHUTTER_COVER_ENTITY)
 
