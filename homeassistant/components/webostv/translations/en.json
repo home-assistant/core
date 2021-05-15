@@ -1,10 +1,10 @@
 {
   "config": {
-    "flow_title": "LG webOS Smart TV ({name})",
+    "flow_title": "LG webOS Smart TV",
     "step": {
       "user": {
         "title": "Connect to the device",
-        "description": "Turn on WebosTV device, fill fields and submit",
+        "description": "Turn on WebosTV device, fill fields and submit.",
         "data": {
           "host": "Hostname",
           "name": "Name - optional",
@@ -18,11 +18,12 @@
     },
     "error": {
       "encode_json": "Error json encoding",
-      "cannot_connect": "Failed to connect, please turn on your device or check ip address"
+      "cannot_connect": "Failed to connect, please turn on your device or check ip address."
     },
     "abort": {
-      "error_pairing": "Connected to LG webOS TV but not paired",
-      "already_configured_device": "Device is already configured"
+      "error_pairing": "Connected to LG webOS TV but not paired.",
+      "client_key_notfound": "Client key not found.",
+      "already_configured_device": "Device is already configured."
     }
   },
   "options": {
@@ -38,8 +39,8 @@
       }
     },
     "error": {
-      "encode_json": "Error json encoding",
-      "cannot_retrieve": "Unable to retrieve the list of sources.Device must be switched off"
+      "encode_json": "Error json encoding.",
+      "cannot_retrieve": "Unable to retrieve the list of sources.Device must be switched off."
     }
-  }  
+  }
 }

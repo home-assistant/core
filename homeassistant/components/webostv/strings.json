@@ -18,10 +18,11 @@
     },
     "error": {
       "encode_json": "Error json encoding",
-      "cannot_connect": "Failed to connect, please turn on your device or check ip address"
+      "cannot_connect": "Failed to connect, please turn on your device or check ip address."
     },
     "abort": {
-      "error_pairing": "Connected to LG webOS TV but not paired",
+      "error_pairing": "Connected to LG webOS TV but not paired.",
+      "client_key_notfound": "Client key not found.",
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },

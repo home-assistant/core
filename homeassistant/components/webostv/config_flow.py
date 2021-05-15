@@ -107,14 +107,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_register(self, user_input, client=None):
         """Register entity."""
         if client.is_registered():
-            name = user_input.get(CONF_NAME, CONF_HOST)
-            user_input["model"] = client.software_info.get("model_name")
-            maj_v = client.software_info.get("major_ver")
-            min_v = client.software_info.get("minor_ver")
+            if client.client_key is None:
+                self.async_abort(reason="client_key_notfound")
             user_input[CONF_CLIENT_SECRET] = client.client_key
-            user_input["sw_version"] = f"{maj_v}.{min_v}"
-
-            return self.async_create_entry(title=name, data=user_input)
+            return self.async_create_entry(
+                title=user_input.get(CONF_NAME, CONF_HOST), data=user_input
+            )
 
         return await self.async_step_user()
 
