@@ -142,12 +142,13 @@ async def async_setup_platform(
             _LOGGER.error("Error in sensor %s structure: %s", entry[CONF_NAME], err)
             continue
 
-        regsize = entry.get(CONF_COUNT, 1) * 2
-        if regsize != size:
+        bytecount = entry.get(CONF_COUNT, 1) * 2
+        if bytecount != size:
             _LOGGER.error(
-                "Structure size (%d bytes) mismatch registers size (%d bytes)",
+                "Structure request %d bytes, but %d registers have a size of %d bytes",
                 size,
-                regsize,
+                entry.get(CONF_COUNT, 1),
+                bytecount,
             )
             continue
 
