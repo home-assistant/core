@@ -325,20 +325,18 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @property
     def device_info(self):
         """Return device information."""
-        model = "unknown"
-        sw_version = ""
-        # If TV is off, the data is not recovered.
-        if self._client.system_info is not None:
-            model = self._client.software_info.get("model_name")
-            maj_v = self._client.software_info.get("major_ver")
-            min_v = self._client.software_info.get("minor_ver")
-            sw_version = f"{maj_v}.{min_v}"
+        if self._client.system_info is None and self.state == STATE_OFF:
+            return {
+                "identifiers": {(DOMAIN, self._uid)},
+            }
+        maj_v = self._client.software_info.get("major_ver")
+        min_v = self._client.software_info.get("minor_ver")
         return {
             "identifiers": {(DOMAIN, self._uid)},
             "manufacturer": "LG",
             "name": self._name,
-            "model": model,
-            "sw_version": sw_version,
+            "model": self._client.software_info.get("model_name"),
+            "sw_version": f"{maj_v}.{min_v}",
         }
 
     @property
