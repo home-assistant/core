@@ -35,60 +35,50 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
+def _create_weather(xknx: XKNX, config: ConfigType) -> XknxWeather:
+    """Return a KNX weather device to be used within XKNX."""
+    return XknxWeather(
+        xknx,
+        name=config[CONF_NAME],
+        sync_state=config[WeatherSchema.CONF_SYNC_STATE],
+        group_address_temperature=config[WeatherSchema.CONF_KNX_TEMPERATURE_ADDRESS],
+        group_address_brightness_south=config.get(
+            WeatherSchema.CONF_KNX_BRIGHTNESS_SOUTH_ADDRESS
+        ),
+        group_address_brightness_east=config.get(
+            WeatherSchema.CONF_KNX_BRIGHTNESS_EAST_ADDRESS
+        ),
+        group_address_brightness_west=config.get(
+            WeatherSchema.CONF_KNX_BRIGHTNESS_WEST_ADDRESS
+        ),
+        group_address_brightness_north=config.get(
+            WeatherSchema.CONF_KNX_BRIGHTNESS_NORTH_ADDRESS
+        ),
+        group_address_wind_speed=config.get(WeatherSchema.CONF_KNX_WIND_SPEED_ADDRESS),
+        group_address_wind_bearing=config.get(
+            WeatherSchema.CONF_KNX_WIND_BEARING_ADDRESS
+        ),
+        group_address_rain_alarm=config.get(WeatherSchema.CONF_KNX_RAIN_ALARM_ADDRESS),
+        group_address_frost_alarm=config.get(
+            WeatherSchema.CONF_KNX_FROST_ALARM_ADDRESS
+        ),
+        group_address_wind_alarm=config.get(WeatherSchema.CONF_KNX_WIND_ALARM_ADDRESS),
+        group_address_day_night=config.get(WeatherSchema.CONF_KNX_DAY_NIGHT_ADDRESS),
+        group_address_air_pressure=config.get(
+            WeatherSchema.CONF_KNX_AIR_PRESSURE_ADDRESS
+        ),
+        group_address_humidity=config.get(WeatherSchema.CONF_KNX_HUMIDITY_ADDRESS),
+    )
+
+
 class KNXWeather(KnxEntity, WeatherEntity):
     """Representation of a KNX weather device."""
 
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of a KNX sensor."""
         self._device: XknxWeather
-        super().__init__(self._create_weather(xknx, config))
+        super().__init__(_create_weather(xknx, config))
         self._unique_id = f"{self._device._temperature.group_address_state}"
-
-    @staticmethod
-    def _create_weather(xknx: XKNX, config: ConfigType) -> XknxWeather:
-        """Return a KNX weather device to be used within XKNX."""
-        return XknxWeather(
-            xknx,
-            name=config[CONF_NAME],
-            sync_state=config[WeatherSchema.CONF_SYNC_STATE],
-            group_address_temperature=config[
-                WeatherSchema.CONF_KNX_TEMPERATURE_ADDRESS
-            ],
-            group_address_brightness_south=config.get(
-                WeatherSchema.CONF_KNX_BRIGHTNESS_SOUTH_ADDRESS
-            ),
-            group_address_brightness_east=config.get(
-                WeatherSchema.CONF_KNX_BRIGHTNESS_EAST_ADDRESS
-            ),
-            group_address_brightness_west=config.get(
-                WeatherSchema.CONF_KNX_BRIGHTNESS_WEST_ADDRESS
-            ),
-            group_address_brightness_north=config.get(
-                WeatherSchema.CONF_KNX_BRIGHTNESS_NORTH_ADDRESS
-            ),
-            group_address_wind_speed=config.get(
-                WeatherSchema.CONF_KNX_WIND_SPEED_ADDRESS
-            ),
-            group_address_wind_bearing=config.get(
-                WeatherSchema.CONF_KNX_WIND_BEARING_ADDRESS
-            ),
-            group_address_rain_alarm=config.get(
-                WeatherSchema.CONF_KNX_RAIN_ALARM_ADDRESS
-            ),
-            group_address_frost_alarm=config.get(
-                WeatherSchema.CONF_KNX_FROST_ALARM_ADDRESS
-            ),
-            group_address_wind_alarm=config.get(
-                WeatherSchema.CONF_KNX_WIND_ALARM_ADDRESS
-            ),
-            group_address_day_night=config.get(
-                WeatherSchema.CONF_KNX_DAY_NIGHT_ADDRESS
-            ),
-            group_address_air_pressure=config.get(
-                WeatherSchema.CONF_KNX_AIR_PRESSURE_ADDRESS
-            ),
-            group_address_humidity=config.get(WeatherSchema.CONF_KNX_HUMIDITY_ADDRESS),
-        )
 
     @property
     def temperature(self) -> float | None:
