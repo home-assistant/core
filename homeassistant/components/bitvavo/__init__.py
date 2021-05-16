@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_key = entry.data[CONF_API_KEY]
     api_secret = entry.data[CONF_API_SECRET]
     markets = entry.data[CONF_MARKETS]
-    show_empty_assets = entry.options[CONF_SHOW_EMPTY_ASSETS]
+    show_empty_assets = entry.options.get(CONF_SHOW_EMPTY_ASSETS, True)
 
     try:
         client = BitvavoClient(api_key, api_secret)
