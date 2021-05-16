@@ -5,6 +5,7 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
+            "device_not_found": "Device not found",
             "invalid_ip": "Invalid IP address",
             "invalid_serial": "Invalid serial number",
             "unknown": "Unexpected error"

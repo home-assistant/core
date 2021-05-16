@@ -76,7 +76,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidIP:
                 errors["base"] = "invalid_ip"
             except DeviceNotFound:
-                errors["base"] = "no_devices_found"
+                errors["base"] = "device_not_found"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
 
