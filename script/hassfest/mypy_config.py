@@ -323,7 +323,7 @@ def generate_and_validate(config: Config) -> str:
                 config.add_error("mypy_config", f"Module '{module} doesn't exist")
 
     # Don't generate mypy.ini if there're errors found because it will likely crash.
-    if any(not err.fixable for err in config.errors):
+    if any(err.plugin == "mypy_config" for err in config.errors):
         return ""
 
     mypy_config = configparser.ConfigParser()
@@ -369,7 +369,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     config_path = config.root / "mypy.ini"
     config.cache["mypy_config"] = content = generate_and_validate(config)
 
-    if config.errors:
+    if any(err.plugin == "mypy_config" for err in config.errors):
         return
 
     with open(str(config_path)) as fp:
