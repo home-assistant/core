@@ -55,7 +55,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-def get_speaker_from_uid(uid: int, data_sonos: SonosData) -> SonosSpeaker:
+def get_speaker_from_uid(uid: str, data_sonos: SonosData) -> SonosSpeaker:
     """Get speeaker from player uid."""
     for discovered_uid in data_sonos.discovered.keys():
         if discovered_uid == uid:
@@ -127,6 +127,9 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         if is_available:
             return
 
+        if self.alarm in self.speaker.available_alarms:
+            self.speaker.available_alarms.remove(self.alarm)
+
         if self.alarm_id in self.hass.data[DATA_SONOS].alarms:
             self.hass.data[DATA_SONOS].alarms.remove(self.alarm_id)
 
@@ -139,34 +142,34 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         await self.async_remove_if_not_available()
         await self.hass.async_add_executor_job(self.update_alarm)
 
+    def _update_device(self):
+        """Update the device, since this alarm moved to a different player."""
+        device_registry = dr.async_get(self.hass)
+        entity_registry = er.async_get(self.hass)
+        entity = entity_registry.async_get(self.entity_id)
+        if entity is None:
+            return
+
+        entry_id = entity.config_entry_id
+
+        new_device = device_registry.async_get_or_create(
+            config_entry_id=entry_id,
+            identifiers={(SONOS_DOMAIN, self.soco.uid)},
+            connections={(dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address)},
+        )
+        if not entity_registry.async_get(self.entity_id).device_id == new_device.id:
+            entity_registry._async_update_entity(
+                self.entity_id, device_id=new_device.id
+            )
+
     def update_alarm(self):
         """Update the state of the alarm."""
 
-        def _update_device():
-            """Update the device, since this alarm moved to a different player."""
-            device_registry = dr.async_get(self.hass)
-            entity_registry = er.async_get(self.hass)
-            entity = entity_registry.async_get(self.entity_id)
-            if entity is None:
-                return
-
-            entry_id = entity.config_entry_id
-
-            new_device = device_registry.async_get_or_create(
-                config_entry_id=entry_id,
-                identifiers={(SONOS_DOMAIN, self.soco.uid)},
-                connections={(dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address)},
-            )
-            if not entity_registry.async_get(self.entity_id).device_id == new_device.id:
-                entity_registry._async_update_entity(
-                    self.entity_id, device_id=new_device.id
-                )
-
-        new_speaker = get_speaker_from_uid(self.alarm.zone.uid, self.data_sonos)
-        if new_speaker is not None and new_speaker.soco.uid != self.alarm.zone.uid:
-            self.speaker = new_speaker
-
-            _update_device()
+        if self.speaker.soco.uid != self.alarm.zone.uid:
+            self.speaker.available_alarms.remove(self.alarm)
+            self.speaker = get_speaker_from_uid(self.alarm.zone.uid, self.data_sonos)
+            self.speaker.available_alarms.add(self.alarm)
+            self._update_device()
 
         self._is_on = self.alarm.enabled
         self._attributes[ATTR_ID] = str(self.alarm_id)
@@ -177,9 +180,6 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         self._attributes[ATTR_PLAY_MODE] = str(self.alarm.play_mode)
         self._attributes[ATTR_SCHEDULED_TODAY] = self._is_today
         self._attributes[ATTR_INCLUDE_LINKED_ZONES] = self.alarm.include_linked_zones
-
-        if self.soco.uid != self.alarm.zone.uid:
-            _update_device()
 
         self.schedule_update_ha_state()
 

@@ -157,7 +157,7 @@ class SonosSpeaker:
         self._last_battery_event: datetime.datetime | None = None
         self._battery_poll_timer: Callable | None = None
 
-        self.available_alarms: list[Alarm] | None = None
+        self.available_alarms: set[Alarm] = set()
 
         self.volume: int | None = None
         self.muted: bool | None = None
@@ -198,9 +198,11 @@ class SonosSpeaker:
         else:
             self._platforms_ready.update({BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN})
 
-        if alarm_info := get_alarms(self.soco):
-            self.available_alarms = alarm_info
-            dispatcher_send(self.hass, SONOS_CREATE_ALARM, self)
+        alarms = get_alarms(self.soco)
+        for alarm in alarms:
+            if alarm.zone.uid == self.soco.uid:
+                self.available_alarms.add(alarm)
+                dispatcher_send(self.hass, SONOS_CREATE_ALARM, self)
         else:
             self._platforms_ready.update({SWITCH_DOMAIN})
 
