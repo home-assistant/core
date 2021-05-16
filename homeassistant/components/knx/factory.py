@@ -11,7 +11,6 @@ from xknx.devices import (
     Fan as XknxFan,
     Light as XknxLight,
     Notification as XknxNotification,
-    Scene as XknxScene,
     Sensor as XknxSensor,
     Weather as XknxWeather,
 )
@@ -26,7 +25,6 @@ from .schema import (
     CoverSchema,
     FanSchema,
     LightSchema,
-    SceneSchema,
     SensorSchema,
     WeatherSchema,
 )
@@ -52,9 +50,6 @@ def create_knx_device(
 
     if platform is SupportedPlatforms.NOTIFY:
         return _create_notify(knx_module, config)
-
-    if platform is SupportedPlatforms.SCENE:
-        return _create_scene(knx_module, config)
 
     if platform is SupportedPlatforms.BINARY_SENSOR:
         return _create_binary_sensor(knx_module, config)
@@ -285,16 +280,6 @@ def _create_notify(knx_module: XKNX, config: ConfigType) -> XknxNotification:
         knx_module,
         name=config[CONF_NAME],
         group_address=config[KNX_ADDRESS],
-    )
-
-
-def _create_scene(knx_module: XKNX, config: ConfigType) -> XknxScene:
-    """Return a KNX scene to be used within XKNX."""
-    return XknxScene(
-        knx_module,
-        name=config[CONF_NAME],
-        group_address=config[KNX_ADDRESS],
-        scene_number=config[SceneSchema.CONF_SCENE_NUMBER],
     )
 
 
