@@ -590,7 +590,7 @@ def run_tasks_at_time(hass, test_time):
 
 
 def test_auto_purge(hass_recorder):
-    """Test periodic purge alarm scheduling."""
+    """Test periodic purge scheduling."""
     hass = hass_recorder()
 
     original_tz = dt_util.DEFAULT_TIME_ZONE
@@ -598,9 +598,10 @@ def test_auto_purge(hass_recorder):
     tz = dt_util.get_time_zone("Europe/Copenhagen")
     dt_util.set_default_time_zone(tz)
 
-    # Purging is schedule to happen at 4:12am every day. Exercise this behavior
-    # by firing alarms and advancing the clock around this time. Pick an arbitrary
-    # year in the future to avoid boundary conditions relative to the current date.
+    # Purging is scheduled to happen at 4:12am every day. Exercise this behavior by
+    # firing time changed events and advancing the clock around this time. Pick an
+    # arbitrary year in the future to avoid boundary conditions relative to the current
+    # date.
     #
     # The clock is started at 4:15am then advanced forward below
     now = dt_util.utcnow()
@@ -633,6 +634,56 @@ def test_auto_purge(hass_recorder):
         test_time = test_time + timedelta(hours=1)
         run_tasks_at_time(hass, test_time)
         assert len(purge_old_data.mock_calls) == 1
+
+    dt_util.set_default_time_zone(original_tz)
+
+
+def test_auto_statistics(hass_recorder):
+    """Test periodic statistics scheduling."""
+    hass = hass_recorder()
+
+    original_tz = dt_util.DEFAULT_TIME_ZONE
+
+    tz = dt_util.get_time_zone("Europe/Copenhagen")
+    dt_util.set_default_time_zone(tz)
+
+    # Statistics is scheduled to happen at *:12am every hour. Exercise this behavior by
+    # firing time changed events and advancing the clock around this time. Pick an
+    # arbitrary year in the future to avoid boundary conditions relative to the current
+    # date.
+    #
+    # The clock is started at 4:15am then advanced forward below
+    now = dt_util.utcnow()
+    test_time = datetime(now.year + 2, 1, 1, 4, 15, 0, tzinfo=tz)
+    run_tasks_at_time(hass, test_time)
+
+    with patch(
+        "homeassistant.components.recorder.statistics.compile_statistics",
+        return_value=True,
+    ) as compile_statistics:
+        # Advance one hour, and the statistics task should run
+        test_time = test_time + timedelta(hours=1)
+        run_tasks_at_time(hass, test_time)
+        assert len(compile_statistics.mock_calls) == 1
+
+        compile_statistics.reset_mock()
+
+        # Advance one hour, and the statistics task should run again
+        test_time = test_time + timedelta(hours=1)
+        run_tasks_at_time(hass, test_time)
+        assert len(compile_statistics.mock_calls) == 1
+
+        compile_statistics.reset_mock()
+
+        # Advance less than one full hour. The task should not run.
+        test_time = test_time + timedelta(minutes=50)
+        run_tasks_at_time(hass, test_time)
+        assert len(compile_statistics.mock_calls) == 0
+
+        # Advance to the next hour, and the statistics task should run again
+        test_time = test_time + timedelta(hours=1)
+        run_tasks_at_time(hass, test_time)
+        assert len(compile_statistics.mock_calls) == 1
 
     dt_util.set_default_time_zone(original_tz)
 

@@ -1,53 +1,47 @@
 """Support for non-delivered packages recorded in AfterShip."""
-from datetime import timedelta
+from __future__ import annotations
+
 import logging
+from typing import Any, Final
 
 from pyaftership.tracker import Tracking
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME, HTTP_OK
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.service import ServiceCall
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Information provided by AfterShip"
-ATTR_TRACKINGS = "trackings"
-
-BASE = "https://track.aftership.com/"
-
-CONF_SLUG = "slug"
-CONF_TITLE = "title"
-CONF_TRACKING_NUMBER = "tracking_number"
-
-DEFAULT_NAME = "aftership"
-UPDATE_TOPIC = f"{DOMAIN}_update"
-
-ICON = "mdi:package-variant-closed"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
-
-SERVICE_ADD_TRACKING = "add_tracking"
-SERVICE_REMOVE_TRACKING = "remove_tracking"
-
-ADD_TRACKING_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_TRACKING_NUMBER): cv.string,
-        vol.Optional(CONF_TITLE): cv.string,
-        vol.Optional(CONF_SLUG): cv.string,
-    }
+from .const import (
+    ADD_TRACKING_SERVICE_SCHEMA,
+    ATTR_TRACKINGS,
+    ATTRIBUTION,
+    BASE,
+    CONF_SLUG,
+    CONF_TITLE,
+    CONF_TRACKING_NUMBER,
+    DEFAULT_NAME,
+    DOMAIN,
+    ICON,
+    MIN_TIME_BETWEEN_UPDATES,
+    REMOVE_TRACKING_SERVICE_SCHEMA,
+    SERVICE_ADD_TRACKING,
+    SERVICE_REMOVE_TRACKING,
+    UPDATE_TOPIC,
 )
 
-REMOVE_TRACKING_SERVICE_SCHEMA = vol.Schema(
-    {vol.Required(CONF_SLUG): cv.string, vol.Required(CONF_TRACKING_NUMBER): cv.string}
-)
+_LOGGER: Final = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -55,7 +49,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the AfterShip sensor platform."""
     apikey = config[CONF_API_KEY]
     name = config[CONF_NAME]
@@ -75,7 +74,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async_add_entities([instance], True)
 
-    async def handle_add_tracking(call):
+    async def handle_add_tracking(call: ServiceCall) -> None:
         """Call when a user adds a new Aftership tracking from Home Assistant."""
         title = call.data.get(CONF_TITLE)
         slug = call.data.get(CONF_SLUG)
@@ -91,7 +90,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         schema=ADD_TRACKING_SERVICE_SCHEMA,
     )
 
-    async def handle_remove_tracking(call):
+    async def handle_remove_tracking(call: ServiceCall) -> None:
         """Call when a user removes an Aftership tracking from Home Assistant."""
         slug = call.data[CONF_SLUG]
         tracking_number = call.data[CONF_TRACKING_NUMBER]
@@ -110,39 +109,39 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class AfterShipSensor(SensorEntity):
     """Representation of a AfterShip sensor."""
 
-    def __init__(self, aftership, name):
+    def __init__(self, aftership: Tracking, name: str) -> None:
         """Initialize the sensor."""
-        self._attributes = {}
-        self._name = name
-        self._state = None
+        self._attributes: dict[str, Any] = {}
+        self._name: str = name
+        self._state: int | None = None
         self.aftership = aftership
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> int | None:
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity, if any."""
         return "packages"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return attributes for the sensor."""
         return self._attributes
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Icon to use in the frontend."""
         return ICON
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
@@ -150,13 +149,13 @@ class AfterShipSensor(SensorEntity):
             )
         )
 
-    async def _force_update(self):
+    async def _force_update(self) -> None:
         """Force update of data."""
         await self.async_update(no_throttle=True)
         self.async_write_ha_state()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self, **kwargs):
+    async def async_update(self, **kwargs: Any) -> None:
         """Get the latest data from the AfterShip API."""
         await self.aftership.get_trackings()
 
@@ -170,7 +169,7 @@ class AfterShipSensor(SensorEntity):
             return
 
         status_to_ignore = {"delivered"}
-        status_counts = {}
+        status_counts: dict[str, int] = {}
         trackings = []
         not_delivered_count = 0
 
