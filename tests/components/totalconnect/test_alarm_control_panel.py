@@ -222,14 +222,14 @@ async def test_arm_night_success(hass):
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
-        assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
 
         await hass.services.async_call(
             ALARM_DOMAIN, SERVICE_ALARM_ARM_NIGHT, DATA, blocking=True
         )
 
         await hass.async_block_till_done()
-        assert STATE_ALARM_ARMED_NIGHT == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_NIGHT
 
 
 async def test_arm_night_failure(hass):
@@ -240,7 +240,7 @@ async def test_arm_night_failure(hass):
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
-        assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
 
         with pytest.raises(HomeAssistantError) as err:
             await hass.services.async_call(
@@ -248,7 +248,7 @@ async def test_arm_night_failure(hass):
             )
             await hass.async_block_till_done()
         assert f"{err.value}" == "TotalConnect failed to arm night test."
-        assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
 
 
 async def test_arming(hass):
@@ -259,12 +259,12 @@ async def test_arming(hass):
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
-        assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
 
         await hass.services.async_call(
             ALARM_DOMAIN, SERVICE_ALARM_ARM_NIGHT, DATA, blocking=True
         )
-        assert STATE_ALARM_ARMING == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMING
 
 
 async def test_disarming(hass):
@@ -275,12 +275,12 @@ async def test_disarming(hass):
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
-        assert STATE_ALARM_ARMED_AWAY == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_AWAY
 
         await hass.services.async_call(
             ALARM_DOMAIN, SERVICE_ALARM_DISARM, DATA, blocking=True
         )
-        assert STATE_ALARM_DISARMING == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMING
 
 
 async def test_triggered_fire(hass):
