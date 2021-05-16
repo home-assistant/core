@@ -1,6 +1,7 @@
 """Config flow for Switchbot."""
 import logging
 
+# pylint: disable=import-error
 from bluepy import btle
 import voluptuous as vol
 
