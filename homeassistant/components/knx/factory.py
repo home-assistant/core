@@ -7,10 +7,8 @@ from xknx.devices import (
     Climate as XknxClimate,
     ClimateMode as XknxClimateMode,
     Device as XknxDevice,
-    Fan as XknxFan,
     Light as XknxLight,
     Notification as XknxNotification,
-    Scene as XknxScene,
     Sensor as XknxSensor,
     Weather as XknxWeather,
 )
@@ -22,9 +20,7 @@ from .const import KNX_ADDRESS, ColorTempModes, SupportedPlatforms
 from .schema import (
     BinarySensorSchema,
     ClimateSchema,
-    FanSchema,
     LightSchema,
-    SceneSchema,
     SensorSchema,
     WeatherSchema,
 )
@@ -48,17 +44,11 @@ def create_knx_device(
     if platform is SupportedPlatforms.NOTIFY:
         return _create_notify(knx_module, config)
 
-    if platform is SupportedPlatforms.SCENE:
-        return _create_scene(knx_module, config)
-
     if platform is SupportedPlatforms.BINARY_SENSOR:
         return _create_binary_sensor(knx_module, config)
 
     if platform is SupportedPlatforms.WEATHER:
         return _create_weather(knx_module, config)
-
-    if platform is SupportedPlatforms.FAN:
-        return _create_fan(knx_module, config)
 
     return None
 
@@ -261,16 +251,6 @@ def _create_notify(knx_module: XKNX, config: ConfigType) -> XknxNotification:
     )
 
 
-def _create_scene(knx_module: XKNX, config: ConfigType) -> XknxScene:
-    """Return a KNX scene to be used within XKNX."""
-    return XknxScene(
-        knx_module,
-        name=config[CONF_NAME],
-        group_address=config[KNX_ADDRESS],
-        scene_number=config[SceneSchema.CONF_SCENE_NUMBER],
-    )
-
-
 def _create_binary_sensor(knx_module: XKNX, config: ConfigType) -> XknxBinarySensor:
     """Return a KNX binary sensor to be used within XKNX."""
     device_name = config[CONF_NAME]
@@ -323,20 +303,3 @@ def _create_weather(knx_module: XKNX, config: ConfigType) -> XknxWeather:
         ),
         group_address_humidity=config.get(WeatherSchema.CONF_KNX_HUMIDITY_ADDRESS),
     )
-
-
-def _create_fan(knx_module: XKNX, config: ConfigType) -> XknxFan:
-    """Return a KNX Fan device to be used within XKNX."""
-
-    fan = XknxFan(
-        knx_module,
-        name=config[CONF_NAME],
-        group_address_speed=config.get(KNX_ADDRESS),
-        group_address_speed_state=config.get(FanSchema.CONF_STATE_ADDRESS),
-        group_address_oscillation=config.get(FanSchema.CONF_OSCILLATION_ADDRESS),
-        group_address_oscillation_state=config.get(
-            FanSchema.CONF_OSCILLATION_STATE_ADDRESS
-        ),
-        max_step=config.get(FanSchema.CONF_MAX_STEP),
-    )
-    return fan
