@@ -12,7 +12,8 @@
                 "data": {
                     "city": "Stadt"
                 },
-                "description": "W\u00e4hle deine Stadt aus der Liste"
+                "description": "W\u00e4hle deine Stadt aus der Liste",
+                "title": "M\u00e9t\u00e9o-France"
             },
             "user": {
                 "data": {
@@ -20,6 +21,15 @@
                 },
                 "description": "Geben Sie die Postleitzahl (nur f\u00fcr Frankreich empfohlen) oder den St\u00e4dtenamen ein",
                 "title": "M\u00e9t\u00e9o-France"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "mode": "Vorhersage Modus"
+                }
             }
         }
     }

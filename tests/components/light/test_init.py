@@ -562,10 +562,15 @@ async def test_default_profiles_group(hass, mock_light_profiles):
 
 
 @pytest.mark.parametrize(
-    "extra_call_params, expected_params",
+    "extra_call_params, expected_params_state_was_off, expected_params_state_was_on",
     (
         (
             {},
+            {
+                light.ATTR_HS_COLOR: (50.353, 100),
+                light.ATTR_BRIGHTNESS: 100,
+                light.ATTR_TRANSITION: 3,
+            },
             {
                 light.ATTR_HS_COLOR: (50.353, 100),
                 light.ATTR_BRIGHTNESS: 100,
@@ -579,6 +584,10 @@ async def test_default_profiles_group(hass, mock_light_profiles):
                 light.ATTR_BRIGHTNESS: 22,
                 light.ATTR_TRANSITION: 3,
             },
+            {
+                light.ATTR_BRIGHTNESS: 22,
+                light.ATTR_TRANSITION: 3,
+            },
         ),
         (
             {light.ATTR_TRANSITION: 22},
@@ -587,10 +596,18 @@ async def test_default_profiles_group(hass, mock_light_profiles):
                 light.ATTR_BRIGHTNESS: 100,
                 light.ATTR_TRANSITION: 22,
             },
+            {
+                light.ATTR_TRANSITION: 22,
+            },
         ),
         (
             {
                 light.ATTR_XY_COLOR: [0.4448, 0.4066],
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
+            {
+                light.ATTR_HS_COLOR: (38.88, 49.02),
                 light.ATTR_BRIGHTNESS: 11,
                 light.ATTR_TRANSITION: 1,
             },
@@ -607,11 +624,19 @@ async def test_default_profiles_group(hass, mock_light_profiles):
                 light.ATTR_BRIGHTNESS: 11,
                 light.ATTR_TRANSITION: 1,
             },
+            {
+                light.ATTR_BRIGHTNESS: 11,
+                light.ATTR_TRANSITION: 1,
+            },
         ),
     ),
 )
 async def test_default_profiles_light(
-    hass, mock_light_profiles, extra_call_params, expected_params
+    hass,
+    mock_light_profiles,
+    extra_call_params,
+    expected_params_state_was_off,
+    expected_params_state_was_on,
 ):
     """Test default turn-on light profile for a specific light."""
     platform = getattr(hass.components, "test.light")
@@ -639,14 +664,26 @@ async def test_default_profiles_light(
     )
 
     _, data = dev.last_call("turn_on")
-    assert data == expected_params
+    assert data == expected_params_state_was_off
 
     await hass.services.async_call(
         light.DOMAIN,
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: dev.entity_id,
-            light.ATTR_BRIGHTNESS: 0,
+            **extra_call_params,
+        },
+        blocking=True,
+    )
+
+    _, data = dev.last_call("turn_on")
+    assert data == expected_params_state_was_on
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        SERVICE_TURN_OFF,
+        {
+            ATTR_ENTITY_ID: dev.entity_id,
         },
         blocking=True,
     )
@@ -748,9 +785,21 @@ async def test_light_brightness_step(hass):
     )
 
     _, data = entity0.last_call("turn_on")
-    assert data["brightness"] == 126  # 100 + (255 * 0.10)
+    assert data["brightness"] == 116  # 90 + (255 * 0.10)
     _, data = entity1.last_call("turn_on")
-    assert data["brightness"] == 76  # 50 + (255 * 0.10)
+    assert data["brightness"] == 66  # 40 + (255 * 0.10)
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": entity0.entity_id,
+            "brightness_step": -126,
+        },
+        blocking=True,
+    )
+
+    assert entity0.state == "off"  # 126 - 126; brightness is 0, light should turn off
 
 
 async def test_light_brightness_pct_conversion(hass):
@@ -1195,7 +1244,43 @@ async def test_light_state_rgbw(hass):
         "friendly_name": "Test_rgbw",
         "supported_color_modes": [light.COLOR_MODE_RGBW],
         "supported_features": 0,
+        "hs_color": (240.0, 25.0),
+        "rgb_color": (3, 3, 4),
         "rgbw_color": (1, 2, 3, 4),
+        "xy_color": (0.301, 0.295),
+    }
+
+
+async def test_light_state_rgbww(hass):
+    """Test rgbww color conversion in state updates."""
+    platform = getattr(hass.components, "test.light")
+    platform.init(empty=True)
+
+    platform.ENTITIES.append(platform.MockLight("Test_rgbww", STATE_ON))
+
+    entity0 = platform.ENTITIES[0]
+    entity0.supported_color_modes = {light.COLOR_MODE_RGBWW}
+    entity0.color_mode = light.COLOR_MODE_RGBWW
+    entity0.hs_color = "Invalid"  # Should be ignored
+    entity0.rgb_color = "Invalid"  # Should be ignored
+    entity0.rgbw_color = "Invalid"  # Should be ignored
+    entity0.rgbww_color = (1, 2, 3, 4, 5)
+    entity0.white_value = "Invalid"  # Should be ignored
+    entity0.xy_color = "Invalid"  # Should be ignored
+
+    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    assert dict(state.attributes) == {
+        "color_mode": light.COLOR_MODE_RGBWW,
+        "friendly_name": "Test_rgbww",
+        "supported_color_modes": [light.COLOR_MODE_RGBWW],
+        "supported_features": 0,
+        "hs_color": (60.0, 20.0),
+        "rgb_color": (5, 5, 4),
+        "rgbww_color": (1, 2, 3, 4, 5),
+        "xy_color": (0.339, 0.354),
     }
 
 
@@ -1209,6 +1294,8 @@ async def test_light_service_call_color_conversion(hass):
     platform.ENTITIES.append(platform.MockLight("Test_xy", STATE_ON))
     platform.ENTITIES.append(platform.MockLight("Test_all", STATE_ON))
     platform.ENTITIES.append(platform.MockLight("Test_legacy", STATE_ON))
+    platform.ENTITIES.append(platform.MockLight("Test_rgbw", STATE_ON))
+    platform.ENTITIES.append(platform.MockLight("Test_rgbww", STATE_ON))
 
     entity0 = platform.ENTITIES[0]
     entity0.supported_color_modes = {light.COLOR_MODE_HS}
@@ -1228,6 +1315,12 @@ async def test_light_service_call_color_conversion(hass):
 
     entity4 = platform.ENTITIES[4]
     entity4.supported_features = light.SUPPORT_COLOR
+
+    entity5 = platform.ENTITIES[5]
+    entity5.supported_color_modes = {light.COLOR_MODE_RGBW}
+
+    entity6 = platform.ENTITIES[6]
+    entity6.supported_color_modes = {light.COLOR_MODE_RGBWW}
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1251,6 +1344,12 @@ async def test_light_service_call_color_conversion(hass):
     state = hass.states.get(entity4.entity_id)
     assert state.attributes["supported_color_modes"] == [light.COLOR_MODE_HS]
 
+    state = hass.states.get(entity5.entity_id)
+    assert state.attributes["supported_color_modes"] == [light.COLOR_MODE_RGBW]
+
+    state = hass.states.get(entity6.entity_id)
+    assert state.attributes["supported_color_modes"] == [light.COLOR_MODE_RGBWW]
+
     await hass.services.async_call(
         "light",
         "turn_on",
@@ -1261,6 +1360,8 @@ async def test_light_service_call_color_conversion(hass):
                 entity2.entity_id,
                 entity3.entity_id,
                 entity4.entity_id,
+                entity5.entity_id,
+                entity6.entity_id,
             ],
             "brightness_pct": 100,
             "hs_color": (240, 100),
@@ -1277,6 +1378,10 @@ async def test_light_service_call_color_conversion(hass):
     assert data == {"brightness": 255, "hs_color": (240.0, 100.0)}
     _, data = entity4.last_call("turn_on")
     assert data == {"brightness": 255, "hs_color": (240.0, 100.0)}
+    _, data = entity5.last_call("turn_on")
+    assert data == {"brightness": 255, "rgbw_color": (0, 0, 255, 0)}
+    _, data = entity6.last_call("turn_on")
+    assert data == {"brightness": 255, "rgbww_color": (0, 0, 255, 0, 0)}
 
     await hass.services.async_call(
         "light",
@@ -1288,6 +1393,42 @@ async def test_light_service_call_color_conversion(hass):
                 entity2.entity_id,
                 entity3.entity_id,
                 entity4.entity_id,
+                entity5.entity_id,
+                entity6.entity_id,
+            ],
+            "brightness_pct": 100,
+            "hs_color": (240, 0),
+        },
+        blocking=True,
+    )
+    _, data = entity0.last_call("turn_on")
+    assert data == {"brightness": 255, "hs_color": (240.0, 0.0)}
+    _, data = entity1.last_call("turn_on")
+    assert data == {"brightness": 255, "rgb_color": (255, 255, 255)}
+    _, data = entity2.last_call("turn_on")
+    assert data == {"brightness": 255, "xy_color": (0.323, 0.329)}
+    _, data = entity3.last_call("turn_on")
+    assert data == {"brightness": 255, "hs_color": (240.0, 0.0)}
+    _, data = entity4.last_call("turn_on")
+    assert data == {"brightness": 255, "hs_color": (240.0, 0.0)}
+    _, data = entity5.last_call("turn_on")
+    assert data == {"brightness": 255, "rgbw_color": (0, 0, 0, 255)}
+    _, data = entity6.last_call("turn_on")
+    # The midpoint the the white channels is warm, compensated by adding green + blue
+    assert data == {"brightness": 255, "rgbww_color": (0, 76, 141, 255, 255)}
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [
+                entity0.entity_id,
+                entity1.entity_id,
+                entity2.entity_id,
+                entity3.entity_id,
+                entity4.entity_id,
+                entity5.entity_id,
+                entity6.entity_id,
             ],
             "brightness_pct": 50,
             "rgb_color": (128, 0, 0),
@@ -1304,6 +1445,10 @@ async def test_light_service_call_color_conversion(hass):
     assert data == {"brightness": 128, "rgb_color": (128, 0, 0)}
     _, data = entity4.last_call("turn_on")
     assert data == {"brightness": 128, "hs_color": (0.0, 100.0)}
+    _, data = entity5.last_call("turn_on")
+    assert data == {"brightness": 128, "rgbw_color": (128, 0, 0, 0)}
+    _, data = entity6.last_call("turn_on")
+    assert data == {"brightness": 128, "rgbww_color": (128, 0, 0, 0, 0)}
 
     await hass.services.async_call(
         "light",
@@ -1315,6 +1460,42 @@ async def test_light_service_call_color_conversion(hass):
                 entity2.entity_id,
                 entity3.entity_id,
                 entity4.entity_id,
+                entity5.entity_id,
+                entity6.entity_id,
+            ],
+            "brightness_pct": 50,
+            "rgb_color": (255, 255, 255),
+        },
+        blocking=True,
+    )
+    _, data = entity0.last_call("turn_on")
+    assert data == {"brightness": 128, "hs_color": (0.0, 0.0)}
+    _, data = entity1.last_call("turn_on")
+    assert data == {"brightness": 128, "rgb_color": (255, 255, 255)}
+    _, data = entity2.last_call("turn_on")
+    assert data == {"brightness": 128, "xy_color": (0.323, 0.329)}
+    _, data = entity3.last_call("turn_on")
+    assert data == {"brightness": 128, "rgb_color": (255, 255, 255)}
+    _, data = entity4.last_call("turn_on")
+    assert data == {"brightness": 128, "hs_color": (0.0, 0.0)}
+    _, data = entity5.last_call("turn_on")
+    assert data == {"brightness": 128, "rgbw_color": (0, 0, 0, 255)}
+    _, data = entity6.last_call("turn_on")
+    # The midpoint the the white channels is warm, compensated by adding green + blue
+    assert data == {"brightness": 128, "rgbww_color": (0, 76, 141, 255, 255)}
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [
+                entity0.entity_id,
+                entity1.entity_id,
+                entity2.entity_id,
+                entity3.entity_id,
+                entity4.entity_id,
+                entity5.entity_id,
+                entity6.entity_id,
             ],
             "brightness_pct": 50,
             "xy_color": (0.1, 0.8),
@@ -1331,6 +1512,44 @@ async def test_light_service_call_color_conversion(hass):
     assert data == {"brightness": 128, "xy_color": (0.1, 0.8)}
     _, data = entity4.last_call("turn_on")
     assert data == {"brightness": 128, "hs_color": (125.176, 100.0)}
+    _, data = entity5.last_call("turn_on")
+    assert data == {"brightness": 128, "rgbw_color": (0, 255, 22, 0)}
+    _, data = entity6.last_call("turn_on")
+    assert data == {"brightness": 128, "rgbww_color": (0, 255, 22, 0, 0)}
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [
+                entity0.entity_id,
+                entity1.entity_id,
+                entity2.entity_id,
+                entity3.entity_id,
+                entity4.entity_id,
+                entity5.entity_id,
+                entity6.entity_id,
+            ],
+            "brightness_pct": 50,
+            "xy_color": (0.323, 0.329),
+        },
+        blocking=True,
+    )
+    _, data = entity0.last_call("turn_on")
+    assert data == {"brightness": 128, "hs_color": (0.0, 0.392)}
+    _, data = entity1.last_call("turn_on")
+    assert data == {"brightness": 128, "rgb_color": (255, 254, 254)}
+    _, data = entity2.last_call("turn_on")
+    assert data == {"brightness": 128, "xy_color": (0.323, 0.329)}
+    _, data = entity3.last_call("turn_on")
+    assert data == {"brightness": 128, "xy_color": (0.323, 0.329)}
+    _, data = entity4.last_call("turn_on")
+    assert data == {"brightness": 128, "hs_color": (0.0, 0.392)}
+    _, data = entity5.last_call("turn_on")
+    assert data == {"brightness": 128, "rgbw_color": (1, 0, 0, 255)}
+    _, data = entity6.last_call("turn_on")
+    # The midpoint the the white channels is warm, compensated by adding green + blue
+    assert data == {"brightness": 128, "rgbww_color": (0, 75, 140, 255, 255)}
 
 
 async def test_light_state_color_conversion(hass):

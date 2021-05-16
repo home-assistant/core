@@ -87,7 +87,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     _LOGGER.debug("Adding vacuums %s", dev)
     async_add_entities(dev, True)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     assert platform is not None
 
     platform.async_register_entity_service(
@@ -395,6 +395,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
                     "Zone '%s' was not found for the robot '%s'", zone, self.entity_id
                 )
                 return
+            _LOGGER.info("Start cleaning zone '%s' with robot %s", zone, self.entity_id)
 
         self._clean_state = STATE_CLEANING
         try:

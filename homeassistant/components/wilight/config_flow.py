@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 import pywilight
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
 
 from . import DOMAIN
@@ -22,7 +22,6 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a WiLight config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the WiLight flow."""

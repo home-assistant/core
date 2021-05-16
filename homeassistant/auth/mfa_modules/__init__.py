@@ -12,6 +12,7 @@ from voluptuous.humanize import humanize_error
 from homeassistant import data_entry_flow, requirements
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.decorator import Registry
 
@@ -105,7 +106,7 @@ class SetupFlow(data_entry_flow.FlowHandler):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Handle the first step of setup flow.
 
         Return self.async_show_form(step_id='init') if user_input is None.

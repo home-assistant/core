@@ -1,15 +1,18 @@
 """The SSDP integration."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
-from typing import Any, Mapping
+from typing import Any
 
 import aiohttp
 from async_upnp_client.search import async_search
 from defusedxml import ElementTree
 from netdisco import ssdp, util
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.loader import async_get_ssdp
@@ -43,12 +46,18 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass, config):
     """Set up the SSDP integration."""
 
-    async def initialize(_):
+    async def _async_initialize(_):
         scanner = Scanner(hass, await async_get_ssdp(hass))
         await scanner.async_scan(None)
-        async_track_time_interval(hass, scanner.async_scan, SCAN_INTERVAL)
+        cancel_scan = async_track_time_interval(hass, scanner.async_scan, SCAN_INTERVAL)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, initialize)
+        @callback
+        def _async_stop_scans(event):
+            cancel_scan()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_scans)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_initialize)
 
     return True
 
@@ -179,14 +188,13 @@ class Scanner:
         """Fetch an XML description."""
         session = self.hass.helpers.aiohttp_client.async_get_clientsession()
         try:
-            resp = await session.get(xml_location, timeout=5)
-            xml = await resp.text(errors="replace")
-
-            # Samsung Smart TV sometimes returns an empty document the
-            # first time. Retry once.
-            if not xml:
+            for _ in range(2):
                 resp = await session.get(xml_location, timeout=5)
                 xml = await resp.text(errors="replace")
+                # Samsung Smart TV sometimes returns an empty document the
+                # first time. Retry once.
+                if xml:
+                    break
         except (aiohttp.ClientError, asyncio.TimeoutError) as err:
             _LOGGER.debug("Error fetching %s: %s", xml_location, err)
             return {}

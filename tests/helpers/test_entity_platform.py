@@ -6,8 +6,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.const import PERCENTAGE
-from homeassistant.core import callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, PERCENTAGE
+from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import (
     device_registry as dr,
@@ -592,6 +592,52 @@ async def test_setup_entry_platform_not_ready(hass, caplog):
     assert len(mock_call_later.mock_calls) == 1
 
 
+async def test_setup_entry_platform_not_ready_with_message(hass, caplog):
+    """Test when an entry is not ready yet that includes a message."""
+    async_setup_entry = Mock(side_effect=PlatformNotReady("lp0 on fire"))
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry()
+    ent_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    with patch.object(entity_platform, "async_call_later") as mock_call_later:
+        assert not await ent_platform.async_setup_entry(config_entry)
+
+    full_name = f"{ent_platform.domain}.{config_entry.domain}"
+    assert full_name not in hass.config.components
+    assert len(async_setup_entry.mock_calls) == 1
+
+    assert "Platform test not ready yet" in caplog.text
+    assert "lp0 on fire" in caplog.text
+    assert len(mock_call_later.mock_calls) == 1
+
+
+async def test_setup_entry_platform_not_ready_from_exception(hass, caplog):
+    """Test when an entry is not ready yet that includes the causing exception string."""
+    original_exception = HomeAssistantError("The device dropped the connection")
+    platform_exception = PlatformNotReady()
+    platform_exception.__cause__ = original_exception
+
+    async_setup_entry = Mock(side_effect=platform_exception)
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry()
+    ent_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    with patch.object(entity_platform, "async_call_later") as mock_call_later:
+        assert not await ent_platform.async_setup_entry(config_entry)
+
+    full_name = f"{ent_platform.domain}.{config_entry.domain}"
+    assert full_name not in hass.config.components
+    assert len(async_setup_entry.mock_calls) == 1
+
+    assert "Platform test not ready yet" in caplog.text
+    assert "The device dropped the connection" in caplog.text
+    assert len(mock_call_later.mock_calls) == 1
+
+
 async def test_reset_cancels_retry_setup(hass):
     """Test that resetting a platform will cancel scheduled a setup retry."""
     async_setup_entry = Mock(side_effect=PlatformNotReady)
@@ -611,6 +657,54 @@ async def test_reset_cancels_retry_setup(hass):
     await ent_platform.async_reset()
 
     assert len(mock_call_later.return_value.mock_calls) == 1
+    assert ent_platform._async_cancel_retry_setup is None
+
+
+async def test_reset_cancels_retry_setup_when_not_started(hass):
+    """Test that resetting a platform will cancel scheduled a setup retry when not yet started."""
+    hass.state = CoreState.starting
+    async_setup_entry = Mock(side_effect=PlatformNotReady)
+    initial_listeners = hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED]
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry()
+    ent_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert not await ent_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+    assert (
+        hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED] == initial_listeners + 1
+    )
+    assert ent_platform._async_cancel_retry_setup is not None
+
+    await ent_platform.async_reset()
+    await hass.async_block_till_done()
+    assert hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED] == initial_listeners
+    assert ent_platform._async_cancel_retry_setup is None
+
+
+async def test_stop_shutdown_cancels_retry_setup_and_interval_listener(hass):
+    """Test that shutdown will cancel scheduled a setup retry and interval listener."""
+    async_setup_entry = Mock(side_effect=PlatformNotReady)
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry()
+    ent_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    with patch.object(entity_platform, "async_call_later") as mock_call_later:
+        assert not await ent_platform.async_setup_entry(config_entry)
+
+    assert len(mock_call_later.mock_calls) == 1
+    assert len(mock_call_later.return_value.mock_calls) == 0
+    assert ent_platform._async_cancel_retry_setup is not None
+
+    await ent_platform.async_shutdown()
+
+    assert len(mock_call_later.return_value.mock_calls) == 1
+    assert ent_platform._async_unsub_polling is None
     assert ent_platform._async_cancel_retry_setup is None
 
 
@@ -727,7 +821,7 @@ async def test_device_info_called(hass):
                     unique_id="qwer",
                     device_info={
                         "identifiers": {("hue", "1234")},
-                        "connections": {("mac", "abcd")},
+                        "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
                         "manufacturer": "test-manuf",
                         "model": "test-model",
                         "name": "test-name",
@@ -755,7 +849,7 @@ async def test_device_info_called(hass):
     device = registry.async_get_device({("hue", "1234")})
     assert device is not None
     assert device.identifiers == {("hue", "1234")}
-    assert device.connections == {("mac", "abcd")}
+    assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "abcd")}
     assert device.manufacturer == "test-manuf"
     assert device.model == "test-model"
     assert device.name == "test-name"
@@ -770,7 +864,7 @@ async def test_device_info_not_overrides(hass):
     registry = dr.async_get(hass)
     device = registry.async_get_or_create(
         config_entry_id="bla",
-        connections={("mac", "abcd")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "abcd")},
         manufacturer="test-manufacturer",
         model="test-model",
     )
@@ -785,7 +879,7 @@ async def test_device_info_not_overrides(hass):
                 MockEntity(
                     unique_id="qwer",
                     device_info={
-                        "connections": {("mac", "abcd")},
+                        "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
                         "default_name": "default name 1",
                         "default_model": "default model 1",
                         "default_manufacturer": "default manufacturer 1",
@@ -804,7 +898,7 @@ async def test_device_info_not_overrides(hass):
     assert await entity_platform.async_setup_entry(config_entry)
     await hass.async_block_till_done()
 
-    device2 = registry.async_get_device(set(), {("mac", "abcd")})
+    device2 = registry.async_get_device(set(), {(dr.CONNECTION_NETWORK_MAC, "abcd")})
     assert device2 is not None
     assert device.id == device2.id
     assert device2.manufacturer == "test-manufacturer"
@@ -832,7 +926,7 @@ async def test_entity_disabled_by_integration(hass):
     entry_default = registry.async_get_or_create(DOMAIN, DOMAIN, "default")
     assert entry_default.disabled_by is None
     entry_disabled = registry.async_get_or_create(DOMAIN, DOMAIN, "disabled")
-    assert entry_disabled.disabled_by == "integration"
+    assert entry_disabled.disabled_by == er.DISABLED_INTEGRATION
 
 
 async def test_entity_info_added_to_entity_registry(hass):

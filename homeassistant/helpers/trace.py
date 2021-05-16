@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import wraps
-from typing import Any, Callable, Deque, Generator, cast
+from typing import Any, Callable, cast
 
 from homeassistant.helpers.typing import TemplateVarsType
 import homeassistant.util.dt as dt_util
@@ -51,6 +52,11 @@ class TraceElement:
         """Set result."""
         self._result = {**kwargs}
 
+    def update_result(self, **kwargs: Any) -> None:
+        """Set result."""
+        old_result = self._result or {}
+        self._result = {**old_result, **kwargs}
+
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this TraceElement."""
         result: dict[str, Any] = {"path": self.path, "timestamp": self._timestamp}
@@ -71,7 +77,7 @@ class TraceElement:
 
 # Context variables for tracing
 # Current trace
-trace_cv: ContextVar[dict[str, Deque[TraceElement]] | None] = ContextVar(
+trace_cv: ContextVar[dict[str, deque[TraceElement]] | None] = ContextVar(
     "trace_cv", default=None
 )
 # Stack of TraceElements
@@ -87,6 +93,10 @@ variables_cv: ContextVar[Any | None] = ContextVar("variables_cv", default=None)
 # (domain, item_id) + Run ID
 trace_id_cv: ContextVar[tuple[str, str] | None] = ContextVar(
     "trace_id_cv", default=None
+)
+# Reason for stopped script execution
+script_execution_cv: ContextVar[StopReason | None] = ContextVar(
+    "script_execution_cv", default=None
 )
 
 
@@ -159,7 +169,7 @@ def trace_append_element(
     trace[path].append(trace_element)
 
 
-def trace_get(clear: bool = True) -> dict[str, Deque[TraceElement]] | None:
+def trace_get(clear: bool = True) -> dict[str, deque[TraceElement]] | None:
     """Return the current trace."""
     if clear:
         trace_clear()
@@ -172,6 +182,7 @@ def trace_clear() -> None:
     trace_stack_cv.set(None)
     trace_path_stack_cv.set(None)
     variables_cv.set(None)
+    script_execution_cv.set(StopReason())
 
 
 def trace_set_child_id(child_key: tuple[str, str], child_run_id: str) -> None:
@@ -185,6 +196,28 @@ def trace_set_result(**kwargs: Any) -> None:
     """Set the result of TraceElement at the top of the stack."""
     node = cast(TraceElement, trace_stack_top(trace_stack_cv))
     node.set_result(**kwargs)
+
+
+class StopReason:
+    """Mutable container class for script_execution."""
+
+    script_execution: str | None = None
+
+
+def script_execution_set(reason: str) -> None:
+    """Set stop reason."""
+    data = script_execution_cv.get()
+    if data is None:
+        return
+    data.script_execution = reason
+
+
+def script_execution_get() -> str | None:
+    """Return the current trace."""
+    data = script_execution_cv.get()
+    if data is None:
+        return None
+    return data.script_execution
 
 
 @contextmanager

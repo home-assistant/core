@@ -34,7 +34,8 @@
                 "data": {
                     "name": "Nome del servizio di notifica (la modifica richiede il riavvio)",
                     "recipient": "Destinatari della notifica SMS",
-                    "track_new_devices": "Traccia nuovi dispositivi"
+                    "track_new_devices": "Traccia nuovi dispositivi",
+                    "track_wired_clients": "Tieni traccia dei client di rete cablata"
                 }
             }
         }

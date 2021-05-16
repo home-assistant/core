@@ -10,7 +10,7 @@ from smarttub import APIError, LoginFailed, SmartTub
 from smarttub.api import Account
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -37,7 +37,6 @@ class SmartTubController:
         self._hass = hass
         self._account = None
         self.spas = set()
-        self._spa_devices = {}
 
         self.coordinator = None
 
@@ -52,10 +51,9 @@ class SmartTubController:
             self._account = await self.login(
                 entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD]
             )
-        except LoginFailed:
+        except LoginFailed as ex:
             # credentials were changed or invalidated, we need new ones
-
-            return False
+            raise ConfigEntryAuthFailed from ex
         except (
             asyncio.TimeoutError,
             client_exceptions.ClientOSError,
@@ -94,16 +92,14 @@ class SmartTubController:
         return data
 
     async def _get_spa_data(self, spa):
-        status, pumps, lights, reminders = await asyncio.gather(
-            spa.get_status(),
-            spa.get_pumps(),
-            spa.get_lights(),
+        full_status, reminders = await asyncio.gather(
+            spa.get_status_full(),
             spa.get_reminders(),
         )
         return {
-            ATTR_STATUS: status,
-            ATTR_PUMPS: {pump.id: pump for pump in pumps},
-            ATTR_LIGHTS: {light.zone: light for light in lights},
+            ATTR_STATUS: full_status,
+            ATTR_PUMPS: {pump.id: pump for pump in full_status.pumps},
+            ATTR_LIGHTS: {light.zone: light for light in full_status.lights},
             ATTR_REMINDERS: {reminder.id: reminder for reminder in reminders},
         }
 
@@ -111,14 +107,13 @@ class SmartTubController:
         """Register devices with the device registry for all spas."""
         device_registry = await dr.async_get_registry(self._hass)
         for spa in self.spas:
-            device = device_registry.async_get_or_create(
+            device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
                 identifiers={(DOMAIN, spa.id)},
                 manufacturer=spa.brand,
                 name=get_spa_name(spa),
                 model=spa.model,
             )
-            self._spa_devices[spa.id] = device
 
     async def login(self, email, password) -> Account:
         """Retrieve the account corresponding to the specified email and password.

@@ -1,14 +1,16 @@
 """Support for exposing Home Assistant via Zeroconf."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from contextlib import suppress
 import fnmatch
-from functools import partial
 import ipaddress
+from ipaddress import ip_address
 import logging
 import socket
-from typing import Any, TypedDict
+from typing import Any, TypedDict, cast
 
+from pyroute2 import IPRoute
 import voluptuous as vol
 from zeroconf import (
     Error as ZeroconfError,
@@ -20,7 +22,7 @@ from zeroconf import (
     Zeroconf,
 )
 
-from homeassistant import util
+from homeassistant import config_entries, util
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
@@ -30,10 +32,10 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.singleton import singleton
-from homeassistant.loader import async_get_homekit, async_get_zeroconf
+from homeassistant.loader import async_get_homekit, async_get_zeroconf, bind_hass
+from homeassistant.util.network import is_loopback
 
-from .models import HaServiceBrowser, HaZeroconf
+from .models import HaAsyncZeroconf, HaServiceBrowser, HaZeroconf
 from .usage import install_multiple_zeroconf_catcher
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,6 +57,8 @@ DEFAULT_IPV6 = True
 HOMEKIT_PAIRED_STATUS_FLAG = "sf"
 HOMEKIT_MODEL = "md"
 
+MDNS_TARGET_IP = "224.0.0.251"
+
 # Property key=value has a max length of 255
 # so we use 230 to leave space for key=
 MAX_PROPERTY_VALUE_LEN = 230
@@ -66,9 +70,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(
-                    CONF_DEFAULT_INTERFACE, default=DEFAULT_DEFAULT_INTERFACE
-                ): cv.boolean,
+                vol.Optional(CONF_DEFAULT_INTERFACE): cv.boolean,
                 vol.Optional(CONF_IPV6, default=DEFAULT_IPV6): cv.boolean,
             }
         )
@@ -88,16 +90,26 @@ class HaServiceInfo(TypedDict):
     properties: dict[str, Any]
 
 
-@singleton(DOMAIN)
+@bind_hass
 async def async_get_instance(hass: HomeAssistant) -> HaZeroconf:
+    """Zeroconf instance to be shared with other integrations that use it."""
+    return cast(HaZeroconf, (await _async_get_instance(hass)).zeroconf)
+
+
+@bind_hass
+async def async_get_async_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
     """Zeroconf instance to be shared with other integrations that use it."""
     return await _async_get_instance(hass)
 
 
-async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaZeroconf:
+async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZeroconf:
+    if DOMAIN in hass.data:
+        return cast(HaAsyncZeroconf, hass.data[DOMAIN])
+
     logging.getLogger("zeroconf").setLevel(logging.NOTSET)
 
-    zeroconf = await hass.async_add_executor_job(partial(HaZeroconf, **zcargs))
+    aio_zc = HaAsyncZeroconf(**zcargs)
+    zeroconf = cast(HaZeroconf, aio_zc.zeroconf)
 
     install_multiple_zeroconf_catcher(zeroconf)
 
@@ -106,20 +118,70 @@ async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaZeroconf:
         zeroconf.ha_close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_zeroconf)
+    hass.data[DOMAIN] = aio_zc
 
-    return zeroconf
+    return aio_zc
+
+
+def _get_ip_route(dst_ip: str) -> Any:
+    """Get ip next hop."""
+    return IPRoute().route("get", dst=dst_ip)
+
+
+def _first_ip_nexthop_from_route(routes: Iterable) -> None | str:
+    """Find the first RTA_PREFSRC in the routes."""
+    _LOGGER.debug("Routes: %s", routes)
+    for route in routes:
+        for key, value in route["attrs"]:
+            if key == "RTA_PREFSRC":
+                return cast(str, value)
+    return None
+
+
+async def async_detect_interfaces_setting(hass: HomeAssistant) -> InterfaceChoice:
+    """Auto detect the interfaces setting when unset."""
+    routes = []
+    try:
+        routes = await hass.async_add_executor_job(_get_ip_route, MDNS_TARGET_IP)
+    except Exception as ex:  # pylint: disable=broad-except
+        _LOGGER.debug(
+            "The system could not auto detect routing data on your operating system; Zeroconf will broadcast on all interfaces",
+            exc_info=ex,
+        )
+        return InterfaceChoice.All
+
+    if not (first_ip := _first_ip_nexthop_from_route(routes)):
+        _LOGGER.debug(
+            "The system could not auto detect the nexthop for %s on your operating system; Zeroconf will broadcast on all interfaces",
+            MDNS_TARGET_IP,
+        )
+        return InterfaceChoice.All
+
+    if is_loopback(ip_address(first_ip)):
+        _LOGGER.debug(
+            "The next hop for %s is %s; Zeroconf will broadcast on all interfaces",
+            MDNS_TARGET_IP,
+            first_ip,
+        )
+        return InterfaceChoice.All
+
+    return InterfaceChoice.Default
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up Zeroconf and make Home Assistant discoverable."""
     zc_config = config.get(DOMAIN, {})
     zc_args: dict = {}
-    if zc_config.get(CONF_DEFAULT_INTERFACE, DEFAULT_DEFAULT_INTERFACE):
+
+    if CONF_DEFAULT_INTERFACE not in zc_config:
+        zc_args["interfaces"] = await async_detect_interfaces_setting(hass)
+    elif zc_config[CONF_DEFAULT_INTERFACE]:
         zc_args["interfaces"] = InterfaceChoice.Default
     if not zc_config.get(CONF_IPV6, DEFAULT_IPV6):
         zc_args["ip_version"] = IPVersion.V4Only
 
-    zeroconf = hass.data[DOMAIN] = await _async_get_instance(hass, **zc_args)
+    aio_zc = await _async_get_instance(hass, **zc_args)
+    zeroconf = aio_zc.zeroconf
 
     async def _async_zeroconf_hass_start(_event: Event) -> None:
         """Expose Home Assistant on zeroconf when it starts.
@@ -127,9 +189,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         Wait till started or otherwise HTTP is not up and running.
         """
         uuid = await hass.helpers.instance_id.async_get()
-        await hass.async_add_executor_job(
-            _register_hass_zc_service, hass, zeroconf, uuid
-        )
+        await _async_register_hass_zc_service(hass, aio_zc, uuid)
 
     async def _async_zeroconf_hass_started(_event: Event) -> None:
         """Start the service browser."""
@@ -144,8 +204,8 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
 
 
-def _register_hass_zc_service(
-    hass: HomeAssistant, zeroconf: HaZeroconf, uuid: str
+async def _async_register_hass_zc_service(
+    hass: HomeAssistant, aio_zc: HaAsyncZeroconf, uuid: str
 ) -> None:
     # Get instance UUID
     valid_location_name = _truncate_location_name_to_valid(hass.config.location_name)
@@ -192,7 +252,7 @@ def _register_hass_zc_service(
 
     _LOGGER.info("Starting Zeroconf broadcast")
     try:
-        zeroconf.register_service(info)
+        await aio_zc.async_register_service(info)
     except NonUniqueNameException:
         _LOGGER.error(
             "Home Assistant instance with identical name present in the local network"
@@ -200,7 +260,7 @@ def _register_hass_zc_service(
 
 
 async def _async_start_zeroconf_browser(
-    hass: HomeAssistant, zeroconf: HaZeroconf
+    hass: HomeAssistant, zeroconf: Zeroconf
 ) -> None:
     """Start the zeroconf browser."""
 
@@ -279,26 +339,38 @@ async def _async_start_zeroconf_browser(
         else:
             uppercase_mac = None
 
+        if "manufacturer" in info["properties"]:
+            lowercase_manufacturer: str | None = info["properties"][
+                "manufacturer"
+            ].lower()
+        else:
+            lowercase_manufacturer = None
+
         # Not all homekit types are currently used for discovery
         # so not all service type exist in zeroconf_types
-        for entry in zeroconf_types.get(service_type, []):
-            if len(entry) > 1:
-                if (
-                    uppercase_mac is not None
-                    and "macaddress" in entry
-                    and not fnmatch.fnmatch(uppercase_mac, entry["macaddress"])
+        for matcher in zeroconf_types.get(service_type, []):
+            if len(matcher) > 1:
+                if "macaddress" in matcher and (
+                    uppercase_mac is None
+                    or not fnmatch.fnmatch(uppercase_mac, matcher["macaddress"])
                 ):
                     continue
-                if (
-                    lowercase_name is not None
-                    and "name" in entry
-                    and not fnmatch.fnmatch(lowercase_name, entry["name"])
+                if "name" in matcher and (
+                    lowercase_name is None
+                    or not fnmatch.fnmatch(lowercase_name, matcher["name"])
+                ):
+                    continue
+                if "manufacturer" in matcher and (
+                    lowercase_manufacturer is None
+                    or not fnmatch.fnmatch(
+                        lowercase_manufacturer, matcher["manufacturer"]
+                    )
                 ):
                     continue
 
             hass.add_job(
                 hass.config_entries.flow.async_init(
-                    entry["domain"], context={"source": DOMAIN}, data=info
+                    matcher["domain"], context={"source": DOMAIN}, data=info
                 )  # type: ignore
             )
 
@@ -334,7 +406,9 @@ def handle_homekit(
 
         hass.add_job(
             hass.config_entries.flow.async_init(
-                homekit_models[test_model], context={"source": "homekit"}, data=info
+                homekit_models[test_model],
+                context={"source": config_entries.SOURCE_HOMEKIT},
+                data=info,
             )  # type: ignore
         )
         return True

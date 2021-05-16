@@ -6,7 +6,7 @@ from python_awair.exceptions import AuthError, AwairError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.awair.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN
 
 from .const import CONFIG, DEVICES_FIXTURE, NO_DEVICES_FIXTURE, UNIQUE_ID, USER_FIXTURE
@@ -156,7 +156,7 @@ async def test_reauth(hass):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reauth", "unique_id": UNIQUE_ID},
+            context={"source": SOURCE_REAUTH, "unique_id": UNIQUE_ID},
             data=CONFIG,
         )
 
@@ -166,7 +166,7 @@ async def test_reauth(hass):
     with patch("python_awair.AwairClient.query", side_effect=AuthError()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reauth", "unique_id": UNIQUE_ID},
+            context={"source": SOURCE_REAUTH, "unique_id": UNIQUE_ID},
             data=CONFIG,
         )
 
@@ -175,7 +175,7 @@ async def test_reauth(hass):
     with patch("python_awair.AwairClient.query", side_effect=AwairError()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": "reauth", "unique_id": UNIQUE_ID},
+            context={"source": SOURCE_REAUTH, "unique_id": UNIQUE_ID},
             data=CONFIG,
         )
 

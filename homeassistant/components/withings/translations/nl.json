@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Configuratie bijgewerkt voor profiel.",
             "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
-            "missing_configuration": "De Netatmo-component is niet geconfigureerd. Gelieve de documentatie volgen.",
+            "missing_configuration": "De component is niet geconfigureerd. Gelieve de documentatie volgen.",
             "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})"
         },
         "create_entry": {
@@ -25,7 +25,7 @@
                 "title": "Gebruikersprofiel."
             },
             "reauth": {
-                "description": "Het \"{profile}\" profiel moet opnieuw worden geverifieerd om Withings gegevens te kunnen blijven ontvangen.",
+                "description": "Het {profile} \" moet opnieuw worden geverifieerd om Withings-gegevens te blijven ontvangen.",
                 "title": "Verifieer de integratie opnieuw"
             }
         }

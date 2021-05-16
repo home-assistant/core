@@ -50,7 +50,7 @@ class SmartTubLight(SmartTubEntity, LightEntity):
     @property
     def light(self) -> SpaLight:
         """Return the underlying SpaLight object for this entity."""
-        return self.coordinator.data[self.spa.id]["lights"][self.light_zone]
+        return self.coordinator.data[self.spa.id][ATTR_LIGHTS][self.light_zone]
 
     @property
     def unique_id(self) -> str:

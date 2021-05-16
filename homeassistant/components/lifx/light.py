@@ -175,7 +175,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             # Priority 3: default interface
             interfaces = [{}]
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     lifx_manager = LIFXManager(hass, platform, async_add_entities)
     hass.data[DATA_LIFX_MANAGER] = lifx_manager
 
@@ -200,6 +200,12 @@ def find_hsbk(hass, **kwargs):
 
     if ATTR_HS_COLOR in kwargs:
         hue, saturation = kwargs[ATTR_HS_COLOR]
+    elif ATTR_RGB_COLOR in kwargs:
+        hue, saturation = color_util.color_RGB_to_hs(*kwargs[ATTR_RGB_COLOR])
+    elif ATTR_XY_COLOR in kwargs:
+        hue, saturation = color_util.color_xy_to_hs(*kwargs[ATTR_XY_COLOR])
+
+    if hue is not None:
         hue = int(hue / 360 * 65535)
         saturation = int(saturation / 100 * 65535)
         kelvin = 3500

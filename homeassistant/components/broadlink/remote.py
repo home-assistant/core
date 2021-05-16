@@ -387,7 +387,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
 
             raise TimeoutError(
                 "No infrared code received within "
-                f"{LEARNING_TIMEOUT.seconds} seconds"
+                f"{LEARNING_TIMEOUT.total_seconds()} seconds"
             )
 
         finally:
@@ -425,7 +425,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
                 )
                 raise TimeoutError(
                     "No radiofrequency found within "
-                    f"{LEARNING_TIMEOUT.seconds} seconds"
+                    f"{LEARNING_TIMEOUT.total_seconds()} seconds"
                 )
 
         finally:
@@ -460,7 +460,7 @@ class BroadlinkRemote(RemoteEntity, RestoreEntity):
 
             raise TimeoutError(
                 "No radiofrequency code received within "
-                f"{LEARNING_TIMEOUT.seconds} seconds"
+                f"{LEARNING_TIMEOUT.total_seconds()} seconds"
             )
 
         finally:

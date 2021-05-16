@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from datetime import datetime
 from ipaddress import ip_address
 import logging
 from socket import gethostbyaddr, herror
+from typing import Any, Final
 
-from aiohttp.web import middleware
+from aiohttp.web import Application, Request, StreamResponse, middleware
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
@@ -19,33 +21,33 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util, yaml
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
+from .view import HomeAssistantView
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
-KEY_BANNED_IPS = "ha_banned_ips"
-KEY_FAILED_LOGIN_ATTEMPTS = "ha_failed_login_attempts"
-KEY_LOGIN_THRESHOLD = "ha_login_threshold"
+KEY_BANNED_IPS: Final = "ha_banned_ips"
+KEY_FAILED_LOGIN_ATTEMPTS: Final = "ha_failed_login_attempts"
+KEY_LOGIN_THRESHOLD: Final = "ha_login_threshold"
 
-NOTIFICATION_ID_BAN = "ip-ban"
-NOTIFICATION_ID_LOGIN = "http-login"
+NOTIFICATION_ID_BAN: Final = "ip-ban"
+NOTIFICATION_ID_LOGIN: Final = "http-login"
 
-IP_BANS_FILE = "ip_bans.yaml"
-ATTR_BANNED_AT = "banned_at"
+IP_BANS_FILE: Final = "ip_bans.yaml"
+ATTR_BANNED_AT: Final = "banned_at"
 
-SCHEMA_IP_BAN_ENTRY = vol.Schema(
+SCHEMA_IP_BAN_ENTRY: Final = vol.Schema(
     {vol.Optional("banned_at"): vol.Any(None, cv.datetime)}
 )
 
 
 @callback
-def setup_bans(hass, app, login_threshold):
+def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> None:
     """Create IP Ban middleware for the app."""
     app.middlewares.append(ban_middleware)
     app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict(int)
     app[KEY_LOGIN_THRESHOLD] = login_threshold
 
-    async def ban_startup(app):
+    async def ban_startup(app: Application) -> None:
         """Initialize bans when app starts up."""
         app[KEY_BANNED_IPS] = await async_load_ip_bans_config(
             hass, hass.config.path(IP_BANS_FILE)
@@ -55,7 +57,9 @@ def setup_bans(hass, app, login_threshold):
 
 
 @middleware
-async def ban_middleware(request, handler):
+async def ban_middleware(
+    request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
+) -> StreamResponse:
     """IP Ban middleware."""
     if KEY_BANNED_IPS not in request.app:
         _LOGGER.error("IP Ban middleware loaded but banned IPs not loaded")
@@ -77,10 +81,14 @@ async def ban_middleware(request, handler):
         raise
 
 
-def log_invalid_auth(func):
+def log_invalid_auth(
+    func: Callable[..., Awaitable[StreamResponse]]
+) -> Callable[..., Awaitable[StreamResponse]]:
     """Decorate function to handle invalid auth or failed login attempts."""
 
-    async def handle_req(view, request, *args, **kwargs):
+    async def handle_req(
+        view: HomeAssistantView, request: Request, *args: Any, **kwargs: Any
+    ) -> StreamResponse:
         """Try to log failed login attempts if response status >= 400."""
         resp = await func(view, request, *args, **kwargs)
         if resp.status >= HTTP_BAD_REQUEST:
@@ -90,7 +98,7 @@ def log_invalid_auth(func):
     return handle_req
 
 
-async def process_wrong_login(request):
+async def process_wrong_login(request: Request) -> None:
     """Process a wrong login attempt.
 
     Increase failed login attempts counter for remote IP address.
@@ -152,7 +160,7 @@ async def process_wrong_login(request):
         )
 
 
-async def process_success_login(request):
+async def process_success_login(request: Request) -> None:
     """Process a success login attempt.
 
     Reset failed login attempts counter for remote IP address.

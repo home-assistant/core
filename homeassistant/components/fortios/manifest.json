@@ -3,5 +3,6 @@
   "name": "FortiOS",
   "documentation": "https://www.home-assistant.io/integrations/fortios/",
   "requirements": ["fortiosapi==0.10.8"],
-  "codeowners": ["@kimfrellsen"]
+  "codeowners": ["@kimfrellsen"],
+  "iot_class": "local_polling"
 }

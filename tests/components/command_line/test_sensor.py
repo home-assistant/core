@@ -1,14 +1,15 @@
 """The tests for the Command line sensor platform."""
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant import setup
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.helpers.typing import Any, Dict, HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 
-async def setup_test_entities(
-    hass: HomeAssistantType, config_dict: Dict[str, Any]
-) -> None:
+async def setup_test_entities(hass: HomeAssistant, config_dict: dict[str, Any]) -> None:
     """Set up a test command line sensor entity."""
     assert await setup.async_setup_component(
         hass,
@@ -30,7 +31,7 @@ async def setup_test_entities(
     await hass.async_block_till_done()
 
 
-async def test_setup(hass: HomeAssistantType) -> None:
+async def test_setup(hass: HomeAssistant) -> None:
     """Test sensor setup."""
     await setup_test_entities(
         hass,
@@ -46,7 +47,7 @@ async def test_setup(hass: HomeAssistantType) -> None:
     assert entity_state.attributes["unit_of_measurement"] == "in"
 
 
-async def test_template(hass: HomeAssistantType) -> None:
+async def test_template(hass: HomeAssistant) -> None:
     """Test command sensor with template."""
     await setup_test_entities(
         hass,
@@ -61,7 +62,7 @@ async def test_template(hass: HomeAssistantType) -> None:
     assert float(entity_state.state) == 5
 
 
-async def test_template_render(hass: HomeAssistantType) -> None:
+async def test_template_render(hass: HomeAssistant) -> None:
     """Ensure command with templates get rendered properly."""
 
     await setup_test_entities(
@@ -75,7 +76,7 @@ async def test_template_render(hass: HomeAssistantType) -> None:
     assert entity_state.state == "template_value"
 
 
-async def test_template_render_with_quote(hass: HomeAssistantType) -> None:
+async def test_template_render_with_quote(hass: HomeAssistant) -> None:
     """Ensure command with templates and quotes get rendered properly."""
 
     with patch(
@@ -96,7 +97,7 @@ async def test_template_render_with_quote(hass: HomeAssistantType) -> None:
         )
 
 
-async def test_bad_template_render(caplog: Any, hass: HomeAssistantType) -> None:
+async def test_bad_template_render(caplog: Any, hass: HomeAssistant) -> None:
     """Test rendering a broken template."""
 
     await setup_test_entities(
@@ -109,7 +110,7 @@ async def test_bad_template_render(caplog: Any, hass: HomeAssistantType) -> None
     assert "Error rendering command template" in caplog.text
 
 
-async def test_bad_command(hass: HomeAssistantType) -> None:
+async def test_bad_command(hass: HomeAssistant) -> None:
     """Test bad command."""
     await setup_test_entities(
         hass,
@@ -122,7 +123,7 @@ async def test_bad_command(hass: HomeAssistantType) -> None:
     assert entity_state.state == "unknown"
 
 
-async def test_update_with_json_attrs(hass: HomeAssistantType) -> None:
+async def test_update_with_json_attrs(hass: HomeAssistant) -> None:
     """Test attributes get extracted from a JSON result."""
     await setup_test_entities(
         hass,
@@ -139,7 +140,7 @@ async def test_update_with_json_attrs(hass: HomeAssistantType) -> None:
     assert entity_state.attributes["key_three"] == "value_three"
 
 
-async def test_update_with_json_attrs_no_data(caplog, hass: HomeAssistantType) -> None:  # type: ignore[no-untyped-def]
+async def test_update_with_json_attrs_no_data(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
     """Test attributes when no JSON result fetched."""
 
     await setup_test_entities(
@@ -155,7 +156,7 @@ async def test_update_with_json_attrs_no_data(caplog, hass: HomeAssistantType) -
     assert "Empty reply found when expecting JSON data" in caplog.text
 
 
-async def test_update_with_json_attrs_not_dict(caplog, hass: HomeAssistantType) -> None:  # type: ignore[no-untyped-def]
+async def test_update_with_json_attrs_not_dict(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
     """Test attributes when the return value not a dict."""
 
     await setup_test_entities(
@@ -171,7 +172,7 @@ async def test_update_with_json_attrs_not_dict(caplog, hass: HomeAssistantType) 
     assert "JSON result was not a dictionary" in caplog.text
 
 
-async def test_update_with_json_attrs_bad_json(caplog, hass: HomeAssistantType) -> None:  # type: ignore[no-untyped-def]
+async def test_update_with_json_attrs_bad_json(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
     """Test attributes when the return value is invalid JSON."""
 
     await setup_test_entities(
@@ -187,7 +188,7 @@ async def test_update_with_json_attrs_bad_json(caplog, hass: HomeAssistantType) 
     assert "Unable to parse output as JSON" in caplog.text
 
 
-async def test_update_with_missing_json_attrs(caplog, hass: HomeAssistantType) -> None:  # type: ignore[no-untyped-def]
+async def test_update_with_missing_json_attrs(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
     """Test attributes when an expected key is missing."""
 
     await setup_test_entities(
@@ -206,7 +207,7 @@ async def test_update_with_missing_json_attrs(caplog, hass: HomeAssistantType) -
     assert "missing_key" not in entity_state.attributes
 
 
-async def test_update_with_unnecessary_json_attrs(caplog, hass: HomeAssistantType) -> None:  # type: ignore[no-untyped-def]
+async def test_update_with_unnecessary_json_attrs(caplog, hass: HomeAssistant) -> None:  # type: ignore[no-untyped-def]
     """Test attributes when an expected key is missing."""
 
     await setup_test_entities(

@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Gagal terhubung"
         },
+        "flow_title": "ZHA: {name}",
         "step": {
             "pick_radio": {
                 "data": {

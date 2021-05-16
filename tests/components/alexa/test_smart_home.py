@@ -231,7 +231,11 @@ async def test_dimmable_light(hass):
     device = (
         "light.test_2",
         "on",
-        {"brightness": 128, "friendly_name": "Test light 2", "supported_features": 1},
+        {
+            "brightness": 128,
+            "friendly_name": "Test light 2",
+            "supported_color_modes": ["brightness"],
+        },
     )
     appliance = await discovery_test(device, hass)
 
@@ -262,14 +266,18 @@ async def test_dimmable_light(hass):
     assert call.data["brightness_pct"] == 50
 
 
-async def test_color_light(hass):
+@pytest.mark.parametrize(
+    "supported_color_modes",
+    [["color_temp", "hs"], ["color_temp", "rgb"], ["color_temp", "xy"]],
+)
+async def test_color_light(hass, supported_color_modes):
     """Test color light discovery."""
     device = (
         "light.test_3",
         "on",
         {
             "friendly_name": "Test light 3",
-            "supported_features": 19,
+            "supported_color_modes": supported_color_modes,
             "min_mireds": 142,
             "color_temp": "333",
         },

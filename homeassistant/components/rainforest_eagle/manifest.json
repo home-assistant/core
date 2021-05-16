@@ -3,5 +3,6 @@
   "name": "Rainforest Eagle-200",
   "documentation": "https://www.home-assistant.io/integrations/rainforest_eagle",
   "requirements": ["eagle200_reader==0.2.4", "uEagle==0.0.2"],
-  "codeowners": ["@gtdiehl", "@jcalbert"]
+  "codeowners": ["@gtdiehl", "@jcalbert"],
+  "iot_class": "local_polling"
 }

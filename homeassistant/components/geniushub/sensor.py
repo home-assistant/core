@@ -6,7 +6,8 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN, GeniusDevice, GeniusEntity
@@ -21,7 +22,7 @@ GH_LEVEL_MAPPING = {
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ) -> None:
     """Set up the Genius Hub sensor entities."""
     if discovery_info is None:

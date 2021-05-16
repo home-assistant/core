@@ -37,10 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             config_entry_id=config_entry.entry_id, **account.device_info(device)
         )
 
-    for domain in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, domain)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     async def async_set_scan_interval(call):
         """Set scan interval."""
@@ -85,7 +82,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         ),
     )
 
-    config_entry.add_update_listener(async_options_updated)
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(async_options_updated)
+    )
     await async_options_updated(hass, config_entry)
 
     return True
@@ -93,12 +92,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    for domain in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, domain)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
 
     account: StarlineAccount = hass.data[DOMAIN][config_entry.entry_id]
     account.unload()
-    return True
+    return unload_ok
 
 
 async def async_options_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:

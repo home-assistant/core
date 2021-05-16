@@ -14,10 +14,10 @@
                 "data": {
                     "country_code": "Din landskode for kontoen din (f.eks. 1 for USA eller 86 for Kina)",
                     "password": "Passord",
-                    "platform": "Appen der kontoen din registreres",
+                    "platform": "Appen der kontoen din er registrert",
                     "username": "Brukernavn"
                 },
-                "description": "Skriv inn din Tuya-legitimasjon.",
+                "description": "Angi Tuya-legitimasjonen din.",
                 "title": ""
             }
         }

@@ -11,15 +11,6 @@
             "unknown": "Onverwachte fout"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "email": "E-mail",
-                    "password": "Wachtwoord",
-                    "region": "Regio"
-                },
-                "description": "Verificatie mislukt voor Mazda Connected Services. Voer uw huidige inloggegevens in.",
-                "title": "Mazda Connected Services - Authenticatie mislukt"
-            },
             "user": {
                 "data": {
                     "email": "E-mail",

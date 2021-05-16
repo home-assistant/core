@@ -15,6 +15,7 @@
                     "file_path": "Pfad und Name der UPStart UPB-Exportdatei.",
                     "protocol": "Protokoll"
                 },
+                "description": "Schlie\u00dfe ein Universal Powerline Bus Powerline Interface Module (UPB PIM) an. Der Adress-String muss in der Form 'address[:port]' f\u00fcr 'TCP' vorliegen. Der Port ist optional und standardm\u00e4\u00dfig auf 2101 eingestellt. Beispiel: '192.168.1.42'. F\u00fcr das serielle Protokoll muss die Adresse die Form 'tty[:baud]' haben. Die Baudrate ist optional und standardm\u00e4\u00dfig auf 4800 eingestellt. Beispiel: '/dev/ttyS1'.",
                 "title": "Stelle eine Verbindung zu UPB PIM her"
             }
         }

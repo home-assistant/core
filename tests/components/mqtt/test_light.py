@@ -161,7 +161,13 @@ import pytest
 
 from homeassistant import config as hass_config
 from homeassistant.components import light
-from homeassistant.const import ATTR_ASSUMED_STATE, SERVICE_RELOAD, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_SUPPORTED_FEATURES,
+    SERVICE_RELOAD,
+    STATE_OFF,
+    STATE_ON,
+)
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
@@ -204,6 +210,27 @@ async def test_fail_setup_if_no_command_topic(hass, mqtt_mock):
     )
     await hass.async_block_till_done()
     assert hass.states.get("light.test") is None
+
+
+async def test_rgb_light(hass, mqtt_mock):
+    """Test RGB light flags brightness support."""
+    assert await async_setup_component(
+        hass,
+        light.DOMAIN,
+        {
+            light.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "test_light_rgb/set",
+                "rgb_command_topic": "test_light_rgb/rgb/set",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test")
+    expected_features = light.SUPPORT_COLOR | light.SUPPORT_BRIGHTNESS
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
 
 
 async def test_no_color_brightness_color_temp_hs_white_xy_if_no_topics(hass, mqtt_mock):

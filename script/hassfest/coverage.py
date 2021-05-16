@@ -51,7 +51,6 @@ ALLOWED_IGNORE_VIOLATIONS = {
     ("sense", "config_flow.py"),
     ("sms", "config_flow.py"),
     ("solarlog", "config_flow.py"),
-    ("somfy", "config_flow.py"),
     ("sonos", "config_flow.py"),
     ("speedtestdotnet", "config_flow.py"),
     ("spider", "config_flow.py"),

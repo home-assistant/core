@@ -6,7 +6,9 @@
             "updated_entry": "Dieser Eintrag wurde bereits eingerichtet, aber der Name, die Apps und / oder die in der Konfiguration definierten Optionen stimmen nicht mit der zuvor importierten Konfiguration \u00fcberein, sodass der Konfigurationseintrag entsprechend aktualisiert wurde."
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen"
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "complete_pairing_failed": "Das Pairing konnte nicht abgeschlossen werden. Vergewissere dich, dass der eingegebene PIN korrekt ist und dass der Fernseher noch mit Strom versorgt wird und mit dem Netzwerk verbunden ist, bevor du es erneut versuchst.",
+            "existing_config_entry_found": "Ein bestehender Richten Sie das VIZIO SmartCast-Ger\u00e4t ein Config-Eintrag mit der gleichen Seriennummer wurde bereits konfiguriert. Sie m\u00fcssen den vorhandenen Eintrag l\u00f6schen, um diesen zu konfigurieren."
         },
         "step": {
             "pair_tv": {

@@ -3,5 +3,6 @@
   "name": "Danfoss Air",
   "documentation": "https://www.home-assistant.io/integrations/danfoss_air",
   "requirements": ["pydanfossair==0.1.0"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

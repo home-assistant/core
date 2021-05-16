@@ -5,7 +5,6 @@ import random
 from unittest.mock import patch
 
 import pytest
-import pytz
 import voluptuous as vol
 
 from homeassistant.components import group
@@ -19,7 +18,7 @@ from homeassistant.const import (
     VOLUME_LITERS,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
+from homeassistant.helpers import device_registry as dr, template
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
@@ -567,11 +566,15 @@ def test_from_json(hass):
 def test_min(hass):
     """Test the min filter."""
     assert template.Template("{{ [1, 2, 3] | min }}", hass).async_render() == 1
+    assert template.Template("{{ min([1, 2, 3]) }}", hass).async_render() == 1
+    assert template.Template("{{ min(1, 2, 3) }}", hass).async_render() == 1
 
 
 def test_max(hass):
     """Test the max filter."""
     assert template.Template("{{ [1, 2, 3] | max }}", hass).async_render() == 3
+    assert template.Template("{{ max([1, 2, 3]) }}", hass).async_render() == 3
+    assert template.Template("{{ max(1, 2, 3) }}", hass).async_render() == 3
 
 
 def test_ord(hass):
@@ -759,7 +762,7 @@ def test_render_with_possible_json_value_non_string_value(hass):
         hass,
     )
     value = datetime(2019, 1, 18, 12, 13, 14)
-    expected = str(pytz.utc.localize(value))
+    expected = str(value.replace(tzinfo=dt_util.UTC))
     assert tpl.async_render_with_possible_json_value(value) == expected
 
 
@@ -999,6 +1002,17 @@ def test_regex_match(hass):
     assert tpl.async_render() is True
 
 
+def test_match_test(hass):
+    """Test match test."""
+    tpl = template.Template(
+        r"""
+{{ '123-456-7890' is match('(\\d{3})-(\\d{3})-(\\d{4})') }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+
 def test_regex_search(hass):
     """Test regex_search method."""
     tpl = template.Template(
@@ -1028,6 +1042,17 @@ def test_regex_search(hass):
     tpl = template.Template(
         """
 {{ ['Home Assistant test'] | regex_search('Assist') }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() is True
+
+
+def test_search_test(hass):
+    """Test search test."""
+    tpl = template.Template(
+        r"""
+{{ '123-456-7890' is search('(\\d{3})-(\\d{3})-(\\d{4})') }}
             """,
         hass,
     )
@@ -1478,7 +1503,7 @@ async def test_device_entities(hass):
     # Test device without entities
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={("mac", "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     info = render_to_info(hass, f"{{{{ device_entities('{device_entry.id}') }}}}")
     assert_result_info(info, [])
@@ -2267,9 +2292,6 @@ async def test_template_timeout(hass):
     tmp = template.Template("{{ states | count }}", hass)
     assert await tmp.async_render_will_timeout(3) is False
 
-    tmp2 = template.Template("{{ error_invalid + 1 }}", hass)
-    assert await tmp2.async_render_will_timeout(3) is False
-
     tmp3 = template.Template("static", hass)
     assert await tmp3.async_render_will_timeout(3) is False
 
@@ -2285,6 +2307,13 @@ async def test_template_timeout(hass):
 """
     tmp5 = template.Template(slow_template_str, hass)
     assert await tmp5.async_render_will_timeout(0.000001) is True
+
+
+async def test_template_timeout_raise(hass):
+    """Test we can raise from."""
+    tmp2 = template.Template("{{ error_invalid + 1 }}", hass)
+    with pytest.raises(TemplateError):
+        assert await tmp2.async_render_will_timeout(3) is False
 
 
 async def test_lights(hass):
@@ -2503,4 +2532,7 @@ async def test_undefined_variable(hass, caplog):
     """Test a warning is logged on undefined variables."""
     tpl = template.Template("{{ no_such_variable }}", hass)
     assert tpl.async_render() == ""
-    assert "Template variable warning: no_such_variable is undefined" in caplog.text
+    assert (
+        "Template variable warning: 'no_such_variable' is undefined when rendering '{{ no_such_variable }}'"
+        in caplog.text
+    )

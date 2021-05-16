@@ -1,5 +1,4 @@
 """Support to embed Plex."""
-import asyncio
 from functools import partial
 import logging
 
@@ -15,15 +14,10 @@ from plexwebsocket import (
 import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY, SOURCE_REAUTH
-from homeassistant.const import (
-    CONF_SOURCE,
-    CONF_URL,
-    CONF_VERIFY_SSL,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
+from homeassistant.const import CONF_URL, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dev_reg, entity_registry as ent_reg
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
@@ -120,19 +114,10 @@ async def async_setup_entry(hass, entry):
                 error,
             )
         raise ConfigEntryNotReady from error
-    except plexapi.exceptions.Unauthorized:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                PLEX_DOMAIN,
-                context={CONF_SOURCE: SOURCE_REAUTH},
-                data=entry.data,
-            )
-        )
-        _LOGGER.error(
-            "Token not accepted, please reauthenticate Plex server '%s'",
-            entry.data[CONF_SERVER],
-        )
-        return False
+    except plexapi.exceptions.Unauthorized as ex:
+        raise ConfigEntryAuthFailed(
+            f"Token not accepted, please reauthenticate Plex server '{entry.data[CONF_SERVER]}'"
+        ) from ex
     except (
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.NotFound,
@@ -246,15 +231,11 @@ async def async_unload_entry(hass, entry):
     for unsub in dispatchers:
         unsub()
 
-    tasks = [
-        hass.config_entries.async_forward_entry_unload(entry, platform)
-        for platform in PLATFORMS
-    ]
-    await asyncio.gather(*tasks)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     hass.data[PLEX_DOMAIN][SERVERS].pop(server_id)
 
-    return True
+    return unload_ok
 
 
 async def async_options_updated(hass, entry):

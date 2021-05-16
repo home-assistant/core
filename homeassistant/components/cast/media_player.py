@@ -1,11 +1,13 @@
 """Provide functionality to interact with Cast devices on the network."""
 from __future__ import annotations
 
+import asyncio
 from contextlib import suppress
 from datetime import timedelta
 import functools as ft
 import json
 import logging
+from urllib.parse import quote
 
 import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
@@ -50,11 +52,10 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
 
@@ -96,7 +97,7 @@ ENTITY_SCHEMA = vol.All(
 
 
 @callback
-def _async_create_cast_device(hass: HomeAssistantType, info: ChromecastInfo):
+def _async_create_cast_device(hass: HomeAssistant, info: ChromecastInfo):
     """Create a CastDevice Entity from the chromecast object.
 
     Returns None if the cast device has already been added.
@@ -185,7 +186,9 @@ class CastDevice(MediaPlayerEntity):
         )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_stop)
         self.async_set_cast_info(self._cast_info)
-        self.hass.async_create_task(
+        # asyncio.create_task is used to avoid delaying startup wrapup if the device
+        # is discovered already during startup but then fails to respond
+        asyncio.create_task(
             async_create_catching_coro(self.async_connect_to_chromecast())
         )
 
@@ -196,10 +199,6 @@ class CastDevice(MediaPlayerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect Chromecast object when removed."""
         await self._async_disconnect()
-        if self._cast_info.uuid is not None:
-            # Remove the entity from the added casts so that it can dynamically
-            # be re-added again.
-            self.hass.data[ADDED_CAST_DEVICES_KEY].remove(self._cast_info.uuid)
         if self._add_remove_handler:
             self._add_remove_handler()
             self._add_remove_handler = None
@@ -209,7 +208,6 @@ class CastDevice(MediaPlayerEntity):
 
     def async_set_cast_info(self, cast_info):
         """Set the cast information."""
-
         self._cast_info = cast_info
 
     async def async_connect_to_chromecast(self):
@@ -460,8 +458,9 @@ class CastDevice(MediaPlayerEntity):
         # Create a signed path.
         if media_id[0] == "/":
             # Sign URL with Home Assistant Cast User
-            config_entries = self.hass.config_entries.async_entries(CAST_DOMAIN)
-            user_id = config_entries[0].data["user_id"]
+            config_entry_id = self.registry_entry.config_entry_id
+            config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
+            user_id = config_entry.data["user_id"]
             user = await self.hass.auth.async_get_user(user_id)
             if user.refresh_tokens:
                 refresh_token: RefreshToken = list(user.refresh_tokens.values())[0]
@@ -469,8 +468,8 @@ class CastDevice(MediaPlayerEntity):
                 media_id = async_sign_path(
                     self.hass,
                     refresh_token.id,
-                    media_id,
-                    timedelta(minutes=5),
+                    quote(media_id),
+                    timedelta(seconds=media_source.DEFAULT_EXPIRY_TIME),
                 )
 
             # prepend external URL

@@ -8,12 +8,8 @@ from xknx.devices import (
     ClimateMode as XknxClimateMode,
     Cover as XknxCover,
     Device as XknxDevice,
-    Fan as XknxFan,
     Light as XknxLight,
-    Notification as XknxNotification,
-    Scene as XknxScene,
     Sensor as XknxSensor,
-    Switch as XknxSwitch,
     Weather as XknxWeather,
 )
 
@@ -25,11 +21,8 @@ from .schema import (
     BinarySensorSchema,
     ClimateSchema,
     CoverSchema,
-    FanSchema,
     LightSchema,
-    SceneSchema,
     SensorSchema,
-    SwitchSchema,
     WeatherSchema,
 )
 
@@ -38,7 +31,7 @@ def create_knx_device(
     platform: SupportedPlatforms,
     knx_module: XKNX,
     config: ConfigType,
-) -> XknxDevice:
+) -> XknxDevice | None:
     """Return the requested XKNX device."""
     if platform is SupportedPlatforms.LIGHT:
         return _create_light(knx_module, config)
@@ -49,17 +42,8 @@ def create_knx_device(
     if platform is SupportedPlatforms.CLIMATE:
         return _create_climate(knx_module, config)
 
-    if platform is SupportedPlatforms.SWITCH:
-        return _create_switch(knx_module, config)
-
     if platform is SupportedPlatforms.SENSOR:
         return _create_sensor(knx_module, config)
-
-    if platform is SupportedPlatforms.NOTIFY:
-        return _create_notify(knx_module, config)
-
-    if platform is SupportedPlatforms.SCENE:
-        return _create_scene(knx_module, config)
 
     if platform is SupportedPlatforms.BINARY_SENSOR:
         return _create_binary_sensor(knx_module, config)
@@ -67,8 +51,7 @@ def create_knx_device(
     if platform is SupportedPlatforms.WEATHER:
         return _create_weather(knx_module, config)
 
-    if platform is SupportedPlatforms.FAN:
-        return _create_fan(knx_module, config)
+    return None
 
 
 def _create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
@@ -270,17 +253,6 @@ def _create_climate(knx_module: XKNX, config: ConfigType) -> XknxClimate:
     )
 
 
-def _create_switch(knx_module: XKNX, config: ConfigType) -> XknxSwitch:
-    """Return a KNX switch to be used within XKNX."""
-    return XknxSwitch(
-        knx_module,
-        name=config[CONF_NAME],
-        group_address=config[KNX_ADDRESS],
-        group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
-        invert=config[SwitchSchema.CONF_INVERT],
-    )
-
-
 def _create_sensor(knx_module: XKNX, config: ConfigType) -> XknxSensor:
     """Return a KNX sensor to be used within XKNX."""
     return XknxSensor(
@@ -290,25 +262,6 @@ def _create_sensor(knx_module: XKNX, config: ConfigType) -> XknxSensor:
         sync_state=config[SensorSchema.CONF_SYNC_STATE],
         always_callback=config[SensorSchema.CONF_ALWAYS_CALLBACK],
         value_type=config[CONF_TYPE],
-    )
-
-
-def _create_notify(knx_module: XKNX, config: ConfigType) -> XknxNotification:
-    """Return a KNX notification to be used within XKNX."""
-    return XknxNotification(
-        knx_module,
-        name=config[CONF_NAME],
-        group_address=config[KNX_ADDRESS],
-    )
-
-
-def _create_scene(knx_module: XKNX, config: ConfigType) -> XknxScene:
-    """Return a KNX scene to be used within XKNX."""
-    return XknxScene(
-        knx_module,
-        name=config[CONF_NAME],
-        group_address=config[KNX_ADDRESS],
-        scene_number=config[SceneSchema.CONF_SCENE_NUMBER],
     )
 
 
@@ -364,20 +317,3 @@ def _create_weather(knx_module: XKNX, config: ConfigType) -> XknxWeather:
         ),
         group_address_humidity=config.get(WeatherSchema.CONF_KNX_HUMIDITY_ADDRESS),
     )
-
-
-def _create_fan(knx_module: XKNX, config: ConfigType) -> XknxFan:
-    """Return a KNX Fan device to be used within XKNX."""
-
-    fan = XknxFan(
-        knx_module,
-        name=config[CONF_NAME],
-        group_address_speed=config.get(KNX_ADDRESS),
-        group_address_speed_state=config.get(FanSchema.CONF_STATE_ADDRESS),
-        group_address_oscillation=config.get(FanSchema.CONF_OSCILLATION_ADDRESS),
-        group_address_oscillation_state=config.get(
-            FanSchema.CONF_OSCILLATION_STATE_ADDRESS
-        ),
-        max_step=config.get(FanSchema.CONF_MAX_STEP),
-    )
-    return fan

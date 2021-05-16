@@ -33,6 +33,7 @@
             "invalid_serial": "Ongeldige seri\u00eble poort",
             "invalid_subscribe_topic": "Ongeldig abonneer topic",
             "invalid_version": "Ongeldige MySensors-versie",
+            "mqtt_required": "De MQTT integratie is niet ingesteld",
             "not_a_number": "Voer een nummer in",
             "port_out_of_range": "Poortnummer moet minimaal 1 en maximaal 65535 zijn",
             "same_topic": "De topics abonneren en publiceren zijn hetzelfde",

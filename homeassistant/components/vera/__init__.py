@@ -155,7 +155,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         controller.stop()
 
     await hass.async_add_executor_job(controller.start)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
+    )
 
     return True
 

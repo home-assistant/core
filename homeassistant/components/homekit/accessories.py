@@ -92,7 +92,7 @@ SWITCH_TYPES = {
 TYPES = Registry()
 
 
-def get_accessory(hass, driver, state, aid, config):
+def get_accessory(hass, driver, state, aid, config):  # noqa: C901
     """Take state and return an accessory object if supported."""
     if not aid:
         _LOGGER.warning(

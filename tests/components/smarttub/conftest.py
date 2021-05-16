@@ -42,9 +42,9 @@ def mock_spa():
     mock_spa.id = "mockspa1"
     mock_spa.brand = "mockbrand1"
     mock_spa.model = "mockmodel1"
-    mock_spa.get_status.return_value = smarttub.SpaState(
+    full_status = smarttub.SpaStateFull(
         mock_spa,
-        **{
+        {
             "setTemperature": 39,
             "water": {"temperature": 38},
             "heater": "ON",
@@ -69,8 +69,12 @@ def mock_spa():
             "uv": "OFF",
             "blowoutCycle": "INACTIVE",
             "cleanupCycle": "INACTIVE",
+            "lights": [],
+            "pumps": [],
         },
     )
+    mock_spa.get_status_full.return_value = full_status
+
     mock_circulation_pump = create_autospec(smarttub.SpaPump, instance=True)
     mock_circulation_pump.id = "CP"
     mock_circulation_pump.spa = mock_spa
@@ -89,7 +93,7 @@ def mock_spa():
     mock_jet_on.state = smarttub.SpaPump.PumpState.HIGH
     mock_jet_on.type = smarttub.SpaPump.PumpType.JET
 
-    mock_spa.get_pumps.return_value = [mock_circulation_pump, mock_jet_off, mock_jet_on]
+    full_status.pumps = [mock_circulation_pump, mock_jet_off, mock_jet_on]
 
     mock_light_off = create_autospec(smarttub.SpaLight, instance=True)
     mock_light_off.spa = mock_spa
@@ -103,7 +107,7 @@ def mock_spa():
     mock_light_on.intensity = 50
     mock_light_on.mode = smarttub.SpaLight.LightMode.PURPLE
 
-    mock_spa.get_lights.return_value = [mock_light_off, mock_light_on]
+    full_status.lights = [mock_light_off, mock_light_on]
 
     mock_filter_reminder = create_autospec(smarttub.SpaReminder, instance=True)
     mock_filter_reminder.id = "FILTER01"

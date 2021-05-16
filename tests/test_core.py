@@ -9,7 +9,6 @@ from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
-import pytz
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -36,6 +35,7 @@ import homeassistant.core as ha
 from homeassistant.exceptions import (
     InvalidEntityFormatError,
     InvalidStateError,
+    MaxLengthExceeded,
     ServiceNotFound,
 )
 import homeassistant.util.dt as dt_util
@@ -43,7 +43,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from tests.common import async_capture_events, async_mock_service
 
-PST = pytz.timezone("America/Los_Angeles")
+PST = dt_util.get_time_zone("America/Los_Angeles")
 
 
 def test_split_entity_id():
@@ -524,6 +524,21 @@ async def test_eventbus_coroutine_event_listener(hass):
     assert len(coroutine_calls) == 1
 
 
+async def test_eventbus_max_length_exceeded(hass):
+    """Test that an exception is raised when the max character length is exceeded."""
+
+    long_evt_name = (
+        "this_event_exceeds_the_max_character_length_even_with_the_new_limit"
+    )
+
+    with pytest.raises(MaxLengthExceeded) as exc_info:
+        hass.bus.async_fire(long_evt_name)
+
+    assert exc_info.value.property_name == "event_type"
+    assert exc_info.value.max_length == 64
+    assert exc_info.value.value == long_evt_name
+
+
 def test_state_init():
     """Test state.init."""
     with pytest.raises(InvalidEntityFormatError):
@@ -861,7 +876,7 @@ def test_config_defaults():
     assert config.longitude == 0
     assert config.elevation == 0
     assert config.location_name == "Home"
-    assert config.time_zone == dt_util.UTC
+    assert config.time_zone == "UTC"
     assert config.internal_url is None
     assert config.external_url is None
     assert config.config_source == "default"

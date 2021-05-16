@@ -12,9 +12,9 @@ from homeassistant.components.switch import (
     SwitchEntity,
 )
 from homeassistant.const import ATTR_VOLTAGE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.typing import HomeAssistantType
 
 from . import CONF_SWITCH, DOMAIN as TPLINK_DOMAIN
 from .common import add_available_devices
@@ -30,7 +30,7 @@ MAX_ATTEMPTS = 300
 SLEEP_TIME = 2
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
     """Set up switches."""
     entities = await hass.async_add_executor_job(
         add_available_devices, hass, CONF_SWITCH, SmartPlugSwitch
@@ -138,23 +138,23 @@ class SmartPlugSwitch(SwitchEntity):
             if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()
 
-                self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.2f}".format(
-                    emeter_readings["power"]
+                self._emeter_params[ATTR_CURRENT_POWER_W] = round(
+                    float(emeter_readings["power"]), 2
                 )
-                self._emeter_params[ATTR_TOTAL_ENERGY_KWH] = "{:.3f}".format(
-                    emeter_readings["total"]
+                self._emeter_params[ATTR_TOTAL_ENERGY_KWH] = round(
+                    float(emeter_readings["total"]), 3
                 )
-                self._emeter_params[ATTR_VOLTAGE] = "{:.1f}".format(
-                    emeter_readings["voltage"]
+                self._emeter_params[ATTR_VOLTAGE] = round(
+                    float(emeter_readings["voltage"]), 1
                 )
-                self._emeter_params[ATTR_CURRENT_A] = "{:.2f}".format(
-                    emeter_readings["current"]
+                self._emeter_params[ATTR_CURRENT_A] = round(
+                    float(emeter_readings["current"]), 2
                 )
 
                 emeter_statics = self.smartplug.get_emeter_daily()
                 with suppress(KeyError):  # Device returned no daily history
-                    self._emeter_params[ATTR_TODAY_ENERGY_KWH] = "{:.3f}".format(
-                        emeter_statics[int(time.strftime("%e"))]
+                    self._emeter_params[ATTR_TODAY_ENERGY_KWH] = round(
+                        float(emeter_statics[int(time.strftime("%e"))]), 3
                     )
             return True
         except (SmartDeviceException, OSError) as ex:

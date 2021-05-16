@@ -1,5 +1,4 @@
 """The Netatmo integration."""
-import asyncio
 import logging
 import secrets
 
@@ -111,10 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await data_handler.async_setup()
     hass.data[DOMAIN][entry.entry_id][DATA_HANDLER] = data_handler
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def unregister_webhook(_):
         if CONF_WEBHOOK_ID not in entry.data:
@@ -188,7 +184,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except pyatmo.ApiError as err:
             _LOGGER.error("Error during webhook registration - %s", err)
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
+        entry.async_on_unload(
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
+        )
 
     if hass.state == CoreState.running:
         await register_webhook(None)
@@ -211,14 +209,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await hass.data[DOMAIN][entry.entry_id][DATA_HANDLER].async_cleanup()
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)

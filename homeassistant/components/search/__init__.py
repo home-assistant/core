@@ -19,7 +19,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "search/related",
@@ -38,6 +37,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         vol.Required("item_id"): str,
     }
 )
+@callback
 def websocket_search_related(hass, connection, msg):
     """Handle search."""
     searcher = Searcher(

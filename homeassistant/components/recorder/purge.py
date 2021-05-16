@@ -6,7 +6,7 @@ import logging
 import time
 from typing import TYPE_CHECKING
 
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import distinct
 
@@ -21,6 +21,12 @@ if TYPE_CHECKING:
     from . import Recorder
 
 _LOGGER = logging.getLogger(__name__)
+
+# Retry when one of the following MySQL errors occurred:
+RETRYABLE_MYSQL_ERRORS = (1205, 1206, 1213)
+# 1205: Lock wait timeout exceeded; try restarting transaction
+# 1206: The total number of locks exceeds the lock table size
+# 1213: Deadlock found when trying to get lock; try restarting transaction
 
 
 def purge_old_data(
@@ -55,22 +61,16 @@ def purge_old_data(
         if repack:
             repack_database(instance)
     except OperationalError as err:
-        # Retry when one of the following MySQL errors occurred:
-        # 1205: Lock wait timeout exceeded; try restarting transaction
-        # 1206: The total number of locks exceeds the lock table size
-        # 1213: Deadlock found when trying to get lock; try restarting transaction
-        if instance.engine.driver in ("mysqldb", "pymysql") and err.orig.args[0] in (
-            1205,
-            1206,
-            1213,
+        if (
+            instance.engine.dialect.name == "mysql"
+            and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
         ):
             _LOGGER.info("%s; purge not completed, retrying", err.orig.args[1])
             time.sleep(instance.db_retry_wait)
             return False
 
         _LOGGER.warning("Error purging history: %s", err)
-    except SQLAlchemyError as err:
-        _LOGGER.warning("Error purging history: %s", err)
+
     return True
 
 

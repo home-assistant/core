@@ -7,7 +7,8 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
-            "unknown": "Unerwarteter Fehler"
+            "unknown": "Unerwarteter Fehler",
+            "wrong_version": "Deine Powerwall verwendet eine Softwareversion, die nicht unterst\u00fctzt wird. Bitte ziehe ein Upgrade in Betracht oder melde dieses Problem, damit es behoben werden kann."
         },
         "flow_title": "Tesla Powerwall ({ip_address})",
         "step": {

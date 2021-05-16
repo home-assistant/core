@@ -7,5 +7,11 @@
   "dependencies": ["http"],
   "after_dependencies": ["cloud"],
   "codeowners": ["@frenck"],
-  "dhcp": [{ "hostname": "eneco-*", "macaddress": "74C63B*" }]
+  "dhcp": [
+    {
+      "hostname": "eneco-*",
+      "macaddress": "74C63B*"
+    }
+  ],
+  "iot_class": "cloud_push"
 }

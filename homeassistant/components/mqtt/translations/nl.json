@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Detectie inschakelen"
                 },
-                "description": "Wilt u Home Assistant configureren om verbinding te maken met de MQTT-broker die wordt aangeboden door de Supervisor add-on {addon} ?",
-                "title": "MQTT Broker via Supervisor add-on"
+                "description": "Wilt u Home Assistant configureren om verbinding te maken met de MQTT-broker die wordt aangeboden door de add-on {addon}?",
+                "title": "MQTT Broker via Home Assistant add-on"
             }
         }
     },
@@ -62,7 +62,8 @@
                     "port": "Poort",
                     "username": "Gebruikersnaam"
                 },
-                "description": "Voer de verbindingsgegevens van uw MQTT-broker in."
+                "description": "Voer de verbindingsgegevens van uw MQTT-broker in.",
+                "title": "Broker opties"
             },
             "options": {
                 "data": {
@@ -78,7 +79,8 @@
                     "will_retain": "Will message behouden",
                     "will_topic": "Will message topic"
                 },
-                "description": "Selecteer MQTT-opties."
+                "description": "Selecteer MQTT-opties.",
+                "title": "MQTT-opties"
             }
         }
     }

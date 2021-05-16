@@ -3,5 +3,6 @@
   "name": "Azure Event Hub",
   "documentation": "https://www.home-assistant.io/integrations/azure_event_hub",
   "requirements": ["azure-eventhub==5.1.0"],
-  "codeowners": ["@eavanvalkenburg"]
+  "codeowners": ["@eavanvalkenburg"],
+  "iot_class": "cloud_push"
 }
