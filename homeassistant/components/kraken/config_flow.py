@@ -1,6 +1,8 @@
 """Config flow for kraken integration."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 import krakenex
 from pykrakenapi.pykrakenapi import KrakenAPI
@@ -18,6 +20,35 @@ from .utils import get_tradable_asset_pairs
 _LOGGER = logging.getLogger(__name__)
 
 
+class KrakenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for kraken."""
+
+    VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> KrakenOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return KrakenOptionsFlowHandler(config_entry)
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the initial step."""
+        if DOMAIN in self.hass.data:
+            return self.async_abort(reason="already_configured")
+        if user_input is not None:
+            return self.async_create_entry(title=DOMAIN, data=user_input)
+        return self.async_show_form(
+            step_id="user",
+            data_schema=None,
+            errors={},
+        )
+
+
 class KrakenOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Kraken client options."""
 
@@ -26,7 +57,7 @@ class KrakenOptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
 
     async def async_step_init(
-        self, user_input: Optional[Dict[str, Any]] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the Kraken options."""
         if user_input is not None:
@@ -53,32 +84,3 @@ class KrakenOptionsFlowHandler(config_entries.OptionsFlow):
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
-
-
-class KrakenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for kraken."""
-
-    VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> KrakenOptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return KrakenOptionsFlowHandler(config_entry)
-
-    async def async_step_user(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> FlowResult:
-        """Handle the initial step."""
-        if DOMAIN in self.hass.data:
-            return self.async_abort(reason="already_configured")
-        if user_input is not None:
-            return self.async_create_entry(title=DOMAIN, data=user_input)
-        return self.async_show_form(
-            step_id="user",
-            data_schema=None,
-            errors={},
-        )

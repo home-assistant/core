@@ -1,6 +1,8 @@
 """Constants for the kraken integration."""
 
-from typing import Dict, List, TypedDict
+from __future__ import annotations
+
+from typing import Dict, TypedDict
 
 KrakenResponse = Dict[str, Dict[str, float]]
 
@@ -20,7 +22,7 @@ CONF_TRACKED_ASSET_PAIRS = "tracked_asset_pairs"
 
 DOMAIN = "kraken"
 
-SENSOR_TYPES: List[SensorType] = [
+SENSOR_TYPES: list[SensorType] = [
     SensorType(name="ask", enabled_by_default=True),
     SensorType(name="ask_volume", enabled_by_default=False),
     SensorType(name="bid", enabled_by_default=True),
