@@ -41,6 +41,7 @@ homeassistant.components.persistent_notification.*
 homeassistant.components.proximity.*
 homeassistant.components.recorder.purge
 homeassistant.components.recorder.repack
+homeassistant.components.recorder.statistics
 homeassistant.components.remote.*
 homeassistant.components.scene.*
 homeassistant.components.sensor.*

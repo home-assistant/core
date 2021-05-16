@@ -55,7 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 @deprecated_function("homeassistant.components.recorder.history.get_significant_states")
 def get_significant_states(hass, *args, **kwargs):
-    """Wrap _get_significant_states with a sql session."""
+    """Wrap _get_significant_states with an sql session."""
     return history.get_significant_states(hass, *args, **kwargs)
 
 
