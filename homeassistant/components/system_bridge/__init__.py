@@ -74,6 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             async with async_timeout.timeout(60):
                 await asyncio.gather(
                     *[
+                        client.async_get_audio(),
                         client.async_get_battery(),
                         client.async_get_cpu(),
                         client.async_get_filesystem(),

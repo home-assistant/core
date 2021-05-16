@@ -10,6 +10,7 @@ from systembridge.objects.media import Media
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_APP,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_VIDEO,
     SUPPORT_PAUSE,
@@ -45,7 +46,54 @@ async def async_setup_entry(
 
     await bridge.async_connect_websocket(entry.data[CONF_HOST], ws_port)
 
-    async_add_entities([BridgeMediaPlayer(coordinator, bridge)])
+    async_add_entities(
+        [BridgeAudio(coordinator, bridge), BridgeMediaPlayer(coordinator, bridge)]
+    )
+
+
+class BridgeAudio(BridgeDeviceEntity, MediaPlayerEntity):
+    """Defines a System Bridge media player."""
+
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge) -> None:
+        """Initialize System Bridge media player."""
+        super().__init__(coordinator, bridge, "audio", "Audio", None, True)
+
+    @property
+    def supported_features(self) -> int:
+        """Flag media player features that are supported."""
+        return SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP
+
+    @property
+    def state(self) -> str:
+        """State of the player."""
+        return STATE_PLAYING
+
+    @property
+    def media_content_type(self) -> str:
+        """Content type of current playing media."""
+        return MEDIA_TYPE_APP
+
+    @property
+    def volume_level(self) -> float | None:
+        """Volume level of the media player (0..1)."""
+        bridge: Bridge = self.coordinator.data
+        return bridge.audio.current["volume"] / 100
+
+    @property
+    def is_volume_muted(self) -> bool | None:
+        """Boolean if volume is currently muted."""
+        bridge: Bridge = self.coordinator.data
+        return bridge.audio.current["muted"]
+
+    async def async_mute_volume(self, mute: bool) -> None:
+        """Mute the volume."""
+        bridge: Bridge = self.coordinator.data
+        await bridge.async_update_audio("mute", {"value": mute})
+
+    async def async_set_volume_level(self, volume: float) -> None:
+        """Set volume level, range 0..1."""
+        bridge: Bridge = self.coordinator.data
+        await bridge.async_update_audio("volume", {"value": volume * 100})
 
 
 class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
