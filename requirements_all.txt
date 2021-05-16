@@ -645,7 +645,7 @@ geniushub-client==0.6.30
 geojson_client==0.4
 
 # homeassistant.components.aprs
-geopy==1.21.0
+geopy==2.1.0
 
 # homeassistant.components.geo_rss_events
 georss_generic_client==0.4
