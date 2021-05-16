@@ -27,7 +27,7 @@ QUERY_STATISTICS = [
     Statistics.max,
 ]
 
-STATISTICS_BAKERY = "statistics_bakery"
+STATISTICS_BAKERY = "recorder_statistics_bakery"
 
 _LOGGER = logging.getLogger(__name__)
 
