@@ -21,6 +21,7 @@ from .const import (
     DEFAULT_TRACKED_ASSET_PAIR,
     DISPATCH_CONFIG_UPDATED,
     DOMAIN,
+    KrakenResponse,
 )
 from .utils import get_tradable_asset_pairs
 
@@ -61,9 +62,9 @@ class KrakenData:
         self._config_entry = config_entry
         self._api = pykrakenapi.KrakenAPI(krakenex.API(), retry=0, crl_sleep=0)
         self.tradable_asset_pairs: dict[str, str] = {}
-        self.coordinator: DataUpdateCoordinator | None = None
+        self.coordinator: DataUpdateCoordinator[KrakenResponse | None] | None = None
 
-    async def async_update(self) -> dict[str, dict[str, float]] | None:
+    async def async_update(self) -> KrakenResponse | None:
         """Get the latest data from the Kraken.com REST API.
 
         All tradeable asset pairs are retrieved, not the tracked asset pairs
@@ -90,7 +91,7 @@ class KrakenData:
             )
         return None
 
-    def _get_kraken_data(self) -> dict[str, dict[str, float]]:
+    def _get_kraken_data(self) -> KrakenResponse:
         websocket_name_pairs = self._get_websocket_name_asset_pairs()
         ticker_df = self._api.get_ticker_information(websocket_name_pairs)
         # Rename columns to their full name

@@ -17,6 +17,7 @@ from .const import (
     DISPATCH_CONFIG_UPDATED,
     DOMAIN,
     SENSOR_TYPES,
+    SensorType,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,7 +77,7 @@ class KrakenSensor(CoordinatorEntity, SensorEntity):
         self,
         kraken_data: KrakenData,
         tracked_asset_pair: str,
-        sensor_type: dict[str, object],
+        sensor_type: SensorType,
     ) -> None:
         """Initialize."""
         assert kraken_data.coordinator is not None
@@ -94,7 +95,7 @@ class KrakenSensor(CoordinatorEntity, SensorEntity):
             [
                 tracked_asset_pair.split("/")[0],
                 tracked_asset_pair.split("/")[1],
-                str(sensor_type["name"]),
+                sensor_type["name"],
             ]
         )
         self._received_data_at_least_once = False
@@ -132,7 +133,70 @@ class KrakenSensor(CoordinatorEntity, SensorEntity):
 
     def _update_internal_state(self):
         try:
-            self._state = self._try_get_state()
+            if self._sensor_type == "last_trade_closed":
+                self._state = self.coordinator.data[self.tracked_asset_pair_wsname][
+                    "last_trade_closed"
+                ][0]
+            if self._sensor_type == "ask":
+                self._state = self.coordinator.data[self.tracked_asset_pair_wsname][
+                    "ask"
+                ][0]
+            if self._sensor_type == "ask_volume":
+                self._state = self.coordinator.data[self.tracked_asset_pair_wsname][
+                    "ask"
+                ][1]
+            if self._sensor_type == "bid":
+                self._state = self.coordinator.data[self.tracked_asset_pair_wsname][
+                    "bid"
+                ][0]
+            if self._sensor_type == "bid_volume":
+                self._state = self.coordinator.data[self.tracked_asset_pair_wsname][
+                    "bid"
+                ][1]
+            if self._sensor_type == "volume_today":
+                self._state = self.coordinator.data[self.tracked_asset_pair_wsname][
+                    "volume"
+                ][0]
+            if self._sensor_type == "volume_last_24h":
+                self._state = self.coordinator.data[self.tracked_asset_pair_wsname][
+                    "volume"
+                ][1]
+            if self._sensor_type == "volume_weighted_average_today":
+                self._state = self.coordinator.data[self.tracked_asset_pair_wsname][
+                    "volume_weighted_average"
+                ][0]
+            if self._sensor_type == "volume_weighted_average_last_24h":
+                self._state = self.coordinator.data[self.tracked_asset_pair_wsname][
+                    "volume_weighted_average"
+                ][1]
+            if self._sensor_type == "number_of_trades_today":
+                self._state = self.coordinator.data[self.tracked_asset_pair_wsname][
+                    "number_of_trades"
+                ][0]
+            if self._sensor_type == "number_of_trades_last_24h":
+                self._state = self.coordinator.data[self.tracked_asset_pair_wsname][
+                    "number_of_trades"
+                ][1]
+            if self._sensor_type == "low_today":
+                self._state = self.coordinator.data[self.tracked_asset_pair_wsname][
+                    "low"
+                ][0]
+            if self._sensor_type == "low_last_24h":
+                self._state = self.coordinator.data[self.tracked_asset_pair_wsname][
+                    "low"
+                ][1]
+            if self._sensor_type == "high_today":
+                self._state = self.coordinator.data[self.tracked_asset_pair_wsname][
+                    "high"
+                ][0]
+            if self._sensor_type == "high_last_24h":
+                self._state = self.coordinator.data[self.tracked_asset_pair_wsname][
+                    "high"
+                ][1]
+            if self._sensor_type == "opening_price_today":
+                self._state = self.coordinator.data[self.tracked_asset_pair_wsname][
+                    "opening_price"
+                ]
             self._received_data_at_least_once = True  # Received data at least one time.
         except TypeError:
             if self._received_data_at_least_once:
@@ -142,54 +206,6 @@ class KrakenSensor(CoordinatorEntity, SensorEntity):
                         self._device_name,
                     )
                     self._available = False
-
-    def _try_get_state(self) -> str:
-        """Try to get the state or return a TypeError."""
-        if self._sensor_type == "last_trade_closed":
-            return self.coordinator.data[self.tracked_asset_pair_wsname][
-                "last_trade_closed"
-            ][0]
-        if self._sensor_type == "ask":
-            return self.coordinator.data[self.tracked_asset_pair_wsname]["ask"][0]
-        if self._sensor_type == "ask_volume":
-            return self.coordinator.data[self.tracked_asset_pair_wsname]["ask"][1]
-        if self._sensor_type == "bid":
-            return self.coordinator.data[self.tracked_asset_pair_wsname]["bid"][0]
-        if self._sensor_type == "bid_volume":
-            return self.coordinator.data[self.tracked_asset_pair_wsname]["bid"][1]
-        if self._sensor_type == "volume_today":
-            return self.coordinator.data[self.tracked_asset_pair_wsname]["volume"][0]
-        if self._sensor_type == "volume_last_24h":
-            return self.coordinator.data[self.tracked_asset_pair_wsname]["volume"][1]
-        if self._sensor_type == "volume_weighted_average_today":
-            return self.coordinator.data[self.tracked_asset_pair_wsname][
-                "volume_weighted_average"
-            ][0]
-        if self._sensor_type == "volume_weighted_average_last_24h":
-            return self.coordinator.data[self.tracked_asset_pair_wsname][
-                "volume_weighted_average"
-            ][1]
-        if self._sensor_type == "number_of_trades_today":
-            return self.coordinator.data[self.tracked_asset_pair_wsname][
-                "number_of_trades"
-            ][0]
-        if self._sensor_type == "number_of_trades_last_24h":
-            return self.coordinator.data[self.tracked_asset_pair_wsname][
-                "number_of_trades"
-            ][1]
-        if self._sensor_type == "low_today":
-            return self.coordinator.data[self.tracked_asset_pair_wsname]["low"][0]
-        if self._sensor_type == "low_last_24h":
-            return self.coordinator.data[self.tracked_asset_pair_wsname]["low"][1]
-        if self._sensor_type == "high_today":
-            return self.coordinator.data[self.tracked_asset_pair_wsname]["high"][0]
-        if self._sensor_type == "high_last_24h":
-            return self.coordinator.data[self.tracked_asset_pair_wsname]["high"][1]
-        if self._sensor_type == "opening_price_today":
-            return self.coordinator.data[self.tracked_asset_pair_wsname][
-                "opening_price"
-            ]
-        raise TypeError
 
     @property
     def icon(self):
