@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Nenhum dispositivo encontrado na rede"
+        }
+    }
+}

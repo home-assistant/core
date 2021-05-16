@@ -63,7 +63,7 @@ class HomeKitLock(HomeKitEntity, LockEntity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
         attributes = {}
 

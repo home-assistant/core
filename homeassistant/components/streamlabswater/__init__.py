@@ -17,7 +17,7 @@ SERVICE_SET_AWAY_MODE = "set_away_mode"
 AWAY_MODE_AWAY = "away"
 AWAY_MODE_HOME = "home"
 
-STREAMLABSWATER_COMPONENTS = ["sensor", "binary_sensor"]
+PLATFORMS = ["sensor", "binary_sensor"]
 
 CONF_LOCATION_ID = "location_id"
 
@@ -39,7 +39,7 @@ SET_AWAY_MODE_SCHEMA = vol.Schema(
 
 
 def setup(hass, config):
-    """Set up the streamlabs water component."""
+    """Set up the streamlabs water integration."""
 
     conf = config[DOMAIN]
     api_key = conf.get(CONF_API_KEY)
@@ -74,8 +74,8 @@ def setup(hass, config):
         "location_name": location_name,
     }
 
-    for component in STREAMLABSWATER_COMPONENTS:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+    for platform in PLATFORMS:
+        discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     def set_away_mode(service):
         """Set the StreamLabsWater Away Mode."""

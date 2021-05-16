@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "no_devices_found": "\ub124\ud2b8\uc6cc\ud06c\uc5d0\uc11c \uae30\uae30\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4"
+        },
         "step": {
             "user": {
                 "data": {

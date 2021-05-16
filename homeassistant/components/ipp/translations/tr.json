@@ -1,7 +1,24 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "connection_upgrade": "Yaz\u0131c\u0131ya ba\u011flan\u0131lamad\u0131. L\u00fctfen SSL / TLS se\u00e7ene\u011fi i\u015faretli olarak tekrar deneyin."
+        },
+        "flow_title": "Yaz\u0131c\u0131: {name}",
         "step": {
+            "user": {
+                "data": {
+                    "host": "Ana Bilgisayar",
+                    "port": "Port"
+                },
+                "title": "Yaz\u0131c\u0131n\u0131z\u0131 ba\u011flay\u0131n"
+            },
             "zeroconf_confirm": {
+                "description": "{name} kurmak istiyor musunuz?",
                 "title": "Ke\u015ffedilen yaz\u0131c\u0131"
             }
         }

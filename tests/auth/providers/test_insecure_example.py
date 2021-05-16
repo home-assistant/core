@@ -1,12 +1,11 @@
 """Tests for the insecure example auth provider."""
+from unittest.mock import AsyncMock
 import uuid
 
 import pytest
 
 from homeassistant.auth import AuthManager, auth_store, models as auth_models
 from homeassistant.auth.providers import insecure_example
-
-from tests.async_mock import AsyncMock
 
 
 @pytest.fixture

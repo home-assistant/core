@@ -1,7 +1,8 @@
 """Support for Supla devices."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Optional
 
 import async_timeout
 from asyncpysupla import SuplaAPI
@@ -126,7 +127,7 @@ async def discover_devices(hass, hass_config):
 
             if channel_function == SUPLA_FUNCTION_NONE:
                 _LOGGER.debug(
-                    "Ignored function: %s, channel id: %s",
+                    "Ignored function: %s, channel ID: %s",
                     channel_function,
                     channel["id"],
                 )
@@ -136,7 +137,7 @@ async def discover_devices(hass, hass_config):
 
             if component_name is None:
                 _LOGGER.warning(
-                    "Unsupported function: %s, channel id: %s",
+                    "Unsupported function: %s, channel ID: %s",
                     channel_function,
                     channel["id"],
                 )
@@ -180,7 +181,7 @@ class SuplaChannel(CoordinatorEntity):
         )
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the device."""
         return self.channel_data["caption"]
 

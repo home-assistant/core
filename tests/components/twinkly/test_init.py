@@ -1,5 +1,6 @@
 """Tests of the initialization of the twinly integration."""
 
+from unittest.mock import patch
 from uuid import uuid4
 
 from homeassistant.components.twinkly import async_setup_entry, async_unload_entry
@@ -12,7 +13,6 @@ from homeassistant.components.twinkly.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 from tests.components.twinkly import TEST_HOST, TEST_MODEL, TEST_NAME_ORIGINAL
 

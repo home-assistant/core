@@ -90,7 +90,7 @@ async def websocket_delete_area(hass, connection, msg):
     registry = await async_get_registry(hass)
 
     try:
-        await registry.async_delete(msg["area_id"])
+        registry.async_delete(msg["area_id"])
     except KeyError:
         connection.send_message(
             websocket_api.error_message(

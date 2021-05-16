@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "discovery_prefix": "Themenpr\u00e4fix f\u00fcr die Erkennung"
+                },
+                "description": "Bitte die Tasmota-Konfiguration einstellen.",
+                "title": "Tasmota"
+            },
+            "confirm": {
+                "description": "M\u00f6chtest du Tasmota einrichten?"
+            }
+        }
+    }
+}

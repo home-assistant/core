@@ -5,14 +5,11 @@ import logging
 import voluptuous as vol
 import whois
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, TIME_DAYS
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import CONF_DOMAIN, CONF_NAME, TIME_DAYS
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_DOMAIN = "domain"
 
 DEFAULT_NAME = "Whois"
 
@@ -49,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
 
-class WhoisSensor(Entity):
+class WhoisSensor(SensorEntity):
     """Implementation of a WHOIS sensor."""
 
     def __init__(self, name, domain):
@@ -83,7 +80,7 @@ class WhoisSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Get the more info attributes."""
         return self._attributes
 

@@ -2,13 +2,13 @@
 from copy import deepcopy
 import json
 import unittest
+from unittest.mock import patch
 
 import requests_mock
 
 from homeassistant import setup
 import homeassistant.components.vultr as vultr
 
-from tests.async_mock import patch
 from tests.common import get_test_home_assistant, load_fixture
 
 VALID_CONFIG = {"vultr": {"api_key": "ABCDEFG1234567"}}

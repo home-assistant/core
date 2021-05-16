@@ -61,3 +61,5 @@ DEFAULT_OPTIONS = {
         const.CONF_USE_EPISODE_ART: False,
     }
 }
+
+PLEX_DIRECT_URL = "https://1-2-3-4.123456789001234567890.plex.direct:32400"

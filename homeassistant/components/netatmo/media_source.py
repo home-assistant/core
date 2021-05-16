@@ -1,8 +1,9 @@
 """Netatmo Media Source Implementation."""
+from __future__ import annotations
+
 import datetime as dt
 import logging
 import re
-from typing import Optional, Tuple
 
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
@@ -53,7 +54,7 @@ class NetatmoSource(MediaSource):
         return PlayMedia(url, MIME_TYPE)
 
     async def async_browse_media(
-        self, item: MediaSourceItem, media_types: Tuple[str] = MEDIA_MIME_TYPES
+        self, item: MediaSourceItem, media_types: tuple[str] = MEDIA_MIME_TYPES
     ) -> BrowseMediaSource:
         """Return media."""
         try:
@@ -156,7 +157,7 @@ def remove_html_tags(text):
 @callback
 def async_parse_identifier(
     item: MediaSourceItem,
-) -> Tuple[str, str, Optional[int]]:
+) -> tuple[str, str, int | None]:
     """Parse identifier."""
     if not item.identifier:
         return "events", "", None

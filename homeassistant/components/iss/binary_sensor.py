@@ -79,7 +79,7 @@ class IssBinarySensor(BinarySensorEntity):
         return DEFAULT_DEVICE_CLASS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.iss_data:
             attrs = {

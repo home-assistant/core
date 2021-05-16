@@ -1,6 +1,7 @@
 """Tests for color_extractor component service calls."""
 import base64
 import io
+from unittest.mock import Mock, mock_open, patch
 
 import aiohttp
 import pytest
@@ -23,7 +24,6 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 import homeassistant.util.color as color_util
 
-from tests.async_mock import Mock, mock_open, patch
 from tests.common import load_fixture
 
 LIGHT_ENTITY = "light.kitchen_lights"

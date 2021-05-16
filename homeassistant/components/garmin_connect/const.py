@@ -42,14 +42,14 @@ GARMIN_ENTITY_LIST = {
     ],
     "wellnessStartTimeLocal": [
         "Wellness Start Time",
-        "",
+        None,
         "mdi:clock",
         DEVICE_CLASS_TIMESTAMP,
         False,
     ],
     "wellnessEndTimeLocal": [
         "Wellness End Time",
-        "",
+        None,
         "mdi:clock",
         DEVICE_CLASS_TIMESTAMP,
         False,
@@ -299,7 +299,7 @@ GARMIN_ENTITY_LIST = {
     "latestSpo2": ["Latest SPO2", PERCENTAGE, "mdi:diabetes", None, True],
     "latestSpo2ReadingTimeLocal": [
         "Latest SPO2 Time",
-        "",
+        None,
         "mdi:diabetes",
         DEVICE_CLASS_TIMESTAMP,
         False,
@@ -334,7 +334,7 @@ GARMIN_ENTITY_LIST = {
     ],
     "latestRespirationTimeGMT": [
         "Latest Respiration Update",
-        "",
+        None,
         "mdi:progress-clock",
         DEVICE_CLASS_TIMESTAMP,
         False,
@@ -348,5 +348,5 @@ GARMIN_ENTITY_LIST = {
     "physiqueRating": ["Physique Rating", "", "mdi:numeric", None, False],
     "visceralFat": ["Visceral Fat", "", "mdi:food", None, False],
     "metabolicAge": ["Metabolic Age", "", "mdi:calendar-heart", None, False],
-    "nextAlarm": ["Next Alarm Time", "", "mdi:alarm", DEVICE_CLASS_TIMESTAMP, True],
+    "nextAlarm": ["Next Alarm Time", None, "mdi:alarm", DEVICE_CLASS_TIMESTAMP, True],
 }

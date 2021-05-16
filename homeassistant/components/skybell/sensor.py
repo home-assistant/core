@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
@@ -38,14 +38,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class SkybellSensor(SkybellDevice):
+class SkybellSensor(SkybellDevice, SensorEntity):
     """A sensor implementation for Skybell devices."""
 
     def __init__(self, device, sensor_type):
         """Initialize a sensor for a Skybell device."""
         super().__init__(device)
         self._sensor_type = sensor_type
-        self._icon = "mdi:{}".format(SENSOR_TYPES[self._sensor_type][1])
+        self._icon = f"mdi:{SENSOR_TYPES[self._sensor_type][1]}"
         self._name = "{} {}".format(
             self._device.name, SENSOR_TYPES[self._sensor_type][0]
         )

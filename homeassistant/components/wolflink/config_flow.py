@@ -9,12 +9,7 @@ from wolf_smartset.wolf_client import WolfClient
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import (  # pylint:disable=unused-import
-    DEVICE_GATEWAY,
-    DEVICE_ID,
-    DEVICE_NAME,
-    DOMAIN,
-)
+from .const import DEVICE_GATEWAY, DEVICE_ID, DEVICE_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +22,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Wolf SmartSet Service."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize with empty username and password."""

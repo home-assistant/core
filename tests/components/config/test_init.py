@@ -1,10 +1,11 @@
 """Test config init."""
 
+from unittest.mock import patch
+
 from homeassistant.components import config
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 
-from tests.async_mock import patch
 from tests.common import mock_component
 
 

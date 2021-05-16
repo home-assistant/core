@@ -1,5 +1,5 @@
 """Support for ESPHome binary sensors."""
-from typing import Optional
+from __future__ import annotations
 
 from aioesphomeapi import BinarySensorInfo, BinarySensorState
 
@@ -29,11 +29,11 @@ class EsphomeBinarySensor(EsphomeEntity, BinarySensorEntity):
         return super()._static_info
 
     @property
-    def _state(self) -> Optional[BinarySensorState]:
+    def _state(self) -> BinarySensorState | None:
         return super()._state
 
     @property
-    def is_on(self) -> Optional[bool]:
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if self._static_info.is_status_binary_sensor:
             # Status binary sensors indicated connected state.

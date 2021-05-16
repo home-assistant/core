@@ -2,6 +2,7 @@
 import asyncio
 from os import path
 import pathlib
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -9,8 +10,6 @@ from homeassistant.generated import config_flows
 from homeassistant.helpers import translation
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component, setup_component
-
-from tests.async_mock import Mock, patch
 
 
 @pytest.fixture

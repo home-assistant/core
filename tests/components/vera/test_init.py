@@ -1,4 +1,6 @@
 """Vera tests."""
+from unittest.mock import MagicMock
+
 import pytest
 import pyvera as pv
 from requests.exceptions import RequestException
@@ -11,10 +13,10 @@ from homeassistant.components.vera import (
 )
 from homeassistant.config_entries import ENTRY_STATE_NOT_LOADED
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .common import ComponentFactory, ConfigSource, new_simple_controller_config
 
-from tests.async_mock import MagicMock
 from tests.common import MockConfigEntry, mock_registry
 
 
@@ -22,7 +24,7 @@ async def test_init(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device1: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
     vera_device1.device_id = 1
     vera_device1.vera_device_id = vera_device1.device_id
     vera_device1.name = "first_dev"
@@ -39,7 +41,7 @@ async def test_init(
         ),
     )
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1
     assert entry1.unique_id == "vera_first_serial_1"
@@ -49,7 +51,7 @@ async def test_init_from_file(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device1: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
     vera_device1.device_id = 1
     vera_device1.vera_device_id = vera_device1.device_id
     vera_device1.name = "first_dev"
@@ -66,7 +68,7 @@ async def test_init_from_file(
         ),
     )
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1
     assert entry1.unique_id == "vera_first_serial_1"
@@ -76,14 +78,14 @@ async def test_multiple_controllers_with_legacy_one(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test multiple controllers with one legacy controller."""
-    vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device1: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
     vera_device1.device_id = 1
     vera_device1.vera_device_id = vera_device1.device_id
     vera_device1.name = "first_dev"
     vera_device1.is_tripped = False
     entity1_id = "binary_sensor.first_dev_1"
 
-    vera_device2 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device2: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
     vera_device2.device_id = 2
     vera_device2.vera_device_id = vera_device2.device_id
     vera_device2.name = "second_dev"
@@ -116,7 +118,7 @@ async def test_multiple_controllers_with_legacy_one(
         ),
     )
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1
@@ -131,7 +133,7 @@ async def test_unload(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device1: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
     vera_device1.device_id = 1
     vera_device1.vera_device_id = vera_device1.device_id
     vera_device1.name = "first_dev"
@@ -185,34 +187,39 @@ async def test_exclude_and_light_ids(
     hass: HomeAssistant, vera_component_factory: ComponentFactory, options
 ) -> None:
     """Test device exclusion, marking switches as lights and fixing the data type."""
-    vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device1: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
     vera_device1.device_id = 1
     vera_device1.vera_device_id = 1
     vera_device1.name = "dev1"
     vera_device1.is_tripped = False
     entity_id1 = "binary_sensor.dev1_1"
 
-    vera_device2 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device2: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
     vera_device2.device_id = 2
     vera_device2.vera_device_id = 2
     vera_device2.name = "dev2"
     vera_device2.is_tripped = False
     entity_id2 = "binary_sensor.dev2_2"
 
-    vera_device3 = MagicMock(spec=pv.VeraSwitch)  # type: pv.VeraSwitch
+    vera_device3: pv.VeraSwitch = MagicMock(spec=pv.VeraSwitch)
     vera_device3.device_id = 3
     vera_device3.vera_device_id = 3
     vera_device3.name = "dev3"
     vera_device3.category = pv.CATEGORY_SWITCH
     vera_device3.is_switched_on = MagicMock(return_value=False)
+
     entity_id3 = "switch.dev3_3"
 
-    vera_device4 = MagicMock(spec=pv.VeraSwitch)  # type: pv.VeraSwitch
+    vera_device4: pv.VeraSwitch = MagicMock(spec=pv.VeraSwitch)
     vera_device4.device_id = 4
     vera_device4.vera_device_id = 4
     vera_device4.name = "dev4"
     vera_device4.category = pv.CATEGORY_SWITCH
     vera_device4.is_switched_on = MagicMock(return_value=False)
+    vera_device4.get_brightness = MagicMock(return_value=0)
+    vera_device4.get_color = MagicMock(return_value=[0, 0, 0])
+    vera_device4.is_dimmable = True
+
     entity_id4 = "light.dev4_4"
 
     component_data = await vera_component_factory.configure_component(

@@ -1,5 +1,6 @@
 """Test the MELCloud config flow."""
 import asyncio
+from unittest.mock import patch
 
 from aiohttp import ClientError, ClientResponseError
 import pymelcloud
@@ -9,7 +10,6 @@ from homeassistant import config_entries
 from homeassistant.components.melcloud.const import DOMAIN
 from homeassistant.const import HTTP_FORBIDDEN, HTTP_INTERNAL_SERVER_ERROR
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

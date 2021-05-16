@@ -21,7 +21,8 @@
                 "data": {
                     "host": "Adresse IP",
                     "password": "ID Smile",
-                    "port": "Port"
+                    "port": "Port",
+                    "username": "Nom d'utilisateur de sourire"
                 },
                 "description": "Veuillez saisir :",
                 "title": "Se connecter \u00e0 Smile"

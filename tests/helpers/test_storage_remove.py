@@ -2,11 +2,11 @@
 import asyncio
 from datetime import timedelta
 import os
+from unittest.mock import patch
 
 from homeassistant.helpers import storage
 from homeassistant.util import dt
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed, async_test_home_assistant
 
 

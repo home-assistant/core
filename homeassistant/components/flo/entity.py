@@ -1,9 +1,10 @@
 """Base entity class for Flo entities."""
+from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN as FLO_DOMAIN
 from .device import FloDeviceDataUpdateCoordinator
@@ -36,7 +37,7 @@ class FloEntity(Entity):
         return self._unique_id
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         return {
             "identifiers": {(FLO_DOMAIN, self._device.id)},

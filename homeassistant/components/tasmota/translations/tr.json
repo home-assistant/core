@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
+        },
+        "step": {
+            "config": {
+                "description": "L\u00fctfen Tasmota yap\u0131land\u0131rmas\u0131n\u0131 girin.",
+                "title": "Tasmota"
+            },
+            "confirm": {
+                "description": "Tasmota'y\u0131 kurmak istiyor musunuz?"
+            }
+        }
+    }
+}

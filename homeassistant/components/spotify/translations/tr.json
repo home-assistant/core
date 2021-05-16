@@ -12,5 +12,10 @@
                 "title": "Kimlik Do\u011frulama Y\u00f6ntemini Se\u00e7"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Spotify API u\u00e7 noktas\u0131na ula\u015f\u0131labilir"
+        }
     }
 }

@@ -1,11 +1,11 @@
 """The tests for the mFi switch platform."""
+import unittest.mock as mock
+
 import pytest
 
 import homeassistant.components.mfi.switch as mfi
 import homeassistant.components.switch as switch_component
 from homeassistant.setup import async_setup_component
-
-import tests.async_mock as mock
 
 PLATFORM = mfi
 COMPONENT = switch_component
@@ -118,7 +118,7 @@ async def test_current_power_w_no_data(port, switch):
     assert switch.current_power_w == 0
 
 
-async def test_device_state_attributes(port, switch):
+async def test_extra_state_attributes(port, switch):
     """Test the state attributes."""
     port.data = {"v_rms": 1.25, "i_rms": 2.75}
-    assert switch.device_state_attributes == {"volts": 1.2, "amps": 2.8}
+    assert switch.extra_state_attributes == {"volts": 1.2, "amps": 2.8}

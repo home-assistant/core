@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Lokasi sudah dikonfigurasi"
+        },
+        "error": {
+            "invalid_api_key": "Kunci API tidak valid",
+            "wrong_location": "Tidak ada stasiun pengukur Airly di daerah ini."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Kunci API",
+                    "latitude": "Lintang",
+                    "longitude": "Bujur",
+                    "name": "Nama"
+                },
+                "description": "Siapkan integrasi kualitas udara Airly. Untuk membuat kunci API, buka https://developer.airly.eu/register",
+                "title": "Airly"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Keterjangkauan server Airly",
+            "requests_per_day": "Permintaan yang diizinkan per hari",
+            "requests_remaining": "Sisa permintaan yang diizinkan"
+        }
+    }
+}

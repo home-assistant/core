@@ -1,7 +1,9 @@
 """Support for an Intergas heater via an InComfort/InTouch Lan2RF gateway."""
-from typing import Any, Dict, Optional
+from __future__ import annotations
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from typing import Any
+
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
@@ -38,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class IncomfortSensor(IncomfortChild):
+class IncomfortSensor(IncomfortChild, SensorEntity):
     """Representation of an InComfort/InTouch sensor device."""
 
     def __init__(self, client, heater, name) -> None:
@@ -57,17 +59,17 @@ class IncomfortSensor(IncomfortChild):
         self._unit_of_measurement = None
 
     @property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the state of the sensor."""
         return self._heater.status[self._state_attr]
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._device_class
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor."""
         return self._unit_of_measurement
 
@@ -95,6 +97,6 @@ class IncomfortTemperature(IncomfortSensor):
         self._unit_of_measurement = TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""
         return {self._attr: self._heater.status[self._attr]}

@@ -1,5 +1,6 @@
 """Tests for the Nightscout integration."""
 import json
+from unittest.mock import patch
 
 from aiohttp import ClientConnectionError
 from py_nightscout.models import SGV, ServerStatus
@@ -7,7 +8,6 @@ from py_nightscout.models import SGV, ServerStatus
 from homeassistant.components.nightscout.const import DOMAIN
 from homeassistant.const import CONF_URL
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 GLUCOSE_READINGS = [

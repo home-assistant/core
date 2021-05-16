@@ -1,6 +1,7 @@
 """Axis switch platform tests."""
 
 from copy import deepcopy
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -20,27 +21,6 @@ from .test_device import (
     setup_axis_integration,
 )
 
-from tests.async_mock import AsyncMock, patch
-
-EVENTS = [
-    {
-        "operation": "Initialized",
-        "topic": "tns1:Device/Trigger/Relay",
-        "source": "RelayToken",
-        "source_idx": "0",
-        "type": "LogicalState",
-        "value": "inactive",
-    },
-    {
-        "operation": "Initialized",
-        "topic": "tns1:Device/Trigger/Relay",
-        "source": "RelayToken",
-        "source_idx": "1",
-        "type": "LogicalState",
-        "value": "active",
-    },
-]
-
 
 async def test_platform_manually_configured(hass):
     """Test that nothing happens when platform is manually configured."""
@@ -58,7 +38,7 @@ async def test_no_switches(hass):
     assert not hass.states.async_entity_ids(SWITCH_DOMAIN)
 
 
-async def test_switches_with_port_cgi(hass):
+async def test_switches_with_port_cgi(hass, mock_rtsp_event):
     """Test that switches are loaded properly using port.cgi."""
     config_entry = await setup_axis_integration(hass)
     device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
@@ -69,8 +49,20 @@ async def test_switches_with_port_cgi(hass):
     device.api.vapix.ports["0"].close = AsyncMock()
     device.api.vapix.ports["1"].name = ""
 
-    for event in EVENTS:
-        device.api.event.process_event(event)
+    mock_rtsp_event(
+        topic="tns1:Device/Trigger/Relay",
+        data_type="LogicalState",
+        data_value="inactive",
+        source_name="RelayToken",
+        source_idx="0",
+    )
+    mock_rtsp_event(
+        topic="tns1:Device/Trigger/Relay",
+        data_type="LogicalState",
+        data_value="active",
+        source_name="RelayToken",
+        source_idx="1",
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
@@ -102,7 +94,9 @@ async def test_switches_with_port_cgi(hass):
     device.api.vapix.ports["0"].open.assert_called_once()
 
 
-async def test_switches_with_port_management(hass):
+async def test_switches_with_port_management(
+    hass, mock_axis_rtspclient, mock_rtsp_event
+):
     """Test that switches are loaded properly using port management."""
     api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
     api_discovery["data"]["apiList"].append(API_DISCOVERY_PORT_MANAGEMENT)
@@ -117,8 +111,20 @@ async def test_switches_with_port_management(hass):
     device.api.vapix.ports["0"].close = AsyncMock()
     device.api.vapix.ports["1"].name = ""
 
-    for event in EVENTS:
-        device.api.event.process_event(event)
+    mock_rtsp_event(
+        topic="tns1:Device/Trigger/Relay",
+        data_type="LogicalState",
+        data_value="inactive",
+        source_name="RelayToken",
+        source_idx="0",
+    )
+    mock_rtsp_event(
+        topic="tns1:Device/Trigger/Relay",
+        data_type="LogicalState",
+        data_value="active",
+        source_name="RelayToken",
+        source_idx="1",
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2

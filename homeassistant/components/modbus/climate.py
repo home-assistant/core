@@ -1,11 +1,10 @@
 """Support for Generic Modbus Thermostats."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import struct
-from typing import Any, Dict, Optional
-
-from pymodbus.exceptions import ConnectionException, ModbusException
-from pymodbus.pdu import ExceptionResponse
+from typing import Any
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -13,23 +12,21 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
-    ATTR_TEMPERATURE,
     CONF_NAME,
+    CONF_OFFSET,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_STRUCTURE,
+    CONF_TEMPERATURE_UNIT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ModbusHub
 from .const import (
+    ATTR_TEMPERATURE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CONF_CLIMATES,
@@ -39,25 +36,25 @@ from .const import (
     CONF_DATA_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
-    CONF_OFFSET,
     CONF_PRECISION,
     CONF_SCALE,
     CONF_STEP,
     CONF_TARGET_TEMP,
-    CONF_UNIT,
     DATA_TYPE_CUSTOM,
     DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
 )
+from .modbus import ModbusHub
 
+PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     async_add_entities,
-    discovery_info: Optional[DiscoveryInfoType] = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ):
     """Read configuration and create Modbus climate."""
     if discovery_info is None:
@@ -108,12 +105,12 @@ class ModbusThermostat(ClimateEntity):
     def __init__(
         self,
         hub: ModbusHub,
-        config: Dict[str, Any],
+        config: dict[str, Any],
     ):
         """Initialize the modbus thermostat."""
         self._hub: ModbusHub = hub
         self._name = config[CONF_NAME]
-        self._slave = config[CONF_SLAVE]
+        self._slave = config.get(CONF_SLAVE)
         self._target_temperature_register = config[CONF_TARGET_TEMP]
         self._current_temperature_register = config[CONF_CURRENT_TEMP]
         self._current_temperature_register_type = config[
@@ -128,7 +125,7 @@ class ModbusThermostat(ClimateEntity):
         self._scale = config[CONF_SCALE]
         self._scan_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
         self._offset = config[CONF_OFFSET]
-        self._unit = config[CONF_UNIT]
+        self._unit = config[CONF_TEMPERATURE_UNIT]
         self._max_temp = config[CONF_MAX_TEMP]
         self._min_temp = config[CONF_MIN_TEMP]
         self._temp_step = config[CONF_STEP]
@@ -136,9 +133,7 @@ class ModbusThermostat(ClimateEntity):
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-        async_track_time_interval(
-            self.hass, lambda arg: self._update(), self._scan_interval
-        )
+        async_track_time_interval(self.hass, self.async_update, self._scan_interval)
 
     @property
     def should_poll(self):
@@ -146,7 +141,6 @@ class ModbusThermostat(ClimateEntity):
 
         False if entity pushes its state to HA.
         """
-
         # Handle polling directly in this entity
         return False
 
@@ -165,7 +159,7 @@ class ModbusThermostat(ClimateEntity):
         """Return the possible HVAC modes."""
         return [HVAC_MODE_AUTO]
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         # Home Assistant expects this method.
         # We'll keep it here to avoid getting exceptions.
@@ -205,71 +199,70 @@ class ModbusThermostat(ClimateEntity):
         """Return the supported step of target temperature."""
         return self._temp_step
 
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
+        if ATTR_TEMPERATURE not in kwargs:
+            return
         target_temperature = int(
             (kwargs.get(ATTR_TEMPERATURE) - self._offset) / self._scale
         )
-        if target_temperature is None:
-            return
         byte_string = struct.pack(self._structure, target_temperature)
         register_value = struct.unpack(">h", byte_string[0:2])[0]
-        self._write_register(self._target_temperature_register, register_value)
-        self._update()
+        self._available = await self._hub.async_write_registers(
+            self._slave,
+            self._target_temperature_register,
+            register_value,
+        )
+        self.async_update()
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
-    def _update(self):
+    async def async_update(self, now=None):
         """Update Target & Current Temperature."""
-        self._target_temperature = self._read_register(
+        # remark "now" is a dummy parameter to avoid problems with
+        # async_track_time_interval
+        self._target_temperature = await self._async_read_register(
             CALL_TYPE_REGISTER_HOLDING, self._target_temperature_register
         )
-        self._current_temperature = self._read_register(
+        self._current_temperature = await self._async_read_register(
             self._current_temperature_register_type, self._current_temperature_register
         )
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def _read_register(self, register_type, register) -> Optional[float]:
+    async def _async_read_register(self, register_type, register) -> float | None:
         """Read register using the Modbus hub slave."""
-        try:
-            if register_type == CALL_TYPE_REGISTER_INPUT:
-                result = self._hub.read_input_registers(
-                    self._slave, register, self._count
-                )
-            else:
-                result = self._hub.read_holding_registers(
-                    self._slave, register, self._count
-                )
-        except ConnectionException:
+        if register_type == CALL_TYPE_REGISTER_INPUT:
+            result = await self._hub.async_read_input_registers(
+                self._slave, register, self._count
+            )
+        else:
+            result = await self._hub.async_read_holding_registers(
+                self._slave, register, self._count
+            )
+        if result is None:
             self._available = False
-            return
-
-        if isinstance(result, (ModbusException, ExceptionResponse)):
-            self._available = False
-            return
+            return -1
 
         byte_string = b"".join(
             [x.to_bytes(2, byteorder="big") for x in result.registers]
         )
-        val = struct.unpack(self._structure, byte_string)[0]
+        val = struct.unpack(self._structure, byte_string)
+        if len(val) != 1 or not isinstance(val[0], (float, int)):
+            _LOGGER.error(
+                "Unable to parse result as a single int or float value; adjust your configuration. Result: %s",
+                str(val),
+            )
+            return -1
+
+        val2 = val[0]
         register_value = format(
-            (self._scale * val) + self._offset, f".{self._precision}f"
+            (self._scale * val2) + self._offset, f".{self._precision}f"
         )
-        register_value = float(register_value)
+        register_value2 = float(register_value)
         self._available = True
 
-        return register_value
-
-    def _write_register(self, register, value):
-        """Write holding register using the Modbus hub slave."""
-        try:
-            self._hub.write_registers(self._slave, register, [value, 0])
-        except ConnectionException:
-            self._available = False
-            return
-
-        self._available = True
+        return register_value2

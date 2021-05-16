@@ -5,8 +5,8 @@ import logging
 import async_timeout
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, ENERGY_KILO_WATT_HOUR
-from homeassistant.helpers import entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -71,7 +71,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities([SrpEntity(coordinator)])
 
 
-class SrpEntity(entity.Entity):
+class SrpEntity(SensorEntity):
     """Implementation of a Srp Energy Usage sensor."""
 
     def __init__(self, coordinator):
@@ -122,7 +122,7 @@ class SrpEntity(entity.Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if not self.coordinator.data:
             return None

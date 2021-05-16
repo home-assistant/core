@@ -24,7 +24,7 @@ async def test_lock_unlock(hass, hk_driver, events):
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = Lock(hass, hk_driver, "Lock", entity_id, 2, config)
-    await acc.run_handler()
+    await acc.run()
 
     assert acc.aid == 2
     assert acc.category == 6  # DoorLock

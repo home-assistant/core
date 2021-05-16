@@ -1,5 +1,7 @@
 """Sorting helpers for ISY994 device classifications."""
-from typing import Any, List, Optional, Union
+from __future__ import annotations
+
+from typing import Any
 
 from pyisy.constants import (
     ISY_VALUE_UNKNOWN,
@@ -19,8 +21,8 @@ from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get_registry
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     _LOGGER,
@@ -38,12 +40,12 @@ from .const import (
     KEY_ACTIONS,
     KEY_STATUS,
     NODE_FILTERS,
+    PLATFORMS,
     SUBNODE_CLIMATE_COOL,
     SUBNODE_CLIMATE_HEAT,
     SUBNODE_EZIO2X4_SENSORS,
     SUBNODE_FANLINC_LIGHT,
     SUBNODE_IOLINC_RELAY,
-    SUPPORTED_PLATFORMS,
     SUPPORTED_PROGRAM_PLATFORMS,
     TYPE_CATEGORY_SENSOR_ACTUATORS,
     TYPE_EZIO2X4,
@@ -56,7 +58,7 @@ BINARY_SENSOR_ISY_STATES = ["on", "off"]
 
 
 def _check_for_node_def(
-    hass_isy_data: dict, node: Union[Group, Node], single_platform: str = None
+    hass_isy_data: dict, node: Group | Node, single_platform: str = None
 ) -> bool:
     """Check if the node matches the node_def_id for any platforms.
 
@@ -69,7 +71,7 @@ def _check_for_node_def(
 
     node_def_id = node.node_def_id
 
-    platforms = SUPPORTED_PLATFORMS if not single_platform else [single_platform]
+    platforms = PLATFORMS if not single_platform else [single_platform]
     for platform in platforms:
         if node_def_id in NODE_FILTERS[platform][FILTER_NODE_DEF_ID]:
             hass_isy_data[ISY994_NODES][platform].append(node)
@@ -79,7 +81,7 @@ def _check_for_node_def(
 
 
 def _check_for_insteon_type(
-    hass_isy_data: dict, node: Union[Group, Node], single_platform: str = None
+    hass_isy_data: dict, node: Group | Node, single_platform: str = None
 ) -> bool:
     """Check if the node matches the Insteon type for any platforms.
 
@@ -94,13 +96,11 @@ def _check_for_insteon_type(
         return False
 
     device_type = node.type
-    platforms = SUPPORTED_PLATFORMS if not single_platform else [single_platform]
+    platforms = PLATFORMS if not single_platform else [single_platform]
     for platform in platforms:
         if any(
-            [
-                device_type.startswith(t)
-                for t in set(NODE_FILTERS[platform][FILTER_INSTEON_TYPE])
-            ]
+            device_type.startswith(t)
+            for t in set(NODE_FILTERS[platform][FILTER_INSTEON_TYPE])
         ):
 
             # Hacky special-cases for certain devices with different platforms
@@ -146,7 +146,7 @@ def _check_for_insteon_type(
 
 
 def _check_for_zwave_cat(
-    hass_isy_data: dict, node: Union[Group, Node], single_platform: str = None
+    hass_isy_data: dict, node: Group | Node, single_platform: str = None
 ) -> bool:
     """Check if the node matches the ISY Z-Wave Category for any platforms.
 
@@ -161,13 +161,11 @@ def _check_for_zwave_cat(
         return False
 
     device_type = node.zwave_props.category
-    platforms = SUPPORTED_PLATFORMS if not single_platform else [single_platform]
+    platforms = PLATFORMS if not single_platform else [single_platform]
     for platform in platforms:
         if any(
-            [
-                device_type.startswith(t)
-                for t in set(NODE_FILTERS[platform][FILTER_ZWAVE_CAT])
-            ]
+            device_type.startswith(t)
+            for t in set(NODE_FILTERS[platform][FILTER_ZWAVE_CAT])
         ):
 
             hass_isy_data[ISY994_NODES][platform].append(node)
@@ -178,7 +176,7 @@ def _check_for_zwave_cat(
 
 def _check_for_uom_id(
     hass_isy_data: dict,
-    node: Union[Group, Node],
+    node: Group | Node,
     single_platform: str = None,
     uom_list: list = None,
 ) -> bool:
@@ -202,7 +200,7 @@ def _check_for_uom_id(
             return True
         return False
 
-    platforms = SUPPORTED_PLATFORMS if not single_platform else [single_platform]
+    platforms = PLATFORMS if not single_platform else [single_platform]
     for platform in platforms:
         if node_uom in NODE_FILTERS[platform][FILTER_UOM]:
             hass_isy_data[ISY994_NODES][platform].append(node)
@@ -213,7 +211,7 @@ def _check_for_uom_id(
 
 def _check_for_states_in_uom(
     hass_isy_data: dict,
-    node: Union[Group, Node],
+    node: Group | Node,
     single_platform: str = None,
     states_list: list = None,
 ) -> bool:
@@ -239,7 +237,7 @@ def _check_for_states_in_uom(
             return True
         return False
 
-    platforms = SUPPORTED_PLATFORMS if not single_platform else [single_platform]
+    platforms = PLATFORMS if not single_platform else [single_platform]
     for platform in platforms:
         if node_uom == set(NODE_FILTERS[platform][FILTER_STATES]):
             hass_isy_data[ISY994_NODES][platform].append(node)
@@ -248,7 +246,7 @@ def _check_for_states_in_uom(
     return False
 
 
-def _is_sensor_a_binary_sensor(hass_isy_data: dict, node: Union[Group, Node]) -> bool:
+def _is_sensor_a_binary_sensor(hass_isy_data: dict, node: Group | Node) -> bool:
     """Determine if the given sensor node should be a binary_sensor."""
     if _check_for_node_def(hass_isy_data, node, single_platform=BINARY_SENSOR):
         return True
@@ -328,7 +326,7 @@ def _categorize_programs(hass_isy_data: dict, programs: Programs) -> None:
 
             actions = None
             status = entity_folder.get_by_name(KEY_STATUS)
-            if not status or not status.protocol == PROTO_PROGRAM:
+            if not status or status.protocol != PROTO_PROGRAM:
                 _LOGGER.warning(
                     "Program %s entity '%s' not loaded, invalid/missing status program",
                     platform,
@@ -338,7 +336,7 @@ def _categorize_programs(hass_isy_data: dict, programs: Programs) -> None:
 
             if platform != BINARY_SENSOR:
                 actions = entity_folder.get_by_name(KEY_ACTIONS)
-                if not actions or not actions.protocol == PROTO_PROGRAM:
+                if not actions or actions.protocol != PROTO_PROGRAM:
                     _LOGGER.warning(
                         "Program %s entity '%s' not loaded, invalid/missing actions program",
                         platform,
@@ -368,7 +366,7 @@ def _categorize_variables(
 
 
 async def migrate_old_unique_ids(
-    hass: HomeAssistantType, platform: str, devices: Optional[List[Any]]
+    hass: HomeAssistant, platform: str, devices: list[Any] | None
 ) -> None:
     """Migrate to new controller-specific unique ids."""
     registry = await async_get_registry(hass)
@@ -400,11 +398,11 @@ async def migrate_old_unique_ids(
 
 
 def convert_isy_value_to_hass(
-    value: Union[int, float, None],
+    value: int | float | None,
     uom: str,
-    precision: Union[int, str],
-    fallback_precision: Optional[int] = None,
-) -> Union[float, int]:
+    precision: int | str,
+    fallback_precision: int | None = None,
+) -> float | int:
     """Fix ISY Reported Values.
 
     ISY provides float values as an integer and precision component.

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Varl\u0131k g\u00fcncellemeleri [ler] aras\u0131ndaki minimum s\u00fcre"
+                },
+                "title": "DSMR Se\u00e7enekleri"
+            }
+        }
+    }
+}

@@ -10,9 +10,8 @@
         "step": {
             "user": {
                 "data": {
-                    "email": "Email",
                     "host": "Host",
-                    "port": "Poort (10000)"
+                    "port": "Poort "
                 },
                 "title": "Verbinding maken met het apparaat"
             }

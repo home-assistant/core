@@ -1,13 +1,28 @@
 {
     "config": {
         "abort": {
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "invalid_mfa_code": "Codi MFA inv\u00e0lid"
         },
         "step": {
+            "mfa": {
+                "data": {
+                    "mfa_code": "Codi MFA (6 d\u00edgits)"
+                },
+                "title": "Introdueix el codi MFA per a Abode"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Correu electr\u00f2nic"
+                },
+                "title": "Introdueix la informaci\u00f3 d'inici de sessi\u00f3 d'Abode."
+            },
             "user": {
                 "data": {
                     "password": "Contrasenya",

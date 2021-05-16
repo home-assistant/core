@@ -1,5 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
         "step": {
             "user": {
                 "data": {
@@ -11,6 +19,11 @@
     },
     "options": {
         "step": {
+            "options_binary": {
+                "data": {
+                    "name": "N\u00e9v (nem k\u00f6telez\u0151)"
+                }
+            },
             "options_digital": {
                 "data": {
                     "name": "N\u00e9v (nem k\u00f6telez\u0151)",

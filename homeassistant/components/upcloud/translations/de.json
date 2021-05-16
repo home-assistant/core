@@ -1,5 +1,9 @@
 {
     "config": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+        },
         "step": {
             "user": {
                 "data": {

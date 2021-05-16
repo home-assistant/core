@@ -1,19 +1,13 @@
 """Test the Tado config flow."""
 import os
+from unittest.mock import MagicMock, patch, sentinel
 
 import serial.tools.list_ports
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.rfxtrx import DOMAIN, config_flow
-from homeassistant.helpers.device_registry import (
-    async_entries_for_config_entry,
-    async_get_registry as async_get_device_registry,
-)
-from homeassistant.helpers.entity_registry import (
-    async_get_registry as async_get_entity_registry,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.async_mock import MagicMock, patch, sentinel
 from tests.common import MockConfigEntry
 
 
@@ -29,7 +23,7 @@ def serial_connect_fail(self):
 
 def com_port():
     """Mock of a serial port."""
-    port = serial.tools.list_ports_common.ListPortInfo()
+    port = serial.tools.list_ports_common.ListPortInfo("/dev/ttyUSB1234")
     port.serial_number = "1234"
     port.manufacturer = "Virtual serial port"
     port.device = "/dev/ttyUSB1234"
@@ -610,8 +604,8 @@ async def test_options_add_remove_device(hass):
     assert state.state == "off"
     assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
 
-    device_registry = await async_get_device_registry(hass)
-    device_entries = async_entries_for_config_entry(device_registry, entry.entry_id)
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
     assert device_entries[0].id
 
@@ -704,8 +698,8 @@ async def test_options_replace_sensor_device(hass):
     )
     assert state
 
-    device_registry = await async_get_device_registry(hass)
-    device_entries = async_entries_for_config_entry(device_registry, entry.entry_id)
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
     old_device = next(
         (
@@ -751,7 +745,7 @@ async def test_options_replace_sensor_device(hass):
 
     await hass.async_block_till_done()
 
-    entity_registry = await async_get_entity_registry(hass)
+    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(
         "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_rssi_numeric"
@@ -843,8 +837,8 @@ async def test_options_replace_control_device(hass):
     state = hass.states.get("switch.ac_1118cdea_2")
     assert state
 
-    device_registry = await async_get_device_registry(hass)
-    device_entries = async_entries_for_config_entry(device_registry, entry.entry_id)
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
     old_device = next(
         (
@@ -890,7 +884,7 @@ async def test_options_replace_control_device(hass):
 
     await hass.async_block_till_done()
 
-    entity_registry = await async_get_entity_registry(hass)
+    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get("binary_sensor.ac_118cdea_2")
     assert entry
@@ -941,8 +935,8 @@ async def test_options_remove_multiple_devices(hass):
     state = hass.states.get("binary_sensor.ac_1118cdea_2")
     assert state
 
-    device_registry = await async_get_device_registry(hass)
-    device_entries = async_entries_for_config_entry(device_registry, entry.entry_id)
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
     assert len(device_entries) == 3
 
@@ -1061,8 +1055,8 @@ async def test_options_add_and_configure_device(hass):
     assert state.state == "off"
     assert state.attributes.get("friendly_name") == "PT2262 22670e"
 
-    device_registry = await async_get_device_registry(hass)
-    device_entries = async_entries_for_config_entry(device_registry, entry.entry_id)
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
     assert device_entries[0].id
 
@@ -1101,6 +1095,90 @@ async def test_options_add_and_configure_device(hass):
     assert entry.data["devices"]["0913000022670e013970"]["fire_event"]
     assert entry.data["devices"]["0913000022670e013970"]["signal_repetitions"] == 5
     assert "delay_off" not in entry.data["devices"]["0913000022670e013970"]
+
+
+async def test_options_configure_rfy_cover_device(hass):
+    """Test we can configure the venetion blind mode of an Rfy cover."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "automatic_add": False,
+            "devices": {},
+        },
+        unique_id=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "automatic_add": True,
+            "event_code": "071a000001020301",
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "set_device_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "fire_event": False,
+            "venetian_blind_mode": "EU",
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    assert entry.data["devices"]["071a000001020301"]["venetian_blind_mode"] == "EU"
+
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    assert device_entries[0].id
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "prompt_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "automatic_add": False,
+            "device": device_entries[0].id,
+        },
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "set_device_options"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "fire_event": False,
+            "venetian_blind_mode": "EU",
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    await hass.async_block_till_done()
+
+    assert entry.data["devices"]["071a000001020301"]["venetian_blind_mode"] == "EU"
 
 
 def test_get_serial_by_id_no_dir():

@@ -48,7 +48,7 @@
         },
         "trigger_type": {
             "remote_button_long_release": "Tla\u010d\u00edtko \"{subtype}\" uvoln\u011bno po dlouh\u00e9m stisku",
-            "remote_button_short_press": "Stisknuto tla\u010d\u00edtko \"{subtype}\"",
+            "remote_button_short_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto",
             "remote_button_short_release": "Uvoln\u011bno tla\u010d\u00edtko \"{subtype}\"",
             "remote_double_button_long_press": "Oba \"{subtype}\" uvoln\u011bny po dlouh\u00e9m stisku",
             "remote_double_button_short_press": "Oba \"{subtype}\" uvoln\u011bny"

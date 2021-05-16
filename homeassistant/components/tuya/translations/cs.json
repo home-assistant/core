@@ -23,6 +23,9 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
         "error": {
             "dev_multi_type": "V\u00edce vybran\u00fdch za\u0159\u00edzen\u00ed k nastaven\u00ed mus\u00ed b\u00fdt stejn\u00e9ho typu",
             "dev_not_config": "Typ za\u0159\u00edzen\u00ed nelze nastavit",

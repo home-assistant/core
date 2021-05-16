@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "access_token": "Unbekannter Fehler beim Generieren eines Zugriffstokens."
+            "access_token": "Unbekannter Fehler beim Generieren eines Zugriffstokens.",
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen."
         },
         "create_entry": {
             "default": "Erfolgreiche Authentifizierung mit Ambiclimate"

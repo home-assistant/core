@@ -6,8 +6,10 @@ from functools import partial
 from pyiqvia import Client
 from pyiqvia.errors import IQVIAError
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -35,15 +37,10 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 PLATFORMS = ["sensor"]
 
 
-async def async_setup(hass, config):
-    """Set up the IQVIA component."""
-    hass.data[DOMAIN] = {DATA_COORDINATOR: {}}
-    return True
-
-
 async def async_setup_entry(hass, entry):
     """Set up IQVIA as config entry."""
-    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
+    hass.data.setdefault(DOMAIN, {})
+    coordinators = {}
 
     if not entry.unique_id:
         # If the config entry doesn't already have a unique ID, set one:
@@ -52,7 +49,7 @@ async def async_setup_entry(hass, entry):
         )
 
     websession = aiohttp_client.async_get_clientsession(hass)
-    client = Client(entry.data[CONF_ZIP_CODE], websession)
+    client = Client(entry.data[CONF_ZIP_CODE], session=websession)
 
     async def async_get_data_from_api(api_coro):
         """Get data from a particular API coroutine."""
@@ -71,9 +68,7 @@ async def async_setup_entry(hass, entry):
         (TYPE_DISEASE_FORECAST, client.disease.extended),
         (TYPE_DISEASE_INDEX, client.disease.current),
     ]:
-        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
-            sensor_type
-        ] = DataUpdateCoordinator(
+        coordinator = coordinators[sensor_type] = DataUpdateCoordinator(
             hass,
             LOGGER,
             name=f"{entry.data[CONF_ZIP_CODE]} {sensor_type}",
@@ -82,34 +77,28 @@ async def async_setup_entry(hass, entry):
         )
         init_data_update_tasks.append(coordinator.async_refresh())
 
-    await asyncio.gather(*init_data_update_tasks)
+    results = await asyncio.gather(*init_data_update_tasks, return_exceptions=True)
+    if all(isinstance(result, Exception) for result in results):
+        # The IQVIA API can be selectively flaky, meaning that any number of the setup
+        # API calls could fail. We only retry integration setup if *all* of the initial
+        # API calls fail:
+        raise ConfigEntryNotReady()
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.data[DOMAIN].setdefault(DATA_COORDINATOR, {})[entry.entry_id] = coordinators
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload an OpenUV config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
-
     return unload_ok
 
 
-class IQVIAEntity(CoordinatorEntity):
+class IQVIAEntity(CoordinatorEntity, SensorEntity):
     """Define a base IQVIA entity."""
 
     def __init__(self, coordinator, entry, sensor_type, name, icon):
@@ -123,7 +112,7 @@ class IQVIAEntity(CoordinatorEntity):
         self._type = sensor_type
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return self._attrs
 

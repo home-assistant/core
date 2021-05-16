@@ -1,5 +1,6 @@
 """The tests for the webdav calendar component."""
 import datetime
+from unittest.mock import MagicMock, Mock, patch
 
 from caldav.objects import Event
 import pytest
@@ -7,8 +8,6 @@ import pytest
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
-
-from tests.async_mock import MagicMock, Mock, patch
 
 # pylint: disable=redefined-outer-name
 
@@ -775,3 +774,32 @@ async def test_event_rrule_hourly_ended(mock_now, hass, calendar):
     state = hass.states.get("calendar.private")
     assert state.name == calendar.name
     assert state.state == STATE_OFF
+
+
+async def test_get_events(hass, calendar):
+    """Test that all events are returned on API."""
+    assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
+    await hass.async_block_till_done()
+    entity = hass.data["calendar"].get_entity("calendar.private")
+    events = await entity.async_get_events(
+        hass, datetime.date(2015, 11, 27), datetime.date(2015, 11, 28)
+    )
+    assert len(events) == 14
+
+
+async def test_get_events_custom_calendars(hass, calendar):
+    """Test that only searched events are returned on API."""
+    config = dict(CALDAV_CONFIG)
+    config["custom_calendars"] = [
+        {"name": "Private", "calendar": "Private", "search": "This is a normal event"}
+    ]
+
+    assert await async_setup_component(hass, "calendar", {"calendar": config})
+    await hass.async_block_till_done()
+
+    entity = hass.data["calendar"].get_entity("calendar.private_private")
+    events = await entity.async_get_events(
+        hass, datetime.date(2015, 11, 27), datetime.date(2015, 11, 28)
+    )
+    assert len(events) == 1
+    assert events[0]["summary"] == "This is a normal event"

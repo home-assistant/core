@@ -1,5 +1,4 @@
 """Support for OpenTherm Gateway devices."""
-import asyncio
 from datetime import date, datetime
 import logging
 
@@ -26,6 +25,9 @@ from homeassistant.const import (
     PRECISION_WHOLE,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import (
+    async_get_registry as async_get_dev_reg,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
@@ -36,6 +38,8 @@ from .const import (
     CONF_CLIMATE,
     CONF_FLOOR_TEMP,
     CONF_PRECISION,
+    CONF_READ_PRECISION,
+    CONF_SET_PRECISION,
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
     DOMAIN,
@@ -76,6 +80,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = [COMP_BINARY_SENSOR, COMP_CLIMATE, COMP_SENSOR]
+
 
 async def options_updated(hass, entry):
     """Handle options update."""
@@ -91,15 +97,23 @@ async def async_setup_entry(hass, config_entry):
     gateway = OpenThermGatewayDevice(hass, config_entry)
     hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]] = gateway
 
+    if config_entry.options.get(CONF_PRECISION):
+        migrate_options = dict(config_entry.options)
+        migrate_options.update(
+            {
+                CONF_READ_PRECISION: config_entry.options[CONF_PRECISION],
+                CONF_SET_PRECISION: config_entry.options[CONF_PRECISION],
+            }
+        )
+        del migrate_options[CONF_PRECISION]
+        hass.config_entries.async_update_entry(config_entry, options=migrate_options)
+
     config_entry.add_update_listener(options_updated)
 
     # Schedule directly on the loop to avoid blocking HA startup.
     hass.loop.create_task(gateway.connect_and_subscribe())
 
-    for comp in [COMP_BINARY_SENSOR, COMP_CLIMATE, COMP_SENSOR]:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, comp)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     register_services(hass)
     return True
@@ -384,14 +398,10 @@ def register_services(hass):
 
 async def async_unload_entry(hass, entry):
     """Cleanup and disconnect from gateway."""
-    await asyncio.gather(
-        hass.config_entries.async_forward_entry_unload(entry, COMP_BINARY_SENSOR),
-        hass.config_entries.async_forward_entry_unload(entry, COMP_CLIMATE),
-        hass.config_entries.async_forward_entry_unload(entry, COMP_SENSOR),
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     gateway = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][entry.data[CONF_ID]]
     await gateway.cleanup()
-    return True
+    return unload_ok
 
 
 class OpenThermGatewayDevice:
@@ -404,6 +414,7 @@ class OpenThermGatewayDevice:
         self.gw_id = config_entry.data[CONF_ID]
         self.name = config_entry.data[CONF_NAME]
         self.climate_config = config_entry.options
+        self.config_entry_id = config_entry.entry_id
         self.status = {}
         self.update_signal = f"{DATA_OPENTHERM_GW}_{self.gw_id}_update"
         self.options_update_signal = f"{DATA_OPENTHERM_GW}_{self.gw_id}_options_update"
@@ -419,9 +430,22 @@ class OpenThermGatewayDevice:
     async def connect_and_subscribe(self):
         """Connect to serial device and subscribe report handler."""
         self.status = await self.gateway.connect(self.hass.loop, self.device_path)
-        _LOGGER.debug("Connected to OpenTherm Gateway at %s", self.device_path)
-        self.gw_version = self.status.get(gw_vars.OTGW_BUILD)
-
+        version_string = self.status[gw_vars.OTGW].get(gw_vars.OTGW_ABOUT)
+        self.gw_version = version_string[18:] if version_string else None
+        _LOGGER.debug(
+            "Connected to OpenTherm Gateway %s at %s", self.gw_version, self.device_path
+        )
+        dev_reg = await async_get_dev_reg(self.hass)
+        gw_dev = dev_reg.async_get_or_create(
+            config_entry_id=self.config_entry_id,
+            identifiers={(DOMAIN, self.gw_id)},
+            name=self.name,
+            manufacturer="Schelte Bron",
+            model="OpenTherm Gateway",
+            sw_version=self.gw_version,
+        )
+        if gw_dev.sw_version != self.gw_version:
+            dev_reg.async_update_device(gw_dev.id, sw_version=self.gw_version)
         self.hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.cleanup)
 
         async def handle_report(status):

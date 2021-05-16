@@ -1,64 +1,138 @@
 """Support for ASUSWRT routers."""
-import logging
+from __future__ import annotations
 
-from homeassistant.components.device_tracker import DeviceScanner
+from typing import Any
 
-from . import DATA_ASUSWRT
+from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DATA_ASUSWRT, DOMAIN
+from .router import AsusWrtRouter
+
+DEFAULT_DEVICE_NAME = "Unknown device"
 
 
-async def async_get_scanner(hass, config):
-    """Validate the configuration and return an ASUS-WRT scanner."""
-    scanner = AsusWrtDeviceScanner(hass.data[DATA_ASUSWRT])
-    await scanner.async_connect()
-    return scanner if scanner.success_init else None
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+) -> None:
+    """Set up device tracker for AsusWrt component."""
+    router = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
+    tracked = set()
+
+    @callback
+    def update_router():
+        """Update the values of the router."""
+        add_entities(router, async_add_entities, tracked)
+
+    router.async_on_close(
+        async_dispatcher_connect(hass, router.signal_device_new, update_router)
+    )
+
+    update_router()
 
 
-class AsusWrtDeviceScanner(DeviceScanner):
-    """This class queries a router running ASUSWRT firmware."""
+@callback
+def add_entities(router, async_add_entities, tracked):
+    """Add new tracker entities from the router."""
+    new_tracked = []
 
-    # Eighth attribute needed for mode (AP mode vs router mode)
-    def __init__(self, api):
-        """Initialize the scanner."""
-        self.last_results = {}
-        self.success_init = False
-        self.connection = api
-        self._connect_error = False
+    for mac, device in router.devices.items():
+        if mac in tracked:
+            continue
 
-    async def async_connect(self):
-        """Initialize connection to the router."""
-        # Test the router is accessible.
-        data = await self.connection.async_get_connected_devices()
-        self.success_init = data is not None
+        new_tracked.append(AsusWrtDevice(router, device))
+        tracked.add(mac)
 
-    async def async_scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        await self.async_update_info()
-        return list(self.last_results)
+    if new_tracked:
+        async_add_entities(new_tracked)
 
-    async def async_get_device_name(self, device):
-        """Return the name of the given device or None if we don't know."""
-        if device not in self.last_results:
-            return None
-        return self.last_results[device].name
 
-    async def async_update_info(self):
-        """Ensure the information from the ASUSWRT router is up to date.
+class AsusWrtDevice(ScannerEntity):
+    """Representation of a AsusWrt device."""
 
-        Return boolean if scanning successful.
-        """
-        _LOGGER.debug("Checking Devices")
+    def __init__(self, router: AsusWrtRouter, device) -> None:
+        """Initialize a AsusWrt device."""
+        self._router = router
+        self._device = device
 
-        try:
-            self.last_results = await self.connection.async_get_connected_devices()
-            if self._connect_error:
-                self._connect_error = False
-                _LOGGER.info("Reconnected to ASUS router for device update")
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._device.mac
 
-        except OSError as err:
-            if not self._connect_error:
-                self._connect_error = True
-                _LOGGER.error(
-                    "Error connecting to ASUS router for device update: %s", err
-                )
+    @property
+    def name(self) -> str:
+        """Return the name."""
+        return self._device.name or DEFAULT_DEVICE_NAME
+
+    @property
+    def is_connected(self):
+        """Return true if the device is connected to the network."""
+        return self._device.is_connected
+
+    @property
+    def source_type(self) -> str:
+        """Return the source type."""
+        return SOURCE_TYPE_ROUTER
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the attributes."""
+        attrs = {}
+        if self._device.last_activity:
+            attrs["last_time_reachable"] = self._device.last_activity.isoformat(
+                timespec="seconds"
+            )
+        return attrs
+
+    @property
+    def hostname(self) -> str:
+        """Return the hostname of device."""
+        return self._device.name
+
+    @property
+    def ip_address(self) -> str:
+        """Return the primary ip address of the device."""
+        return self._device.ip_address
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the device."""
+        return self._device.mac
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
+        data = {
+            "connections": {(CONNECTION_NETWORK_MAC, self._device.mac)},
+        }
+        if self._device.name:
+            data["default_name"] = self._device.name
+
+        return data
+
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
+
+    @callback
+    def async_on_demand_update(self):
+        """Update state."""
+        self._device = self._router.devices[self._device.mac]
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self):
+        """Register state update callback."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                self._router.signal_device_update,
+                self.async_on_demand_update,
+            )
+        )

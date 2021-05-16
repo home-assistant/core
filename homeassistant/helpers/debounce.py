@@ -1,7 +1,10 @@
 """Debounce helper."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Awaitable
 from logging import Logger
-from typing import Any, Awaitable, Callable, Optional
+from typing import Any, Callable
 
 from homeassistant.core import HassJob, HomeAssistant, callback
 
@@ -16,7 +19,7 @@ class Debouncer:
         *,
         cooldown: float,
         immediate: bool,
-        function: Optional[Callable[..., Awaitable[Any]]] = None,
+        function: Callable[..., Awaitable[Any]] | None = None,
     ):
         """Initialize debounce.
 
@@ -29,13 +32,13 @@ class Debouncer:
         self._function = function
         self.cooldown = cooldown
         self.immediate = immediate
-        self._timer_task: Optional[asyncio.TimerHandle] = None
+        self._timer_task: asyncio.TimerHandle | None = None
         self._execute_at_end_of_timer: bool = False
         self._execute_lock = asyncio.Lock()
-        self._job: Optional[HassJob] = None if function is None else HassJob(function)
+        self._job: HassJob | None = None if function is None else HassJob(function)
 
     @property
-    def function(self) -> Optional[Callable[..., Awaitable[Any]]]:
+    def function(self) -> Callable[..., Awaitable[Any]] | None:
         """Return the function being wrapped by the Debouncer."""
         return self._function
 

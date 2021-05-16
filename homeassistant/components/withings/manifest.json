@@ -3,7 +3,8 @@
   "name": "Withings",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/withings",
-  "requirements": ["withings-api==2.1.6"],
+  "requirements": ["withings-api==2.3.2"],
   "dependencies": ["http", "webhook"],
-  "codeowners": ["@vangorra"]
+  "codeowners": ["@vangorra"],
+  "iot_class": "cloud_polling"
 }

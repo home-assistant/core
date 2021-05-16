@@ -1,4 +1,6 @@
 """Tests for the WLED switch platform."""
+from unittest.mock import patch
+
 from wled import WLEDConnectionError
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -18,8 +20,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.async_mock import patch
 from tests.components.wled import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -30,7 +32,7 @@ async def test_switch_state(
     """Test the creation and values of the WLED switches."""
     await init_integration(hass, aioclient_mock)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     state = hass.states.get("switch.wled_rgb_light_nightlight")
     assert state

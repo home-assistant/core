@@ -11,7 +11,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import base_unique_id
-from .const import CONF_STATION, DOMAIN  # pylint:disable=unused-import
+from .const import CONF_STATION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for National Weather Service (NWS)."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

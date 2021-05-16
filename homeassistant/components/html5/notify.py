@@ -1,4 +1,5 @@
 """HTML5 Push Messaging notification service."""
+from contextlib import suppress
 from datetime import datetime, timedelta
 from functools import partial
 import json
@@ -26,6 +27,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import (
+    ATTR_NAME,
     HTTP_BAD_REQUEST,
     HTTP_INTERNAL_SERVER_ERROR,
     HTTP_UNAUTHORIZED,
@@ -73,7 +75,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 ATTR_SUBSCRIPTION = "subscription"
 ATTR_BROWSER = "browser"
-ATTR_NAME = "name"
 
 ATTR_ENDPOINT = "endpoint"
 ATTR_KEYS = "keys"
@@ -202,10 +203,8 @@ def get_service(hass, config, discovery_info=None):
 
 def _load_config(filename):
     """Load configuration."""
-    try:
+    with suppress(HomeAssistantError):
         return load_json(filename)
-    except HomeAssistantError:
-        pass
     return {}
 
 
@@ -325,10 +324,8 @@ class HTML5PushCallbackView(HomeAssistantView):
         if target_check.get(ATTR_TARGET) in self.registrations:
             possible_target = self.registrations[target_check[ATTR_TARGET]]
             key = possible_target[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH]
-            try:
+            with suppress(jwt.exceptions.DecodeError):
                 return jwt.decode(token, key, algorithms=["ES256", "HS256"])
-            except jwt.exceptions.DecodeError:
-                pass
 
         return self.json_message(
             "No target found in JWT", status_code=HTTP_UNAUTHORIZED

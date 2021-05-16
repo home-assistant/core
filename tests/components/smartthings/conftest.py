@@ -1,5 +1,6 @@
 """Test configuration and mocks for the SmartThings component."""
 import secrets
+from unittest.mock import Mock, patch
 from uuid import uuid4
 
 from pysmartthings import (
@@ -36,7 +37,7 @@ from homeassistant.components.smartthings.const import (
     STORAGE_VERSION,
 )
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.config_entries import CONN_CLASS_CLOUD_PUSH, SOURCE_USER, ConfigEntry
+from homeassistant.config_entries import SOURCE_USER, ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_CLIENT_ID,
@@ -45,9 +46,8 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
-from tests.components.light.conftest import mock_light_profiles  # noqa
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 COMPONENT_PREFIX = "homeassistant.components.smartthings."
 
@@ -61,7 +61,6 @@ async def setup_platform(hass, platform: str, *, devices=None, scenes=None):
         "Test",
         {CONF_INSTALLED_APP_ID: str(uuid4())},
         SOURCE_USER,
-        CONN_CLASS_CLOUD_PUSH,
         system_options={},
     )
     broker = DeviceBroker(
@@ -231,7 +230,6 @@ def config_entry_fixture(hass, installed_app, location):
         title=location.name,
         version=2,
         source=SOURCE_USER,
-        connection_class=CONN_CLASS_CLOUD_PUSH,
     )
 
 

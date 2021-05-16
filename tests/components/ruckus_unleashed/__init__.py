@@ -1,4 +1,6 @@
 """Tests for the Ruckus Unleashed integration."""
+from unittest.mock import patch
+
 from homeassistant.components.ruckus_unleashed import DOMAIN
 from homeassistant.components.ruckus_unleashed.const import (
     API_ACCESS_POINT,
@@ -15,7 +17,6 @@ from homeassistant.components.ruckus_unleashed.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 DEFAULT_TITLE = "Ruckus Mesh"

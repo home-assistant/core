@@ -1,5 +1,5 @@
 """Tests for instance ID helper."""
-from tests.async_mock import patch
+from unittest.mock import patch
 
 
 async def test_get_id_empty(hass, hass_storage):

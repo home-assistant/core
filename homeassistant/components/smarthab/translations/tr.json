@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-posta",
+                    "password": "Parola"
+                },
+                "title": "SmartHab'\u0131 kurun"
+            }
+        }
+    }
+}

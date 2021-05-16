@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Nem siker\u00fclt csatlakozni"
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "step": {
             "user": {

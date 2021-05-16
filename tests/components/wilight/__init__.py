@@ -1,4 +1,7 @@
 """Tests for the WiLight component."""
+
+from pywilight.const import DOMAIN
+
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_MANUFACTURER,
@@ -10,9 +13,8 @@ from homeassistant.components.wilight.config_flow import (
     CONF_MODEL_NAME,
     CONF_SERIAL_NUMBER,
 )
-from homeassistant.components.wilight.const import DOMAIN
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -24,6 +26,7 @@ UPNP_MODEL_NAME_P_B = "WiLight 0102001800010009-10010010"
 UPNP_MODEL_NAME_DIMMER = "WiLight 0100001700020009-10010010"
 UPNP_MODEL_NAME_COLOR = "WiLight 0107001800020009-11010"
 UPNP_MODEL_NAME_LIGHT_FAN = "WiLight 0104001800010009-10"
+UPNP_MODEL_NAME_COVER = "WiLight 0103001800010009-10"
 UPNP_MODEL_NUMBER = "123456789012345678901234567890123456"
 UPNP_SERIAL = "000000000099"
 UPNP_MAC_ADDRESS = "5C:CF:7F:8B:CA:56"
@@ -53,17 +56,9 @@ MOCK_SSDP_DISCOVERY_INFO_MISSING_MANUFACTORER = {
     ATTR_UPNP_SERIAL: ATTR_UPNP_SERIAL,
 }
 
-MOCK_SSDP_DISCOVERY_INFO_LIGHT_FAN = {
-    ATTR_SSDP_LOCATION: SSDP_LOCATION,
-    ATTR_UPNP_MANUFACTURER: UPNP_MANUFACTURER,
-    ATTR_UPNP_MODEL_NAME: UPNP_MODEL_NAME_LIGHT_FAN,
-    ATTR_UPNP_MODEL_NUMBER: UPNP_MODEL_NUMBER,
-    ATTR_UPNP_SERIAL: ATTR_UPNP_SERIAL,
-}
-
 
 async def setup_integration(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> MockConfigEntry:
     """Mock ConfigEntry in Home Assistant."""
 

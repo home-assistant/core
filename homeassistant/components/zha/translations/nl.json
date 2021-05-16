@@ -1,11 +1,12 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Slechts \u00e9\u00e9n configuratie van ZHA is toegestaan."
+            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken met ZHA apparaat."
+            "cannot_connect": "Kan geen verbinding maken"
         },
+        "flow_title": "ZHA: {name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -30,6 +31,19 @@
                 "description": "Selecteer seri\u00eble poort voor Zigbee-radio",
                 "title": "ZHA"
             }
+        }
+    },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "Code vereist voor inschakelacties",
+            "alarm_failed_tries": "Het aantal opeenvolgende foute codes om het alarm te activeren",
+            "alarm_master_code": "Mastercode voor het alarm bedieningspaneel",
+            "title": "Alarm bedieningspaneel Opties"
+        },
+        "zha_options": {
+            "default_light_transition": "Standaard licht transitietijd (seconden)",
+            "enable_identify_on_join": "Schakel het identificatie-effect in wanneer apparaten in het netwerk komen",
+            "title": "Globale opties"
         }
     },
     "device_automation": {
@@ -65,6 +79,7 @@
             "device_dropped": "Apparaat gevallen",
             "device_flipped": "Apparaat omgedraaid \"{subtype}\"",
             "device_knocked": "Apparaat klopte \"{subtype}\"",
+            "device_offline": "Apparaat offline",
             "device_rotated": "Apparaat gedraaid \" {subtype} \"",
             "device_shaken": "Apparaat geschud",
             "device_slid": "Apparaat geschoven \"{subtype}\"\".",

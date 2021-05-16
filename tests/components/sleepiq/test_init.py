@@ -1,8 +1,9 @@
 """The tests for the SleepIQ component."""
+from unittest.mock import MagicMock, patch
+
 from homeassistant import setup
 import homeassistant.components.sleepiq as sleepiq
 
-from tests.async_mock import MagicMock, patch
 from tests.common import load_fixture
 
 CONFIG = {"sleepiq": {"username": "foo", "password": "bar"}}

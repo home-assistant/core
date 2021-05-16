@@ -64,7 +64,8 @@
                     "off_delay": "Ritardo di spegnimento",
                     "off_delay_enabled": "Attivare il ritardo di spegnimento",
                     "replace_device": "Selezionare il dispositivo da sostituire",
-                    "signal_repetitions": "Numero di ripetizioni del segnale"
+                    "signal_repetitions": "Numero di ripetizioni del segnale",
+                    "venetian_blind_mode": "Modalit\u00e0 veneziana"
                 },
                 "title": "Configurare le opzioni del dispositivo"
             }

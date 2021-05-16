@@ -1,4 +1,10 @@
 {
+    "device_automation": {
+        "trigger_type": {
+            "enters": "{entity_name} bir b\u00f6lgeye girdi",
+            "leaves": "{entity_name} bir b\u00f6lgeden ayr\u0131l\u0131yor"
+        }
+    },
     "state": {
         "_": {
             "home": "Evde",

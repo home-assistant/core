@@ -1,8 +1,9 @@
 """Support for Canary sensors."""
-from typing import Callable, List
+from __future__ import annotations
 
 from canary.api import SensorType
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -13,8 +14,8 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
@@ -52,9 +53,9 @@ STATE_AIR_QUALITY_VERY_ABNORMAL = "very_abnormal"
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Canary sensors based on a config entry."""
     coordinator: CanaryDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
@@ -75,7 +76,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class CanarySensor(CoordinatorEntity, Entity):
+class CanarySensor(CoordinatorEntity, SensorEntity):
     """Representation of a Canary sensor."""
 
     def __init__(self, coordinator, sensor_type, location, device):
@@ -163,7 +164,7 @@ class CanarySensor(CoordinatorEntity, Entity):
         return self._sensor_type[2]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         reading = self.reading
 

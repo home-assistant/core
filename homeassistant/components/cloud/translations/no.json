@@ -4,7 +4,7 @@
             "alexa_enabled": "Alexa aktivert",
             "can_reach_cert_server": "N\u00e5 sertifikatserver",
             "can_reach_cloud": "N\u00e5 Home Assistant Cloud",
-            "can_reach_cloud_auth": "N\u00e5 autentiseringsserver",
+            "can_reach_cloud_auth": "N\u00e5 godkjenningsserver",
             "google_enabled": "Google aktivert",
             "logged_in": "Logget inn",
             "relayer_connected": "Relayer tilkoblet",

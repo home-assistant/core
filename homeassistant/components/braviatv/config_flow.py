@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .const import (  # pylint:disable=unused-import
+from .const import (
     ATTR_CID,
     ATTR_MAC,
     ATTR_MODEL,
@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 def host_valid(host):
     """Return True if hostname or IP address is valid."""
     try:
-        if ipaddress.ip_address(host).version == (4 or 6):
+        if ipaddress.ip_address(host).version in [4, 6]:
             return True
     except ValueError:
         disallowed = re.compile(r"[^a-zA-Z\d\-]")
@@ -40,7 +40,6 @@ class BraviaTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for BraviaTV integration."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize."""

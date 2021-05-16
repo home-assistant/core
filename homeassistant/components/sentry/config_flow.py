@@ -2,15 +2,16 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from sentry_sdk.utils import BadDsn, Dsn
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     CONF_DSN,
     CONF_ENVIRONMENT,
     CONF_EVENT_CUSTOM_COMPONENTS,
@@ -36,7 +37,6 @@ class SentryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Sentry config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @staticmethod
     @callback
@@ -47,8 +47,8 @@ class SentryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return SentryOptionsFlow(config_entry)
 
     async def async_step_user(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a user config flow."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -78,8 +78,8 @@ class SentryOptionsFlow(config_entries.OptionsFlow):
         self.config_entry = config_entry
 
     async def async_step_init(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage Sentry options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

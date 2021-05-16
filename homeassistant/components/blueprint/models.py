@@ -1,11 +1,13 @@
 """Blueprint models."""
+from __future__ import annotations
+
 import asyncio
 import logging
 import pathlib
 import shutil
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
-from pkg_resources import parse_version
+from awesomeversion import AwesomeVersion
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -19,7 +21,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import placeholder
 from homeassistant.util import yaml
 
 from .const import (
@@ -38,7 +39,7 @@ from .errors import (
     FileAlreadyExists,
     InvalidBlueprint,
     InvalidBlueprintInputs,
-    MissingPlaceholder,
+    MissingInput,
 )
 from .schemas import BLUEPRINT_INSTANCE_FIELDS, BLUEPRINT_SCHEMA
 
@@ -50,16 +51,14 @@ class Blueprint:
         self,
         data: dict,
         *,
-        path: Optional[str] = None,
-        expected_domain: Optional[str] = None,
+        path: str | None = None,
+        expected_domain: str | None = None,
     ) -> None:
         """Initialize a blueprint."""
         try:
             data = self.data = BLUEPRINT_SCHEMA(data)
         except vol.Invalid as err:
             raise InvalidBlueprint(expected_domain, path, data, err) from err
-
-        self.placeholders = placeholder.extract_placeholders(data)
 
         # In future, we will treat this as "incorrect" and allow to recover from this
         data_domain = data[CONF_BLUEPRINT][CONF_DOMAIN]
@@ -73,7 +72,7 @@ class Blueprint:
 
         self.domain = data_domain
 
-        missing = self.placeholders - set(data[CONF_BLUEPRINT][CONF_INPUT])
+        missing = yaml.extract_inputs(data) - set(data[CONF_BLUEPRINT][CONF_INPUT])
 
         if missing:
             raise InvalidBlueprint(
@@ -98,7 +97,7 @@ class Blueprint:
         """Return blueprint metadata."""
         return self.data[CONF_BLUEPRINT]
 
-    def update_metadata(self, *, source_url: Optional[str] = None) -> None:
+    def update_metadata(self, *, source_url: str | None = None) -> None:
         """Update metadata."""
         if source_url is not None:
             self.data[CONF_BLUEPRINT][CONF_SOURCE_URL] = source_url
@@ -108,7 +107,7 @@ class Blueprint:
         return yaml.dump(self.data)
 
     @callback
-    def validate(self) -> Optional[List[str]]:
+    def validate(self) -> list[str] | None:
         """Test if the Home Assistant installation supports this blueprint.
 
         Return list of errors if not valid.
@@ -117,7 +116,7 @@ class Blueprint:
         metadata = self.metadata
         min_version = metadata.get(CONF_HOMEASSISTANT, {}).get(CONF_MIN_VERSION)
 
-        if min_version is not None and parse_version(__version__) < parse_version(
+        if min_version is not None and AwesomeVersion(__version__) < AwesomeVersion(
             min_version
         ):
             errors.append(f"Requires at least Home Assistant {min_version}")
@@ -129,7 +128,7 @@ class BlueprintInputs:
     """Inputs for a blueprint."""
 
     def __init__(
-        self, blueprint: Blueprint, config_with_inputs: Dict[str, Any]
+        self, blueprint: Blueprint, config_with_inputs: dict[str, Any]
     ) -> None:
         """Instantiate a blueprint inputs object."""
         self.blueprint = blueprint
@@ -143,7 +142,7 @@ class BlueprintInputs:
     @property
     def inputs_with_default(self):
         """Return the inputs and fallback to defaults."""
-        no_input = self.blueprint.placeholders - set(self.inputs)
+        no_input = set(self.blueprint.inputs) - set(self.inputs)
 
         inputs_with_default = dict(self.inputs)
 
@@ -156,12 +155,10 @@ class BlueprintInputs:
 
     def validate(self) -> None:
         """Validate the inputs."""
-        missing = self.blueprint.placeholders - set(self.inputs_with_default)
+        missing = set(self.blueprint.inputs) - set(self.inputs_with_default)
 
         if missing:
-            raise MissingPlaceholder(
-                self.blueprint.domain, self.blueprint.name, missing
-            )
+            raise MissingInput(self.blueprint.domain, self.blueprint.name, missing)
 
         # In future we can see if entities are correct domain, areas exist etc
         # using the new selector helper.
@@ -169,9 +166,7 @@ class BlueprintInputs:
     @callback
     def async_substitute(self) -> dict:
         """Get the blueprint value with the inputs substituted."""
-        processed = placeholder.substitute(
-            self.blueprint.data, self.inputs_with_default
-        )
+        processed = yaml.substitute(self.blueprint.data, self.inputs_with_default)
         combined = {**processed, **self.config_with_inputs}
         # From config_with_inputs
         combined.pop(CONF_USE_BLUEPRINT)
@@ -225,7 +220,7 @@ class DomainBlueprints:
             blueprint_data, expected_domain=self.domain, path=blueprint_path
         )
 
-    def _load_blueprints(self) -> Dict[str, Union[Blueprint, BlueprintException]]:
+    def _load_blueprints(self) -> dict[str, Blueprint | BlueprintException]:
         """Load all the blueprints."""
         blueprint_folder = pathlib.Path(
             self.hass.config.path(BLUEPRINT_FOLDER, self.domain)
@@ -250,7 +245,7 @@ class DomainBlueprints:
 
     async def async_get_blueprints(
         self,
-    ) -> Dict[str, Union[Blueprint, BlueprintException]]:
+    ) -> dict[str, Blueprint | BlueprintException]:
         """Get all the blueprints."""
         async with self._load_lock:
             return await self.hass.async_add_executor_job(self._load_blueprints)

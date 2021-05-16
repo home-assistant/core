@@ -1,4 +1,6 @@
 """Test the Nightscout config flow."""
+from unittest.mock import patch
+
 from aiohttp import ClientError
 
 from homeassistant.components.nightscout.const import DOMAIN
@@ -9,7 +11,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_URL
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 from tests.components.nightscout import init_integration
 

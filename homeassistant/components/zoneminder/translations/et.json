@@ -23,7 +23,7 @@
                     "password": "Salas\u00f5na",
                     "path": "ZM aadress",
                     "path_zms": "ZMS-i aadress",
-                    "ssl": "Kasutage ZoneMinderiga \u00fchenduse loomiseks SSL-i",
+                    "ssl": "Kasuta ZoneMinderiga \u00fchenduse loomiseks SSL-i",
                     "username": "Kasutajanimi",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 },

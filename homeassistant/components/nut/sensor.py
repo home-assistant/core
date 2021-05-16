@@ -1,29 +1,12 @@
 """Provides a sensor to track various status aspects of a UPS."""
 import logging
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    ATTR_STATE,
-    CONF_ALIAS,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_RESOURCES,
-    CONF_USERNAME,
-    STATE_UNKNOWN,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import ATTR_STATE, CONF_RESOURCES, STATE_UNKNOWN
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     COORDINATOR,
-    DEFAULT_HOST,
-    DEFAULT_NAME,
-    DEFAULT_PORT,
     DOMAIN,
     KEY_STATUS,
     KEY_STATUS_DISPLAY,
@@ -42,29 +25,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_ALIAS): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_RESOURCES): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    }
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import the platform into a config entry."""
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -108,7 +68,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
             )
         else:
-            _LOGGER.warning(
+            _LOGGER.info(
                 "Sensor type: %s does not appear in the NUT status "
                 "output, cannot add",
                 sensor_type,
@@ -117,7 +77,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class NUTSensor(CoordinatorEntity):
+class NUTSensor(CoordinatorEntity, SensorEntity):
     """Representation of a sensor entity for NUT status values."""
 
     def __init__(
@@ -201,7 +161,7 @@ class NUTSensor(CoordinatorEntity):
         return self._unit
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the sensor attributes."""
         return {ATTR_STATE: _format_display_state(self._data.status)}
 

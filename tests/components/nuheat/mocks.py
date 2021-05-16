@@ -1,10 +1,16 @@
 """The test for the NuHeat thermostat module."""
+from unittest.mock import MagicMock, Mock
+
 from nuheat.config import SCHEDULE_HOLD, SCHEDULE_RUN, SCHEDULE_TEMPORARY_HOLD
 
-from homeassistant.components.nuheat.const import DOMAIN
+from homeassistant.components.nuheat.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME
 
-from tests.async_mock import MagicMock, Mock
+MOCK_CONFIG_ENTRY = {
+    CONF_USERNAME: "me",
+    CONF_PASSWORD: "secret",
+    CONF_SERIAL_NUMBER: 12345,
+}
 
 
 def _get_mock_thermostat_run():

@@ -1,9 +1,9 @@
 """Support for Toon binary sensors."""
-from typing import Optional
+from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .const import (
     ATTR_DEFAULT_ENABLED,
@@ -26,7 +26,7 @@ from .models import (
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up a Toon binary sensor based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -84,7 +84,7 @@ class ToonBinarySensor(ToonEntity, BinarySensorEntity):
         return BINARY_SENSOR_ENTITIES[self.key][ATTR_DEVICE_CLASS]
 
     @property
-    def is_on(self) -> Optional[bool]:
+    def is_on(self) -> bool | None:
         """Return the status of the binary sensor."""
         section = getattr(
             self.coordinator.data, BINARY_SENSOR_ENTITIES[self.key][ATTR_SECTION]

@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Keine LIFX Ger\u00e4te im Netzwerk gefunden.",
-            "single_instance_allowed": "Nur eine einzige Konfiguration von LIFX ist zul\u00e4ssig."
+            "no_devices_found": "Keine LIFX Ger\u00e4te im Netzwerk gefunden",
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "step": {
             "confirm": {

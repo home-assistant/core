@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Kann keine Verbindung zu entdeckten Volumio herstellen"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "M\u00f6chtest du Volumio (`{name}`) zum Home Assistant hinzuf\u00fcgen?",
+                "title": "Entdeckte Volumio"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

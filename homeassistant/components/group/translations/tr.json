@@ -2,9 +2,9 @@
     "state": {
         "_": {
             "closed": "Kapand\u0131",
-            "home": "[%key:common::state::evde%]",
+            "home": "Evde",
             "locked": "Kilitli",
-            "not_home": "[%key:common::state::evde_degil%]",
+            "not_home": "D\u0131\u015far\u0131da",
             "off": "Kapal\u0131",
             "ok": "Tamam",
             "on": "A\u00e7\u0131k",

@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "resources": {
+                "data": {
+                    "resources": "Kaynaklar"
+                }
+            },
+            "ups": {
+                "data": {
+                    "alias": "Takma ad"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Ana Bilgisayar",
+                    "password": "Parola",
+                    "port": "Port",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "resources": "Kaynaklar"
+                },
+                "description": "Sens\u00f6r Kaynaklar\u0131'n\u0131 se\u00e7in."
+            }
+        }
+    }
+}

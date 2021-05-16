@@ -2,8 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up Z-Wave",
-        "description": "See https://www.home-assistant.io/docs/z-wave/installation/ for information on the configuration variables",
+        "description": "This integration is no longer maintained. For new installations, use Z-Wave JS instead.\n\nSee https://www.home-assistant.io/docs/z-wave/installation/ for information on the configuration variables",
         "data": {
           "usb_path": "[%key:common::config_flow::data::usb_path%]",
           "network_key": "Network Key (leave blank to auto-generate)"

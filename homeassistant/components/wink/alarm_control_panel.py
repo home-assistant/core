@@ -70,6 +70,6 @@ class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanelEntity):
         self.wink.set_mode("away")
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {"private": self.wink.private()}

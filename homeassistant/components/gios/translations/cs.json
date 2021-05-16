@@ -18,5 +18,10 @@
                 "title": "GIO\u015a (polsk\u00fd hlavn\u00ed inspektor\u00e1t ochrany \u017eivotn\u00edho prost\u0159ed\u00ed)"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "GIOS server dosa\u017een"
+        }
     }
 }

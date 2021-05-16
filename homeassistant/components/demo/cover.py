@@ -3,7 +3,11 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     SUPPORT_CLOSE,
+    SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
+    SUPPORT_OPEN_TILT,
+    SUPPORT_SET_TILT_POSITION,
+    SUPPORT_STOP_TILT,
     CoverEntity,
 )
 from homeassistant.core import callback
@@ -25,6 +29,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "Garage Door",
                 device_class="garage",
                 supported_features=(SUPPORT_OPEN | SUPPORT_CLOSE),
+            ),
+            DemoCover(
+                hass,
+                "cover_5",
+                "Pergola Roof",
+                tilt_position=60,
+                supported_features=(
+                    SUPPORT_OPEN_TILT
+                    | SUPPORT_STOP_TILT
+                    | SUPPORT_CLOSE_TILT
+                    | SUPPORT_SET_TILT_POSITION
+                ),
             ),
         ]
     )

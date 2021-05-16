@@ -8,10 +8,9 @@ from fints.client import FinTS3PinTanClient
 from fints.dialog import FinTSDialogError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_PIN, CONF_URL, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for account in balance_accounts:
         if config[CONF_ACCOUNTS] and account.iban not in account_config:
-            _LOGGER.info("skipping account %s for bank %s", account.iban, fints_name)
+            _LOGGER.info("Skipping account %s for bank %s", account.iban, fints_name)
             continue
 
         account_name = account_config.get(account.iban)
@@ -87,7 +86,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for account in holdings_accounts:
         if config[CONF_HOLDINGS] and account.accountnumber not in holdings_config:
             _LOGGER.info(
-                "skipping holdings %s for bank %s", account.accountnumber, fints_name
+                "Skipping holdings %s for bank %s", account.accountnumber, fints_name
             )
             continue
 
@@ -154,7 +153,7 @@ class FinTsClient:
         return balance_accounts, holdings_accounts
 
 
-class FinTsAccount(Entity):
+class FinTsAccount(SensorEntity):
     """Sensor for a FinTS balance account.
 
     A balance account contains an amount of money (=balance). The amount may
@@ -193,7 +192,7 @@ class FinTsAccount(Entity):
         return self._currency
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Additional attributes of the sensor."""
         attributes = {ATTR_ACCOUNT: self._account.iban, ATTR_ACCOUNT_TYPE: "balance"}
         if self._client.name:
@@ -206,7 +205,7 @@ class FinTsAccount(Entity):
         return ICON
 
 
-class FinTsHoldingsAccount(Entity):
+class FinTsHoldingsAccount(SensorEntity):
     """Sensor for a FinTS holdings account.
 
     A holdings account does not contain money but rather some financial
@@ -238,7 +237,7 @@ class FinTsHoldingsAccount(Entity):
         return ICON
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Additional attributes of the sensor.
 
         Lists each holding of the account with the current value.

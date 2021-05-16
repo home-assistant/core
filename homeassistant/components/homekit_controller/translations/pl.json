@@ -62,9 +62,9 @@
             "doorbell": "dzwonek do drzwi"
         },
         "trigger_type": {
-            "double_press": "\"{subtype}\" naci\u015bni\u0119ty dwukrotnie",
-            "long_press": "\"{subtype}\" naci\u015bni\u0119ty i przytrzymany",
-            "single_press": "\"{subtype}\" naci\u015bni\u0119ty"
+            "double_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty dwukrotnie",
+            "long_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty i przytrzymany",
+            "single_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty"
         }
     },
     "title": "Kontroler HomeKit"

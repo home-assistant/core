@@ -1,5 +1,6 @@
 """Test Websocket API http module."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from aiohttp import WSMsgType
 import pytest
@@ -7,7 +8,6 @@ import pytest
 from homeassistant.components.websocket_api import const, http
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 
@@ -67,7 +67,7 @@ async def test_pending_msg_peak(hass, mock_low_peak, hass_ws_client, caplog):
 
 
 async def test_non_json_message(hass, websocket_client, caplog):
-    """Test trying to serialze non JSON objects."""
+    """Test trying to serialize non JSON objects."""
     bad_data = object()
     hass.states.async_set("test_domain.entity", "testing", {"bad": bad_data})
     await websocket_client.send_json({"id": 5, "type": "get_states"})
@@ -77,6 +77,6 @@ async def test_non_json_message(hass, websocket_client, caplog):
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
     assert (
-        f"Unable to serialize to JSON. Bad data found at $.result[0](state: test_domain.entity).attributes.bad={bad_data}(<class 'object'>"
+        f"Unable to serialize to JSON. Bad data found at $.result[0](State: test_domain.entity).attributes.bad={bad_data}(<class 'object'>"
         in caplog.text
     )

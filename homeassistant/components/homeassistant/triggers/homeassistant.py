@@ -19,6 +19,7 @@ TRIGGER_SCHEMA = vol.Schema(
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for events based on configuration."""
+    trigger_id = automation_info.get("trigger_id") if automation_info else None
     event = config.get(CONF_EVENT)
     job = HassJob(action)
 
@@ -34,6 +35,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
                         "platform": "homeassistant",
                         "event": event,
                         "description": "Home Assistant stopping",
+                        "id": trigger_id,
                     }
                 },
                 event.context,
@@ -51,6 +53,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
                     "platform": "homeassistant",
                     "event": event,
                     "description": "Home Assistant starting",
+                    "id": trigger_id,
                 }
             },
         )

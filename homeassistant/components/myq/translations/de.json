@@ -1,14 +1,22 @@
 {
     "config": {
         "abort": {
-            "already_configured": "MyQ ist bereits konfiguriert"
+            "already_configured": "Der Dienst ist bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passwort"
+                },
+                "description": "Das Passwort f\u00fcr {username} ist nicht mehr g\u00fcltig.",
+                "title": "Authentifizieren Sie Ihr MyQ-Konto erneut"
+            },
             "user": {
                 "data": {
                     "password": "Passwort",

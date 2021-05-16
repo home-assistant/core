@@ -14,6 +14,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
     CONF_NAME,
+    CONF_REPEAT,
     CONF_STATE,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -33,7 +34,6 @@ DOMAIN = "alert"
 
 CONF_CAN_ACK = "can_acknowledge"
 CONF_NOTIFIERS = "notifiers"
-CONF_REPEAT = "repeat"
 CONF_SKIP_FIRST = "skip_first"
 CONF_ALERT_MESSAGE = "message"
 CONF_DONE_MESSAGE = "done_message"

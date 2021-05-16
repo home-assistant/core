@@ -82,7 +82,7 @@ class BrData:
 
     async def get_data(self, url):
         """Load data from specified url."""
-        _LOGGER.debug("Calling url: %s...", url)
+        _LOGGER.debug("Calling url: %s", url)
         result = {SUCCESS: False, MESSAGE: None}
         resp = None
         try:

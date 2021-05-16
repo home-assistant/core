@@ -1,5 +1,6 @@
 """Tests for the HomeKit AID manager."""
 import os
+from unittest.mock import patch
 
 from fnvhash import fnv1a_32
 import pytest
@@ -12,7 +13,6 @@ from homeassistant.components.homekit.aidmanager import (
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 
 

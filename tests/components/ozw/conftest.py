@@ -1,19 +1,27 @@
 """Helpers for tests."""
 import json
+from unittest.mock import patch
 
 import pytest
 
+from homeassistant.config_entries import ENTRY_STATE_LOADED
+
 from .common import MQTTMessage
 
-from tests.async_mock import patch
-from tests.common import load_fixture
-from tests.components.light.conftest import mock_light_profiles  # noqa
+from tests.common import MockConfigEntry, load_fixture
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
 @pytest.fixture(name="generic_data", scope="session")
 def generic_data_fixture():
     """Load generic MQTT data and return it."""
     return load_fixture("ozw/generic_network_dump.csv")
+
+
+@pytest.fixture(name="migration_data", scope="session")
+def migration_data_fixture():
+    """Load migration MQTT data and return it."""
+    return load_fixture("ozw/migration_fixture.csv")
 
 
 @pytest.fixture(name="fan_data", scope="session")
@@ -253,3 +261,20 @@ def mock_uninstall_addon():
         "homeassistant.components.hassio.async_uninstall_addon"
     ) as uninstall_addon:
         yield uninstall_addon
+
+
+@pytest.fixture(name="get_addon_discovery_info")
+def mock_get_addon_discovery_info():
+    """Mock get add-on discovery info."""
+    with patch(
+        "homeassistant.components.hassio.async_get_addon_discovery_info"
+    ) as get_addon_discovery_info:
+        yield get_addon_discovery_info
+
+
+@pytest.fixture(name="mqtt")
+async def mock_mqtt_fixture(hass):
+    """Mock the MQTT integration."""
+    mqtt_entry = MockConfigEntry(domain="mqtt", state=ENTRY_STATE_LOADED)
+    mqtt_entry.add_to_hass(hass)
+    return mqtt_entry

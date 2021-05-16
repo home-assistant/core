@@ -13,7 +13,7 @@
         "step": {
             "pair_tv": {
                 "data": {
-                    "pin": "PIN-kode"
+                    "pin": "PIN kode"
                 },
                 "description": "TVen skal vise en kode. Fyll inn denne koden i skjemaet, og fortsett deretter til neste trinn for \u00e5 fullf\u00f8re paringen.",
                 "title": "Fullf\u00f8r sammenkoblingsprosess"

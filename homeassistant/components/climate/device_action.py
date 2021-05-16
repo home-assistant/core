@@ -1,5 +1,5 @@
 """Provides device automations for Climate."""
-from typing import List, Optional
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -38,7 +38,7 @@ SET_PRESET_MODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 ACTION_SCHEMA = vol.Any(SET_HVAC_MODE_SCHEMA, SET_PRESET_MODE_SCHEMA)
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device actions for Climate devices."""
     registry = await entity_registry.async_get_registry(hass)
     actions = []
@@ -76,11 +76,9 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
 
 
 async def async_call_action_from_config(
-    hass: HomeAssistant, config: dict, variables: dict, context: Optional[Context]
+    hass: HomeAssistant, config: dict, variables: dict, context: Context | None
 ) -> None:
     """Execute a device action."""
-    config = ACTION_SCHEMA(config)
-
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
 
     if config[CONF_TYPE] == "set_hvac_mode":

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Mindestzeit zwischen Entit\u00e4tsaktualisierungen [s]"
+                },
+                "title": "DSMR-Optionen"
+            }
+        }
+    }
+}

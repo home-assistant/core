@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "latitude": "Enlem",
+                    "longitude": "Boylam"
+                }
+            }
+        }
+    }
+}

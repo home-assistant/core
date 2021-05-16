@@ -1,6 +1,9 @@
 """Network helpers."""
+from __future__ import annotations
+
+from contextlib import suppress
 from ipaddress import ip_address
-from typing import Optional, cast
+from typing import cast
 
 import yarl
 
@@ -8,13 +11,7 @@ from homeassistant.components import http
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
-from homeassistant.util.network import (
-    is_ip_address,
-    is_local,
-    is_loopback,
-    is_private,
-    normalize_url,
-)
+from homeassistant.util.network import is_ip_address, is_loopback, normalize_url
 
 TYPE_URL_INTERNAL = "internal_url"
 TYPE_URL_EXTERNAL = "external_url"
@@ -60,7 +57,7 @@ def get_url(
     for url_type in order:
 
         if allow_internal and url_type == TYPE_URL_INTERNAL:
-            try:
+            with suppress(NoURLAvailableError):
                 return _get_internal_url(
                     hass,
                     allow_ip=allow_ip,
@@ -68,11 +65,9 @@ def get_url(
                     require_ssl=require_ssl,
                     require_standard_port=require_standard_port,
                 )
-            except NoURLAvailableError:
-                pass
 
         if allow_external and url_type == TYPE_URL_EXTERNAL:
-            try:
+            with suppress(NoURLAvailableError):
                 return _get_external_url(
                     hass,
                     allow_cloud=allow_cloud,
@@ -82,8 +77,6 @@ def get_url(
                     require_ssl=require_ssl,
                     require_standard_port=require_standard_port,
                 )
-            except NoURLAvailableError:
-                pass
 
     # For current request, we accept loopback interfaces (e.g., 127.0.0.1),
     # the Supervisor hostname and localhost transparently
@@ -123,7 +116,7 @@ def get_url(
     raise NoURLAvailableError
 
 
-def _get_request_host() -> Optional[str]:
+def _get_request_host() -> str | None:
     """Get the host address of the current request."""
     request = http.current_request.get()
     if request is None:
@@ -150,19 +143,6 @@ def _get_internal_url(
             and (allow_ip or not is_ip_address(str(internal_url.host)))
         ):
             return normalize_url(str(internal_url))
-
-    # Fallback to old base_url
-    try:
-        return _get_deprecated_base_url(
-            hass,
-            internal=True,
-            allow_ip=allow_ip,
-            require_current_request=require_current_request,
-            require_ssl=require_ssl,
-            require_standard_port=require_standard_port,
-        )
-    except NoURLAvailableError:
-        pass
 
     # Fallback to detected local IP
     if allow_ip and not (
@@ -194,10 +174,8 @@ def _get_external_url(
 ) -> str:
     """Get external URL of this instance."""
     if prefer_cloud and allow_cloud:
-        try:
+        with suppress(NoURLAvailableError):
             return _get_cloud_url(hass)
-        except NoURLAvailableError:
-            pass
 
     if hass.config.external_url:
         external_url = yarl.URL(hass.config.external_url)
@@ -217,22 +195,9 @@ def _get_external_url(
         ):
             return normalize_url(str(external_url))
 
-    try:
-        return _get_deprecated_base_url(
-            hass,
-            allow_ip=allow_ip,
-            require_current_request=require_current_request,
-            require_ssl=require_ssl,
-            require_standard_port=require_standard_port,
-        )
-    except NoURLAvailableError:
-        pass
-
     if allow_cloud:
-        try:
+        with suppress(NoURLAvailableError):
             return _get_cloud_url(hass, require_current_request=require_current_request)
-        except NoURLAvailableError:
-            pass
 
     raise NoURLAvailableError
 
@@ -248,52 +213,5 @@ def _get_cloud_url(hass: HomeAssistant, require_current_request: bool = False) -
 
         if not require_current_request or cloud_url.host == _get_request_host():
             return normalize_url(str(cloud_url))
-
-    raise NoURLAvailableError
-
-
-@bind_hass
-def _get_deprecated_base_url(
-    hass: HomeAssistant,
-    *,
-    internal: bool = False,
-    allow_ip: bool = True,
-    require_current_request: bool = False,
-    require_ssl: bool = False,
-    require_standard_port: bool = False,
-) -> str:
-    """Work with the deprecated `base_url`, used as fallback."""
-    if hass.config.api is None or not hass.config.api.deprecated_base_url:
-        raise NoURLAvailableError
-
-    base_url = yarl.URL(hass.config.api.deprecated_base_url)
-    # Rules that apply to both internal and external
-    if (
-        (allow_ip or not is_ip_address(str(base_url.host)))
-        and (not require_current_request or base_url.host == _get_request_host())
-        and (not require_ssl or base_url.scheme == "https")
-        and (not require_standard_port or base_url.is_default_port())
-    ):
-        # Check to ensure an internal URL
-        if internal and (
-            str(base_url.host).endswith(".local")
-            or (
-                is_ip_address(str(base_url.host))
-                and not is_loopback(ip_address(base_url.host))
-                and is_private(ip_address(base_url.host))
-            )
-        ):
-            return normalize_url(str(base_url))
-
-        # Check to ensure an external URL (a little)
-        if (
-            not internal
-            and not str(base_url.host).endswith(".local")
-            and not (
-                is_ip_address(str(base_url.host))
-                and is_local(ip_address(str(base_url.host)))
-            )
-        ):
-            return normalize_url(str(base_url))
 
     raise NoURLAvailableError

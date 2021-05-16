@@ -1,7 +1,11 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
+            "missing_configuration": "A komponens nincs konfigur\u00e1lva. K\u00e9rlek, k\u00f6vesd a dokument\u00e1ci\u00f3t."
+        },
         "create_entry": {
-            "default": "Sikeres autentik\u00e1ci\u00f3"
+            "default": "Sikeres hiteles\u00edt\u00e9s"
         }
     }
 }

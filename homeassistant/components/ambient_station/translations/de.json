@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dieser App-Schl\u00fcssel wird bereits verwendet."
+            "already_configured": "Der Dienst ist bereits konfiguriert"
         },
         "error": {
-            "invalid_key": "Ung\u00fcltiger API Key und / oder Anwendungsschl\u00fcssel",
+            "invalid_key": "Ung\u00fcltiger API-Schl\u00fcssel",
             "no_devices": "Keine Ger\u00e4te im Konto gefunden"
         },
         "step": {

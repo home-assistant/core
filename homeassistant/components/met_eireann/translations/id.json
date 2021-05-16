@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Layanan sudah dikonfigurasi"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Ketinggian",
+                    "latitude": "Lintang",
+                    "longitude": "Bujur",
+                    "name": "Nama"
+                },
+                "description": "Masukkan lokasi Anda untuk menggunakan data cuaca dari Met \u00c9ireann Public Weather Forecast API",
+                "title": "Lokasi"
+            }
+        }
+    }
+}

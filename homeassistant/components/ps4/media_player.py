@@ -1,8 +1,10 @@
 """Support for PlayStation 4 consoles."""
 import asyncio
+from contextlib import suppress
 import logging
 
 from pyps4_2ndscreen.errors import NotReady, PSDataIncomplete
+from pyps4_2ndscreen.media_art import TYPE_APP as PS_TYPE_APP
 import pyps4_2ndscreen.ps4 as pyps4
 
 from homeassistant.components.media_player import MediaPlayerEntity
@@ -141,10 +143,8 @@ class PS4Device(MediaPlayerEntity):
                 and not self._ps4.is_standby
                 and self._ps4.is_available
             ):
-                try:
+                with suppress(NotReady):
                     await self._ps4.async_connect()
-                except NotReady:
-                    pass
 
         # Try to ensure correct status is set on startup for device info.
         if self._ps4.ddp_protocol is None:
@@ -262,7 +262,7 @@ class PS4Device(MediaPlayerEntity):
                 app_name = title.name
                 art = title.cover_art
                 # Assume media type is game if not app.
-                if title.game_type != "App":
+                if title.game_type != PS_TYPE_APP:
                     media_type = MEDIA_TYPE_GAME
                 else:
                     media_type = MEDIA_TYPE_APP

@@ -18,6 +18,9 @@
         },
         "flow_title": "Acess\u00f3rio HomeKit: {name}",
         "step": {
+            "busy_error": {
+                "title": "O dispositivo j\u00e1 est\u00e1 a emparelhar com outro controlador"
+            },
             "pair": {
                 "data": {
                     "pairing_code": "C\u00f3digo de emparelhamento"
@@ -32,6 +35,23 @@
                 "description": "Selecione o dispositivo com o qual deseja emparelhar",
                 "title": "Emparelhar com o acess\u00f3rio HomeKit"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button1": "Bot\u00e3o 1",
+            "button10": "Bot\u00e3o 10",
+            "button2": "Bot\u00e3o 2",
+            "button3": "Bot\u00e3o 3",
+            "button4": "Bot\u00e3o 4",
+            "button5": "Bot\u00e3o 5",
+            "button6": "Bot\u00e3o 6",
+            "button7": "Bot\u00e3o 7",
+            "button8": "Bot\u00e3o 8",
+            "button9": "Bot\u00e3o 9"
+        },
+        "trigger_type": {
+            "single_press": "\"{subtype}\" pressionado"
         }
     },
     "title": "Acess\u00f3rio HomeKit"

@@ -64,7 +64,8 @@
                     "off_delay": "Retard OFF",
                     "off_delay_enabled": "Activa el retard OFF",
                     "replace_device": "Selecciona el dispositiu a substituir",
-                    "signal_repetitions": "Nombre de repeticions del senyal"
+                    "signal_repetitions": "Nombre de repeticions del senyal",
+                    "venetian_blind_mode": "Mode persiana veneciana"
                 },
                 "title": "Configuraci\u00f3 de les opcions del dispositiu"
             }

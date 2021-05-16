@@ -1,7 +1,7 @@
 """Test script init."""
-import homeassistant.scripts as scripts
+from unittest.mock import patch
 
-from tests.async_mock import patch
+import homeassistant.scripts as scripts
 
 
 @patch("homeassistant.scripts.get_default_config_dir", return_value="/default")

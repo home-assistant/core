@@ -4,5 +4,16 @@
       "turn_on": "Turn on {entity_name}",
       "turn_off": "Turn off {entity_name}"
     }
+  },
+  "state": {
+    "_": {
+      "off": "[%key:common::state::off%]",
+      "eco": "Eco",
+      "electric": "Electric",
+      "gas": "Gas",
+      "high_demand": "High Demand",
+      "heat_pump": "Heat Pump",
+      "performance": "Performance"
+    }
   }
 }

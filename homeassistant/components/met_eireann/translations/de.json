@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Der Dienst ist bereits konfiguriert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "H\u00f6he",
+                    "latitude": "Breitengrad",
+                    "longitude": "L\u00e4ngengrad",
+                    "name": "Name"
+                },
+                "title": "Standort"
+            }
+        }
+    }
+}

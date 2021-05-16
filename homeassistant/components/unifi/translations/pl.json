@@ -1,13 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana"
+            "already_configured": "Us\u0142uga jest ju\u017c skonfigurowana",
+            "configuration_updated": "Konfiguracja zaktualizowana",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
             "faulty_credentials": "Niepoprawne uwierzytelnienie",
             "service_unavailable": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "unknown_client_mac": "Brak klienta z tym adresem MAC"
         },
+        "flow_title": "Sie\u0107 UniFi {site} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -67,7 +70,7 @@
                     "allow_uptime_sensors": "Sensory czasu pracy dla klient\u00f3w sieciowych"
                 },
                 "description": "Konfiguracja sensora statystyk",
-                "title": "Opcje UniFi"
+                "title": "Opcje UniFi 3/3"
             }
         }
     }

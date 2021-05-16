@@ -1,8 +1,9 @@
 """Test Z-Wave node entity."""
+from unittest.mock import MagicMock, patch
+
 from homeassistant.components.zwave import const, node_entity
 from homeassistant.const import ATTR_ENTITY_ID
 
-from tests.async_mock import MagicMock, patch
 import tests.mock.zwave as mock_zwave
 
 
@@ -192,8 +193,7 @@ async def test_application_version(hass, mock_openzwave):
 
     # Make sure application version isn't set before
     assert (
-        node_entity.ATTR_APPLICATION_VERSION
-        not in entity.device_state_attributes.keys()
+        node_entity.ATTR_APPLICATION_VERSION not in entity.extra_state_attributes.keys()
     )
 
     # Add entity to hass
@@ -211,9 +211,7 @@ async def test_application_version(hass, mock_openzwave):
     )
     await hass.async_block_till_done()
 
-    assert (
-        entity.device_state_attributes[node_entity.ATTR_APPLICATION_VERSION] == "5.10"
-    )
+    assert entity.extra_state_attributes[node_entity.ATTR_APPLICATION_VERSION] == "5.10"
 
     # Fire off a changed
     value = mock_zwave.MockValue(
@@ -226,9 +224,7 @@ async def test_application_version(hass, mock_openzwave):
     )
     await hass.async_block_till_done()
 
-    assert (
-        entity.device_state_attributes[node_entity.ATTR_APPLICATION_VERSION] == "4.14"
-    )
+    assert entity.extra_state_attributes[node_entity.ATTR_APPLICATION_VERSION] == "4.14"
 
 
 async def test_network_node_changed_from_value(hass, mock_openzwave):
@@ -305,7 +301,7 @@ async def test_node_changed(hass, mock_openzwave):
         "node_name": "Mock Node",
         "manufacturer_name": "Test Manufacturer",
         "product_name": "Test Product",
-    } == entity.device_state_attributes
+    } == entity.extra_state_attributes
 
     node.get_values.return_value = {1: mock_zwave.MockValue(data=1800)}
     zwave_network.manager.getNodeStatistics.return_value = {
@@ -615,12 +611,12 @@ async def test_node_changed(hass, mock_openzwave):
         "sentCnt": 7,
         "sentFailed": 1,
         "sentTS": "2017-03-27 15:38:15:620 ",
-    } == entity.device_state_attributes
+    } == entity.extra_state_attributes
 
     node.can_wake_up_value = False
     entity.node_changed()
 
-    assert "wake_up_interval" not in entity.device_state_attributes
+    assert "wake_up_interval" not in entity.extra_state_attributes
 
 
 async def test_name(hass, mock_openzwave):

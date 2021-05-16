@@ -1,13 +1,15 @@
 """Constants used by Home Assistant components."""
-MAJOR_VERSION = 0
-MINOR_VERSION = 119
+from typing import Final
+
+MAJOR_VERSION = 2021
+MINOR_VERSION = 6
 PATCH_VERSION = "0.dev0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER = (3, 7, 1)
+REQUIRED_PYTHON_VER = (3, 8, 0)
 # Truthy date string triggers showing related deprecation warning messages.
-REQUIRED_NEXT_PYTHON_VER = (3, 8, 0)
-REQUIRED_NEXT_PYTHON_DATE = "December 7, 2020"
+REQUIRED_NEXT_PYTHON_VER = (3, 9, 0)
+REQUIRED_NEXT_PYTHON_DATE = ""
 
 # Format for platform files
 PLATFORM_FORMAT = "{platform}.{domain}"
@@ -21,6 +23,10 @@ ENTITY_MATCH_ALL = "all"
 
 # If no name is specified
 DEVICE_DEFAULT_NAME = "Unnamed Device"
+
+# Max characters for an event_type (changing this requires a recorder
+# database migration)
+MAX_LENGTH_EVENT_TYPE = 64
 
 # Sun events
 SUN_EVENT_SUNSET = "sunset"
@@ -73,6 +79,7 @@ CONF_CUSTOMIZE_GLOB = "customize_glob"
 CONF_DEFAULT = "default"
 CONF_DELAY = "delay"
 CONF_DELAY_TIME = "delay_time"
+CONF_DESCRIPTION = "description"
 CONF_DEVICE = "device"
 CONF_DEVICES = "devices"
 CONF_DEVICE_CLASS = "device_class"
@@ -170,6 +177,7 @@ CONF_STATE = "state"
 CONF_STATE_TEMPLATE = "state_template"
 CONF_STRUCTURE = "structure"
 CONF_SWITCHES = "switches"
+CONF_TARGET = "target"
 CONF_TEMPERATURE_UNIT = "temperature_unit"
 CONF_TIMEOUT = "timeout"
 CONF_TIME_ZONE = "time_zone"
@@ -208,7 +216,6 @@ EVENT_HOMEASSISTANT_STARTED = "homeassistant_started"
 EVENT_HOMEASSISTANT_STOP = "homeassistant_stop"
 EVENT_HOMEASSISTANT_FINAL_WRITE = "homeassistant_final_write"
 EVENT_LOGBOOK_ENTRY = "logbook_entry"
-EVENT_PLATFORM_DISCOVERED = "platform_discovered"
 EVENT_SERVICE_REGISTERED = "service_registered"
 EVENT_SERVICE_REMOVED = "service_removed"
 EVENT_STATE_CHANGED = "state_changed"
@@ -219,6 +226,8 @@ EVENT_TIME_CHANGED = "time_changed"
 
 # #### DEVICE CLASSES ####
 DEVICE_CLASS_BATTERY = "battery"
+DEVICE_CLASS_CO = "carbon_monoxide"
+DEVICE_CLASS_CO2 = "carbon_dioxide"
 DEVICE_CLASS_HUMIDITY = "humidity"
 DEVICE_CLASS_ILLUMINANCE = "illuminance"
 DEVICE_CLASS_SIGNAL_STRENGTH = "signal_strength"
@@ -282,10 +291,10 @@ ATTR_SERVICE_DATA = "service_data"
 ATTR_ID = "id"
 
 # Name
-ATTR_NAME = "name"
+ATTR_NAME: Final = "name"
 
 # Contains one string or a list of strings, each being an entity id
-ATTR_ENTITY_ID = "entity_id"
+ATTR_ENTITY_ID: Final = "entity_id"
 
 # Contains one string or a list of strings, each being an area id
 ATTR_AREA_ID = "area_id"
@@ -299,11 +308,13 @@ ATTR_FRIENDLY_NAME = "friendly_name"
 # A picture to represent entity
 ATTR_ENTITY_PICTURE = "entity_picture"
 
+ATTR_IDENTIFIERS: Final = "identifiers"
+
 # Icon to use in the frontend
 ATTR_ICON = "icon"
 
 # The unit of measurement if applicable
-ATTR_UNIT_OF_MEASUREMENT = "unit_of_measurement"
+ATTR_UNIT_OF_MEASUREMENT: Final = "unit_of_measurement"
 
 CONF_UNIT_SYSTEM_METRIC: str = "metric"
 CONF_UNIT_SYSTEM_IMPERIAL: str = "imperial"
@@ -311,16 +322,17 @@ CONF_UNIT_SYSTEM_IMPERIAL: str = "imperial"
 # Electrical attributes
 ATTR_VOLTAGE = "voltage"
 
-# Contains the information that is discovered
-ATTR_DISCOVERED = "discovered"
-
 # Location of the device/sensor
 ATTR_LOCATION = "location"
 
 ATTR_MODE = "mode"
 
+ATTR_MANUFACTURER: Final = "manufacturer"
+ATTR_MODEL: Final = "model"
+ATTR_SW_VERSION: Final = "sw_version"
+
 ATTR_BATTERY_CHARGING = "battery_charging"
-ATTR_BATTERY_LEVEL = "battery_level"
+ATTR_BATTERY_LEVEL: Final = "battery_level"
 ATTR_WAKEUP = "wake_up_interval"
 
 # For devices which support a code attribute
@@ -367,10 +379,10 @@ ATTR_RESTORED = "restored"
 ATTR_SUPPORTED_FEATURES = "supported_features"
 
 # Class of device within its domain
-ATTR_DEVICE_CLASS = "device_class"
+ATTR_DEVICE_CLASS: Final = "device_class"
 
 # Temperature attribute
-ATTR_TEMPERATURE = "temperature"
+ATTR_TEMPERATURE: Final = "temperature"
 
 # #### UNITS OF MEASUREMENT ####
 # Power units
@@ -581,7 +593,7 @@ SERVICE_TOGGLE_COVER_TILT = "toggle_cover_tilt"
 SERVICE_SELECT_OPTION = "select_option"
 
 # #### API / REMOTE ####
-SERVER_PORT = 8123
+SERVER_PORT: Final = 8123
 
 URL_ROOT = "/"
 URL_API = "/api/"

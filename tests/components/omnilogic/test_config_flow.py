@@ -1,10 +1,11 @@
 """Test the Omnilogic config flow."""
+from unittest.mock import patch
+
 from omnilogic import LoginException, OmniLogicException
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.omnilogic.const import DOMAIN
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 DATA = {"username": "test-username", "password": "test-password"}
@@ -23,8 +24,6 @@ async def test_form(hass):
         "homeassistant.components.omnilogic.config_flow.OmniLogic.connect",
         return_value=True,
     ), patch(
-        "homeassistant.components.omnilogic.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.omnilogic.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -37,7 +36,6 @@ async def test_form(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Omnilogic"
     assert result2["data"] == DATA
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

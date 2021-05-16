@@ -1,12 +1,12 @@
 """The test for the fido sensor platform."""
 import logging
+from unittest.mock import MagicMock, patch
 
 from pyfido.client import PyFidoError
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.fido import sensor as fido
 
-from tests.async_mock import MagicMock, patch
 from tests.common import assert_setup_component
 
 CONTRACT = "123456789"

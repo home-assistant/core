@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u0426\u044f \u0441\u043b\u0443\u0436\u0431\u0430 \u0432\u0436\u0435 \u0434\u043e\u0434\u0430\u043d\u0430 \u0432 Home Assistant."
+        },
+        "error": {
+            "invalid_key": "\u0425\u0438\u0431\u043d\u0438\u0439 \u043a\u043b\u044e\u0447 API",
+            "no_devices": "\u0412 \u043e\u0431\u043b\u0456\u043a\u043e\u0432\u043e\u043c\u0443 \u0437\u0430\u043f\u0438\u0441\u0456 \u043d\u0435 \u0437\u043d\u0430\u0439\u0434\u0435\u043d\u043e \u043f\u0440\u0438\u0441\u0442\u0440\u043e\u0457\u0432."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "\u041a\u043b\u044e\u0447 API",
+                    "app_key": "\u041a\u043b\u044e\u0447 \u0434\u043e\u0434\u0430\u0442\u043a\u0443"
+                },
+                "title": "Ambient PWS"
+            }
+        }
+    }
+}

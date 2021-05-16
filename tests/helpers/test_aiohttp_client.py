@@ -1,5 +1,6 @@
 """Test the aiohttp client helper."""
 import asyncio
+from unittest.mock import Mock, patch
 
 import aiohttp
 import pytest
@@ -7,8 +8,6 @@ import pytest
 from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE
 import homeassistant.helpers.aiohttp_client as client
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import Mock, patch
 
 
 @pytest.fixture(name="camera_client")

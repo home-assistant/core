@@ -1,10 +1,12 @@
 """Translation string lookup helpers."""
+from __future__ import annotations
+
 import asyncio
 from collections import ChainMap
 import logging
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import (
     MAX_LOAD_CONCURRENTLY,
     Integration,
@@ -15,8 +17,6 @@ from homeassistant.loader import (
 from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.json import load_json
 
-from .typing import HomeAssistantType
-
 _LOGGER = logging.getLogger(__name__)
 
 TRANSLATION_LOAD_LOCK = "translation_load_lock"
@@ -24,7 +24,7 @@ TRANSLATION_FLATTEN_CACHE = "translation_flatten_cache"
 LOCALE_EN = "en"
 
 
-def recursive_flatten(prefix: Any, data: Dict) -> Dict[str, Any]:
+def recursive_flatten(prefix: Any, data: dict) -> dict[str, Any]:
     """Return a flattened representation of dict data."""
     output = {}
     for key, value in data.items():
@@ -38,7 +38,7 @@ def recursive_flatten(prefix: Any, data: Dict) -> Dict[str, Any]:
 @callback
 def component_translation_path(
     component: str, language: str, integration: Integration
-) -> Optional[str]:
+) -> str | None:
     """Return the translation json file location for a component.
 
     For component:
@@ -69,8 +69,8 @@ def component_translation_path(
 
 
 def load_translations_files(
-    translation_files: Dict[str, str]
-) -> Dict[str, Dict[str, Any]]:
+    translation_files: dict[str, str]
+) -> dict[str, dict[str, Any]]:
     """Load and parse translation.json files."""
     loaded = {}
     for component, translation_file in translation_files.items():
@@ -90,13 +90,13 @@ def load_translations_files(
 
 
 def _merge_resources(
-    translation_strings: Dict[str, Dict[str, Any]],
-    components: Set[str],
+    translation_strings: dict[str, dict[str, Any]],
+    components: set[str],
     category: str,
-) -> Dict[str, Dict[str, Any]]:
+) -> dict[str, dict[str, Any]]:
     """Build and merge the resources response for the given components and platforms."""
     # Build response
-    resources: Dict[str, Dict[str, Any]] = {}
+    resources: dict[str, dict[str, Any]] = {}
     for component in components:
         if "." not in component:
             domain = component
@@ -131,10 +131,10 @@ def _merge_resources(
 
 
 def _build_resources(
-    translation_strings: Dict[str, Dict[str, Any]],
-    components: Set[str],
+    translation_strings: dict[str, dict[str, Any]],
+    components: set[str],
     category: str,
-) -> Dict[str, Dict[str, Any]]:
+) -> dict[str, dict[str, Any]]:
     """Build the resources response for the given components."""
     # Build response
     return {
@@ -146,8 +146,8 @@ def _build_resources(
 
 
 async def async_get_component_strings(
-    hass: HomeAssistantType, language: str, components: Set[str]
-) -> Dict[str, Any]:
+    hass: HomeAssistant, language: str, components: set[str]
+) -> dict[str, Any]:
     """Load translations."""
     domains = list({loaded.split(".")[-1] for loaded in components})
     integrations = dict(
@@ -160,7 +160,7 @@ async def async_get_component_strings(
         )
     )
 
-    translations: Dict[str, Any] = {}
+    translations: dict[str, Any] = {}
 
     # Determine paths of missing components/platforms
     files_to_load = {}
@@ -202,18 +202,18 @@ async def async_get_component_strings(
 class _TranslationCache:
     """Cache for flattened translations."""
 
-    def __init__(self, hass: HomeAssistantType) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the cache."""
         self.hass = hass
-        self.loaded: Dict[str, Set[str]] = {}
-        self.cache: Dict[str, Dict[str, Dict[str, Any]]] = {}
+        self.loaded: dict[str, set[str]] = {}
+        self.cache: dict[str, dict[str, dict[str, Any]]] = {}
 
     async def async_fetch(
         self,
         language: str,
         category: str,
-        components: Set,
-    ) -> List[Dict[str, Dict[str, Any]]]:
+        components: set,
+    ) -> list[dict[str, dict[str, Any]]]:
         """Load resources into the cache."""
         components_to_load = components - self.loaded.setdefault(language, set())
 
@@ -224,7 +224,7 @@ class _TranslationCache:
 
         return [cached.get(component, {}).get(category, {}) for component in components]
 
-    async def _async_load(self, language: str, components: Set) -> None:
+    async def _async_load(self, language: str, components: set) -> None:
         """Populate the cache for a given set of components."""
         _LOGGER.debug(
             "Cache miss for %s: %s",
@@ -247,12 +247,12 @@ class _TranslationCache:
     def _build_category_cache(
         self,
         language: str,
-        components: Set,
-        translation_strings: Dict[str, Dict[str, Any]],
+        components: set,
+        translation_strings: dict[str, dict[str, Any]],
     ) -> None:
         """Extract resources into the cache."""
         cached = self.cache.setdefault(language, {})
-        categories: Set[str] = set()
+        categories: set[str] = set()
         for resource in translation_strings.values():
             categories.update(resource)
 
@@ -263,7 +263,7 @@ class _TranslationCache:
             new_resources = resource_func(translation_strings, components, category)
 
             for component, resource in new_resources.items():
-                category_cache: Dict[str, Any] = cached.setdefault(
+                category_cache: dict[str, Any] = cached.setdefault(
                     component, {}
                 ).setdefault(category, {})
 
@@ -280,12 +280,12 @@ class _TranslationCache:
 
 @bind_hass
 async def async_get_translations(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     language: str,
     category: str,
-    integration: Optional[str] = None,
-    config_flow: Optional[bool] = None,
-) -> Dict[str, Any]:
+    integration: str | None = None,
+    config_flow: bool | None = None,
+) -> dict[str, Any]:
     """Return all backend translations.
 
     If integration specified, load it for that one.

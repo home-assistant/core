@@ -1,9 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "UPnP/IGD is al geconfigureerd",
+            "already_configured": "Apparaat is al geconfigureerd",
             "incomplete_discovery": "Onvolledige ontdekking",
-            "no_devices_found": "Geen UPnP/IGD apparaten gevonden op het netwerk."
+            "no_devices_found": "Geen apparaten gevonden op het netwerk"
         },
         "error": {
             "one": "Een",
@@ -11,8 +11,12 @@
         },
         "flow_title": "UPnP/IGD: {name}",
         "step": {
+            "init": {
+                "one": "Leeg",
+                "other": "Leeg"
+            },
             "ssdp_confirm": {
-                "description": "Wilt u [%%] instellen?"
+                "description": "Wilt u dit UPnP/IGD-apparaat instellen?"
             },
             "user": {
                 "data": {

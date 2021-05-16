@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Google Hangouts ist bereits konfiguriert",
-            "unknown": "Ein unbekannter Fehler ist aufgetreten."
+            "unknown": "Unerwarteter Fehler"
         },
         "error": {
             "invalid_2fa": "Ung\u00fcltige 2-Faktor Authentifizierung, bitte versuche es erneut.",

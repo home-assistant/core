@@ -1,13 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Controller site is al geconfigureerd"
+            "already_configured": "Controller site is al geconfigureerd",
+            "configuration_updated": "Configuratie bijgewerkt.",
+            "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {
-            "faulty_credentials": "Foutieve gebruikersgegevens",
-            "service_unavailable": "Geen service beschikbaar",
+            "faulty_credentials": "Ongeldige authenticatie",
+            "service_unavailable": "Kan geen verbinding maken",
             "unknown_client_mac": "Geen client beschikbaar op dat MAC-adres"
         },
+        "flow_title": "UniFi Netwerk {site} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -16,7 +19,7 @@
                     "port": "Poort",
                     "site": "Site ID",
                     "username": "Gebruikersnaam",
-                    "verify_ssl": "Controller gebruik van het juiste certificaat"
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 },
                 "title": "Stel de UniFi-controller in"
             }
@@ -27,6 +30,7 @@
             "client_control": {
                 "data": {
                     "block_client": "Cli\u00ebnten met netwerktoegang",
+                    "dpi_restrictions": "Sta controle van DPI-beperkingsgroepen toe",
                     "poe_clients": "Sta POE-controle van gebruikers toe"
                 },
                 "description": "Configureer clientbesturingen \n\n Maak schakelaars voor serienummers waarvoor u de netwerktoegang wilt beheren.",

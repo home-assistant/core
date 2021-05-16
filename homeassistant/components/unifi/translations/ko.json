@@ -1,13 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\ucee8\ud2b8\ub864\ub7ec \uc0ac\uc774\ud2b8\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+            "already_configured": "\ucee8\ud2b8\ub864\ub7ec \uc0ac\uc774\ud2b8\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "configuration_updated": "\uad6c\uc131\uc774 \uc5c5\ub370\uc774\ud2b8\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "reauth_successful": "\uc7ac\uc778\uc99d\uc5d0 \uc131\uacf5\ud588\uc2b5\ub2c8\ub2e4"
         },
         "error": {
             "faulty_credentials": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
             "service_unavailable": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
             "unknown_client_mac": "\ud574\ub2f9 MAC \uc8fc\uc18c\uc5d0\uc11c \uc0ac\uc6a9 \uac00\ub2a5\ud55c \ud074\ub77c\uc774\uc5b8\ud2b8\uac00 \uc5c6\uc2b5\ub2c8\ub2e4."
         },
+        "flow_title": "UniFi \ub124\ud2b8\uc6cc\ud06c: {site} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -16,7 +19,7 @@
                     "port": "\ud3ec\ud2b8",
                     "site": "\uc0ac\uc774\ud2b8 ID",
                     "username": "\uc0ac\uc6a9\uc790 \uc774\ub984",
-                    "verify_ssl": "\uc62c\ubc14\ub978 \uc778\uc99d\uc11c\ub97c \uc0ac\uc6a9\ud558\ub294 \ucee8\ud2b8\ub864\ub7ec"
+                    "verify_ssl": "SSL \uc778\uc99d\uc11c \ud655\uc778"
                 },
                 "title": "UniFi \ucee8\ud2b8\ub864\ub7ec \uc124\uc815\ud558\uae30"
             }
@@ -26,10 +29,11 @@
         "step": {
             "client_control": {
                 "data": {
-                    "block_client": "\ub124\ud2b8\uc6cc\ud06c \uc561\uc138\uc2a4 \uc81c\uc5b4 \ud074\ub77c\uc774\uc5b8\ud2b8",
-                    "poe_clients": "\ud074\ub77c\uc774\uc5b8\ud2b8\uc758 POE \uc81c\uc5b4 \ud5c8\uc6a9"
+                    "block_client": "\ub124\ud2b8\uc6cc\ud06c \uc811\uadfc \uc81c\uc5b4 \ud074\ub77c\uc774\uc5b8\ud2b8",
+                    "dpi_restrictions": "DPI \uc81c\ud55c \uadf8\ub8f9\uc758 \uc81c\uc5b4 \ud5c8\uc6a9\ud558\uae30",
+                    "poe_clients": "\ud074\ub77c\uc774\uc5b8\ud2b8\uc758 POE \uc81c\uc5b4 \ud5c8\uc6a9\ud558\uae30"
                 },
-                "description": "\ud074\ub77c\uc774\uc5b8\ud2b8 \ucee8\ud2b8\ub864 \uad6c\uc131 \n\n\ub124\ud2b8\uc6cc\ud06c \uc561\uc138\uc2a4\ub97c \uc81c\uc5b4\ud558\ub824\ub294 \uc2dc\ub9ac\uc5bc \ubc88\ud638\uc5d0 \ub300\ud55c \uc2a4\uc704\uce58\ub97c \ub9cc\ub4ed\ub2c8\ub2e4.",
+                "description": "\ud074\ub77c\uc774\uc5b8\ud2b8 \ucee8\ud2b8\ub864 \uad6c\uc131 \n\n\ub124\ud2b8\uc6cc\ud06c \uc811\uadfc\uc744 \uc81c\uc5b4\ud558\ub824\ub294 \uc2dc\ub9ac\uc5bc \ubc88\ud638\uc5d0 \ub300\ud55c \uc2a4\uc704\uce58\ub97c \ub9cc\ub4ed\ub2c8\ub2e4.",
                 "title": "UniFi \uc635\uc158 2/3"
             },
             "device_tracker": {
@@ -46,7 +50,7 @@
             },
             "simple_options": {
                 "data": {
-                    "block_client": "\ub124\ud2b8\uc6cc\ud06c \uc561\uc138\uc2a4 \uc81c\uc5b4 \ud074\ub77c\uc774\uc5b8\ud2b8",
+                    "block_client": "\ub124\ud2b8\uc6cc\ud06c \uc811\uadfc \uc81c\uc5b4 \ud074\ub77c\uc774\uc5b8\ud2b8",
                     "track_clients": "\ub124\ud2b8\uc6cc\ud06c \ud074\ub77c\uc774\uc5b8\ud2b8 \ucd94\uc801 \ub300\uc0c1",
                     "track_devices": "\ub124\ud2b8\uc6cc\ud06c \uae30\uae30 \ucd94\uc801 (Ubiquiti \uae30\uae30)"
                 },
@@ -55,7 +59,7 @@
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "\ub124\ud2b8\uc6cc\ud06c \ud074\ub77c\uc774\uc5b8\ud2b8 \ub300\uc5ed\ud3ed \uc0ac\uc6a9\ub7c9 \uc13c\uc11c",
-                    "allow_uptime_sensors": "\ub124\ud2b8\uc6cc\ud06c \ud074\ub77c\uc774\uc5b8\ud2b8\ub97c \uc704\ud55c \uac00\ub3d9 \uc2dc\uac04 \uc13c\uc11c"
+                    "allow_uptime_sensors": "\ub124\ud2b8\uc6cc\ud06c \ud074\ub77c\uc774\uc5b8\ud2b8\uc5d0 \ub300\ud55c \uac00\ub3d9 \uc2dc\uac04 \uc13c\uc11c"
                 },
                 "description": "\ud1b5\uacc4 \uc13c\uc11c \uad6c\uc131",
                 "title": "UniFi \uc635\uc158 3/3"

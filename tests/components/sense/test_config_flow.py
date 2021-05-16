@@ -1,10 +1,10 @@
 """Test the Sense config flow."""
+from unittest.mock import patch
+
 from sense_energy import SenseAPITimeoutException, SenseAuthenticationException
 
 from homeassistant import config_entries, setup
 from homeassistant.components.sense.const import DOMAIN
-
-from tests.async_mock import patch
 
 
 async def test_form(hass):
@@ -17,8 +17,6 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch("sense_energy.ASyncSenseable.authenticate", return_value=True,), patch(
-        "homeassistant.components.sense.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.sense.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -35,7 +33,6 @@ async def test_form(hass):
         "email": "test-email",
         "password": "test-password",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

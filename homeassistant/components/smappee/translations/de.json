@@ -1,11 +1,34 @@
 {
     "config": {
+        "abort": {
+            "already_configured_device": "Ger\u00e4t ist bereits konfiguriert",
+            "already_configured_local_device": "Lokale(s) Ger\u00e4t(e) ist/sind bereits konfiguriert. Bitte entferne diese zuerst, bevor du ein Cloud-Ger\u00e4t konfigurierst.",
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_mdns": "Nicht unterst\u00fctztes Ger\u00e4t f\u00fcr die Smappee-Integration.",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
+            "no_url_available": "Keine URL verf\u00fcgbar. Informationen zu diesem Fehler findest du [im Hilfebereich]({docs_url})."
+        },
         "flow_title": "Smappee: {name}",
         "step": {
             "environment": {
                 "data": {
                     "environment": "Umgebung"
-                }
+                },
+                "description": "Richte dein Smappee f\u00fcr die Integration mit dem Home Assistant ein."
+            },
+            "local": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Gib den Host ein, um die lokale Integration von Smappee zu initiieren"
+            },
+            "pick_implementation": {
+                "title": "W\u00e4hle die Authentifizierungsmethode"
+            },
+            "zeroconf_confirm": {
+                "description": "M\u00f6chtest du das Smappee-Ger\u00e4t mit der Seriennummer `{serialnumber}` zum Home Assistant hinzuf\u00fcgen?",
+                "title": "Entdecktes Smappee-Ger\u00e4t"
             }
         }
     }

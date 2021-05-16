@@ -1,11 +1,11 @@
 """Tests for the client validator."""
 import asyncio
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.auth import indieauth
 
-from tests.async_mock import patch
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 

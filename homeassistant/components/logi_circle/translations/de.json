@@ -1,11 +1,15 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert",
             "external_error": "Es ist eine Ausnahme in einem anderen Flow aufgetreten.",
-            "external_setup": "Logi Circle wurde erfolgreich aus einem anderen Flow konfiguriert."
+            "external_setup": "Logi Circle wurde erfolgreich aus einem anderen Flow konfiguriert.",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen."
         },
         "error": {
-            "follow_link": "Bitte folge dem Link und authentifiziere dich, bevor du auf Senden klickst."
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
+            "follow_link": "Bitte folge dem Link und authentifiziere dich, bevor du auf Senden klickst.",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
         "step": {
             "auth": {

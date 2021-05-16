@@ -3,5 +3,6 @@
   "name": "Essent",
   "documentation": "https://www.home-assistant.io/integrations/essent",
   "requirements": ["PyEssent==0.14"],
-  "codeowners": ["@TheLastProject"]
+  "codeowners": ["@TheLastProject"],
+  "iot_class": "cloud_polling"
 }

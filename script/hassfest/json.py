@@ -1,6 +1,7 @@
 """Validate integration JSON files."""
+from __future__ import annotations
+
 import json
-from typing import Dict
 
 from .model import Integration
 
@@ -20,7 +21,7 @@ def validate_json_files(integration: Integration):
     return
 
 
-def validate(integrations: Dict[str, Integration], config):
+def validate(integrations: dict[str, Integration], config):
     """Handle JSON files inside integrations."""
     if not config.specific_integrations:
         return

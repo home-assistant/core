@@ -1,7 +1,9 @@
 """Allow users to set and activate scenes."""
+from __future__ import annotations
+
 from collections import namedtuple
 import logging
-from typing import Any, List
+from typing import Any
 
 import voluptuous as vol
 
@@ -118,7 +120,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def scenes_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
+def scenes_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all scenes that reference the entity."""
     if DATA_PLATFORM not in hass.data:
         return []
@@ -133,7 +135,7 @@ def scenes_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
 
 
 @callback
-def entities_in_scene(hass: HomeAssistant, entity_id: str) -> List[str]:
+def entities_in_scene(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all entities in a scene."""
     if DATA_PLATFORM not in hass.data:
         return []
@@ -157,7 +159,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
 
     # Store platform for later.
-    platform = hass.data[DATA_PLATFORM] = entity_platform.current_platform.get()
+    platform = hass.data[DATA_PLATFORM] = entity_platform.async_get_current_platform()
 
     async def reload_config(call):
         """Reload the scene config."""
@@ -298,7 +300,7 @@ class HomeAssistantScene(Scene):
         return self.scene_config.id
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the scene state attributes."""
         attributes = {ATTR_ENTITY_ID: list(self.scene_config.states)}
         unique_id = self.unique_id

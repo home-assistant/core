@@ -4,14 +4,16 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import (
+    CONF_FILE_PATH,
+    CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
+)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_FILE_PATH = "file_path"
 
 DEFAULT_NAME = "File"
 
@@ -43,7 +45,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.error("'%s' is not an allowed directory", file_path)
 
 
-class FileSensor(Entity):
+class FileSensor(SensorEntity):
     """Implementation of a file sensor."""
 
     def __init__(self, name, file_path, unit_of_measurement, value_template):

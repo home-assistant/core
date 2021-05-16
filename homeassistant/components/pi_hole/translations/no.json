@@ -7,6 +7,11 @@
             "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "API-n\u00f8kkel"
+                }
+            },
             "user": {
                 "data": {
                     "api_key": "API-n\u00f8kkel",
@@ -15,6 +20,7 @@
                     "name": "Navn",
                     "port": "Port",
                     "ssl": "Bruker et SSL-sertifikat",
+                    "statistics_only": "Bare statistikk",
                     "verify_ssl": "Verifisere SSL-sertifikat"
                 }
             }

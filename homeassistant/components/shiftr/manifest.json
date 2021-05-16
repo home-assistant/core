@@ -3,5 +3,6 @@
   "name": "shiftr.io",
   "documentation": "https://www.home-assistant.io/integrations/shiftr",
   "requirements": ["paho-mqtt==1.5.1"],
-  "codeowners": ["@fabaff"]
+  "codeowners": ["@fabaff"],
+  "iot_class": "cloud_push"
 }

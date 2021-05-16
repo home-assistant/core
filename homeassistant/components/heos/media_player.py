@@ -1,8 +1,10 @@
 """Denon HEOS Media Player."""
+from __future__ import annotations
+
+from collections.abc import Sequence
 from functools import reduce, wraps
 import logging
 from operator import ior
-from typing import Sequence
 
 from pyheos import HeosError, const as heos_const
 
@@ -28,7 +30,8 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util.dt import utcnow
 
 from .const import DATA_SOURCE_MANAGER, DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_UPDATED
@@ -61,7 +64,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
     """Add media players for a config entry."""
     players = hass.data[HEOS_DOMAIN][DOMAIN]
@@ -251,7 +254,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         return self._player.available
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Get attributes about the device."""
         return {
             "identifiers": {(HEOS_DOMAIN, self._player.player_id)},
@@ -262,7 +265,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         }
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Get additional attribute about the state."""
         return {
             "media_album_id": self._player.now_playing_media.album_id,

@@ -53,6 +53,11 @@ class AlexaConfig(AbstractConfig):
         """Return config locale."""
         return self._config.get(CONF_LOCALE)
 
+    @core.callback
+    def user_identifier(self):
+        """Return an identifier for the user that represents this config."""
+        return ""
+
     def should_expose(self, entity_id):
         """If an entity should be exposed."""
         return self._config[CONF_FILTER](entity_id)

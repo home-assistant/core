@@ -12,7 +12,7 @@
         "step": {
             "authorize": {
                 "data": {
-                    "pin": "PIN-kode"
+                    "pin": "PIN kode"
                 },
                 "description": "Angi PIN-koden som vises p\u00e5 Sony Bravia TV. \n\nHvis PIN-koden ikke vises, m\u00e5 du avregistrere Home Assistant p\u00e5 TV-en, g\u00e5 til: Innstillinger -> Nettverk -> Innstillinger for ekstern enhet -> Avregistrere ekstern enhet.",
                 "title": "Godkjenn Sony Bravia TV"

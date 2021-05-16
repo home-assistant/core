@@ -14,7 +14,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODE, TEMP_CELSIUS
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -28,6 +28,8 @@ from .const import (
     DOMAIN,
     FORECAST_MODE_DAILY,
     FORECAST_MODE_HOURLY,
+    MANUFACTURER,
+    MODEL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +44,7 @@ def format_condition(condition: str):
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the Meteo-France weather platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR_FORECAST]
@@ -57,7 +59,7 @@ async def async_setup_entry(
         True,
     )
     _LOGGER.debug(
-        "Weather entity (%s) added for %s.",
+        "Weather entity (%s) added for %s",
         entry.options.get(CONF_MODE, FORECAST_MODE_DAILY),
         coordinator.data.position["name"],
     )
@@ -82,6 +84,17 @@ class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._city_name
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self.platform.config_entry.unique_id)},
+            "name": self.coordinator.name,
+            "manufacturer": MANUFACTURER,
+            "model": MODEL,
+            "entry_type": "service",
+        }
 
     @property
     def condition(self):

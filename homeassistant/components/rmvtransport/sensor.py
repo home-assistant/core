@@ -4,15 +4,16 @@ from datetime import timedelta
 import logging
 
 from RMVtransport import RMVtransport
-from RMVtransport.rmvtransport import RMVtransportApiConnectionError
+from RMVtransport.rmvtransport import (
+    RMVtransportApiConnectionError,
+    RMVtransportDataError,
+)
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_TIMEOUT, TIME_MINUTES
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +27,6 @@ CONF_LINES = "lines"
 CONF_PRODUCTS = "products"
 CONF_TIME_OFFSET = "time_offset"
 CONF_MAX_JOURNEYS = "max_journeys"
-CONF_TIMEOUT = "timeout"
 
 DEFAULT_NAME = "RMV Journey"
 
@@ -78,24 +78,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the RMV departure sensor."""
     timeout = config.get(CONF_TIMEOUT)
 
-    session = async_get_clientsession(hass)
-
-    sensors = []
-    for next_departure in config.get(CONF_NEXT_DEPARTURE):
-        sensors.append(
-            RMVDepartureSensor(
-                session,
-                next_departure[CONF_STATION],
-                next_departure.get(CONF_DESTINATIONS),
-                next_departure.get(CONF_DIRECTION),
-                next_departure.get(CONF_LINES),
-                next_departure.get(CONF_PRODUCTS),
-                next_departure.get(CONF_TIME_OFFSET),
-                next_departure.get(CONF_MAX_JOURNEYS),
-                next_departure.get(CONF_NAME),
-                timeout,
-            )
+    sensors = [
+        RMVDepartureSensor(
+            next_departure[CONF_STATION],
+            next_departure.get(CONF_DESTINATIONS),
+            next_departure.get(CONF_DIRECTION),
+            next_departure.get(CONF_LINES),
+            next_departure.get(CONF_PRODUCTS),
+            next_departure.get(CONF_TIME_OFFSET),
+            next_departure.get(CONF_MAX_JOURNEYS),
+            next_departure.get(CONF_NAME),
+            timeout,
         )
+        for next_departure in config.get(CONF_NEXT_DEPARTURE)
+    ]
 
     tasks = [sensor.async_update() for sensor in sensors]
     if tasks:
@@ -107,12 +103,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors)
 
 
-class RMVDepartureSensor(Entity):
+class RMVDepartureSensor(SensorEntity):
     """Implementation of an RMV departure sensor."""
 
     def __init__(
         self,
-        session,
         station,
         destinations,
         direction,
@@ -128,7 +123,6 @@ class RMVDepartureSensor(Entity):
         self._name = name
         self._state = None
         self.data = RMVDepartureData(
-            session,
             station,
             destinations,
             direction,
@@ -156,7 +150,7 @@ class RMVDepartureSensor(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         try:
             return {
@@ -204,7 +198,6 @@ class RMVDepartureData:
 
     def __init__(
         self,
-        session,
         station_id,
         destinations,
         direction,
@@ -223,7 +216,7 @@ class RMVDepartureData:
         self._products = products
         self._time_offset = time_offset
         self._max_journeys = max_journeys
-        self.rmv = RMVtransport(session, timeout)
+        self.rmv = RMVtransport(timeout)
         self.departures = []
         self._error_notification = False
 
@@ -238,7 +231,7 @@ class RMVDepartureData:
                 max_journeys=50,
             )
 
-        except RMVtransportApiConnectionError:
+        except (RMVtransportApiConnectionError, RMVtransportDataError):
             self.departures = []
             _LOGGER.warning("Could not retrieve data from rmv.de")
             return
@@ -263,10 +256,10 @@ class RMVDepartureData:
                 if not dest_found:
                     continue
 
-            if self._lines and journey["number"] not in self._lines:
+            elif self._lines and journey["number"] not in self._lines:
                 continue
 
-            if journey["minutes"] < self._time_offset:
+            elif journey["minutes"] < self._time_offset:
                 continue
 
             for attr in ["direction", "departure_time", "product", "minutes"]:

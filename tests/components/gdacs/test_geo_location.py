@@ -1,5 +1,6 @@
 """The tests for the GDACS Feed integration."""
 import datetime
+from unittest.mock import patch
 
 from homeassistant.components import gdacs
 from homeassistant.components.gdacs import DEFAULT_SCAN_INTERVAL, DOMAIN, FEED
@@ -28,12 +29,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     LENGTH_KILOMETERS,
 )
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 from tests.components.gdacs import _generate_mock_feed_entry
 
@@ -99,7 +99,7 @@ async def test_setup(hass, legacy_patchable_time):
         all_states = hass.states.async_all()
         # 3 geolocation and 1 sensor entities
         assert len(all_states) == 4
-        entity_registry = await async_get_registry(hass)
+        entity_registry = er.async_get(hass)
         assert len(entity_registry.entities) == 4
 
         state = hass.states.get("geo_location.drought_name_1")

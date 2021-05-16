@@ -41,7 +41,7 @@ class TestImageProcessing(ImageProcessingEntity):
         return self._count
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {"image": self._image}
 

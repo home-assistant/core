@@ -1,5 +1,4 @@
 """Collection of useful functions for the HomeKit component."""
-from collections import OrderedDict, namedtuple
 import io
 import ipaddress
 import logging
@@ -11,11 +10,20 @@ import socket
 import pyqrcode
 import voluptuous as vol
 
-from homeassistant.components import binary_sensor, fan, media_player, sensor
+from homeassistant.components import binary_sensor, media_player, sensor
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.media_player import (
+    DEVICE_CLASS_TV,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+)
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, SUPPORT_ACTIVITY
 from homeassistant.const import (
     ATTR_CODE,
+    ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
     CONF_NAME,
+    CONF_PORT,
     CONF_TYPE,
     TEMP_CELSIUS,
 )
@@ -66,7 +74,6 @@ from .const import (
     FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
-    HOMEKIT_FILE,
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
     TYPE_FAUCET,
@@ -310,56 +317,6 @@ def validate_media_player_features(state, feature_list):
     return True
 
 
-SpeedRange = namedtuple("SpeedRange", ("start", "target"))
-SpeedRange.__doc__ += """ Maps Home Assistant speed \
-values to percentage based HomeKit speeds.
-start: Start of the range (inclusive).
-target: Percentage to use to determine HomeKit percentages \
-from HomeAssistant speed.
-"""
-
-
-class HomeKitSpeedMapping:
-    """Supports conversion between Home Assistant and HomeKit fan speeds."""
-
-    def __init__(self, speed_list):
-        """Initialize a new SpeedMapping object."""
-        if speed_list[0] != fan.SPEED_OFF:
-            _LOGGER.warning(
-                "%s does not contain the speed setting "
-                "%s as its first element. "
-                "Assuming that %s is equivalent to 'off'",
-                speed_list,
-                fan.SPEED_OFF,
-                speed_list[0],
-            )
-        self.speed_ranges = OrderedDict()
-        list_size = len(speed_list)
-        for index, speed in enumerate(speed_list):
-            # By dividing by list_size -1 the following
-            # desired attributes hold true:
-            # * index = 0 => 0%, equal to "off"
-            # * index = len(speed_list) - 1 => 100 %
-            # * all other indices are equally distributed
-            target = index * 100 / (list_size - 1)
-            start = index * 100 / list_size
-            self.speed_ranges[speed] = SpeedRange(start, target)
-
-    def speed_to_homekit(self, speed):
-        """Map Home Assistant speed state to HomeKit speed."""
-        if speed is None:
-            return None
-        speed_range = self.speed_ranges[speed]
-        return round(speed_range.target)
-
-    def speed_to_states(self, speed):
-        """Map HomeKit speed to Home Assistant speed state."""
-        for state, speed_range in reversed(self.speed_ranges.items()):
-            if speed_range.start <= speed:
-                return state
-        return list(self.speed_ranges)[0]
-
-
 def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
     """Display persistent notification with setup information."""
     pin = pincode.decode()
@@ -379,9 +336,7 @@ def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
         f"### {pin}\n"
         f"![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
     )
-    hass.components.persistent_notification.create(
-        message, "HomeKit Bridge Setup", entry_id
-    )
+    hass.components.persistent_notification.create(message, "HomeKit Pairing", entry_id)
 
 
 def dismiss_setup_message(hass, entry_id):
@@ -460,24 +415,6 @@ def format_sw_version(version):
     return None
 
 
-def migrate_filesystem_state_data_for_primary_imported_entry_id(
-    hass: HomeAssistant, entry_id: str
-):
-    """Migrate the old paths to the storage directory."""
-    legacy_persist_file_path = hass.config.path(HOMEKIT_FILE)
-    if os.path.exists(legacy_persist_file_path):
-        os.rename(
-            legacy_persist_file_path, get_persist_fullpath_for_entry_id(hass, entry_id)
-        )
-
-    legacy_aid_storage_path = hass.config.path(STORAGE_DIR, "homekit.aids")
-    if os.path.exists(legacy_aid_storage_path):
-        os.rename(
-            legacy_aid_storage_path,
-            get_aid_storage_fullpath_for_entry_id(hass, entry_id),
-        )
-
-
 def remove_state_files_for_entry_id(hass: HomeAssistant, entry_id: str):
     """Remove the state files from disk."""
     persist_file_path = get_persist_fullpath_for_entry_id(hass, entry_id)
@@ -496,7 +433,7 @@ def _get_test_socket():
     return test_socket
 
 
-def port_is_available(port: int):
+def port_is_available(port: int) -> bool:
     """Check to see if a port is available."""
     test_socket = _get_test_socket()
     try:
@@ -507,10 +444,25 @@ def port_is_available(port: int):
     return True
 
 
-def find_next_available_port(start_port: int):
+async def async_find_next_available_port(hass: HomeAssistant, start_port: int) -> int:
+    """Find the next available port not assigned to a config entry."""
+    exclude_ports = {
+        entry.data[CONF_PORT]
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if CONF_PORT in entry.data
+    }
+
+    return await hass.async_add_executor_job(
+        _find_next_available_port, start_port, exclude_ports
+    )
+
+
+def _find_next_available_port(start_port: int, exclude_ports: set) -> int:
     """Find the next available port starting with the given port."""
     test_socket = _get_test_socket()
     for port in range(start_port, MAX_PORT):
+        if port in exclude_ports:
+            continue
         try:
             test_socket.bind(("", port))
             return port
@@ -520,7 +472,7 @@ def find_next_available_port(start_port: int):
             continue
 
 
-def pid_is_alive(pid):
+def pid_is_alive(pid) -> bool:
     """Check to see if a process is alive."""
     try:
         os.kill(pid, 0)
@@ -528,3 +480,32 @@ def pid_is_alive(pid):
     except OSError:
         pass
     return False
+
+
+def accessory_friendly_name(hass_name, accessory):
+    """Return the combined name for the accessory.
+
+    The mDNS name and the Home Assistant config entry
+    name are usually different which means they need to
+    see both to identify the accessory.
+    """
+    accessory_mdns_name = accessory.display_name
+    if hass_name.casefold().startswith(accessory_mdns_name.casefold()):
+        return hass_name
+    if accessory_mdns_name.casefold().startswith(hass_name.casefold()):
+        return accessory_mdns_name
+    return f"{hass_name} ({accessory_mdns_name})"
+
+
+def state_needs_accessory_mode(state):
+    """Return if the entity represented by the state must be paired in accessory mode."""
+    if state.domain == CAMERA_DOMAIN:
+        return True
+
+    return (
+        state.domain == LOCK_DOMAIN
+        or state.domain == MEDIA_PLAYER_DOMAIN
+        and state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TV
+        or state.domain == REMOTE_DOMAIN
+        and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & SUPPORT_ACTIVITY
+    )

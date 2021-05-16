@@ -1,12 +1,13 @@
 """Support for ISY994 sensors."""
-from typing import Callable, Dict, Union
+from __future__ import annotations
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
-from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.sensor import DOMAIN as SENSOR, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     _LOGGER,
@@ -24,9 +25,9 @@ from .helpers import convert_isy_value_to_hass, migrate_old_unique_ids
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> bool:
     """Set up the ISY994 sensor platform."""
     hass_isy_data = hass.data[ISY994_DOMAIN][entry.entry_id]
@@ -43,11 +44,11 @@ async def async_setup_entry(
     async_add_entities(devices)
 
 
-class ISYSensorEntity(ISYNodeEntity):
+class ISYSensorEntity(ISYNodeEntity, SensorEntity):
     """Representation of an ISY994 sensor device."""
 
     @property
-    def raw_unit_of_measurement(self) -> Union[dict, str]:
+    def raw_unit_of_measurement(self) -> dict | str:
         """Get the raw unit of measurement for the ISY994 sensor device."""
         uom = self._node.uom
 
@@ -103,7 +104,7 @@ class ISYSensorEntity(ISYNodeEntity):
         return raw_units
 
 
-class ISYSensorVariableEntity(ISYEntity):
+class ISYSensorVariableEntity(ISYEntity, SensorEntity):
     """Representation of an ISY994 variable as a sensor device."""
 
     def __init__(self, vname: str, vobj: object) -> None:
@@ -117,7 +118,7 @@ class ISYSensorVariableEntity(ISYEntity):
         return convert_isy_value_to_hass(self._node.status, "", self._node.prec)
 
     @property
-    def device_state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> dict:
         """Get the state attributes for the device."""
         return {
             "init_value": convert_isy_value_to_hass(

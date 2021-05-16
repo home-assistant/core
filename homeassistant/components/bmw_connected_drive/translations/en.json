@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "region": "ConnectedDrive Region",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "account_options": {
+                "data": {
+                    "read_only": "Read-only (only sensors and notify, no execution of services, no lock)",
+                    "use_location": "Use Home Assistant location for car location polls (required for non i3/i8 vehicles produced before 7/2014)"
+                }
+            }
+        }
+    }
+}

@@ -1,5 +1,6 @@
 """Test the songpal config flow."""
 import copy
+from unittest.mock import patch
 
 from homeassistant.components import ssdp
 from homeassistant.components.songpal.const import CONF_ENDPOINT, DOMAIN
@@ -21,7 +22,6 @@ from . import (
     _patch_config_flow_device,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 UDN = "uuid:1234"

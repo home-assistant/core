@@ -1,4 +1,6 @@
 """Test the OVO Energy config flow."""
+from unittest.mock import patch
+
 import aiohttp
 
 from homeassistant import config_entries, data_entry_flow
@@ -6,7 +8,6 @@ from homeassistant.components.ovo_energy.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 FIXTURE_REAUTH_INPUT = {CONF_PASSWORD: "something1"}
@@ -84,9 +85,6 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
         "homeassistant.components.ovo_energy.config_flow.OVOEnergy.authenticate",
         return_value=True,
     ), patch(
-        "homeassistant.components.ovo_energy.async_setup",
-        return_value=True,
-    ), patch(
         "homeassistant.components.ovo_energy.async_setup_entry",
         return_value=True,
     ):
@@ -107,7 +105,9 @@ async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
         return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
+            DOMAIN,
+            context={"source": config_entries.SOURCE_REAUTH},
+            data=FIXTURE_USER_INPUT,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -131,7 +131,9 @@ async def test_reauth_connection_error(hass: HomeAssistant) -> None:
         side_effect=aiohttp.ClientError,
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
+            DOMAIN,
+            context={"source": config_entries.SOURCE_REAUTH},
+            data=FIXTURE_USER_INPUT,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -160,7 +162,9 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         mock_config.add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "reauth"}, data=FIXTURE_USER_INPUT
+            DOMAIN,
+            context={"source": config_entries.SOURCE_REAUTH},
+            data=FIXTURE_USER_INPUT,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

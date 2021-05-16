@@ -261,7 +261,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND):
         return
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     async def service_adb_command(service):
         """Dispatch service calls to target entities."""
@@ -469,7 +469,7 @@ class ADBDevice(MediaPlayerEntity):
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Provide the last ADB command's response and the device's HDMI input as attributes."""
         return {
             "adb_response": self._adb_response,

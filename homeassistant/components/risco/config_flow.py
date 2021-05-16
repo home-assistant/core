@@ -23,9 +23,9 @@ from .const import (
     CONF_HA_STATES_TO_RISCO,
     CONF_RISCO_STATES_TO_HA,
     DEFAULT_OPTIONS,
+    DOMAIN,
     RISCO_STATES,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +58,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Risco."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @staticmethod
     @core.callback

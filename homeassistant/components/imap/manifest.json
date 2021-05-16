@@ -3,5 +3,6 @@
   "name": "IMAP",
   "documentation": "https://www.home-assistant.io/integrations/imap",
   "requirements": ["aioimaplib==0.7.15"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

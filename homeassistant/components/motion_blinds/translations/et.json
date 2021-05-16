@@ -5,14 +5,31 @@
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "connection_error": "\u00dchendamine nurjus"
         },
+        "error": {
+            "discovery_error": "Motion Gateway avastamine nurjus"
+        },
         "flow_title": "",
         "step": {
+            "connect": {
+                "data": {
+                    "api_key": "API v\u00f5ti"
+                },
+                "description": "On vaja 16-kohalist API-v\u00f5tit, juhiste saamiseks vaata https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key",
+                "title": ""
+            },
+            "select": {
+                "data": {
+                    "select_ip": "IP aadress"
+                },
+                "description": "K\u00e4ivita seadistamine uuesti kui soovid \u00fchendada t\u00e4iendavaid Motion Gateway sidumisi",
+                "title": "Vali Motion Gateway, mille soovid \u00fchendada"
+            },
             "user": {
                 "data": {
                     "api_key": "API v\u00f5ti",
                     "host": "IP-aadress"
                 },
-                "description": "Vaja on 16-kohalist API-v\u00f5tit. Juhiste saamiseks vt https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key",
+                "description": "\u00dchenda oma Motion Gatewayga. Kui IP-aadress on m\u00e4\u00e4ramata kasutatakse automaatset avastamist",
                 "title": ""
             }
         }

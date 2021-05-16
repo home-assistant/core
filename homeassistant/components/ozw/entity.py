@@ -209,7 +209,7 @@ class ZWaveDeviceEntity(Entity):
         return device_info
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         return {const.ATTR_NODE_ID: self.values.primary.node.node_id}
 
@@ -268,7 +268,7 @@ class ZWaveDeviceEntity(Entity):
         if not self.values:
             return  # race condition: delete already requested
         if values_id == self.values.values_id:
-            await self.async_remove()
+            await self.async_remove(force_remove=True)
 
 
 def create_device_name(node: OZWNode):

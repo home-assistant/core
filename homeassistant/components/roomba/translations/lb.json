@@ -1,9 +1,36 @@
 {
     "config": {
+        "abort": {
+            "cannot_connect": "Feeler beim verbannen"
+        },
         "error": {
             "cannot_connect": "Feeler beim verbannen"
         },
+        "flow_title": "iRobot {name} ({host})",
         "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Ee Roomba oder Bravaa auswielen.",
+                "title": "Automatesch mam Apparat verbannen"
+            },
+            "link": {
+                "title": "Passwuert ausliesen"
+            },
+            "link_manual": {
+                "data": {
+                    "password": "Passwuert"
+                },
+                "title": "Passwuert aginn"
+            },
+            "manual": {
+                "data": {
+                    "blid": "BLID",
+                    "host": "Host"
+                },
+                "title": "Manuell mam Apparat verbannen"
+            },
             "user": {
                 "data": {
                     "blid": "BLID",

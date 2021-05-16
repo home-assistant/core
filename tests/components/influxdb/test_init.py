@@ -1,6 +1,7 @@
 """The tests for the InfluxDB component."""
 from dataclasses import dataclass
 import datetime
+from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
 
@@ -15,8 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import split_entity_id
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import MagicMock, Mock, call, patch
 
 INFLUX_PATH = "homeassistant.components.influxdb"
 INFLUX_CLIENT_PATH = f"{INFLUX_PATH}.InfluxDBClient"
@@ -128,8 +127,142 @@ async def test_setup_config_full(hass, mock_client, config_ext, get_write_api):
     assert await async_setup_component(hass, influxdb.DOMAIN, config)
     await hass.async_block_till_done()
     assert hass.bus.listen.called
-    assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
+    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
     assert get_write_api(mock_client).call_count == 1
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_base, config_ext, expected_client_args",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            {
+                "ssl": True,
+                "verify_ssl": False,
+            },
+            {
+                "ssl": True,
+                "verify_ssl": False,
+            },
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            {
+                "ssl": True,
+                "verify_ssl": True,
+            },
+            {
+                "ssl": True,
+                "verify_ssl": True,
+            },
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            {
+                "ssl": True,
+                "verify_ssl": True,
+                "ssl_ca_cert": "fake/path/ca.pem",
+            },
+            {
+                "ssl": True,
+                "verify_ssl": "fake/path/ca.pem",
+            },
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            {
+                "ssl": True,
+                "ssl_ca_cert": "fake/path/ca.pem",
+            },
+            {
+                "ssl": True,
+                "verify_ssl": "fake/path/ca.pem",
+            },
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            {
+                "ssl": True,
+                "verify_ssl": False,
+                "ssl_ca_cert": "fake/path/ca.pem",
+            },
+            {
+                "ssl": True,
+                "verify_ssl": False,
+            },
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            {
+                "api_version": influxdb.API_VERSION_2,
+                "verify_ssl": False,
+            },
+            {
+                "verify_ssl": False,
+            },
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            {
+                "api_version": influxdb.API_VERSION_2,
+                "verify_ssl": True,
+            },
+            {
+                "verify_ssl": True,
+            },
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            {
+                "api_version": influxdb.API_VERSION_2,
+                "verify_ssl": True,
+                "ssl_ca_cert": "fake/path/ca.pem",
+            },
+            {
+                "verify_ssl": True,
+                "ssl_ca_cert": "fake/path/ca.pem",
+            },
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            {
+                "api_version": influxdb.API_VERSION_2,
+                "verify_ssl": False,
+                "ssl_ca_cert": "fake/path/ca.pem",
+            },
+            {
+                "verify_ssl": False,
+                "ssl_ca_cert": "fake/path/ca.pem",
+            },
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_setup_config_ssl(
+    hass, mock_client, config_base, config_ext, expected_client_args
+):
+    """Test the setup with various verify_ssl values."""
+    config = {"influxdb": config_base.copy()}
+    config["influxdb"].update(config_ext)
+
+    with patch("os.access", return_value=True), patch(
+        "os.path.isfile", return_value=True
+    ):
+        assert await async_setup_component(hass, influxdb.DOMAIN, config)
+        await hass.async_block_till_done()
+
+        assert hass.bus.listen.called
+        assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
+        assert expected_client_args.items() <= mock_client.call_args.kwargs.items()
 
 
 @pytest.mark.parametrize(
@@ -148,7 +281,7 @@ async def test_setup_minimal_config(hass, mock_client, config_ext, get_write_api
     assert await async_setup_component(hass, influxdb.DOMAIN, config)
     await hass.async_block_till_done()
     assert hass.bus.listen.called
-    assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
+    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
     assert get_write_api(mock_client).call_count == 1
 
 

@@ -8,8 +8,8 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Do you want to configure Home Assistant to connect to Almond provided by the Hass.io add-on: {addon}?",
-                "title": "Almond via Hass.io add-on"
+                "description": "Do you want to configure Home Assistant to connect to Almond provided by the add-on: {addon}?",
+                "title": "Almond via Home Assistant add-on"
             },
             "pick_implementation": {
                 "title": "Pick Authentication Method"

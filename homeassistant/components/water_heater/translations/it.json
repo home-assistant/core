@@ -4,5 +4,16 @@
             "turn_off": "Disattiva {entity_name}",
             "turn_on": "Attiva {entity_name}"
         }
+    },
+    "state": {
+        "_": {
+            "eco": "Eco",
+            "electric": "Elettrico",
+            "gas": "Gas",
+            "heat_pump": "Pompa di calore",
+            "high_demand": "Forte richiesta",
+            "off": "Spento",
+            "performance": "Prestazione"
+        }
     }
 }

@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "latitude": "Enlem",
+                    "longitude": "Boylam"
+                }
+            }
+        }
+    }
+}

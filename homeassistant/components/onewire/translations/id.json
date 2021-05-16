@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_path": "Direktori tidak ditemukan."
+        },
+        "step": {
+            "owserver": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "title": "Tetapkan detail owserver"
+            },
+            "user": {
+                "data": {
+                    "type": "Jenis koneksi"
+                },
+                "title": "Siapkan 1-Wire"
+            }
+        }
+    }
+}
