@@ -376,20 +376,22 @@ class MqttCover(MqttEntity, CoverEntity):
                         self.tilt_payload_received(payload["tilt_position"])
                     payload = payload["position"]
 
-            if type(payload) in [int, float] or payload.isnumeric():
+            try:
                 percentage_payload = self.find_percentage_in_range(
                     float(payload), COVER_PAYLOAD
                 )
-                self._position = percentage_payload
-                if self._config.get(CONF_STATE_TOPIC) is None:
-                    self._state = (
-                        STATE_CLOSED
-                        if percentage_payload == DEFAULT_POSITION_CLOSED
-                        else STATE_OPEN
-                    )
-            else:
+            except ValueError:
                 _LOGGER.warning("Payload '%s' is not numeric", payload)
                 return
+
+            self._position = percentage_payload
+            if self._config.get(CONF_STATE_TOPIC) is None:
+                self._state = (
+                    STATE_CLOSED
+                    if percentage_payload == DEFAULT_POSITION_CLOSED
+                    else STATE_OPEN
+                )
+
             self.async_write_ha_state()
 
         if self._config.get(CONF_GET_POSITION_TOPIC):
@@ -413,16 +415,16 @@ class MqttCover(MqttEntity, CoverEntity):
             # Force into optimistic mode.
             self._optimistic = True
 
-        if not self._config.get(CONF_TILT_STATUS_TOPIC) is None:
+        if self._config.get(CONF_TILT_STATUS_TOPIC) is None:
+            # Force into optimistic tilt mode.
+            self._tilt_optimistic = True
+        else:
             self._tilt_value = STATE_UNKNOWN
             topics["tilt_status_topic"] = {
                 "topic": self._config.get(CONF_TILT_STATUS_TOPIC),
                 "msg_callback": tilt_message_received,
                 "qos": self._config[CONF_QOS],
             }
-        else:
-            # Force into optimistic tilt mode.
-            self._tilt_optimistic = True
 
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state, topics
@@ -695,6 +697,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
     def tilt_payload_received(self, _payload):
         """Set the tilt value."""
+
         try:
             payload = float(_payload)
         except ValueError:
