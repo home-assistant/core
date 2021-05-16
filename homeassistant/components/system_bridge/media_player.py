@@ -67,7 +67,7 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
         asyncio.ensure_future(bridge.listen_for_events(handle_event))
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag media player features that are supported."""
         return (
             SUPPORT_PAUSE
@@ -107,6 +107,26 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
         elif self._media_player_status.source["type"] == "video":
             return MEDIA_TYPE_VIDEO
         return None
+
+    @property
+    def media_duration(self) -> float | None:
+        """Duration of current playing media in seconds."""
+        if (
+            self._media_player_status is None
+            or self._media_player_status.attributes is None
+        ):
+            return None
+        return self._media_player_status.duration
+
+    @property
+    def media_position(self) -> float | None:
+        """Position of current playing media in seconds."""
+        if (
+            self._media_player_status is None
+            or self._media_player_status.attributes is None
+        ):
+            return None
+        return self._media_player_status.position
 
     @property
     def volume_level(self) -> float | None:
