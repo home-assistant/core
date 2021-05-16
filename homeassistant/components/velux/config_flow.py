@@ -39,9 +39,12 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=host,
                     data=user_input,
                 )
-            except PyVLXException:
-                _LOGGER.exception("Cannot connect to KLF 200 gateway")
+            except PyVLXException as ex:
+                _LOGGER.exception("Unable to connect to Velux gateway: %s", ex)
                 errors["base"] = "invalid_auth"
+            except OSError as ex:
+                _LOGGER.exception("Unable to connect to Velux gateway: %s", ex)
+                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
