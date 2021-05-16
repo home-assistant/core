@@ -43,32 +43,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     wolf_client = WolfClient(username, password)
 
-    try:
-        parameters = await fetch_parameters(wolf_client, gateway_id, device_id)
-    except InvalidAuth:
-        _LOGGER.debug("Authentication failed")
-        return False
+    parameters = await fetch_parameters_init(wolf_client, gateway_id, device_id)
 
     async def async_update_data():
         """Update all stored entities for Wolf SmartSet."""
         try:
             nonlocal refetch_parameters
             nonlocal parameters
-            if refetch_parameters:
-                parameters = await fetch_parameters(wolf_client, gateway_id, device_id)
-                hass.data[DOMAIN][entry.entry_id][PARAMETERS] = parameters
-                refetch_parameters = False
-            values = {
-                v.value_id: v.value
-                for v in await wolf_client.fetch_value(
-                    gateway_id, device_id, parameters
+            await wolf_client.update_session()
+            if not wolf_client.fetch_system_state_list(device_id, gateway_id):
+                refetch_parameters = True
+                raise UpdateFailed(
+                    "Could not fetch values from server because device is Offline."
                 )
-            }
-            return {
-                parameter.parameter_id: (parameter.value_id, values[parameter.value_id])
-                for parameter in parameters
-                if parameter.value_id in values.keys()
-            }
+            else:
+                if refetch_parameters:
+                    parameters = await fetch_parameters(
+                        wolf_client, gateway_id, device_id
+                    )
+                    hass.data[DOMAIN][entry.entry_id][PARAMETERS] = parameters
+                    refetch_parameters = False
+                values = {
+                    v.value_id: v.value
+                    for v in await wolf_client.fetch_value(
+                        gateway_id, device_id, parameters
+                    )
+                }
+                return {
+                    parameter.parameter_id: (
+                        parameter.value_id,
+                        values[parameter.value_id],
+                    )
+                    for parameter in parameters
+                    if parameter.value_id in values
+                }
         except ConnectError as exception:
             raise UpdateFailed(
                 f"Error communicating with API: {exception}"
@@ -80,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except ParameterReadError as exception:
             refetch_parameters = True
             raise UpdateFailed(
-                "Could not fetch values for parameter. Refreshing value ids."
+                "Could not fetch values for parameter. Refreshing value IDs."
             ) from exception
         except InvalidAuth as exception:
             raise UpdateFailed("Invalid authentication during update.") from exception
@@ -128,7 +136,7 @@ async def fetch_parameters(client: WolfClient, gateway_id: int, device_id: int):
 async def fetch_parameters_init(client: WolfClient, gateway_id: int, device_id: int):
     """Fetch all available parameters with usage of WolfClient but handles all exceptions and results in ConfigEntryNotReady."""
     try:
-        return fetch_parameters(client, gateway_id, device_id)
+        return await fetch_parameters(client, gateway_id, device_id)
     except (ConnectError, ConnectTimeout, FetchFailed) as exception:
         raise ConfigEntryNotReady(
             f"Error communicating with API: {exception}"
