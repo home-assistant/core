@@ -17,7 +17,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY_MEDIA,
     SUPPORT_SEEK,
     SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
@@ -74,7 +73,6 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
             | SUPPORT_PLAY
             | SUPPORT_PLAY_MEDIA
             | SUPPORT_SEEK
-            | SUPPORT_TURN_OFF
             | SUPPORT_STOP
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_VOLUME_SET
@@ -147,3 +145,39 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
         ):
             return None
         return self._media_player_status.muted
+
+    @property
+    def media_image_url(self) -> str | None:
+        """Image url of current playing media."""
+        # TODO: Add get cover method to package
+        return None
+
+    @property
+    def media_title(self) -> str | None:
+        """Title of current playing media."""
+        if (
+            self._media_player_status is None
+            or self._media_player_status.attributes is None
+        ):
+            return None
+        return self._media_player_status.source.get("title")
+
+    @property
+    def media_artist(self) -> str | None:
+        """Artist of current playing media, music track only."""
+        if (
+            self._media_player_status is None
+            or self._media_player_status.attributes is None
+        ):
+            return None
+        return self._media_player_status.source.get("artist")
+
+    @property
+    def media_album_name(self) -> str | None:
+        """Album name of current playing media, music track only."""
+        if (
+            self._media_player_status is None
+            or self._media_player_status.attributes is None
+        ):
+            return None
+        return self._media_player_status.source.get("album")
