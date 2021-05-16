@@ -9,7 +9,10 @@ from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    DEVICE_CLASS_BLIND,
     DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_SHUTTER,
+    DEVICE_CLASS_WINDOW,
     DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
@@ -75,6 +78,15 @@ def percent_to_zwave_position(value: int) -> int:
 
 class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     """Representation of a Z-Wave Cover device."""
+
+    @property
+    def device_class(self) -> str | None:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        if self.info.platform_hint == "window_shutter":
+            return DEVICE_CLASS_SHUTTER
+        if self.info.platform_hint == "window_blind":
+            return DEVICE_CLASS_BLIND
+        return DEVICE_CLASS_WINDOW
 
     @property
     def is_closed(self) -> bool | None:

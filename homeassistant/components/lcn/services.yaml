@@ -19,10 +19,10 @@ output_abs:
       selector:
         select:
           options:
-            - 'OUTPUT1'
-            - 'OUTPUT2'
-            - 'OUTPUT3'
-            - 'OUTPUT4'
+            - "output1"
+            - "output2"
+            - "output3"
+            - "output4"
     brightness:
       name: Brightness
       description: Absolute brightness in percent.
@@ -63,10 +63,10 @@ output_rel:
       selector:
         select:
           options:
-            - 'OUTPUT1'
-            - 'OUTPUT2'
-            - 'OUTPUT3'
-            - 'OUTPUT4'
+            - "output1"
+            - "output2"
+            - "output3"
+            - "output4"
     brightness:
       name: Brightness
       description: Relative brightness in percent.
@@ -76,7 +76,7 @@ output_rel:
         number:
           min: -100
           max: 100
-          unit_of_measurement: '%'
+          unit_of_measurement: "%"
 
 output_toggle:
   name: Toggle output
@@ -97,10 +97,10 @@ output_toggle:
       selector:
         select:
           options:
-            - 'OUTPUT1'
-            - 'OUTPUT2'
-            - 'OUTPUT3'
-            - 'OUTPUT4'
+            - "output1"
+            - "output2"
+            - "output3"
+            - "output4"
     transition:
       name: Transition
       description: Transition time.
@@ -151,18 +151,18 @@ led:
       selector:
         select:
           options:
-            - 'LED1'
-            - 'LED2'
-            - 'LED3'
-            - 'LED4'
-            - 'LED5'
-            - 'LED6'
-            - 'LED7'
-            - 'LED8'
-            - 'LED9'
-            - 'LED10'
-            - 'LED11'
-            - 'LED12'
+            - "led1"
+            - "led2"
+            - "led3"
+            - "led4"
+            - "led5"
+            - "led6"
+            - "led7"
+            - "led8"
+            - "led9"
+            - "led10"
+            - "led11"
+            - "led12"
     state:
       name: State
       description: Led state
@@ -171,10 +171,10 @@ led:
       selector:
         select:
           options:
-            - 'blink'
-            - 'flicker'
-            - 'off'
-            - 'on'
+            - "blink"
+            - "flicker"
+            - "off"
+            - "on"
 
 var_abs:
   name: Set absolute variable
@@ -192,30 +192,30 @@ var_abs:
       description: Variable or setpoint name
       required: true
       example: "var1"
-      default: NATIVE
+      default: native
       selector:
         select:
           options:
-            - 'R1VAR'
-            - 'R2VAR'
-            - 'R1VARSETPOINT'
-            - 'R2VARSETPOINT'
-            - 'TVAR'
-            - 'VAR1ORTVAR'
-            - 'VAR2ORR1VAR'
-            - 'VAR3ORR2VAR'
-            - 'VAR1'
-            - 'VAR2'
-            - 'VAR3'
-            - 'VAR4'
-            - 'VAR5'
-            - 'VAR6'
-            - 'VAR7'
-            - 'VAR8'
-            - 'VAR9'
-            - 'VAR10'
-            - 'VAR11'
-            - 'VAR12'
+            - "r1var"
+            - "r2var"
+            - "r1varsetpoint"
+            - "r2varsetpoint"
+            - "tvar"
+            - "var1ortvar"
+            - "var2orr1var"
+            - "var3orr2var"
+            - "var1"
+            - "var2"
+            - "var3"
+            - "var4"
+            - "var5"
+            - "var6"
+            - "var7"
+            - "var8"
+            - "var9"
+            - "var10"
+            - "var11"
+            - "var12"
     value:
       name: Value
       description: Value to set
@@ -232,29 +232,29 @@ var_abs:
       selector:
         select:
           options:
-            - ''
-            - '%'
-            - '°'
-            - '°C'
-            - '°F'
-            - 'AMPERE'
-            - 'AMP'
-            - 'A'
-            - 'DEGREE'
-            - 'NATIVE'
-            - 'K'
-            - 'LCN'
-            - 'LUX_T'
-            - 'LX_T'
-            - 'LUX_I'
-            - 'LUX'
-            - 'LX'
-            - 'M/S'
-            - 'METERPERSECOND'
-            - 'PERCENT'
-            - 'PPM'
-            - 'V'
-            - 'VOLT'
+            - ""
+            - "%"
+            - "°"
+            - "°C"
+            - "°F"
+            - "ampere"
+            - "amp"
+            - "a"
+            - "degree"
+            - "native"
+            - "k"
+            - "lcn"
+            - "lux_t"
+            - "lx_t"
+            - "lux_i"
+            - "lux"
+            - "lx"
+            - "m/s"
+            - "meterpersecond"
+            - "percent"
+            - "ppm"
+            - "v"
+            - "volt"
 
 var_reset:
   name: Reset variable
@@ -273,26 +273,26 @@ var_reset:
       selector:
         select:
           options:
-            - 'R1VAR'
-            - 'R2VAR'
-            - 'R1VARSETPOINT'
-            - 'R2VARSETPOINT'
-            - 'TVAR'
-            - 'VAR1ORTVAR'
-            - 'VAR2ORR1VAR'
-            - 'VAR3ORR2VAR'
-            - 'VAR1'
-            - 'VAR2'
-            - 'VAR3'
-            - 'VAR4'
-            - 'VAR5'
-            - 'VAR6'
-            - 'VAR7'
-            - 'VAR8'
-            - 'VAR9'
-            - 'VAR10'
-            - 'VAR11'
-            - 'VAR12'
+            - "r1var"
+            - "r2var"
+            - "r1varsetpoint"
+            - "r2varsetpoint"
+            - "tvar"
+            - "var1ortvar"
+            - "var2orr1var"
+            - "var3orr2var"
+            - "var1"
+            - "var2"
+            - "var3"
+            - "var4"
+            - "var5"
+            - "var6"
+            - "var7"
+            - "var8"
+            - "var9"
+            - "var10"
+            - "var11"
+            - "var12"
 
 var_rel:
   name: Shift variable
@@ -313,43 +313,43 @@ var_rel:
       selector:
         select:
           options:
-            - 'R1VAR'
-            - 'R2VAR'
-            - 'R1VARSETPOINT'
-            - 'R2VARSETPOINT'
-            - 'THRS1'
-            - 'THRS2'
-            - 'THRS3'
-            - 'THRS4'
-            - 'THRS5'
-            - 'THRS2_1'
-            - 'THRS2_2'
-            - 'THRS2_3'
-            - 'THRS2_4'
-            - 'THRS3_1'
-            - 'THRS3_2'
-            - 'THRS3_3'
-            - 'THRS3_4'
-            - 'THRS4_1'
-            - 'THRS4_2'
-            - 'THRS4_3'
-            - 'THRS4_4'
-            - 'TVAR'
-            - 'VAR1ORTVAR'
-            - 'VAR2ORR1VAR'
-            - 'VAR3ORR2VAR'
-            - 'VAR1'
-            - 'VAR2'
-            - 'VAR3'
-            - 'VAR4'
-            - 'VAR5'
-            - 'VAR6'
-            - 'VAR7'
-            - 'VAR8'
-            - 'VAR9'
-            - 'VAR10'
-            - 'VAR11'
-            - 'VAR12'
+            - "r1var"
+            - "r2var"
+            - "r1varsetpoint"
+            - "r2varsetpoint"
+            - "thrs1"
+            - "thrs2"
+            - "thrs3"
+            - "thrs4"
+            - "thrs5"
+            - "thrs2_1"
+            - "thrs2_2"
+            - "thrs2_3"
+            - "thrs2_4"
+            - "thrs3_1"
+            - "thrs3_2"
+            - "thrs3_3"
+            - "thrs3_4"
+            - "thrs4_1"
+            - "thrs4_2"
+            - "thrs4_3"
+            - "thrs4_4"
+            - "tvar"
+            - "var1ortvar"
+            - "var2orr1var"
+            - "var3orr2var"
+            - "var1"
+            - "var2"
+            - "var3"
+            - "var4"
+            - "var5"
+            - "var6"
+            - "var7"
+            - "var8"
+            - "var9"
+            - "var10"
+            - "var11"
+            - "var12"
     value:
       name: Value
       description: Shift value
@@ -363,43 +363,43 @@ var_rel:
       name: Unit of measurement
       description: Unit of value
       example: "celsius"
-      default: NATIVE
+      default: native
       selector:
         select:
           options:
-            - ''
-            - '%'
-            - '°'
-            - '°C'
-            - '°F'
-            - 'AMPERE'
-            - 'AMP'
-            - 'A'
-            - 'DEGREE'
-            - 'NATIVE'
-            - 'K'
-            - 'LCN'
-            - 'LUX_T'
-            - 'LX_T'
-            - 'LUX_I'
-            - 'LUX'
-            - 'LX'
-            - 'M/S'
-            - 'METERPERSECOND'
-            - 'PERCENT'
-            - 'PPM'
-            - 'V'
-            - 'VOLT'
+            - ""
+            - "%"
+            - "°"
+            - "°C"
+            - "°F"
+            - "ampere"
+            - "amp"
+            - "a"
+            - "degree"
+            - "native"
+            - "k"
+            - "lcn"
+            - "lux_t"
+            - "lx_t"
+            - "lux_i"
+            - "lux"
+            - "lx"
+            - "m/s"
+            - "meterpersecond"
+            - "percent"
+            - "ppm"
+            - "v"
+            - "volt"
     value_reference:
       name: Reference value
       description: Reference value for setpoint and threshold
       example: "current"
-      default: CURRENT
+      default: current
       selector:
         select:
           options:
-            - 'CURRENT'
-            - 'PROG'
+            - "current"
+            - "prog"
 
 lock_regulator:
   name: Lock regulator
@@ -420,23 +420,23 @@ lock_regulator:
       selector:
         select:
           options:
-            - 'THRS1'
-            - 'THRS2'
-            - 'THRS3'
-            - 'THRS4'
-            - 'THRS5'
-            - 'THRS2_1'
-            - 'THRS2_2'
-            - 'THRS2_3'
-            - 'THRS2_4'
-            - 'THRS3_1'
-            - 'THRS3_2'
-            - 'THRS3_3'
-            - 'THRS3_4'
-            - 'THRS4_1'
-            - 'THRS4_2'
-            - 'THRS4_3'
-            - 'THRS4_4'
+            - "thrs1"
+            - "thrs2"
+            - "thrs3"
+            - "thrs4"
+            - "thrs5"
+            - "thrs2_1"
+            - "thrs2_2"
+            - "thrs2_3"
+            - "thrs2_4"
+            - "thrs3_1"
+            - "thrs3_2"
+            - "thrs3_3"
+            - "thrs3_4"
+            - "thrs4_1"
+            - "thrs4_2"
+            - "thrs4_3"
+            - "thrs4_4"
     state:
       name: State
       description: New setpoint state
@@ -467,14 +467,14 @@ send_keys:
       name: State
       description: "Key state upon sending (optional, must be hit for deferred)"
       example: "hit"
-      default: HIT
+      default: hit
       selector:
         select:
           options:
-            - 'HIT'
-            - 'MAKE'
-            - 'BREAK'
-            - 'DONTSEND'
+            - "hit"
+            - "make"
+            - "break"
+            - "dontsend"
     time:
       name: Time
       description: Send delay.
@@ -488,24 +488,24 @@ send_keys:
       name: Time unit
       description: Time unit of send delay.
       example: "s"
-      default: S
+      default: s
       selector:
         select:
           options:
-            - 'D'
-            - 'DAY'
-            - 'DAYS'
-            - 'H'
-            - 'HOUR'
-            - 'HOURS'
-            - 'M'
-            - 'MIN'
-            - 'MINUTE'
-            - 'MINUTES'
-            - 'S'
-            - 'SEC'
-            - 'SECOND'
-            - 'SECONDS'
+            - "d"
+            - "day"
+            - "days"
+            - "h"
+            - "hour"
+            - "hours"
+            - "m"
+            - "min"
+            - "minute"
+            - "minutes"
+            - "s"
+            - "sec"
+            - "second"
+            - "seconds"
 
 lock_keys:
   name: Lock keys
@@ -521,8 +521,8 @@ lock_keys:
     table:
       name: Table
       description: "Table with keys to lock (must be A for interval)."
-      example: "A5"
-      default: A
+      example: "a5"
+      default: a
       selector:
         text:
     state:
@@ -545,24 +545,24 @@ lock_keys:
       name: Time unit
       description: Time unit of lock interval.
       example: "s"
-      default: S
+      default: s
       selector:
         select:
           options:
-            - 'D'
-            - 'DAY'
-            - 'DAYS'
-            - 'H'
-            - 'HOUR'
-            - 'HOURS'
-            - 'M'
-            - 'MIN'
-            - 'MINUTE'
-            - 'MINUTES'
-            - 'S'
-            - 'SEC'
-            - 'SECOND'
-            - 'SECONDS'
+            - "d"
+            - "day"
+            - "days"
+            - "h"
+            - "hour"
+            - "hours"
+            - "m"
+            - "min"
+            - "minute"
+            - "minutes"
+            - "s"
+            - "sec"
+            - "second"
+            - "seconds"
 
 dyn_text:
   name: Dynamic text
