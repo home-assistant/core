@@ -1,25 +1,22 @@
 """Handle manual setup of ihc resources as entities in Home Assistant."""
 import logging
+import os.path
 
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
-    CONF_PASSWORD,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
-    CONF_URL,
-    CONF_USERNAME,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_AUTOSETUP,
     CONF_BINARY_SENSOR,
     CONF_DIMMABLE,
     CONF_INFO,
@@ -33,6 +30,7 @@ from .const import (
     CONF_SWITCH,
     DOMAIN,
     IHC_PLATFORMS,
+    MANUAL_SETUP_YAML,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,41 +81,65 @@ SENSOR_SCHEMA = DEVICE_SCHEMA.extend(
     {vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string}
 )
 
-IHC_SCHEMA = vol.Schema(
+
+MANUAL_SETUP_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_URL): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_AUTOSETUP, default=True): cv.boolean,
-        vol.Optional(CONF_BINARY_SENSOR, default=[]): vol.All(
-            cv.ensure_list, [vol.All(BINARY_SENSOR_SCHEMA, validate_name)]
-        ),
-        vol.Optional(CONF_INFO, default=True): cv.boolean,
-        vol.Optional(CONF_LIGHT, default=[]): vol.All(
-            cv.ensure_list, [vol.All(LIGHT_SCHEMA, validate_name)]
-        ),
-        vol.Optional(CONF_SENSOR, default=[]): vol.All(
-            cv.ensure_list, [vol.All(SENSOR_SCHEMA, validate_name)]
-        ),
-        vol.Optional(CONF_SWITCH, default=[]): vol.All(
-            cv.ensure_list, [vol.All(SWITCH_SCHEMA, validate_name)]
-        ),
+        DOMAIN: vol.Schema(
+            vol.All(
+                cv.ensure_list,
+                [
+                    vol.Schema(
+                        {
+                            vol.Required("controller"): cv.string,
+                            vol.Optional(CONF_BINARY_SENSOR, default=[]): vol.All(
+                                cv.ensure_list,
+                                [vol.All(BINARY_SENSOR_SCHEMA, validate_name)],
+                            ),
+                            vol.Optional(CONF_INFO, default=True): cv.boolean,
+                            vol.Optional(CONF_LIGHT, default=[]): vol.All(
+                                cv.ensure_list, [vol.All(LIGHT_SCHEMA, validate_name)]
+                            ),
+                            vol.Optional(CONF_SENSOR, default=[]): vol.All(
+                                cv.ensure_list, [vol.All(SENSOR_SCHEMA, validate_name)]
+                            ),
+                            vol.Optional(CONF_SWITCH, default=[]): vol.All(
+                                cv.ensure_list, [vol.All(SWITCH_SCHEMA, validate_name)]
+                            ),
+                        }
+                    )
+                ],
+            )
+        )
     }
 )
 
 
-def get_manual_configuration(
-    hass: HomeAssistant,
-    config: ConfigType,
-    controller_conf: ConfigType,
-    controller_id: str,
-) -> None:
-    """Get manual configuration for IHC devices."""
-    for platform in IHC_PLATFORMS:
+def manual_setup(hass: HomeAssistant, controller_id):
+    """Manual setup of IHC devices."""
+    yaml_path = hass.config.path(MANUAL_SETUP_YAML)
+    if not os.path.isfile(yaml_path):
+        return
+    yaml = load_yaml_config_file(yaml_path)
+    try:
+        ihc_conf = MANUAL_SETUP_SCHEMA(yaml)[DOMAIN]
+    except vol.Invalid as exception:
+        _LOGGER.error("Invalid IHC manual setup data: %s", exception)
+        return
+
+    # Find the controller config for this controller
+    controller_conf = None
+    for conf in ihc_conf:
+        if conf["controller"] == controller_id:
+            controller_conf = conf
+            break
+    if controller_conf is None:
+        return
+    # Get manual configuration for IHC devices
+    for component in IHC_PLATFORMS:
         discovery_info = {}
-        if platform in controller_conf:
-            platform_setup = controller_conf.get(platform, {})
-            for sensor_cfg in platform_setup:
+        if component in controller_conf:
+            component_setup = controller_conf.get(component)
+            for sensor_cfg in component_setup:
                 name = sensor_cfg[CONF_NAME]
                 device = {
                     "ihc_id": sensor_cfg[CONF_ID],
@@ -138,4 +160,7 @@ def get_manual_configuration(
                 }
                 discovery_info[name] = device
         if discovery_info:
-            discovery.load_platform(hass, platform, DOMAIN, discovery_info, config)
+            if component in hass.data[DOMAIN][controller_id]:
+                hass.data[DOMAIN][controller_id][component].update(discovery_info)
+            else:
+                hass.data[DOMAIN][controller_id][component] = discovery_info

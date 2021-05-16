@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_TYPE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -84,9 +83,12 @@ AUTO_SETUP_SCHEMA = vol.Schema(
 )
 
 
-def autosetup_ihc_products(hass: HomeAssistant, config, ihc_controller, controller_id):
+def autosetup_ihc_products(
+    hass: HomeAssistant, ihc_controller, controller_id, use_groups: bool
+):
     """Auto setup of IHC products from the IHC project file."""
-    if not (project_xml := ihc_controller.get_project()):
+    project_xml = ihc_controller.get_project()
+    if not project_xml:
         _LOGGER.error("Unable to read project from IHC controller")
         return False
     project = ElementTree.fromstring(project_xml)
@@ -101,23 +103,23 @@ def autosetup_ihc_products(hass: HomeAssistant, config, ihc_controller, controll
     except vol.Invalid as exception:
         _LOGGER.error("Invalid IHC auto setup data: %s", exception)
         return False
-
     groups = project.findall(".//group")
-    for platform in IHC_PLATFORMS:
-        platform_setup = auto_setup_conf[platform]
-        discovery_info = get_discovery_info(platform_setup, groups, controller_id)
+    for component in IHC_PLATFORMS:
+        component_setup = auto_setup_conf[component]
+        discovery_info = get_discovery_info(
+            component_setup, groups, controller_id, use_groups
+        )
         if discovery_info:
-            discovery.load_platform(hass, platform, DOMAIN, discovery_info, config)
-
+            hass.data[DOMAIN][controller_id][component] = discovery_info
     return True
 
 
-def get_discovery_info(platform_setup, groups, controller_id):
-    """Get discovery info for specified IHC platform."""
+def get_discovery_info(component_setup, groups, controller_id, use_groups: bool):
+    """Get discovery info for specified IHC component."""
     discovery_data = {}
     for group in groups:
         groupname = group.attrib["name"]
-        for product_cfg in platform_setup:
+        for product_cfg in component_setup:
             products = group.findall(product_cfg[CONF_XPATH])
             for product in products:
                 product_id = int(product.attrib["id"].strip("_"), 0)
@@ -127,8 +129,10 @@ def get_discovery_info(platform_setup, groups, controller_id):
                         continue
                     ihc_id = int(node.attrib["id"].strip("_"), 0)
                     name = f"{groupname}_{ihc_id}"
+                    model = product.get("product_identifier") or ""
                     # make the model number look a bit nicer - strip leading _
-                    model = product.get("product_identifier", "").lstrip("_")
+                    if model.startswith("_"):
+                        model = model[1::]
                     device = {
                         "ihc_id": ihc_id,
                         "ctrl_id": controller_id,
@@ -138,9 +142,10 @@ def get_discovery_info(platform_setup, groups, controller_id):
                             "note": product.get("note") or "",
                             "position": product.get("position") or "",
                             "model": model,
-                            "group": groupname,
                         },
                         "product_cfg": product_cfg,
                     }
+                    if use_groups:
+                        device["product"]["group"] = groupname
                     discovery_data[name] = device
     return discovery_data

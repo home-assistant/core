@@ -1,0 +1,33 @@
+{
+    "config": {
+        "error": {
+            "already_setup": "This controller is already setup",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "auto_setup": "Autosetup",
+                    "password": "Password",
+                    "url": "URL",
+                    "use_groups": "Use IHC groups as suggested areas",
+                    "username": "Username"
+                },
+                "description": "Add your IHC controller to Home Assistant"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "info": "Info (add IHC name,note and position as attributes)"
+                },
+                "description": "IHC controller options"
+            }
+        }
+    },
+    "title": "IHC"
+}

@@ -22,7 +22,7 @@ SET_RUNTIME_VALUE_BOOL_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_IHC_ID): cv.positive_int,
         vol.Required(ATTR_VALUE): cv.boolean,
-        vol.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
+        vol.Optional(ATTR_CONTROLLER_ID, default=""): cv.string,
     }
 )
 
@@ -30,7 +30,7 @@ SET_RUNTIME_VALUE_INT_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_IHC_ID): cv.positive_int,
         vol.Required(ATTR_VALUE): vol.Coerce(int),
-        vol.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
+        vol.Optional(ATTR_CONTROLLER_ID, default=""): cv.string,
     }
 )
 
@@ -38,14 +38,14 @@ SET_RUNTIME_VALUE_FLOAT_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_IHC_ID): cv.positive_int,
         vol.Required(ATTR_VALUE): vol.Coerce(float),
-        vol.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
+        vol.Optional(ATTR_CONTROLLER_ID, default=""): cv.string,
     }
 )
 
 PULSE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_IHC_ID): cv.positive_int,
-        vol.Optional(ATTR_CONTROLLER_ID, default=0): cv.positive_int,
+        vol.Optional(ATTR_CONTROLLER_ID, default=""): cv.string,
     }
 )
 
@@ -54,13 +54,11 @@ def setup_service_functions(hass: HomeAssistant) -> None:
     """Set up the IHC service functions."""
 
     def _get_controller(call):
-        controller_index = call.data[ATTR_CONTROLLER_ID]
-        for controller_id in hass.data[DOMAIN]:
-            controller_conf = hass.data[DOMAIN][controller_id]
-            if controller_conf[IHC_CONTROLLER_INDEX] == controller_index:
-                return controller_conf[IHC_CONTROLLER]
-        # if not found the controller_index is ouf of range
-        raise ValueError("The controller index is out of range")
+        controller_id = call.data[ATTR_CONTROLLER_ID]
+        # if no controller id is specified use the first one
+        if controller_id == "":
+            controller_id = next(iter(hass.data[DOMAIN]))
+        return hass.data[DOMAIN][controller_id][IHC_CONTROLLER]
 
     async def async_set_runtime_value_bool(call):
         """Set a IHC runtime bool value service function."""

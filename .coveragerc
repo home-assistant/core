@@ -517,7 +517,19 @@ omit =
     homeassistant/components/ifttt/__init__.py
     homeassistant/components/ifttt/alarm_control_panel.py
     homeassistant/components/iglo/light.py
-    homeassistant/components/ihc/*
+    homeassistant/components/ihc/__init__.py
+    homeassistant/components/ihc/auto_setup.py
+    homeassistant/components/ihc/binary_sensor.py
+    homeassistant/components/ihc/const.py
+    homeassistant/components/ihc/ihcdevice.py
+    homeassistant/components/ihc/light.py
+    homeassistant/components/ihc/manual_setup.py
+    homeassistant/components/ihc/migrate.py
+    homeassistant/components/ihc/sensor.py
+    homeassistant/components/ihc/service_functions.py
+    homeassistant/components/ihc/switch.py
+    homeassistant/components/ihc/util.py
+    homeassistant/components/imap/sensor.py
     homeassistant/components/imap_email_content/sensor.py
     homeassistant/components/incomfort/*
     homeassistant/components/insteon/binary_sensor.py

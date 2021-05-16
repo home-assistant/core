@@ -4,7 +4,7 @@ import asyncio
 
 from ihcsdk.ihccontroller import IHCController
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 
 
 async def async_pulse(
@@ -44,3 +44,12 @@ def async_set_float(
     return hass.async_add_executor_job(
         ihc_controller.set_runtime_value_float, ihc_id, value
     )
+
+
+def get_controller_serial(ihc_controller: IHCController) -> str:
+    """Get the controller serial number.
+
+    Having the function makes it easier to patch for testing
+    """
+    info = ihc_controller.client.get_system_info()
+    return info["serial_number"]

@@ -7,13 +7,11 @@ set_runtime_value_bool:
     controller_id:
       name: Controller ID
       description: |
-        If you have multiple controller, this is the index of you controller
-        starting with 0.
-      default: 0
+        The controller ID is the serial number of the IHC controller.
+        If you have only one controller you can skip this parameter
+      example: CN1234
       selector:
-        number:
-          min: 0
-          max: 100
+        text:
     ihc_id:
       name: IHC ID
       description: The integer IHC resource ID.
@@ -37,13 +35,11 @@ set_runtime_value_int:
     controller_id:
       name: Controller ID
       description: |
-        If you have multiple controller, this is the index of you controller
-        starting with 0.
-      default: 0
+        The controller ID is the serial number of the IHC controller.
+        If you have only one controller you can skip this parameter
+      example: CN1234
       selector:
-        number:
-          min: 0
-          max: 100
+        text:
     ihc_id:
       name: IHC ID
       description: The integer IHC resource ID.
@@ -70,13 +66,11 @@ set_runtime_value_float:
     controller_id:
       name: Controller ID
       description: |
-        If you have multiple controller, this is the index of you controller
-        starting with 0.
-      default: 0
+        The controller ID is the serial number of the IHC controller.
+        If you have only one controller you can skip this parameter
+      example: CN1234
       selector:
-        number:
-          min: 0
-          max: 100
+        text:
     ihc_id:
       name: IHC ID
       description: The integer IHC resource ID.
@@ -104,13 +98,11 @@ pulse:
     controller_id:
       name: Controller ID
       description: |
-        If you have multiple controller, this is the index of you controller
-        starting with 0.
-      default: 0
+        The controller ID is the serial number of the IHC controller.
+        If you have only one controller you can skip this parameter
+      example: CN1234
       selector:
-        number:
-          min: 0
-          max: 100
+        text:
     ihc_id:
       name: IHC ID
       description: The integer IHC resource ID.
