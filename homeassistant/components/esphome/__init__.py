@@ -5,12 +5,12 @@ import asyncio
 import functools
 import logging
 import math
-from typing import Any, Callable
+from typing import Callable
 
 from aioesphomeapi import (
     APIClient,
     APIConnectionError,
-    DeviceInfo,
+    DeviceInfo as EsphomeDeviceInfo,
     EntityInfo,
     EntityState,
     HomeassistantServiceCall,
@@ -36,7 +36,7 @@ from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.service import async_set_service_schema
@@ -140,32 +140,65 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
             )
 
-    async def send_home_assistant_state_event(event: Event) -> None:
-        """Forward Home Assistant states updates to ESPHome."""
-        new_state = event.data.get("new_state")
-        if new_state is None:
-            return
-        entity_id = event.data.get("entity_id")
-        await cli.send_home_assistant_state(entity_id, new_state.state)
-
     async def _send_home_assistant_state(
-        entity_id: str, new_state: State | None
+        entity_id: str, attribute: str | None, state: State | None
     ) -> None:
         """Forward Home Assistant states to ESPHome."""
-        await cli.send_home_assistant_state(entity_id, new_state.state)
+        if state is None or (attribute and attribute not in state.attributes):
+            return
+
+        send_state = state.state
+        if attribute:
+            send_state = state.attributes[attribute]
+            # ESPHome only handles "on"/"off" for boolean values
+            if isinstance(send_state, bool):
+                send_state = "on" if send_state else "off"
+
+        await cli.send_home_assistant_state(entity_id, attribute, str(send_state))
 
     @callback
-    def async_on_state_subscription(entity_id: str) -> None:
+    def async_on_state_subscription(
+        entity_id: str, attribute: str | None = None
+    ) -> None:
         """Subscribe and forward states for requested entities."""
+
+        async def send_home_assistant_state_event(event: Event) -> None:
+            """Forward Home Assistant states updates to ESPHome."""
+
+            # Only communicate changes to the state or attribute tracked
+            if (
+                "old_state" in event.data
+                and "new_state" in event.data
+                and (
+                    (
+                        not attribute
+                        and event.data["old_state"].state
+                        == event.data["new_state"].state
+                    )
+                    or (
+                        attribute
+                        and attribute in event.data["old_state"].attributes
+                        and attribute in event.data["new_state"].attributes
+                        and event.data["old_state"].attributes[attribute]
+                        == event.data["new_state"].attributes[attribute]
+                    )
+                )
+            ):
+                return
+
+            await _send_home_assistant_state(
+                event.data["entity_id"], attribute, event.data.get("new_state")
+            )
+
         unsub = async_track_state_change_event(
             hass, [entity_id], send_home_assistant_state_event
         )
         entry_data.disconnect_callbacks.append(unsub)
-        new_state = hass.states.get(entity_id)
-        if new_state is None:
-            return
+
         # Send initial state
-        hass.async_create_task(_send_home_assistant_state(entity_id, new_state))
+        hass.async_create_task(
+            _send_home_assistant_state(entity_id, attribute, hass.states.get(entity_id))
+        )
 
     async def on_login() -> None:
         """Subscribe to states and list entities on successful API login."""
@@ -448,7 +481,7 @@ class ReconnectLogic(RecordUpdateListener):
 
 
 async def _async_setup_device_registry(
-    hass: HomeAssistant, entry: ConfigEntry, device_info: DeviceInfo
+    hass: HomeAssistant, entry: ConfigEntry, device_info: EsphomeDeviceInfo
 ):
     """Set up device registry feature for a particular config entry."""
     sw_version = device_info.esphome_version
@@ -769,7 +802,7 @@ class EsphomeBaseEntity(Entity):
         return self._entry_data.old_info[self._component_key].get(self._key)
 
     @property
-    def _device_info(self) -> DeviceInfo:
+    def _device_info(self) -> EsphomeDeviceInfo:
         return self._entry_data.device_info
 
     @property
@@ -803,7 +836,7 @@ class EsphomeBaseEntity(Entity):
         return self._static_info.unique_id
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         return {
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)}

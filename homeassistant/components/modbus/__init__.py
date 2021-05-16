@@ -1,6 +1,7 @@
 """Support for Modbus."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -56,6 +57,7 @@ from .const import (
     CONF_BAUDRATE,
     CONF_BYTESIZE,
     CONF_CLIMATES,
+    CONF_CLOSE_COMM_ON_ERROR,
     CONF_CURRENT_TEMP,
     CONF_CURRENT_TEMP_REGISTER_TYPE,
     CONF_DATA_COUNT,
@@ -95,9 +97,13 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_STRUCTURE_PREFIX,
     DEFAULT_TEMP_UNIT,
+    MINIMUM_SCAN_INTERVAL,
     MODBUS_DOMAIN as DOMAIN,
+    PLATFORMS,
 )
-from .modbus import modbus_setup
+from .modbus import async_modbus_setup
+
+_LOGGER = logging.getLogger(__name__)
 
 BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
 
@@ -119,6 +125,38 @@ def number(value: Any) -> int | float:
         return value
     except (TypeError, ValueError) as err:
         raise vol.Invalid(f"invalid number {value}") from err
+
+
+def control_scan_interval(config: dict) -> dict:
+    """Control scan_interval."""
+    for hub in config:
+        minimum_scan_interval = DEFAULT_SCAN_INTERVAL
+        for component, conf_key in PLATFORMS:
+            if conf_key not in hub:
+                continue
+
+            for entry in hub[conf_key]:
+                scan_interval = entry.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+                if scan_interval < MINIMUM_SCAN_INTERVAL:
+                    _LOGGER.warning(
+                        "%s %s scan_interval(%d) is adjusted to minimum(%d)",
+                        component,
+                        entry.get(CONF_NAME),
+                        scan_interval,
+                        MINIMUM_SCAN_INTERVAL,
+                    )
+                    scan_interval = MINIMUM_SCAN_INTERVAL
+                entry[CONF_SCAN_INTERVAL] = scan_interval
+                minimum_scan_interval = min(scan_interval, minimum_scan_interval)
+        if CONF_TIMEOUT in hub and hub[CONF_TIMEOUT] > minimum_scan_interval - 1:
+            _LOGGER.warning(
+                "Modbus %s timeout(%d) is adjusted(%d) due to scan_interval",
+                hub.get(CONF_NAME, ""),
+                hub[CONF_TIMEOUT],
+                minimum_scan_interval - 1,
+            )
+        hub[CONF_TIMEOUT] = minimum_scan_interval - 1
+    return config
 
 
 BASE_COMPONENT_SCHEMA = vol.Schema(
@@ -244,6 +282,7 @@ MODBUS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string,
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
+        vol.Optional(CONF_CLOSE_COMM_ON_ERROR, default=True): cv.boolean,
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
             cv.ensure_list, [BINARY_SENSOR_SCHEMA]
@@ -279,6 +318,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.ensure_list,
+            control_scan_interval,
             [
                 vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],
@@ -310,8 +350,8 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up Modbus component."""
-    return modbus_setup(
+    return await async_modbus_setup(
         hass, config, SERVICE_WRITE_REGISTER_SCHEMA, SERVICE_WRITE_COIL_SCHEMA
     )

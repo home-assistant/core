@@ -10,7 +10,7 @@
             "invalid_auth": "Tuvastamine nurjus",
             "unknown": "Tundmatu t\u00f5rge"
         },
-        "flow_title": "S\u00fcsteemi sild: {name}",
+        "flow_title": "{name}",
         "step": {
             "authenticate": {
                 "data": {

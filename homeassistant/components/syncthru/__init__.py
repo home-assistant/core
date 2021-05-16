@@ -76,7 +76,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def device_identifiers(printer: SyncThru) -> set[tuple[str, ...]] | None:
+def device_identifiers(printer: SyncThru) -> set[tuple[str, str]] | None:
     """Get device identifiers for device registry."""
     serial = printer.serial_number()
     if serial is None:

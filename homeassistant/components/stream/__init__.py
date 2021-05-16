@@ -14,6 +14,8 @@ are no active output formats, the background worker is shut down and access
 tokens are expired. Alternatively, a Stream can be configured with keepalive
 to always keep workers active.
 """
+from __future__ import annotations
+
 import logging
 import re
 import secrets
@@ -34,7 +36,7 @@ from .const import (
     STREAM_RESTART_INCREMENT,
     STREAM_RESTART_RESET_TIME,
 )
-from .core import PROVIDERS, IdleTimer
+from .core import PROVIDERS, IdleTimer, StreamOutput
 from .hls import async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,13 +120,13 @@ class Stream:
         self.access_token = None
         self._thread = None
         self._thread_quit = threading.Event()
-        self._outputs = {}
+        self._outputs: dict[str, StreamOutput] = {}
         self._fast_restart_once = False
 
         if self.options is None:
             self.options = {}
 
-    def endpoint_url(self, fmt):
+    def endpoint_url(self, fmt: str) -> str:
         """Start the stream and returns a url for the output format."""
         if fmt not in self._outputs:
             raise ValueError(f"Stream is not configured for format '{fmt}'")
@@ -274,4 +276,4 @@ class Stream:
             num_segments = min(int(lookback // hls.target_duration), MAX_SEGMENTS)
             # Wait for latest segment, then add the lookback
             await hls.recv()
-            recorder.prepend(list(hls.get_segment())[-num_segments:])
+            recorder.prepend(list(hls.get_segments())[-num_segments:])

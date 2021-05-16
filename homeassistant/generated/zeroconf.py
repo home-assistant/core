@@ -98,6 +98,10 @@ ZEROCONF = {
     ],
     "_http._tcp.local.": [
         {
+            "domain": "bosch_shc",
+            "name": "bosch shc*"
+        },
+        {
             "domain": "nam",
             "name": "nam-*"
         },
@@ -240,6 +244,7 @@ HOMEKIT = {
     "Touch HD": "rainmachine",
     "Welcome": "netatmo",
     "Wemo": "wemo",
+    "YLDP*": "yeelight",
     "iSmartGate": "gogogate2",
     "iZone": "izone",
     "tado": "tado"

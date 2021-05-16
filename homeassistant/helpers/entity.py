@@ -115,7 +115,7 @@ class DeviceInfo(TypedDict, total=False):
 
     name: str
     connections: set[tuple[str, str]]
-    identifiers: set[tuple[str, ...]]
+    identifiers: set[tuple[str, str]]
     manufacturer: str
     model: str
     suggested_area: str
@@ -749,7 +749,7 @@ class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """Return the state."""
         return STATE_ON if self.is_on else STATE_OFF
 

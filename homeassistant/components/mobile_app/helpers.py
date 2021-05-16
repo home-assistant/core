@@ -16,6 +16,7 @@ from homeassistant.const import (
     HTTP_OK,
 )
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.json import JSONEncoder
 
 from .const import (
@@ -166,12 +167,12 @@ def webhook_response(
     )
 
 
-def device_info(registration: dict) -> dict:
+def device_info(registration: dict) -> DeviceInfo:
     """Return the device info for this registration."""
     return {
         "identifiers": {(DOMAIN, registration[ATTR_DEVICE_ID])},
         "manufacturer": registration[ATTR_MANUFACTURER],
         "model": registration[ATTR_MODEL],
-        "device_name": registration[ATTR_DEVICE_NAME],
+        "name": registration[ATTR_DEVICE_NAME],
         "sw_version": registration[ATTR_OS_VERSION],
     }

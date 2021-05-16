@@ -316,7 +316,11 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         """
         return self.async_create_entry(title=self.flow_impl.name, data=data)
 
-    async_step_user = async_step_pick_implementation
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle a flow start."""
+        return await self.async_step_pick_implementation(user_input)
 
     @classmethod
     def async_register_implementation(
@@ -334,7 +338,7 @@ def async_register_implementation(
     if isinstance(implementation, LocalOAuth2Implementation) and not hass.data.get(
         DATA_VIEW_REGISTERED, False
     ):
-        hass.http.register_view(OAuth2AuthorizeCallbackView())  # type: ignore
+        hass.http.register_view(OAuth2AuthorizeCallbackView())
         hass.data[DATA_VIEW_REGISTERED] = True
 
     implementations = hass.data.setdefault(DATA_IMPLEMENTATIONS, {})
