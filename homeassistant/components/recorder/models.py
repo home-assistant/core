@@ -218,7 +218,7 @@ class Statistics(Base):  # type: ignore
     id = Column(Integer, primary_key=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
     source = Column(String(32))
-    statistic_id = Column(String(255), index=True)
+    statistic_id = Column(String(255))
     start = Column(DATETIME_TYPE, index=True)
     mean = Column(Float())
     min = Column(Float())
