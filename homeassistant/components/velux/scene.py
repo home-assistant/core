@@ -5,7 +5,8 @@ from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import _LOGGER, DATA_VELUX
+from . import _LOGGER
+from .const import CONFIG_KEY_MODULE, DOMAIN
 
 
 async def async_setup_entry(
@@ -14,7 +15,8 @@ async def async_setup_entry(
     async_add_entities,
 ) -> None:
     """Set up the scenes for Velux platform."""
-    entities = [VeluxScene(scene) for scene in hass.data[DATA_VELUX].pyvlx.scenes]
+    veluxModule = hass.data[DOMAIN][entry.entry_id][CONFIG_KEY_MODULE]
+    entities = [VeluxScene(scene) for scene in veluxModule.pyvlx.scenes]
     async_add_entities(entities)
 
 

@@ -24,7 +24,7 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
-from . import DATA_VELUX
+from .const import CONFIG_KEY_MODULE, DOMAIN
 
 
 async def async_setup_entry(
@@ -34,7 +34,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up cover(s) for Velux platform."""
     entities = []
-    for node in hass.data[DATA_VELUX].pyvlx.nodes:
+    veluxModule = hass.data[DOMAIN][entry.entry_id][CONFIG_KEY_MODULE]
+    for node in veluxModule.pyvlx.nodes:
         if isinstance(node, OpeningDevice):
             entities.append(VeluxCover(node))
     async_add_entities(entities)

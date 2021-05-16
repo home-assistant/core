@@ -7,8 +7,8 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
-DOMAIN = "velux"
-DATA_VELUX = "data_velux"
+from .const import CONFIG_KEY_MODULE, DOMAIN
+
 PLATFORMS = ["cover", "scene"]
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,9 +30,12 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Set up Velux using config flow."""
     try:
-        hass.data[DATA_VELUX] = VeluxModule(hass, config_entry)
-        hass.data[DATA_VELUX].setup()
-        await hass.data[DATA_VELUX].async_start()
+        veluxModule = VeluxModule(hass, config_entry)
+        veluxModule.setup()
+        await veluxModule.async_start()
+
+        hass.data.setdefault(DOMAIN, {})
+        hass.data[DOMAIN][config_entry.entry_id] = {CONFIG_KEY_MODULE: veluxModule}
 
     except PyVLXException as ex:
         _LOGGER.exception("Can't connect to velux interface: %s", ex)
