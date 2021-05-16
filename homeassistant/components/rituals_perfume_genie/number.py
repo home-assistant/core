@@ -1,15 +1,17 @@
 """Support for Rituals Perfume Genie numbers."""
+from __future__ import annotations
+
 import logging
-from typing import Callable
 
 from pyrituals import Diffuser
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTRIBUTES, COORDINATORS, DEVICES, DOMAIN, HUB, ROOM, SPEED
+from . import RitualsDataUpdateCoordinator
+from .const import ATTRIBUTES, COORDINATORS, DEVICES, DOMAIN, ROOM, SPEED
 from .entity import DiffuserEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,12 +26,14 @@ ROOM_SIZE_SUFFIX = " Room Size"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the diffuser numbers."""
     diffusers = hass.data[DOMAIN][config_entry.entry_id][DEVICES]
     coordinators = hass.data[DOMAIN][config_entry.entry_id][COORDINATORS]
-    entities = []
+    entities: list[DiffuserEntity] = []
     for hublot, diffuser in diffusers.items():
         coordinator = coordinators[hublot]
         entities.append(DiffuserPerfumeAmount(diffuser, coordinator))
@@ -41,7 +45,9 @@ async def async_setup_entry(
 class DiffuserPerfumeAmount(NumberEntity, DiffuserEntity):
     """Representation of a diffuser perfume amount number."""
 
-    def __init__(self, diffuser: Diffuser, coordinator: CoordinatorEntity) -> None:
+    def __init__(
+        self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
+    ) -> None:
         """Initialize the diffuser perfume amount number."""
         super().__init__(diffuser, coordinator, PERFUME_AMOUNT_SUFFIX)
 
@@ -53,7 +59,7 @@ class DiffuserPerfumeAmount(NumberEntity, DiffuserEntity):
     @property
     def value(self) -> int:
         """Return the current perfume amount."""
-        return self.coordinator.data[HUB][ATTRIBUTES][SPEED]
+        return self._diffuser.hub_data[ATTRIBUTES][SPEED]
 
     @property
     def min_value(self) -> int:
@@ -81,7 +87,9 @@ class DiffuserPerfumeAmount(NumberEntity, DiffuserEntity):
 class DiffuserRoomSize(NumberEntity, DiffuserEntity):
     """Representation of a diffuser room size number."""
 
-    def __init__(self, diffuser: Diffuser, coordinator: CoordinatorEntity) -> None:
+    def __init__(
+        self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
+    ) -> None:
         """Initialize the diffuser room size number."""
         super().__init__(diffuser, coordinator, ROOM_SIZE_SUFFIX)
 
@@ -93,7 +101,7 @@ class DiffuserRoomSize(NumberEntity, DiffuserEntity):
     @property
     def value(self) -> int:
         """Return the current room size."""
-        return self.coordinator.data[HUB][ATTRIBUTES][ROOM]
+        return self._diffuser.hub_data[ATTRIBUTES][ROOM]
 
     @property
     def min_value(self) -> int:
