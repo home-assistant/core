@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RitualsDataUpdateCoordinator
-from .const import ATTRIBUTES, COORDINATORS, DEVICES, DOMAIN
+from .const import ATTRIBUTES, COORDINATORS, DEVICES, DOMAIN, ROOM, SPEED
 from .entity import DiffuserEntity
 
 FAN = "fanc"
