@@ -108,7 +108,7 @@ class KrakenData:
                 "o": "opening_price",
             }
         )
-        response_dict = ticker_df.transpose().to_dict()
+        response_dict: KrakenResponse = ticker_df.transpose().to_dict()
         return response_dict
 
     async def _async_refresh_tradable_asset_pairs(self) -> None:

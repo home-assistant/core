@@ -9,6 +9,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import KrakenData
@@ -23,7 +25,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add kraken entities from a config_entry."""
 
     @callback
@@ -103,22 +109,22 @@ class KrakenSensor(CoordinatorEntity, SensorEntity):
         self._state = None
 
     @property
-    def entity_registry_enabled_default(self):
+    def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._enabled_by_default
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name."""
         return self._name
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Set unique_id for sensor."""
         return self._name.lower()
 
     @property
-    def state(self):
+    def state(self) -> StateType:
         """Return the state."""
         return self._state
 
@@ -127,11 +133,11 @@ class KrakenSensor(CoordinatorEntity, SensorEntity):
         await super().async_added_to_hass()
         self._update_internal_state()
 
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         self._update_internal_state()
         super()._handle_coordinator_update()
 
-    def _update_internal_state(self):
+    def _update_internal_state(self) -> None:
         try:
             if self._sensor_type == "last_trade_closed":
                 self._state = self.coordinator.data[self.tracked_asset_pair_wsname][
@@ -208,7 +214,7 @@ class KrakenSensor(CoordinatorEntity, SensorEntity):
                     self._available = False
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon."""
         if self._target_asset == "EUR":
             return "mdi:currency-eur"
@@ -223,14 +229,14 @@ class KrakenSensor(CoordinatorEntity, SensorEntity):
         return "mdi:cash"
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         if "number_of" not in self._sensor_type:
             return self._unit_of_measurement
         return None
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Could the api be accessed during the last update call."""
         return self._available and self.coordinator.last_update_success
 
