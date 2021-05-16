@@ -19,7 +19,7 @@ from .const import (
     DOMAIN,
 )
 
-PLATFORMS = ["binary_sensor", "cover", "sensor", "switch"]
+PLATFORMS = ["binary_sensor", "sensor"]
 
 _LOGGER = logging.getLogger(__name__)
 
