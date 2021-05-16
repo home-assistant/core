@@ -11,7 +11,7 @@ import pykrakenapi
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -47,8 +47,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         config_entry, PLATFORMS
     )
     if unload_ok:
-        for unsub_listener in hass.data[DOMAIN].unsub_listeners:
-            unsub_listener()
         hass.data.pop(DOMAIN)
 
     return unload_ok
@@ -64,7 +62,6 @@ class KrakenData:
         self._api = pykrakenapi.KrakenAPI(krakenex.API(), retry=0, crl_sleep=0)
         self.tradable_asset_pairs: dict[str, str] = {}
         self.coordinator: DataUpdateCoordinator | None = None
-        self.unsub_listeners: list[CALLBACK_TYPE] = []
 
     async def async_update(self) -> dict[str, dict[str, float]] | None:
         """Get the latest data from the Kraken.com REST API.

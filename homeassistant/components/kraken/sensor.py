@@ -60,7 +60,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_update_sensors(hass, config_entry)
 
-    hass.data[DOMAIN].unsub_listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             DISPATCH_CONFIG_UPDATED,
