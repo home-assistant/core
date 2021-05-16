@@ -231,7 +231,7 @@ DISCOVERY_SCHEMAS = [
         platform="cover",
         hint="window_shutter",
         manufacturer_id={0x0159},
-        product_id={0x0052},
+        product_id={0x0052, 0x0053},
         product_type={0x0003},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
