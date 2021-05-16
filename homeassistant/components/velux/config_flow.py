@@ -42,9 +42,9 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except PyVLXException as ex:
                 _LOGGER.exception("Unable to connect to Velux gateway: %s", ex)
                 errors["base"] = "invalid_auth"
-            except OSError as ex:
+            except Exception as ex:  # pylint: disable=broad-except
                 _LOGGER.exception("Unable to connect to Velux gateway: %s", ex)
-                errors["base"] = "cannot_connect"
+                errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
