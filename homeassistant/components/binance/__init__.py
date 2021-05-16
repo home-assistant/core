@@ -1,7 +1,7 @@
 """Gather the market details from Binance."""
 import asyncio
 import logging
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from binance import AsyncClient
 from binance.exceptions import BinanceAPIException, BinanceRequestException
@@ -23,11 +23,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
-    """Set up the component."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
