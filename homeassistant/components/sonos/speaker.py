@@ -12,7 +12,7 @@ import urllib.parse
 
 import async_timeout
 from pysonos.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
-from pysonos.data_structures import DidlAudioBroadcast, DidlFavorite
+from pysonos.data_structures import DidlAudioBroadcast
 from pysonos.events_base import Event as SonosEvent, SubscriptionBase
 from pysonos.exceptions import SoCoException
 from pysonos.music_library import MusicLibrary
@@ -49,6 +49,7 @@ from .const import (
     SOURCE_LINEIN,
     SOURCE_TV,
 )
+from .favorites import SonosFavorites
 from .helpers import soco_error
 
 EVENT_CHARGING = {
@@ -127,8 +128,9 @@ class SonosSpeaker:
         self, hass: HomeAssistant, soco: SoCo, speaker_info: dict[str, Any]
     ) -> None:
         """Initialize a SonosSpeaker."""
-        self.hass: HomeAssistant = hass
-        self.soco: SoCo = soco
+        self.hass = hass
+        self.soco = soco
+        self.household_id: str = soco.household_id
         self.media = SonosMedia(soco)
 
         self._is_ready: bool = False
@@ -160,8 +162,6 @@ class SonosSpeaker:
         self.sonos_group_entities: list[str] = []
         self.soco_snapshot: Snapshot | None = None
         self.snapshot_group: list[SonosSpeaker] | None = None
-
-        self.favorites: list[DidlFavorite] = []
 
     def setup(self) -> None:
         """Run initial setup of the speaker."""
@@ -213,7 +213,6 @@ class SonosSpeaker:
         """Set basic information when speaker is reconnected."""
         self.media.play_mode = self.soco.play_mode
         self.update_volume()
-        self.set_favorites()
 
     @property
     def available(self) -> bool:
@@ -654,24 +653,16 @@ class SonosSpeaker:
         for speaker in hass.data[DATA_SONOS].discovered.values():
             speaker.soco._zgs_cache.clear()  # pylint: disable=protected-access
 
-    def set_favorites(self) -> None:
-        """Set available favorites."""
-        self.favorites = []
-        for fav in self.soco.music_library.get_sonos_favorites():
-            try:
-                # Exclude non-playable favorites with no linked resources
-                if fav.reference.resources:
-                    self.favorites.append(fav)
-            except SoCoException as ex:
-                # Skip unknown types
-                _LOGGER.error("Unhandled favorite '%s': %s", fav.title, ex)
+    @property
+    def favorites(self) -> SonosFavorites:
+        """Return the SonosFavorites instance for this household."""
+        return self.hass.data[DATA_SONOS].favorites[self.household_id]
 
     @callback
     def async_update_content(self, event: SonosEvent | None = None) -> None:
         """Update information about available content."""
         if event and "favorites_update_id" in event.variables:
-            self.hass.async_add_job(self.set_favorites)
-            self.async_write_entity_states()
+            self.favorites.async_delayed_update(event)
 
     def update_volume(self) -> None:
         """Update information about current volume settings."""
