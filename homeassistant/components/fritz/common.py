@@ -16,6 +16,7 @@ from fritzconnection.core.exceptions import (
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
 
+from homeassistant.components.device_tracker.const import CONF_CONSIDER_HOME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -59,6 +60,7 @@ class FritzBoxTools:
         """Initialize FritzboxTools class."""
         self._cancel_scan = None
         self._devices: dict[str, Any] = {}
+        self._options = None
         self._unique_id = None
         self.connection = None
         self.fritz_hosts = None
@@ -95,10 +97,10 @@ class FritzBoxTools:
         self.sw_version = info.get("NewSoftwareVersion")
         self.mac = self.unique_id
 
-    async def async_start(self):
+    async def async_start(self, options):
         """Start FritzHosts connection."""
         self.fritz_hosts = FritzHosts(fc=self.connection)
-
+        self._options = options
         await self.hass.async_add_executor_job(self.scan_devices)
 
         self._cancel_scan = async_track_time_interval(
@@ -141,6 +143,8 @@ class FritzBoxTools:
         """Scan for new devices and return a list of found device ids."""
         _LOGGER.debug("Checking devices for FRITZ!Box router %s", self.host)
 
+        consider_home = self._options[CONF_CONSIDER_HOME]
+
         new_device = False
         for known_host in self._update_info():
             if not known_host.get("mac"):
@@ -154,10 +158,10 @@ class FritzBoxTools:
             dev_info = Device(dev_mac, dev_ip, dev_name)
 
             if dev_mac in self._devices:
-                self._devices[dev_mac].update(dev_info, dev_home)
+                self._devices[dev_mac].update(dev_info, dev_home, consider_home)
             else:
                 device = FritzDevice(dev_mac)
-                device.update(dev_info, dev_home)
+                device.update(dev_info, dev_home, consider_home)
                 self._devices[dev_mac] = device
                 new_device = True
 
@@ -204,19 +208,22 @@ class FritzDevice:
         self._last_activity = None
         self._connected = False
 
-    def update(self, dev_info, dev_home):
+    def update(self, dev_info, dev_home, consider_home):
         """Update device info."""
         utc_point_in_time = dt_util.utcnow()
-        if not self._name:
-            self._name = dev_info.name or self._mac.replace(":", "_")
-        self._connected = dev_home
 
-        if not self._connected:
+        if dev_info:
+            if not self._name:
+                self._name = dev_info.name or self._mac.replace(":", "_")
+            self._ip_address = dev_info.ip_address
+            self._last_activity = utc_point_in_time
+            self._connected = dev_home
+
+        elif not self._connected:
+            self._connected = (
+                utc_point_in_time - self._last_activity
+            ).total_seconds() < consider_home
             self._ip_address = None
-            return
-
-        self._last_activity = utc_point_in_time
-        self._ip_address = dev_info.ip_address
 
     @property
     def is_connected(self):

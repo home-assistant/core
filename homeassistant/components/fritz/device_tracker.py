@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -116,6 +117,7 @@ class FritzBoxTracker(ScannerEntity):
         self._router = router
         self._mac = device.mac_address
         self._name = device.hostname or DEFAULT_DEVICE_NAME
+        self._last_activity = device.last_activity
         self._active = False
         self._attrs: dict = {}
 
@@ -186,10 +188,20 @@ class FritzBoxTracker(ScannerEntity):
         """Return if the entity should be enabled when first added to the entity registry."""
         return False
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the attributes."""
+        attrs: dict[str, str] = {}
+        if self._last_activity:
+            attrs["last_time_reachable"] = self._last_activity.isoformat(
+                timespec="seconds"
+            )
+        return attrs
+
     @callback
     def async_process_update(self) -> None:
         """Update device."""
-        device = self._router.devices[self._mac]
+        device: FritzDevice = self._router.devices[self._mac]
         self._active = device.is_connected
 
         if device.last_activity:
