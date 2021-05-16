@@ -142,7 +142,7 @@ class KrakenSensor(CoordinatorEntity, SensorEntity):
                     )
                     self._available = False
 
-    def _try_get_state(self) -> str:  # type: ignore[return]
+    def _try_get_state(self) -> str:
         """Try to get the state or return a TypeError."""
         if self._sensor_type == "last_trade_closed":
             return self.coordinator.data[self.tracked_asset_pair_wsname][
@@ -188,6 +188,7 @@ class KrakenSensor(CoordinatorEntity, SensorEntity):
             return self.coordinator.data[self.tracked_asset_pair_wsname][
                 "opening_price"
             ]
+        raise TypeError
 
     @property
     def icon(self):
