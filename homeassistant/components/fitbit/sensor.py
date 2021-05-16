@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import time
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from aiohttp.web import Request
 from fitbit import Fitbit
@@ -151,7 +151,7 @@ def setup_platform(
     """Set up the Fitbit sensor."""
     config_path = hass.config.path(FITBIT_CONFIG_FILE)
     if os.path.isfile(config_path):
-        config_file: ConfigType = load_json(config_path)  # type: ignore[assignment]
+        config_file: ConfigType = cast(ConfigType, load_json(config_path))
         if config_file == DEFAULT_CONFIG:
             request_app_setup(
                 hass, config, add_entities, config_path, discovery_info=None
