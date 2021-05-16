@@ -181,3 +181,33 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
         ):
             return None
         return self._media_player_status.source.get("album")
+
+    async def async_mute_volume(self, mute: bool) -> None:
+        """Mute the volume."""
+        bridge: Bridge = self.coordinator.data
+        await bridge.async_update_media("mute", {"value": mute})
+
+    async def async_set_volume_level(self, volume: float) -> None:
+        """Set volume level, range 0..1."""
+        bridge: Bridge = self.coordinator.data
+        await bridge.async_update_media("volume", {"value": volume * 100})
+
+    async def async_media_play(self) -> None:
+        """Send play command."""
+        bridge: Bridge = self.coordinator.data
+        await bridge.async_update_media("play", None)
+
+    async def async_media_pause(self) -> None:
+        """Send pause command."""
+        bridge: Bridge = self.coordinator.data
+        await bridge.async_update_media("pause", None)
+
+    async def async_media_stop(self) -> None:
+        """Send stop command."""
+        bridge: Bridge = self.coordinator.data
+        await bridge.async_update_media("stop", None)
+
+    async def async_media_seek(self, position: float) -> None:
+        """Send seek command."""
+        bridge: Bridge = self.coordinator.data
+        await bridge.async_update_media("seek", {"value": position})
