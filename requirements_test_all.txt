@@ -992,7 +992,7 @@ pysqueezebox==0.5.5
 pysyncthru==0.7.3
 
 # homeassistant.components.binance
-python-binance-async-ha==0.7.3.2.dev0
+python-binance==1.0.10
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.11
