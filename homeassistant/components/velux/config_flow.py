@@ -50,9 +50,7 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config):
         """Import config from configuration.yaml."""
         entries = self._async_current_entries()
-        for entry in entries:
-            if entry.data[CONF_HOST] == import_config[CONF_HOST]:
-                return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: import_config[CONF_HOST]})
 
         return await self.async_step_user(import_config)
 
