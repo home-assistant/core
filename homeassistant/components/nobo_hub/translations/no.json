@@ -5,6 +5,7 @@
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
+            "device_not_found": "Enhet ikke funnet",
             "invalid_ip": "Ugyldig IP-adresse",
             "invalid_serial": "Ugyldig serienummer",
             "unknown": "Uventet feil"
