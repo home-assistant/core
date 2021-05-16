@@ -27,46 +27,46 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
 
-    for binarysensor in session.device_helper.shutter_contacts:
+    for binary_sensor in session.device_helper.shutter_contacts:
         entities.append(
             ShutterContactSensor(
-                device=binarysensor,
+                device=binary_sensor,
                 parent_id=session.information.unique_id,
                 entry_id=config_entry.entry_id,
             )
         )
 
-    for binarysensor in session.device_helper.motion_detectors:
+    for binary_sensor in session.device_helper.motion_detectors:
         entities.append(
             MotionDetectionSensor(
-                device=binarysensor,
+                device=binary_sensor,
                 parent_id=session.information.unique_id,
                 entry_id=config_entry.entry_id,
             )
         )
 
-    for binarysensor in session.device_helper.smoke_detectors:
+    for binary_sensor in session.device_helper.smoke_detectors:
         entities.append(
             SmokeDetectorSensor(
-                device=binarysensor,
+                device=binary_sensor,
                 parent_id=session.information.unique_id,
                 entry_id=config_entry.entry_id,
             )
         )
 
-    for binarysensor in session.device_helper.smoke_detection_system:
+    for binary_sensor in session.device_helper.smoke_detection_system:
         entities.append(
             SmokeDetectionSystemSensor(
-                device=binarysensor,
+                device=binary_sensor,
                 parent_id=session.information.unique_id,
                 entry_id=config_entry.entry_id,
             )
         )
 
-    for binarysensor in session.device_helper.water_leakage_detectors:
+    for binary_sensor in session.device_helper.water_leakage_detectors:
         entities.append(
             WaterLeakageDetectorSensor(
-                device=binarysensor,
+                device=binary_sensor,
                 parent_id=session.information.unique_id,
                 entry_id=config_entry.entry_id,
             )
