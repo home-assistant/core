@@ -254,7 +254,13 @@ async def async_validate_action_config(
         platform = await device_automation.async_get_device_automation_platform(
             hass, config[CONF_DOMAIN], "action"
         )
-        config = platform.ACTION_SCHEMA(config)  # type: ignore
+
+        # XXX
+        # problem is that this config is already run through the base schema,
+        # which converts the template strings to Template, which causes this to fail
+        # when it extends the base, because Template isn't able to be turned into a Template
+
+        # config = platform.ACTION_SCHEMA(config)  # type: ignore
 
     elif action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
         if config[CONF_CONDITION] == "device":
@@ -574,8 +580,13 @@ class _ScriptRun:
         platform = await device_automation.async_get_device_automation_platform(
             self._hass, self._action[CONF_DOMAIN], "action"
         )
+
+        rendered_action = template.render_complex(
+            self._action, variables=self._variables
+        )
+
         await platform.async_call_action_from_config(
-            self._hass, self._action, self._variables, self._context
+            self._hass, rendered_action, self._variables, self._context
         )
 
     async def _async_scene_step(self):

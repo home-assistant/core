@@ -1125,7 +1125,7 @@ _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema(
 DEVICE_ACTION_BASE_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
-        vol.Required(CONF_DEVICE_ID): string,
+        vol.Required(CONF_DEVICE_ID): dynamic_template,
         vol.Required(CONF_DOMAIN): str,
     }
 )
