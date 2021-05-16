@@ -1,8 +1,7 @@
 """Support for KNX/IP sensors."""
 from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import Any, Callable
+from typing import Any
 
 from xknx import XKNX
 from xknx.devices import Sensor as XknxSensor
@@ -10,7 +9,7 @@ from xknx.devices import Sensor as XknxSensor
 from homeassistant.components.sensor import DEVICE_CLASSES, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt
 
@@ -22,7 +21,7 @@ from .schema import SensorSchema
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: Callable[[Iterable[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up sensor(s) for KNX platform."""

@@ -10,7 +10,7 @@
             "no_server_found": "\u7121\u6cd5\u81ea\u52d5\u63a2\u7d22\u4f3a\u670d\u5668\u3002",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
-        "flow_title": "\u7f85\u6280 Squeezebox\uff1a{host}",
+        "flow_title": "{host}",
         "step": {
             "edit": {
                 "data": {

@@ -3,7 +3,7 @@
   "name": "Luftdaten",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/luftdaten",
-  "requirements": ["luftdaten==0.6.4"],
+  "requirements": ["luftdaten==0.6.5"],
   "codeowners": ["@fabaff"],
   "quality_scale": "gold",
   "iot_class": "cloud_polling"

@@ -1,15 +1,17 @@
 """Support for Dynalite channels as lights."""
-from typing import Callable
 
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .dynalitebase import DynaliteBase, async_setup_entry_base
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Record the async_add_entities function to add them later when received from Dynalite."""
     async_setup_entry_base(

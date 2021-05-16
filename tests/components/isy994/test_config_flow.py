@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components import ssdp
+from homeassistant.components import dhcp, ssdp
 from homeassistant.components.isy994.config_flow import CannotConnect
 from homeassistant.components.isy994.const import (
     CONF_IGNORE_STRING,
@@ -15,7 +15,7 @@ from homeassistant.components.isy994.const import (
     ISY_URL_POSTFIX,
     UDN_UUID_PREFIX,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_IMPORT, SOURCE_SSDP
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -61,7 +61,8 @@ MOCK_IMPORT_FULL_CONFIG = {
 }
 
 MOCK_DEVICE_NAME = "Name of the device"
-MOCK_UUID = "CE:FB:72:31:B7:B9"
+MOCK_UUID = "ce:fb:72:31:b7:b9"
+MOCK_MAC = "cefb7231b7b9"
 MOCK_VALIDATED_RESPONSE = {"name": MOCK_DEVICE_NAME, "uuid": MOCK_UUID}
 
 PATCH_CONFIGURATION = "homeassistant.components.isy994.config_flow.Configuration"
@@ -290,6 +291,48 @@ async def test_form_ssdp(hass: HomeAssistant):
             ssdp.ATTR_SSDP_LOCATION: f"http://{MOCK_HOSTNAME}{ISY_URL_POSTFIX}",
             ssdp.ATTR_UPNP_FRIENDLY_NAME: "myisy",
             ssdp.ATTR_UPNP_UDN: f"{UDN_UUID_PREFIX}{MOCK_UUID}",
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with patch(PATCH_CONFIGURATION) as mock_config_class, patch(
+        PATCH_CONNECTION
+    ) as mock_connection_class, patch(
+        PATCH_ASYNC_SETUP, return_value=True
+    ) as mock_setup, patch(
+        PATCH_ASYNC_SETUP_ENTRY,
+        return_value=True,
+    ) as mock_setup_entry:
+        isy_conn = mock_connection_class.return_value
+        isy_conn.get_config.return_value = None
+        mock_config_class.return_value = MOCK_VALIDATED_RESPONSE
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == f"{MOCK_DEVICE_NAME} ({MOCK_HOSTNAME})"
+    assert result2["result"].unique_id == MOCK_UUID
+    assert result2["data"] == MOCK_USER_INPUT
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_dhcp(hass: HomeAssistant):
+    """Test we can setup from dhcp."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data={
+            dhcp.IP_ADDRESS: "1.2.3.4",
+            dhcp.HOSTNAME: "isy994-ems",
+            dhcp.MAC_ADDRESS: MOCK_MAC,
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

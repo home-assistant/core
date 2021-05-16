@@ -16,7 +16,7 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -63,7 +63,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bond."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
         """Initialize config flow."""
@@ -94,7 +93,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: DiscoveryInfoType
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         name: str = discovery_info[CONF_NAME]
         host: str = discovery_info[CONF_HOST]
@@ -118,7 +117,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle confirmation flow for discovered bond hub."""
         errors = {}
         if user_input is not None:
@@ -159,7 +158,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:

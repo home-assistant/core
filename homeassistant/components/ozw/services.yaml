@@ -1,58 +1,126 @@
 # Describes the format for available Z-Wave services
 add_node:
+  name: Add node
   description: Add a new node to the Z-Wave network.
   fields:
     secure:
+      name: Secure
       description: Add the new node with secure communications. Secure network key must be set, this process will fallback to add_node (unsecure) for unsupported devices. Note that unsecure devices can't directly talk to secure devices.
+      default: false
+      selector:
+        boolean:
     instance_id:
-      description: (Optional) The OZW Instance/Controller to use, defaults to 1.
+      name: Instance ID
+      description: The OZW Instance/Controller to use.
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 255
 
 remove_node:
+  name: Remove node
   description: Remove a node from the Z-Wave network. Will set the controller into exclusion mode.
   fields:
     instance_id:
-      description: (Optional) The OZW Instance/Controller to use, defaults to 1.
+      name: Instance ID
+      description: The OZW Instance/Controller to use.
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 255
 
 cancel_command:
+  name: Cancel command
   description: Cancel a pending add or remove node command.
   fields:
     instance_id:
-      description: (Optional) The OZW Instance/Controller to use, defaults to 1.
+      name: Instance ID
+      description: The OZW Instance/Controller to use.
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 255
 
 set_config_parameter:
+  name: Set config parameter
   description: Set a config parameter to a node on the Z-Wave network.
   fields:
     node_id:
-      description: Node id of the device to set config parameter to (integer).
+      name: Node ID
+      description: Node id of the device to set config parameter to.
+      required: true
       example: 10
+      selector:
+        number:
+          min: 1
+          max: 255
     parameter:
-      description: Parameter number to set (integer).
+      name: Parameter
+      description: Parameter number to set.
+      required: true
       example: 8
+      selector:
+        number:
+          min: 1
+          max: 255
     value:
+      name: Value
       description: Value to set for parameter. (String value for list and bool parameters, integer for others).
+      required: true
       example: 50268673
+      selector:
+        text:
     instance_id:
-      description: (Optional) The OZW Instance/Controller to use, defaults to 1.
+      name: Instance ID
+      description: The OZW Instance/Controller to use.
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 255
 
 clear_usercode:
+  name: Clear usercode
   description: Clear a usercode from lock.
+  target:
+    entity:
+      integration: ozw
+      domain: lock
   fields:
-    entity_id:
-      description: Lock entity_id.
-      example: lock.front_door_locked
     code_slot:
+      name: Code slot
       description: Code slot to clear code from.
+      required: true
       example: 1
+      selector:
+        number:
+          min: 1
+          max: 255
 
 set_usercode:
+  name: Set usercode
   description: Set a usercode to lock.
+  target:
+    entity:
+      integration: ozw
+      domain: lock
   fields:
-    entity_id:
-      description: Lock entity_id.
-      example: lock.front_door_locked
     code_slot:
+      name: Code slot
       description: Code slot to set the code.
+      required: true
       example: 1
+      selector:
+        number:
+          min: 1
+          max: 255
     usercode:
+      name: Usercode
       description: Code to set.
+      required: true
       example: 1234
+      selector:
+        text:

@@ -50,6 +50,8 @@ INFO_TYPE_TO_PLATFORM = {
 class RuntimeEntryData:
     """Store runtime data for esphome config entries."""
 
+    _storage_contents: dict | None = None
+
     entry_id: str = attr.ib()
     client: APIClient = attr.ib()
     store: Store = attr.ib()
@@ -134,6 +136,7 @@ class RuntimeEntryData:
         restored = await self.store.async_load()
         if restored is None:
             return [], []
+        self._storage_contents = restored.copy()
 
         self.device_info = _attr_obj_from_dict(
             DeviceInfo, **restored.pop("device_info")
@@ -159,7 +162,14 @@ class RuntimeEntryData:
         for service in self.services.values():
             store_data["services"].append(service.to_dict())
 
-        self.store.async_delay_save(lambda: store_data, SAVE_DELAY)
+        if store_data == self._storage_contents:
+            return
+
+        def _memorized_storage():
+            self._storage_contents = store_data
+            return store_data
+
+        self.store.async_delay_save(_memorized_storage, SAVE_DELAY)
 
 
 def _attr_obj_from_dict(cls, **kwargs):

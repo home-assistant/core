@@ -31,7 +31,6 @@ async def async_setup_test_fixture(hass, mock_get_station, initial_value):
         entry_id="VikingRecorder1234",
         data={"station": "L1234"},
         title="Viking Recorder",
-        connection_class=config_entries.CONN_CLASS_CLOUD_PUSH,
     )
     entry.add_to_hass(hass)
 

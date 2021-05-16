@@ -78,7 +78,6 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Plugwise Smile."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the Plugwise config flow."""
@@ -114,9 +113,7 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_HOST] = self.discovery_info[CONF_HOST]
                 user_input[CONF_PORT] = self.discovery_info.get(CONF_PORT, DEFAULT_PORT)
 
-            for entry in self._async_current_entries():
-                if entry.data.get(CONF_HOST) == user_input[CONF_HOST]:
-                    return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
             try:
                 api = await validate_gw_input(self.hass, user_input)

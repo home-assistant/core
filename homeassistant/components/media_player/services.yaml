@@ -176,7 +176,7 @@ repeat_set:
   fields:
     repeat:
       name: Repeat mode
-      description: Repeat mode to set (off, all, one).
+      description: Repeat mode to set.
       required: true
       example: "off"
       selector:
@@ -187,18 +187,21 @@ repeat_set:
             - "one"
 
 join:
+  name: Join
   description:
     Group players together. Only works on platforms with support for player
     groups.
-  name: Join
   target:
   fields:
     group_members:
+      name: Group members
       description:
         The players which will be synced with the target player.
       example:
         - "media_player.multiroom_player2"
         - "media_player.multiroom_player3"
+      selector:
+        object:
 
 unjoin:
   description:
