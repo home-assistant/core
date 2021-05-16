@@ -89,11 +89,13 @@ class BridgeAudio(BridgeDeviceEntity, MediaPlayerEntity):
         """Mute the volume."""
         bridge: Bridge = self.coordinator.data
         await bridge.async_update_audio("mute", {"value": mute})
+        await self.coordinator.async_refresh()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         bridge: Bridge = self.coordinator.data
         await bridge.async_update_audio("volume", {"value": volume * 100})
+        await self.coordinator.async_refresh()
 
 
 class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
