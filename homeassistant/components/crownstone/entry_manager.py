@@ -25,14 +25,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
-from .const import (
-    CONF_USB_PATH,
-    CONF_USE_CROWNSTONE_USB,
-    DOMAIN,
-    LIGHT_PLATFORM,
-    SSE,
-    UART,
-)
+from .const import CONF_USB_PATH, CONF_USE_CROWNSTONE_USB, DOMAIN, PLATFORMS, SSE, UART
 from .helpers import get_port
 from .listeners import create_data_listeners
 
@@ -125,12 +118,8 @@ class CrownstoneEntryManager:
         # create listener for when home assistant is stopped
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.on_close)
 
-        # register crownstone entities
-        self.hass.async_create_task(
-            self.hass.config_entries.async_forward_entry_setup(
-                self.config_entry, LIGHT_PLATFORM
-            )
-        )
+        # register all entities
+        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
         return True
 
@@ -161,8 +150,8 @@ class CrownstoneEntryManager:
             UartEventBus.unsubscribe(subscription_id)
 
         # unload all platform entities
-        unload_ok = await self.hass.config_entries.async_forward_entry_unload(
-            self.config_entry, LIGHT_PLATFORM
+        unload_ok = await self.hass.config_entries.async_unload_platforms(
+            self.config_entry, PLATFORMS
         )
 
         return unload_ok

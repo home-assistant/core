@@ -2,7 +2,7 @@
 
 # Platforms
 DOMAIN = "crownstone"
-LIGHT_PLATFORM = "light"
+PLATFORMS = ["light"]
 
 # Listeners
 SSE = "sse_listeners"
