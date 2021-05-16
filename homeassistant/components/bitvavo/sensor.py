@@ -156,34 +156,12 @@ class Balance(CoordinatorEntity):
         }
 
 
-class Order(CoordinatorEntity):
-    """Implementation of the order sensor."""
-
-    def __init__(self, coordinator, order):
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._order = order
-        self._icon = "mdi:checkbook"
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return self._icon
-
-    @property
-    def extra_state_attributes(self):
-        """Return additional sensor state attributes."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
-
-
-class OpenOrders(Order):
+class OpenOrders(CoordinatorEntity):
     """Implementation of the open orders sensor."""
 
     def __init__(self, coordinator, order):
         """Initialize the sensor."""
-        super().__init__(coordinator, order)
+        super().__init__(coordinator)
 
         self._name = "Bitvavo Open Orders"
         self._unique_id = "bitvavo_orders_open"
@@ -191,6 +169,15 @@ class OpenOrders(Order):
     def _get_orders(self):
         """Return the data from self.coordinator.data."""
         return self.coordinator.data[CONF_OPEN_ORDERS]
+
+    def _type_orders(self, side):
+        """Return the number of orders per type."""
+        number = 0
+        for order in self.coordinator.data[CONF_OPEN_ORDERS]:
+            if order["side"] == side:
+                number += 1
+
+        return number
 
     @property
     def name(self):
@@ -216,6 +203,8 @@ class OpenOrders(Order):
     def extra_state_attributes(self):
         """Return additional sensor state attributes."""
         return {
+            "buy orders": self._type_orders("buy"),
+            "sell orders": self._type_orders("sell"),
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
