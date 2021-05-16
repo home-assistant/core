@@ -51,6 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _ZONE_NORMAL_WEEK_LIST_SCHEMA = vol.Schema({cv.string: cv.string})
 
+# For backwards compatibility of HACS version.
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -64,11 +65,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
 async def async_setup_platform(
     hass: HomeAssistant, config, async_add_entities, discovery_info=None
 ) -> bool:
-    """
-    Set up the Nobø Ecohub platform from configuration.yaml.
-
-    For backwards compatibility of HACS version.
-    """
+    """Set up the Nobø Ecohub platform from configuration.yaml."""
 
     serial = config.get(CONF_HOST)
     ip = config.get(CONF_IP_ADDRESS)
