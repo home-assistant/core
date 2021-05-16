@@ -156,6 +156,41 @@ class ModbusHub:
             # network configuration
             self._config_host = client_config[CONF_HOST]
 
+        self._call_type = {
+            CALL_TYPE_COIL: {
+                ENTRY_ATTR: "bits",
+                ENTRY_FUNC: None,
+            },
+            CALL_TYPE_DISCRETE: {
+                ENTRY_ATTR: "bits",
+                ENTRY_FUNC: None,
+            },
+            CALL_TYPE_REGISTER_HOLDING: {
+                ENTRY_ATTR: "registers",
+                ENTRY_FUNC: None,
+            },
+            CALL_TYPE_REGISTER_INPUT: {
+                ENTRY_ATTR: "registers",
+                ENTRY_FUNC: None,
+            },
+            CALL_TYPE_WRITE_COIL: {
+                ENTRY_ATTR: "value",
+                ENTRY_FUNC: None,
+            },
+            CALL_TYPE_WRITE_COILS: {
+                ENTRY_ATTR: "count",
+                ENTRY_FUNC: None,
+            },
+            CALL_TYPE_WRITE_REGISTER: {
+                ENTRY_ATTR: "value",
+                ENTRY_FUNC: None,
+            },
+            CALL_TYPE_WRITE_REGISTERS: {
+                ENTRY_ATTR: "count",
+                ENTRY_FUNC: None,
+            },
+        }
+
     @property
     def name(self):
         """Return the name of this hub."""
@@ -213,40 +248,24 @@ class ModbusHub:
         async with self._lock:
             await self.hass.async_add_executor_job(self._pymodbus_connect)
 
-        self._call_type = {
-            CALL_TYPE_COIL: {
-                ENTRY_ATTR: "bits",
-                ENTRY_FUNC: self._client.read_coils,
-            },
-            CALL_TYPE_DISCRETE: {
-                ENTRY_ATTR: "bits",
-                ENTRY_FUNC: self._client.read_discrete_inputs,
-            },
-            CALL_TYPE_REGISTER_HOLDING: {
-                ENTRY_ATTR: "registers",
-                ENTRY_FUNC: self._client.read_holding_registers,
-            },
-            CALL_TYPE_REGISTER_INPUT: {
-                ENTRY_ATTR: "registers",
-                ENTRY_FUNC: self._client.read_input_registers,
-            },
-            CALL_TYPE_WRITE_COIL: {
-                ENTRY_ATTR: "value",
-                ENTRY_FUNC: self._client.write_coil,
-            },
-            CALL_TYPE_WRITE_COILS: {
-                ENTRY_ATTR: "count",
-                ENTRY_FUNC: self._client.write_coils,
-            },
-            CALL_TYPE_WRITE_REGISTER: {
-                ENTRY_ATTR: "value",
-                ENTRY_FUNC: self._client.write_register,
-            },
-            CALL_TYPE_WRITE_REGISTERS: {
-                ENTRY_ATTR: "count",
-                ENTRY_FUNC: self._client.write_registers,
-            },
-        }
+        self._call_type[CALL_TYPE_COIL][ENTRY_FUNC] = self._client.read_coils
+        self._call_type[CALL_TYPE_DISCRETE][
+            ENTRY_FUNC
+        ] = self._client.read_discrete_inputs
+        self._call_type[CALL_TYPE_REGISTER_HOLDING][
+            ENTRY_FUNC
+        ] = self._client.read_holding_registers
+        self._call_type[CALL_TYPE_REGISTER_INPUT][
+            ENTRY_FUNC
+        ] = self._client.read_input_registers
+        self._call_type[CALL_TYPE_WRITE_COIL][ENTRY_FUNC] = self._client.write_coil
+        self._call_type[CALL_TYPE_WRITE_COILS][ENTRY_FUNC] = self._client.write_coils
+        self._call_type[CALL_TYPE_WRITE_REGISTER][
+            ENTRY_FUNC
+        ] = self._client.write_register
+        self._call_type[CALL_TYPE_WRITE_REGISTERS][
+            ENTRY_FUNC
+        ] = self._client.write_registers
 
         # Start counting down to allow modbus requests.
         if self._config_delay:
