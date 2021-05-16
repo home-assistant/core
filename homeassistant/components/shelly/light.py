@@ -11,6 +11,7 @@ import async_timeout
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     COLOR_MODE_BRIGHTNESS,
@@ -18,6 +19,7 @@ from homeassistant.components.light import (
     COLOR_MODE_ONOFF,
     COLOR_MODE_RGB,
     COLOR_MODE_RGBW,
+    SUPPORT_EFFECT,
     LightEntity,
     brightness_supported,
 )
@@ -36,6 +38,8 @@ from .const import (
     KELVIN_MAX_VALUE,
     KELVIN_MIN_VALUE_COLOR,
     KELVIN_MIN_VALUE_WHITE,
+    SHBLB_1_RGB_EFFECTS,
+    STANDARD_RGB_EFFECTS,
 )
 from .entity import ShellyBlockEntity
 from .utils import async_remove_shelly_entity
@@ -77,6 +81,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         self.control_result = None
         self.mode_result = None
         self._supported_color_modes = set()
+        self._supported_features = 0
         self._min_kelvin = KELVIN_MIN_VALUE_WHITE
         self._max_kelvin = KELVIN_MAX_VALUE
 
@@ -95,6 +100,14 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
                 self._supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
             else:
                 self._supported_color_modes.add(COLOR_MODE_ONOFF)
+
+        if hasattr(block, "effect"):
+            self._supported_features |= SUPPORT_EFFECT
+
+    @property
+    def supported_features(self) -> int:
+        """Supported features."""
+        return self._supported_features
 
     @property
     def is_on(self) -> bool:
@@ -204,6 +217,33 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         """Flag supported color modes."""
         return self._supported_color_modes
 
+    @property
+    def effect_list(self) -> list[str] | None:
+        """Return the list of supported effects."""
+        if not self.supported_features & SUPPORT_EFFECT:
+            return None
+
+        if self.wrapper.model == "SHBLB-1":
+            return list(SHBLB_1_RGB_EFFECTS.values())
+
+        return list(STANDARD_RGB_EFFECTS.values())
+
+    @property
+    def effect(self) -> str | None:
+        """Return the current effect."""
+        if not self.supported_features & SUPPORT_EFFECT:
+            return None
+
+        if self.control_result:
+            effect_index = self.control_result["effect"]
+        else:
+            effect_index = self.block.effect
+
+        if self.wrapper.model == "SHBLB-1":
+            return SHBLB_1_RGB_EFFECTS[effect_index]
+
+        return STANDARD_RGB_EFFECTS[effect_index]
+
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on light."""
         if self.block.type == "relay":
@@ -240,6 +280,24 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
             (params["red"], params["green"], params["blue"], params["white"]) = kwargs[
                 ATTR_RGBW_COLOR
             ]
+
+        if ATTR_EFFECT in kwargs:
+            # Color effect change - used only in color mode, switch device mode to color
+            set_mode = "color"
+            if self.wrapper.model == "SHBLB-1":
+                effect_dict = SHBLB_1_RGB_EFFECTS
+            else:
+                effect_dict = STANDARD_RGB_EFFECTS
+            if kwargs[ATTR_EFFECT] in effect_dict.values():
+                params["effect"] = [
+                    k for k, v in effect_dict.items() if v == kwargs[ATTR_EFFECT]
+                ][0]
+            else:
+                _LOGGER.error(
+                    "Effect '%s' not supported by device %s",
+                    kwargs[ATTR_EFFECT],
+                    self.wrapper.model,
+                )
 
         if await self.set_light_mode(set_mode):
             self.control_result = await self.set_state(**params)

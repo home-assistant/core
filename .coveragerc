@@ -9,7 +9,9 @@ omit =
 
     # omit pieces of code that rely on external devices being present
     homeassistant/components/acer_projector/*
+    homeassistant/components/actiontec/const.py
     homeassistant/components/actiontec/device_tracker.py
+    homeassistant/components/actiontec/model.py
     homeassistant/components/acmeda/__init__.py
     homeassistant/components/acmeda/base.py
     homeassistant/components/acmeda/const.py
@@ -24,7 +26,7 @@ omit =
     homeassistant/components/adguard/switch.py
     homeassistant/components/ads/*
     homeassistant/components/aemet/weather_update_coordinator.py
-    homeassistant/components/aftership/sensor.py
+    homeassistant/components/aftership/*
     homeassistant/components/agent_dvr/__init__.py
     homeassistant/components/agent_dvr/alarm_control_panel.py
     homeassistant/components/agent_dvr/camera.py
@@ -35,7 +37,7 @@ omit =
     homeassistant/components/airvisual/__init__.py
     homeassistant/components/airvisual/air_quality.py
     homeassistant/components/airvisual/sensor.py
-    homeassistant/components/aladdin_connect/cover.py
+    homeassistant/components/aladdin_connect/*
     homeassistant/components/alarmdecoder/__init__.py
     homeassistant/components/alarmdecoder/alarm_control_panel.py
     homeassistant/components/alarmdecoder/binary_sensor.py
@@ -348,6 +350,9 @@ omit =
     homeassistant/components/frontier_silicon/media_player.py
     homeassistant/components/futurenow/light.py
     homeassistant/components/garadget/cover.py
+    homeassistant/components/garages_amsterdam/__init__.py
+    homeassistant/components/garages_amsterdam/binary_sensor.py
+    homeassistant/components/garages_amsterdam/sensor.py
     homeassistant/components/garmin_connect/__init__.py
     homeassistant/components/garmin_connect/const.py
     homeassistant/components/garmin_connect/sensor.py

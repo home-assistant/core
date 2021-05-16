@@ -52,6 +52,7 @@ async def test_already_configured(hass):
             DOMAIN, context={"source": "user"}
         )
         assert result["type"] == "abort"
+        assert result["reason"] == "already_configured"
 
 
 async def test_options(hass):

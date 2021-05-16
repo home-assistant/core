@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from pykrakenapi.pykrakenapi import CallRateLimitError, KrakenAPIError
 
-from homeassistant.components import kraken
 from homeassistant.components.kraken.const import DOMAIN
 
 from .const import TICKER_INFORMATION_RESPONSE, TRADEABLE_ASSET_PAIR_RESPONSE
@@ -25,7 +24,7 @@ async def test_unload_entry(hass):
 
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        assert await kraken.async_unload_entry(hass, entry)
+        assert await hass.config_entries.async_unload(entry.entry_id)
         assert DOMAIN not in hass.data
 
 

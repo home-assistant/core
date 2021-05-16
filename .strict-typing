@@ -4,7 +4,10 @@
 
 homeassistant.components
 homeassistant.components.acer_projector.*
+homeassistant.components.actiontec.*
+homeassistant.components.aftership.*
 homeassistant.components.airly.*
+homeassistant.components.aladdin_connect.*
 homeassistant.components.automation.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bond.*
