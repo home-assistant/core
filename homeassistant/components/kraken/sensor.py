@@ -79,7 +79,8 @@ class KrakenSensor(CoordinatorEntity, SensorEntity):
         sensor_type: dict[str, object],
     ) -> None:
         """Initialize."""
-        super().__init__(kraken_data.coordinator)  # type: ignore[arg-type]
+        assert kraken_data.coordinator is not None
+        super().__init__(kraken_data.coordinator)
         self.tracked_asset_pair_wsname = kraken_data.tradable_asset_pairs[
             tracked_asset_pair
         ]
