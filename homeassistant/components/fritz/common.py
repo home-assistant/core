@@ -117,7 +117,7 @@ class FritzBoxTools:
 
         self.fritz_status = FritzStatus(fc=self.connection)
         info = self.connection.call_action("DeviceInfo:1", "GetInfo")
-        if not self._unique_id:
+        if len(self._unique_id) == 0:
             self._unique_id = info["NewSerialNumber"]
 
         self._model = info.get("NewModelName")
