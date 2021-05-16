@@ -11,7 +11,7 @@ import pykrakenapi
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -62,11 +62,11 @@ class KrakenData:
         self._hass = hass
         self._config_entry = config_entry
         self._api = pykrakenapi.KrakenAPI(krakenex.API(), retry=0, crl_sleep=0)
-        self.tradable_asset_pairs = None
-        self.coordinator = None
-        self.unsub_listeners = []
+        self.tradable_asset_pairs: dict[str, str] = {}
+        self.coordinator: DataUpdateCoordinator | None = None
+        self.unsub_listeners: list[CALLBACK_TYPE] = []
 
-    async def async_update(self) -> None:
+    async def async_update(self) -> dict[str, dict[str, float]] | None:
         """Get the latest data from the Kraken.com REST API.
 
         All tradeable asset pairs are retrieved, not the tracked asset pairs
@@ -91,8 +91,9 @@ class KrakenData:
             _LOGGER.warning(
                 "Exceeded the Kraken.com call rate limit. Increase the update interval to prevent this error"
             )
+        return None
 
-    def _get_kraken_data(self) -> dict:
+    def _get_kraken_data(self) -> dict[str, dict[str, float]]:
         websocket_name_pairs = self._get_websocket_name_asset_pairs()
         ticker_df = self._api.get_ticker_information(websocket_name_pairs)
         # Rename columns to their full name
@@ -140,12 +141,13 @@ class KrakenData:
         )
         await self.coordinator.async_config_entry_first_refresh()
 
-    def _get_websocket_name_asset_pairs(self) -> list:
+    def _get_websocket_name_asset_pairs(self) -> str:
         return ",".join(wsname for wsname in self.tradable_asset_pairs.values())
 
     def set_update_interval(self, update_interval: int) -> None:
         """Set the coordinator update_interval to the supplied update_interval."""
-        self.coordinator.update_interval = timedelta(seconds=update_interval)
+        if self.coordinator is not None:
+            self.coordinator.update_interval = timedelta(seconds=update_interval)
 
 
 async def async_options_updated(hass: HomeAssistant, config_entry: ConfigEntry) -> None:

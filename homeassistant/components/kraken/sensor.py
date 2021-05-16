@@ -75,10 +75,10 @@ class KrakenSensor(CoordinatorEntity, SensorEntity):
         self,
         kraken_data: KrakenData,
         tracked_asset_pair: str,
-        sensor_type: dict[str, bool],
+        sensor_type: dict[str, object],
     ) -> None:
         """Initialize."""
-        super().__init__(kraken_data.coordinator)
+        super().__init__(kraken_data.coordinator)  # type: ignore[arg-type]
         self.tracked_asset_pair_wsname = kraken_data.tradable_asset_pairs[
             tracked_asset_pair
         ]
@@ -92,7 +92,7 @@ class KrakenSensor(CoordinatorEntity, SensorEntity):
             [
                 tracked_asset_pair.split("/")[0],
                 tracked_asset_pair.split("/")[1],
-                sensor_type["name"],
+                str(sensor_type["name"]),
             ]
         )
         self._received_data_at_least_once = False
@@ -141,7 +141,7 @@ class KrakenSensor(CoordinatorEntity, SensorEntity):
                     )
                     self._available = False
 
-    def _try_get_state(self) -> str:
+    def _try_get_state(self) -> str:  # type: ignore[return]
         """Try to get the state or return a TypeError."""
         if self._sensor_type == "last_trade_closed":
             return self.coordinator.data[self.tracked_asset_pair_wsname][
@@ -216,7 +216,7 @@ class KrakenSensor(CoordinatorEntity, SensorEntity):
         return self._available and self.coordinator.last_update_success
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self):
         """Return a device description for device registry."""
 
         return {
