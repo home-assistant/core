@@ -6,6 +6,7 @@ from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -38,7 +39,15 @@ TABLE_STATES = "states"
 TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
 
-ALL_TABLES = [TABLE_STATES, TABLE_EVENTS, TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES]
+TABLE_STATISTICS = "statistics"
+
+ALL_TABLES = [
+    TABLE_STATES,
+    TABLE_EVENTS,
+    TABLE_RECORDER_RUNS,
+    TABLE_SCHEMA_CHANGES,
+    TABLE_STATISTICS,
+]
 
 DATETIME_TYPE = DateTime(timezone=True).with_variant(
     mysql.DATETIME(timezone=True, fsp=6), "mysql"
@@ -196,6 +205,39 @@ class States(Base):  # type: ignore
             # When json.loads fails
             _LOGGER.exception("Error converting row to state: %s", self)
             return None
+
+
+class Statistics(Base):  # type: ignore
+    """Statistics."""
+
+    __table_args__ = {
+        "mysql_default_charset": "utf8mb4",
+        "mysql_collate": "utf8mb4_unicode_ci",
+    }
+    __tablename__ = TABLE_STATISTICS
+    id = Column(Integer, primary_key=True)
+    created = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    source = Column(String(32))
+    statistic_id = Column(String(255))
+    start = Column(DATETIME_TYPE, index=True)
+    mean = Column(Float())
+    min = Column(Float())
+    max = Column(Float())
+
+    __table_args__ = (
+        # Used for fetching statistics for a certain entity at a specific time
+        Index("ix_statistics_statistic_id_start", "statistic_id", "start"),
+    )
+
+    @staticmethod
+    def from_stats(source, statistic_id, start, stats):
+        """Create object from a statistics."""
+        return Statistics(
+            source=source,
+            statistic_id=statistic_id,
+            start=start,
+            **stats,
+        )
 
 
 class RecorderRuns(Base):  # type: ignore
