@@ -17,7 +17,7 @@ DATA_SCHEMA = vol.Schema(
 
 
 class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for youless."""
+    """Handle a config flow for velux."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
@@ -49,7 +49,6 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config):
         """Import config from configuration.yaml."""
-        entries = self._async_current_entries()
         self._async_abort_entries_match({CONF_HOST: import_config[CONF_HOST]})
 
         return await self.async_step_user(import_config)
