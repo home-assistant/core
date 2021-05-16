@@ -33,7 +33,6 @@ def _markets_schema(markets: list | None):
 async def validate_input(hass: HomeAssistant, data: dict):
     """Validate the user input allows us to connect."""
     markets_list = []
-    balances_list = []
 
     api_key = data[CONF_API_KEY]
     api_secret = data[CONF_API_SECRET]
@@ -44,12 +43,6 @@ async def validate_input(hass: HomeAssistant, data: dict):
         for market in markets:
             markets_list.append(market["market"])
         markets_list.sort()
-
-        balances = await client.get_balance()
-        for balance in balances:
-            if balance["available"] != "0":
-                balances_list.append(balance["symbol"])
-        balances_list.sort()
     except BitvavoException as error:
         if str(error.status_code) == "403":
             raise InvalidAuth from error
@@ -57,7 +50,7 @@ async def validate_input(hass: HomeAssistant, data: dict):
     finally:
         await client.close()
 
-    return {"markets": markets_list, "balances": balances_list}
+    return {"markets": markets_list}
 
 
 class BitvavoConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -70,7 +63,6 @@ class BitvavoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the Bitvavo config flow."""
         self.bitvavo_config = {}
         self.markets = None
-        self.balances = None
 
     @staticmethod
     @callback
@@ -82,8 +74,6 @@ class BitvavoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
-
-        # assert self.hass
 
         errors = {}
 
@@ -111,13 +101,12 @@ class BitvavoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self.bitvavo_config.update(user_input)
-            info, errors = await self._async_validate_or_error(self.bitvavo_config)
+            errors = await self._async_validate_or_error(self.bitvavo_config)
 
             title = "Markets: " + ", ".join(self.bitvavo_config[CONF_MARKETS])
 
             if not errors:
                 await self.async_set_unique_id(user_input[CONF_MARKETS])
-                self.balances = info["balances"]
 
                 return self.async_create_entry(title=title, data=self.bitvavo_config)
 
@@ -129,17 +118,16 @@ class BitvavoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_or_error(self, config):
         errors = {}
-        info = {}
 
         try:
-            info = await validate_input(self.hass, config)
+            await validate_input(self.hass, config)
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
 
-        return info, errors
+        return errors
 
 
 class BitvavoOptionsFlowHandler(OptionsFlow):
