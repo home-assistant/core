@@ -21,6 +21,7 @@
                     "port": "Port",
                     "protocol": "Communication protocol to use",
                     "ssh_key": "Path to your SSH key file (instead of password)",
+                    "track_new_devices": "Enable device tracker",
                     "username": "Username"
                 },
                 "description": "Set required parameter to connect to your router",

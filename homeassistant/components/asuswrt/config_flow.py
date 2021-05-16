@@ -100,6 +100,7 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_MODE, default=MODE_ROUTER): vol.In(
                         {MODE_ROUTER: "Router", MODE_AP: "Access Point"}
                     ),
+                    vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): bool,
                 }
             ),
             errors=errors or {},
@@ -143,6 +144,7 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._host = user_input[CONF_HOST]
         pwd = user_input.get(CONF_PASSWORD)
         ssh = user_input.get(CONF_SSH_KEY)
+        track_new = user_input.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
         if not (pwd or ssh):
             errors["base"] = "pwd_or_ssh"
@@ -170,6 +172,7 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=self._host,
             data=user_input,
+            options={CONF_TRACK_NEW: False} if not track_new else None,
         )
 
     async def async_step_import(self, user_input=None):

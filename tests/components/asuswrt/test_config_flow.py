@@ -40,6 +40,7 @@ CONFIG_DATA = {
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pwd",
     CONF_MODE: "ap",
+    CONF_TRACK_NEW: True,
 }
 
 

@@ -8,7 +8,10 @@ import pytest
 from homeassistant.components import device_tracker, sensor
 from homeassistant.components.asuswrt.const import DOMAIN
 from homeassistant.components.asuswrt.sensor import DEFAULT_PREFIX
-from homeassistant.components.device_tracker.const import CONF_CONSIDER_HOME
+from homeassistant.components.device_tracker.const import (
+    CONF_CONSIDER_HOME,
+    CONF_TRACK_NEW,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODE,
@@ -34,6 +37,7 @@ CONFIG_DATA = {
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pwd",
     CONF_MODE: "router",
+    CONF_TRACK_NEW: True,
 }
 
 MOCK_DEVICES = {

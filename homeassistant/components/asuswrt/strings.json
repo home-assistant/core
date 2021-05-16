@@ -12,7 +12,8 @@
           "ssh_key": "Path to your SSH key file (instead of password)",
           "protocol": "Communication protocol to use",
           "port": "[%key:common::config_flow::data::port%]",
-          "mode": "[%key:common::config_flow::data::mode%]"
+          "mode": "[%key:common::config_flow::data::mode%]",
+          "track_new_devices": "Enable device tracker"
         }
       }
     },
