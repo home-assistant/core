@@ -4,7 +4,7 @@ import logging
 from pyvlx import PyVLX, PyVLXException
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
 from .const import DOMAIN  # pylint:disable=unused-import
@@ -55,7 +55,3 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: import_config[CONF_HOST]})
 
         return await self.async_step_user(import_config)
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
