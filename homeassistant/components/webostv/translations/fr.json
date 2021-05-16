@@ -17,7 +17,6 @@
             }
         },
         "error": {
-            "encode_json": "Error json encoding",
             "cannot_connect": "Impossible de se connecter, svp allumer votre TV ou vérifier votre adresse ip."
         },
         "abort": {
@@ -29,17 +28,16 @@
     "options": {
         "step": {
             "init": {
-                "title": "Turn on action",
-                "description": "Home Assistant is able to turn on a LG webOS Smart TV if you specify an action, like HDMI-CEC or WakeOnLan.",
+                "title": "Options pour Webos Smart TV",
+                "description": "Home Assistant peut allumer la Smart TV, si tu précises un script. [Lire la documentation]({docs_url})",
                 "data": {
-                    "service": "Service (ex: wake_on_lan.send_magic_packet)",
-                    "data": "JSON Data (ex: \"mac\":\"01:23:45:67:89:AB\",\"broadcast_address\":\"255.255.255.0\")",
+                    "turn_on_action": "Script utilisé pour allumer la TV ",
                     "sources": "Sources list"
                 }
             }
         },
         "error": {
-            "encode_json": "Error json encoding.",
+            "script_notfound": "Script introuvable",
             "cannot_retrieve": "Impossible de recupérer la liste des sources.Votre TV doit être éteinte."
         }
     }

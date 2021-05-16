@@ -17,7 +17,6 @@
       }
     },
     "error": {
-      "encode_json": "Error json encoding",
       "cannot_connect": "Failed to connect, please turn on your device or check ip address."
     },
     "abort": {
@@ -29,17 +28,16 @@
   "options": {
     "step": {
       "init": {
-        "title": "Turn on action",
-        "description": "Home Assistant is able to turn on a LG webOS Smart TV if you specify an action, like HDMI-CEC or WakeOnLan.",
+        "title": "Options for Webos Smart TV",
+        "description": "Home Assistant is able to turn on a LG webOS Smart TV if you specify an script. [Read documentation]({docs_url})",
         "data": {
-          "service": "Service (ex: wake_on_lan.send_magic_packet)",
-          "data": "JSON Data (ex: \"mac\":\"01:23:45:67:89:AB\",\"broadcast_address\":\"255.255.255.0\")",
+          "turn_on_action": "Script used to turn on TV (ex: script.wake_on_lan)",
           "sources": "Sources list"
         }
       }
     },
     "error": {
-      "encode_json": "Error json encoding",
+      "script_notfound": "Script not found",
       "cannot_retrieve": "Unable to retrieve the list of sources.Device must be switched off"
     }
   }

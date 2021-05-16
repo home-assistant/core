@@ -67,10 +67,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     uid = config_entry.unique_id
     name = config_entry.data.get(CONF_NAME)
     sources = config_entry.options.get(CONF_SOURCES)
-    turn_on_action = [config_entry.options.get(CONF_ON_ACTION)]
+    turn_on_action = config_entry.options.get(CONF_ON_ACTION)
     client = hass.data[DOMAIN][config_entry.entry_id]
-
-    on_script = Script(hass, turn_on_action, name, DOMAIN) if turn_on_action else None
+    on_script = (
+        Script(
+            hass,
+            [{"service": turn_on_action}],
+            name,
+            DOMAIN,
+        )
+        if turn_on_action
+        else None
+    )
 
     async_add_entities(
         [LgWebOSMediaPlayerEntity(client, name, sources, uid, on_script)],
@@ -317,14 +325,20 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     @property
     def device_info(self):
         """Return device information."""
-        maj_v = self._client.software_info.get("major_ver")
-        min_v = self._client.software_info.get("minor_ver")
+        model = "unknown"
+        sw_version = ""
+        # If TV is off, the data is not recovered.
+        if self._client.system_info is not None:
+            model = self._client.software_info.get("model_name")
+            maj_v = self._client.software_info.get("major_ver")
+            min_v = self._client.software_info.get("minor_ver")
+            sw_version = f"{maj_v}.{min_v}"
         return {
             "identifiers": {(DOMAIN, self._uid)},
             "manufacturer": "LG",
             "name": self._name,
-            "model": self._client.software_info.get("model_name"),
-            "sw_version": f"{maj_v}.{min_v}",
+            "model": model,
+            "sw_version": sw_version,
         }
 
     @property

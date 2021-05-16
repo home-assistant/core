@@ -1,6 +1,5 @@
 """Config flow to configure webostv component."""
 import functools
-import json
 import logging
 from urllib.parse import urlparse
 
@@ -16,15 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.util.network import is_ip_address
 
 from . import CannotConnect, async_control_connect
-from .const import (
-    CONF_ON_ACTION,
-    CONF_SOURCES,
-    DEFAULT_NAME,
-    DEFAULT_SOURCES,
-    DOMAIN,
-    TURN_ON_DATA,
-    TURN_ON_SERVICE,
-)
+from .const import CONF_ON_ACTION, CONF_SOURCES, DEFAULT_NAME, DEFAULT_SOURCES, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -34,6 +25,8 @@ DATA_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+DOCS_URL = "https://www.home-assistant.io/integrations/webostv"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -141,31 +134,23 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
         errors = {}
         if user_input is not None:
-            try:
-                data_input = {}
-                # Set turn on service
-                if user_input.get(TURN_ON_SERVICE):
-                    data_input.update(
-                        {
-                            CONF_ON_ACTION: {
-                                "service": user_input.get(TURN_ON_SERVICE),
-                                "data": json.loads(user_input.get(TURN_ON_DATA)),
-                            }
-                        }
-                    )
-                # Set preferred sources
-                if user_input.get(CONF_SOURCES):
-                    data_input.update({CONF_SOURCES: user_input[CONF_SOURCES]})
-
-                return self.async_create_entry(title="", data=data_input)
-
-            except json.decoder.JSONDecodeError as error:
-                _LOGGER.error("Error JSON (%s)", error)
-                errors["base"] = "encode_json"
+            if user_input.get(CONF_ON_ACTION) and not self.hass.states.get(
+                user_input.get(CONF_ON_ACTION)
+            ):
+                errors["base"] = "script_notfound"
+            elif (
+                self.hass.states.get(user_input.get(CONF_ON_ACTION))
+            ).domain != "script":
+                errors["base"] = "script_notfound"
+            if "base" not in errors:
+                options_input = {
+                    CONF_ON_ACTION: user_input.get(CONF_ON_ACTION),
+                    CONF_SOURCES: user_input[CONF_SOURCES],
+                }
+                return self.async_create_entry(title="", data=options_input)
 
         # Get turn on service
-        service = self.options.get(CONF_ON_ACTION, {}).get(TURN_ON_SERVICE, "")
-        data = json.dumps(self.options.get(CONF_ON_ACTION, {}).get(TURN_ON_DATA, "{}"))
+        script_turn_on = self.options.get(CONF_ON_ACTION, "")
 
         # Get sources
         sources = self.options.get(CONF_SOURCES, DEFAULT_SOURCES)
@@ -177,13 +162,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         options_schema = vol.Schema(
             {
                 vol.Optional(
-                    TURN_ON_SERVICE,
-                    description={"suggested_value": service},
-                ): str,
-                vol.Optional(
-                    TURN_ON_DATA,
-                    default="{}",
-                    description={"suggested_value": data},
+                    CONF_ON_ACTION,
+                    description={"suggested_value": script_turn_on},
                 ): str,
                 vol.Optional(
                     CONF_SOURCES,
@@ -193,7 +173,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
         return self.async_show_form(
-            step_id="init", data_schema=options_schema, errors=errors
+            step_id="init",
+            data_schema=options_schema,
+            errors=errors,
+            description_placeholders={"docs_url": DOCS_URL},
         )
 
 

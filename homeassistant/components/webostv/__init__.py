@@ -110,12 +110,7 @@ async def async_setup_entry(hass, config_entry):
         options = {}
 
         # Get Turn_on service
-        turn_on_service = config.get(CONF_ON_ACTION)
-        if turn_on_service:
-            services = {}
-            for service in turn_on_service:
-                services.update(service)
-            options[CONF_ON_ACTION] = services
+        options[CONF_ON_ACTION] = config.get(CONF_ON_ACTION)
 
         # Get Preferred Sources
         sources = config.get(CONF_CUSTOMIZE, {}).get(CONF_SOURCES)

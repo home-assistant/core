@@ -4,18 +4,18 @@ from unittest.mock import patch
 from aiopylgtv import PyLGTVPairException
 import pytest
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.webostv import CannotConnect
-from homeassistant.components.webostv.const import (
-    CONF_ON_ACTION,
-    CONF_SOURCES,
-    DOMAIN,
-    TURN_ON_DATA,
-    TURN_ON_SERVICE,
-)
+from homeassistant.components.webostv.const import CONF_ON_ACTION, CONF_SOURCES, DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP
-from homeassistant.const import CONF_HOST, CONF_ICON, CONF_NAME, CONF_SOURCE
+from homeassistant.const import (
+    CONF_CLIENT_SECRET,
+    CONF_HOST,
+    CONF_ICON,
+    CONF_NAME,
+    CONF_SOURCE,
+)
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -32,7 +32,7 @@ MOCK_YAML_CONFIG = {
 
 MOCK_CONFIG_ENTRY = {
     CONF_HOST: "1.2.3.4",
-    "client_secret": "0123456789",
+    CONF_CLIENT_SECRET: "0123456789",
 }
 
 
@@ -52,54 +52,49 @@ def client_fixture():
 
 async def test_form_import(hass, client):
     """Test we can import yaml config."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: config_entries.SOURCE_IMPORT},
         data=MOCK_YAML_CONFIG,
     )
-
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "pairing"
 
     with patch(
         "homeassistant.components.webostv.config_flow.async_control_connect",
         return_value=client,
-    ), patch(
-        "homeassistant.components.webostv.async_setup", return_value=True
-    ) as mock_setup, patch(
+    ), patch("homeassistant.components.webostv.async_setup", return_value=True), patch(
         "homeassistant.components.webostv.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
 
     await hass.async_block_till_done()
+
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"]["name"] == "fake"
-
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form(hass, client):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: config_entries.SOURCE_USER},
     )
+    await hass.async_block_till_done()
+
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: config_entries.SOURCE_USER},
         data=MOCK_YAML_CONFIG,
     )
+    await hass.async_block_till_done()
+
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "pairing"
 
@@ -110,35 +105,28 @@ async def test_form(hass, client):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={CONF_SOURCE: config_entries.SOURCE_USER},
-            data={
-                CONF_HOST: "hostname",
-                CONF_NAME: "fake",
-                CONF_ICON: "mdi:test",
-            },
+            data=MOCK_YAML_CONFIG,
         )
     await hass.async_block_till_done()
+
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "pairing"
 
     with patch(
         "homeassistant.components.webostv.config_flow.async_control_connect",
         return_value=client,
-    ), patch(
-        "homeassistant.components.webostv.async_setup", return_value=True
-    ) as mock_setup, patch(
+    ), patch("homeassistant.components.webostv.async_setup", return_value=True), patch(
         "homeassistant.components.webostv.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
 
     await hass.async_block_till_done()
+
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"]["name"] == "fake"
-
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_options_flow(hass, client):
@@ -149,6 +137,7 @@ async def test_options_flow(hass, client):
         unique_id="00:01:02:03:04:05",
     )
     entry.add_to_hass(hass)
+    hass.states.async_set("script.test", "off", {"domain": "script"})
 
     with patch(
         "homeassistant.components.webostv.config_flow.async_control_connect",
@@ -156,6 +145,7 @@ async def test_options_flow(hass, client):
     ):
         result = await hass.config_entries.options.async_init(entry.entry_id)
     await hass.async_block_till_done()
+
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
@@ -166,19 +156,14 @@ async def test_options_flow(hass, client):
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                TURN_ON_SERVICE: "service.test",
-                TURN_ON_DATA: '{"title":"Hello","message":"World"}',
+                CONF_ON_ACTION: "script.test",
                 CONF_SOURCES: ["Input01", "Input02"],
             },
         )
-
     await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["data"][CONF_ON_ACTION] == {
-        "data": {"message": "World", "title": "Hello"},
-        "service": "service.test",
-    }
+    assert result2["data"][CONF_ON_ACTION] == "script.test"
 
     with patch(
         "homeassistant.components.webostv.config_flow.async_control_connect",
@@ -190,6 +175,7 @@ async def test_options_flow(hass, client):
         result3 = await hass.config_entries.options.async_init(entry.entry_id)
 
     await hass.async_block_till_done()
+
     assert result3["type"] == RESULT_TYPE_FORM
     assert result3["errors"] == {"base": "cannot_retrieve"}
 
@@ -200,11 +186,12 @@ async def test_options_flow(hass, client):
         result4 = await hass.config_entries.options.async_init(entry.entry_id)
 
     await hass.async_block_till_done()
+
     assert result4["type"] == RESULT_TYPE_FORM
     assert result4["errors"] == {"base": "cannot_retrieve"}
 
 
-async def test_options_jsonformat_incorrect_flow(hass, client):
+async def test_options_script_incorrect_flow(hass, client):
     """Test json format incorrect in options config flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -212,6 +199,7 @@ async def test_options_jsonformat_incorrect_flow(hass, client):
         unique_id="00:01:02:03:04:05",
     )
     entry.add_to_hass(hass)
+    hass.states.async_set("script.fake", "off", {"domain": "script"})
 
     with patch(
         "homeassistant.components.webostv.config_flow.async_control_connect",
@@ -228,19 +216,32 @@ async def test_options_jsonformat_incorrect_flow(hass, client):
     ):
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input={
-                TURN_ON_SERVICE: "service.test",
-                TURN_ON_DATA: '{"title":Hello,}',
-            },
+            user_input={CONF_ON_ACTION: "script.test"},
         )
+
     await hass.async_block_till_done()
+
     assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "encode_json"}
+    assert result2["errors"] == {"base": "script_notfound"}
+
+    hass.states.async_set("fake.test", "off", {"domain": "fake"})
+    with patch(
+        "homeassistant.components.webostv.config_flow.async_control_connect",
+        return_value=client,
+    ):
+        result3 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_ON_ACTION: "fake.test"},
+        )
+
+    await hass.async_block_till_done()
+
+    assert result3["type"] == RESULT_TYPE_FORM
+    assert result3["errors"] == {"base": "script_notfound"}
 
 
 async def test_form_cannot_connect(hass):
     """Test we handle cannot connect error."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: config_entries.SOURCE_USER},
@@ -254,13 +255,13 @@ async def test_form_cannot_connect(hass):
             result["flow_id"], user_input={}
         )
     await hass.async_block_till_done()
+
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_pairexception(hass):
     """Test pairing exception."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: config_entries.SOURCE_USER},
@@ -280,7 +281,7 @@ async def test_form_pairexception(hass):
     assert result2["reason"] == "error_pairing"
 
 
-async def test_form_updates_unique_id(hass, client):
+async def test_form_updates_unique_id(hass):
     """Test duplicated unique_id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -324,43 +325,31 @@ async def test_form_ssdp(hass, client):
     assert result["step_id"] == "pairing"
 
 
-async def test_pairing_form(hass, client):
+async def test_pairing_failed_form(hass, client):
     """Test pairing form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
-        "homeassistant.components.webostv.config_flow.async_control_connect",
-        return_value=client,
-    ), patch(
         "homeassistant.components.webostv.config_flow.get_mac_address",
         return_value="00:01:02:03:04:05",
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={CONF_SOURCE: "pairing"},
+            context={CONF_SOURCE: config_entries.SOURCE_USER},
             data=MOCK_YAML_CONFIG,
         )
 
-    await hass.async_block_till_done()
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "pairing"
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "host"
-
-
-async def test_pairing_failed_form(hass, client):
-    """Test pairing form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
         "homeassistant.components.webostv.config_flow.async_control_connect",
         return_value=client,
     ):
         client.is_registered.return_value = False
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={CONF_SOURCE: "pairing"},
-            data=MOCK_YAML_CONFIG,
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
         )
 
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["step_id"] == "user"
