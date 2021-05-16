@@ -1,6 +1,7 @@
 """Define fixtures available for all tests."""
 from unittest.mock import MagicMock, patch
 
+# pylint: disable=import-error
 from bluepy.btle import Peripheral
 from pytest import fixture
 

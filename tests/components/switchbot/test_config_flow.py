@@ -1,5 +1,6 @@
 """Test the switchbot config flow."""
 
+# pylint: disable=import-error
 from bluepy import btle
 
 from homeassistant.components.switchbot.const import DOMAIN
