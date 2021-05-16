@@ -1,8 +1,5 @@
 """Test the switchbot config flow."""
 
-# pylint: disable=import-error
-from bluepy import btle
-
 from homeassistant.components.switchbot.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.data_entry_flow import (
@@ -86,7 +83,7 @@ async def test_user_form_exception(hass, switchbot_config_flow):
     """Test we handle exception on user form."""
     await async_setup_component(hass, "persistent_notification", {})
 
-    switchbot_config_flow.side_effect = btle.BTLEException("mock_message")
+    switchbot_config_flow.side_effect = Exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -111,13 +108,3 @@ async def test_user_form_exception(hass, switchbot_config_flow):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_host"}
-
-    switchbot_config_flow.side_effect = Exception
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        USER_INPUT,
-    )
-
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "unknown"

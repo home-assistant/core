@@ -2,9 +2,10 @@
 import logging
 
 # pylint: disable=import-error
-from bluepy import btle
+from switchbot import SwitchbotDevice
 import voluptuous as vol
 
+from homeassistant import exceptions
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
 
@@ -13,12 +14,18 @@ from .const import ATTR_BOT, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def _btle_connect(addr) -> None:
+def _btle_connect(data) -> None:
     """Try to connect to switchbot device."""
 
-    device = btle.Peripheral()
-    device.connect(addr, addrType=btle.ADDR_TYPE_RANDOM)
-    device.disconnect()
+    if data.get(CONF_PASSWORD):
+        device = SwitchbotDevice(mac=data[CONF_MAC], password=data[CONF_PASSWORD])
+
+    else:
+        device = SwitchbotDevice(mac=data[CONF_MAC])
+
+    # pylint: disable=protected-access
+    device._connect()
+    device._disconnect()
 
     return device
 
@@ -35,13 +42,13 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Validate bluetooth device mac.
         try:
-            await self.hass.async_add_executor_job(_btle_connect, data[CONF_MAC])
-
-        except btle.BTLEDisconnectError as err:
-            raise btle.BTLEDisconnectError(err)
+            await self.hass.async_add_executor_job(_btle_connect, data)
 
         except ValueError as err:
             raise ValueError from err
+
+        except Exception as err:  # pylint: disable=broad-except
+            raise CannotConnect from err
 
         return self.async_create_entry(title=data[CONF_NAME], data=data)
 
@@ -57,11 +64,11 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 return await self._validate_mac(user_input)
 
-            except btle.BTLEException:
-                errors["base"] = "cannot_connect"
-
             except ValueError:
                 errors["base"] = "invalid_host"
+
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
 
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -94,3 +101,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=import_config[CONF_NAME], data=import_config
         )
+
+
+class CannotConnect(exceptions.HomeAssistantError):
+    """Error to indicate we cannot connect."""
