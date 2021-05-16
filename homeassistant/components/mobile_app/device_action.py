@@ -8,7 +8,6 @@ from homeassistant.components.device_automation import InvalidDeviceAutomationCo
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.template import Template
 
 from .const import DOMAIN
 from .util import get_notify_service, supports_push, webhook_id_from_device_id
@@ -37,10 +36,7 @@ async def async_call_action_from_config(
     hass: HomeAssistant, config: dict, variables: dict, context: Context | None
 ) -> None:
     """Execute a device action."""
-    device_id = Template(config[CONF_DEVICE_ID], hass).async_render(
-        variables, parse_result=False
-    )
-    webhook_id = webhook_id_from_device_id(hass, device_id)
+    webhook_id = webhook_id_from_device_id(hass, config[CONF_DEVICE_ID])
 
     if webhook_id is None:
         raise InvalidDeviceAutomationConfig(
