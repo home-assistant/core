@@ -29,12 +29,13 @@ class HeatzyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await self.async_set_unique_id(user_input[CONF_USERNAME])
                 self._abort_if_unique_id_configured()
+
                 api = HeatzyClient(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
                 await self.hass.async_add_executor_job(api.is_connected)
+
+                return self.async_create_entry(title=DOMAIN, data=user_input)
             except HeatzyException:
                 errors["base"] = "cannot_connect"
-            else:
-                return self.async_create_entry(title=DOMAIN, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
