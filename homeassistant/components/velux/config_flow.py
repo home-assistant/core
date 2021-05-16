@@ -30,6 +30,9 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 host = user_input[CONF_HOST]
                 password = user_input[CONF_PASSWORD]
 
+                await self.async_set_unique_id(host)
+                self._abort_if_unique_id_configured()
+
                 pyvlx = PyVLX(host=host, password=password)
                 await pyvlx.connect()
 
