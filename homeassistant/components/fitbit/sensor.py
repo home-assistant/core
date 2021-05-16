@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime
 import logging
 import os
 import time
@@ -32,7 +33,7 @@ from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.json import load_json, save_json
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_ACCESS_TOKEN,
     ATTR_LAST_SAVED_AT,
     ATTR_REFRESH_TOKEN,
@@ -48,12 +49,13 @@ from .const import (  # noqa: F401
     FITBIT_DEFAULT_RESOURCES,
     FITBIT_MEASUREMENTS,
     FITBIT_RESOURCES_LIST,
-    SCAN_INTERVAL,
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
 
 _CONFIGURING: dict = {}
+
+SCAN_INTERVAL: Final = datetime.timedelta(minutes=30)
 
 PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
     {

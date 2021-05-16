@@ -1,7 +1,6 @@
 """Constants for the Fitbit platform."""
 from __future__ import annotations
 
-import datetime
 from typing import Final
 
 from homeassistant.const import (
@@ -37,8 +36,6 @@ FITBIT_AUTH_CALLBACK_PATH: Final = "/api/fitbit/callback"
 FITBIT_AUTH_START: Final = "/api/fitbit"
 FITBIT_CONFIG_FILE: Final = "fitbit.conf"
 FITBIT_DEFAULT_RESOURCES: Final[list[str]] = ["activities/steps"]
-
-SCAN_INTERVAL: Final = datetime.timedelta(minutes=30)
 
 DEFAULT_CONFIG: Final[dict[str, str]] = {
     CONF_CLIENT_ID: "CLIENT_ID_HERE",
