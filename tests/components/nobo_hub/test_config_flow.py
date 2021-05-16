@@ -2,7 +2,6 @@
 from unittest.mock import PropertyMock, patch
 
 from homeassistant import config_entries, setup
-from homeassistant.components.nobo_hub.config_flow import CannotConnect
 from homeassistant.components.nobo_hub.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -14,7 +13,7 @@ async def test_configure_with_ip(hass: HomeAssistant) -> None:
 
     with patch(
         "pynobo.nobo.async_discover_hubs",
-        return_value=[("1.1.1.1", "123456789")],
+        return_value=[],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -22,7 +21,9 @@ async def test_configure_with_ip(hass: HomeAssistant) -> None:
         assert result["type"] == "form"
         assert result["errors"] == {}
 
-        with patch("pynobo.nobo.async_connect_hub", return_value=True), patch(
+        with patch(
+            "pynobo.nobo.async_connect_hub", return_value=True
+        ) as mock_connect, patch(
             "pynobo.nobo.hub_info",
             new_callable=PropertyMock,
             create=True,
@@ -46,7 +47,8 @@ async def test_configure_with_ip(hass: HomeAssistant) -> None:
             "serial": "123456789012",
             "ip_address": "1.1.1.1",
         }
-        assert len(mock_setup_entry.mock_calls) == 1
+        mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
+        mock_setup_entry.assert_awaited_once()
 
 
 async def test_configure_with_discover(hass: HomeAssistant) -> None:
@@ -64,7 +66,9 @@ async def test_configure_with_discover(hass: HomeAssistant) -> None:
         assert result["type"] == "form"
         assert result["errors"] == {}
 
-        with patch("pynobo.nobo.async_connect_hub", return_value=True), patch(
+        with patch(
+            "pynobo.nobo.async_connect_hub", return_value=True
+        ) as mock_connect, patch(
             "pynobo.nobo.hub_info",
             new_callable=PropertyMock,
             create=True,
@@ -86,7 +90,8 @@ async def test_configure_with_discover(hass: HomeAssistant) -> None:
         assert result2["data"] == {
             "serial": "123456789012",
         }
-        assert len(mock_setup_entry.mock_calls) == 1
+        mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
+        mock_setup_entry.assert_awaited_once()
 
 
 async def test_configure_device_not_found(hass: HomeAssistant) -> None:
@@ -104,19 +109,13 @@ async def test_configure_device_not_found(hass: HomeAssistant) -> None:
         assert result["type"] == "form"
         assert result["errors"] == {}
 
-        with patch("pynobo.nobo.async_connect_hub", return_value=True), patch(
-            "pynobo.nobo.hub_info",
-            new_callable=PropertyMock,
-            create=True,
-            return_value={"name": "My Nobø Ecohub"},
-        ):
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {
-                    "serial": "223456789012",
-                },
-            )
-            await hass.async_block_till_done()
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "serial": "223456789012",
+            },
+        )
+        await hass.async_block_till_done()
 
         assert result2["type"] == "form"
         assert result2["errors"] == {"base": "device_not_found"}
@@ -175,8 +174,8 @@ async def test_configure_cannot_connect(hass: HomeAssistant) -> None:
 
         with patch(
             "pynobo.nobo.async_connect_hub",
-            side_effect=CannotConnect,
-        ):
+            return_value=False,
+        ) as mock_connect:
             result2 = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 {"serial": "123456789012", "ip_address": "1.1.1.1"},
@@ -184,3 +183,4 @@ async def test_configure_cannot_connect(hass: HomeAssistant) -> None:
 
         assert result2["type"] == "form"
         assert result2["errors"] == {"base": "cannot_connect"}
+        mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
