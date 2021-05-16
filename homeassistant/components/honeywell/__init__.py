@@ -1,15 +1,16 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 from datetime import timedelta
-import logging
 
 import somecomfort
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.climate import PLATFORM_SCHEMA
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 from .const import (
+    _LOGGER,
     CONF_COOL_AWAY_TEMPERATURE,
     CONF_DEV_ID,
     CONF_HEAT_AWAY_TEMPERATURE,
@@ -19,31 +20,27 @@ from .const import (
     DOMAIN,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(
-                    CONF_COOL_AWAY_TEMPERATURE, default=DEFAULT_COOL_AWAY_TEMPERATURE
-                ): vol.Coerce(int),
-                vol.Optional(
-                    CONF_HEAT_AWAY_TEMPERATURE, default=DEFAULT_HEAT_AWAY_TEMPERATURE
-                ): vol.Coerce(int),
-                vol.Optional(CONF_DEV_ID): cv.string,
-                vol.Optional(CONF_LOC_ID): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_REGION),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+            vol.Optional(
+                CONF_COOL_AWAY_TEMPERATURE, default=DEFAULT_COOL_AWAY_TEMPERATURE
+            ): vol.Coerce(int),
+            vol.Optional(
+                CONF_HEAT_AWAY_TEMPERATURE, default=DEFAULT_HEAT_AWAY_TEMPERATURE
+            ): vol.Coerce(int),
+            vol.Optional(CONF_REGION): cv.string,
+            vol.Optional(CONF_DEV_ID): cv.string,
+            vol.Optional(CONF_LOC_ID): cv.string,
+        }
+    ),
 )
 
-PLATFORMS = ["climate", "sensor"]
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
+PLATFORMS = ["climate"]
 
 
 async def async_setup_entry(hass, config):

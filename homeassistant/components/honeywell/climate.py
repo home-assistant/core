@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import datetime
-import logging
 from typing import Any
 
 import somecomfort
@@ -32,6 +31,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PERCENTAGE,
@@ -39,9 +39,12 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 
-from .const import CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    _LOGGER,
+    CONF_COOL_AWAY_TEMPERATURE,
+    CONF_HEAT_AWAY_TEMPERATURE,
+    DOMAIN,
+)
 
 ATTR_FAN_ACTION = "fan_action"
 
@@ -92,6 +95,20 @@ async def async_setup_entry(
     async_add_entities(
         [HoneywellUSThermostat(hass.data[DOMAIN], cool_away_temp, heat_away_temp)]
     )
+
+    return True
+
+
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+    """Honeywell uses config flow for configuration now. If an entry exists in configuration.yaml, the import flow will attempt to import it and create a config entry."""
+
+    if config["platform"] == "honeywell":
+        _LOGGER.warn("Deprecated honeywell entry found in configuration.yaml.")
+        # No config entry exists and configuration.yaml config exists, trigger the import flow.
+        if not hass.config_entries.async_entries(DOMAIN):
+            await hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+            )
 
     return True
 
