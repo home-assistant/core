@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured_account": "Account is already configured",
+            "already_configured_device": "Device is already configured",
             "unknown": "Unexpected error"
         },
         "error": {

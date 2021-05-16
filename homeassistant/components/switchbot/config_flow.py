@@ -1,4 +1,4 @@
-"""Config flow for ezviz."""
+"""Config flow for Switchbot."""
 import logging
 
 from bluepy import btle
@@ -12,30 +12,32 @@ from .const import ATTR_BOT, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def _connect(mac_address) -> None:
+def _btle_connect(addr) -> None:
     """Try to connect to switchbot device."""
 
-    bl_test = btle.Peripheral(mac_address, btle.ADDR_TYPE_RANDOM)
+    device = btle.Peripheral()
+    device.connect(addr, addrType=btle.ADDR_TYPE_RANDOM)
+    device.disconnect()
 
-    return bl_test
+    return device
 
 
 class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Ezviz."""
+    """Handle a config flow for Switchbot."""
 
     VERSION = 1
 
     async def _validate_mac(self, data):
-        """Try to login to ezviz cloud account and create entry if successful."""
+        """Try to connect to Switchbot device and create entry if successful."""
         await self.async_set_unique_id(data[CONF_MAC].replace(":", ""))
         self._abort_if_unique_id_configured()
 
         # Validate bluetooth device mac.
         try:
-            await self.hass.async_add_executor_job(_connect, data[CONF_MAC])
+            await self.hass.async_add_executor_job(_btle_connect, data[CONF_MAC])
 
-        except btle.BTLEException as err:
-            raise btle.BTLEException from err
+        except btle.BTLEDisconnectError as err:
+            raise btle.BTLEDisconnectError(err)
 
         except ValueError as err:
             raise ValueError from err

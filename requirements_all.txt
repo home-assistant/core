@@ -394,7 +394,6 @@ blockchain==1.4.4
 
 # homeassistant.components.decora
 # homeassistant.components.miflora
-# homeassistant.components.switchbot
 # bluepy==1.3.0
 
 # homeassistant.components.bme280

@@ -1,38 +1,28 @@
 """Tests for the switchbot integration."""
 from unittest.mock import patch
 
-from homeassistant.components.switchbot.const import ATTR_BOT, DOMAIN
-from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
+from homeassistant.components.switchbot.const import DOMAIN
+from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 ENTRY_CONFIG = {
-    CONF_NAME: "test-username",
+    CONF_NAME: "test-name",
     CONF_PASSWORD: "test-password",
     CONF_MAC: "00:00:00",
-    CONF_SENSOR_TYPE: ATTR_BOT,
 }
 
 USER_INPUT = {
-    CONF_NAME: "test-username",
+    CONF_NAME: "test-name",
     CONF_PASSWORD: "test-password",
     CONF_MAC: "00:00:00",
-    CONF_SENSOR_TYPE: ATTR_BOT,
-}
-
-INPUT_INVALID = {
-    CONF_NAME: "test-username",
-    CONF_PASSWORD: "test-password",
-    CONF_MAC: None,
-    CONF_SENSOR_TYPE: ATTR_BOT,
 }
 
 YAML_CONFIG = {
-    CONF_NAME: "test-username",
+    CONF_NAME: "test-name",
     CONF_PASSWORD: "test-password",
     CONF_MAC: "00:00:00",
-    CONF_SENSOR_TYPE: ATTR_BOT,
 }
 
 
