@@ -114,7 +114,7 @@ class SonarrEntity(Entity):
         icon: str,
         enabled_default: bool = True,
     ) -> None:
-        """Initialize the Sonar entity."""
+        """Initialize the Sonarr entity."""
         self._entry_id = entry_id
         self._device_id = device_id
         self._enabled_default = enabled_default

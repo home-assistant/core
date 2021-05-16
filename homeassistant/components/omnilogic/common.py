@@ -176,3 +176,5 @@ def check_guard(state_key, item, entity_setting):
             for guard_key, guard_value in guard_condition.items()
         ):
             return True
+
+    return False

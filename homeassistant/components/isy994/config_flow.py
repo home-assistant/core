@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.components import ssdp
+from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
@@ -148,6 +149,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input):
         """Handle import."""
         return await self.async_step_user(user_input)
+
+    async def async_step_dhcp(self, discovery_info):
+        """Handle a discovered isy994 via dhcp."""
+        friendly_name = discovery_info[HOSTNAME]
+        url = f"http://{discovery_info[IP_ADDRESS]}"
+        mac = discovery_info[MAC_ADDRESS]
+        isy_mac = (
+            f"{mac[0:2]}:{mac[2:4]}:{mac[4:6]}:{mac[6:8]}:{mac[8:10]}:{mac[10:12]}"
+        )
+        await self.async_set_unique_id(isy_mac)
+        self._abort_if_unique_id_configured()
+
+        self.discovered_conf = {
+            CONF_NAME: friendly_name,
+            CONF_HOST: url,
+        }
+
+        self.context["title_placeholders"] = self.discovered_conf
+        return await self.async_step_user()
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered isy994."""

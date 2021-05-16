@@ -44,7 +44,3 @@ ALARM_STATE_TO_HA = {
     "ARMED_AWAY": STATE_ALARM_ARMED_AWAY,
     "PENDING": STATE_ALARM_PENDING,
 }
-
-# Legacy; to remove after YAML removal
-CONF_CODE_DIGITS = "code_digits"
-CONF_DEFAULT_LOCK_CODE = "default_lock_code"

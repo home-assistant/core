@@ -11,7 +11,7 @@
             "connection_error": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning"
         },
-        "flow_title": "FRITZ!Box Verkt\u00f8y: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {

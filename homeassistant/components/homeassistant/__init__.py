@@ -133,11 +133,12 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:  # noqa: C9
             and await recorder.async_migration_in_progress(hass)
         ):
             _LOGGER.error(
-                "The system cannot %s while a database upgrade in progress",
+                "The system cannot %s while a database upgrade is in progress",
                 call.service,
             )
             raise HomeAssistantError(
-                f"The system cannot {call.service} while a database upgrade in progress."
+                f"The system cannot {call.service} "
+                "while a database upgrade is in progress."
             )
 
         if call.service == SERVICE_HOMEASSISTANT_STOP:
@@ -158,7 +159,8 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:  # noqa: C9
                 f"{ha.DOMAIN}.check_config",
             )
             raise HomeAssistantError(
-                f"The system cannot {call.service} because the configuration is not valid: {errors}"
+                f"The system cannot {call.service} "
+                f"because the configuration is not valid: {errors}"
             )
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:

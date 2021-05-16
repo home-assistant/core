@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Any
 
+from awesomeversion import AwesomeVersion
 from zwave_js_server.const import THERMOSTAT_CURRENT_TEMP_PROPERTY, CommandClass
 from zwave_js_server.model.device_class import DeviceClassItem
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -17,6 +18,33 @@ from .discovery_data_template import (
     DynamicCurrentTempClimateDataTemplate,
     ZwaveValueID,
 )
+
+
+class DataclassMustHaveAtLeastOne:
+    """A dataclass that must have at least one input parameter that is not None."""
+
+    def __post_init__(self) -> None:
+        """Post dataclass initialization."""
+        if all(val is None for val in asdict(self).values()):
+            raise ValueError("At least one input parameter must not be None")
+
+
+@dataclass
+class FirmwareVersionRange(DataclassMustHaveAtLeastOne):
+    """Firmware version range dictionary."""
+
+    min: str | None = None
+    max: str | None = None
+    min_ver: AwesomeVersion | None = field(default=None, init=False)
+    max_ver: AwesomeVersion | None = field(default=None, init=False)
+
+    def __post_init__(self) -> None:
+        """Post dataclass initialization."""
+        super().__post_init__()
+        if self.min:
+            self.min_ver = AwesomeVersion(self.min)
+        if self.max:
+            self.max_ver = AwesomeVersion(self.max)
 
 
 @dataclass
@@ -42,7 +70,7 @@ class ZwaveDiscoveryInfo:
 
 
 @dataclass
-class ZWaveValueDiscoverySchema:
+class ZWaveValueDiscoverySchema(DataclassMustHaveAtLeastOne):
     """Z-Wave Value discovery schema.
 
     The Z-Wave Value must match these conditions.
@@ -89,6 +117,8 @@ class ZWaveDiscoverySchema:
     product_id: set[int] | None = None
     # [optional] the node's product_type must match ANY of these values
     product_type: set[int] | None = None
+    # [optional] the node's firmware_version must be within this range
+    firmware_version_range: FirmwareVersionRange | None = None
     # [optional] the node's firmware_version must match ANY of these values
     firmware_version: set[str] | None = None
     # [optional] the node's basic device class must match ANY of these values
@@ -190,6 +220,7 @@ DISCOVERY_SCHEMAS = [
     # Fibaro Shutter Fibaro FGS222
     ZWaveDiscoverySchema(
         platform="cover",
+        hint="window_shutter",
         manufacturer_id={0x010F},
         product_id={0x1000},
         product_type={0x0302},
@@ -198,14 +229,16 @@ DISCOVERY_SCHEMAS = [
     # Qubino flush shutter
     ZWaveDiscoverySchema(
         platform="cover",
+        hint="window_shutter",
         manufacturer_id={0x0159},
-        product_id={0x0052},
+        product_id={0x0052, 0x0053},
         product_type={0x0003},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # Graber/Bali/Spring Fashion Covers
     ZWaveDiscoverySchema(
         platform="cover",
+        hint="window_blind",
         manufacturer_id={0x026E},
         product_id={0x5A31},
         product_type={0x4353},
@@ -214,6 +247,7 @@ DISCOVERY_SCHEMAS = [
     # iBlinds v2 window blind motor
     ZWaveDiscoverySchema(
         platform="cover",
+        hint="window_blind",
         manufacturer_id={0x0287},
         product_id={0x000D},
         product_type={0x0003},
@@ -269,6 +303,42 @@ DISCOVERY_SCHEMAS = [
                     THERMOSTAT_CURRENT_TEMP_PROPERTY,
                     CommandClass.SENSOR_MULTILEVEL,
                     endpoint=4,
+                ),
+            },
+            ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
+        ),
+    ),
+    # Heatit Z-TRM2fx
+    ZWaveDiscoverySchema(
+        platform="climate",
+        hint="dynamic_current_temp",
+        manufacturer_id={0x019B},
+        product_id={0x0202},
+        product_type={0x0003},
+        firmware_version_range=FirmwareVersionRange(min="3.0"),
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.THERMOSTAT_MODE},
+            property={"mode"},
+            type={"number"},
+        ),
+        data_template=DynamicCurrentTempClimateDataTemplate(
+            {
+                # External Sensor
+                "A2": ZwaveValueID(
+                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=2,
+                ),
+                "A2F": ZwaveValueID(
+                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=2,
+                ),
+                # Floor sensor
+                "F": ZwaveValueID(
+                    THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=3,
                 ),
             },
             ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
@@ -538,6 +608,21 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
             if (
                 schema.product_type is not None
                 and value.node.product_type not in schema.product_type
+            ):
+                continue
+
+            # check firmware_version_range
+            if schema.firmware_version_range is not None and (
+                (
+                    schema.firmware_version_range.min is not None
+                    and schema.firmware_version_range.min_ver
+                    > AwesomeVersion(value.node.firmware_version)
+                )
+                or (
+                    schema.firmware_version_range.max is not None
+                    and schema.firmware_version_range.max_ver
+                    < AwesomeVersion(value.node.firmware_version)
+                )
             ):
                 continue
 

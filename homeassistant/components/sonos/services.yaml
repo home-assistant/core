@@ -6,6 +6,7 @@ join:
       name: Master
       description:
         Entity ID of the player that should become the coordinator of the group.
+      required: true
       example: "media_player.living_room_sonos"
       selector:
         entity:
@@ -14,6 +15,7 @@ join:
     entity_id:
       name: Entity
       description: Name of entity that will join the master.
+      required: true
       example: "media_player.living_room_sonos"
       selector:
         entity:
@@ -23,15 +25,10 @@ join:
 unjoin:
   name: Unjoin group
   description: Unjoin the player from a group.
-  fields:
-    entity_id:
-      name: Entity
-      description: Name of entity that will be unjoined from their group.
-      example: "media_player.living_room_sonos"
-      selector:
-        entity:
-          integration: sonos
-          domain: media_player
+  target:
+    entity:
+      integration: sonos
+      domain: media_player
 
 snapshot:
   name: Snapshot

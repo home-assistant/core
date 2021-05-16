@@ -225,8 +225,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
             CONF_HOST: parsed_url.hostname,
         }
 
-        if self._host_already_configured(self.config[CONF_HOST]):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: self.config[CONF_HOST]})
 
         await self.async_set_unique_id(mac_address)
         self._abort_if_unique_id_configured(updates=self.config)
@@ -241,13 +240,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
             self.config[CONF_PORT] = port
 
         return await self.async_step_user()
-
-    def _host_already_configured(self, host):
-        """See if we already have a UniFi entry matching the host."""
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_HOST) == host:
-                return True
-        return False
 
 
 class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
@@ -299,6 +291,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                     ): cv.multi_select(clients_to_block),
                 }
             ),
+            last_step=True,
         )
 
     async def async_step_device_tracker(self, user_input=None):
@@ -354,6 +347,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                     ): bool,
                 }
             ),
+            last_step=False,
         )
 
     async def async_step_client_control(self, user_input=None):
@@ -391,6 +385,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                 }
             ),
             errors=errors,
+            last_step=False,
         )
 
     async def async_step_statistics_sensors(self, user_input=None):
@@ -413,6 +408,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                     ): bool,
                 }
             ),
+            last_step=True,
         )
 
     async def _update_options(self):
