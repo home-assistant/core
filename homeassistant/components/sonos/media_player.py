@@ -439,7 +439,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         elif source == SOURCE_TV:
             soco.switch_to_tv()
         else:
-            fav = [fav for fav in self.coordinator.favorites if fav.title == source]
+            fav = [fav for fav in self.speaker.favorites if fav.title == source]
             if len(fav) == 1:
                 src = fav.pop()
                 uri = src.reference.get_uri()
@@ -456,7 +456,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @property  # type: ignore[misc]
     def source_list(self) -> list[str]:
         """List of available input sources."""
-        sources = [fav.title for fav in self.coordinator.favorites]
+        sources = [fav.title for fav in self.speaker.favorites]
 
         model = self.coordinator.model_name.upper()
         if "PLAY:5" in model or "CONNECT" in model:
