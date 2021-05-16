@@ -34,7 +34,6 @@ async def setup_push_receiver(hass, aioclient_mock):
     )
 
     entry = MockConfigEntry(
-        connection_class="cloud_push",
         data={
             "app_data": {"push_token": "PUSH_TOKEN", "push_url": push_url},
             "app_id": "io.homeassistant.mobile_app",
@@ -62,7 +61,6 @@ async def setup_push_receiver(hass, aioclient_mock):
     await hass.async_block_till_done()
 
     loaded_late_entry = MockConfigEntry(
-        connection_class="cloud_push",
         data={
             "app_data": {"push_token": "PUSH_TOKEN2", "push_url": f"{push_url}2"},
             "app_id": "io.homeassistant.mobile_app",

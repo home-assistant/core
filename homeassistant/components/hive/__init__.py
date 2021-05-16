@@ -22,15 +22,18 @@ from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=2): cv.positive_int,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Optional(CONF_SCAN_INTERVAL, default=2): cv.positive_int,
+                },
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 

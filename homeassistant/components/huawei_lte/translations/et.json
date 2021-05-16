@@ -15,7 +15,7 @@
             "response_error": "Seade andis tuvastamatu t\u00f5rke",
             "unknown": "Ootamatu t\u00f5rge"
         },
-        "flow_title": "",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

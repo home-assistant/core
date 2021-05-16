@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers import config_validation as cv
 
@@ -293,7 +293,7 @@ class NotifySetupFlow(SetupFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Let user select available notify services."""
         errors: dict[str, str] = {}
 
@@ -319,7 +319,7 @@ class NotifySetupFlow(SetupFlow):
 
     async def async_step_setup(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResultDict:
+    ) -> FlowResult:
         """Verify user can receive one-time password."""
         errors: dict[str, str] = {}
 

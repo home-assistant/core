@@ -5,8 +5,7 @@
             "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
-            "invalid_auth": "Ugyldig godkjenning",
-            "unknown": "Uventet feil"
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "step": {
             "reauth_confirm": {

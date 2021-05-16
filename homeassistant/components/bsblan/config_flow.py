@@ -6,9 +6,9 @@ import logging
 from bsblan import BSBLan, BSBLanError, Info
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResultDict
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
@@ -21,11 +21,8 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a BSBLan config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
-    async def async_step_user(
-        self, user_input: ConfigType | None = None
-    ) -> FlowResultDict:
+    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._show_setup_form()
@@ -57,7 +54,7 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    def _show_setup_form(self, errors: dict | None = None) -> FlowResultDict:
+    def _show_setup_form(self, errors: dict | None = None) -> FlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",

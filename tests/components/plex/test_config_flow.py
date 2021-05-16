@@ -4,6 +4,7 @@ import ssl
 from unittest.mock import patch
 
 import plexapi.exceptions
+import pytest
 import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
@@ -21,7 +22,6 @@ from homeassistant.components.plex.const import (
     PLEX_SERVER_CONFIG,
     SERVERS,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     SOURCE_INTEGRATION_DISCOVERY,
@@ -45,13 +45,8 @@ from .mock_classes import MockGDM
 from tests.common import MockConfigEntry
 
 
-async def test_bad_credentials(hass):
+async def test_bad_credentials(hass, current_request_with_host):
     """Test when provided credentials are rejected."""
-    await async_process_ha_core_config(
-        hass,
-        {"internal_url": "http://example.local:8123"},
-    )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -78,13 +73,8 @@ async def test_bad_credentials(hass):
         assert result["errors"][CONF_TOKEN] == "faulty_credentials"
 
 
-async def test_bad_hostname(hass, mock_plex_calls):
+async def test_bad_hostname(hass, mock_plex_calls, current_request_with_host):
     """Test when an invalid address is provided."""
-    await async_process_ha_core_config(
-        hass,
-        {"internal_url": "http://example.local:8123"},
-    )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -112,13 +102,8 @@ async def test_bad_hostname(hass, mock_plex_calls):
         assert result["errors"][CONF_HOST] == "not_found"
 
 
-async def test_unknown_exception(hass):
+async def test_unknown_exception(hass, current_request_with_host):
     """Test when an unknown exception is encountered."""
-    await async_process_ha_core_config(
-        hass,
-        {"internal_url": "http://example.local:8123"},
-    )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -141,14 +126,11 @@ async def test_unknown_exception(hass):
         assert result["reason"] == "unknown"
 
 
-async def test_no_servers_found(hass, mock_plex_calls, requests_mock, empty_payload):
+async def test_no_servers_found(
+    hass, mock_plex_calls, requests_mock, empty_payload, current_request_with_host
+):
     """Test when no servers are on an account."""
     requests_mock.get("https://plex.tv/api/resources", text=empty_payload)
-
-    await async_process_ha_core_config(
-        hass,
-        {"internal_url": "http://example.local:8123"},
-    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -173,14 +155,10 @@ async def test_no_servers_found(hass, mock_plex_calls, requests_mock, empty_payl
         assert result["errors"]["base"] == "no_servers"
 
 
-async def test_single_available_server(hass, mock_plex_calls):
+async def test_single_available_server(
+    hass, mock_plex_calls, current_request_with_host
+):
     """Test creating an entry with one server available."""
-
-    await async_process_ha_core_config(
-        hass,
-        {"internal_url": "http://example.local:8123"},
-    )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -217,15 +195,13 @@ async def test_single_available_server(hass, mock_plex_calls):
 
 
 async def test_multiple_servers_with_selection(
-    hass, mock_plex_calls, requests_mock, plextv_resources_base
+    hass,
+    mock_plex_calls,
+    requests_mock,
+    plextv_resources_base,
+    current_request_with_host,
 ):
     """Test creating an entry with multiple servers available."""
-
-    await async_process_ha_core_config(
-        hass,
-        {"internal_url": "http://example.local:8123"},
-    )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -273,15 +249,13 @@ async def test_multiple_servers_with_selection(
 
 
 async def test_adding_last_unconfigured_server(
-    hass, mock_plex_calls, requests_mock, plextv_resources_base
+    hass,
+    mock_plex_calls,
+    requests_mock,
+    plextv_resources_base,
+    current_request_with_host,
 ):
     """Test automatically adding last unconfigured server when multiple servers on account."""
-
-    await async_process_ha_core_config(
-        hass,
-        {"internal_url": "http://example.local:8123"},
-    )
-
     MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -331,15 +305,14 @@ async def test_adding_last_unconfigured_server(
 
 
 async def test_all_available_servers_configured(
-    hass, entry, requests_mock, plextv_account, plextv_resources_base
+    hass,
+    entry,
+    requests_mock,
+    plextv_account,
+    plextv_resources_base,
+    current_request_with_host,
 ):
     """Test when all available servers are already configured."""
-
-    await async_process_ha_core_config(
-        hass,
-        {"internal_url": "http://example.local:8123"},
-    )
-
     entry.add_to_hass(hass)
 
     MockConfigEntry(
@@ -470,14 +443,8 @@ async def test_option_flow_new_users_available(hass, entry, setup_plex_server):
         assert "[New]" in multiselect_defaults[user]
 
 
-async def test_external_timed_out(hass):
+async def test_external_timed_out(hass, current_request_with_host):
     """Test when external flow times out."""
-
-    await async_process_ha_core_config(
-        hass,
-        {"internal_url": "http://example.local:8123"},
-    )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -500,14 +467,8 @@ async def test_external_timed_out(hass):
         assert result["reason"] == "token_request_timeout"
 
 
-async def test_callback_view(hass, aiohttp_client):
+async def test_callback_view(hass, aiohttp_client, current_request_with_host):
     """Test callback view."""
-
-    await async_process_ha_core_config(
-        hass,
-        {"internal_url": "http://example.local:8123"},
-    )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -529,12 +490,8 @@ async def test_callback_view(hass, aiohttp_client):
         assert resp.status == 200
 
 
-async def test_manual_config(hass, mock_plex_calls):
+async def test_manual_config(hass, mock_plex_calls, current_request_with_host):
     """Test creating via manual configuration."""
-    await async_process_ha_core_config(
-        hass,
-        {"internal_url": "http://example.local:8123"},
-    )
 
     class WrongCertValidaitionException(requests.exceptions.SSLError):
         """Mock the exception showing an unmatched error."""
@@ -744,13 +701,11 @@ async def test_integration_discovery(hass):
     assert flow["step_id"] == "user"
 
 
-async def test_trigger_reauth(hass, entry, mock_plex_server, mock_websocket):
+async def test_trigger_reauth(
+    hass, entry, mock_plex_server, mock_websocket, current_request_with_host
+):
     """Test setup and reauthorization of a Plex token."""
     await async_setup_component(hass, "persistent_notification", {})
-    await async_process_ha_core_config(
-        hass,
-        {"internal_url": "http://example.local:8123"},
-    )
 
     assert entry.state == ENTRY_STATE_LOADED
 
@@ -791,3 +746,43 @@ async def test_trigger_reauth(hass, entry, mock_plex_server, mock_websocket):
     assert entry.data[CONF_SERVER_IDENTIFIER] == mock_plex_server.machine_identifier
     assert entry.data[PLEX_SERVER_CONFIG][CONF_URL] == PLEX_DIRECT_URL
     assert entry.data[PLEX_SERVER_CONFIG][CONF_TOKEN] == "BRAND_NEW_TOKEN"
+
+
+async def test_client_request_missing(hass):
+    """Test when client headers are not set properly."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    with patch("plexauth.PlexAuth.initiate_auth"), patch(
+        "plexauth.PlexAuth.token", return_value=None
+    ):
+        with pytest.raises(RuntimeError):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={}
+            )
+
+
+async def test_client_header_issues(hass, current_request_with_host):
+    """Test when client headers are not set properly."""
+
+    class MockRequest:
+        headers = {}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    with patch("plexauth.PlexAuth.initiate_auth"), patch(
+        "plexauth.PlexAuth.token", return_value=None
+    ), patch(
+        "homeassistant.components.http.current_request.get", return_value=MockRequest()
+    ):
+        with pytest.raises(RuntimeError):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={}
+            )

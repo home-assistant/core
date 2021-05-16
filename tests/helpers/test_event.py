@@ -2908,8 +2908,8 @@ async def test_periodic_task_entering_dst(hass):
     specific_runs = []
 
     now = dt_util.utcnow()
-    time_that_will_not_match_right_away = timezone.localize(
-        datetime(now.year + 1, 3, 25, 2, 31, 0)
+    time_that_will_not_match_right_away = datetime(
+        now.year + 1, 3, 25, 2, 31, 0, tzinfo=timezone
     )
 
     with patch(
@@ -2924,25 +2924,25 @@ async def test_periodic_task_entering_dst(hass):
         )
 
     async_fire_time_changed(
-        hass, timezone.localize(datetime(now.year + 1, 3, 25, 1, 50, 0, 999999))
+        hass, datetime(now.year + 1, 3, 25, 1, 50, 0, 999999, tzinfo=timezone)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
     async_fire_time_changed(
-        hass, timezone.localize(datetime(now.year + 1, 3, 25, 3, 50, 0, 999999))
+        hass, datetime(now.year + 1, 3, 25, 3, 50, 0, 999999, tzinfo=timezone)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
     async_fire_time_changed(
-        hass, timezone.localize(datetime(now.year + 1, 3, 26, 1, 50, 0, 999999))
+        hass, datetime(now.year + 1, 3, 26, 1, 50, 0, 999999, tzinfo=timezone)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
     async_fire_time_changed(
-        hass, timezone.localize(datetime(now.year + 1, 3, 26, 2, 50, 0, 999999))
+        hass, datetime(now.year + 1, 3, 26, 2, 50, 0, 999999, tzinfo=timezone)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
@@ -2958,8 +2958,8 @@ async def test_periodic_task_leaving_dst(hass):
 
     now = dt_util.utcnow()
 
-    time_that_will_not_match_right_away = timezone.localize(
-        datetime(now.year + 1, 10, 28, 2, 28, 0), is_dst=True
+    time_that_will_not_match_right_away = datetime(
+        now.year + 1, 10, 28, 2, 28, 0, tzinfo=timezone, fold=1
     )
 
     with patch(
@@ -2974,46 +2974,33 @@ async def test_periodic_task_leaving_dst(hass):
         )
 
     async_fire_time_changed(
-        hass,
-        timezone.localize(
-            datetime(now.year + 1, 10, 28, 2, 5, 0, 999999), is_dst=False
-        ),
+        hass, datetime(now.year + 1, 10, 28, 2, 5, 0, 999999, tzinfo=timezone, fold=0)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
     async_fire_time_changed(
-        hass,
-        timezone.localize(
-            datetime(now.year + 1, 10, 28, 2, 55, 0, 999999), is_dst=False
-        ),
+        hass, datetime(now.year + 1, 10, 28, 2, 55, 0, 999999, tzinfo=timezone, fold=0)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
     async_fire_time_changed(
         hass,
-        timezone.localize(
-            datetime(now.year + 2, 10, 28, 2, 45, 0, 999999), is_dst=True
-        ),
+        datetime(now.year + 2, 10, 28, 2, 45, 0, 999999, tzinfo=timezone, fold=1),
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
     async_fire_time_changed(
         hass,
-        timezone.localize(
-            datetime(now.year + 2, 10, 28, 2, 55, 0, 999999), is_dst=True
-        ),
+        datetime(now.year + 2, 10, 28, 2, 55, 0, 999999, tzinfo=timezone, fold=1),
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
     async_fire_time_changed(
-        hass,
-        timezone.localize(
-            datetime(now.year + 2, 10, 28, 2, 55, 0, 999999), is_dst=True
-        ),
+        hass, datetime(now.year + 2, 10, 28, 2, 55, 0, 999999, tzinfo=timezone, fold=1)
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
@@ -3224,7 +3211,7 @@ async def test_async_track_point_in_time_cancel(hass):
     await asyncio.sleep(0.2)
 
     assert len(times) == 1
-    assert times[0].tzinfo.zone == "US/Hawaii"
+    assert "US/Hawaii" in str(times[0].tzinfo)
 
 
 async def test_async_track_entity_registry_updated_event(hass):

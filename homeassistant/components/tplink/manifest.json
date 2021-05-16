@@ -5,5 +5,67 @@
   "documentation": "https://www.home-assistant.io/integrations/tplink",
   "requirements": ["pyHS100==0.3.5.2"],
   "codeowners": ["@rytilahti", "@thegardenmonkey"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "dhcp": [
+    {
+      "hostname": "hs*",
+      "macaddress": "1C3BF3*"
+    },
+    {
+      "hostname": "hs*",
+      "macaddress": "50C7BF*"
+    },
+    {
+      "hostname": "hs*",
+      "macaddress": "68FF7B*"
+    },
+    {
+      "hostname": "hs*",
+      "macaddress": "98DAC4*"
+    },
+    {
+      "hostname": "hs*",
+      "macaddress": "B09575*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "1C3BF3*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "50C7BF*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "68FF7B*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "98DAC4*"
+    },
+    {
+      "hostname": "k[lp]*",
+      "macaddress": "B09575*"
+    },
+    {
+      "hostname": "lb*",
+      "macaddress": "1C3BF3*"
+    },
+    {
+      "hostname": "lb*",
+      "macaddress": "50C7BF*"
+    },
+    {
+      "hostname": "lb*",
+      "macaddress": "68FF7B*"
+    },
+    {
+      "hostname": "lb*",
+      "macaddress": "98DAC4*"
+    },
+    {
+      "hostname": "lb*",
+      "macaddress": "B09575*"
+    }     
+  ]
 }

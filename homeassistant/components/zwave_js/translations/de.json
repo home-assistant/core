@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "addon_get_discovery_info_failed": "Z-Wave-JS-Add-on-Discovery-Informationen konnten nicht abgerufen werden.",
             "addon_info_failed": "Fehler beim Abrufen von Z-Wave JS Add-on Informationen.",
             "addon_install_failed": "Installation des Z-Wave JS Add-Ons fehlgeschlagen.",
             "addon_set_config_failed": "Setzen der Z-Wave JS Konfiguration fehlgeschlagen",
@@ -47,11 +48,6 @@
             },
             "start_addon": {
                 "title": "Z-Wave JS Add-on wird gestartet."
-            },
-            "user": {
-                "data": {
-                    "url": "URL"
-                }
             }
         }
     },

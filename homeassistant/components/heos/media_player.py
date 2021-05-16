@@ -31,6 +31,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util.dt import utcnow
 
 from .const import DATA_SOURCE_MANAGER, DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_UPDATED
@@ -253,7 +254,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         return self._player.available
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Get attributes about the device."""
         return {
             "identifiers": {(HEOS_DOMAIN, self._player.player_id)},

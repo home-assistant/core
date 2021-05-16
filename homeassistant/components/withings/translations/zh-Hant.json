@@ -12,7 +12,7 @@
         "error": {
             "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
-        "flow_title": "Withings\uff1a{profile}",
+        "flow_title": "{profile}",
         "step": {
             "pick_implementation": {
                 "title": "\u9078\u64c7\u9a57\u8b49\u6a21\u5f0f"

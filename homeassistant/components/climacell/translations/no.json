@@ -23,7 +23,6 @@
         "step": {
             "init": {
                 "data": {
-                    "forecast_types": "Prognosetype(r)",
                     "timestep": "Min. mellom NowCast prognoser"
                 },
                 "description": "Hvis du velger \u00e5 aktivere \u00abnowcast\u00bb -varselenheten, kan du konfigurere antall minutter mellom hver prognose. Antall angitte prognoser avhenger av antall minutter som er valgt mellom prognosene.",
