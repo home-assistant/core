@@ -40,9 +40,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         data_sonos = hass.data[DATA_SONOS]
 
         for alarm in speaker.available_alarms:
+            # pylint: disable=protected-access
             if alarm._alarm_id not in data_sonos.alarms:
                 entity = SonosAlarmEntity(alarm, data_sonos, speaker)
                 async_add_entities([entity])
+                # pylint: disable=protected-access
                 data_sonos.alarms.append(alarm._alarm_id)
                 config_entry.async_on_unload(
                     async_dispatcher_connect(
@@ -90,6 +92,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     @property
     def alarm_id(self):
         """Return the ID of the alarm."""
+        # pylint: disable=protected-access
         return self.alarm._alarm_id
 
     @property
@@ -113,10 +116,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
 
     def _get_current_alarm_instance(self):
         """Retrieve the current alarms and return if the alarm is available or not."""
-        if self.alarm in self.speaker.available_alarms:
-            return True
-        else:
-            return False
+        return self.alarm in self.speaker.available_alarms
 
     async def async_remove_if_not_available(self):
         """Remove alarm entity if not available."""
@@ -187,22 +187,14 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     def _is_today(self):
         recurrence = self.alarm.recurrence
         timestr = int(datetime.datetime.today().strftime("%w"))
-        if recurrence[:2] == "ON":
-            if str(timestr) in recurrence:
-                return True
-            else:
-                return False
-        else:
-            if recurrence == "DAILY":
-                return True
-            elif recurrence == "ONCE":
-                return True
-            elif recurrence == "WEEKDAYS" and int(timestr) not in [0, 7]:
-                return True
-            elif recurrence == "WEEKENDS" and int(timestr) not in range(1, 7):
-                return True
-            else:
-                return False
+        return (
+            bool(recurrence[:2] == "ON" and str(timestr) in recurrence)
+            or bool(recurrence == "DAILY")
+            or bool(recurrence == "WEEKDAYS" and int(timestr) not in [0, 7])
+            or bool(recurrence == "ONCE")
+            or bool(recurrence == "WEEKDAYS" and int(timestr) not in [0, 7])
+            or bool(recurrence == "WEEKENDS" and int(timestr) not in range(1, 7))
+        )
 
     @property
     def is_on(self):

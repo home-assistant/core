@@ -203,8 +203,8 @@ class SonosSpeaker:
             if alarm.zone.uid == self.soco.uid:
                 self.available_alarms.add(alarm)
                 dispatcher_send(self.hass, SONOS_CREATE_ALARM, self)
-        else:
-            self._platforms_ready.update({SWITCH_DOMAIN})
+
+        self._platforms_ready.update({SWITCH_DOMAIN})
 
         dispatcher_send(self.hass, SONOS_CREATE_MEDIA_PLAYER, self)
 
