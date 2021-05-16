@@ -127,6 +127,15 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
         return self._media_player_status.position
 
     @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid.
+
+        Returns value from homeassistant.util.dt.utcnow().
+        """
+        # TODO: Implement
+        return None
+
+    @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         if (
@@ -211,3 +220,8 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
         """Send seek command."""
         bridge: Bridge = self.coordinator.data
         await bridge.async_update_media("seek", {"value": position})
+
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
+        # TODO: Implement
+        _LOGGER.warn(media_type, media_id, **kwargs)
