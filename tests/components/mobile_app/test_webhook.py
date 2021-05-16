@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.camera import SUPPORT_STREAM as CAMERA_SUPPORT_STREAM
-from homeassistant.components.mobile_app.const import CONF_SECRET
+from homeassistant.components.mobile_app.const import CONF_SECRET, DATA_DEVICES, DOMAIN
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
@@ -121,8 +121,13 @@ async def test_webhook_handle_fire_event(hass, create_registrations, webhook_cli
     json = await resp.json()
     assert json == {}
 
+    device_id = hass.data[DOMAIN][DATA_DEVICES][
+        create_registrations[1]["webhook_id"]
+    ].id
+
     assert len(events) == 1
     assert events[0].data["hello"] == "yo world"
+    assert events[0].data["device_id"] == device_id
 
 
 async def test_webhook_update_registration(webhook_client, authed_api_client):
@@ -470,6 +475,10 @@ async def test_webhook_handle_scan_tag(hass, create_registrations, webhook_clien
     json = await resp.json()
     assert json == {}
 
+    device_id = hass.data[DOMAIN][DATA_DEVICES][
+        create_registrations[1]["webhook_id"]
+    ].id
+
     assert len(events) == 1
     assert events[0].data["tag_id"] == "mock-tag-id"
-    assert events[0].data["device_id"] == "mock-device-id"
+    assert events[0].data["device_id"] == device_id

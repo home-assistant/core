@@ -36,10 +36,15 @@ async def test_action(hass, push_registration):
                         "event_type": "test_notify",
                     },
                     "action": [
-                        {"variables": {"name": "Paulus"}},
+                        {
+                            "variables": {
+                                "name": "Paulus",
+                                "id": hass.data[DOMAIN]["devices"][webhook_id].id,
+                            }
+                        },
                         {
                             "domain": DOMAIN,
-                            "device_id": hass.data[DOMAIN]["devices"][webhook_id].id,
+                            "device_id": "{{ id }}",
                             "type": "notify",
                             "message": "Hello {{ name }}",
                         },

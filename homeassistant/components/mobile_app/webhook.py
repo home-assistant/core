@@ -143,6 +143,14 @@ def validate_schema(schema):
     return wrapper
 
 
+async def _device_id_from_config_entry(hass, config_entry):
+    device_registry = await dr.async_get_registry(hass)
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+    for device in devices:
+        return device.id
+    return None
+
+
 async def handle_webhook(
     hass: HomeAssistant, webhook_id: str, request: Request
 ) -> Response:
@@ -246,9 +254,12 @@ async def webhook_call_service(hass, config_entry, data):
 async def webhook_fire_event(hass, config_entry, data):
     """Handle a fire event webhook."""
     event_type = data[ATTR_EVENT_TYPE]
+    event_data = data[ATTR_EVENT_DATA]
+    event_data["device_id"] = await _device_id_from_config_entry(hass, config_entry)
+
     hass.bus.async_fire(
         event_type,
-        data[ATTR_EVENT_DATA],
+        event_data,
         EventOrigin.remote,
         context=registration_context(config_entry.data),
     )
@@ -562,7 +573,7 @@ async def webhook_scan_tag(hass, config_entry, data):
     await tag.async_scan_tag(
         hass,
         data["tag_id"],
-        config_entry.data[ATTR_DEVICE_ID],
+        await _device_id_from_config_entry(hass, config_entry),
         registration_context(config_entry.data),
     )
     return empty_okay_response()
