@@ -11,6 +11,7 @@ from typing import Any, Callable
 import urllib.parse
 
 import async_timeout
+from pysonos.alarms import Alarm, get_alarms
 from pysonos.core import MUSIC_SRC_LINE_IN, MUSIC_SRC_RADIO, MUSIC_SRC_TV, SoCo
 from pysonos.data_structures import DidlAudioBroadcast
 from pysonos.events_base import Event as SonosEvent, SubscriptionBase
@@ -21,6 +22,7 @@ from pysonos.snapshot import Snapshot
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as ent_reg
 from homeassistant.helpers.dispatcher import (
@@ -37,6 +39,8 @@ from .const import (
     PLATFORMS,
     SCAN_INTERVAL,
     SEEN_EXPIRE_TIME,
+    SONOS_ALARM_UPDATE,
+    SONOS_CREATE_ALARM,
     SONOS_CREATE_BATTERY,
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_ENTITY_CREATED,
@@ -153,6 +157,8 @@ class SonosSpeaker:
         self._last_battery_event: datetime.datetime | None = None
         self._battery_poll_timer: Callable | None = None
 
+        self.available_alarms: list[Alarm] | None = None
+
         self.volume: int | None = None
         self.muted: bool | None = None
         self.night_mode: bool | None = None
@@ -192,12 +198,18 @@ class SonosSpeaker:
         else:
             self._platforms_ready.update({BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN})
 
+        if alarm_info := get_alarms(self.soco):
+            self.available_alarms = alarm_info
+            dispatcher_send(self.hass, SONOS_CREATE_ALARM, self)
+        else:
+            self._platforms_ready.update({SWITCH_DOMAIN})
+
         dispatcher_send(self.hass, SONOS_CREATE_MEDIA_PLAYER, self)
 
     async def async_handle_new_entity(self, entity_type: str) -> None:
         """Listen to new entities to trigger first subscription."""
         self._platforms_ready.add(entity_type)
-        if self._platforms_ready == PLATFORMS:
+        if self._platforms_ready == PLATFORMS and not self._subscriptions:
             await self.async_subscribe()
             self._is_ready = True
 
@@ -242,6 +254,7 @@ class SonosSpeaker:
                 self._subscribe(
                     self.soco.deviceProperties, self.async_dispatch_properties
                 ),
+                self._subscribe(self.soco.alarmClock, self.async_dispatch_alarms),
             )
             return True
         except SoCoException as ex:
@@ -263,6 +276,11 @@ class SonosSpeaker:
     def async_dispatch_properties(self, event: SonosEvent | None = None) -> None:
         """Update properties from event."""
         self.hass.async_create_task(self.async_update_device_properties(event))
+
+    @callback
+    def async_dispatch_alarms(self, event: SonosEvent | None = None) -> None:
+        """Update properties from event."""
+        self.hass.async_create_task(self.async_update_alarms(event))
 
     @callback
     def async_dispatch_groups(self, event: SonosEvent | None = None) -> None:
@@ -345,6 +363,23 @@ class SonosSpeaker:
             battery_dict = dict(x.split(":") for x in more_info.split(","))
             await self.async_update_battery_info(battery_dict)
 
+        self.async_write_entity_states()
+
+    async def async_update_alarms(self, event: SonosEvent = None) -> None:
+        """Update device properties using the provided SonosEvent."""
+        if event is None:
+            return
+
+        new_available_alarms = await self.hass.async_add_executor_job(
+            get_alarms, self.soco
+        )
+
+        if new_available_alarms != self.available_alarms:
+            self.available_alarms = new_available_alarms
+            self._platforms_ready.update({SWITCH_DOMAIN})
+            dispatcher_send(self.hass, SONOS_CREATE_ALARM, self)
+
+        async_dispatcher_send(self.hass, SONOS_ALARM_UPDATE, self)
         self.async_write_entity_states()
 
     async def async_update_battery_info(self, battery_dict: dict[str, Any]) -> None:

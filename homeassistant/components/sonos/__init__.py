@@ -30,6 +30,7 @@ from .const import (
     DISCOVERY_INTERVAL,
     DOMAIN,
     PLATFORMS,
+    SONOS_ALARM_UPDATE,
     SONOS_GROUP_UPDATE,
     SONOS_SEEN,
 )
@@ -70,6 +71,7 @@ class SonosData:
         # OrderedDict behavior used by SonosFavorites
         self.discovered: OrderedDict[str, SonosSpeaker] = OrderedDict()
         self.favorites: dict[str, SonosFavorites] = {}
+        self.alarms: list[int] = []
         self.topology_condition = asyncio.Condition()
         self.discovery_thread = None
         self.hosts_heartbeat = None
@@ -174,6 +176,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def _async_signal_update_groups(event):
         async_dispatcher_send(hass, SONOS_GROUP_UPDATE)
 
+    @callback
+    def _async_signal_update_alarms(event):
+        async_dispatcher_send(hass, SONOS_ALARM_UPDATE)
+
     async def setup_platforms_and_discovery():
         await asyncio.gather(
             *[
@@ -187,6 +193,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.async_on_unload(
             hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START, _async_signal_update_groups
+            )
+        )
+        entry.async_on_unload(
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, _async_signal_update_alarms
             )
         )
         _LOGGER.debug("Adding discovery job")
