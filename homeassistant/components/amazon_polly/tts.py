@@ -85,7 +85,7 @@ def get_engine(
 
     config[CONF_SAMPLE_RATE] = sample_rate
 
-    profile = config.get(CONF_PROFILE_NAME)
+    profile: str | None = config.get(CONF_PROFILE_NAME)
 
     if profile is not None:
         boto3.setup_default_session(profile_name=profile)
@@ -107,16 +107,20 @@ def get_engine(
 
     polly_client = boto3.client("polly", **aws_config)
 
-    supported_languages = []
+    supported_languages: list[str] = []
 
-    all_voices = {}
+    all_voices: dict[str, dict[str, str]] = {}
 
     all_voices_req = polly_client.describe_voices()
 
-    for voice in all_voices_req.get("Voices"):
-        all_voices[voice.get("Id")] = voice
-        if voice.get("LanguageCode") not in supported_languages:
-            supported_languages.append(voice.get("LanguageCode"))
+    for voice in all_voices_req.get("Voices", []):
+        voice_id: str | None = voice.get("Id")
+        if voice_id is None:
+            continue
+        all_voices[voice_id] = voice
+        language_code: str | None = voice.get("LanguageCode")
+        if language_code is not None and language_code not in supported_languages:
+            supported_languages.append(language_code)
 
     return AmazonPollyProvider(polly_client, config, supported_languages, all_voices)
 
@@ -145,9 +149,9 @@ class AmazonPollyProvider(Provider):
         return self.supported_langs
 
     @property
-    def default_language(self) -> str:
+    def default_language(self) -> str | None:
         """Return the default language."""
-        return self.all_voices[self.default_voice]["LanguageCode"]
+        return self.all_voices.get(self.default_voice, {}).get("LanguageCode")
 
     @property
     def default_options(self) -> dict[str, str]:
@@ -160,10 +164,15 @@ class AmazonPollyProvider(Provider):
         return [CONF_VOICE]
 
     def get_tts_audio(
-        self, message: str, language: str, options: dict[str, str] | None = None
-    ) -> TtsAudioType | tuple[None, None]:
+        self,
+        message: str,
+        language: str | None = None,
+        options: dict[str, str] | None = None,
+    ) -> TtsAudioType:
         """Request TTS file from Polly."""
-        assert options is not None
+        if options is None or language is None:
+            _LOGGER.debug("language and/or options were missing")
+            return None, None
         voice_id = options.get(CONF_VOICE, self.default_voice)
         voice_in_dict = self.all_voices[voice_id]
         if language != voice_in_dict.get("LanguageCode"):
