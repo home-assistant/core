@@ -1,6 +1,7 @@
 """Support for WeMo device discovery."""
+from __future__ import annotations
+
 import logging
-import typing
 
 import pywemo
 import voluptuous as vol
@@ -183,7 +184,7 @@ class WemoDiscovery:
         self,
         hass: HomeAssistant,
         wemo_dispatcher: WemoDispatcher,
-        static_config: typing.Tuple[str, str],
+        static_config: list[tuple[[str, str | None]],
     ) -> None:
         """Initialize the WemoDiscovery."""
         self._hass = hass
