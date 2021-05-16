@@ -108,7 +108,7 @@ class HueBridge:
         if bridge.sensors is not None:
             self.sensor_manager = SensorManager(self)
 
-        hass.data.setdefault(DOMAIN, {})[self.config_entry.entry_id] = bridge
+        hass.data.setdefault(DOMAIN, {})[self.config_entry.entry_id] = self
         hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
         self.parallel_updates_semaphore = asyncio.Semaphore(
