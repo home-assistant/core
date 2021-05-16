@@ -33,7 +33,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.json import load_json, save_json
 
 from .const import (  # noqa: F401
-    _CONFIGURING,
     ATTR_ACCESS_TOKEN,
     ATTR_LAST_SAVED_AT,
     ATTR_REFRESH_TOKEN,
@@ -53,6 +52,8 @@ from .const import (  # noqa: F401
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
+
+_CONFIGURING: dict = {}
 
 PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
     {
@@ -395,19 +396,16 @@ class FitbitSensor(SensorEntity):
         return None
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
-        attrs: dict[str, str] = {}
+        attrs: dict[str, str | None] = {}
 
         attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
 
         if self.extra is not None:
-            extra_device_version = self.extra.get("deviceVersion")
-            if extra_device_version is not None:
-                attrs["model"] = extra_device_version
+            attrs["model"] = self.extra.get("deviceVersion")
             extra_type = self.extra.get("type")
-            if extra_type is not None:
-                attrs["type"] = extra_type.lower()
+            attrs["type"] = extra_type.lower() if extra_type is not None else None
 
         return attrs
 

@@ -15,11 +15,19 @@ from homeassistant.const import (
     TIME_MINUTES,
 )
 
-_CONFIGURING: Final[dict] = {}
-
 ATTR_ACCESS_TOKEN: Final = "access_token"
 ATTR_REFRESH_TOKEN: Final = "refresh_token"
 ATTR_LAST_SAVED_AT: Final = "last_saved_at"
+
+ATTR_DURATION: Final = "duration"
+ATTR_DISTANCE: Final = "distance"
+ATTR_ELEVATION: Final = "elevation"
+ATTR_HEIGHT: Final = "height"
+ATTR_WEIGHT: Final = "weight"
+ATTR_BODY: Final = "body"
+ATTR_LIQUIDS: Final = "liquids"
+ATTR_BLOOD_GLUCOSE: Final = "blood glucose"
+ATTR_BATTERY: Final = "battery"
 
 CONF_MONITORED_RESOURCES: Final = "monitored_resources"
 CONF_CLOCK_FORMAT: Final = "clock_format"
@@ -28,7 +36,7 @@ ATTRIBUTION: Final = "Data provided by Fitbit.com"
 FITBIT_AUTH_CALLBACK_PATH: Final = "/api/fitbit/callback"
 FITBIT_AUTH_START: Final = "/api/fitbit"
 FITBIT_CONFIG_FILE: Final = "fitbit.conf"
-FITBIT_DEFAULT_RESOURCES: Final = ["activities/steps"]
+FITBIT_DEFAULT_RESOURCES: Final[list[str]] = ["activities/steps"]
 
 SCAN_INTERVAL: Final = datetime.timedelta(minutes=30)
 
@@ -101,37 +109,37 @@ FITBIT_RESOURCES_LIST: Final[dict[str, tuple[str, str | None, str | None]]] = {
 
 FITBIT_MEASUREMENTS: Final[dict[str, dict[str, str]]] = {
     "en_US": {
-        "duration": TIME_MILLISECONDS,
-        "distance": "mi",
-        "elevation": LENGTH_FEET,
-        "height": "in",
-        "weight": "lbs",
-        "body": "in",
-        "liquids": "fl. oz.",
-        "blood glucose": f"{MASS_MILLIGRAMS}/dL",
-        "battery": "",
+        ATTR_DURATION: TIME_MILLISECONDS,
+        ATTR_DISTANCE: "mi",
+        ATTR_ELEVATION: LENGTH_FEET,
+        ATTR_HEIGHT: "in",
+        ATTR_WEIGHT: "lbs",
+        ATTR_BODY: "in",
+        ATTR_LIQUIDS: "fl. oz.",
+        ATTR_BLOOD_GLUCOSE: f"{MASS_MILLIGRAMS}/dL",
+        ATTR_BATTERY: "",
     },
     "en_GB": {
-        "duration": TIME_MILLISECONDS,
-        "distance": "kilometers",
-        "elevation": "meters",
-        "height": "centimeters",
-        "weight": "stone",
-        "body": "centimeters",
-        "liquids": "milliliters",
-        "blood glucose": "mmol/L",
-        "battery": "",
+        ATTR_DURATION: TIME_MILLISECONDS,
+        ATTR_DISTANCE: "kilometers",
+        ATTR_ELEVATION: "meters",
+        ATTR_HEIGHT: "centimeters",
+        ATTR_WEIGHT: "stone",
+        ATTR_BODY: "centimeters",
+        ATTR_LIQUIDS: "milliliters",
+        ATTR_BLOOD_GLUCOSE: "mmol/L",
+        ATTR_BATTERY: "",
     },
     "metric": {
-        "duration": TIME_MILLISECONDS,
-        "distance": "kilometers",
-        "elevation": "meters",
-        "height": "centimeters",
-        "weight": MASS_KILOGRAMS,
-        "body": "centimeters",
-        "liquids": "milliliters",
-        "blood glucose": "mmol/L",
-        "battery": "",
+        ATTR_DURATION: TIME_MILLISECONDS,
+        ATTR_DISTANCE: "kilometers",
+        ATTR_ELEVATION: "meters",
+        ATTR_HEIGHT: "centimeters",
+        ATTR_WEIGHT: MASS_KILOGRAMS,
+        ATTR_BODY: "centimeters",
+        ATTR_LIQUIDS: "milliliters",
+        ATTR_BLOOD_GLUCOSE: "mmol/L",
+        ATTR_BATTERY: "",
     },
 }
 
