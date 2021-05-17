@@ -6,6 +6,8 @@ turn_on:
     Turn on one or more lights and adjust properties of the light, even when
     they are turned on already.
   target:
+    entity:
+      domain: light
   fields:
     transition:
       name: Transition
@@ -194,8 +196,7 @@ turn_on:
             - "yellowgreen"
     hs_color:
       name: Hue/Sat color
-      description:
-        Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
+      description: Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
       advanced: true
       example: "[300, 70]"
       selector:
@@ -258,8 +259,8 @@ turn_on:
           max: 255
     brightness_step_pct:
       name: Brightness step
-      description:
-        Change brightness by a percentage. Should be between -100..100.
+      description: Change brightness by a percentage. Should be between -100..100.
+      example: -10
       selector:
         number:
           min: -100
@@ -295,6 +296,8 @@ turn_off:
   name: Turn off
   description: Turns off one or more lights.
   target:
+    entity:
+      domain: light
   fields:
     transition:
       name: Transition
@@ -320,6 +323,8 @@ toggle:
     Toggles one or more lights, from on to off, or, off to on, based on their
     current state.
   target:
+    entity:
+      domain: light
   fields:
     transition:
       name: Transition
@@ -494,8 +499,7 @@ toggle:
             - "yellowgreen"
     hs_color:
       name: Hue/Sat color
-      description:
-        Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
+      description: Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
       advanced: true
       example: "[300, 70]"
       selector:
@@ -536,8 +540,7 @@ toggle:
           max: 255
     brightness:
       name: Brightness value
-      description:
-        Number indicating brightness, where 0 turns the light
+      description: Number indicating brightness, where 0 turns the light
         off, 1 is the minimum brightness and 255 is the maximum brightness
         supported by the light.
       advanced: true
