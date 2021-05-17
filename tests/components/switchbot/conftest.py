@@ -2,7 +2,24 @@
 from unittest.mock import MagicMock, patch
 
 from pytest import fixture
-from switchbot import SwitchbotDevice
+
+
+# Mock pyswitchbot
+class SwitchbotDevice:
+    """Mock."""
+
+    def __init__(self, mac, password=None) -> None:
+        """Init moc class."""
+        self._password = password
+        self._mac = mac
+
+    def _connect(self):
+        """Mock class."""
+        return bool(self._mac)
+
+    def _disconnect(self):
+        """Mock class."""
+        return bool(self._mac)
 
 
 @fixture
