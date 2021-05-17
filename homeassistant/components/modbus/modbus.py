@@ -327,26 +327,6 @@ class ModbusHub:
                 self._pymodbus_call, unit, address, value, use_call
             )
 
-    async def async_read_coils(self, unit, address, count):
-        """Read coils."""
-        return await self.async_pymodbus_call(unit, address, count, CALL_TYPE_COIL)
-
-    async def async_read_discrete_inputs(self, unit, address, count):
-        """Read discrete inputs."""
-        return await self.async_pymodbus_call(unit, address, count, CALL_TYPE_DISCRETE)
-
-    async def async_read_input_registers(self, unit, address, count):
-        """Read input registers."""
-        return await self.async_pymodbus_call(
-            unit, address, count, CALL_TYPE_REGISTER_INPUT
-        )
-
-    async def async_read_holding_registers(self, unit, address, count):
-        """Read holding registers."""
-        return await self.async_pymodbus_call(
-            unit, address, count, CALL_TYPE_REGISTER_HOLDING
-        )
-
     async def async_write_coil(self, unit, address, value) -> bool:
         """Write coil."""
         return await self.async_pymodbus_call(
