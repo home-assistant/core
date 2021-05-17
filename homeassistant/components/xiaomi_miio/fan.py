@@ -830,7 +830,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
 
         except DeviceException as ex:
             self._failure += 1
-            if self._failures < self._allowed_failures:
+            if self._failure < self._allowed_failures:
                 _LOGGER.info(
                     "Got exception while fetching the state: %s, failure: %d",
                     ex,
