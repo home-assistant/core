@@ -295,7 +295,7 @@ class FlowDispatcher:
     def create(self, flow: ZeroconfFlow) -> None:
         """Create and add or queue a flow."""
         if self.started:
-            self.hass.add_job(self._init_flow(flow))  # type: ignore
+            self.hass.add_job(self._init_flow(flow))  # type: ignore[arg-type]
         else:
             self.pending_flows.append(flow)
 
