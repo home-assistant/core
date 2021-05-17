@@ -28,7 +28,7 @@ def switchbot_config_flow(hass):
     with patch.object(SwitchbotDevice, "_connect", return_value=True), patch(
         "homeassistant.components.switchbot.config_flow.SwitchbotDevice"
     ) as mock_switchbot:
-        instance = mock_switchbot.return_value = SwitchbotDevice(mac="test")
+        instance = mock_switchbot.return_value
 
         # pylint: disable=protected-access
         instance._connect = MagicMock(return_value=True)
