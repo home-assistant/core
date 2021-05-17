@@ -120,7 +120,7 @@ relays:
         text:
     state:
       name: State
-      description: Relays states as string (1=on, 2=off, t=toggle, -=nochange)
+      description: Relays states as string (1=on, 2=off, t=toggle, -=no change)
       required: true
       example: "t---001-"
       selector:
@@ -183,11 +183,7 @@ var_abs:
       name: Variable
       description: Variable or setpoint name
       required: true
-<<<<<<< HEAD
       default: native
-=======
-      default: NATIVE
->>>>>>> 03b128d982 (Wrap up selectors)
       selector:
         select:
           options:
@@ -353,12 +349,8 @@ var_rel:
           max: 100000
     unit_of_measurement:
       name: Unit of measurement
-      description: Unit of value
-<<<<<<< HEAD
+      description: Unit of values
       default: native
-=======
-      default: NATIVE
->>>>>>> 03b128d982 (Wrap up selectors)
       selector:
         select:
           options:
@@ -388,11 +380,7 @@ var_rel:
     value_reference:
       name: Reference value
       description: Reference value for setpoint and threshold
-<<<<<<< HEAD
       default: current
-=======
-      default: CURRENT
->>>>>>> 03b128d982 (Wrap up selectors)
       selector:
         select:
           options:
@@ -462,11 +450,7 @@ send_keys:
     state:
       name: State
       description: "Key state upon sending (must be hit for deferred)"
-<<<<<<< HEAD
       default: hit
-=======
-      default: HIT
->>>>>>> 03b128d982 (Wrap up selectors)
       selector:
         select:
           options:
@@ -485,11 +469,7 @@ send_keys:
     time_unit:
       name: Time unit
       description: Time unit of send delay.
-<<<<<<< HEAD
       default: s
-=======
-      default: S
->>>>>>> 03b128d982 (Wrap up selectors)
       selector:
         select:
           options:
@@ -544,11 +524,7 @@ lock_keys:
     time_unit:
       name: Time unit
       description: Time unit of lock interval.
-<<<<<<< HEAD
       default: s
-=======
-      default: S
->>>>>>> 03b128d982 (Wrap up selectors)
       selector:
         select:
           options:

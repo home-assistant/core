@@ -230,7 +230,7 @@ turn_on:
     brightness:
       name: Brightness value
       description:
-        Number between 0..255 indicating brightness, where 0 turns the light
+        Number indicating brightness, where 0 turns the light
         off, 1 is the minimum brightness and 255 is the maximum brightness
         supported by the light.
       advanced: true
@@ -241,7 +241,7 @@ turn_on:
     brightness_pct:
       name: Brightness
       description:
-        Number between 0..100 indicating percentage of full brightness, where 0
+        Number indicating percentage of full brightness, where 0
         turns the light off, 1 is the minimum brightness and 100 is the maximum
         brightness supported by the light.
       selector:
@@ -251,7 +251,7 @@ turn_on:
           unit_of_measurement: "%"
     brightness_step:
       name: Brightness step value
-      description: Change brightness by an amount. Should be between -255..255.
+      description: Change brightness by an amount.
       advanced: true
       selector:
         number:
@@ -259,7 +259,7 @@ turn_on:
           max: 255
     brightness_step_pct:
       name: Brightness step
-      description: Change brightness by a percentage. Should be between -100..100.
+      description: Change brightness by a percentage.
       example: -10
       selector:
         number:
@@ -275,7 +275,7 @@ turn_on:
         text:
     flash:
       name: Flash
-      description: If the light should flash. Valid values are short and long.
+      description: If the light should flash.
       advanced: true
       selector:
         select:
@@ -309,7 +309,7 @@ turn_off:
           unit_of_measurement: seconds
     flash:
       name: Flash
-      description: If the light should flash. Valid values are short and long.
+      description: If the light should flash.
       advanced: true
       selector:
         select:
@@ -551,7 +551,7 @@ toggle:
     brightness_pct:
       name: Brightness
       description:
-        Number between 0..100 indicating percentage of full brightness, where 0
+        Number indicating percentage of full brightness, where 0
         turns the light off, 1 is the minimum brightness and 100 is the maximum
         brightness supported by the light.
       selector:
@@ -568,7 +568,7 @@ toggle:
         text:
     flash:
       name: Flash
-      description: If the light should flash. Valid values are short and long.
+      description: If the light should flash.
       advanced: true
       selector:
         select:
