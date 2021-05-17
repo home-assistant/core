@@ -41,7 +41,6 @@ async def test_create_auroradevice(hass):
 
     info = device.device_info
     assert info == {
-        "config_entry_id": "13579",
         "identifiers": {(DOMAIN, "65432")},
         "manufacturer": MANUFACTURER,
         "model": "AAYYBB",
