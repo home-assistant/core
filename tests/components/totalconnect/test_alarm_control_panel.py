@@ -9,10 +9,16 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_DISARM,
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
+    STATE_ALARM_DISARMING,
+    STATE_ALARM_TRIGGERED,
 )
 from homeassistant.exceptions import HomeAssistantError
 
@@ -21,10 +27,19 @@ from .common import (
     RESPONSE_ARM_FAILURE,
     RESPONSE_ARM_SUCCESS,
     RESPONSE_ARMED_AWAY,
+    RESPONSE_ARMED_CUSTOM,
+    RESPONSE_ARMED_NIGHT,
     RESPONSE_ARMED_STAY,
+    RESPONSE_ARMING,
     RESPONSE_DISARM_FAILURE,
     RESPONSE_DISARM_SUCCESS,
     RESPONSE_DISARMED,
+    RESPONSE_DISARMING,
+    RESPONSE_SUCCESS,
+    RESPONSE_TRIGGERED_CARBON_MONOXIDE,
+    RESPONSE_TRIGGERED_FIRE,
+    RESPONSE_TRIGGERED_POLICE,
+    RESPONSE_UNKNOWN,
     RESPONSE_USER_CODE_INVALID,
     setup_platform,
 )
@@ -197,3 +212,135 @@ async def test_disarm_invalid_usercode(hass):
             await hass.async_block_till_done()
         assert f"{err.value}" == "TotalConnect failed to disarm test."
         assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_AWAY
+
+
+async def test_arm_night_success(hass):
+    """Test arm night method success."""
+    responses = [RESPONSE_DISARMED, RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_NIGHT]
+    with patch(
+        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        side_effect=responses,
+    ):
+        await setup_platform(hass, ALARM_DOMAIN)
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
+
+        await hass.services.async_call(
+            ALARM_DOMAIN, SERVICE_ALARM_ARM_NIGHT, DATA, blocking=True
+        )
+
+        await hass.async_block_till_done()
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_NIGHT
+
+
+async def test_arm_night_failure(hass):
+    """Test arm night method failure."""
+    responses = [RESPONSE_DISARMED, RESPONSE_ARM_FAILURE, RESPONSE_DISARMED]
+    with patch(
+        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        side_effect=responses,
+    ):
+        await setup_platform(hass, ALARM_DOMAIN)
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
+
+        with pytest.raises(HomeAssistantError) as err:
+            await hass.services.async_call(
+                ALARM_DOMAIN, SERVICE_ALARM_ARM_NIGHT, DATA, blocking=True
+            )
+            await hass.async_block_till_done()
+        assert f"{err.value}" == "TotalConnect failed to arm night test."
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
+
+
+async def test_arming(hass):
+    """Test arming."""
+    responses = [RESPONSE_DISARMED, RESPONSE_SUCCESS, RESPONSE_ARMING]
+    with patch(
+        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        side_effect=responses,
+    ):
+        await setup_platform(hass, ALARM_DOMAIN)
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
+
+        await hass.services.async_call(
+            ALARM_DOMAIN, SERVICE_ALARM_ARM_NIGHT, DATA, blocking=True
+        )
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMING
+
+
+async def test_disarming(hass):
+    """Test disarming."""
+    responses = [RESPONSE_ARMED_AWAY, RESPONSE_SUCCESS, RESPONSE_DISARMING]
+    with patch(
+        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        side_effect=responses,
+    ):
+        await setup_platform(hass, ALARM_DOMAIN)
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_AWAY
+
+        await hass.services.async_call(
+            ALARM_DOMAIN, SERVICE_ALARM_DISARM, DATA, blocking=True
+        )
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMING
+
+
+async def test_triggered_fire(hass):
+    """Test triggered by fire."""
+    responses = [RESPONSE_TRIGGERED_FIRE]
+    with patch(
+        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        side_effect=responses,
+    ):
+        await setup_platform(hass, ALARM_DOMAIN)
+        state = hass.states.get(ENTITY_ID)
+        assert state.state == STATE_ALARM_TRIGGERED
+        assert state.attributes.get("triggered_source") == "Fire/Smoke"
+
+
+async def test_triggered_police(hass):
+    """Test triggered by police."""
+    responses = [RESPONSE_TRIGGERED_POLICE]
+    with patch(
+        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        side_effect=responses,
+    ):
+        await setup_platform(hass, ALARM_DOMAIN)
+        state = hass.states.get(ENTITY_ID)
+        assert state.state == STATE_ALARM_TRIGGERED
+        assert state.attributes.get("triggered_source") == "Police/Medical"
+
+
+async def test_triggered_carbon_monoxide(hass):
+    """Test triggered by carbon monoxide."""
+    responses = [RESPONSE_TRIGGERED_CARBON_MONOXIDE]
+    with patch(
+        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        side_effect=responses,
+    ):
+        await setup_platform(hass, ALARM_DOMAIN)
+        state = hass.states.get(ENTITY_ID)
+        assert state.state == STATE_ALARM_TRIGGERED
+        assert state.attributes.get("triggered_source") == "Carbon Monoxide"
+
+
+async def test_armed_custom(hass):
+    """Test armed custom."""
+    responses = [RESPONSE_ARMED_CUSTOM]
+    with patch(
+        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        side_effect=responses,
+    ):
+        await setup_platform(hass, ALARM_DOMAIN)
+        state = hass.states.get(ENTITY_ID)
+        assert state.state == STATE_ALARM_ARMED_CUSTOM_BYPASS
+
+
+async def test_unknown(hass):
+    """Test unknown arm status."""
+    responses = [RESPONSE_UNKNOWN]
+    with patch(
+        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        side_effect=responses,
+    ):
+        await setup_platform(hass, ALARM_DOMAIN)
+        state = hass.states.get(ENTITY_ID)
+        assert state.state == "unknown"

@@ -213,7 +213,7 @@ class ModbusThermostat(ClimateEntity):
             self._target_temperature_register,
             register_value,
         )
-        self.async_update()
+        await self.async_update()
 
     @property
     def available(self) -> bool:

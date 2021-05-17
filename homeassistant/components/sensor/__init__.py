@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
-from typing import Any, cast
+from typing import Any, cast, final
 
 import voluptuous as vol
 
@@ -36,6 +36,7 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_LAST_RESET = "last_reset"
 ATTR_STATE_CLASS = "state_class"
 
 DOMAIN = "sensor"
@@ -101,9 +102,23 @@ class SensorEntity(Entity):
         return None
 
     @property
+    def last_reset(self) -> datetime | None:
+        """Return the time when the sensor was last reset, if any."""
+        return None
+
+    @property
     def capability_attributes(self) -> Mapping[str, Any] | None:
         """Return the capability attributes."""
-        if self.state_class:
-            return {ATTR_STATE_CLASS: self.state_class}
+        if state_class := self.state_class:
+            return {ATTR_STATE_CLASS: state_class}
+
+        return None
+
+    @final
+    @property
+    def state_attributes(self) -> dict[str, Any] | None:
+        """Return state attributes."""
+        if last_reset := self.last_reset:
+            return {ATTR_LAST_RESET: last_reset}
 
         return None

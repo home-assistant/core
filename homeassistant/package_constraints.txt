@@ -7,7 +7,7 @@ astral==2.2
 async-upnp-client==0.17.0
 async_timeout==3.0.1
 attrs==21.2.0
-awesomeversion==21.2.3
+awesomeversion==21.4.0
 backports.zoneinfo;python_version<"3.9"
 bcrypt==3.1.7
 certifi>=2020.12.5
@@ -34,7 +34,7 @@ sqlalchemy==1.4.13
 voluptuous-serialize==2.4.0
 voluptuous==0.12.1
 yarl==1.6.3
-zeroconf==0.30.0
+zeroconf==0.31.0
 
 pycryptodome>=3.6.6
 
