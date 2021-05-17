@@ -30,6 +30,7 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.loader import async_get_homekit, async_get_zeroconf, bind_hass
@@ -299,7 +300,7 @@ class FlowDispatcher:
         else:
             self.pending_flows.append(flow)
 
-    def _init_flow(self, flow: ZeroconfFlow) -> Coroutine[Any, Any, Any]:
+    def _init_flow(self, flow: ZeroconfFlow) -> Coroutine[None, None, FlowResult]:
         """Create a flow."""
         return self.hass.config_entries.flow.async_init(
             flow["domain"], context=flow["context"], data=flow["data"]
