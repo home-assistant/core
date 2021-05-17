@@ -2943,3 +2943,29 @@ async def test_set_state_via_stopped_state_no_position_topic(hass, mqtt_mock):
 
     state = hass.states.get("cover.test")
     assert state.state == STATE_CLOSED
+
+
+async def test_position_via_position_topic_template_return_invalid_json(
+    hass, caplog, mqtt_mock
+):
+    """Test position by updating status via position template and returning invalid json."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "command_topic": "command-topic",
+                "set_position_topic": "set-position-topic",
+                "position_topic": "get-position-topic",
+                "position_template": '{{ {"position" : invalid_json} }}',
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "get-position-topic", "55")
+
+    assert ("Payload '{'position': Undefined}' is not numeric") in caplog.text
