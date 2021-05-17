@@ -29,6 +29,7 @@ homeassistant.components.hyperion.*
 homeassistant.components.image_processing.*
 homeassistant.components.integration.*
 homeassistant.components.knx.*
+homeassistant.components.kraken.*
 homeassistant.components.light.*
 homeassistant.components.lock.*
 homeassistant.components.mailbox.*
