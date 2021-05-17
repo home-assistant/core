@@ -21,7 +21,7 @@ from .const import DOMAIN, HOME_LOCATION_NAME
 def smhi_locations(hass: HomeAssistant) -> set[str]:
     """Return configurations of SMHI component."""
     return {
-        (slugify(entry.data[CONF_NAME]))
+        slugify(entry.data[CONF_NAME])
         for entry in hass.config_entries.async_entries(DOMAIN)
     }
 
