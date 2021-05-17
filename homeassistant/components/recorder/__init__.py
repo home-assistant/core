@@ -279,8 +279,8 @@ class PurgeTask(NamedTuple):
     apply_filter: bool
 
 
-class NightlyTask:
-    """An object to insert into the recorder to trigger nightly tasks when auto purge is disabled."""
+class PerodicCleanupTask:
+    """An object to insert into the recorder to trigger cleanup tasks when auto purge is disabled."""
 
 
 class StatisticsTask(NamedTuple):
@@ -492,9 +492,12 @@ class Recorder(threading.Thread):
     def async_nightly_tasks(self, now):
         """Trigger the purge."""
         if self.auto_purge:
+            # Purge will schedule the perodic cleanups
+            # after it completes to ensure it does not happen
+            # until after the database is vacuumed
             self.queue.put(PurgeTask(self.keep_days, repack=False, apply_filter=False))
         else:
-            self.queue.put(NightlyTask())
+            self.queue.put(PerodicCleanupTask())
 
     @callback
     def async_hourly_statistics(self, now):
@@ -653,7 +656,9 @@ class Recorder(threading.Thread):
     def _run_purge(self, keep_days, repack, apply_filter):
         """Purge the database."""
         if purge.purge_old_data(self, keep_days, repack, apply_filter):
-            # If we have auto purge run
+            # We always need to do the db cleanups after a purge
+            # is finished to ensure the WAL checkpoint and other
+            # tasks happen after a vacuum.
             perodic_db_cleanups(self)
             return
         # Schedule a new purge task if this one didn't finish
@@ -671,7 +676,7 @@ class Recorder(threading.Thread):
         if isinstance(event, PurgeTask):
             self._run_purge(event.keep_days, event.repack, event.apply_filter)
             return
-        if isinstance(event, NightlyTask):
+        if isinstance(event, PerodicCleanupTask):
             perodic_db_cleanups(self)
             return
         if isinstance(event, StatisticsTask):
