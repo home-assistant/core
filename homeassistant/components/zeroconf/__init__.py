@@ -9,7 +9,7 @@ import ipaddress
 from ipaddress import ip_address
 import logging
 import socket
-from typing import Any, TypedDict, cast
+from typing import Any, Coroutine, TypedDict, cast
 
 from pyroute2 import IPRoute
 import voluptuous as vol
@@ -275,6 +275,37 @@ async def _async_register_hass_zc_service(
         )
 
 
+class FlowDispatcher:
+    """Dispatch discovery flows."""
+
+    def __init__(self, hass: HomeAssistant):
+        """Init the discovery dispatcher."""
+        self.hass = hass
+        self.pending_flows: list[ZeroconfFlow] = []
+        self.started = False
+
+    @callback
+    def async_start(self) -> None:
+        """Start processing pending flows."""
+        self.started = True
+        for flow in list(self.pending_flows):
+            self.hass.async_create_task(self._init_flow(flow))
+        self.pending_flows = []
+
+    def create(self, flow: ZeroconfFlow) -> None:
+        """Create and add or queue a flow."""
+        if self.started:
+            self.hass.add_job(self._init_flow(flow))  # type: ignore
+        else:
+            self.pending_flows.append(flow)
+
+    def _init_flow(self, flow: ZeroconfFlow) -> Coroutine[Any, Any, Any]:
+        """Create a flow."""
+        return self.hass.config_entries.flow.async_init(
+            flow["domain"], context=flow["context"], data=flow["data"]
+        )
+
+
 class ZeroconfDiscovery:
     """Discovery via zeroconf."""
 
@@ -291,13 +322,12 @@ class ZeroconfDiscovery:
         self.zeroconf_types = zeroconf_types
         self.homekit_models = homekit_models
 
+        self.flow_dispatcher: FlowDispatcher | None = None
         self.service_browser: HaServiceBrowser | None = None
-        self.queue: asyncio.Queue | None = None
-        self.process_task: asyncio.Task | None = None
 
     async def async_setup(self) -> None:
         """Start discovery."""
-        self.queue = asyncio.Queue()
+        self.flow_dispatcher = FlowDispatcher(self.hass)
         types = list(self.zeroconf_types)
         for hk_type in HOMEKIT_TYPES:
             if hk_type not in self.zeroconf_types:
@@ -311,23 +341,12 @@ class ZeroconfDiscovery:
         """Cancel the service browser and stop processing the queue."""
         if self.service_browser:
             await self.hass.async_add_executor_job(self.service_browser.cancel)
-        if self.process_task:
-            self.process_task.cancel()
 
     @callback
     def async_start(self) -> None:
         """Start processing discovery flows."""
-        self.process_task = asyncio.create_task(self._async_process())
-
-    async def _async_process(self) -> None:
-        assert self.queue is not None
-        while flow := await self.queue.get():
-            self.hass.async_create_task(
-                self.hass.config_entries.flow.async_init(
-                    flow["domain"], context=flow["context"], data=flow["data"]
-                )
-            )
-            self.queue.task_done()
+        assert self.flow_dispatcher is not None
+        self.flow_dispatcher.async_start()
 
     def service_update(
         self,
@@ -350,12 +369,12 @@ class ZeroconfDiscovery:
             return
 
         _LOGGER.debug("Discovered new device %s %s", name, info)
-        assert self.queue is not None
+        assert self.flow_dispatcher is not None
 
         # If we can handle it as a HomeKit discovery, we do that here.
         if service_type in HOMEKIT_TYPES:
             if pending_flow := handle_homekit(self.hass, self.homekit_models, info):
-                self.hass.loop.call_soon_threadsafe(self.queue.put_nowait, pending_flow)
+                self.flow_dispatcher.create(pending_flow)
             # Continue on here as homekit_controller
             # still needs to get updates on devices
             # so it can see when the 'c#' field is updated.
@@ -417,7 +436,7 @@ class ZeroconfDiscovery:
                 "context": {"source": config_entries.SOURCE_ZEROCONF},
                 "data": info,
             }
-            self.hass.loop.call_soon_threadsafe(self.queue.put_nowait, flow)
+            self.flow_dispatcher.create(flow)
 
 
 def handle_homekit(
