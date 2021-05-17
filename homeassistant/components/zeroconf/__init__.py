@@ -329,7 +329,7 @@ class ZeroconfDiscovery:
         """Start discovery."""
         self.flow_dispatcher = FlowDispatcher(self.hass)
         types = list(self.zeroconf_types)
-        for hk_type in HOMEKIT_TYPES:
+        for hk_type in (ZEROCONF_TYPE, *HOMEKIT_TYPES):
             if hk_type not in self.zeroconf_types:
                 types.append(hk_type)
         _LOGGER.debug("Starting Zeroconf browser")
