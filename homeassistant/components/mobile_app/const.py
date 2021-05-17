@@ -14,6 +14,7 @@ DATA_DELETED_IDS = "deleted_ids"
 DATA_DEVICES = "devices"
 DATA_STORE = "store"
 DATA_NOTIFY = "notify"
+DATA_PUSH_CHANNEL = "push_channel"
 
 ATTR_APP_DATA = "app_data"
 ATTR_APP_ID = "app_id"
