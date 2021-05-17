@@ -67,6 +67,20 @@ UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 _LOGGER = logging.getLogger(__name__)
 
 
+def fetch_alarms_for_speaker(soco: SoCo) -> set[Alarm] | None:
+    """Update current alarm instances.
+
+    Returns a list of alarm instances that belong to a speaker.
+    """
+    alarms = get_alarms(soco)
+    available_alarms = set()
+    for alarm in alarms:
+        if alarm.zone.uid == soco.uid:
+            available_alarms.add(alarm)
+
+    return available_alarms
+
+
 def fetch_battery_info_or_none(soco: SoCo) -> dict[str, Any] | None:
     """Fetch battery_info from the given SoCo object.
 
@@ -198,11 +212,9 @@ class SonosSpeaker:
         else:
             self._platforms_ready.update({BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN})
 
-        alarms = get_alarms(self.soco)
-        for alarm in alarms:
-            if alarm.zone.uid == self.soco.uid:
-                self.available_alarms.add(alarm)
-                dispatcher_send(self.hass, SONOS_CREATE_ALARM, self)
+        self.available_alarms = fetch_alarms_for_speaker(self.soco)
+        if bool(self.available_alarms):
+            dispatcher_send(self.hass, SONOS_CREATE_ALARM, self)
 
         self._platforms_ready.update({SWITCH_DOMAIN})
 
@@ -281,7 +293,7 @@ class SonosSpeaker:
 
     @callback
     def async_dispatch_alarms(self, event: SonosEvent | None = None) -> None:
-        """Update properties from event."""
+        """Update alarms from event."""
         self.hass.async_create_task(self.async_update_alarms(event))
 
     @callback
@@ -372,18 +384,12 @@ class SonosSpeaker:
         if event is None:
             return
 
-        all_new_available_alarms = await self.hass.async_add_executor_job(
-            get_alarms, self.soco
+        new_available_alarms = await self.hass.async_add_executor_job(
+            fetch_alarms_for_speaker, self.soco
         )
-        new_available_alarms = {
-            alarm
-            for alarm in all_new_available_alarms
-            if alarm.zone.uid == self.soco.uid
-        }
 
         if new_available_alarms != self.available_alarms:
             self.available_alarms = new_available_alarms
-            self._platforms_ready.update({SWITCH_DOMAIN})
             dispatcher_send(self.hass, SONOS_CREATE_ALARM, self)
 
         async_dispatcher_send(self.hass, SONOS_ALARM_UPDATE, self)

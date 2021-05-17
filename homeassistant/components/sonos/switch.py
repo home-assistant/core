@@ -42,6 +42,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for alarm in speaker.available_alarms:
             # pylint: disable=protected-access
             if alarm._alarm_id not in data_sonos.alarms:
+                # pylint: disable=protected-access
+                _LOGGER.debug("Creating alarm with id %s", alarm._alarm_id)
                 entity = SonosAlarmEntity(alarm, data_sonos, speaker)
                 async_add_entities([entity])
                 # pylint: disable=protected-access
@@ -58,10 +60,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 def get_speaker_from_uid(uid: str, data_sonos: SonosData) -> SonosSpeaker:
-    """Get speeaker from player uid."""
+    """Get speaker from player uid."""
     for discovered_uid in data_sonos.discovered.keys():
         if discovered_uid == uid:
             return data_sonos.discovered[discovered_uid]
+
+    raise RuntimeError("No configured Sonos speaker has been found to match the alarm.")
 
 
 class SonosAlarmEntity(SonosEntity, SwitchEntity):
@@ -114,22 +118,12 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             str(self.alarm.start_time)[0:5],
         )
 
-    def _get_current_alarm_instance(self):
-        """Retrieve the current alarms and return if the alarm is available or not."""
-        return self.alarm in self.speaker.available_alarms
-
     async def async_remove_if_not_available(self):
         """Remove alarm entity if not available."""
-        is_available = await self.hass.async_add_executor_job(
-            self._get_current_alarm_instance
-        )
-
-        if is_available:
+        if self.alarm in self.speaker.available_alarms:
             return
 
-        if self.alarm in self.speaker.available_alarms:
-            self.speaker.available_alarms.remove(self.alarm)
-
+        _LOGGER.debug("The alarm is removed from hass because it has been deleted.")
         if self.alarm_id in self.hass.data[DATA_SONOS].alarms:
             self.hass.data[DATA_SONOS].alarms.remove(self.alarm_id)
 
@@ -147,8 +141,6 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         device_registry = dr.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
         entity = entity_registry.async_get(self.entity_id)
-        if entity is None:
-            return
 
         entry_id = entity.config_entry_id
 
@@ -158,13 +150,15 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             connections={(dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address)},
         )
         if not entity_registry.async_get(self.entity_id).device_id == new_device.id:
+            _LOGGER.debug("The alarm is switching the sonos player.")
+            # pylint: disable=protected-access
             entity_registry._async_update_entity(
                 self.entity_id, device_id=new_device.id
             )
 
     def update_alarm(self):
         """Update the state of the alarm."""
-
+        _LOGGER.debug("Updating the state of the alarm.")
         if self.speaker.soco.uid != self.alarm.zone.uid:
             self.speaker.available_alarms.remove(self.alarm)
             self.speaker = get_speaker_from_uid(self.alarm.zone.uid, self.data_sonos)
@@ -220,8 +214,8 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
 
     async def async_handle_switch_on_off(self, turn_on: bool) -> bool:
         """Handle turn on/off of alarm switch."""
-        # pylint: disable=import-error
         try:
+            _LOGGER.debug("Switching the state of the alarm.")
             self.alarm.enabled = turn_on
             await self.hass.async_add_executor_job(self.alarm.save)
             return True
