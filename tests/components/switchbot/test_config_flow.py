@@ -9,11 +9,11 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import USER_INPUT, YAML_CONFIG, _patch_async_setup_entry
+from . import USER_INPUT, USER_INPUT_NO_PASS, YAML_CONFIG, _patch_async_setup_entry
 
 
-async def test_user_form(hass, switchbot_config_flow):
-    """Test the user initiated form."""
+async def test_user_form_with_password(hass, switchbot_config_flow):
+    """Test the user initiated form with password."""
     await async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
@@ -58,6 +58,35 @@ async def test_user_form(hass, switchbot_config_flow):
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "unknown"
+
+
+async def test_user_form_without_password(hass, switchbot_config_flow):
+    """Test the user initiated form without password."""
+    await async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT_NO_PASS,
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "test-name"
+    assert result["data"] == {
+        "mac": "00:00:00",
+        "name": "test-name",
+        "sensor_type": "bot",
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_async_step_import(hass):

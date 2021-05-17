@@ -19,6 +19,11 @@ USER_INPUT = {
     CONF_MAC: "00:00:00",
 }
 
+USER_INPUT_NO_PASS = {
+    CONF_NAME: "test-name",
+    CONF_MAC: "00:00:00",
+}
+
 YAML_CONFIG = {
     CONF_NAME: "test-name",
     CONF_PASSWORD: "test-password",
