@@ -1,4 +1,6 @@
 """Code to handle a Hue bridge."""
+from __future__ import annotations
+
 import asyncio
 from functools import partial
 import logging
@@ -241,7 +243,8 @@ class HueBridge:
                 key = (updated_object.ITEM_TYPE, updated_object.id)
 
                 if key in self._update_callbacks:
-                    self._update_callbacks[key]()
+                    for callback in self._update_callbacks[key]:
+                        callback()
 
         except GeneratorExit:
             pass
@@ -249,18 +252,20 @@ class HueBridge:
     @core.callback
     def listen_updates(self, item_type, item_id, update_callback):
         """Listen to updates."""
-        callbacks = self._update_callbacks
         key = (item_type, item_id)
+        callbacks: list[core.CALLBACK_TYPE] | None = self._update_callbacks.get(key)
 
-        if key in callbacks:
-            _LOGGER.warning("Overwriting update callback for %s", key)
+        if callbacks is None:
+            callbacks = self._update_callbacks[key] = []
 
-        callbacks[key] = update_callback
+        callbacks.append(update_callback)
 
         @core.callback
         def unsub():
-            if callbacks.get(key) == update_callback:
-                callbacks.pop(key)
+            try:
+                callbacks.remove(update_callback)
+            except ValueError:
+                pass
 
         return unsub
 
