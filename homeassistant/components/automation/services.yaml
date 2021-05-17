@@ -17,7 +17,6 @@ turn_off:
       name: Stop actions
       description: Stop currently running actions.
       default: true
-      example: true
       selector:
         boolean:
 
@@ -39,7 +38,6 @@ trigger:
       name: Skip conditions
       description: Whether or not the conditions will be skipped.
       default: true
-      example: true
       selector:
         boolean:
 
