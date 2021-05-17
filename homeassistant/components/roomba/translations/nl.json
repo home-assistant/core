@@ -9,7 +9,7 @@
         "error": {
             "cannot_connect": "Kan geen verbinding maken"
         },
-        "flow_title": "iRobot {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "init": {
                 "data": {
