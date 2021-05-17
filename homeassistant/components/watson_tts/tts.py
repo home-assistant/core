@@ -147,6 +147,12 @@ def get_engine(hass, config, discovery_info=None):
     output_format = config[CONF_OUTPUT_FORMAT]
     service.set_default_headers({"x-watson-learning-opt-out": "true"})
 
+    if default_voice in DEPRECATED_VOICES:
+        _LOGGER.warning(
+            "Watson TTS voice %s is deprecated, it may be removed in the future",
+            default_voice,
+        )
+
     return WatsonTTSProvider(service, supported_languages, default_voice, output_format)
 
 
@@ -161,12 +167,6 @@ class WatsonTTSProvider(Provider):
         self.default_voice = default_voice
         self.output_format = output_format
         self.name = "Watson TTS"
-
-        if self.default_voice in DEPRECATED_VOICES:
-            _LOGGER.warning(
-                "Watson TTS voice %s is deprecated, it may be removed in the future",
-                self.default_voice,
-            )
 
     @property
     def supported_languages(self):
