@@ -569,7 +569,7 @@ toggle:
           mode: slider
     white_value:
       name: White level
-      description: Number between 0..255 indicating level of white.
+      description: Number indicating level of white.
       advanced: true
       example: "250"
       selector:
@@ -581,7 +581,7 @@ toggle:
     brightness:
       name: Brightness value
       description:
-        Number between 0..255 indicating brightness, where 0 turns the light
+        Number indicating brightness, where 0 turns the light
         off, 1 is the minimum brightness and 255 is the maximum brightness
         supported by the light.
       advanced: true

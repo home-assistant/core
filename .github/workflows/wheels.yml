@@ -41,6 +41,7 @@ jobs:
             echo "GRPC_BUILD_WITH_BORING_SSL_ASM=false"
             echo "GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=true"
             echo "GRPC_PYTHON_BUILD_WITH_CYTHON=true"
+            echo "GRPC_PYTHON_DISABLE_LIBC_COMPATIBILITY=true"
           ) > .env_file
 
       - name: Upload env_file
@@ -81,7 +82,7 @@ jobs:
           name: requirements_diff
 
       - name: Build wheels
-        uses: home-assistant/wheels@2021.05.2
+        uses: home-assistant/wheels@2021.05.3
         with:
           tag: ${{ matrix.tag }}
           arch: ${{ matrix.arch }}
@@ -151,7 +152,7 @@ jobs:
           done
 
       - name: Build wheels
-        uses: home-assistant/wheels@2021.05.2
+        uses: home-assistant/wheels@2021.05.3
         with:
           tag: ${{ matrix.tag }}
           arch: ${{ matrix.arch }}

@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 def _login_and_fetch_site_info(power_wall: Powerwall, password: str):
     """Login to the powerwall and fetch the base info."""
     if password is not None:
-        power_wall.login("", password)
+        power_wall.login(password)
     power_wall.detect_and_pin_version()
     return power_wall.get_site_info()
 

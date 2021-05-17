@@ -57,6 +57,7 @@ from .const import (
     CONF_BAUDRATE,
     CONF_BYTESIZE,
     CONF_CLIMATES,
+    CONF_CLOSE_COMM_ON_ERROR,
     CONF_CURRENT_TEMP,
     CONF_CURRENT_TEMP_REGISTER_TYPE,
     CONF_DATA_COUNT,
@@ -100,7 +101,7 @@ from .const import (
     MODBUS_DOMAIN as DOMAIN,
     PLATFORMS,
 )
-from .modbus import modbus_setup
+from .modbus import async_modbus_setup
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -281,6 +282,7 @@ MODBUS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string,
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
+        vol.Optional(CONF_CLOSE_COMM_ON_ERROR, default=True): cv.boolean,
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
             cv.ensure_list, [BINARY_SENSOR_SCHEMA]
@@ -348,8 +350,8 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up Modbus component."""
-    return modbus_setup(
+    return await async_modbus_setup(
         hass, config, SERVICE_WRITE_REGISTER_SCHEMA, SERVICE_WRITE_COIL_SCHEMA
     )

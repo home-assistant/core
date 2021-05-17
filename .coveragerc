@@ -8,8 +8,10 @@ omit =
     homeassistant/scripts/*.py
 
     # omit pieces of code that rely on external devices being present
-    homeassistant/components/acer_projector/switch.py
+    homeassistant/components/acer_projector/*
+    homeassistant/components/actiontec/const.py
     homeassistant/components/actiontec/device_tracker.py
+    homeassistant/components/actiontec/model.py
     homeassistant/components/acmeda/__init__.py
     homeassistant/components/acmeda/base.py
     homeassistant/components/acmeda/const.py
@@ -23,9 +25,8 @@ omit =
     homeassistant/components/adguard/sensor.py
     homeassistant/components/adguard/switch.py
     homeassistant/components/ads/*
-    homeassistant/components/aemet/abstract_aemet_sensor.py
     homeassistant/components/aemet/weather_update_coordinator.py
-    homeassistant/components/aftership/sensor.py
+    homeassistant/components/aftership/*
     homeassistant/components/agent_dvr/__init__.py
     homeassistant/components/agent_dvr/alarm_control_panel.py
     homeassistant/components/agent_dvr/camera.py
@@ -36,7 +37,7 @@ omit =
     homeassistant/components/airvisual/__init__.py
     homeassistant/components/airvisual/air_quality.py
     homeassistant/components/airvisual/sensor.py
-    homeassistant/components/aladdin_connect/cover.py
+    homeassistant/components/aladdin_connect/*
     homeassistant/components/alarmdecoder/__init__.py
     homeassistant/components/alarmdecoder/alarm_control_panel.py
     homeassistant/components/alarmdecoder/binary_sensor.py
@@ -113,6 +114,10 @@ omit =
     homeassistant/components/bmw_connected_drive/lock.py
     homeassistant/components/bmw_connected_drive/notify.py
     homeassistant/components/bmw_connected_drive/sensor.py
+    homeassistant/components/bosch_shc/__init__.py
+    homeassistant/components/bosch_shc/const.py
+    homeassistant/components/bosch_shc/binary_sensor.py
+    homeassistant/components/bosch_shc/entity.py
     homeassistant/components/braviatv/__init__.py
     homeassistant/components/braviatv/const.py
     homeassistant/components/braviatv/media_player.py
@@ -345,6 +350,9 @@ omit =
     homeassistant/components/frontier_silicon/media_player.py
     homeassistant/components/futurenow/light.py
     homeassistant/components/garadget/cover.py
+    homeassistant/components/garages_amsterdam/__init__.py
+    homeassistant/components/garages_amsterdam/binary_sensor.py
+    homeassistant/components/garages_amsterdam/sensor.py
     homeassistant/components/garmin_connect/__init__.py
     homeassistant/components/garmin_connect/const.py
     homeassistant/components/garmin_connect/sensor.py

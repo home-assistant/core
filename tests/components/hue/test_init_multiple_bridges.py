@@ -1,15 +1,12 @@
 """Test Hue init with multiple bridges."""
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import patch
 
-from aiohue.groups import Groups
-from aiohue.lights import Lights
-from aiohue.scenes import Scenes
-from aiohue.sensors import Sensors
 import pytest
 
 from homeassistant.components import hue
-from homeassistant.components.hue import sensor_base as hue_sensor_base
 from homeassistant.setup import async_setup_component
+
+from .conftest import create_mock_bridge
 
 from tests.common import MockConfigEntry
 
@@ -144,37 +141,3 @@ def mock_bridge1(hass):
 def mock_bridge2(hass):
     """Mock a Hue bridge."""
     return create_mock_bridge(hass)
-
-
-def create_mock_bridge(hass):
-    """Create a mock Hue bridge."""
-    bridge = Mock(
-        hass=hass,
-        available=True,
-        authorized=True,
-        allow_unreachable=False,
-        allow_groups=False,
-        api=Mock(),
-        reset_jobs=[],
-        spec=hue.HueBridge,
-        async_setup=AsyncMock(return_value=True),
-    )
-    bridge.sensor_manager = hue_sensor_base.SensorManager(bridge)
-    bridge.mock_requests = []
-
-    async def mock_request(method, path, **kwargs):
-        kwargs["method"] = method
-        kwargs["path"] = path
-        bridge.mock_requests.append(kwargs)
-        return {}
-
-    async def async_request_call(task):
-        await task()
-
-    bridge.async_request_call = async_request_call
-    bridge.api.config.apiversion = "9.9.9"
-    bridge.api.lights = Lights({}, mock_request)
-    bridge.api.groups = Groups({}, mock_request)
-    bridge.api.sensors = Sensors({}, mock_request)
-    bridge.api.scenes = Scenes({}, mock_request)
-    return bridge
