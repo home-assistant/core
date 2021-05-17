@@ -561,7 +561,7 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
     try:
         addon_info = await addon_manager.async_get_addon_info()
     except AddonError as err:
-        LOGGER.error("err")
+        LOGGER.error(err)
         raise ConfigEntryNotReady from err
 
     usb_path: str = entry.data[CONF_USB_PATH]
