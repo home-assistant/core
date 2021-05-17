@@ -182,7 +182,7 @@ aiohomekit==0.2.61
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==2.4.2
+aiohue==2.5.0
 
 # homeassistant.components.imap
 aioimaplib==0.7.15
@@ -272,7 +272,7 @@ apcaccess==0.0.13
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.8.9
+apprise==0.9.3
 
 # homeassistant.components.aprs
 aprslib==0.6.46

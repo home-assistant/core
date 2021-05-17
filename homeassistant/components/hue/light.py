@@ -306,7 +306,11 @@ class HueLight(CoordinatorEntity, LightEntity):
     @property
     def unique_id(self):
         """Return the unique ID of this Hue light."""
-        return self.light.uniqueid
+        unique_id = self.light.uniqueid
+        if not unique_id and self.is_group and self.light.room:
+            unique_id = self.light.room["id"]
+
+        return unique_id
 
     @property
     def device_id(self):
