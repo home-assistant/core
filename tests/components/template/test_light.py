@@ -379,6 +379,7 @@ async def test_on_action(hass, calls):
 
     assert len(calls) == 1
 
+
 async def test_on_action_with_transition(hass, calls):
     """Test on action with transition."""
     assert await setup.async_setup_component(
@@ -528,6 +529,7 @@ async def test_off_action(hass, calls):
 
     assert len(calls) == 1
 
+
 async def test_off_action_with_transition(hass, calls):
     """Test off action with transition."""
     assert await setup.async_setup_component(
@@ -577,6 +579,7 @@ async def test_off_action_with_transition(hass, calls):
 
     assert len(calls) == 1
     assert calls[0].data["transition"] == 2
+
 
 async def test_off_action_optimistic(hass, calls):
     """Test off action with optimistic state."""
@@ -1220,62 +1223,6 @@ async def test_color_template(hass, expected_hs, template):
     assert state.attributes.get("hs_color") == expected_hs
 
 
-@pytest.mark.parametrize(
-    "expected_hs,template",
-    [
-        ((360, 100), "{{(360, 100)}}"),
-        ((359.9, 99.9), "{{(359.9, 99.9)}}"),
-        (None, "{{(361, 100)}}"),
-        (None, "{{(360, 101)}}"),
-        (None, "{{x - 12}}"),
-        (None, ""),
-        (None, "{{ none }}"),
-    ],
-)
-async def test_color_template(hass, expected_hs, template):
-    """Test the template for the color."""
-    with assert_setup_component(1, light.DOMAIN):
-        assert await setup.async_setup_component(
-            hass,
-            light.DOMAIN,
-            {
-                "light": {
-                    "platform": "template",
-                    "lights": {
-                        "test_template_light": {
-                            "value_template": "{{ 1 == 1 }}",
-                            "turn_on": {
-                                "service": "light.turn_on",
-                                "entity_id": "light.test_state",
-                            },
-                            "turn_off": {
-                                "service": "light.turn_off",
-                                "entity_id": "light.test_state",
-                            },
-                            "set_color": [
-                                {
-                                    "service": "input_number.set_value",
-                                    "data_template": {
-                                        "entity_id": "input_number.h",
-                                        "value": "{{h}}",
-                                    },
-                                }
-                            ],
-                            "color_template": template,
-                            "supports_transition_template": "{{ true }}",
-                        }
-                    },
-                }
-            },
-        )
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-    state = hass.states.get("light.test_template_light")
-    assert state is not None
-    assert state.attributes.get("hs_color") == expected_hs
-
-
 async def test_effect_action(hass, calls):
     """Test setting effect with template."""
     assert setup.setup_component(
@@ -1308,11 +1255,11 @@ async def test_effect_action(hass, calls):
             }
         },
     )
-    self.hass.block_till_done()
-    self.hass.start()
-    self.hass.block_till_done()
+    await hass.block_till_done()
+    await hass.start()
+    await hass.block_till_done()
 
-    state = self.hass.states.get("light.test_template_light")
+    state = hass.states.get("light.test_template_light")
     assert state.attributes.get("effect") is None
 
     await hass.services.async_call(
@@ -1322,10 +1269,10 @@ async def test_effect_action(hass, calls):
         blocking=True,
     )
 
-    assert len(self.calls) == 1
-    assert self.calls[0].data["effect"] == "Disco"
+    assert len(calls) == 1
+    assert calls[0].data["effect"] == "Disco"
 
-    state = self.hass.states.get("light.test_template_light")
+    state = hass.states.get("light.test_template_light")
     _LOGGER.info(str(state.attributes))
     assert state is not None
     assert state.attributes.get("effect") == "Disco"
