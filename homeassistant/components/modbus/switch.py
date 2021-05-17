@@ -109,7 +109,7 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         """Set switch on."""
 
         result = await self._hub.async_pymodbus_call(
-            self._slave, self._verify_address, self._command_on, self._write_type
+            self._slave, self._address, self._command_on, self._write_type
         )
         if result is False:
             self._available = False
@@ -125,7 +125,7 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
     async def async_turn_off(self, **kwargs):
         """Set switch off."""
         result = await self._hub.async_pymodbus_call(
-            self._slave, self._verify_address, self._command_off, self._write_type
+            self._slave, self._address, self._command_off, self._write_type
         )
         if result is False:
             self._available = False
