@@ -64,7 +64,7 @@ class AddonInfo:
     options: dict[str, Any]
     state: AddonState
     update_available: bool
-    version: str
+    version: str | None
 
 
 class AddonState(Enum):
