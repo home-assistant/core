@@ -8,9 +8,10 @@ from homeassistant.components.renault.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 
-async def test_config_flow_single_account(hass):
+async def test_config_flow_single_account(hass: HomeAssistant):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -60,7 +61,7 @@ async def test_config_flow_single_account(hass):
     assert result["data"][CONF_LOCALE] == "fr_FR"
 
 
-async def test_config_flow_no_account(hass):
+async def test_config_flow_no_account(hass: HomeAssistant):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -89,7 +90,7 @@ async def test_config_flow_no_account(hass):
     assert result["reason"] == "kamereon_no_account"
 
 
-async def test_config_flow_multiple_accounts(hass):
+async def test_config_flow_multiple_accounts(hass: HomeAssistant):
     """Test what happens if multiple Kamereon accounts are available."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
