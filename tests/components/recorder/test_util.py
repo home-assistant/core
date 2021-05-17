@@ -269,3 +269,11 @@ def test_end_incomplete_runs(hass_recorder, caplog):
         assert run_info.end == now_without_tz
 
     assert "Ended unfinished session" in caplog.text
+
+
+def test_perodic_db_cleanups(hass_recorder):
+    """Test perodic db cleanups."""
+    hass = hass_recorder()
+    with patch.object(hass.data[DATA_INSTANCE].engine, "execute") as execute_mock:
+        util.perodic_db_cleanups(hass.data[DATA_INSTANCE])
+    assert execute_mock.call_args[0][0] == "PRAGMA wal_checkpoint(TRUNCATE);"
