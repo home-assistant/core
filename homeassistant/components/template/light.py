@@ -319,7 +319,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             supported_features |= SUPPORT_WHITE_VALUE
         if self._effect_script is not None:
             supported_features |= SUPPORT_EFFECT
-        if self._supports_transition == True:
+        if self._supports_transition is True:
             supported_features |= SUPPORT_TRANSITION
         return supported_features
 
@@ -435,7 +435,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             common_params["brightness"] = kwargs[ATTR_BRIGHTNESS]
 
-        if ATTR_TRANSITION in kwargs and self._supports_transition == True:
+        if ATTR_TRANSITION in kwargs and self._supports_transition is True:
             common_params["transition"] = kwargs[ATTR_TRANSITION]
 
         if ATTR_COLOR_TEMP in kwargs and self._temperature_script:
@@ -475,6 +475,8 @@ class LightTemplate(TemplateEntity, LightEntity):
             )
         elif ATTR_BRIGHTNESS in kwargs and self._level_script:
             await self._level_script.async_run(common_params, context=self._context)
+        elif ATTR_TRANSITION in kwargs and self._supports_transition is True:
+            await self._on_script.async_run(common_params, context=self._context)
         else:
             await self._on_script.async_run(context=self._context)
 
@@ -483,7 +485,10 @@ class LightTemplate(TemplateEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        await self._off_script.async_run(context=self._context)
+        if ATTR_TRANSITION in kwargs and self._supports_transition is True:
+            await self._off_script.async_run({"transition": kwargs[ATTR_TRANSITION]}, context=self._context)
+        else:
+            await self._off_script.async_run(context=self._context)
         if self._template is None:
             self._state = False
             self.async_write_ha_state()
