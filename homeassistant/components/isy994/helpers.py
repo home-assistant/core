@@ -41,12 +41,12 @@ from .const import (
     KEY_STATUS,
     NODE_FILTERS,
     PLATFORMS,
+    PROGRAM_PLATFORMS,
     SUBNODE_CLIMATE_COOL,
     SUBNODE_CLIMATE_HEAT,
     SUBNODE_EZIO2X4_SENSORS,
     SUBNODE_FANLINC_LIGHT,
     SUBNODE_IOLINC_RELAY,
-    SUPPORTED_PROGRAM_PLATFORMS,
     TYPE_CATEGORY_SENSOR_ACTUATORS,
     TYPE_EZIO2X4,
     UOM_DOUBLE_TEMP,
@@ -167,7 +167,6 @@ def _check_for_zwave_cat(
             device_type.startswith(t)
             for t in set(NODE_FILTERS[platform][FILTER_ZWAVE_CAT])
         ):
-
             hass_isy_data[ISY994_NODES][platform].append(node)
             return True
 
@@ -314,7 +313,7 @@ def _categorize_nodes(
 
 def _categorize_programs(hass_isy_data: dict, programs: Programs) -> None:
     """Categorize the ISY994 programs."""
-    for platform in SUPPORTED_PROGRAM_PLATFORMS:
+    for platform in PROGRAM_PLATFORMS:
         folder = programs.get_by_name(f"{DEFAULT_PROGRAM_STRING}{platform}")
         if not folder:
             continue
