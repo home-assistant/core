@@ -319,8 +319,6 @@ class LightTemplate(TemplateEntity, LightEntity):
             supported_features |= SUPPORT_WHITE_VALUE
         if self._effect_script is not None:
             supported_features |= SUPPORT_EFFECT
-        if self._effect_script is not None:
-            supported_features |= SUPPORT_EFFECT
         if self._supports_transition == True:
             supported_features |= SUPPORT_TRANSITION
         return supported_features
