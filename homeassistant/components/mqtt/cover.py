@@ -358,9 +358,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
                 try:
                     payload = json_loads(payload)
-                except TypeError:
-                    pass
-                except JSONDecodeError:
+                except (TypeError, JSONDecodeError):
                     pass
 
                 if isinstance(payload, dict):
@@ -699,7 +697,7 @@ class MqttCover(MqttEntity, CoverEntity):
         """Set the tilt value."""
 
         try:
-            payload = float(_payload)
+            payload = int(round(float(_payload)))
         except ValueError:
             _LOGGER.warning("Payload '%s' is not numeric", _payload)
             return

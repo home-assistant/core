@@ -1634,7 +1634,7 @@ async def test_tilt_status_out_of_range_warning(hass, caplog, mqtt_mock):
     async_fire_mqtt_message(hass, "tilt-status-topic", "60")
 
     assert (
-        "Payload '60.0' is out of range, must be between '0' and '50' inclusive"
+        "Payload '60' is out of range, must be between '0' and '50' inclusive"
     ) in caplog.text
 
 
