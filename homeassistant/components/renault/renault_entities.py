@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
+from renault_api.kamereon.enums import ChargeState, PlugState
 from renault_api.kamereon.models import (
     KamereonVehicleBatteryStatusData,
     KamereonVehicleChargeModeData,
@@ -71,6 +72,20 @@ class RenaultBatteryDataEntity(RenaultDataEntity):
         if self.data.timestamp:
             attrs[ATTR_LAST_UPDATE] = self.data.timestamp
         return attrs
+
+    @property
+    def is_charging(self) -> bool | None:
+        """Return charge state as boolean."""
+        if self.data is None:
+            return None
+        return self.data.get_charging_status() == ChargeState.CHARGE_IN_PROGRESS
+
+    @property
+    def is_plugged_in(self) -> bool | None:
+        """Return plug state as boolean."""
+        if self.data is None:
+            return None
+        return self.data.get_plug_status() == PlugState.PLUGGED
 
 
 class RenaultChargeModeDataEntity(RenaultDataEntity):

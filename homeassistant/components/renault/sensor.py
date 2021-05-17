@@ -3,8 +3,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from renault_api.kamereon.enums import ChargeState, PlugState
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -91,8 +89,6 @@ class RenaultBatteryAutonomySensor(RenaultBatteryDataEntity):
     @property
     def state(self) -> int | None:
         """Return the state of this entity."""
-        if self.data.batteryAutonomy is None:
-            return None
         return self.data.batteryAutonomy
 
     @property
@@ -112,7 +108,7 @@ class RenaultBatteryLevelSensor(RenaultBatteryDataEntity):
     @property
     def state(self) -> int | None:
         """Return the state of this entity."""
-        return self.data.batteryLevel if self.data else None
+        return self.data.batteryLevel if self.data is not None else None
 
     @property
     def device_class(self) -> str:
@@ -127,11 +123,9 @@ class RenaultBatteryLevelSensor(RenaultBatteryDataEntity):
     @property
     def icon(self) -> str:
         """Icon handling."""
-        charging = (
-            self.data is not None
-            and self.data.get_charging_status() == ChargeState.CHARGE_IN_PROGRESS
+        return icon_for_battery_level(
+            battery_level=self.state, charging=self.is_charging
         )
-        return icon_for_battery_level(battery_level=self.state, charging=charging)
 
     @property
     def device_state_attributes(self) -> dict[str, Any]:
@@ -172,7 +166,7 @@ class RenaultChargeModeSensor(RenaultChargeModeDataEntity):
     @property
     def icon(self) -> str:
         """Icon handling."""
-        if self.data and self.data.chargeMode == "schedule_mode":
+        if self.data is not None and self.data.chargeMode == "schedule_mode":
             return "mdi:calendar-clock"
         return "mdi:calendar-remove"
 
@@ -188,17 +182,13 @@ class RenaultChargeStateSensor(RenaultBatteryDataEntity):
     @property
     def state(self) -> str | None:
         """Return the state of this entity."""
-        charging_status = (
-            self.data.get_charging_status() if self.data is not None else None
-        )
+        charging_status = self.data.get_charging_status()
         return slugify(charging_status.name) if charging_status is not None else None
 
     @property
     def icon(self) -> str:
         """Icon handling."""
-        if self.state == ChargeState.CHARGE_IN_PROGRESS.name:
-            return "mdi:flash"
-        return "mdi:flash-off"
+        return "mdi:flash" if self.is_charging else "mdi:flash-off"
 
     @property
     def device_class(self) -> str:
@@ -255,8 +245,6 @@ class RenaultFuelAutonomySensor(RenaultCockpitDataEntity):
     @property
     def state(self) -> int | None:
         """Return the state of this entity."""
-        if self.data.fuelAutonomy is None:
-            return None
         return round(self.data.fuelAutonomy)
 
     @property
@@ -276,8 +264,6 @@ class RenaultFuelQuantitySensor(RenaultCockpitDataEntity):
     @property
     def state(self) -> int | None:
         """Return the state of this entity."""
-        if self.data.fuelQuantity is None:
-            return None
         return round(self.data.fuelQuantity)
 
     @property
@@ -297,8 +283,6 @@ class RenaultMileageSensor(RenaultCockpitDataEntity):
     @property
     def state(self) -> int | None:
         """Return the state of this entity."""
-        if self.data.totalMileage is None:
-            return None
         return round(self.data.totalMileage)
 
     @property
@@ -337,15 +321,13 @@ class RenaultPlugStateSensor(RenaultBatteryDataEntity):
     @property
     def state(self) -> str | None:
         """Return the state of this entity."""
-        plug_status = self.data.get_plug_status() if self.data is not None else None
+        plug_status = self.data.get_plug_status()
         return slugify(plug_status.name) if plug_status is not None else None
 
     @property
     def icon(self) -> str:
         """Icon handling."""
-        if self.state == PlugState.PLUGGED.name:
-            return "mdi:power-plug"
-        return "mdi:power-plug-off"
+        return "mdi:power-plug" if self.is_plugged_in else "mdi:power-plug-off"
 
     @property
     def device_class(self) -> str:

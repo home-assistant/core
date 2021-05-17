@@ -48,7 +48,7 @@ MOCK_VEHICLES = {
         ],
         "endpoints": {
             "battery_status": "battery_status_charging.json",
-            "charge_mode": "charge_mode.json",
+            "charge_mode": "charge_mode_always.json",
             "cockpit": "cockpit_ev.json",
             "hvac_status": "hvac_status.json",
         },
@@ -135,7 +135,7 @@ MOCK_VEHICLES = {
         ],
         "endpoints": {
             "battery_status": "battery_status_not_charging.json",
-            "charge_mode": "charge_mode.json",
+            "charge_mode": "charge_mode_schedule.json",
             "cockpit": "cockpit_ev.json",
         },
         SENSOR_DOMAIN: [
@@ -162,7 +162,7 @@ MOCK_VEHICLES = {
             {
                 "entity_id": "sensor.vf1aaaaa555777999_charge_mode",
                 "unique_id": "vf1aaaaa555777999_charge_mode",
-                "result": "always",
+                "result": "schedule_mode",
                 "class": DEVICE_CLASS_CHARGE_MODE,
             },
             {
@@ -214,7 +214,7 @@ MOCK_VEHICLES = {
         ],
         "endpoints": {
             "battery_status": "battery_status_charging.json",
-            "charge_mode": "charge_mode.json",
+            "charge_mode": "charge_mode_always.json",
             "cockpit": "cockpit_fuel.json",
         },
         SENSOR_DOMAIN: [

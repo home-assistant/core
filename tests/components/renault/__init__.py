@@ -118,8 +118,8 @@ async def create_vehicle_proxy(
     return vehicle_proxy
 
 
-async def create_vehicle_proxy_with_exception(
-    hass: HomeAssistant, vehicle_type: str, exception: Exception
+async def create_vehicle_proxy_with_side_effect(
+    hass: HomeAssistant, vehicle_type: str, side_effect: Any
 ) -> RenaultVehicleProxy:
     """Create a vehicle proxy for testing unavailable entities."""
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
@@ -144,16 +144,16 @@ async def create_vehicle_proxy_with_exception(
         side_effect=mock_vehicle["endpoints_available"],
     ), patch(
         "homeassistant.components.renault.renault_vehicle.RenaultVehicleProxy.get_battery_status",
-        side_effect=exception,
+        side_effect=side_effect,
     ), patch(
         "homeassistant.components.renault.renault_vehicle.RenaultVehicleProxy.get_charge_mode",
-        side_effect=exception,
+        side_effect=side_effect,
     ), patch(
         "homeassistant.components.renault.renault_vehicle.RenaultVehicleProxy.get_cockpit",
-        side_effect=exception,
+        side_effect=side_effect,
     ), patch(
         "homeassistant.components.renault.renault_vehicle.RenaultVehicleProxy.get_hvac_status",
-        side_effect=exception,
+        side_effect=side_effect,
     ):
         await vehicle_proxy.async_initialise()
     return vehicle_proxy
