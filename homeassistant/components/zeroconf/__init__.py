@@ -329,6 +329,9 @@ class ZeroconfDiscovery:
         """Start discovery."""
         self.flow_dispatcher = FlowDispatcher(self.hass)
         types = list(self.zeroconf_types)
+        # We want to make sure we know about other HomeAssistant
+        # instances as soon as possible to avoid name conflicts
+        # so we always browse for ZEROCONF_TYPE
         for hk_type in (ZEROCONF_TYPE, *HOMEKIT_TYPES):
             if hk_type not in self.zeroconf_types:
                 types.append(hk_type)
