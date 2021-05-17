@@ -12,6 +12,12 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
@@ -33,6 +39,7 @@ from .const import (
 )
 from .modbus import ModbusHub
 
+PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -104,11 +111,17 @@ class ModbusCover(CoverEntity, RestoreEntity):
         """Handle entity which will be added."""
         state = await self.async_get_last_state()
         if state:
-            self._value = state.state
+            convert = {
+                STATE_CLOSED: self._state_closed,
+                STATE_CLOSING: self._state_closing,
+                STATE_OPENING: self._state_opening,
+                STATE_OPEN: self._state_open,
+                STATE_UNAVAILABLE: None,
+                STATE_UNKNOWN: None,
+            }
+            self._value = convert[state.state]
 
-        async_track_time_interval(
-            self.hass, lambda arg: self.update(), self._scan_interval
-        )
+        async_track_time_interval(self.hass, self.async_update, self._scan_interval)
 
     @property
     def device_class(self) -> str | None:
@@ -154,41 +167,43 @@ class ModbusCover(CoverEntity, RestoreEntity):
         # Handle polling directly in this entity
         return False
 
-    def open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         if self._coil is not None:
-            self._write_coil(True)
+            await self._async_write_coil(True)
         else:
-            self._write_register(self._state_open)
+            await self._async_write_register(self._state_open)
 
-        self.update()
+        self.async_update()
 
-    def close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         if self._coil is not None:
-            self._write_coil(False)
+            await self._async_write_coil(False)
         else:
-            self._write_register(self._state_closed)
+            await self._async_write_register(self._state_closed)
 
-        self.update()
+        self.async_update()
 
-    def update(self):
+    async def async_update(self, now=None):
         """Update the state of the cover."""
+        # remark "now" is a dummy parameter to avoid problems with
+        # async_track_time_interval
         if self._coil is not None and self._status_register is None:
-            self._value = self._read_coil()
+            self._value = await self._async_read_coil()
         else:
-            self._value = self._read_status_register()
+            self._value = await self._async_read_status_register()
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def _read_status_register(self) -> int | None:
+    async def _async_read_status_register(self) -> int | None:
         """Read status register using the Modbus hub slave."""
         if self._status_register_type == CALL_TYPE_REGISTER_INPUT:
-            result = self._hub.read_input_registers(
+            result = await self._hub.async_read_input_registers(
                 self._slave, self._status_register, 1
             )
         else:
-            result = self._hub.read_holding_registers(
+            result = await self._hub.async_read_holding_registers(
                 self._slave, self._status_register, 1
             )
         if result is None:
@@ -200,13 +215,15 @@ class ModbusCover(CoverEntity, RestoreEntity):
 
         return value
 
-    def _write_register(self, value):
+    async def _async_write_register(self, value):
         """Write holding register using the Modbus hub slave."""
-        self._available = self._hub.write_register(self._slave, self._register, value)
+        self._available = await self._hub.async_write_register(
+            self._slave, self._register, value
+        )
 
-    def _read_coil(self) -> bool | None:
+    async def _async_read_coil(self) -> bool | None:
         """Read coil using the Modbus hub slave."""
-        result = self._hub.read_coils(self._slave, self._coil, 1)
+        result = await self._hub.async_read_coils(self._slave, self._coil, 1)
         if result is None:
             self._available = False
             return None
@@ -214,6 +231,8 @@ class ModbusCover(CoverEntity, RestoreEntity):
         value = bool(result.bits[0] & 1)
         return value
 
-    def _write_coil(self, value):
+    async def _async_write_coil(self, value):
         """Write coil using the Modbus hub slave."""
-        self._available = self._hub.write_coil(self._slave, self._coil, value)
+        self._available = await self._hub.async_write_coil(
+            self._slave, self._coil, value
+        )

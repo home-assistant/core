@@ -479,7 +479,7 @@ debugpy==1.3.0
 # homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
 # homeassistant.components.ssdp
-defusedxml==0.6.0
+defusedxml==0.7.1
 
 # homeassistant.components.deluge
 deluge-client==1.7.1
@@ -634,6 +634,9 @@ fritzconnection==1.4.2
 # homeassistant.components.google_translate
 gTTS==2.2.2
 
+# homeassistant.components.garages_amsterdam
+garages-amsterdam==2.0.4
+
 # homeassistant.components.garmin_connect
 garminconnect==0.1.19
 
@@ -738,7 +741,7 @@ hass-nabucasa==0.43.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.2.12
+hatasmota==0.2.13
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.2
@@ -1040,7 +1043,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.20.2
+numpy==1.20.3
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -1070,7 +1073,7 @@ onvif-zeep-async==1.0.0
 open-garage==0.1.4
 
 # homeassistant.components.opencv
-# opencv-python-headless==4.3.0.36
+# opencv-python-headless==4.4.0.42
 
 # homeassistant.components.openerz
 openerz-api==0.1.0
@@ -1415,7 +1418,7 @@ pyfireservicerota==0.0.40
 pyflexit==0.3
 
 # homeassistant.components.flic
-pyflic-homeassistant==0.4.dev0
+pyflic==2.0.3
 
 # homeassistant.components.flume
 pyflume==0.5.5
@@ -2335,7 +2338,7 @@ wakeonlan==2.0.1
 waqiasync==1.0.0
 
 # homeassistant.components.folder_watcher
-watchdog==2.1.0
+watchdog==2.1.1
 
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0
