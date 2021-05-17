@@ -23,6 +23,9 @@
                 },
                 "title": "W\u00e4hle einen Namen f\u00fcr das Ger\u00e4t"
             },
+            "reset": {
+                "description": "{Name} ({Modell} unter {Host}) ist gesperrt. Du musst das Ger\u00e4t entsperren, um dich zu authentifizieren und die Konfiguration abzuschlie\u00dfen. Anweisungen:\n1. \u00d6ffne die Broadlink-App.\n2. Klicke auf auf das Ger\u00e4t.\n3. Klicke oben rechts auf `...`.\n4. Scrolle zum unteren Ende der Seite.\n5. Deaktiviere die Sperre."
+            },
             "user": {
                 "data": {
                     "host": "Host",

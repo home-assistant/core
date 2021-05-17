@@ -15,7 +15,7 @@
             "response_error": "Wyst\u0105pi\u0142 nieznany b\u0142\u0105d w urz\u0105dzeniu",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
-        "flow_title": "Huawei LTE: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
