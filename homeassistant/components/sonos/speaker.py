@@ -372,9 +372,14 @@ class SonosSpeaker:
         if event is None:
             return
 
-        new_available_alarms = await self.hass.async_add_executor_job(
+        all_new_available_alarms = await self.hass.async_add_executor_job(
             get_alarms, self.soco
         )
+        new_available_alarms = {
+            alarm
+            for alarm in all_new_available_alarms
+            if alarm.zone.uid == self.soco.uid
+        }
 
         if new_available_alarms != self.available_alarms:
             self.available_alarms = new_available_alarms
