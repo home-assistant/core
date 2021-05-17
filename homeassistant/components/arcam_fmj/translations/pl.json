@@ -11,7 +11,7 @@
             "one": "jeden",
             "other": "inne"
         },
-        "flow_title": "Arcam FMJ na {host}",
+        "flow_title": "{host}",
         "step": {
             "confirm": {
                 "description": "Czy chcesz doda\u0107 Arcam FMJ na \"{host}\" do Home Assistanta?"

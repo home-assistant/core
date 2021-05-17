@@ -13,7 +13,7 @@
             "cannot_connect": "Kan geen verbinding maken",
             "connection_upgrade": "Kan geen verbinding maken met de printer. Probeer het opnieuw met SSL / TLS-optie aangevinkt."
         },
-        "flow_title": "Printer: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

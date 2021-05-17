@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.1.8
+AEMET-OpenData==0.2.1
 
 # homeassistant.components.homekit
 HAP-python==3.4.1
@@ -91,7 +91,7 @@ aiodiscover==1.4.0
 
 # homeassistant.components.dnsip
 # homeassistant.components.minecraft_server
-aiodns==2.0.0
+aiodns==3.0.0
 
 # homeassistant.components.eafm
 aioeafm==0.1.2
@@ -223,7 +223,7 @@ bond-api==0.1.12
 boschshcpy==0.2.17
 
 # homeassistant.components.braviatv
-bravia-tv==1.0.8
+bravia-tv==1.0.11
 
 # homeassistant.components.broadlink
 broadlink==0.17.0
