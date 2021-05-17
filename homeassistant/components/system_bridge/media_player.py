@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime
 import logging
 
 from systembridge import Bridge
@@ -26,6 +27,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+import homeassistant.util.dt as dt_util
 
 from . import BridgeDeviceEntity
 from .const import DOMAIN
@@ -107,10 +109,12 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
             coordinator, bridge, "media_player", "Media Player", None, True
         )
         self._media_player_status: Media = None
+        self._media_player_last_updated: datetime | None = None
 
         async def handle_event(event: Event) -> None:
             if event.name == "player-status":
                 self._media_player_status = Media(event.data)
+                self._media_player_last_updated = dt_util.utcnow()
                 await self.async_update_ha_state()
 
         asyncio.ensure_future(bridge.listen_for_events(handle_event))
@@ -177,13 +181,9 @@ class BridgeMediaPlayer(BridgeDeviceEntity, MediaPlayerEntity):
         return self._media_player_status.position
 
     @property
-    def media_position_updated_at(self):
-        """When was the position of the current playing media valid.
-
-        Returns value from homeassistant.util.dt.utcnow().
-        """
-        # TODO: Implement
-        return None
+    def media_position_updated_at(self) -> datetime | None:
+        """When was the position of the current playing media valid."""
+        return self._media_player_last_updated
 
     @property
     def volume_level(self) -> float | None:
