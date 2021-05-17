@@ -15,6 +15,9 @@ from .const import DOMAIN
 
 PLATFORMS = ["binary_sensor"]
 
+UPDATE_INTERVAL_NOT_IN_MEETING = timedelta(seconds=10)
+UPDATE_INTERVAL_IN_MEETING = timedelta(seconds=1)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up mütesync from a config entry."""
@@ -27,7 +30,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def update_data():
         """Update the data."""
         async with async_timeout.timeout(2.5):
-            return await client.get_state()
+            state = await client.get_state()
+
+            if state["muted"] is None or state["in_meeting"] is None:
+                raise update_coordinator.UpdateFailed("Got invalid response")
+
+            if state["in_meeting"] is True:
+                coordinator.update_interval = UPDATE_INTERVAL_IN_MEETING
+            else:
+                coordinator.update_interval = UPDATE_INTERVAL_NOT_IN_MEETING
+
+            return state
 
     coordinator = hass.data.setdefault(DOMAIN, {})[
         entry.entry_id
@@ -35,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         logging.getLogger(__name__),
         name=DOMAIN,
-        update_interval=timedelta(seconds=5),
+        update_interval=UPDATE_INTERVAL_NOT_IN_MEETING,
         update_method=update_data,
     )
     await coordinator.async_config_entry_first_refresh()
