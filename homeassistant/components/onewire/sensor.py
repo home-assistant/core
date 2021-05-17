@@ -195,7 +195,7 @@ HOBBYBOARD_EF: dict[str, list[DeviceComponentDescription]] = {
 
 # 7E sensors are special sensors by Embedded Data Systems
 
-EDS_SENSORS = {
+EDS_SENSORS: dict[str, list[DeviceComponentDescription]] = {
     "EDS0066": [
         {
             "path": "EDS0066/temperature",
