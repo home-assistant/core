@@ -123,7 +123,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         if self.alarm in self.speaker.available_alarms:
             return
 
-        _LOGGER.debug("The alarm is removed from hass because it has been deleted.")
+        _LOGGER.debug("The alarm is removed from hass because it has been deleted")
         if self.alarm_id in self.hass.data[DATA_SONOS].alarms:
             self.hass.data[DATA_SONOS].alarms.remove(self.alarm_id)
 
@@ -150,7 +150,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
             connections={(dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address)},
         )
         if not entity_registry.async_get(self.entity_id).device_id == new_device.id:
-            _LOGGER.debug("The alarm is switching the sonos player.")
+            _LOGGER.debug("The alarm is switching the sonos player")
             # pylint: disable=protected-access
             entity_registry._async_update_entity(
                 self.entity_id, device_id=new_device.id
@@ -158,7 +158,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
 
     def update_alarm(self):
         """Update the state of the alarm."""
-        _LOGGER.debug("Updating the state of the alarm.")
+        _LOGGER.debug("Updating the state of the alarm")
         if self.speaker.soco.uid != self.alarm.zone.uid:
             self.speaker.available_alarms.remove(self.alarm)
             self.speaker = get_speaker_from_uid(self.alarm.zone.uid, self.data_sonos)
@@ -215,7 +215,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     async def async_handle_switch_on_off(self, turn_on: bool) -> bool:
         """Handle turn on/off of alarm switch."""
         try:
-            _LOGGER.debug("Switching the state of the alarm.")
+            _LOGGER.debug("Switching the state of the alarm")
             self.alarm.enabled = turn_on
             await self.hass.async_add_executor_job(self.alarm.save)
             return True
