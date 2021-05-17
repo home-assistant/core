@@ -4,7 +4,6 @@ from __future__ import annotations
 from xknx import XKNX
 from xknx.devices import (
     BinarySensor as XknxBinarySensor,
-    Cover as XknxCover,
     Device as XknxDevice,
     Sensor as XknxSensor,
     Weather as XknxWeather,
@@ -14,7 +13,7 @@ from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_TYPE
 from homeassistant.helpers.typing import ConfigType
 
 from .const import SupportedPlatforms
-from .schema import BinarySensorSchema, CoverSchema, SensorSchema, WeatherSchema
+from .schema import BinarySensorSchema, SensorSchema, WeatherSchema
 
 
 def create_knx_device(
@@ -23,9 +22,6 @@ def create_knx_device(
     config: ConfigType,
 ) -> XknxDevice | None:
     """Return the requested XKNX device."""
-    if platform is SupportedPlatforms.COVER:
-        return _create_cover(knx_module, config)
-
     if platform is SupportedPlatforms.SENSOR:
         return _create_sensor(knx_module, config)
 
@@ -36,28 +32,6 @@ def create_knx_device(
         return _create_weather(knx_module, config)
 
     return None
-
-
-def _create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
-    """Return a KNX Cover device to be used within XKNX."""
-    return XknxCover(
-        knx_module,
-        name=config[CONF_NAME],
-        group_address_long=config.get(CoverSchema.CONF_MOVE_LONG_ADDRESS),
-        group_address_short=config.get(CoverSchema.CONF_MOVE_SHORT_ADDRESS),
-        group_address_stop=config.get(CoverSchema.CONF_STOP_ADDRESS),
-        group_address_position_state=config.get(
-            CoverSchema.CONF_POSITION_STATE_ADDRESS
-        ),
-        group_address_angle=config.get(CoverSchema.CONF_ANGLE_ADDRESS),
-        group_address_angle_state=config.get(CoverSchema.CONF_ANGLE_STATE_ADDRESS),
-        group_address_position=config.get(CoverSchema.CONF_POSITION_ADDRESS),
-        travel_time_down=config[CoverSchema.CONF_TRAVELLING_TIME_DOWN],
-        travel_time_up=config[CoverSchema.CONF_TRAVELLING_TIME_UP],
-        invert_position=config[CoverSchema.CONF_INVERT_POSITION],
-        invert_angle=config[CoverSchema.CONF_INVERT_ANGLE],
-        device_class=config.get(CONF_DEVICE_CLASS),
-    )
 
 
 def _create_sensor(knx_module: XKNX, config: ConfigType) -> XknxSensor:
