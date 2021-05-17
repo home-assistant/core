@@ -130,7 +130,7 @@ def _create_climate(knx_module: XKNX, config: ConfigType) -> XknxClimate:
         group_address_setpoint_shift_state=config.get(
             ClimateSchema.CONF_SETPOINT_SHIFT_STATE_ADDRESS
         ),
-        setpoint_shift_mode=config[ClimateSchema.CONF_SETPOINT_SHIFT_MODE],
+        setpoint_shift_mode=config.get(ClimateSchema.CONF_SETPOINT_SHIFT_MODE),
         setpoint_shift_max=config[ClimateSchema.CONF_SETPOINT_SHIFT_MAX],
         setpoint_shift_min=config[ClimateSchema.CONF_SETPOINT_SHIFT_MIN],
         temperature_step=config[ClimateSchema.CONF_TEMPERATURE_STEP],
