@@ -9,7 +9,7 @@
             "one": "Een",
             "other": "Ander"
         },
-        "flow_title": "UPnP/IGD: {name}",
+        "flow_title": "{name}",
         "step": {
             "init": {
                 "one": "Leeg",

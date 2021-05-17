@@ -16,6 +16,7 @@ from .const import (
     DOMAIN,
     SONOS_ENTITY_CREATED,
     SONOS_ENTITY_UPDATE,
+    SONOS_HOUSEHOLD_UPDATED,
     SONOS_STATE_UPDATED,
 )
 from .speaker import SonosSpeaker
@@ -45,6 +46,13 @@ class SonosEntity(Entity):
             async_dispatcher_connect(
                 self.hass,
                 f"{SONOS_STATE_UPDATED}-{self.soco.uid}",
+                self.async_write_ha_state,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SONOS_HOUSEHOLD_UPDATED}-{self.soco.household_id}",
                 self.async_write_ha_state,
             )
         )

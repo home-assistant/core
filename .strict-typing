@@ -4,10 +4,12 @@
 
 homeassistant.components
 homeassistant.components.acer_projector.*
+homeassistant.components.actiontec.*
 homeassistant.components.aftership.*
 homeassistant.components.airly.*
 homeassistant.components.aladdin_connect.*
 homeassistant.components.amazon_polly.*
+homeassistant.components.ampio.*
 homeassistant.components.automation.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bond.*
@@ -29,6 +31,7 @@ homeassistant.components.hyperion.*
 homeassistant.components.image_processing.*
 homeassistant.components.integration.*
 homeassistant.components.knx.*
+homeassistant.components.kraken.*
 homeassistant.components.light.*
 homeassistant.components.lock.*
 homeassistant.components.mailbox.*
@@ -41,6 +44,7 @@ homeassistant.components.persistent_notification.*
 homeassistant.components.proximity.*
 homeassistant.components.recorder.purge
 homeassistant.components.recorder.repack
+homeassistant.components.recorder.statistics
 homeassistant.components.remote.*
 homeassistant.components.scene.*
 homeassistant.components.sensor.*

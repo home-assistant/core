@@ -1,5 +1,8 @@
 """Config flow for kraken integration."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import krakenex
 from pykrakenapi.pykrakenapi import KrakenAPI
@@ -8,6 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_TRACKED_ASSET_PAIRS, DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -24,11 +28,15 @@ class KrakenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> KrakenOptionsFlowHandler:
         """Get the options flow for this handler."""
         return KrakenOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         if DOMAIN in self.hass.data:
             return self.async_abort(reason="already_configured")
@@ -44,11 +52,13 @@ class KrakenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class KrakenOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Kraken client options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Kraken options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the Kraken options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
