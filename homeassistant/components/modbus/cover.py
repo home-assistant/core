@@ -174,7 +174,7 @@ class ModbusCover(CoverEntity, RestoreEntity):
         else:
             await self._async_write_register(self._state_open)
 
-        self.async_update()
+        await self.async_update()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
@@ -183,7 +183,7 @@ class ModbusCover(CoverEntity, RestoreEntity):
         else:
             await self._async_write_register(self._state_closed)
 
-        self.async_update()
+        await self.async_update()
 
     async def async_update(self, now=None):
         """Update the state of the cover."""

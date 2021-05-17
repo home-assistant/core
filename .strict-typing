@@ -6,8 +6,11 @@ homeassistant.components
 homeassistant.components.acer_projector.*
 homeassistant.components.actiontec.*
 homeassistant.components.aftership.*
+homeassistant.components.air_quality.*
 homeassistant.components.airly.*
 homeassistant.components.aladdin_connect.*
+homeassistant.components.amazon_polly.*
+homeassistant.components.ampio.*
 homeassistant.components.automation.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bond.*
@@ -29,6 +32,7 @@ homeassistant.components.hyperion.*
 homeassistant.components.image_processing.*
 homeassistant.components.integration.*
 homeassistant.components.knx.*
+homeassistant.components.kraken.*
 homeassistant.components.light.*
 homeassistant.components.lock.*
 homeassistant.components.mailbox.*

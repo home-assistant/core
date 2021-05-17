@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.1.8
+AEMET-OpenData==0.2.1
 
 # homeassistant.components.homekit
 HAP-python==3.4.1
@@ -91,7 +91,7 @@ aiodiscover==1.4.0
 
 # homeassistant.components.dnsip
 # homeassistant.components.minecraft_server
-aiodns==2.0.0
+aiodns==3.0.0
 
 # homeassistant.components.eafm
 aioeafm==0.1.2
@@ -119,7 +119,7 @@ aiohomekit==0.2.61
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==2.4.2
+aiohue==2.5.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
@@ -176,7 +176,7 @@ androidtv[async]==0.0.59
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.8.9
+apprise==0.9.3
 
 # homeassistant.components.aprs
 aprslib==0.6.46
@@ -223,7 +223,7 @@ bond-api==0.1.12
 boschshcpy==0.2.17
 
 # homeassistant.components.braviatv
-bravia-tv==1.0.8
+bravia-tv==1.0.11
 
 # homeassistant.components.broadlink
 broadlink==0.17.0
@@ -351,7 +351,7 @@ garminconnect==0.1.19
 geojson_client==0.4
 
 # homeassistant.components.aprs
-geopy==1.21.0
+geopy==2.1.0
 
 # homeassistant.components.geo_rss_events
 georss_generic_client==0.4
@@ -1271,7 +1271,7 @@ wolf_smartset==0.1.8
 xbox-webapi==2.0.11
 
 # homeassistant.components.knx
-xknx==0.18.1
+xknx==0.18.2
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest

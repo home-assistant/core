@@ -1,6 +1,16 @@
 {
-    "title": "Bosch SHC",
     "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "pairing_failed": "Pairing failed; please check the Bosch Smart Home Controller is in pairing mode (LED flashing) as well as your password is correct.",
+            "session_error": "Session error: API return Non-OK result.",
+            "unknown": "Unexpected error"
+        },
         "flow_title": "Bosch SHC: {name}",
         "step": {
             "confirm_discovery": {
@@ -11,31 +21,18 @@
                     "password": "Password of the Smart Home Controller"
                 }
             },
-            "user": {
-                "description": "Set up your Bosch Smart Home Controller to allow monitoring and control with Home Assistant.",
-                "title": "SHC authentication parameters",
-                "data": {
-                    "host": "Host"
-                }
-            },
             "reauth_confirm": {
-                "title": "SHC authentication parameters",
                 "description": "The bosch_shc integration needs to re-authenticate your account",
+                "title": "Reauthenticate Integration"
+            },
+            "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Set up your Bosch Smart Home Controller to allow monitoring and control with Home Assistant.",
+                "title": "SHC authentication parameters"
             }
-        },
-        "error": {
-            "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
-            "pairing_failed": "Pairing failed; please check the Bosch Smart Home Controller is in pairing mode (LED flashing) as well as your password is correct.",
-            "session_error": "Session error: API return Non-OK result.",
-            "unknown": "Unexpected error"
-        },
-        "abort": {
-            "already_configured": "Device is already configured",
-            "reauth_successful": "Re-authentication was successful"
         }
-    }
+    },
+    "title": "Bosch SHC"
 }

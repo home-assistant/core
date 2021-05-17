@@ -354,7 +354,7 @@ async def test_reusing_uuid(hass, aioclient_mock):
     assert analytics.uuid == "NOT_MOCK_UUID"
 
 
-async def test_custom_integrations(hass, aioclient_mock):
+async def test_custom_integrations(hass, aioclient_mock, enable_custom_integrations):
     """Test sending custom integrations."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)

@@ -142,11 +142,13 @@ async def async_setup_platform(
             _LOGGER.error("Error in sensor %s structure: %s", entry[CONF_NAME], err)
             continue
 
-        if entry[CONF_COUNT] * 2 != size:
+        bytecount = entry[CONF_COUNT] * 2
+        if bytecount != size:
             _LOGGER.error(
-                "Structure size (%d bytes) mismatch registers count (%d words)",
+                "Structure request %d bytes, but %d registers have a size of %d bytes",
                 size,
                 entry[CONF_COUNT],
+                bytecount,
             )
             continue
 
@@ -283,14 +285,9 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
         """Update the state of the sensor."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
-        if self._register_type == CALL_TYPE_REGISTER_INPUT:
-            result = await self._hub.async_read_input_registers(
-                self._slave, self._register, self._count
-            )
-        else:
-            result = await self._hub.async_read_holding_registers(
-                self._slave, self._register, self._count
-            )
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._register, self._count, self._register_type
+        )
         if result is None:
             self._available = False
             self.async_write_ha_state()

@@ -134,7 +134,7 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         else:
             self._available = True
             if self._verify_active:
-                self.async_update()
+                await self.async_update()
             else:
                 self._is_on = True
                 self.async_write_ha_state()
@@ -150,7 +150,7 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         else:
             self._available = True
             if self._verify_active:
-                self.async_update()
+                await self.async_update()
             else:
                 self._is_on = False
                 self.async_write_ha_state()
