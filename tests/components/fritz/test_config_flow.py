@@ -454,20 +454,3 @@ async def test_optionsflow(hass: HomeAssistant, fc_class_mock):
             mock_config.options[CONF_CONSIDER_HOME]
             == DEFAULT_CONSIDER_HOME.total_seconds()
         )
-
-        result = await hass.config_entries.options.async_init(mock_config.entry_id)
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "init"
-
-        result = await hass.config_entries.options.async_init(mock_config.entry_id)
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
-            },
-        )
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert (
-            mock_config.options[CONF_CONSIDER_HOME]
-            == DEFAULT_CONSIDER_HOME.total_seconds()
-        )

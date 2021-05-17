@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import voluptuous as vol
 
@@ -189,10 +188,10 @@ class FritzBoxTracker(ScannerEntity):
         return False
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         attrs: dict[str, str] = {}
-        if self._last_activity:
+        if self._last_activity is not None:
             attrs["last_time_reachable"] = self._last_activity.isoformat(
                 timespec="seconds"
             )

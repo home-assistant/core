@@ -44,7 +44,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry):
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return FritzBoxToolsOptionsFlowHandler(config_entry)
 
     def __init__(self):
         """Initialize FRITZ!Box Tools flow."""
@@ -261,7 +261,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class OptionsFlowHandler(OptionsFlow):
+class FritzBoxToolsOptionsFlowHandler(OptionsFlow):
     """Handle a option flow."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
