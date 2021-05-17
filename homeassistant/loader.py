@@ -508,7 +508,7 @@ async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration
 
     try:
         integration = await _async_get_integration(hass, domain)
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         # Remove event from cache.
         cache.pop(domain)
         event.set()
