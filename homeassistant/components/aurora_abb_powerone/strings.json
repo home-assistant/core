@@ -2,11 +2,24 @@
   "config": {
     "step": {
       "user": {
-        "description": "The inverter must be connected via an RS485 adaptor or TCP, please select serial port and the inverter's address as configured on the LCD panel",
+        "description": "The inverter must connected and on (in daylight), please select connection type (direct serial or TCP/IP based)",
         "data": {
-          "port": "RS485 or USB-RS485 Adaptor Port or TCP",
-          "address": "Inverter Bus Address",
-          "host": "TCP Host:Port"
+          "type": "Connection type"
+        }
+      },
+      "user_serial": {
+        "description": "The inverter must be connected via an RS485 adaptor, please select serial port and the inverter's address as configured on the LCD panel",
+        "data": {
+          "port": "RS485 or USB-RS485 Adaptor Port",
+          "address": "Inverter Address"
+        }
+      },
+      "user_tcp": {
+        "description": "The inverter must be connected via an TCP/IP to serial adaptor, please select host, port and the address number configured on the LCD panel",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "address": "Inverter Address"
         }
       }
     },

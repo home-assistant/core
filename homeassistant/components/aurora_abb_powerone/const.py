@@ -8,6 +8,9 @@ DOMAIN = "aurora_abb_powerone"
 MIN_ADDRESS = 2
 MAX_ADDRESS = 63
 DEFAULT_ADDRESS = 2
+DEFAULT_TYPE = "serial"
+DEFAULT_HOST = None
+DEFAULT_PORT = 1234
 
 DEFAULT_INTEGRATION_TITLE = "PhotoVoltaic Inverters"
 DEFAULT_DEVICE_NAME = "Solar Inverter"
