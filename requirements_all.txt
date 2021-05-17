@@ -1759,7 +1759,7 @@ pysnmp==4.4.12
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.46
+pysonos==0.0.47
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -2384,7 +2384,7 @@ xmltodict==0.12.0
 xs1-api-client==3.0.0
 
 # homeassistant.components.yale_smart_alarm
-yalesmartalarmclient==0.1.6
+yalesmartalarmclient==0.3.3
 
 # homeassistant.components.august
 yalexs==1.1.11
