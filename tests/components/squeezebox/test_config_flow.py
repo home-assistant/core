@@ -4,6 +4,7 @@ from unittest.mock import patch
 from pysqueezebox import Server
 
 from homeassistant import config_entries
+from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.components.squeezebox.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -191,6 +192,41 @@ async def test_discovery_no_uuid(hass):
             DOMAIN,
             context={"source": config_entries.SOURCE_DISCOVERY},
             data={CONF_HOST: HOST, CONF_PORT: PORT},
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "edit"
+
+
+async def test_dhcp_discovery(hass):
+    """Test we can process discovery from dhcp."""
+    with patch(
+        "pysqueezebox.Server.async_query",
+        return_value={"uuid": UUID},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data={
+                IP_ADDRESS: "1.1.1.1",
+                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+                HOSTNAME: "any",
+            },
+        )
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["step_id"] == "edit"
+
+
+async def test_dhcp_discovery_no_connection(hass):
+    """Test we can process discovery from dhcp without connecting to squeezebox server."""
+    with patch("pysqueezebox.Server.async_query", new=patch_async_query_unauthorized):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data={
+                IP_ADDRESS: "1.1.1.1",
+                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
+                HOSTNAME: "any",
+            },
         )
         assert result["type"] == RESULT_TYPE_FORM
         assert result["step_id"] == "edit"
