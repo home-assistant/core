@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Kon niet verbinden"
         },
-        "flow_title": "Canary: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
