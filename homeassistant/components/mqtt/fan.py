@@ -147,7 +147,6 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_PERCENTAGE_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_PERCENTAGE_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_PERCENTAGE_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH): cv.string,
             # CONF_PRESET_MODE_COMMAND_TOPIC and CONF_PRESET_MODES_LIST must be used together
             vol.Inclusive(
                 CONF_PRESET_MODE_COMMAND_TOPIC, "preset_modes"
