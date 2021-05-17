@@ -12,8 +12,16 @@
             },
             "user": {
                 "data": {
-                    "scan_interval": "Update interval (seconds, minimal 30)",
-                    "usn": "Device"
+                    "unique_id": "Device"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Update interval (seconds, minimal 30)"
                 }
             }
         }

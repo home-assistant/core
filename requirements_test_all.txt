@@ -176,7 +176,7 @@ androidtv[async]==0.0.59
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.8.9
+apprise==0.9.3
 
 # homeassistant.components.aprs
 aprslib==0.6.46

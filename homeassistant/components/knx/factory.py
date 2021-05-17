@@ -3,17 +3,16 @@ from __future__ import annotations
 
 from xknx import XKNX
 from xknx.devices import (
-    BinarySensor as XknxBinarySensor,
     Device as XknxDevice,
     Sensor as XknxSensor,
     Weather as XknxWeather,
 )
 
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_NAME, CONF_TYPE
 from homeassistant.helpers.typing import ConfigType
 
 from .const import SupportedPlatforms
-from .schema import BinarySensorSchema, SensorSchema, WeatherSchema
+from .schema import SensorSchema, WeatherSchema
 
 
 def create_knx_device(
@@ -24,9 +23,6 @@ def create_knx_device(
     """Return the requested XKNX device."""
     if platform is SupportedPlatforms.SENSOR:
         return _create_sensor(knx_module, config)
-
-    if platform is SupportedPlatforms.BINARY_SENSOR:
-        return _create_binary_sensor(knx_module, config)
 
     if platform is SupportedPlatforms.WEATHER:
         return _create_weather(knx_module, config)
@@ -43,23 +39,6 @@ def _create_sensor(knx_module: XKNX, config: ConfigType) -> XknxSensor:
         sync_state=config[SensorSchema.CONF_SYNC_STATE],
         always_callback=config[SensorSchema.CONF_ALWAYS_CALLBACK],
         value_type=config[CONF_TYPE],
-    )
-
-
-def _create_binary_sensor(knx_module: XKNX, config: ConfigType) -> XknxBinarySensor:
-    """Return a KNX binary sensor to be used within XKNX."""
-    device_name = config[CONF_NAME]
-
-    return XknxBinarySensor(
-        knx_module,
-        name=device_name,
-        group_address_state=config[BinarySensorSchema.CONF_STATE_ADDRESS],
-        invert=config[BinarySensorSchema.CONF_INVERT],
-        sync_state=config[BinarySensorSchema.CONF_SYNC_STATE],
-        device_class=config.get(CONF_DEVICE_CLASS),
-        ignore_internal_state=config[BinarySensorSchema.CONF_IGNORE_INTERNAL_STATE],
-        context_timeout=config.get(BinarySensorSchema.CONF_CONTEXT_TIMEOUT),
-        reset_after=config.get(BinarySensorSchema.CONF_RESET_AFTER),
     )
 
 
