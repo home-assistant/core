@@ -256,6 +256,15 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         last_state = await self.async_get_last_state()
 
+        def add_topic(topic, msg_callback):
+            """Add a topic."""
+            if self._topic[topic] is not None:
+                topics[topic] = {
+                    "topic": self._topic[topic],
+                    "msg_callback": msg_callback,
+                    "qos": self._config[CONF_QOS],
+                }
+
         @callback
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
@@ -298,13 +307,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self._brightness = percent_bright * 255
             self.async_write_ha_state()
 
-        if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is not None:
-            topics[CONF_BRIGHTNESS_STATE_TOPIC] = {
-                "topic": self._topic[CONF_BRIGHTNESS_STATE_TOPIC],
-                "msg_callback": brightness_received,
-                "qos": self._config[CONF_QOS],
-            }
-        elif (
+        add_topic(CONF_BRIGHTNESS_STATE_TOPIC, brightness_received)
+        if (
             self._optimistic_brightness
             and last_state
             and last_state.attributes.get(ATTR_BRIGHTNESS)
@@ -327,12 +331,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 self._brightness = percent_bright * 255
             self.async_write_ha_state()
 
-        if self._topic[CONF_RGB_STATE_TOPIC] is not None:
-            topics[CONF_RGB_STATE_TOPIC] = {
-                "topic": self._topic[CONF_RGB_STATE_TOPIC],
-                "msg_callback": rgb_received,
-                "qos": self._config[CONF_QOS],
-            }
+        add_topic(CONF_RGB_STATE_TOPIC, rgb_received)
         if (
             self._optimistic_rgb
             and last_state
@@ -354,12 +353,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self._color_temp = int(payload)
             self.async_write_ha_state()
 
-        if self._topic[CONF_COLOR_TEMP_STATE_TOPIC] is not None:
-            topics[CONF_COLOR_TEMP_STATE_TOPIC] = {
-                "topic": self._topic[CONF_COLOR_TEMP_STATE_TOPIC],
-                "msg_callback": color_temp_received,
-                "qos": self._config[CONF_QOS],
-            }
+        add_topic(CONF_COLOR_TEMP_STATE_TOPIC, color_temp_received)
         if (
             self._optimistic_color_temp
             and last_state
@@ -381,12 +375,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self._effect = payload
             self.async_write_ha_state()
 
-        if self._topic[CONF_EFFECT_STATE_TOPIC] is not None:
-            topics[CONF_EFFECT_STATE_TOPIC] = {
-                "topic": self._topic[CONF_EFFECT_STATE_TOPIC],
-                "msg_callback": effect_received,
-                "qos": self._config[CONF_QOS],
-            }
+        add_topic(CONF_EFFECT_STATE_TOPIC, effect_received)
         if (
             self._optimistic_effect
             and last_state
@@ -410,12 +399,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             except ValueError:
                 _LOGGER.debug("Failed to parse hs state update: '%s'", payload)
 
-        if self._topic[CONF_HS_STATE_TOPIC] is not None:
-            topics[CONF_HS_STATE_TOPIC] = {
-                "topic": self._topic[CONF_HS_STATE_TOPIC],
-                "msg_callback": hs_received,
-                "qos": self._config[CONF_QOS],
-            }
+        add_topic(CONF_HS_STATE_TOPIC, hs_received)
         if (
             self._optimistic_hs
             and last_state
@@ -439,13 +423,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self._white_value = percent_white * 255
             self.async_write_ha_state()
 
-        if self._topic[CONF_WHITE_VALUE_STATE_TOPIC] is not None:
-            topics[CONF_WHITE_VALUE_STATE_TOPIC] = {
-                "topic": self._topic[CONF_WHITE_VALUE_STATE_TOPIC],
-                "msg_callback": white_value_received,
-                "qos": self._config[CONF_QOS],
-            }
-        elif (
+        add_topic(CONF_WHITE_VALUE_STATE_TOPIC, white_value_received)
+        if (
             self._optimistic_white_value
             and last_state
             and last_state.attributes.get(ATTR_WHITE_VALUE)
@@ -465,12 +444,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self._hs = color_util.color_xy_to_hs(*xy_color)
             self.async_write_ha_state()
 
-        if self._topic[CONF_XY_STATE_TOPIC] is not None:
-            topics[CONF_XY_STATE_TOPIC] = {
-                "topic": self._topic[CONF_XY_STATE_TOPIC],
-                "msg_callback": xy_received,
-                "qos": self._config[CONF_QOS],
-            }
+        add_topic(CONF_XY_STATE_TOPIC, xy_received)
         if (
             self._optimistic_xy
             and last_state
