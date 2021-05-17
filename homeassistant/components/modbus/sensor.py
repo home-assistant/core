@@ -283,14 +283,9 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
         """Update the state of the sensor."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
-        if self._register_type == CALL_TYPE_REGISTER_INPUT:
-            result = await self._hub.async_read_input_registers(
-                self._slave, self._register, self._count
-            )
-        else:
-            result = await self._hub.async_read_holding_registers(
-                self._slave, self._register, self._count
-            )
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._register, self._count, self._register_type
+        )
         if result is None:
             self._available = False
             self.async_write_ha_state()
