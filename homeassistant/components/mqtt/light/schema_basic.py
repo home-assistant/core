@@ -155,11 +155,11 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize MQTT light."""
-        self._state = False
         self._brightness = None
-        self._hs = None
         self._color_temp = None
         self._effect = None
+        self._hs_color = None
+        self._state = False
         self._white_value = None
 
         self._topic = None
@@ -265,6 +265,11 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                     "qos": self._config[CONF_QOS],
                 }
 
+        def restore_state(attribute, condition):
+            """Restore a state attribute."""
+            if condition and last_state and last_state.attributes.get(attribute):
+                setattr(self, f"_{attribute}", last_state.attributes[attribute])
+
         @callback
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
@@ -308,12 +313,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
         add_topic(CONF_BRIGHTNESS_STATE_TOPIC, brightness_received)
-        if (
-            self._optimistic_brightness
-            and last_state
-            and last_state.attributes.get(ATTR_BRIGHTNESS)
-        ):
-            self._brightness = last_state.attributes.get(ATTR_BRIGHTNESS)
+        restore_state(ATTR_BRIGHTNESS, self._optimistic_brightness)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -325,19 +325,14 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 return
 
             rgb = [int(val) for val in payload.split(",")]
-            self._hs = color_util.color_RGB_to_hs(*rgb)
+            self._hs_color = color_util.color_RGB_to_hs(*rgb)
             if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is None:
                 percent_bright = float(color_util.color_RGB_to_hsv(*rgb)[2]) / 100.0
                 self._brightness = percent_bright * 255
             self.async_write_ha_state()
 
         add_topic(CONF_RGB_STATE_TOPIC, rgb_received)
-        if (
-            self._optimistic_rgb
-            and last_state
-            and last_state.attributes.get(ATTR_HS_COLOR)
-        ):
-            self._hs = last_state.attributes.get(ATTR_HS_COLOR)
+        restore_state(ATTR_HS_COLOR, self._optimistic_rgb)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -354,12 +349,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
         add_topic(CONF_COLOR_TEMP_STATE_TOPIC, color_temp_received)
-        if (
-            self._optimistic_color_temp
-            and last_state
-            and last_state.attributes.get(ATTR_COLOR_TEMP)
-        ):
-            self._color_temp = last_state.attributes.get(ATTR_COLOR_TEMP)
+        restore_state(ATTR_COLOR_TEMP, self._optimistic_color_temp)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -376,12 +366,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
         add_topic(CONF_EFFECT_STATE_TOPIC, effect_received)
-        if (
-            self._optimistic_effect
-            and last_state
-            and last_state.attributes.get(ATTR_EFFECT)
-        ):
-            self._effect = last_state.attributes.get(ATTR_EFFECT)
+        restore_state(ATTR_EFFECT, self._optimistic_effect)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -394,18 +379,13 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
             try:
                 hs_color = [float(val) for val in payload.split(",", 2)]
-                self._hs = hs_color
+                self._hs_color = hs_color
                 self.async_write_ha_state()
             except ValueError:
                 _LOGGER.debug("Failed to parse hs state update: '%s'", payload)
 
         add_topic(CONF_HS_STATE_TOPIC, hs_received)
-        if (
-            self._optimistic_hs
-            and last_state
-            and last_state.attributes.get(ATTR_HS_COLOR)
-        ):
-            self._hs = last_state.attributes.get(ATTR_HS_COLOR)
+        restore_state(ATTR_HS_COLOR, self._optimistic_hs)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -424,12 +404,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
         add_topic(CONF_WHITE_VALUE_STATE_TOPIC, white_value_received)
-        if (
-            self._optimistic_white_value
-            and last_state
-            and last_state.attributes.get(ATTR_WHITE_VALUE)
-        ):
-            self._white_value = last_state.attributes.get(ATTR_WHITE_VALUE)
+        restore_state(ATTR_WHITE_VALUE, self._optimistic_white_value)
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -441,16 +416,11 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 return
 
             xy_color = [float(val) for val in payload.split(",")]
-            self._hs = color_util.color_xy_to_hs(*xy_color)
+            self._hs_color = color_util.color_xy_to_hs(*xy_color)
             self.async_write_ha_state()
 
         add_topic(CONF_XY_STATE_TOPIC, xy_received)
-        if (
-            self._optimistic_xy
-            and last_state
-            and last_state.attributes.get(ATTR_HS_COLOR)
-        ):
-            self._hs = last_state.attributes.get(ATTR_HS_COLOR)
+        restore_state(ATTR_HS_COLOR, self._optimistic_hs)
 
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state, topics
@@ -469,7 +439,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         """Return the hs color value."""
         if self._white_value:
             return None
-        return self._hs
+        return self._hs_color
 
     @property
     def color_temp(self):
@@ -607,7 +577,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             )
 
             if self._optimistic_rgb:
-                self._hs = kwargs[ATTR_HS_COLOR]
+                self._hs_color = kwargs[ATTR_HS_COLOR]
                 should_update = True
 
         if ATTR_HS_COLOR in kwargs and self._topic[CONF_HS_COMMAND_TOPIC] is not None:
@@ -622,7 +592,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             )
 
             if self._optimistic_hs:
-                self._hs = kwargs[ATTR_HS_COLOR]
+                self._hs_color = kwargs[ATTR_HS_COLOR]
                 should_update = True
 
         if ATTR_HS_COLOR in kwargs and self._topic[CONF_XY_COMMAND_TOPIC] is not None:
@@ -637,7 +607,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             )
 
             if self._optimistic_xy:
-                self._hs = kwargs[ATTR_HS_COLOR]
+                self._hs_color = kwargs[ATTR_HS_COLOR]
                 should_update = True
 
         if (
@@ -667,7 +637,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             and ATTR_HS_COLOR not in kwargs
             and self._topic[CONF_RGB_COMMAND_TOPIC] is not None
         ):
-            hs_color = self._hs if self._hs is not None else (0, 0)
+            hs_color = self._hs_color if self._hs_color is not None else (0, 0)
             rgb = color_util.color_hsv_to_RGB(
                 hs_color[0], hs_color[1], kwargs[ATTR_BRIGHTNESS] / 255 * 100
             )
