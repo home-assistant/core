@@ -561,14 +561,18 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         should_update = False
         on_command_type = self._config[CONF_ON_COMMAND_TYPE]
 
-        if on_command_type == "first":
+        def publish(topic, payload):
+            """Publish an MQTT message."""
             mqtt.async_publish(
                 self.hass,
-                self._topic[CONF_COMMAND_TOPIC],
-                self._payload["on"],
+                self._topic[topic],
+                payload,
                 self._config[CONF_QOS],
                 self._config[CONF_RETAIN],
             )
+
+        if on_command_type == "first":
+            publish(CONF_COMMAND_TOPIC, self._payload["on"])
             should_update = True
 
         # If brightness is being used instead of an on command, make sure
@@ -598,13 +602,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             else:
                 rgb_color_str = f"{rgb[0]},{rgb[1]},{rgb[2]}"
 
-            mqtt.async_publish(
-                self.hass,
-                self._topic[CONF_RGB_COMMAND_TOPIC],
-                rgb_color_str,
-                self._config[CONF_QOS],
-                self._config[CONF_RETAIN],
-            )
+            publish(CONF_RGB_COMMAND_TOPIC, rgb_color_str)
 
             if self._optimistic_rgb:
                 self._hs = kwargs[ATTR_HS_COLOR]
@@ -613,13 +611,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         if ATTR_HS_COLOR in kwargs and self._topic[CONF_HS_COMMAND_TOPIC] is not None:
 
             hs_color = kwargs[ATTR_HS_COLOR]
-            mqtt.async_publish(
-                self.hass,
-                self._topic[CONF_HS_COMMAND_TOPIC],
-                f"{hs_color[0]},{hs_color[1]}",
-                self._config[CONF_QOS],
-                self._config[CONF_RETAIN],
-            )
+            publish(CONF_HS_COMMAND_TOPIC, f"{hs_color[0]},{hs_color[1]}")
 
             if self._optimistic_hs:
                 self._hs = kwargs[ATTR_HS_COLOR]
@@ -628,13 +620,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         if ATTR_HS_COLOR in kwargs and self._topic[CONF_XY_COMMAND_TOPIC] is not None:
 
             xy_color = color_util.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
-            mqtt.async_publish(
-                self.hass,
-                self._topic[CONF_XY_COMMAND_TOPIC],
-                f"{xy_color[0]},{xy_color[1]}",
-                self._config[CONF_QOS],
-                self._config[CONF_RETAIN],
-            )
+            publish(CONF_XY_COMMAND_TOPIC, f"{xy_color[0]},{xy_color[1]}")
 
             if self._optimistic_xy:
                 self._hs = kwargs[ATTR_HS_COLOR]
@@ -651,13 +637,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             )
             # Make sure the brightness is not rounded down to 0
             device_brightness = max(device_brightness, 1)
-            mqtt.async_publish(
-                self.hass,
-                self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC],
-                device_brightness,
-                self._config[CONF_QOS],
-                self._config[CONF_RETAIN],
-            )
+            publish(CONF_BRIGHTNESS_COMMAND_TOPIC, device_brightness)
 
             if self._optimistic_brightness:
                 self._brightness = kwargs[ATTR_BRIGHTNESS]
@@ -677,13 +657,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             else:
                 rgb_color_str = f"{rgb[0]},{rgb[1]},{rgb[2]}"
 
-            mqtt.async_publish(
-                self.hass,
-                self._topic[CONF_RGB_COMMAND_TOPIC],
-                rgb_color_str,
-                self._config[CONF_QOS],
-                self._config[CONF_RETAIN],
-            )
+            publish(CONF_RGB_COMMAND_TOPIC, rgb_color_str)
 
             if self._optimistic_brightness:
                 self._brightness = kwargs[ATTR_BRIGHTNESS]
@@ -699,13 +673,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             if tpl:
                 color_temp = tpl({"value": color_temp})
 
-            mqtt.async_publish(
-                self.hass,
-                self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC],
-                color_temp,
-                self._config[CONF_QOS],
-                self._config[CONF_RETAIN],
-            )
+            publish(CONF_COLOR_TEMP_COMMAND_TOPIC, color_temp)
 
             if self._optimistic_color_temp:
                 self._color_temp = kwargs[ATTR_COLOR_TEMP]
@@ -714,13 +682,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         if ATTR_EFFECT in kwargs and self._topic[CONF_EFFECT_COMMAND_TOPIC] is not None:
             effect = kwargs[ATTR_EFFECT]
             if effect in self._config.get(CONF_EFFECT_LIST):
-                mqtt.async_publish(
-                    self.hass,
-                    self._topic[CONF_EFFECT_COMMAND_TOPIC],
-                    effect,
-                    self._config[CONF_QOS],
-                    self._config[CONF_RETAIN],
-                )
+                publish(CONF_EFFECT_COMMAND_TOPIC, effect)
 
                 if self._optimistic_effect:
                     self._effect = kwargs[ATTR_EFFECT]
@@ -733,26 +695,14 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             percent_white = float(kwargs[ATTR_WHITE_VALUE]) / 255
             white_scale = self._config[CONF_WHITE_VALUE_SCALE]
             device_white_value = min(round(percent_white * white_scale), white_scale)
-            mqtt.async_publish(
-                self.hass,
-                self._topic[CONF_WHITE_VALUE_COMMAND_TOPIC],
-                device_white_value,
-                self._config[CONF_QOS],
-                self._config[CONF_RETAIN],
-            )
+            publish(CONF_WHITE_VALUE_COMMAND_TOPIC, device_white_value)
 
             if self._optimistic_white_value:
                 self._white_value = kwargs[ATTR_WHITE_VALUE]
                 should_update = True
 
         if on_command_type == "last":
-            mqtt.async_publish(
-                self.hass,
-                self._topic[CONF_COMMAND_TOPIC],
-                self._payload["on"],
-                self._config[CONF_QOS],
-                self._config[CONF_RETAIN],
-            )
+            publish(CONF_COMMAND_TOPIC, self._payload["on"])
             should_update = True
 
         if self._optimistic:
