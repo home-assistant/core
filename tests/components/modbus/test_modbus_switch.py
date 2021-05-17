@@ -3,6 +3,7 @@ import pytest
 
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
+    CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CONF_COILS,
@@ -232,11 +233,11 @@ async def test_service_switch_update(hass, mock_pymodbus):
                 CONF_NAME: "test",
                 CONF_ADDRESS: 1234,
                 CONF_WRITE_TYPE: CALL_TYPE_COIL,
-                CONF_VERIFY: {},
+                CONF_VERIFY: {CONF_INPUT_TYPE: CALL_TYPE_DISCRETE},
             }
         ]
     }
-    mock_pymodbus.read_coils.return_value = ReadResult([0x01])
+    mock_pymodbus.read_discrete_inputs.return_value = ReadResult([0x01])
     await prepare_service_update(
         hass,
         config,
@@ -245,7 +246,7 @@ async def test_service_switch_update(hass, mock_pymodbus):
         "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
     )
     assert hass.states.get(entity_id).state == STATE_ON
-    mock_pymodbus.read_coils.return_value = ReadResult([0x00])
+    mock_pymodbus.read_discrete_inputs.return_value = ReadResult([0x00])
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
     )
