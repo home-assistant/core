@@ -600,7 +600,7 @@ class MqttCover(MqttEntity, CoverEntity):
             self._config[CONF_RETAIN],
         )
         if self._tilt_optimistic:
-            _LOGGER.info("Set tilt value optimistic")
+            _LOGGER.debug("Set tilt value optimistic")
             self._tilt_value = percentage_tilt
             self.async_write_ha_state()
 
