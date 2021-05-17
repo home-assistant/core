@@ -552,7 +552,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if model in MODELS_PURIFIER_MIOT:
             air_purifier = AirPurifierMiot(host, token)
             entity = XiaomiAirPurifierMiot(
-                name, air_purifier, config_entry, unique_id, retries=2
+                name, air_purifier, config_entry, unique_id, allowed_failures=2
             )
         elif model.startswith("zhimi.airpurifier."):
             air_purifier = AirPurifier(host, token)
@@ -771,11 +771,11 @@ class XiaomiGenericDevice(XiaomiMiioEntity, FanEntity):
 class XiaomiAirPurifier(XiaomiGenericDevice):
     """Representation of a Xiaomi Air Purifier."""
 
-    def __init__(self, name, device, entry, unique_id, retries=0):
+    def __init__(self, name, device, entry, unique_id, allowed_failures=0):
         """Initialize the plug switch."""
         super().__init__(name, device, entry, unique_id)
-        self._retries = retries
-        self._retry = 0
+        self._allowed_failures = allowed_failures
+        self._failure = 0
 
         if self._model == MODEL_AIRPURIFIER_PRO:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO
@@ -826,23 +826,23 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
                 }
             )
 
-            self._retry = 0
+            self._failure = 0
 
         except DeviceException as ex:
-            self._retry += 1
-            if self._retry < self._retries:
+            self._failure += 1
+            if self._failures < self._allowed_failures:
                 _LOGGER.info(
-                    "Got exception while fetching the state: %s, retry: %d",
+                    "Got exception while fetching the state: %s, failure: %d",
                     ex,
-                    self._retry,
+                    self._failure,
                 )
             else:
                 if self._available:
                     self._available = False
                     _LOGGER.error(
-                        "Got exception while fetching the state: %s, retry: %d",
+                        "Got exception while fetching the state: %s, failure: %d",
                         ex,
-                        self._retry,
+                        self._failure,
                     )
 
     @property
