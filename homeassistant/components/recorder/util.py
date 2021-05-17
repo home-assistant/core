@@ -254,25 +254,26 @@ def execute_on_connection(dbapi_connection, statement):
     cursor.close()
 
 
-def setup_connection_for_dialect(dialect_name, dbapi_connection):
+def setup_connection_for_dialect(dialect_name, dbapi_connection, first_connection):
     """Execute statements needed for dialect connection."""
     # Returns False if the the connection needs to be setup
     # on the next connection, returns True if the connection
     # never needs to be setup again.
     if dialect_name == "sqlite":
-        old_isolation = dbapi_connection.isolation_level
-        dbapi_connection.isolation_level = None
-        execute_on_connection(dbapi_connection, "PRAGMA journal_mode=WAL")
-        dbapi_connection.isolation_level = old_isolation
-        # WAL mode only needs to be setup once
-        # instead of every time we open the sqlite connection
-        # as its persistent and isn't free to call every time.
-        return True
+        if first_connection:
+            old_isolation = dbapi_connection.isolation_level
+            dbapi_connection.isolation_level = None
+            execute_on_connection(dbapi_connection, "PRAGMA journal_mode=WAL")
+            dbapi_connection.isolation_level = old_isolation
+            # WAL mode only needs to be setup once
+            # instead of every time we open the sqlite connection
+            # as its persistent and isn't free to call every time.
+
+        # approximately 8MiB of memory
+        execute_on_connection(dbapi_connection, "PRAGMA cache_size = -8192")
 
     if dialect_name == "mysql":
         execute_on_connection(dbapi_connection, "SET session wait_timeout=28800")
-
-    return False
 
 
 def end_incomplete_runs(session, start_time):
