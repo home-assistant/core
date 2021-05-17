@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if state["muted"] is None or state["in_meeting"] is None:
                 raise update_coordinator.UpdateFailed("Got invalid response")
 
-            if state["in_meeting"] is True:
+            if state["in_meeting"]:
                 coordinator.update_interval = UPDATE_INTERVAL_IN_MEETING
             else:
                 coordinator.update_interval = UPDATE_INTERVAL_NOT_IN_MEETING
