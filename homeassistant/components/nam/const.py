@@ -10,6 +10,7 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
     PERCENTAGE,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -126,5 +127,12 @@ SENSORS: Final[dict[str, SensorDescription]] = {
         "device_class": DEVICE_CLASS_TEMPERATURE,
         "icon": None,
         "enabled": True,
+    },
+    "uptime": {
+        "label": f"{DEFAULT_NAME} Uptime",
+        "unit": None,
+        "device_class": DEVICE_CLASS_TIMESTAMP,
+        "icon": None,
+        "enabled": False,
     },
 }

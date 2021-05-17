@@ -14,6 +14,7 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
     PERCENTAGE,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -39,6 +40,14 @@ async def test_sensor(hass):
         DOMAIN,
         "aa:bb:cc:dd:ee:ff-signal",
         suggested_object_id="nettigo_air_monitor_signal_strength",
+        disabled_by=None,
+    )
+
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "aa:bb:cc:dd:ee:ff-uptime",
+        suggested_object_id="nettigo_air_monitor_uptime",
         disabled_by=None,
     )
 
@@ -166,6 +175,18 @@ async def test_sensor(hass):
     entry = registry.async_get("sensor.nettigo_air_monitor_signal_strength")
     assert entry
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff-signal"
+
+    state = hass.states.get("sensor.nettigo_air_monitor_uptime")
+    assert state
+    assert (
+        state.state
+        == (utcnow() - timedelta(seconds=456987)).replace(microsecond=0).isoformat()
+    )
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TIMESTAMP
+
+    entry = registry.async_get("sensor.nettigo_air_monitor_uptime")
+    assert entry
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff-uptime"
 
 
 async def test_sensor_disabled(hass):
