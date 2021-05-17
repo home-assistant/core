@@ -56,27 +56,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 raise UpdateFailed(
                     "Could not fetch values from server because device is Offline."
                 )
-            else:
-                if refetch_parameters:
-                    parameters = await fetch_parameters(
-                        wolf_client, gateway_id, device_id
-                    )
-                    hass.data[DOMAIN][entry.entry_id][PARAMETERS] = parameters
-                    refetch_parameters = False
-                values = {
-                    v.value_id: v.value
-                    for v in await wolf_client.fetch_value(
-                        gateway_id, device_id, parameters
-                    )
-                }
-                return {
-                    parameter.parameter_id: (
-                        parameter.value_id,
-                        values[parameter.value_id],
-                    )
-                    for parameter in parameters
-                    if parameter.value_id in values
-                }
+            if refetch_parameters:
+                parameters = await fetch_parameters(wolf_client, gateway_id, device_id)
+                hass.data[DOMAIN][entry.entry_id][PARAMETERS] = parameters
+                refetch_parameters = False
+            values = {
+                v.value_id: v.value
+                for v in await wolf_client.fetch_value(
+                    gateway_id, device_id, parameters
+                )
+            }
+            return {
+                parameter.parameter_id: (
+                    parameter.value_id,
+                    values[parameter.value_id],
+                )
+                for parameter in parameters
+                if parameter.value_id in values
+            }
         except ConnectError as exception:
             raise UpdateFailed(
                 f"Error communicating with API: {exception}"
@@ -93,10 +90,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         except InvalidAuth as exception:
             raise UpdateFailed("Invalid authentication during update.") from exception
 
-    coordinator = DataUpdateCoordinator(
+    coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name="wolflink",
+        name=DOMAIN,
         update_method=async_update_data,
         update_interval=timedelta(minutes=1),
     )
