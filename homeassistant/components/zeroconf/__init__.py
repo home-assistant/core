@@ -299,7 +299,7 @@ class FlowDispatcher:
         else:
             self.pending_flows.append(flow)
 
-    def _init_flow(self, flow: ZeroconfFlow) -> Coroutine[Any, Any, Any]:
+    def _init_flow(self, flow: ZeroconfFlow) -> Coroutine[None, None, FlowResult]:
         """Create a flow."""
         return self.hass.config_entries.flow.async_init(
             flow["domain"], context=flow["context"], data=flow["data"]
