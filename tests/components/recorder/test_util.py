@@ -152,7 +152,7 @@ def test_setup_connection_for_dialect_mysql():
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    assert util.setup_connection_for_dialect("mysql", dbapi_connection) is False
+    util.setup_connection_for_dialect("mysql", dbapi_connection, True)
 
     assert execute_mock.call_args[0][0] == "SET session wait_timeout=28800"
 
@@ -167,9 +167,17 @@ def test_setup_connection_for_dialect_sqlite():
 
     dbapi_connection = MagicMock(cursor=_make_cursor_mock)
 
-    assert util.setup_connection_for_dialect("sqlite", dbapi_connection) is True
+    util.setup_connection_for_dialect("sqlite", dbapi_connection, True)
 
-    assert execute_mock.call_args[0][0] == "PRAGMA journal_mode=WAL"
+    assert len(execute_mock.call_args_list) == 2
+    assert execute_mock.call_args_list[0][0][0] == "PRAGMA journal_mode=WAL"
+    assert execute_mock.call_args_list[1][0][0] == "PRAGMA cache_size = -8192"
+
+    execute_mock.reset_mock()
+    util.setup_connection_for_dialect("sqlite", dbapi_connection, False)
+
+    assert len(execute_mock.call_args_list) == 1
+    assert execute_mock.call_args_list[0][0][0] == "PRAGMA cache_size = -8192"
 
 
 def test_basic_sanity_check(hass_recorder):

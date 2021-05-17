@@ -331,7 +331,7 @@ class Recorder(threading.Thread):
         self._pending_expunge = []
         self.event_session = None
         self.get_session = None
-        self._completed_database_setup = None
+        self._completed_first_database_setup = None
         self._event_listener = None
         self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
@@ -837,15 +837,16 @@ class Recorder(threading.Thread):
     def _setup_connection(self):
         """Ensure database is ready to fly."""
         kwargs = {}
-        self._completed_database_setup = False
+        self._completed_first_database_setup = False
 
         def setup_recorder_connection(dbapi_connection, connection_record):
             """Dbapi specific connection settings."""
-            if self._completed_database_setup:
-                return
-            self._completed_database_setup = setup_connection_for_dialect(
-                self.engine.dialect.name, dbapi_connection
+            setup_connection_for_dialect(
+                self.engine.dialect.name,
+                dbapi_connection,
+                not self._completed_first_database_setup,
             )
+            self._completed_first_database_setup = True
 
         if self.db_url == SQLITE_URL_PREFIX or ":memory:" in self.db_url:
             kwargs["connect_args"] = {"check_same_thread": False}

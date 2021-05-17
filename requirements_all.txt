@@ -2,7 +2,7 @@
 -r requirements.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.1.8
+AEMET-OpenData==0.2.1
 
 # homeassistant.components.sht31
 Adafruit-GPIO==1.0.3
@@ -151,7 +151,7 @@ aiodiscover==1.4.0
 
 # homeassistant.components.dnsip
 # homeassistant.components.minecraft_server
-aiodns==2.0.0
+aiodns==3.0.0
 
 # homeassistant.components.eafm
 aioeafm==0.1.2
@@ -182,7 +182,7 @@ aiohomekit==0.2.61
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==2.4.2
+aiohue==2.5.0
 
 # homeassistant.components.imap
 aioimaplib==0.7.15
@@ -272,7 +272,7 @@ apcaccess==0.0.13
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.8.9
+apprise==0.9.3
 
 # homeassistant.components.aprs
 aprslib==0.6.46
@@ -390,7 +390,7 @@ boschshcpy==0.2.17
 boto3==1.16.52
 
 # homeassistant.components.braviatv
-bravia-tv==1.0.8
+bravia-tv==1.0.11
 
 # homeassistant.components.broadlink
 broadlink==0.17.0
@@ -623,9 +623,6 @@ fortiosapi==0.10.8
 # homeassistant.components.freebox
 freebox-api==0.0.10
 
-# homeassistant.components.free_mobile
-freesms==0.1.2
-
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 # homeassistant.components.fritzbox_netmonitor
@@ -648,7 +645,7 @@ geniushub-client==0.6.30
 geojson_client==0.4
 
 # homeassistant.components.aprs
-geopy==1.21.0
+geopy==2.1.0
 
 # homeassistant.components.geo_rss_events
 georss_generic_client==0.4
@@ -2368,7 +2365,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.18.1
+xknx==0.18.2
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest
