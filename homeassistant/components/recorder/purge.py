@@ -1,8 +1,6 @@
 """Purge old data helper."""
 from __future__ import annotations
 
-from collections.abc import Generator
-from contextlib import contextmanager
 from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Callable

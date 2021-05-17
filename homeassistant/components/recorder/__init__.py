@@ -66,6 +66,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_PURGE = "purge"
 SERVICE_PURGE_ENTITIES = "purge_entities"
+SERVICE_STATISTICS = "statistics"
 SERVICE_ENABLE = "enable"
 SERVICE_DISABLE = "disable"
 
@@ -74,8 +75,6 @@ ATTR_REPACK = "repack"
 ATTR_APPLY_FILTER = "apply_filter"
 
 MAX_QUEUE_BACKLOG = 30000
-ATTR_DOMAINS = "domains"
-ATTR_ENTITY_GLOBS = "entity_globs"
 
 SERVICE_PURGE_SCHEMA = vol.Schema(
     {
@@ -84,6 +83,10 @@ SERVICE_PURGE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_APPLY_FILTER, default=False): cv.boolean,
     }
 )
+
+ATTR_DOMAINS = "domains"
+ATTR_ENTITY_GLOBS = "entity_globs"
+
 SERVICE_PURGE_ENTITIES_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_DOMAINS, default=[]): vol.All(cv.ensure_list, [cv.string]),
@@ -271,7 +274,7 @@ def _async_register_services(hass, instance):
         domains = service.data.get(ATTR_DOMAINS, [])
         entity_globs = service.data.get(ATTR_ENTITY_GLOBS, [])
 
-        instance.purge_entities(entity_ids, domains, entity_globs)
+        instance.do_adhoc_purge_entities(entity_ids, domains, entity_globs)
 
     hass.services.async_register(
         DOMAIN,
@@ -298,6 +301,10 @@ def _async_register_services(hass, instance):
     )
 
 
+class PerodicCleanupTask:
+    """An object to insert into the recorder to trigger cleanup tasks when auto purge is disabled."""
+
+
 class PurgeTask(NamedTuple):
     """Object to store information about purge task."""
 
@@ -306,20 +313,16 @@ class PurgeTask(NamedTuple):
     apply_filter: bool
 
 
-class PerodicCleanupTask:
-    """An object to insert into the recorder to trigger cleanup tasks when auto purge is disabled."""
+class PurgeEntitiesTask(NamedTuple):
+    """Object to store entity information about purge task."""
+
+    entity_filter: Callable[[str], bool]
 
 
 class StatisticsTask(NamedTuple):
     """An object to insert into the recorder queue to run a statistics task."""
 
     start: datetime.datetime
-
-
-class PurgeEntitiesTask(NamedTuple):
-    """Object to store entity information about purge task."""
-
-    entity_filter: Callable[[str], bool]
 
 
 class WaitTask:
@@ -448,7 +451,7 @@ class Recorder(threading.Thread):
 
         self.queue.put(PurgeTask(keep_days, repack, apply_filter))
 
-    def purge_entities(self, entity_ids, domains, entity_globs):
+    def do_adhoc_purge_entities(self, entity_ids, domains, entity_globs):
         """Trigger an adhoc purge of requested entities."""
         entity_filter = generate_filter(domains, entity_ids, [], [], entity_globs)
         self.queue.put(PurgeEntitiesTask(entity_filter))
@@ -459,9 +462,6 @@ class Recorder(threading.Thread):
         if not start:
             start = statistics.get_start_time()
         self.queue.put(StatisticsTask(start))
-
-    def run(self):
-        """Start processing events to save."""
 
     @callback
     def async_register(self, shutdown_task, hass_started):
@@ -705,6 +705,13 @@ class Recorder(threading.Thread):
         # Schedule a new purge task if this one didn't finish
         self.queue.put(PurgeTask(keep_days, repack, apply_filter))
 
+    def _run_purge_entities(self, entity_filter):
+        """Purge entities from the database."""
+        if purge.purge_entity_data(self, entity_filter):
+            return
+        # Schedule a new purge task if this one didn't finish
+        self.queue.put(PurgeEntitiesTask(entity_filter))
+
     def _run_statistics(self, start):
         """Run statistics task."""
         if statistics.compile_statistics(self, start):
@@ -714,19 +721,16 @@ class Recorder(threading.Thread):
 
     def _process_one_event(self, event):
         """Process one event."""
+        if isinstance(event, PerodicCleanupTask):
+            perodic_db_cleanups(self)
         if isinstance(event, PurgeTask):
             self._run_purge(event.keep_days, event.repack, event.apply_filter)
             return
-        if isinstance(event, PerodicCleanupTask):
-            perodic_db_cleanups(self)
+        if isinstance(event, PurgeEntitiesTask):
+            self._run_purge_entities(event.entity_filter)
             return
         if isinstance(event, StatisticsTask):
             self._run_statistics(event.start)
-            return
-        if isinstance(event, PurgeEntitiesTask):
-            # Schedule a new entity purge task if this one didn't finish
-            if not purge.purge_entity_data(self, event.entity_filter):
-                self.queue.put(PurgeEntitiesTask(event.entity_filter))
             return
         if isinstance(event, WaitTask):
             self._queue_watch.set()
