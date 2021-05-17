@@ -145,10 +145,27 @@ async def test_notify_ws_works(
     msg_result = await client.receive_json()
     assert msg_result["event"] == {"message": "Hello world"}
 
-    # Test non-existing webhook ID
+    # Unsubscribe, now it should go over http
     await client.send_json(
         {
             "id": 6,
+            "type": "unsubscribe_events",
+            "subscription": 5,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+
+    assert await hass.services.async_call(
+        "notify", "mobile_app_test", {"message": "Hello world 2"}, blocking=True
+    )
+
+    assert len(aioclient_mock.mock_calls) == 1
+
+    # Test non-existing webhook ID
+    await client.send_json(
+        {
+            "id": 7,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "non-existing",
         }
@@ -163,7 +180,7 @@ async def test_notify_ws_works(
     # Test webhook ID linked to other user
     await client.send_json(
         {
-            "id": 7,
+            "id": 8,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "webhook_id_2",
         }
