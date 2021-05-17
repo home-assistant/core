@@ -4,26 +4,36 @@ turn_off:
   name: Turn off
   description: Turn off camera.
   target:
+    entity:
+      domain: camera
 
 turn_on:
   name: Turn on
   description: Turn on camera.
   target:
+    entity:
+      domain: camera
 
 enable_motion_detection:
   name: Enable motion detection
   description: Enable the motion detection in a camera.
   target:
+    entity:
+      domain: camera
 
 disable_motion_detection:
   name: Disable motion detection
   description: Disable the motion detection in a camera.
   target:
+    entity:
+      domain: camera
 
 snapshot:
   name: Take snapshot
   description: Take a snapshot from a camera.
   target:
+    entity:
+      domain: camera
   fields:
     filename:
       name: Filename
@@ -37,6 +47,8 @@ play_stream:
   name: Play stream
   description: Play camera stream on supported media player.
   target:
+    entity:
+      domain: camera
   fields:
     media_player:
       name: Media Player
@@ -60,6 +72,8 @@ record:
   name: Record
   description: Record live camera feed.
   target:
+    entity:
+      domain: camera
   fields:
     filename:
       name: Filename

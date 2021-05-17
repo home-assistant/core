@@ -4,6 +4,8 @@ turn_on:
     Set the light RGB to the predominant color found in the image provided by
     URL or file path.
   target:
+    entity:
+      domain: light
   fields:
     color_extract_url:
       name: URL
