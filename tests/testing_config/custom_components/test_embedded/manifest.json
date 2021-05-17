@@ -1,6 +1,6 @@
 {
-  "domain": "test_package",
-  "name": "Test Package",
+  "domain": "test_embedded",
+  "name": "Test Embedded",
   "documentation": "http://test-package.io",
   "requirements": [],
   "dependencies": [],
