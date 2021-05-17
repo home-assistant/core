@@ -20,6 +20,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_DEVICES,
     CONF_MAC,
+    CONF_SOURCE,
     PRECISION_HALVES,
     TEMP_CELSIUS,
 )
@@ -55,7 +56,9 @@ EQ_TO_HA_PRESET = {eq3.Mode.Boost: PRESET_BOOST, eq3.Mode.Away: PRESET_AWAY}
 HA_TO_EQ_PRESET = {PRESET_BOOST: eq3.Mode.Boost, PRESET_AWAY: eq3.Mode.Away}
 
 
-DEVICE_SCHEMA = vol.Schema({vol.Required(CONF_MAC): cv.string})
+DEVICE_SCHEMA = vol.Schema(
+    {vol.Required(CONF_MAC): cv.string, vol.Optional(CONF_SOURCE): cv.entity_id}
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_DEVICES): vol.Schema({cv.string: DEVICE_SCHEMA})}
@@ -70,7 +73,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for name, device_cfg in config[CONF_DEVICES].items():
         mac = device_cfg[CONF_MAC]
-        devices.append(EQ3BTSmartThermostat(mac, name))
+        source = device_cfg[CONF_SOURCE] if CONF_SOURCE in device_cfg else None
+        devices.append(EQ3BTSmartThermostat(mac, name, source))
 
     add_entities(devices, True)
 
@@ -78,11 +82,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class EQ3BTSmartThermostat(ClimateEntity):
     """Representation of an eQ-3 Bluetooth Smart thermostat."""
 
-    def __init__(self, _mac, _name):
+    def __init__(self, _mac, _name, _source):
         """Initialize the thermostat."""
         # We want to avoid name clash with this module.
         self._name = _name
         self._thermostat = eq3.Thermostat(_mac)
+        self._source = _source
 
     @property
     def supported_features(self):
@@ -111,7 +116,16 @@ class EQ3BTSmartThermostat(ClimateEntity):
 
     @property
     def current_temperature(self):
-        """Can not report temperature, so return target_temperature."""
+        """Can not report temperature, so return source temperature.
+        Return target temperature if no source present.
+        """
+        if self._source:
+            state = self.hass.states.get(self._source)
+            if state is not None:
+                try:
+                    return float(state.state)
+                except ValueError:
+                    pass
         return self.target_temperature
 
     @property
