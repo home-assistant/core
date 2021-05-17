@@ -1185,7 +1185,7 @@ async def test_on_command_rgb(hass, mqtt_mock):
 
     mqtt_mock.async_publish.assert_has_calls(
         [
-            call("test_light/rgb", "1,1,0", 0, False),
+            call("test_light/rgb", "1,0,0", 0, False),
             call("test_light/set", "ON", 0, False),
         ],
         any_order=True,

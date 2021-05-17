@@ -572,7 +572,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                     brightness = kwargs.get(
                         ATTR_BRIGHTNESS, self._brightness if self._brightness else 255
                     )
-            return tuple(round(channel * brightness / 255) for channel in color)
+            return tuple(int(channel * brightness / 255) for channel in color)
 
         def render_rgbx(color, template):
             """Render RGBx payload."""
