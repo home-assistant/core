@@ -559,13 +559,14 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
     if addon_manager.task_in_progress():
         raise ConfigEntryNotReady
     try:
-        addon_state = await addon_manager.async_get_addon_state()
+        addon_info = await addon_manager.async_get_addon_info()
     except AddonError as err:
-        LOGGER.error("Failed to get the Z-Wave JS add-on state")
+        LOGGER.error("err")
         raise ConfigEntryNotReady from err
 
     usb_path: str = entry.data[CONF_USB_PATH]
     network_key: str = entry.data[CONF_NETWORK_KEY]
+    addon_state = addon_info.state
 
     if addon_state == AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(

@@ -30,7 +30,12 @@ def mock_addon_info(addon_info_side_effect):
         "homeassistant.components.zwave_js.addon.async_get_addon_info",
         side_effect=addon_info_side_effect,
     ) as addon_info:
-        addon_info.return_value = {}
+        addon_info.return_value = {
+            "options": {},
+            "state": None,
+            "update_available": False,
+            "version": None,
+        }
         yield addon_info
 
 
@@ -52,7 +57,6 @@ def mock_addon_installed(addon_info):
 @pytest.fixture(name="addon_options")
 def mock_addon_options(addon_info):
     """Mock add-on options."""
-    addon_info.return_value["options"] = {}
     return addon_info.return_value["options"]
 
 
