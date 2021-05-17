@@ -467,3 +467,32 @@ async def test_get_custom_components_safe_mode(hass):
     """Test that we get empty custom components in safe mode."""
     hass.config.safe_mode = True
     assert await loader.async_get_custom_components(hass) == {}
+
+
+async def test_custom_integration_missing_version(hass, caplog):
+    """Test trying to load a custom integration without a version twice does not deadlock."""
+    test_integration_1 = loader.Integration(
+        hass, "custom_components.test1", None, {"domain": "test1"}
+    )
+    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
+        mock_get.return_value = {
+            "test1": test_integration_1,
+        }
+
+        with pytest.raises(loader.IntegrationNotFound):
+            await loader.async_get_integration(hass, "test1")
+
+        with pytest.raises(loader.IntegrationNotFound):
+            await loader.async_get_integration(hass, "test1")
+
+
+async def test_custom_integration_missing(hass, caplog):
+    """Test trying to load a custom integration that is missing twice not deadlock."""
+    with patch("homeassistant.loader.async_get_custom_components") as mock_get:
+        mock_get.return_value = {}
+
+        with pytest.raises(loader.IntegrationNotFound):
+            await loader.async_get_integration(hass, "test1")
+
+        with pytest.raises(loader.IntegrationNotFound):
+            await loader.async_get_integration(hass, "test1")
