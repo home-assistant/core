@@ -520,7 +520,7 @@ lock_keys:
         text:
     table:
       name: Table
-      description: "Table with keys to lock (optional, must be A for interval)."
+      description: "Table with keys to lock (must be A for interval)."
       example: "a"
       default: a
       selector:
