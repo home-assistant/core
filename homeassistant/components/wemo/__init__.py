@@ -184,7 +184,7 @@ class WemoDiscovery:
         self,
         hass: HomeAssistant,
         wemo_dispatcher: WemoDispatcher,
-        static_config: list[tuple[[str, str | None]],
+        static_config: list[tuple[[str, str | None]]],
     ) -> None:
         """Initialize the WemoDiscovery."""
         self._hass = hass
