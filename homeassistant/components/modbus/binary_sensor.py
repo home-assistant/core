@@ -151,12 +151,9 @@ class ModbusBinarySensor(BinarySensorEntity):
         """Update the state of the sensor."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
-        if self._input_type == CALL_TYPE_COIL:
-            result = await self._hub.async_read_coils(self._slave, self._address, 1)
-        else:
-            result = await self._hub.async_read_discrete_inputs(
-                self._slave, self._address, 1
-            )
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._address, 1, self._input_type
+        )
         if result is None:
             self._available = False
             self.async_write_ha_state()

@@ -2,7 +2,7 @@
 -r requirements.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.1.8
+AEMET-OpenData==0.2.1
 
 # homeassistant.components.sht31
 Adafruit-GPIO==1.0.3
@@ -645,7 +645,7 @@ geniushub-client==0.6.30
 geojson_client==0.4
 
 # homeassistant.components.aprs
-geopy==1.21.0
+geopy==2.1.0
 
 # homeassistant.components.geo_rss_events
 georss_generic_client==0.4
@@ -2365,7 +2365,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.18.1
+xknx==0.18.2
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest
