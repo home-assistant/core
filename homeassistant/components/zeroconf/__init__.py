@@ -289,7 +289,10 @@ class FlowDispatcher:
     def async_start(self) -> None:
         """Start processing pending flows."""
         self.started = True
-        for flow in list(self.pending_flows):
+        self.hass.loop.call_soon(self._async_process_pending_flows)
+
+    def _async_process_pending_flows(self) -> None:
+        for flow in self.pending_flows:
             self.hass.async_create_task(self._init_flow(flow))
         self.pending_flows = []
 
