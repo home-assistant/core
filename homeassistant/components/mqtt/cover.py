@@ -358,7 +358,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
                 try:
                     payload = json_loads(payload)
-                except (TypeError, JSONDecodeError):
+                except JSONDecodeError:
                     pass
 
                 if isinstance(payload, dict):
