@@ -3,6 +3,8 @@ set_speed:
   name: Set speed
   description: Set fan speed.
   target:
+    entity:
+      domain: fan
   fields:
     speed:
       name: Speed
@@ -16,6 +18,8 @@ set_preset_mode:
   name: Set preset mode
   description: Set preset mode for a fan device.
   target:
+    entity:
+      domain: fan
   fields:
     preset_mode:
       name: Preset mode
@@ -29,6 +33,8 @@ set_percentage:
   name: Set speed percentage
   description: Set fan speed percentage.
   target:
+    entity:
+      domain: fan
   fields:
     percentage:
       name: Percentage
@@ -47,6 +53,8 @@ turn_on:
   name: Turn on
   description: Turn fan on.
   target:
+    entity:
+      domain: fan
   fields:
     speed:
       name: Speed
@@ -74,11 +82,15 @@ turn_off:
   name: Turn off
   description: Turn fan off.
   target:
+    entity:
+      domain: fan
 
 oscillate:
   name: Oscillate
   description: Oscillate the fan.
   target:
+    entity:
+      domain: fan
   fields:
     oscillating:
       name: Oscillating
@@ -92,11 +104,15 @@ toggle:
   name: Toggle
   description: Toggle the fan on/off.
   target:
+    entity:
+      domain: fan
 
 set_direction:
   name: Set direction
   description: Set the fan rotation.
   target:
+    entity:
+      domain: fan
   fields:
     direction:
       name: Direction
@@ -113,6 +129,8 @@ increase_speed:
   name: Increase speed
   description: Increase the speed of the fan by one speed or a percentage_step.
   target:
+    entity:
+      domain: fan
   fields:
     percentage_step:
       advanced: true
@@ -131,6 +149,8 @@ decrease_speed:
   name: Decrease speed
   description: Decrease the speed of the fan by one speed or a percentage_step.
   target:
+    entity:
+      domain: fan
   fields:
     percentage_step:
       advanced: true
