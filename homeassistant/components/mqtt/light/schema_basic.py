@@ -420,7 +420,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             self.async_write_ha_state()
 
         add_topic(CONF_XY_STATE_TOPIC, xy_received)
-        restore_state(ATTR_HS_COLOR, self._optimistic_hs)
+        restore_state(ATTR_HS_COLOR, self._optimistic_xy)
 
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state, topics
