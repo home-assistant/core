@@ -1,5 +1,8 @@
 """Tests for the Renault integration."""
+from __future__ import annotations
+
 from datetime import timedelta
+from typing import Any
 from unittest.mock import patch
 
 from renault_api.kamereon import models, schemas
@@ -12,6 +15,7 @@ from homeassistant.components.renault.const import (
 )
 from homeassistant.components.renault.renault_vehicle import RenaultVehicleProxy
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
 from .const import MOCK_VEHICLES
@@ -19,7 +23,7 @@ from .const import MOCK_VEHICLES
 from tests.common import MockConfigEntry, load_fixture
 
 
-async def setup_renault_integration(hass):
+async def setup_renault_integration(hass: HomeAssistant):
     """Create the Renault integration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -45,10 +49,10 @@ async def setup_renault_integration(hass):
     return config_entry
 
 
-async def create_vehicle_proxy(hass, vehicle_type: str) -> RenaultVehicleProxy:
+def get_fixtures(vehicle_type: str) -> dict[str, Any]:
     """Create a vehicle proxy for testing."""
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    mock_fixtures = {
+    return {
         "battery_status": schemas.KamereonVehicleDataResponseSchema.loads(
             load_fixture(f"renault/{mock_vehicle['endpoints']['battery_status']}")
             if "battery_status" in mock_vehicle["endpoints"]
@@ -70,6 +74,14 @@ async def create_vehicle_proxy(hass, vehicle_type: str) -> RenaultVehicleProxy:
             else "{}"
         ).get_attributes(schemas.KamereonVehicleHvacStatusDataSchema),
     }
+
+
+async def create_vehicle_proxy(
+    hass: HomeAssistant, vehicle_type: str
+) -> RenaultVehicleProxy:
+    """Create a vehicle proxy for testing."""
+    mock_vehicle = MOCK_VEHICLES[vehicle_type]
+    mock_fixtures = get_fixtures(vehicle_type)
 
     vehicles_response: models.KamereonVehiclesResponse = (
         schemas.KamereonVehiclesResponseSchema.loads(
@@ -101,6 +113,47 @@ async def create_vehicle_proxy(hass, vehicle_type: str) -> RenaultVehicleProxy:
     ), patch(
         "homeassistant.components.renault.renault_vehicle.RenaultVehicleProxy.get_hvac_status",
         return_value=mock_fixtures["hvac_status"],
+    ):
+        await vehicle_proxy.async_initialise()
+    return vehicle_proxy
+
+
+async def create_vehicle_proxy_with_exception(
+    hass: HomeAssistant, vehicle_type: str, exception: Exception
+) -> RenaultVehicleProxy:
+    """Create a vehicle proxy for testing unavailable entities."""
+    mock_vehicle = MOCK_VEHICLES[vehicle_type]
+
+    vehicles_response: models.KamereonVehiclesResponse = (
+        schemas.KamereonVehiclesResponseSchema.loads(
+            load_fixture(f"renault/vehicle_{vehicle_type}.json")
+        )
+    )
+    vehicle_details = vehicles_response.vehicleLinks[0].vehicleDetails
+    vehicle = RenaultVehicle(
+        vehicles_response.accountId,
+        vehicle_details.vin,
+        websession=aiohttp_client.async_get_clientsession(hass),
+    )
+
+    vehicle_proxy = RenaultVehicleProxy(
+        hass, vehicle, vehicle_details, timedelta(seconds=300)
+    )
+    with patch(
+        "homeassistant.components.renault.renault_vehicle.RenaultVehicleProxy.endpoint_available",
+        side_effect=mock_vehicle["endpoints_available"],
+    ), patch(
+        "homeassistant.components.renault.renault_vehicle.RenaultVehicleProxy.get_battery_status",
+        side_effect=exception,
+    ), patch(
+        "homeassistant.components.renault.renault_vehicle.RenaultVehicleProxy.get_charge_mode",
+        side_effect=exception,
+    ), patch(
+        "homeassistant.components.renault.renault_vehicle.RenaultVehicleProxy.get_cockpit",
+        side_effect=exception,
+    ), patch(
+        "homeassistant.components.renault.renault_vehicle.RenaultVehicleProxy.get_hvac_status",
+        side_effect=exception,
     ):
         await vehicle_proxy.async_initialise()
     return vehicle_proxy
