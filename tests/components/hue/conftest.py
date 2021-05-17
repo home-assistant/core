@@ -81,10 +81,10 @@ def create_mock_api(hass):
     logger = logging.getLogger(__name__)
 
     api.config.apiversion = "9.9.9"
-    api.lights = Lights(logger, {}, mock_request)
-    api.groups = Groups(logger, {}, mock_request)
-    api.sensors = Sensors(logger, {}, mock_request)
-    api.scenes = Scenes(logger, {}, mock_request)
+    api.lights = Lights(logger, {}, [], mock_request)
+    api.groups = Groups(logger, {}, [], mock_request)
+    api.sensors = Sensors(logger, {}, [], mock_request)
+    api.scenes = Scenes(logger, {}, [], mock_request)
     return api
 
 
