@@ -792,7 +792,13 @@ async def test_position_update(hass, mqtt_mock):
     assert current_cover_position == 22
 
 
-async def test_set_position_templated(hass, mqtt_mock):
+@pytest.mark.parametrize(
+    "pos_template,pos_call,pos_message",
+    [("{{position-1}}", 43, "42"), ("{{100-62}}", 100, "38")],
+)
+async def test_set_position_templated(
+    hass, mqtt_mock, pos_template, pos_call, pos_message
+):
     """Test setting cover position via template."""
     assert await async_setup_component(
         hass,
@@ -806,7 +812,7 @@ async def test_set_position_templated(hass, mqtt_mock):
                 "position_open": 100,
                 "position_closed": 0,
                 "set_position_topic": "set-position-topic",
-                "set_position_template": "{{position-1}}",
+                "set_position_template": pos_template,
                 "payload_open": "OPEN",
                 "payload_close": "CLOSE",
                 "payload_stop": "STOP",
@@ -818,12 +824,12 @@ async def test_set_position_templated(hass, mqtt_mock):
     await hass.services.async_call(
         cover.DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.test", ATTR_POSITION: 43},
+        {ATTR_ENTITY_ID: "cover.test", ATTR_POSITION: pos_call},
         blocking=True,
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "set-position-topic", "42", 0, False
+        "set-position-topic", pos_message, 0, False
     )
 
 
