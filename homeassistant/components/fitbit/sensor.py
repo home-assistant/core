@@ -165,7 +165,7 @@ def setup_platform(
         request_app_setup(hass, config, add_entities, config_path, discovery_info=None)
         return
 
-    if _CONFIGURING.get("fitbit") is not None:
+    if "fitbit" in _CONFIGURING:
         hass.components.configurator.request_done(_CONFIGURING.pop("fitbit"))
 
     access_token: str | None = config_file.get(ATTR_ACCESS_TOKEN)
