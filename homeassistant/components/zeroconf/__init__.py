@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Coroutine, Iterable
 from contextlib import suppress
 import fnmatch
 import ipaddress
 from ipaddress import ip_address
 import logging
 import socket
-from typing import Any, Coroutine, TypedDict, cast
+from typing import Any, TypedDict, cast
 
 from pyroute2 import IPRoute
 import voluptuous as vol
@@ -295,7 +295,7 @@ class FlowDispatcher:
     def create(self, flow: ZeroconfFlow) -> None:
         """Create and add or queue a flow."""
         if self.started:
-            self.hass.add_job(self._init_flow(flow))  # type: ignore[arg-type]
+            self.hass.create_task(self._init_flow(flow))
         else:
             self.pending_flows.append(flow)
 
