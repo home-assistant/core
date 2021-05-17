@@ -89,7 +89,7 @@ class RenaultBatteryAutonomySensor(RenaultBatteryDataEntity):
     @property
     def state(self) -> int | None:
         """Return the state of this entity."""
-        return self.data.batteryAutonomy
+        return self.data.batteryAutonomy if self.data is not None else None
 
     @property
     def icon(self) -> str:
@@ -131,7 +131,7 @@ class RenaultBatteryLevelSensor(RenaultBatteryDataEntity):
     def device_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of this entity."""
         attrs = super().device_state_attributes
-        if self.data.batteryAvailableEnergy is not None:
+        if self.data is not None and self.data.batteryAvailableEnergy is not None:
             attrs[ATTR_BATTERY_AVAILABLE_ENERGY] = self.data.batteryAvailableEnergy
         return attrs
 
@@ -142,7 +142,7 @@ class RenaultBatteryTemperatureSensor(RenaultBatteryDataEntity):
     @property
     def state(self) -> int | None:
         """Return the state of this entity."""
-        return self.data.batteryTemperature
+        return self.data.batteryTemperature if self.data is not None else None
 
     @property
     def device_class(self) -> str:
@@ -182,7 +182,9 @@ class RenaultChargeStateSensor(RenaultBatteryDataEntity):
     @property
     def state(self) -> str | None:
         """Return the state of this entity."""
-        charging_status = self.data.get_charging_status()
+        charging_status = (
+            self.data.get_charging_status() if self.data is not None else None
+        )
         return slugify(charging_status.name) if charging_status is not None else None
 
     @property
@@ -202,7 +204,7 @@ class RenaultChargingRemainingTimeSensor(RenaultBatteryDataEntity):
     @property
     def state(self) -> int | None:
         """Return the state of this entity."""
-        return self.data.chargingRemainingTime
+        return self.data.chargingRemainingTime if self.data is not None else None
 
     @property
     def icon(self) -> str:
@@ -221,7 +223,7 @@ class RenaultChargingPowerSensor(RenaultBatteryDataEntity):
     @property
     def state(self) -> float | None:
         """Return the state of this entity."""
-        if self.data.chargingInstantaneousPower is None:
+        if self.data is None or self.data.chargingInstantaneousPower is None:
             return None
         if self.vehicle.details.reports_charging_power_in_watts():
             # Need to convert to kilowatts
@@ -245,7 +247,11 @@ class RenaultFuelAutonomySensor(RenaultCockpitDataEntity):
     @property
     def state(self) -> int | None:
         """Return the state of this entity."""
-        return round(self.data.fuelAutonomy)
+        return (
+            round(self.data.fuelAutonomy)
+            if self.data.fuelAutonomy is not None
+            else None
+        )
 
     @property
     def icon(self) -> str:
@@ -264,7 +270,11 @@ class RenaultFuelQuantitySensor(RenaultCockpitDataEntity):
     @property
     def state(self) -> int | None:
         """Return the state of this entity."""
-        return round(self.data.fuelQuantity)
+        return (
+            round(self.data.fuelQuantity)
+            if self.data.fuelQuantity is not None
+            else None
+        )
 
     @property
     def icon(self) -> str:
@@ -283,7 +293,11 @@ class RenaultMileageSensor(RenaultCockpitDataEntity):
     @property
     def state(self) -> int | None:
         """Return the state of this entity."""
-        return round(self.data.totalMileage)
+        return (
+            round(self.data.totalMileage)
+            if self.data.totalMileage is not None
+            else None
+        )
 
     @property
     def icon(self) -> str:
@@ -321,7 +335,7 @@ class RenaultPlugStateSensor(RenaultBatteryDataEntity):
     @property
     def state(self) -> str | None:
         """Return the state of this entity."""
-        plug_status = self.data.get_plug_status()
+        plug_status = self.data.get_plug_status() if self.data is not None else None
         return slugify(plug_status.name) if plug_status is not None else None
 
     @property

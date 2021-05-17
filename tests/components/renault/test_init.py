@@ -1,8 +1,10 @@
 """Tests for Renault setup process."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import aiohttp
 import pytest
+from renault_api.gigya.exceptions import InvalidCredentialsException
+from renault_api.kamereon import schemas
 
 from homeassistant.components.renault import (
     RenaultHub,
@@ -10,11 +12,12 @@ from homeassistant.components.renault import (
     async_unload_entry,
 )
 from homeassistant.components.renault.const import DOMAIN
+from homeassistant.components.renault.renault_vehicle import RenaultVehicleProxy
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import MOCK_CONFIG
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 
 async def test_setup_unload_and_reload_entry(hass):
@@ -23,15 +26,28 @@ async def test_setup_unload_and_reload_entry(hass):
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=123456
     )
+    renault_account = AsyncMock()
+    renault_account.get_vehicles.return_value = (
+        schemas.KamereonVehiclesResponseSchema.loads(
+            load_fixture("renault/vehicle_zoe_40.json")
+        )
+    )
 
-    with patch(
-        "homeassistant.components.renault.RenaultHub.attempt_login", return_value=True
-    ), patch("homeassistant.components.renault.RenaultHub.async_initialise"):
+    with patch("renault_api.renault_session.RenaultSession.login"), patch(
+        "renault_api.renault_client.RenaultClient.get_api_account",
+        return_value=renault_account,
+    ):
         # Set up the entry and assert that the values set during setup are where we expect
         # them to be.
         assert await async_setup_entry(hass, config_entry)
         assert DOMAIN in hass.data and config_entry.unique_id in hass.data[DOMAIN]
         assert isinstance(hass.data[DOMAIN][config_entry.unique_id], RenaultHub)
+
+        renault_hub: RenaultHub = hass.data[DOMAIN][config_entry.unique_id]
+        assert len(renault_hub.vehicles) == 1
+        assert isinstance(
+            renault_hub.vehicles["VF1AAAAA555777999"], RenaultVehicleProxy
+        )
 
         # Unload the entry and verify that the data has been removed
         assert await async_unload_entry(hass, config_entry)
@@ -46,7 +62,8 @@ async def test_setup_entry_bad_password(hass):
     )
 
     with patch(
-        "homeassistant.components.renault.RenaultHub.attempt_login", return_value=False
+        "renault_api.renault_session.RenaultSession.login",
+        side_effect=InvalidCredentialsException(403042, "invalid loginID or password"),
     ):
         # Set up the entry and assert that the values set during setup are where we expect
         # them to be.
@@ -62,7 +79,7 @@ async def test_setup_entry_exception(hass):
     # In this case we are testing the condition where async_setup_entry raises
     # ConfigEntryNotReady.
     with patch(
-        "homeassistant.components.renault.RenaultHub.attempt_login",
+        "renault_api.renault_session.RenaultSession.login",
         side_effect=aiohttp.ClientConnectionError,
     ), pytest.raises(ConfigEntryNotReady):
         assert await async_setup_entry(hass, config_entry)

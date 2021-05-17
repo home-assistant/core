@@ -61,30 +61,34 @@ class RenaultBatteryDataEntity(RenaultDataEntity):
         super().__init__(vehicle, entity_type, "battery")
 
     @property
-    def data(self) -> KamereonVehicleBatteryStatusData:
+    def data(self) -> KamereonVehicleBatteryStatusData | None:
         """Return collected data."""
-        return cast(KamereonVehicleBatteryStatusData, self.coordinator.data)
+        return (
+            cast(KamereonVehicleBatteryStatusData, self.coordinator.data)
+            if self.coordinator.data is not None
+            else None
+        )
 
     @property
     def device_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of this entity."""
         attrs = {}
-        if self.data.timestamp:
+        if self.data is not None and self.data.timestamp is not None:
             attrs[ATTR_LAST_UPDATE] = self.data.timestamp
         return attrs
 
     @property
-    def is_charging(self) -> bool | None:
+    def is_charging(self) -> bool:
         """Return charge state as boolean."""
         if self.data is None:
-            return None
+            return False
         return self.data.get_charging_status() == ChargeState.CHARGE_IN_PROGRESS
 
     @property
-    def is_plugged_in(self) -> bool | None:
+    def is_plugged_in(self) -> bool:
         """Return plug state as boolean."""
         if self.data is None:
-            return None
+            return False
         return self.data.get_plug_status() == PlugState.PLUGGED
 
 

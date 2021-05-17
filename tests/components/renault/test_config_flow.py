@@ -1,5 +1,8 @@
 """Test the Renault config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, PropertyMock, patch
+
+from renault_api.gigya.exceptions import InvalidCredentialsException
+from renault_api.kamereon import schemas
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.renault.const import (
@@ -9,6 +12,8 @@ from homeassistant.components.renault.const import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+
+from tests.common import load_fixture
 
 
 async def test_config_flow_single_account(hass: HomeAssistant):
@@ -21,8 +26,8 @@ async def test_config_flow_single_account(hass: HomeAssistant):
 
     # Failed credentials
     with patch(
-        "homeassistant.components.renault.config_flow.RenaultHub.attempt_login",
-        return_value=False,
+        "renault_api.renault_session.RenaultSession.login",
+        side_effect=InvalidCredentialsException(403042, "invalid loginID or password"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -36,13 +41,20 @@ async def test_config_flow_single_account(hass: HomeAssistant):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "invalid_credentials"}
 
+    renault_account = AsyncMock()
+    type(renault_account).account_id = PropertyMock(return_value="account_id_1")
+    renault_account.get_vehicles.return_value = (
+        schemas.KamereonVehiclesResponseSchema.loads(
+            load_fixture("renault/vehicle_zoe_40.json")
+        )
+    )
+
     # Account list single
-    with patch(
-        "homeassistant.components.renault.config_flow.RenaultHub.attempt_login",
-        return_value=True,
+    with patch("renault_api.renault_session.RenaultSession.login"), patch(
+        "renault_api.renault_account.RenaultAccount.account_id", return_value="123"
     ), patch(
-        "homeassistant.components.renault.config_flow.RenaultHub.get_account_ids",
-        return_value=["account_id_1"],
+        "renault_api.renault_client.RenaultClient.get_api_accounts",
+        return_value=[renault_account],
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -70,10 +82,7 @@ async def test_config_flow_no_account(hass: HomeAssistant):
     assert result["errors"] == {}
 
     # Account list empty
-    with patch(
-        "homeassistant.components.renault.config_flow.RenaultHub.attempt_login",
-        return_value=True,
-    ), patch(
+    with patch("renault_api.renault_session.RenaultSession.login"), patch(
         "homeassistant.components.renault.config_flow.RenaultHub.get_account_ids",
         return_value=[],
     ):
@@ -99,10 +108,7 @@ async def test_config_flow_multiple_accounts(hass: HomeAssistant):
     assert result["errors"] == {}
 
     # Multiple accounts
-    with patch(
-        "homeassistant.components.renault.config_flow.RenaultHub.attempt_login",
-        return_value=True,
-    ), patch(
+    with patch("renault_api.renault_session.RenaultSession.login"), patch(
         "homeassistant.components.renault.config_flow.RenaultHub.get_account_ids",
         return_value=["account_id_1", "account_id_2"],
     ):
