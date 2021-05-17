@@ -112,12 +112,12 @@ async def test_setup_entry_with_tracing(hass: HomeAssistant) -> None:
         ("0.115.0dev0", "dev"),
     ],
 )
-async def test_get_channel(version, channel) -> None:
+async def test_get_channel(version: str, channel: str) -> None:
     """Test if channel detection works from Home Assistant version number."""
     assert get_channel(version) == channel
 
 
-async def test_process_before_send(hass: HomeAssistant):
+async def test_process_before_send(hass: HomeAssistant) -> None:
     """Test regular use of the Sentry process before sending function."""
     hass.config.components.add("puppies")
     hass.config.components.add("a_integration")
