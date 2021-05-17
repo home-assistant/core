@@ -544,7 +544,7 @@ class CameraMjpegStream(CameraView):
         interval_str = request.query.get("interval")
         if interval_str is None:
             stream = await camera.handle_async_mjpeg_stream(request)
-            if not stream:
+            if stream is None:
                 raise web.HTTPBadGateway()
             return stream
 
