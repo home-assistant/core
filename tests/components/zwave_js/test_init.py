@@ -655,6 +655,48 @@ async def test_addon_info_failure(
 
 
 @pytest.mark.parametrize(
+    "old_device, new_device, old_network_key, new_network_key",
+    [("/old_test", "/new_test", "old123", "new123")],
+)
+async def test_addon_options_changed(
+    hass,
+    client,
+    addon_installed,
+    addon_running,
+    install_addon,
+    addon_options,
+    start_addon,
+    old_device,
+    new_device,
+    old_network_key,
+    new_network_key,
+):
+    """Test update config entry data on entry setup if add-on options changed."""
+    addon_options["device"] = new_device
+    addon_options["network_key"] = new_network_key
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Z-Wave JS",
+        data={
+            "url": "ws://host1:3001",
+            "use_addon": True,
+            "usb_path": old_device,
+            "network_key": old_network_key,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.LOADED
+    assert entry.data["usb_path"] == new_device
+    assert entry.data["network_key"] == new_network_key
+    assert install_addon.call_count == 0
+    assert start_addon.call_count == 0
+
+
+@pytest.mark.parametrize(
     "addon_version, update_available, update_calls, snapshot_calls, "
     "update_addon_side_effect, create_shapshot_side_effect",
     [
