@@ -5,5 +5,5 @@
   "requirements": ["freesms==0.1.2"],
   "codeowners": [],
   "iot_class": "cloud_push",
-  "disabled": "https://github.com/bfontaine/freesms/pull/7"
+  "disabled": "https://github.com/home-assistant/core/pull/50749"
 }
