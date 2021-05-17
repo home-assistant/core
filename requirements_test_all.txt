@@ -91,7 +91,7 @@ aiodiscover==1.4.0
 
 # homeassistant.components.dnsip
 # homeassistant.components.minecraft_server
-aiodns==2.0.0
+aiodns==3.0.0
 
 # homeassistant.components.eafm
 aioeafm==0.1.2
