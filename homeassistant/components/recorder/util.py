@@ -269,7 +269,7 @@ def setup_connection_for_dialect(dialect_name, dbapi_connection, first_connectio
             # instead of every time we open the sqlite connection
             # as its persistent and isn't free to call every time.
 
-        # approximately abs(N*1024) bytes of memory
+        # approximately 8MiB of memory
         execute_on_connection(dbapi_connection, "PRAGMA cache_size = -8192")
 
     if dialect_name == "mysql":

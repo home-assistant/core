@@ -28,6 +28,16 @@
                 },
                 "description": "Update FRITZ!Box Tools credentials for: {host}.\n\nFRITZ!Box Tools is unable to log in to your FRITZ!Box.",
                 "title": "Updating FRITZ!Box Tools - credentials"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "description": "Setup FRITZ!Box Tools to control your FRITZ!Box.\nMinimum needed: username, password.",
+                "title": "Setup FRITZ!Box Tools"
             }
         }
     }
