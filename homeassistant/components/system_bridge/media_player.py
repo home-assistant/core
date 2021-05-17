@@ -79,12 +79,16 @@ class BridgeAudio(BridgeDeviceEntity, MediaPlayerEntity):
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         bridge: Bridge = self.coordinator.data
+        if bridge.audio is None or bridge.audio.attributes is None:
+            return None
         return bridge.audio.current["volume"] / 100
 
     @property
     def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
         bridge: Bridge = self.coordinator.data
+        if bridge.audio is None or bridge.audio.attributes is None:
+            return None
         return bridge.audio.current["muted"]
 
     async def async_mute_volume(self, mute: bool) -> None:
