@@ -63,6 +63,37 @@ class RenaultVehicleProxy:
                 # Polling interval. Will only be polled if there are subscribers.
                 update_interval=self._scan_interval,
             )
+        if await self.endpoint_available("hvac-status"):
+            self.coordinators["hvac_status"] = RenaultDataUpdateCoordinator(
+                self.hass,
+                LOGGER,
+                # Name of the data. For logging purposes.
+                name=f"{self.details.vin} hvac_status",
+                update_method=self.get_hvac_status,
+                # Polling interval. Will only be polled if there are subscribers.
+                update_interval=self._scan_interval,
+            )
+        if self.details.uses_electricity():
+            if await self.endpoint_available("battery-status"):
+                self.coordinators["battery"] = RenaultDataUpdateCoordinator(
+                    self.hass,
+                    LOGGER,
+                    # Name of the data. For logging purposes.
+                    name=f"{self.details.vin} battery",
+                    update_method=self.get_battery_status,
+                    # Polling interval. Will only be polled if there are subscribers.
+                    update_interval=self._scan_interval,
+                )
+            if await self.endpoint_available("charge-mode"):
+                self.coordinators["charge_mode"] = RenaultDataUpdateCoordinator(
+                    self.hass,
+                    LOGGER,
+                    # Name of the data. For logging purposes.
+                    name=f"{self.details.vin} charge_mode",
+                    update_method=self.get_charge_mode,
+                    # Polling interval. Will only be polled if there are subscribers.
+                    update_interval=self._scan_interval,
+                )
         for key in list(self.coordinators.keys()):
             await self.coordinators[key].async_refresh()
             if self.coordinators[key].not_supported:
@@ -78,6 +109,18 @@ class RenaultVehicleProxy:
             endpoint
         ) and await self._vehicle.has_contract_for_endpoint(endpoint)
 
+    async def get_battery_status(self) -> models.KamereonVehicleBatteryStatusData:
+        """Get battery status information from vehicle."""
+        return await self._vehicle.get_battery_status()
+
+    async def get_charge_mode(self) -> models.KamereonVehicleChargeModeData:
+        """Get charge mode information from vehicle."""
+        return await self._vehicle.get_charge_mode()
+
     async def get_cockpit(self) -> models.KamereonVehicleCockpitData:
         """Get cockpit information from vehicle."""
         return await self._vehicle.get_cockpit()
+
+    async def get_hvac_status(self) -> models.KamereonVehicleHvacStatusData:
+        """Get hvac status information from vehicle."""
+        return await self._vehicle.get_hvac_status()

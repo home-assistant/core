@@ -1,15 +1,44 @@
 """Support for Renault sensors."""
 from __future__ import annotations
 
+from typing import Any
+
+from renault_api.kamereon.enums import ChargeState, PlugState
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import LENGTH_KILOMETERS, VOLUME_LITERS
+from homeassistant.const import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_TEMPERATURE,
+    LENGTH_KILOMETERS,
+    PERCENTAGE,
+    POWER_KILO_WATT,
+    TEMP_CELSIUS,
+    TIME_MINUTES,
+    VOLUME_LITERS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.util import slugify
 
-from .const import DOMAIN
-from .renault_entities import RenaultCockpitDataEntity, RenaultDataEntity
+from .const import (
+    DEVICE_CLASS_CHARGE_MODE,
+    DEVICE_CLASS_CHARGE_STATE,
+    DEVICE_CLASS_PLUG_STATE,
+    DOMAIN,
+)
+from .renault_entities import (
+    RenaultBatteryDataEntity,
+    RenaultChargeModeDataEntity,
+    RenaultCockpitDataEntity,
+    RenaultDataEntity,
+    RenaultHVACDataEntity,
+)
 from .renault_hub import RenaultHub
 from .renault_vehicle import RenaultVehicleProxy
+
+ATTR_BATTERY_AVAILABLE_ENERGY = "battery_available_energy"
 
 
 async def async_setup_entry(
@@ -39,7 +68,185 @@ async def get_vehicle_entities(vehicle: RenaultVehicleProxy) -> list[RenaultData
         if vehicle.details.uses_fuel():
             entities.append(RenaultFuelAutonomySensor(vehicle, "Fuel Autonomy"))
             entities.append(RenaultFuelQuantitySensor(vehicle, "Fuel Quantity"))
+    if "hvac_status" in vehicle.coordinators:
+        entities.append(RenaultOutsideTemperatureSensor(vehicle, "Outside Temperature"))
+    if "battery" in vehicle.coordinators:
+        entities.append(RenaultBatteryLevelSensor(vehicle, "Battery Level"))
+        entities.append(RenaultChargeStateSensor(vehicle, "Charge State"))
+        entities.append(
+            RenaultChargingRemainingTimeSensor(vehicle, "Charging Remaining Time")
+        )
+        entities.append(RenaultChargingPowerSensor(vehicle, "Charging Power"))
+        entities.append(RenaultPlugStateSensor(vehicle, "Plug State"))
+        entities.append(RenaultBatteryAutonomySensor(vehicle, "Battery Autonomy"))
+        entities.append(RenaultBatteryTemperatureSensor(vehicle, "Battery Temperature"))
+    if "charge_mode" in vehicle.coordinators:
+        entities.append(RenaultChargeModeSensor(vehicle, "Charge Mode"))
     return entities
+
+
+class RenaultBatteryAutonomySensor(RenaultBatteryDataEntity):
+    """Battery autonomy sensor."""
+
+    @property
+    def state(self) -> int | None:
+        """Return the state of this entity."""
+        if self.data.batteryAutonomy is None:
+            return None
+        return self.data.batteryAutonomy
+
+    @property
+    def icon(self) -> str:
+        """Icon handling."""
+        return "mdi:ev-station"
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this entity."""
+        return LENGTH_KILOMETERS
+
+
+class RenaultBatteryLevelSensor(RenaultBatteryDataEntity):
+    """Battery Level sensor."""
+
+    @property
+    def state(self) -> int | None:
+        """Return the state of this entity."""
+        return self.data.batteryLevel if self.data else None
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this entity."""
+        return DEVICE_CLASS_BATTERY
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this entity."""
+        return PERCENTAGE
+
+    @property
+    def icon(self) -> str:
+        """Icon handling."""
+        charging = (
+            self.data is not None
+            and self.data.get_charging_status() == ChargeState.CHARGE_IN_PROGRESS
+        )
+        return icon_for_battery_level(battery_level=self.state, charging=charging)
+
+    @property
+    def device_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of this entity."""
+        attrs = super().device_state_attributes
+        if self.data.batteryAvailableEnergy is not None:
+            attrs[ATTR_BATTERY_AVAILABLE_ENERGY] = self.data.batteryAvailableEnergy
+        return attrs
+
+
+class RenaultBatteryTemperatureSensor(RenaultBatteryDataEntity):
+    """Battery Temperature sensor."""
+
+    @property
+    def state(self) -> int | None:
+        """Return the state of this entity."""
+        return self.data.batteryTemperature
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this entity."""
+        return DEVICE_CLASS_TEMPERATURE
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this entity."""
+        return TEMP_CELSIUS
+
+
+class RenaultChargeModeSensor(RenaultChargeModeDataEntity):
+    """Charge Mode sensor."""
+
+    @property
+    def state(self) -> str | None:
+        """Return the state of this entity."""
+        return self.data.chargeMode
+
+    @property
+    def icon(self) -> str:
+        """Icon handling."""
+        if self.data and self.data.chargeMode == "schedule_mode":
+            return "mdi:calendar-clock"
+        return "mdi:calendar-remove"
+
+    @property
+    def device_class(self) -> str:
+        """Return sensor device class."""
+        return DEVICE_CLASS_CHARGE_MODE
+
+
+class RenaultChargeStateSensor(RenaultBatteryDataEntity):
+    """Charge State sensor."""
+
+    @property
+    def state(self) -> str | None:
+        """Return the state of this entity."""
+        charging_status = (
+            self.data.get_charging_status() if self.data is not None else None
+        )
+        return slugify(charging_status.name) if charging_status is not None else None
+
+    @property
+    def icon(self) -> str:
+        """Icon handling."""
+        if self.state == ChargeState.CHARGE_IN_PROGRESS.name:
+            return "mdi:flash"
+        return "mdi:flash-off"
+
+    @property
+    def device_class(self) -> str:
+        """Return sensor device class."""
+        return DEVICE_CLASS_CHARGE_STATE
+
+
+class RenaultChargingRemainingTimeSensor(RenaultBatteryDataEntity):
+    """Charging Remaining Time sensor."""
+
+    @property
+    def state(self) -> int | None:
+        """Return the state of this entity."""
+        return self.data.chargingRemainingTime
+
+    @property
+    def icon(self) -> str:
+        """Icon handling."""
+        return "mdi:timer"
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this entity."""
+        return TIME_MINUTES
+
+
+class RenaultChargingPowerSensor(RenaultBatteryDataEntity):
+    """Charging Power sensor."""
+
+    @property
+    def state(self) -> float | None:
+        """Return the state of this entity."""
+        if self.data.chargingInstantaneousPower is None:
+            return None
+        if self.vehicle.details.reports_charging_power_in_watts():
+            # Need to convert to kilowatts
+            return self.data.chargingInstantaneousPower / 1000
+        return self.data.chargingInstantaneousPower
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this entity."""
+        return POWER_KILO_WATT
+
+    @property
+    def device_class(self) -> str:
+        """Return sensor device class."""
+        return DEVICE_CLASS_ENERGY
 
 
 class RenaultFuelAutonomySensor(RenaultCockpitDataEntity):
@@ -103,3 +310,44 @@ class RenaultMileageSensor(RenaultCockpitDataEntity):
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity."""
         return LENGTH_KILOMETERS
+
+
+class RenaultOutsideTemperatureSensor(RenaultHVACDataEntity):
+    """HVAC Outside Temperature sensor."""
+
+    @property
+    def state(self) -> float | None:
+        """Return the state of this entity."""
+        return self.data.externalTemperature
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this entity."""
+        return DEVICE_CLASS_TEMPERATURE
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this entity."""
+        return TEMP_CELSIUS
+
+
+class RenaultPlugStateSensor(RenaultBatteryDataEntity):
+    """Plug State sensor."""
+
+    @property
+    def state(self) -> str | None:
+        """Return the state of this entity."""
+        plug_status = self.data.get_plug_status() if self.data is not None else None
+        return slugify(plug_status.name) if plug_status is not None else None
+
+    @property
+    def icon(self) -> str:
+        """Icon handling."""
+        if self.state == PlugState.PLUGGED.name:
+            return "mdi:power-plug"
+        return "mdi:power-plug-off"
+
+    @property
+    def device_class(self) -> str:
+        """Return sensor device class."""
+        return DEVICE_CLASS_PLUG_STATE
