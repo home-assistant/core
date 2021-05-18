@@ -20,7 +20,6 @@ from homeassistant.const import CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utc_from_timestamp
 
@@ -102,7 +101,7 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
             return None
 
     @property
-    def temperature(self) -> StateType:
+    def temperature(self) -> float:
         """Return the temperature."""
         return cast(
             float, self.coordinator.data["Temperature"][self._unit_system]["Value"]
@@ -114,38 +113,38 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
         return TEMP_CELSIUS if self.coordinator.is_metric else TEMP_FAHRENHEIT
 
     @property
-    def pressure(self) -> StateType:
+    def pressure(self) -> float:
         """Return the pressure."""
         return cast(
             float, self.coordinator.data["Pressure"][self._unit_system]["Value"]
         )
 
     @property
-    def humidity(self) -> StateType:
+    def humidity(self) -> int:
         """Return the humidity."""
         return cast(int, self.coordinator.data["RelativeHumidity"])
 
     @property
-    def wind_speed(self) -> StateType:
+    def wind_speed(self) -> float:
         """Return the wind speed."""
         return cast(
             float, self.coordinator.data["Wind"]["Speed"][self._unit_system]["Value"]
         )
 
     @property
-    def wind_bearing(self) -> StateType:
+    def wind_bearing(self) -> int:
         """Return the wind bearing."""
         return cast(int, self.coordinator.data["Wind"]["Direction"]["Degrees"])
 
     @property
-    def visibility(self) -> StateType:
+    def visibility(self) -> float:
         """Return the visibility."""
         return cast(
             float, self.coordinator.data["Visibility"][self._unit_system]["Value"]
         )
 
     @property
-    def ozone(self) -> StateType:
+    def ozone(self) -> int | None:
         """Return the ozone level."""
         # We only have ozone data for certain locations and only in the forecast data.
         if self.coordinator.forecast and self.coordinator.data[ATTR_FORECAST][0].get(
