@@ -746,3 +746,31 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
     await help_test_entity_debug_info_message(
         hass, mqtt_mock, alarm_control_panel.DOMAIN, DEFAULT_CONFIG
     )
+
+
+async def test_state_topic_template_with_entity_id(hass, mqtt_mock):
+    """Test entity id in template."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            alarm_control_panel.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "test-topic",
+                "state_topic": "test-topic",
+                "value_template": '\
+                {% if state_attr(entity_id, "friendly_name") == "test"  %}\
+                  armed_away\
+                {% else %}\
+                   disarmed\
+                {% endif %}',
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "test-topic", "100")
+
+    state = hass.states.get("alarm_control_panel.test")
+    assert state.state == STATE_ALARM_ARMED_AWAY
