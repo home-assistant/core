@@ -199,9 +199,9 @@ class SonosSpeaker:
         """Listen to new entities to trigger first subscription."""
         self._platforms_ready.add(entity_type)
         if self._platforms_ready == PLATFORMS:
+            self._resubscription_lock = asyncio.Lock()
             await self.async_subscribe()
             self._is_ready = True
-        self._resubscription_lock = asyncio.Lock()
 
     def write_entity_states(self) -> None:
         """Write states for associated SonosEntity instances."""
