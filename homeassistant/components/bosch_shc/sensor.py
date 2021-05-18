@@ -333,17 +333,25 @@ class BatterySensor(SHCEntity):
             self._device.batterylevel
             == SHCBatteryDevice.BatteryLevelService.State.CRITICAL_LOW
         ):
-            _LOGGER.warning("Battery state of device %s is critical low.", self.name)
+            _LOGGER.warning("Battery state of device %s is critical low", self.name)
             return 0
-        elif (
+
+        if (
             self._device.batterylevel
             == SHCBatteryDevice.BatteryLevelService.State.LOW_BATTERY
         ):
+            _LOGGER.warning("Battery state of device %s is low", self.name)
             return 20
-        elif self._device.batterylevel == SHCBatteryDevice.BatteryLevelService.State.OK:
+
+        if self._device.batterylevel == SHCBatteryDevice.BatteryLevelService.State.OK:
             return 100
 
-        _LOGGER.warning("Battery state of device %s is not available.", self.name)
+        if (
+            self._device.batterylevel
+            == SHCBatteryDevice.BatteryLevelService.State.NOT_AVAILABLE
+        ):
+            _LOGGER.debug("Battery state of device %s is not available", self.name)
+
         return None
 
     @property
