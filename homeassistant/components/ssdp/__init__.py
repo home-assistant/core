@@ -154,6 +154,7 @@ class Scanner:
 
     async def _async_process_entry(self, entry):
         """Process SSDP entries."""
+        _LOGGER.debug("_async_process_entry: %s", entry)
         key = (entry.st, entry.location)
         if key in self.seen:
             return
@@ -169,6 +170,8 @@ class Scanner:
                 self._description_cache[entry.location] = result
 
         info, domains = self._info_domains(entry)
+        _LOGGER.debug("_info_domains: %s - %s", info, domains)
+
         for domain in domains:
             _LOGGER.debug("Discovered %s at %s", domain, entry.location)
             await self.hass.config_entries.flow.async_init(
