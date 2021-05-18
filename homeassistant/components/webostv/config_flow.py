@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_ICON, CONF_NAME
+from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.network import is_ip_address
@@ -21,7 +21,6 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_ICON): cv.string,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -102,9 +101,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if client.is_registered():
             if client.client_key is None:
                 self.async_abort(reason="client_key_notfound")
-            user_input[CONF_CLIENT_SECRET] = client.client_key
+            data = {
+                CONF_HOST: self._user_input[CONF_HOST],
+                CONF_CLIENT_SECRET: client.client_key,
+            }
             return self.async_create_entry(
-                title=user_input.get(CONF_NAME, CONF_HOST), data=user_input
+                title=user_input.get(CONF_NAME, CONF_HOST), data=data
             )
 
         return await self.async_step_user()

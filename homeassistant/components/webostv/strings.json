@@ -7,8 +7,7 @@
         "description": "Turn on WebosTV device, fill fields and submit",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "name": "[%key:common::config_flow::data::name%]",
-          "icon": "Icon - optional (ex: mdi:tv)"
+          "name": "[%key:common::config_flow::data::name%]"
         }
       },
       "pairing": {

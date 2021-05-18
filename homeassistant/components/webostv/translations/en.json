@@ -7,8 +7,7 @@
         "description": "Turn on WebosTV device, fill fields and submit.",
         "data": {
           "host": "Hostname",
-          "name": "Name - optional",
-          "icon": "Icon - optional (ex: mdi:tv)"
+          "name": "Name - optional"
         }
       },
       "pairing": {

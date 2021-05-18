@@ -7,8 +7,7 @@
                 "description": "Merci d'allumer votre téléviseur, avant de remplir les champs",
                 "data": {
                     "host": "IP ou Nom",
-                    "name": "Nom convivial",
-                    "icon": "Icon (ex: mdi:tv)"
+                    "name": "Nom convivial"
                 }
             },
             "pairing": {
