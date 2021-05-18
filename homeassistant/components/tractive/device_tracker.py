@@ -75,6 +75,18 @@ class TractiveDeviceTracker(TrackerEntity):
         return SOURCE_TYPE_GPS
 
     @property
+    def device_info(self):
+        """Return device information."""
+        return {
+            "identifiers": {(DOMAIN, self._tracker_details["_id"])},
+            "name": f"Tractive ({self._tracker_details['_id']})",
+            "manufacturer": "Tractive GmbH",
+            "sw_version": self._tracker_details["fw_version"],
+            "entry_type": None,
+            "model": self._tracker_details["model_number"],
+        }
+
+    @property
     def latitude(self):
         """Return latitude value of the device."""
         return self._latitude
