@@ -31,10 +31,10 @@ PLATFORMS = ["sensor", "weather"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up AccuWeather as config entry."""
-    api_key = entry.data[CONF_API_KEY]
+    api_key: str = entry.data[CONF_API_KEY]
     assert entry.unique_id is not None
     location_key = entry.unique_id
-    forecast = entry.options.get(CONF_FORECAST, False)
+    forecast: bool = entry.options.get(CONF_FORECAST, False)
 
     _LOGGER.debug("Using location_key: %s, get forecast: %s", location_key, forecast)
 
