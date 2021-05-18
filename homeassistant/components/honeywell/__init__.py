@@ -17,19 +17,11 @@ async def async_setup_entry(hass, config):
     username = config.data[CONF_USERNAME]
     password = config.data[CONF_PASSWORD]
 
-    try:
-        client = await hass.async_add_executor_job(
-            somecomfort.SomeComfort, username, password
-        )
-    except somecomfort.AuthError:
-        _LOGGER.error("Failed to login to honeywell account %s", username)
-        return False
-    except somecomfort.SomeComfortError:
-        _LOGGER.error(
-            "Failed to initialize the Honeywell client: "
-            "Check your configuration (username, password), "
-            "or maybe you have exceeded the API rate limit?"
-        )
+    client = await hass.async_add_executor_job(
+        get_somecomfort_client, username, password
+    )
+
+    if client is None:
         return False
 
     loc_id = config.data.get(CONF_LOC_ID)
@@ -46,6 +38,22 @@ async def async_setup_entry(hass, config):
                 hass.config_entries.async_setup_platforms(config, PLATFORMS)
 
     return True
+
+
+def get_somecomfort_client(username, password):
+    """Initialize the somecomfort client."""
+    try:
+        return somecomfort.SomeComfort(username, password)
+    except somecomfort.AuthError:
+        _LOGGER.error("Failed to login to honeywell account %s", username)
+        return None
+    except somecomfort.SomeComfortError:
+        _LOGGER.error(
+            "Failed to initialize the Honeywell client: "
+            "Check your configuration (username, password), "
+            "or maybe you have exceeded the API rate limit?"
+        )
+        return None
 
 
 class HoneywellService:
@@ -65,13 +73,9 @@ class HoneywellService:
         When we got an error, the best way to be sure that the next query
         will succeed, is to recreate a new somecomfort client.
         """
-        try:
-            self._client = somecomfort.SomeComfort(self._username, self._password)
-        except somecomfort.AuthError:
-            _LOGGER.error("Failed to login to honeywell account %s", self._username)
-            return False
-        except somecomfort.SomeComfortError as ex:
-            _LOGGER.error("Failed to initialize honeywell client: %s", str(ex))
+        self._client = get_somecomfort_client(self._username, self._password)
+
+        if self._client is None:
             return False
 
         devices = [

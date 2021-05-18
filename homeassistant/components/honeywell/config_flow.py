@@ -18,7 +18,7 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            valid = await self.is_valid(user_input["username"], user_input["password"])
+            valid = await self.is_valid(**user_input)
             if valid:
                 return self.async_create_entry(
                     title=DOMAIN,
@@ -35,11 +35,11 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=vol.Schema(data_schema), errors=errors
         )
 
-    async def is_valid(self, username, password) -> bool:
+    async def is_valid(self, **kwargs) -> bool:
         """Check if login credentials are valid."""
         try:
             await self.hass.async_add_executor_job(
-                somecomfort.SomeComfort, username, password
+                somecomfort.SomeComfort, kwargs[CONF_USERNAME], kwargs[CONF_PASSWORD]
             )
             return True
         except somecomfort.SomeComfortError:
