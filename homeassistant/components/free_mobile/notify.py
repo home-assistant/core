@@ -1,7 +1,7 @@
 """Support for Free Mobile SMS platform."""
 import logging
 
-from freesms import FreeClient  # pylint: disable=import-error
+from freesms import FreeClient
 import voluptuous as vol
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService

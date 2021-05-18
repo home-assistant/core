@@ -502,10 +502,10 @@ async def test_homekit_match_partial_fnmatch(hass, mock_zeroconf):
         side_effect=lambda *args, **kwargs: service_update_mock(
             *args, **kwargs, limit_service="_hap._tcp.local."
         ),
-    ) as mock_service_browser:
-        mock_zeroconf.get_service_info.side_effect = get_homekit_info_mock(
-            "YLDP13YL", HOMEKIT_STATUS_UNPAIRED
-        )
+    ) as mock_service_browser, patch(
+        "homeassistant.components.zeroconf.ServiceInfo",
+        side_effect=get_homekit_info_mock("YLDP13YL", HOMEKIT_STATUS_UNPAIRED),
+    ):
         assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
