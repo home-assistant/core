@@ -8,6 +8,9 @@
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "M\u00f6chten Sie {model} ({host}) einrichten?"
+            },
             "pick_device": {
                 "data": {
                     "device": "Ger\u00e4te"

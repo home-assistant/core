@@ -22,9 +22,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CALL_TYPE_COIL,
-    CALL_TYPE_DISCRETE,
-    CALL_TYPE_REGISTER_HOLDING,
-    CALL_TYPE_REGISTER_INPUT,
     CONF_INPUT_TYPE,
     CONF_STATE_OFF,
     CONF_STATE_ON,
@@ -34,6 +31,7 @@ from .const import (
 )
 from .modbus import ModbusHub
 
+PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -61,14 +59,9 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         self._available = True
         self._scan_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
         self._address = config[CONF_ADDRESS]
-        if config[CONF_WRITE_TYPE] == CALL_TYPE_COIL:
-            self._write_func = self._hub.write_coil
-            self._command_on = 0x01
-            self._command_off = 0x00
-        else:
-            self._write_func = self._hub.write_register
-            self._command_on = config[CONF_COMMAND_ON]
-            self._command_off = config[CONF_COMMAND_OFF]
+        self._write_type = config[CONF_WRITE_TYPE]
+        self._command_on = config[CONF_COMMAND_ON]
+        self._command_off = config[CONF_COMMAND_OFF]
         if CONF_VERIFY in config:
             if config[CONF_VERIFY] is None:
                 config[CONF_VERIFY] = {}
@@ -81,15 +74,6 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
             )
             self._state_on = config[CONF_VERIFY].get(CONF_STATE_ON, self._command_on)
             self._state_off = config[CONF_VERIFY].get(CONF_STATE_OFF, self._command_off)
-
-            if self._verify_type == CALL_TYPE_REGISTER_HOLDING:
-                self._read_func = self._hub.read_holding_registers
-            elif self._verify_type == CALL_TYPE_DISCRETE:
-                self._read_func = self._hub.read_discrete_inputs
-            elif self._verify_type == CALL_TYPE_REGISTER_INPUT:
-                self._read_func = self._hub.read_input_registers
-            else:  # self._verify_type == CALL_TYPE_COIL:
-                self._read_func = self._hub.read_coils
         else:
             self._verify_active = False
 
@@ -99,9 +83,7 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         if state:
             self._is_on = state.state == STATE_ON
 
-        async_track_time_interval(
-            self.hass, lambda arg: self.update(), self._scan_interval
-        )
+        async_track_time_interval(self.hass, self.async_update, self._scan_interval)
 
     @property
     def is_on(self):
@@ -123,46 +105,54 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         """Return True if entity is available."""
         return self._available
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Set switch on."""
 
-        result = self._write_func(self._slave, self._address, self._command_on)
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._address, self._command_on, self._write_type
+        )
         if result is False:
             self._available = False
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
         else:
             self._available = True
             if self._verify_active:
-                self.update()
+                await self.async_update()
             else:
                 self._is_on = True
-                self.schedule_update_ha_state()
+                self.async_write_ha_state()
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Set switch off."""
-        result = self._write_func(self._slave, self._address, self._command_off)
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._address, self._command_off, self._write_type
+        )
         if result is False:
             self._available = False
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
         else:
             self._available = True
             if self._verify_active:
-                self.update()
+                await self.async_update()
             else:
                 self._is_on = False
-                self.schedule_update_ha_state()
+                self.async_write_ha_state()
 
-    def update(self):
+    async def async_update(self, now=None):
         """Update the entity state."""
+        # remark "now" is a dummy parameter to avoid problems with
+        # async_track_time_interval
         if not self._verify_active:
             self._available = True
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
             return
 
-        result = self._read_func(self._slave, self._verify_address, 1)
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._verify_address, 1, self._verify_type
+        )
         if result is None:
             self._available = False
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
             return
 
         self._available = True
@@ -182,4 +172,4 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
                     self._verify_address,
                     value,
                 )
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

@@ -3264,6 +3264,7 @@ async def test_media_player_eq_modes(hass):
 
     eq_capability = get_capability(capabilities, "Alexa.EqualizerController")
     assert eq_capability is not None
+    assert eq_capability["properties"]["retrievable"]
     assert "modes" in eq_capability["configurations"]
 
     eq_modes = eq_capability["configurations"]["modes"]

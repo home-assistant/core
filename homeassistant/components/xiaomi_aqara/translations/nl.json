@@ -12,7 +12,7 @@
             "invalid_key": "Ongeldige gatewaysleutel",
             "invalid_mac": "Ongeldig MAC-adres"
         },
-        "flow_title": "Xiaomi Aqara Gateway: {name}",
+        "flow_title": "{name}",
         "step": {
             "select": {
                 "data": {

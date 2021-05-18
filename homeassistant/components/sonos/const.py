@@ -136,6 +136,7 @@ SONOS_CREATE_MEDIA_PLAYER = "sonos_create_media_player"
 SONOS_ENTITY_CREATED = "sonos_entity_created"
 SONOS_ENTITY_UPDATE = "sonos_entity_update"
 SONOS_GROUP_UPDATE = "sonos_group_update"
+SONOS_HOUSEHOLD_UPDATED = "sonos_household_updated"
 SONOS_STATE_UPDATED = "sonos_state_updated"
 SONOS_SEEN = "sonos_seen"
 
@@ -146,3 +147,4 @@ BATTERY_SCAN_INTERVAL = datetime.timedelta(minutes=15)
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 DISCOVERY_INTERVAL = datetime.timedelta(seconds=60)
 SEEN_EXPIRE_TIME = 3.5 * DISCOVERY_INTERVAL
+SUBSCRIPTION_TIMEOUT = 1200

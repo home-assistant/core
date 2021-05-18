@@ -101,7 +101,7 @@ from .const import (
     MODBUS_DOMAIN as DOMAIN,
     PLATFORMS,
 )
-from .modbus import modbus_setup
+from .modbus import async_modbus_setup
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -350,8 +350,8 @@ SERVICE_WRITE_COIL_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up Modbus component."""
-    return modbus_setup(
+    return await async_modbus_setup(
         hass, config, SERVICE_WRITE_REGISTER_SCHEMA, SERVICE_WRITE_COIL_SCHEMA
     )
