@@ -257,6 +257,7 @@ FLOWS = [
     "totalconnect",
     "tplink",
     "traccar",
+    "tractive",
     "tradfri",
     "transmission",
     "tuya",
