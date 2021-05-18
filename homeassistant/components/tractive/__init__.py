@@ -1,6 +1,9 @@
 """The tractive integration."""
 from __future__ import annotations
 
+import asyncio
+import logging
+
 import aiotractive
 
 from homeassistant.config_entries import ConfigEntry
@@ -10,6 +13,9 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 
 PLATFORMS = ["device_tracker"]
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -53,11 +59,27 @@ class TractiveClient:
         """Initialize the client."""
         self._hass = hass
         self._client = client
+        self._listen_task = None
+
+    async def trackable_objects(self):
+        """Get list of trackable objects."""
+        return await self._client.trackable_objects()
+
+    def tracker(self, id):
+        """Get tracker by id."""
+        return self._client.tracker(id)
 
     def subscribe(self):
         """Start event listener coroutine."""
-        pass
+        self._listen_task = asyncio.create_task(self._listen())
 
     async def unsubscribe(self):
         """Stop event listener coroutine."""
+        if self._listen_task:
+            self._listen_task.cancel()
         await self._client.close()
+
+    async def _listen(self):
+        async for event in self._client.events():
+            pass
+            # _LOGGER.warning(event)
