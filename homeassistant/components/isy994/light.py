@@ -9,7 +9,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -78,7 +78,8 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
         if not await self._node.turn_off():
             _LOGGER.debug("Unable to turn off light")
 
-    def on_update(self, event: object) -> None:
+    @callback
+    def async_on_update(self, event: object) -> None:
         """Save brightness in the update event from the ISY994 Node."""
         if self._node.status not in (0, ISY_VALUE_UNKNOWN):
             self._last_brightness = self._node.status
@@ -86,7 +87,7 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
                 self._last_brightness = round(self._node.status * 255.0 / 100.0)
             else:
                 self._last_brightness = self._node.status
-        super().on_update(event)
+        super().async_on_update(event)
 
     # pylint: disable=arguments-differ
     async def async_turn_on(self, brightness=None, **kwargs) -> None:

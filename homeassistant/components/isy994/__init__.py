@@ -219,7 +219,9 @@ async def async_setup_entry(
     undo_listener = entry.add_update_listener(_async_update_listener)
 
     hass_isy_data[UNDO_UPDATE_LISTENER] = undo_listener
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_auto_update)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_auto_update)
+    )
 
     # Register Integration-wide Services:
     async_setup_services(hass)

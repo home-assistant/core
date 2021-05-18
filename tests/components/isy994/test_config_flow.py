@@ -1,11 +1,11 @@
 """Test the Universal Devices ISY994 config flow."""
+import re
 from unittest.mock import patch
 
-from pyisy import ISYInvalidAuthError
+from pyisy import ISYConnectionError, ISYInvalidAuthError
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components import dhcp, ssdp
-from homeassistant.components.isy994.config_flow import CannotConnect
 from homeassistant.components.isy994.const import (
     CONF_IGNORE_STRING,
     CONF_RESTORE_LIGHT_STATE,
@@ -156,14 +156,52 @@ async def test_form_invalid_auth(hass: HomeAssistant):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass: HomeAssistant):
-    """Test we handle cannot connect error."""
+async def test_form_isy_connection_error(hass: HomeAssistant):
+    """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
         PATCH_CONNECTION,
-        side_effect=CannotConnect,
+        side_effect=ISYConnectionError(),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_USER_INPUT,
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_isy_parse_response_error(hass: HomeAssistant, caplog):
+    """Test we handle poorly formatted XML response from ISY."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        PATCH_CONNECTION,
+        return_value=MOCK_CONFIG_RESPONSE.rsplit("\n", 3)[0],  # Test with invalid XML
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_USER_INPUT,
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert "ISY Could not parse response, poorly formatted XML." in caplog.text
+
+
+async def test_form_no_name_in_response(hass: HomeAssistant):
+    """Test we handle invalid response from ISY with name not set."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        PATCH_CONNECTION,
+        return_value=re.sub(
+            r"\<name\>.*\n", "", MOCK_CONFIG_RESPONSE
+        ),  # Test with <name> line removed.
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
