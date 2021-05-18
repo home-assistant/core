@@ -268,7 +268,7 @@ def _async_register_services(hass, instance):
         DOMAIN, SERVICE_PURGE, async_handle_purge_service, schema=SERVICE_PURGE_SCHEMA
     )
 
-    async def async_handle_purge_entities_sevice(service):
+    async def async_handle_purge_entities_service(service):
         """Handle calls to the purge entities service."""
         entity_ids = await async_extract_entity_ids(hass, service)
         domains = service.data.get(ATTR_DOMAINS, [])
@@ -279,15 +279,18 @@ def _async_register_services(hass, instance):
     hass.services.async_register(
         DOMAIN,
         SERVICE_PURGE_ENTITIES,
-        async_handle_purge_entities_sevice,
+        async_handle_purge_entities_service,
         schema=SERVICE_PURGE_ENTITIES_SCHEMA,
     )
 
-    async def async_handle_enable_sevice(service):
+    async def async_handle_enable_service(service):
         instance.set_enable(True)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_ENABLE, async_handle_enable_sevice, schema=SERVICE_ENABLE_SCHEMA
+        DOMAIN,
+        SERVICE_ENABLE,
+        async_handle_enable_service,
+        schema=SERVICE_ENABLE_SCHEMA,
     )
 
     async def async_handle_disable_service(service):
