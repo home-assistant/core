@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import sqlite3
 from unittest.mock import patch
 
+import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 
 from homeassistant.components import recorder
@@ -682,6 +683,7 @@ def test_auto_purge_disabled(hass_recorder):
     dt_util.set_default_time_zone(original_tz)
 
 
+@pytest.mark.parametrize("enable_statistics", [True])
 def test_auto_statistics(hass_recorder):
     """Test periodic statistics scheduling."""
     hass = hass_recorder()

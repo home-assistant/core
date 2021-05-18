@@ -857,10 +857,12 @@ def assert_setup_component(count, domain=None):
     ), f"setup_component failed, expected {count} got {res_len}: {res}"
 
 
-def init_recorder_component(hass, add_config=None):
+def init_recorder_component(hass, add_config=None, enable_statistics=False):
     """Initialize the recorder."""
     config = dict(add_config) if add_config else {}
     config[recorder.CONF_DB_URL] = "sqlite://"  # In memory DB
+    if not enable_statistics:
+        hass.data[recorder.DISABLE_STATISTICS] = True
 
     with patch("homeassistant.components.recorder.migration.migrate_schema"):
         assert setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})
@@ -868,11 +870,13 @@ def init_recorder_component(hass, add_config=None):
     _LOGGER.info("In-memory recorder successfully started")
 
 
-async def async_init_recorder_component(hass, add_config=None):
+async def async_init_recorder_component(hass, add_config=None, enable_statistics=False):
     """Initialize the recorder asynchronously."""
     config = dict(add_config) if add_config else {}
     config[recorder.CONF_DB_URL] = "sqlite://"
 
+    if not enable_statistics:
+        hass.data[recorder.DISABLE_STATISTICS] = True
     with patch("homeassistant.components.recorder.migration.migrate_schema"):
         assert await async_setup_component(
             hass, recorder.DOMAIN, {recorder.DOMAIN: config}

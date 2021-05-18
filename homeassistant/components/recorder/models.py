@@ -223,6 +223,9 @@ class Statistics(Base):  # type: ignore
     mean = Column(Float())
     min = Column(Float())
     max = Column(Float())
+    last_reset = Column(DATETIME_TYPE)
+    abs_value = Column(Float())
+    sum = Column(Float())
 
     __table_args__ = (
         # Used for fetching statistics for a certain entity at a specific time

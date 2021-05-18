@@ -33,6 +33,9 @@ def test_compile_hourly_statistics(hass_recorder):
                 "mean": 15.0,
                 "min": 10.0,
                 "max": 20.0,
+                "last_reset": None,
+                "abs_value": None,
+                "sum": None,
             }
         ]
     }

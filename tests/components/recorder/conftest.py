@@ -23,13 +23,23 @@ SetupRecorderInstanceT = Callable[..., Awaitable[Recorder]]
 
 
 @pytest.fixture
-def hass_recorder():
+def enable_statistics():
+    """Fixture to control enabling of recorder's statistics compilation.
+
+    To enable statistics, tests can be marked with:
+    @pytest.mark.parametrize("enable_statistics", [True])
+    """
+    return False
+
+
+@pytest.fixture
+def hass_recorder(enable_statistics):
     """Home Assistant fixture with in-memory recorder."""
     hass = get_test_home_assistant()
 
     def setup_recorder(config=None):
         """Set up with params."""
-        init_recorder_component(hass, config)
+        init_recorder_component(hass, config, enable_statistics)
         hass.start()
         hass.block_till_done()
         hass.data[DATA_INSTANCE].block_till_done()

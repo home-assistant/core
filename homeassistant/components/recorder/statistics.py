@@ -25,6 +25,9 @@ QUERY_STATISTICS = [
     Statistics.mean,
     Statistics.min,
     Statistics.max,
+    Statistics.last_reset,
+    Statistics.abs_value,
+    Statistics.sum,
 ]
 
 STATISTICS_BAKERY = "recorder_statistics_bakery"
@@ -97,16 +100,40 @@ def statistics_during_period(hass, start_time, end_time=None, statistic_id=None)
 
         statistic_ids = [statistic_id] if statistic_id is not None else None
 
-        return _sorted_statistics_to_dict(
-            hass, session, stats, start_time, statistic_ids
+        return _sorted_statistics_to_dict(stats, statistic_ids)
+
+
+def get_last_statistics(hass, number_of_stats, statistic_id=None):
+    """Return the last number_of_stats statistics."""
+    with session_scope(hass=hass) as session:
+        baked_query = hass.data[STATISTICS_BAKERY](
+            lambda session: session.query(*QUERY_STATISTICS)
         )
+
+        if statistic_id is not None:
+            baked_query += lambda q: q.filter_by(statistic_id=bindparam("statistic_id"))
+            statistic_id = statistic_id.lower()
+
+        baked_query += lambda q: q.order_by(
+            Statistics.statistic_id, Statistics.start.desc()
+        )
+
+        number_of_stats = 1
+        baked_query += lambda q: q.limit(bindparam("number_of_stats"))
+
+        stats = execute(
+            baked_query(session).params(
+                number_of_stats=number_of_stats, statistic_id=statistic_id
+            )
+        )
+
+        statistic_ids = [statistic_id] if statistic_id is not None else None
+
+        return _sorted_statistics_to_dict(stats, statistic_ids)
 
 
 def _sorted_statistics_to_dict(
-    hass,
-    session,
     stats,
-    start_time,
     statistic_ids,
 ):
     """Convert SQL results into JSON friendly data structure."""
@@ -130,6 +157,9 @@ def _sorted_statistics_to_dict(
                 "mean": db_state.mean,
                 "min": db_state.min,
                 "max": db_state.max,
+                "last_reset": _process_timestamp_to_utc_isoformat(db_state.last_reset),
+                "abs_value": db_state.abs_value,
+                "sum": db_state.sum,
             }
             for db_state in group
         )
