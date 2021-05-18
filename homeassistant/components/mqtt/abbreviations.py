@@ -119,6 +119,8 @@ ABBREVIATIONS = {
     "pl_osc_off": "payload_oscillation_off",
     "pl_osc_on": "payload_oscillation_on",
     "pl_paus": "payload_pause",
+    "pl_rst_pct": "payload_reset_percentage",
+    "pl_rst_pr_mode": "payload_reset_preset_mode",
     "pl_stop": "payload_stop",
     "pl_strt": "payload_start",
     "pl_stpa": "payload_start_pause",
