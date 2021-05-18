@@ -6,6 +6,7 @@ import time
 from typing import Optional, List, Callable
 
 from aiohttp import ClientSession
+from homeassistant.const import ATTR_BATTERY_LEVEL
 
 from .sonoff_cloud import EWeLinkCloud
 from .sonoff_local import EWeLinkLocal
@@ -13,15 +14,7 @@ from .sonoff_local import EWeLinkLocal
 _LOGGER = logging.getLogger(__name__)
 
 ATTRS = ('local', 'cloud', 'rssi', 'humidity', 'temperature', 'power',
-         'current', 'voltage', 'battery', 'consumption', 'water')
-
-# map cloud attrs to local attrs
-ATTRS_MAP = {
-    'currentTemperature': 'temperature',
-    'currentHumidity': 'humidity'
-}
-
-EMPTY_DICT = {}
+         'current', 'voltage', 'consumption', 'water', ATTR_BATTERY_LEVEL)
 
 
 def load_cache(filename: str):
@@ -42,10 +35,6 @@ def save_cache(filename: str, data: dict):
 
 
 def get_attrs(state: dict) -> dict:
-    for k in ATTRS_MAP:
-        if k in state:
-            state[ATTRS_MAP[k]] = state.pop(k)
-
     return {k: state[k] for k in ATTRS if k in state}
 
 
@@ -82,9 +71,15 @@ class EWeLinkRegistry:
 
         # skip update with same sequence (from cloud and local or from local)
         if sequence:
-            if device.get('seq') == sequence:
+            sequence = int(sequence)
+            ts = time.time()
+            # skip same and lower sequence in last 10 seconds
+            if ('seq' in device and ts - device['seq_ts'] < 10 and
+                    sequence <= device['seq']):
+                _LOGGER.debug("Skip update with same sequence")
                 return
             device['seq'] = sequence
+            device['seq_ts'] = ts
 
         # check when cloud offline first time
         if state.get('cloud') == 'offline' and device.get('host'):
@@ -136,7 +131,7 @@ class EWeLinkRegistry:
 
         await self.cloud.start([self._registry_handler], self.devices)
 
-    async def local_start(self, handlers: List[Callable]):
+    async def local_start(self, handlers: List[Callable], zeroconf):
         if self.devices is None:
             self.devices = {}
 
@@ -145,9 +140,9 @@ class EWeLinkRegistry:
         else:
             handlers = [self._registry_handler]
 
-        self.local.start(handlers, self.devices)
+        self.local.start(handlers, self.devices, zeroconf)
 
-    async def stop(self):
+    async def stop(self, *args):
         # TODO: do something
         pass
 

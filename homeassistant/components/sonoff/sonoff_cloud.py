@@ -12,6 +12,7 @@ from typing import Optional, Callable, List
 
 from aiohttp import ClientSession, WSMsgType, ClientConnectorError, \
     WSMessage, ClientWebSocketResponse
+from homeassistant.const import ATTR_BATTERY_LEVEL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,12 +21,45 @@ FAST_DELAY = RETRY_DELAYS.index(5 * 60)
 DATA_ERROR = {
     0: 'online',
     503: 'offline',
-    504: 'timeout'
+    504: 'timeout',
+    None: 'unknown'
 }
 
 CLOUD_ERROR = (
     "Cloud mode cannot work simultaneously with two copies of component. "
     "Read more: https://github.com/AlexxIT/SonoffLAN#config-examples")
+
+
+def fix_attrs(deviceid: str, state: dict):
+    """
+    - Sonoff TH `currentTemperature: "24.7"`
+    - Sonoff TH `currentTemperature: "unavailable"`
+    - Sonoff ZigBee: `temperature: "2096"`
+    - Sonoff SC: `temperature: 23`
+    - Sonoff POW: `power: "12.78"`
+    """
+    try:
+        # https://github.com/AlexxIT/SonoffLAN/issues/110
+        if 'currentTemperature' in state:
+            state['temperature'] = float(state['currentTemperature'])
+        if 'currentHumidity' in state:
+            state['humidity'] = float(state['currentHumidity'])
+
+        # battery_level is common name for battery attribute
+        if 'battery' in state:
+            state[ATTR_BATTERY_LEVEL] = state['battery']
+
+        for k in ('power', 'voltage', 'current'):
+            if k in state:
+                state[k] = float(state[k])
+
+        # zigbee device
+        if deviceid.startswith('a4'):
+            for k in ('temperature', 'humidity'):
+                if k in state:
+                    state[k] = int(state[k]) / 100.0
+    except:
+        pass
 
 
 class ResponseWaiter:
@@ -35,8 +69,8 @@ class ResponseWaiter:
     async def _set_response(self, data: dict):
         sequence = data.get('sequence')
         if sequence in self._waiters:
-            assert 'error' in data, data
-            err = data['error']
+            # sometimes the error doesn't exists
+            err = data.get('error')
             result = DATA_ERROR[err] if err in DATA_ERROR else f"E#{err}"
             # set future result
             self._waiters[sequence].set_result(result)
@@ -57,7 +91,12 @@ class ResponseWaiter:
         return self._waiters.pop(sequence).result()
 
 
-class EWeLinkCloud(ResponseWaiter):
+class EWeLinkApp:
+    appid = 'oeVkj2lYFGnJu5XUtWisfW4utiN4u9Mq'
+    appsecret = '6Nz4n0xA8s8qdxQf2GqurZj2Fs55FUvM'
+
+
+class EWeLinkCloud(ResponseWaiter, EWeLinkApp):
     devices: dict = None
     _handlers = None
     _ws: Optional[ClientWebSocketResponse] = None
@@ -65,6 +104,7 @@ class EWeLinkCloud(ResponseWaiter):
     _baseurl = 'https://eu-api.coolkit.cc:8080/'
     _apikey = None
     _token = None
+    _last_ts = 0
 
     def __init__(self, session: ClientSession):
         self.session = session
@@ -80,7 +120,7 @@ class EWeLinkCloud(ResponseWaiter):
         """
         ts = int(time.time())
         payload.update({
-            'appid': 'oeVkj2lYFGnJu5XUtWisfW4utiN4u9Mq',
+            'appid': self.appid,
             'nonce': str(ts),  # 8-digit random alphanumeric characters
             'ts': ts,  # 10-digit standard timestamp
             'version': 8
@@ -95,7 +135,7 @@ class EWeLinkCloud(ResponseWaiter):
             coro = self.session.get(self._baseurl + api, params=payload,
                                     headers={'Authorization': auth})
         elif mode == 'login':
-            hex_dig = hmac.new(b'6Nz4n0xA8s8qdxQf2GqurZj2Fs55FUvM',
+            hex_dig = hmac.new(self.appsecret.encode(),
                                json.dumps(payload).encode(),
                                digestmod=hashlib.sha256).digest()
             auth = "Sign " + base64.b64encode(hex_dig).decode()
@@ -107,8 +147,8 @@ class EWeLinkCloud(ResponseWaiter):
         try:
             r = await coro
             return await r.json()
-        except:
-            _LOGGER.exception("Coolkit API")
+        except (Exception, RuntimeError) as e:
+            _LOGGER.exception(f"Coolkit API error: {e}")
             return None
 
     async def _process_ws_msg(self, data: dict):
@@ -134,12 +174,7 @@ class EWeLinkCloud(ResponseWaiter):
                     device['online'] = True
                     state['cloud'] = 'online'
 
-                # TODO: fix when Sonoff TH arrives to me
-                # https://github.com/AlexxIT/SonoffLAN/issues/110
-                if state.get('currentTemperature') == 'unavailable':
-                    del state['currentTemperature']
-                if state.get('currentHumidity') == 'unavailable':
-                    del state['currentHumidity']
+                fix_attrs(deviceid, state)
 
                 for handler in self._handlers:
                     handler(deviceid, state, data.get('seq'))
@@ -173,7 +208,7 @@ class EWeLinkCloud(ResponseWaiter):
             try:
                 url = f"wss://{resp['IP']}:{resp['port']}/api/ws"
                 self._ws = await self.session.ws_connect(
-                    url, heartbeat=55, ssl=False)
+                    url, heartbeat=145, ssl=False)
 
                 ts = time.time()
                 payload = {
@@ -181,7 +216,7 @@ class EWeLinkCloud(ResponseWaiter):
                     'at': self._token,
                     'apikey': self._apikey,
                     'userAgent': 'app',
-                    'appid': 'oeVkj2lYFGnJu5XUtWisfW4utiN4u9Mq',
+                    'appid': self.appid,
                     'nonce': str(int(ts / 100)),
                     'ts': int(ts),
                     'version': 8,
@@ -190,22 +225,27 @@ class EWeLinkCloud(ResponseWaiter):
                 await self._ws.send_json(payload)
 
                 msg: WSMessage = await self._ws.receive()
-                _LOGGER.debug(f"Cloud init: {json.loads(msg.data)}")
+                resp = json.loads(msg.data)
+                if resp['error'] == 0:
+                    _LOGGER.debug(f"Cloud init: {resp}")
 
-                async for msg in self._ws:
                     fails = 0
 
-                    if msg.type == WSMsgType.TEXT:
-                        resp = json.loads(msg.data)
-                        await self._process_ws_msg(resp)
+                    async for msg in self._ws:
+                        if msg.type == WSMsgType.TEXT:
+                            resp = json.loads(msg.data)
+                            await self._process_ws_msg(resp)
 
-                    elif msg.type == WSMsgType.CLOSED:
-                        _LOGGER.debug(f"Cloud WS Closed: {msg.data}")
-                        break
+                        elif msg.type == WSMsgType.CLOSED:
+                            _LOGGER.debug(f"Cloud WS Closed: {msg.data}")
+                            break
 
-                    elif msg.type == WSMsgType.ERROR:
-                        _LOGGER.debug(f"Cloud WS Error: {msg.data}")
-                        break
+                        elif msg.type == WSMsgType.ERROR:
+                            _LOGGER.debug(f"Cloud WS Error: {msg.data}")
+                            break
+
+                else:
+                    _LOGGER.debug(f"Cloud error: {resp}")
 
                 # can't run two WS on same account in same time
                 if time.time() - ts < 10 and fails < FAST_DELAY:
@@ -224,8 +264,8 @@ class EWeLinkCloud(ResponseWaiter):
                     await self._ws.close()
                 return
 
-            except Exception:
-                _LOGGER.exception(f"Cloud WS exception")
+            except Exception as e:
+                _LOGGER.exception(f"Cloud WS exception: {e}")
 
         delay = RETRY_DELAYS[fails]
         _LOGGER.debug(f"Cloud WS retrying in {delay} seconds")
@@ -289,7 +329,28 @@ class EWeLinkCloud(ResponseWaiter):
         :param data: example `{'switch': 'on'}`
         :param sequence: 13-digit standard timestamp, to verify uniqueness
         """
+
+        # protect cloud from DDoS (it can break connection)
+        while time.time() - self._last_ts < 0.1:
+            _LOGGER.debug("Protect cloud from DDoS")
+            await asyncio.sleep(0.1)
+            sequence = None
+
+        self._last_ts = time.time()
+
+        if sequence is None:
+            sequence = str(int(self._last_ts * 1000))
+
         payload = {
+            'action': 'query',
+            'apikey': self.devices[deviceid]['apikey'],
+            'selfApikey': self._apikey,
+            'deviceid': deviceid,
+            'params': [],
+            'userAgent': 'app',
+            'sequence': sequence,
+            'ts': 0
+        } if '_query' in data else {
             'action': 'update',
             # device apikey for shared devices
             'apikey': self.devices[deviceid]['apikey'],
@@ -300,21 +361,45 @@ class EWeLinkCloud(ResponseWaiter):
             'ts': 0,
             'params': data
         }
-        _LOGGER.debug(f"{deviceid} => Cloud4 | {data} | {sequence}")
-        await self._ws.send_json(payload)
+        log = f"{deviceid} => Cloud4 | {data} | {sequence}"
+        _LOGGER.debug(log)
+        try:
+            await self._ws.send_json(payload)
 
-        # wait for response with same sequence
-        return await self._wait_response(sequence)
+            # wait for response with same sequence
+            return await self._wait_response(sequence)
+
+        except:
+            _LOGGER.exception(log)
+            return 'E#???'
 
 
-class ConsumptionHelper:
+class CloudPowHelper:
     def __init__(self, cloud: EWeLinkCloud):
+        # search pow devices
+        self.devices = [
+            device for device in cloud.devices.values()
+            if 'params' in device and 'uiActive' in device['params']]
+        if not self.devices:
+            return
+
         self.cloud = cloud
+
+        _LOGGER.debug(f"Start refresh task for {len(self.devices)} POW")
+
+        # noinspection PyProtectedMember
         self._cloud_process_ws_msg = cloud._process_ws_msg
         cloud._process_ws_msg = self._process_ws_msg
 
+        asyncio.create_task(self.update())
+
     async def _process_ws_msg(self, data: dict):
-        if 'config' in data and 'hundredDaysKwhData' in data['config']:
+        if 'params' in data and data['params'].get('uiActive') == 60:
+            deviceid = data['deviceid']
+            device = self.cloud.devices[deviceid]
+            device['powActiveTime'] = 0
+
+        elif 'config' in data and 'hundredDaysKwhData' in data['config']:
             # 000002 000207 000003 000002 000201 000008 000003 000006...
             kwh = data['config'].pop('hundredDaysKwhData')
             kwh = [round(int(kwh[i:i + 2], 16) +
@@ -325,11 +410,23 @@ class ConsumptionHelper:
         await self._cloud_process_ws_msg(data)
 
     async def update(self):
-        if not self.cloud.started:
-            return
+        if self.cloud.started:
+            t = time.time()
+            for device in self.devices:
+                if t - device.get('powActiveTime', 0) > 3600:
+                    device['powActiveTime'] = t
+                    # set pow active status for 2 hours
+                    await self.cloud.send(device['deviceid'], {
+                        'uiActive': 7200}, None)
 
-        for device in self.cloud.devices.values():
-            if 'params' in device and 'hundredDaysKwh' in device['params']:
-                sequence = str(int(time.time() * 1000))
+        # sleep for 1 minute
+        await asyncio.sleep(60)
+
+        asyncio.create_task(self.update())
+
+    async def update_consumption(self):
+        if self.cloud.started:
+            _LOGGER.debug("Update consumption for all devices")
+            for device in self.devices:
                 await self.cloud.send(device['deviceid'], {
-                    'hundredDaysKwh': 'get'}, sequence)
+                    'hundredDaysKwh': 'get'}, None)

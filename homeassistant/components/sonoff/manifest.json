@@ -2,11 +2,16 @@
   "domain": "sonoff",
   "name": "Sonoff",
   "documentation": "https://github.com/AlexxIT/SonoffLAN",
-  "dependencies": [],
+  "issue_tracker": "https://github.com/AlexxIT/SonoffLAN/issues",
+  "dependencies": [
+    "http",
+    "zeroconf"
+  ],
   "codeowners": [
-    "AlexxIT"
+    "@AlexxIT"
   ],
   "requirements": [
     "pycryptodome>=3.6.6"
-  ]
+  ],
+  "version": "v2.4.3"
 }
