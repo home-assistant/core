@@ -176,7 +176,7 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
             self.api.upload()
             return self.api.results.dict()
         except speedtest.SpeedtestBestServerFailure as err:
-            raise UpdateFailed("Failed to retrieve best server for speedtest", err)
+            raise UpdateFailed("Failed to retrieve best server for speedtest", err) from err
 
     async def async_update(self, *_):
         """Update Speedtest data."""
