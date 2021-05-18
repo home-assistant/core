@@ -75,7 +75,7 @@ async def test_form_options(hass):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert entry.state == "loaded"
+        assert entry.state is ConfigEntryState.LOADED
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
 
@@ -93,7 +93,7 @@ async def test_form_options(hass):
 
         await hass.async_block_till_done()
 
-        assert entry.state == "loaded"
+        assert entry.state is ConfigEntryState.LOADED
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
 
@@ -111,7 +111,7 @@ async def test_form_options(hass):
 
         await hass.async_block_till_done()
 
-        assert entry.state == "loaded"
+        assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_form_duplicated_id(hass):
