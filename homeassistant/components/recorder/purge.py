@@ -201,16 +201,16 @@ def _purge_filtered_events(session: Session, excluded_event_types: list[str]) ->
 def purge_entity_data(instance: Recorder, entity_filter: Callable[[str], bool]) -> bool:
     """Purge states and events of specified entities."""
     with session_scope(session=instance.get_session()) as session:  # type: ignore
-        # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
         selected_entity_ids: list[str] = [
             entity_id
             for (entity_id,) in session.query(distinct(States.entity_id)).all()
             if entity_filter(entity_id)
         ]
-        _LOGGER.debug("Remove entity data for %s", selected_entity_ids)
+        _LOGGER.debug("Purging entity data for %s", selected_entity_ids)
         if len(selected_entity_ids) > 0:
+            # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
             _purge_filtered_states(session, selected_entity_ids)
-            _LOGGER.debug("Remove entity data hasn't fully completed yet")
+            _LOGGER.debug("Purging entity data hasn't fully completed yet")
             return False
 
     return True

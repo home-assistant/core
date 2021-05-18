@@ -41,7 +41,7 @@ purge_entities:
     domains:
       name: Domains to remove
       description: List the domains that need to be removed from the recorder database.
-      example: "sensor"
+      example: "sun"
       required: false
       default: []
       selector:
@@ -50,7 +50,7 @@ purge_entities:
     entity_globs:
       name: Entity Globs to remove
       description: List the regular expressions to select entities for removal from the recorder database.
-      example: "*.purge*"
+      example: "domain*.object_id*"
       required: false
       default: []
       selector:
