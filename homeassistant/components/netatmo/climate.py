@@ -506,7 +506,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self._target_temperature = roomstatus["target_temperature"]
         self._preset = NETATMO_MAP_PRESET[roomstatus["setpoint_mode"]]
         self._hvac_mode = HVAC_MAP_NETATMO[self._preset]
-        self._battery_level = roomstatus.get("battery_level")
+        self._battery_level = roomstatus.get("battery_state")
         self._connected = True
 
         self._away = self._hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
@@ -546,7 +546,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 roomstatus["heating_status"] = self._boilerstatus
                 batterylevel = self._home_status.thermostats[
                     roomstatus["module_id"]
-                ].get("battery_level")
+                ].get("battery_state")
             elif roomstatus["module_type"] == NA_VALVE:
                 roomstatus["heating_power_request"] = self._room_status[
                     "heating_power_request"
@@ -557,16 +557,11 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                         self._boilerstatus and roomstatus["heating_status"]
                     )
                 batterylevel = self._home_status.valves[roomstatus["module_id"]].get(
-                    "battery_level"
+                    "battery_state"
                 )
 
             if batterylevel:
-                batterypct = interpolate(batterylevel, roomstatus["module_type"])
-                if (
-                    not roomstatus.get("battery_level")
-                    or batterypct < roomstatus["battery_level"]
-                ):
-                    roomstatus["battery_level"] = batterypct
+                roomstatus["battery_state"] = batterylevel
 
             return roomstatus
 
@@ -600,48 +595,6 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
     def device_info(self):
         """Return the device info for the thermostat."""
         return {**super().device_info, "suggested_area": self._room_data["name"]}
-
-
-def interpolate(batterylevel: int, module_type: str) -> int:
-    """Interpolate battery level depending on device type."""
-    na_battery_levels = {
-        NA_THERM: {
-            "full": 4100,
-            "high": 3600,
-            "medium": 3300,
-            "low": 3000,
-            "empty": 2800,
-        },
-        NA_VALVE: {
-            "full": 3200,
-            "high": 2700,
-            "medium": 2400,
-            "low": 2200,
-            "empty": 2200,
-        },
-    }
-
-    levels = sorted(na_battery_levels[module_type].values())
-    steps = [20, 50, 80, 100]
-
-    na_battery_level = na_battery_levels[module_type]
-    if batterylevel >= na_battery_level["full"]:
-        return 100
-    if batterylevel >= na_battery_level["high"]:
-        i = 3
-    elif batterylevel >= na_battery_level["medium"]:
-        i = 2
-    elif batterylevel >= na_battery_level["low"]:
-        i = 1
-    else:
-        return 0
-
-    pct = steps[i - 1] + (
-        (steps[i] - steps[i - 1])
-        * (batterylevel - levels[i])
-        / (levels[i + 1] - levels[i])
-    )
-    return int(pct)
 
 
 def get_all_home_ids(home_data: pyatmo.HomeData) -> list[str]:
