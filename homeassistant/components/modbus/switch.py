@@ -118,12 +118,13 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         )
         if result is None:
             self._available = False
+            self.async_write_ha_state()
         else:
             if self._verify_active:
                 await self.async_update()
             else:
                 self._is_on = True
-        self.async_write_ha_state()
+                self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Set switch off."""
@@ -132,12 +133,13 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         )
         if result is None:
             self._available = False
+            self.async_write_ha_state()
         else:
             if self._verify_active:
                 await self.async_update()
             else:
                 self._is_on = False
-        self.async_write_ha_state()
+                self.async_write_ha_state()
 
     async def async_update(self, now=None):
         """Update the entity state."""
