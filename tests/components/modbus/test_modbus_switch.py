@@ -224,31 +224,31 @@ async def test_switch_service_turn(hass, caplog, mock_pymodbus):
     await hass.async_block_till_done()
     assert MODBUS_DOMAIN in hass.config.components
 
-    # assert hass.states.get(entity_id1).state == STATE_OFF
-    # await hass.services.async_call(
-    #    "switch", "turn_on", service_data={"entity_id": entity_id1}
-    # )
-    # await hass.async_block_till_done()
-    # assert hass.states.get(entity_id1).state == STATE_ON
-    # await hass.services.async_call(
-    #    "switch", "turn_off", service_data={"entity_id": entity_id1}
-    # )
-    # await hass.async_block_till_done()
-    # assert hass.states.get(entity_id1).state == STATE_OFF
+    assert hass.states.get(entity_id1).state == STATE_OFF
+    await hass.services.async_call(
+        "switch", "turn_on", service_data={"entity_id": entity_id1}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id1).state == STATE_ON
+    await hass.services.async_call(
+        "switch", "turn_off", service_data={"entity_id": entity_id1}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id1).state == STATE_OFF
 
-    # mock_pymodbus.read_holding_registers.return_value = ReadResult([0x01])
-    # assert hass.states.get(entity_id2).state == STATE_OFF
-    # await hass.services.async_call(
-    #    "switch", "turn_on", service_data={"entity_id": entity_id2}
-    # )
-    # await hass.async_block_till_done()
-    # assert hass.states.get(entity_id2).state == STATE_ON
-    # mock_pymodbus.read_holding_registers.return_value = ReadResult([0x00])
-    # await hass.services.async_call(
-    #    "switch", "turn_off", service_data={"entity_id": entity_id2}
-    # )
-    # await hass.async_block_till_done()
-    # assert hass.states.get(entity_id2).state == STATE_OFF
+    mock_pymodbus.read_holding_registers.return_value = ReadResult([0x01])
+    assert hass.states.get(entity_id2).state == STATE_OFF
+    await hass.services.async_call(
+        "switch", "turn_on", service_data={"entity_id": entity_id2}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id2).state == STATE_ON
+    mock_pymodbus.read_holding_registers.return_value = ReadResult([0x00])
+    await hass.services.async_call(
+        "switch", "turn_off", service_data={"entity_id": entity_id2}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id2).state == STATE_OFF
 
     mock_pymodbus.write_register.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
