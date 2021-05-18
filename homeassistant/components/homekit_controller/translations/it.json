@@ -17,7 +17,7 @@
             "unable_to_pair": "Impossibile abbinare, per favore riprova.",
             "unknown_error": "Il dispositivo ha riportato un errore sconosciuto. L'abbinamento non \u00e8 riuscito."
         },
-        "flow_title": "{name} tramite il Protocollo degli Accessori HomeKit",
+        "flow_title": "{name}",
         "step": {
             "busy_error": {
                 "description": "Interrompere l'associazione su tutti i controller o provare a riavviare il dispositivo, quindi continuare a riprendere l'associazione.",
