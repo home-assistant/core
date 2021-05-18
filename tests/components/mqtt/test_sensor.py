@@ -643,7 +643,7 @@ async def test_entity_disabled_by_default(hass, mqtt_mock):
 
 
 async def test_value_template_with_entity_id(hass, mqtt_mock):
-    """Test the setting of the value via MQTT with JSON payload."""
+    """Test the access to attributes in value_template via the entity_id."""
     assert await async_setup_component(
         hass,
         sensor.DOMAIN,
