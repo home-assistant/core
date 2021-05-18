@@ -14,9 +14,16 @@ if [ ! -f "$SETTINGS_FILE" ]; then
     cp "$SETTINGS_TEMPLATE_FILE" "$SETTINGS_FILE"
 fi
 
-mkdir -p /data/data/pl.sviete.dom/files/home/AIS/www/img
-mkdir -p /data/data/pl.sviete.dom/files/home/dom
-mkdir -p /data/data/pl.sviete.dom/dom_cloud_drives
+sudo apt-get install python3 python-dev python3-dev \
+     build-essential libssl-dev libffi-dev \
+     libxml2-dev libxslt1-dev zlib1g-dev
+
+sudo mkdir -p /data/data/pl.sviete.dom/files/home/AIS/www/img
+sudo mkdir -p /data/data/pl.sviete.dom/files/home/dom
+sudo mkdir -p /data/data/pl.sviete.dom/dom_cloud_drives
+
+sudo chmod -R 755 /data
+sudo chown -R $(whoami) /data
 
 if [ ! -n "$DEVCONTAINER" ];then
   python3.9 -m venv venv

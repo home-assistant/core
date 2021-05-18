@@ -85,6 +85,9 @@ async def async_setup(hass, config):
     async def set_clock_display_text(service):
         await _set_clock_display_text(hass, service)
 
+    async def install_zwave(service):
+        await _install_zwave(hass, service)
+
     # register services
     hass.services.async_register(DOMAIN, "change_host_name", change_host_name)
     hass.services.async_register(DOMAIN, "cec_command", cec_command)
@@ -107,6 +110,7 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "disable_irda_remote", disable_irda_remote)
     hass.services.async_register(DOMAIN, "set_scaling_governor", set_scaling_governor)
     hass.services.async_register(DOMAIN, "set_io_scheduler", set_io_scheduler)
+    hass.services.async_register(DOMAIN, "install_zwave", install_zwave)
     if ais_global.has_front_clock():
         hass.services.async_register(
             DOMAIN, "set_clock_display_text", set_clock_display_text
@@ -567,3 +571,15 @@ async def _set_clock_display_text(hass, call):
 
     comm = r'su -c "echo ' + text + ' > /sys/class/fd655/panel"'
     await _run(comm)
+
+
+async def _install_zwave(hass, call):
+    script = str(os.path.dirname(__file__))
+    script += "/scripts/install_zwave.sh"
+
+    subprocess.Popen(
+        "su -c ' " + script + " " + "'",
+        shell=True,  # nosec
+        stdout=None,
+        stderr=None,
+    )
