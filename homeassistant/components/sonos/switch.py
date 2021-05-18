@@ -40,14 +40,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         data_sonos = hass.data[DATA_SONOS]
 
         for alarm in speaker.available_alarms:
-            # pylint: disable=protected-access
-            if alarm._alarm_id not in data_sonos.alarms:
-                # pylint: disable=protected-access
-                _LOGGER.debug("Creating alarm with id %s", alarm._alarm_id)
+            if alarm.alarm_id not in data_sonos.alarms:
+                _LOGGER.debug("Creating alarm with id %s", alarm.alarm_id)
                 entity = SonosAlarmEntity(alarm, data_sonos, speaker)
                 async_add_entities([entity])
-                # pylint: disable=protected-access
-                data_sonos.alarms.append(alarm._alarm_id)
+                data_sonos.alarms.append(alarm.alarm_id)
                 config_entry.async_on_unload(
                     async_dispatcher_connect(
                         hass, SONOS_ALARM_UPDATE, entity.async_update
@@ -96,8 +93,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     @property
     def alarm_id(self):
         """Return the ID of the alarm."""
-        # pylint: disable=protected-access
-        return self.alarm._alarm_id
+        return self.alarm.alarm_id
 
     @property
     def unique_id(self) -> str:
