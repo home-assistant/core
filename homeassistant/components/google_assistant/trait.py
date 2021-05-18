@@ -2088,8 +2088,10 @@ class ChannelTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        if domain == media_player.DOMAIN and (
-            features & media_player.SUPPORT_PLAY_MEDIA
+        if (
+            domain == media_player.DOMAIN
+            and (features & media_player.SUPPORT_PLAY_MEDIA)
+            and device_class == media_player.DEVICE_CLASS_TV
         ):
             return True
 

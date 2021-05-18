@@ -2663,7 +2663,16 @@ async def test_channel(hass):
     """Test Channel trait support."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
     assert trait.ChannelTrait.supported(
-        media_player.DOMAIN, media_player.SUPPORT_PLAY_MEDIA, None, None
+        media_player.DOMAIN,
+        media_player.SUPPORT_PLAY_MEDIA,
+        media_player.DEVICE_CLASS_TV,
+        None,
+    )
+    assert (
+        trait.ChannelTrait.supported(
+            media_player.DOMAIN, media_player.SUPPORT_PLAY_MEDIA, None, None
+        )
+        is False
     )
     assert trait.ChannelTrait.supported(media_player.DOMAIN, 0, None, None) is False
 
