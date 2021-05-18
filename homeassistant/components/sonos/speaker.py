@@ -136,6 +136,7 @@ class SonosSpeaker:
 
         self._is_ready: bool = False
         self._subscriptions: list[SubscriptionBase] = []
+        self._resubscription_lock: asyncio.Lock | None = None
         self._poll_timer: Callable | None = None
         self._seen_timer: Callable | None = None
         self._platforms_ready: set[str] = set()
@@ -200,6 +201,7 @@ class SonosSpeaker:
         if self._platforms_ready == PLATFORMS:
             await self.async_subscribe()
             self._is_ready = True
+        self._resubscription_lock = asyncio.Lock()
 
     def write_entity_states(self) -> None:
         """Write states for associated SonosEntity instances."""
@@ -315,7 +317,7 @@ class SonosSpeaker:
 
     async def async_resubscribe(self, exception: Exception) -> None:
         """Attempt to resubscribe when a renewal failure is detected."""
-        async with self.hass.data[DATA_SONOS].topology_condition:
+        async with self._resubscription_lock:
             if self.available:
                 if getattr(exception, "status", None) == 412:
                     _LOGGER.warning(
