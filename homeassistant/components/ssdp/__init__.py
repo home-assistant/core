@@ -161,7 +161,7 @@ class Scanner:
 
         if entry.location is not None and entry.location not in self._description_cache:
             try:
-                result = self._fetch_description(entry.location)
+                result = await self._fetch_description(entry.location)
             except Exception:
                 _LOGGER.exception("Failed to fetch ssdp data from: %s", entry.location)
                 return
