@@ -301,10 +301,6 @@ def _async_register_services(hass, instance):
     )
 
 
-class PerodicCleanupTask:
-    """An object to insert into the recorder to trigger cleanup tasks when auto purge is disabled."""
-
-
 class PurgeTask(NamedTuple):
     """Object to store information about purge task."""
 
@@ -317,6 +313,10 @@ class PurgeEntitiesTask(NamedTuple):
     """Object to store entity information about purge task."""
 
     entity_filter: Callable[[str], bool]
+
+
+class PerodicCleanupTask:
+    """An object to insert into the recorder to trigger cleanup tasks when auto purge is disabled."""
 
 
 class StatisticsTask(NamedTuple):
@@ -721,13 +721,14 @@ class Recorder(threading.Thread):
 
     def _process_one_event(self, event):
         """Process one event."""
-        if isinstance(event, PerodicCleanupTask):
-            perodic_db_cleanups(self)
         if isinstance(event, PurgeTask):
             self._run_purge(event.keep_days, event.repack, event.apply_filter)
             return
         if isinstance(event, PurgeEntitiesTask):
             self._run_purge_entities(event.entity_filter)
+            return
+        if isinstance(event, PerodicCleanupTask):
+            perodic_db_cleanups(self)
             return
         if isinstance(event, StatisticsTask):
             self._run_statistics(event.start)
