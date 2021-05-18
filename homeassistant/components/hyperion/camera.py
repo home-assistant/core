@@ -210,10 +210,10 @@ class HyperionCamera(Camera):
 
     async def handle_async_mjpeg_stream(
         self, request: web.Request
-    ) -> web.StreamResponse:
+    ) -> web.StreamResponse | None:
         """Serve an HTTP MJPEG stream from the camera."""
         if not await self._start_image_streaming_for_client():
-            raise web.HTTPBadGateway()
+            return None
         try:
             response = await async_get_still_stream(
                 request, self._async_wait_for_camera_image, DEFAULT_CONTENT_TYPE, 0.0

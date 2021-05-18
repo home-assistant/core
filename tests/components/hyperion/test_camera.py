@@ -174,9 +174,7 @@ async def test_camera_stream_failed_start_stream_call(hass: HomeAssistant) -> No
     await setup_test_config_entry(hass, hyperion_client=client)
 
     request = Mock()
-
-    with pytest.raises(web.HTTPBadGateway):
-        await async_get_mjpeg_stream(hass, request, TEST_CAMERA_ENTITY_ID)
+    assert not await async_get_mjpeg_stream(hass, request, TEST_CAMERA_ENTITY_ID)
 
     assert client.async_send_image_stream_start.called
     assert not client.async_send_image_stream_stop.called
