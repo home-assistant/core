@@ -76,9 +76,9 @@ def _parse_legacy_options(entry: ConfigEntry, sensor_def: pysma.Sensors) -> list
     # Find and replace sensors removed from pysma
     # This only alters the config, the actual sensor migration takes place in _migrate_old_unique_ids
     for sensor in config_sensors.copy():
-        if sensor in pysma.LEGACY_MAP:
+        if sensor in pysma.const.LEGACY_MAP:
             config_sensors.remove(sensor)
-            config_sensors.append(pysma.LEGACY_MAP[sensor]["new_sensor"])
+            config_sensors.append(pysma.const.LEGACY_MAP[sensor]["new_sensor"])
 
     # Only sensors from config should be enabled
     for sensor in sensor_def:
@@ -98,16 +98,16 @@ def _migrate_old_unique_ids(
 
     # Create list of all possible sensor names
     possible_sensors = set(
-        config_sensors + [s.name for s in sensor_def] + list(pysma.LEGACY_MAP)
+        config_sensors + [s.name for s in sensor_def] + list(pysma.const.LEGACY_MAP)
     )
 
     for sensor in possible_sensors:
         if sensor in sensor_def:
             pysma_sensor = sensor_def[sensor]
             original_key = pysma_sensor.key
-        elif sensor in pysma.LEGACY_MAP:
+        elif sensor in pysma.const.LEGACY_MAP:
             # If sensor was removed from pysma we will remap it to the new sensor
-            legacy_sensor = pysma.LEGACY_MAP[sensor]
+            legacy_sensor = pysma.const.LEGACY_MAP[sensor]
             pysma_sensor = sensor_def[legacy_sensor["new_sensor"]]
             original_key = legacy_sensor["old_key"]
         else:
