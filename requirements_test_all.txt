@@ -432,7 +432,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210504.0
+home-assistant-frontend==20210517.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -980,7 +980,7 @@ pysmartthings==0.7.6
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.47
+pysonos==0.0.48
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -1290,7 +1290,7 @@ yeelight==0.6.2
 zeep[async]==4.0.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.30.0
+zeroconf==0.31.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.57

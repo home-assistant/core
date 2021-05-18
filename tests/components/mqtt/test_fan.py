@@ -100,6 +100,8 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
                 "payload_low_speed": "speed_lOw",
                 "payload_medium_speed": "speed_mEdium",
                 "payload_high_speed": "speed_High",
+                "payload_reset_percentage": "rEset_percentage",
+                "payload_reset_preset_mode": "rEset_preset_mode",
             }
         },
     )
@@ -168,6 +170,10 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
     state = hass.states.get("fan.test")
     assert state.attributes.get("preset_mode") == "silent"
 
+    async_fire_mqtt_message(hass, "preset-mode-state-topic", "rEset_preset_mode")
+    state = hass.states.get("fan.test")
+    assert state.attributes.get("preset_mode") is None
+
     async_fire_mqtt_message(hass, "preset-mode-state-topic", "ModeUnknown")
     assert "not a valid preset mode" in caplog.text
     caplog.clear()
@@ -190,6 +196,11 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
     async_fire_mqtt_message(hass, "speed-state-topic", "speed_OfF")
     state = hass.states.get("fan.test")
     assert state.attributes.get("speed") == fan.SPEED_OFF
+
+    async_fire_mqtt_message(hass, "percentage-state-topic", "rEset_percentage")
+    state = hass.states.get("fan.test")
+    assert state.attributes.get(fan.ATTR_PERCENTAGE) is None
+    assert state.attributes.get(fan.ATTR_SPEED) is None
 
     async_fire_mqtt_message(hass, "speed-state-topic", "speed_very_high")
     assert "not a valid speed" in caplog.text
@@ -408,6 +419,10 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, cap
     state = hass.states.get("fan.test")
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 100
 
+    async_fire_mqtt_message(hass, "percentage-state-topic", '{"val": "None"}')
+    state = hass.states.get("fan.test")
+    assert state.attributes.get(fan.ATTR_PERCENTAGE) is None
+
     async_fire_mqtt_message(hass, "percentage-state-topic", '{"otherval": 100}')
     assert "Ignoring empty speed from" in caplog.text
     caplog.clear()
@@ -427,6 +442,10 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, cap
     async_fire_mqtt_message(hass, "preset-mode-state-topic", '{"val": "silent"}')
     state = hass.states.get("fan.test")
     assert state.attributes.get("preset_mode") == "silent"
+
+    async_fire_mqtt_message(hass, "preset-mode-state-topic", '{"val": "None"}')
+    state = hass.states.get("fan.test")
+    assert state.attributes.get("preset_mode") is None
 
     async_fire_mqtt_message(hass, "preset-mode-state-topic", '{"otherval": 100}')
     assert "Ignoring empty preset_mode from" in caplog.text
@@ -1895,6 +1914,21 @@ async def test_supported_features(hass, mqtt_mock):
                     "speed_range_min": 0,
                     "speed_range_max": 40,
                 },
+                {
+                    "platform": "mqtt",
+                    "name": "test7reset_payload_in_preset_modes_a",
+                    "command_topic": "command-topic",
+                    "preset_mode_command_topic": "preset-mode-command-topic",
+                    "preset_modes": ["auto", "smart", "normal", "None"],
+                },
+                {
+                    "platform": "mqtt",
+                    "name": "test7reset_payload_in_preset_modes_b",
+                    "command_topic": "command-topic",
+                    "preset_mode_command_topic": "preset-mode-command-topic",
+                    "preset_modes": ["whoosh", "silent", "auto", "None"],
+                    "payload_reset_preset_mode": "normal",
+                },
             ]
         },
     )
@@ -1961,6 +1995,11 @@ async def test_supported_features(hass, mqtt_mock):
     assert state is None
     state = hass.states.get("fan.test6spd_range_c")
     assert state is None
+
+    state = hass.states.get("fan.test7reset_payload_in_preset_modes_a")
+    assert state is None
+    state = hass.states.get("fan.test7reset_payload_in_preset_modes_b")
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == fan.SUPPORT_PRESET_MODE
 
 
 async def test_availability_when_connection_lost(hass, mqtt_mock):
