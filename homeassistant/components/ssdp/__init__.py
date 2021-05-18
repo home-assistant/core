@@ -129,7 +129,7 @@ class Scanner:
 
     async def _async_on_ssdp_response(self, data: Mapping[str, Any]) -> None:
         """Process an ssdp response."""
-        self._async_process_entry(
+        await self._async_process_entry(
             ssdp.UPNPEntry({key.lower(): item for key, item in data.items()})
         )
 
