@@ -116,7 +116,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
 
     async def async_remove_if_not_available(self):
         """Remove alarm entity if not available."""
-        if self.alarm in self.speaker.available_alarms:
+        if self.alarm.alarm_id in self.data_sonos.alarms:
             return
 
         _LOGGER.debug("The alarm is removed from hass because it has been deleted")
@@ -138,6 +138,9 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         entity_registry = er.async_get(self.hass)
         entity = entity_registry.async_get(self.entity_id)
 
+        if entity is None:
+            raise RuntimeError("Alarm has been deleted by accident.")
+
         entry_id = entity.config_entry_id
 
         new_device = device_registry.async_get_or_create(
@@ -156,7 +159,6 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         """Update the state of the alarm."""
         _LOGGER.debug("Updating the state of the alarm")
         if self.speaker.soco.uid != self.alarm.zone.uid:
-            self.speaker.available_alarms.remove(self.alarm)
             self.speaker = get_speaker_from_uid(self.alarm.zone.uid, self.data_sonos)
             self.speaker.available_alarms.add(self.alarm)
             self._update_device()
