@@ -22,21 +22,14 @@ except:
 _LOGGER = logging.getLogger(__name__)
 
 
-def init_zeroconf_singleton(hass):
-    """Generate only one Zeroconf. Component must be loaded before Zeroconf."""
-    from homeassistant.components import zeroconf
-    if isinstance(zeroconf.Zeroconf, type):
-        def zeroconf_singleton():
-            if 'zeroconf' not in hass.data:
-                from zeroconf import Zeroconf
-                _LOGGER.debug("Generate zeroconf singleton")
-                hass.data['zeroconf'] = Zeroconf()
-            else:
-                _LOGGER.debug("Use zeroconf singleton")
-            return hass.data['zeroconf']
-
-        _LOGGER.debug("Init zeroconf singleton")
-        zeroconf.Zeroconf = zeroconf_singleton
+async def get_zeroconf_singleton(hass: HomeAssistantType):
+    try:
+        # Home Assistant 0.110.0 and above
+        from homeassistant.components.zeroconf import async_get_instance
+        return await async_get_instance(hass)
+    except:
+        from zeroconf import Zeroconf
+        return Zeroconf()
 
 
 UIIDS = {}
@@ -73,15 +66,26 @@ def init_device_class(default_class: str = 'switch'):
         34: ['light', {'fan': [2, 3, 4]}],  # Sonoff iFan02 and iFan03
         36: 'light',  # KING-M4 (dimmer, only cloud)
         44: 'light',  # Sonoff D1
+        57: 'light',  # Mosquito Killer Lamp
         59: 'light',  # Sonoff LED (only cloud)
+        66: switch1,  # ZigBee Bridge
         77: switchx,  # Sonoff Micro
         78: switchx,
-        81: switch1,
+        81: switchx,
         82: switch2,
         83: switch3,
         84: switch4,
+        98: 'remote',  # SA-026 door bell
         102: 'binary_sensor',  # Sonoff DW2 Door/Window sensor
+        103: 'light',  # Sonoff B02 CCT bulb
+        104: 'light',  # Sonoff B05 RGB+CCT color bulb
         107: switchx,
+        126: switch2,  # DUALR3
+        1000: 'sensor',  # zigbee_ON_OFF_SWITCH_1000
+        1256: 'light',  # ZCL_HA_DEVICEID_ON_OFF_LIGHT
+        1770: 'sensor',  # ZCL_HA_DEVICEID_TEMPERATURE_SENSOR
+        2026: 'binary_sensor',  # ZIGBEE_MOBILE_SENSOR
+        3026: 'binary_sensor',  # ZIGBEE_DOOR_AND_WINDOW_SENSOR
         # list local types
         'plug': switch1,  # Basic, Mini
         'diy_plug': switch1,  # Mini in DIY mode
@@ -108,11 +112,18 @@ def guess_device_class(config: dict):
 def get_device_info(config: dict):
     try:
         # https://developers.home-assistant.io/docs/device_registry_index/
+        sw = config['extra']['extra']['model']
+        # zigbee device
+        if sw == 'NON-OTA-GL':
+            return None
+
+        if 'fwVersion' in config['params']:
+            sw += f" v{config['params']['fwVersion']}"
+
         return {
             'manufacturer': config['brandName'],
             'model': config['productModel'],
-            'sw_version': f"{config['extra']['extra']['model']} "
-                          f"v{config['params'].get('fwVersion', '???')}"
+            'sw_version': sw
         }
     except:
         return None
@@ -172,7 +183,7 @@ RE_DEVICEID = re.compile(r"^[a-z0-9]{10}\b")
 # remove uiid, MAC, IP
 RE_PRIVATE = re.compile(
     r"\b([a-zA-Z0-9_-]{36,}|[A-F0-9:]{17}|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|"
-    r"EWLK-\d{6}-[A-Z]{5})\b")
+    r"EWLK-\d{6}-[A-Z]{5})\b|(?<=ssid': ')[^']+")
 NOTIFY_TEXT = (
     '<a href="%s" target="_blank">Open Log<a> | '
     '[New Issue on GitHub](https://github.com/AlexxIT/SonoffLAN/issues/new) | '

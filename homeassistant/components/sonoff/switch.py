@@ -27,7 +27,12 @@ async def async_setup_platform(hass, config, add_entities,
     deviceid = discovery_info['deviceid']
     channels = discovery_info['channels']
     registry = hass.data[DOMAIN]
-    add_entities([EWeLinkToggle(registry, deviceid, channels)])
+
+    uiid = registry.devices[deviceid].get('uiid')
+    if uiid == 66:
+        add_entities([ZigBeeBridge(registry, deviceid)])
+    else:
+        add_entities([EWeLinkToggle(registry, deviceid, channels)])
 
 
 class EWeLinkToggle(ToggleEntity, EWeLinkDevice):
@@ -98,7 +103,30 @@ class EWeLinkToggle(ToggleEntity, EWeLinkDevice):
         https://github.com/AlexxIT/SonoffLAN/issues/14
         """
         _LOGGER.debug(f"Refresh device state {self.deviceid}")
-        params = {'sledonline': self._sled_online} \
-            if self._sled_online is not None else \
-            {'cmd': 'signal_strength'}
-        await self.registry.send(self.deviceid, params)
+        await self.registry.send(self.deviceid, {'_query': self._sled_online})
+
+
+class ZigBeeBridge(EWeLinkToggle):
+    def _update_handler(self, state: dict, attrs: dict):
+        self._attrs.update(attrs)
+
+        if 'addSubDevState' in state:
+            self._is_on = (state['addSubDevState'] == 'on')
+        elif 'subDevMaxNum' in state:
+            self._is_on = False
+
+        if 'subDevNum' in state and 'subDevMaxNum' in state:
+            self._attrs['devices'] = \
+                f"{state['subDevNum']} / {state['subDevMaxNum']}"
+
+        self.schedule_update_ha_state()
+
+    @property
+    def icon(self):
+        return 'mdi:zigbee'
+
+    async def async_turn_on(self, **kwargs) -> None:
+        await self.registry.send(self.deviceid, {'addSubDevState': 'on'})
+
+    async def async_turn_off(self, **kwargs) -> None:
+        await self.registry.send(self.deviceid, {'addSubDevState': 'off'})

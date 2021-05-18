@@ -1,7 +1,8 @@
 import json
 from typing import Optional
 
-from homeassistant.components.binary_sensor import DEVICE_CLASS_DOOR
+from homeassistant.components.binary_sensor import DEVICE_CLASS_DOOR, \
+    DEVICE_CLASS_MOTION
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_TIMEOUT, \
     CONF_PAYLOAD_OFF
 from homeassistant.core import Event
@@ -24,9 +25,14 @@ async def async_setup_platform(hass, config, add_entities,
 
     deviceid = discovery_info['deviceid']
     registry = hass.data[DOMAIN]
-    device = registry.devices[deviceid]
-    if device.get('uiid') == 102:
-        add_entities([DoorWindowSensor(registry, deviceid)])
+
+    uiid = registry.devices[deviceid].get('uiid')
+    if uiid == 102:
+        add_entities([WiFiDoorWindowSensor(registry, deviceid)])
+    elif uiid == 2026:
+        add_entities([ZigBeeMotionSensor(registry, deviceid)])
+    elif uiid == 3026:
+        add_entities([ZigBeeDoorWindowSensor(registry, deviceid)])
     else:
         add_entities([EWeLinkBinarySensor(registry, deviceid)])
 
@@ -65,7 +71,7 @@ class EWeLinkBinarySensor(BinarySensorEntity, EWeLinkDevice):
         return self._is_on
 
 
-class DoorWindowSensor(EWeLinkBinarySensor):
+class WiFiDoorWindowSensor(EWeLinkBinarySensor):
     _device_class = None
 
     async def async_added_to_hass(self) -> None:
@@ -90,6 +96,40 @@ class DoorWindowSensor(EWeLinkBinarySensor):
     @property
     def device_class(self):
         return self._device_class
+
+
+class ZigBeeDoorWindowSensor(WiFiDoorWindowSensor):
+    def _update_handler(self, state: dict, attrs: dict):
+        self._attrs.update(attrs)
+
+        if 'lock' in state:
+            # 1 - open, 0 - close
+            self._is_on = (state['lock'] == 1)
+
+        self.schedule_update_ha_state()
+
+
+class ZigBeeMotionSensor(EWeLinkBinarySensor):
+    def _update_handler(self, state: dict, attrs: dict):
+        self._attrs.update(attrs)
+
+        if 'motion' in state:
+            self._is_on = (state['motion'] == 1)
+        else:
+            # this intend to prevents that motion detection stay locked if
+            # zigbee turn unavailable (occurs with some frequency)
+            self._is_on = False
+
+        self.schedule_update_ha_state()
+
+    @property
+    def available(self) -> bool:
+        device: dict = self.registry.devices[self.deviceid]
+        return device['available']
+
+    @property
+    def device_class(self):
+        return DEVICE_CLASS_MOTION
 
 
 class RFBridgeSensor(BinarySensorEntity):
