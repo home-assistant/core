@@ -623,6 +623,9 @@ fortiosapi==0.10.8
 # homeassistant.components.freebox
 freebox-api==0.0.10
 
+# homeassistant.components.free_mobile
+freesms==0.2.0
+
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 # homeassistant.components.fritzbox_netmonitor
@@ -765,7 +768,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210504.0
+home-assistant-frontend==20210517.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -2378,7 +2381,7 @@ xmltodict==0.12.0
 xs1-api-client==3.0.0
 
 # homeassistant.components.yale_smart_alarm
-yalesmartalarmclient==0.1.6
+yalesmartalarmclient==0.3.3
 
 # homeassistant.components.august
 yalexs==1.1.11
@@ -2399,7 +2402,7 @@ zeep[async]==4.0.0
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.30.0
+zeroconf==0.31.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.57

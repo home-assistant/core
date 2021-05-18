@@ -318,3 +318,15 @@ def retryable_database_job(description: str):
         return wrapper
 
     return decorator
+
+
+def perodic_db_cleanups(instance: Recorder):
+    """Run any database cleanups that need to happen perodiclly.
+
+    These cleanups will happen nightly or after any purge.
+    """
+
+    if instance.engine.dialect.name == "sqlite":
+        # Execute sqlite to create a wal checkpoint and free up disk space
+        _LOGGER.debug("WAL checkpoint")
+        instance.engine.execute("PRAGMA wal_checkpoint(TRUNCATE);")
