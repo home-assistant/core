@@ -6,14 +6,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
 from homeassistant.core import callback
 
-from .const import (  # pylint:disable=unused-import
-    CONF_SERVER,
-    DOMAIN,
-    MG_DL,
-    MMOL_L,
-    SERVER_OUS,
-    SERVER_US,
-)
+from .const import CONF_SERVER, DOMAIN, MG_DL, MMOL_L, SERVER_OUS, SERVER_US
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -28,7 +21,6 @@ class DexcomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Dexcom."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

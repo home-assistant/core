@@ -1,14 +1,13 @@
 """Config flow for August integration."""
 import logging
 
-from august.authenticator import ValidationResult
 import voluptuous as vol
+from yalexs.authenticator import ValidationResult
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import CONF_LOGIN_METHOD, LOGIN_METHODS, VERIFICATION_CODE_KEY
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import CONF_LOGIN_METHOD, DOMAIN, LOGIN_METHODS, VERIFICATION_CODE_KEY
 from .exceptions import CannotConnect, InvalidAuth, RequireValidation
 from .gateway import AugustGateway
 
@@ -58,7 +57,6 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for August."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Store an AugustGateway()."""

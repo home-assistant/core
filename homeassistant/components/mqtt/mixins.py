@@ -52,6 +52,7 @@ AVAILABILITY_MODES = [AVAILABILITY_ALL, AVAILABILITY_ANY, AVAILABILITY_LATEST]
 CONF_AVAILABILITY = "availability"
 CONF_AVAILABILITY_MODE = "availability_mode"
 CONF_AVAILABILITY_TOPIC = "availability_topic"
+CONF_ENABLED_BY_DEFAULT = "enabled_by_default"
 CONF_PAYLOAD_AVAILABLE = "payload_available"
 CONF_PAYLOAD_NOT_AVAILABLE = "payload_not_available"
 CONF_JSON_ATTRS_TOPIC = "json_attributes_topic"
@@ -140,6 +141,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
 MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        vol.Optional(CONF_ENABLED_BY_DEFAULT, default=True): cv.boolean,
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
@@ -353,7 +355,7 @@ async def cleanup_device_registry(hass, device_id):
     if (
         device_id
         and not hass.helpers.entity_registry.async_entries_for_device(
-            entity_registry, device_id, include_disabled_entities=True
+            entity_registry, device_id, include_disabled_entities=False
         )
         and not await device_trigger.async_get_triggers(hass, device_id)
         and not tag.async_has_tags(hass, device_id)
@@ -585,6 +587,11 @@ class MqttEntity(
     @abstractmethod
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._config[CONF_ENABLED_BY_DEFAULT]
 
     @property
     def icon(self):

@@ -5,7 +5,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ID,
@@ -19,7 +19,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,13 +92,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for elem in data.data:
 
-        if exclude_feeds is not None:
-            if int(elem["id"]) in exclude_feeds:
-                continue
+        if exclude_feeds is not None and int(elem["id"]) in exclude_feeds:
+            continue
 
-        if include_only_feeds is not None:
-            if int(elem["id"]) not in include_only_feeds:
-                continue
+        if include_only_feeds is not None and int(elem["id"]) not in include_only_feeds:
+            continue
 
         name = None
         if sensor_names is not None:
@@ -125,7 +122,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class EmonCmsSensor(Entity):
+class EmonCmsSensor(SensorEntity):
     """Implementation of an Emoncms sensor."""
 
     def __init__(

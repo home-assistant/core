@@ -5,6 +5,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.sensor import ATTR_LAST_RESET, SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -50,7 +51,6 @@ ATTR_SOURCE_ID = "source"
 ATTR_STATUS = "status"
 ATTR_PERIOD = "meter_period"
 ATTR_LAST_PERIOD = "last_period"
-ATTR_LAST_RESET = "last_reset"
 ATTR_TARIFF = "tariff"
 
 ICON = "mdi:counter"
@@ -93,7 +93,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async_add_entities(meters)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_CALIBRATE_METER,
@@ -102,7 +102,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class UtilityMeterSensor(RestoreEntity):
+class UtilityMeterSensor(RestoreEntity, SensorEntity):
     """Representation of an utility meter sensor."""
 
     def __init__(
@@ -330,7 +330,6 @@ class UtilityMeterSensor(RestoreEntity):
             ATTR_SOURCE_ID: self._sensor_source_id,
             ATTR_STATUS: PAUSED if self._collecting is None else COLLECTING,
             ATTR_LAST_PERIOD: self._last_period,
-            ATTR_LAST_RESET: self._last_reset,
         }
         if self._period is not None:
             state_attr[ATTR_PERIOD] = self._period
@@ -342,3 +341,8 @@ class UtilityMeterSensor(RestoreEntity):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return ICON
+
+    @property
+    def last_reset(self):
+        """Return the time when the sensor was last reset."""
+        return self._last_reset

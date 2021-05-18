@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/mystrom",
   "requirements": ["python-mystrom==1.1.2"],
   "dependencies": ["http"],
-  "codeowners": ["@fabaff"]
+  "codeowners": ["@fabaff"],
+  "iot_class": "local_polling"
 }

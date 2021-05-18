@@ -97,6 +97,17 @@ class ConfigManagerEntryResourceReloadView(HomeAssistantView):
         return self.json({"require_restart": not result})
 
 
+def _prepare_config_flow_result_json(result, prepare_result_json):
+    """Convert result to JSON."""
+    if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+        return prepare_result_json(result)
+
+    data = result.copy()
+    data["result"] = entry_json(result["result"])
+    data.pop("data")
+    return data
+
+
 class ConfigManagerFlowIndexView(FlowManagerIndexView):
     """View to create config flows."""
 
@@ -118,13 +129,7 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
 
     def _prepare_result_json(self, result):
         """Convert result to JSON."""
-        if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
-            return super()._prepare_result_json(result)
-
-        data = result.copy()
-        data["result"] = data["result"].entry_id
-        data.pop("data")
-        return data
+        return _prepare_config_flow_result_json(result, super()._prepare_result_json)
 
 
 class ConfigManagerFlowResourceView(FlowManagerResourceView):
@@ -151,13 +156,7 @@ class ConfigManagerFlowResourceView(FlowManagerResourceView):
 
     def _prepare_result_json(self, result):
         """Convert result to JSON."""
-        if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
-            return super()._prepare_result_json(result)
-
-        data = result.copy()
-        data["result"] = data["result"].entry_id
-        data.pop("data")
-        return data
+        return _prepare_config_flow_result_json(result, super()._prepare_result_json)
 
 
 class ConfigManagerAvailableFlowView(HomeAssistantView):
@@ -312,7 +311,7 @@ async def config_entry_update(hass, connection, msg):
         "type": "config_entries/disable",
         "entry_id": str,
         # We only allow setting disabled_by user via API.
-        "disabled_by": vol.Any("user", None),
+        "disabled_by": vol.Any(config_entries.DISABLED_USER, None),
     }
 )
 async def config_entry_disable(hass, connection, msg):
@@ -387,8 +386,8 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
         "title": entry.title,
         "source": entry.source,
         "state": entry.state,
-        "connection_class": entry.connection_class,
         "supports_options": supports_options,
         "supports_unload": entry.supports_unload,
         "disabled_by": entry.disabled_by,
+        "reason": entry.reason,
     }

@@ -5,9 +5,6 @@
         },
         "step": {
             "user": {
-                "data": {
-                    "name": "Nama Sensor"
-                },
                 "description": "Ingin memulai penyiapan?",
                 "title": "Alamat IP Lokal"
             }

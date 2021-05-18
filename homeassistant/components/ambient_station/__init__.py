@@ -1,5 +1,4 @@
 """Support for Ambient Weather Station Service."""
-import asyncio
 
 from aioambient import Client
 from aioambient.errors import WebsocketError
@@ -18,7 +17,13 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_API_KEY,
     DEGREE,
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CO2,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
     EVENT_HOMEASSISTANT_STOP,
     IRRADIATION_WATTS_PER_SQUARE_METER,
     LIGHT_LUX,
@@ -65,6 +70,7 @@ TYPE_BATT6 = "batt6"
 TYPE_BATT7 = "batt7"
 TYPE_BATT8 = "batt8"
 TYPE_BATT9 = "batt9"
+TYPE_BATT_CO2 = "batt_co2"
 TYPE_BATTOUT = "battout"
 TYPE_CO2 = "co2"
 TYPE_DAILYRAININ = "dailyrainin"
@@ -87,6 +93,12 @@ TYPE_HUMIDITYIN = "humidityin"
 TYPE_LASTRAIN = "lastRain"
 TYPE_MAXDAILYGUST = "maxdailygust"
 TYPE_MONTHLYRAININ = "monthlyrainin"
+TYPE_PM25 = "pm25"
+TYPE_PM25_24H = "pm25_24h"
+TYPE_PM25_BATT = "batt_25"
+TYPE_PM25_IN = "pm25_in"
+TYPE_PM25_IN_24H = "pm25_in_24h"
+TYPE_PM25IN_BATT = "batt_25in"
 TYPE_RELAY1 = "relay1"
 TYPE_RELAY10 = "relay10"
 TYPE_RELAY2 = "relay2"
@@ -133,8 +145,6 @@ TYPE_TEMPF = "tempf"
 TYPE_TEMPINF = "tempinf"
 TYPE_TOTALRAININ = "totalrainin"
 TYPE_UV = "uv"
-TYPE_PM25 = "pm25"
-TYPE_PM25_24H = "pm25_24h"
 TYPE_WEEKLYRAININ = "weeklyrainin"
 TYPE_WINDDIR = "winddir"
 TYPE_WINDDIR_AVG10M = "winddir_avg10m"
@@ -147,40 +157,67 @@ TYPE_WINDSPEEDMPH = "windspeedmph"
 TYPE_YEARLYRAININ = "yearlyrainin"
 SENSOR_TYPES = {
     TYPE_24HOURRAININ: ("24 Hr Rain", "in", SENSOR, None),
-    TYPE_BAROMABSIN: ("Abs Pressure", PRESSURE_INHG, SENSOR, "pressure"),
-    TYPE_BAROMRELIN: ("Rel Pressure", PRESSURE_INHG, SENSOR, "pressure"),
-    TYPE_BATT10: ("Battery 10", None, BINARY_SENSOR, "battery"),
-    TYPE_BATT1: ("Battery 1", None, BINARY_SENSOR, "battery"),
-    TYPE_BATT2: ("Battery 2", None, BINARY_SENSOR, "battery"),
-    TYPE_BATT3: ("Battery 3", None, BINARY_SENSOR, "battery"),
-    TYPE_BATT4: ("Battery 4", None, BINARY_SENSOR, "battery"),
-    TYPE_BATT5: ("Battery 5", None, BINARY_SENSOR, "battery"),
-    TYPE_BATT6: ("Battery 6", None, BINARY_SENSOR, "battery"),
-    TYPE_BATT7: ("Battery 7", None, BINARY_SENSOR, "battery"),
-    TYPE_BATT8: ("Battery 8", None, BINARY_SENSOR, "battery"),
-    TYPE_BATT9: ("Battery 9", None, BINARY_SENSOR, "battery"),
-    TYPE_BATTOUT: ("Battery", None, BINARY_SENSOR, "battery"),
+    TYPE_BAROMABSIN: ("Abs Pressure", PRESSURE_INHG, SENSOR, DEVICE_CLASS_PRESSURE),
+    TYPE_BAROMRELIN: ("Rel Pressure", PRESSURE_INHG, SENSOR, DEVICE_CLASS_PRESSURE),
+    TYPE_BATT10: ("Battery 10", None, BINARY_SENSOR, DEVICE_CLASS_BATTERY),
+    TYPE_BATT1: ("Battery 1", None, BINARY_SENSOR, DEVICE_CLASS_BATTERY),
+    TYPE_BATT2: ("Battery 2", None, BINARY_SENSOR, DEVICE_CLASS_BATTERY),
+    TYPE_BATT3: ("Battery 3", None, BINARY_SENSOR, DEVICE_CLASS_BATTERY),
+    TYPE_BATT4: ("Battery 4", None, BINARY_SENSOR, DEVICE_CLASS_BATTERY),
+    TYPE_BATT5: ("Battery 5", None, BINARY_SENSOR, DEVICE_CLASS_BATTERY),
+    TYPE_BATT6: ("Battery 6", None, BINARY_SENSOR, DEVICE_CLASS_BATTERY),
+    TYPE_BATT7: ("Battery 7", None, BINARY_SENSOR, DEVICE_CLASS_BATTERY),
+    TYPE_BATT8: ("Battery 8", None, BINARY_SENSOR, DEVICE_CLASS_BATTERY),
+    TYPE_BATT9: ("Battery 9", None, BINARY_SENSOR, DEVICE_CLASS_BATTERY),
+    TYPE_BATTOUT: ("Battery", None, BINARY_SENSOR, DEVICE_CLASS_BATTERY),
+    TYPE_BATT_CO2: ("CO2 Battery", None, BINARY_SENSOR, DEVICE_CLASS_BATTERY),
     TYPE_CO2: ("co2", CONCENTRATION_PARTS_PER_MILLION, SENSOR, DEVICE_CLASS_CO2),
     TYPE_DAILYRAININ: ("Daily Rain", "in", SENSOR, None),
-    TYPE_DEWPOINT: ("Dew Point", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_DEWPOINT: ("Dew Point", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
     TYPE_EVENTRAININ: ("Event Rain", "in", SENSOR, None),
-    TYPE_FEELSLIKE: ("Feels Like", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_FEELSLIKE: ("Feels Like", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
     TYPE_HOURLYRAININ: ("Hourly Rain Rate", "in/hr", SENSOR, None),
-    TYPE_HUMIDITY10: ("Humidity 10", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_HUMIDITY1: ("Humidity 1", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_HUMIDITY2: ("Humidity 2", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_HUMIDITY3: ("Humidity 3", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_HUMIDITY4: ("Humidity 4", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_HUMIDITY5: ("Humidity 5", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_HUMIDITY6: ("Humidity 6", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_HUMIDITY7: ("Humidity 7", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_HUMIDITY8: ("Humidity 8", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_HUMIDITY9: ("Humidity 9", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_HUMIDITY: ("Humidity", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_HUMIDITYIN: ("Humidity In", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_LASTRAIN: ("Last Rain", None, SENSOR, "timestamp"),
+    TYPE_HUMIDITY10: ("Humidity 10", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_HUMIDITY1: ("Humidity 1", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_HUMIDITY2: ("Humidity 2", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_HUMIDITY3: ("Humidity 3", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_HUMIDITY4: ("Humidity 4", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_HUMIDITY5: ("Humidity 5", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_HUMIDITY6: ("Humidity 6", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_HUMIDITY7: ("Humidity 7", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_HUMIDITY8: ("Humidity 8", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_HUMIDITY9: ("Humidity 9", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_HUMIDITY: ("Humidity", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_HUMIDITYIN: ("Humidity In", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_LASTRAIN: ("Last Rain", None, SENSOR, DEVICE_CLASS_TIMESTAMP),
     TYPE_MAXDAILYGUST: ("Max Gust", SPEED_MILES_PER_HOUR, SENSOR, None),
     TYPE_MONTHLYRAININ: ("Monthly Rain", "in", SENSOR, None),
+    TYPE_PM25_24H: (
+        "PM25 24h Avg",
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        SENSOR,
+        None,
+    ),
+    TYPE_PM25_BATT: ("PM25 Battery", None, BINARY_SENSOR, DEVICE_CLASS_BATTERY),
+    TYPE_PM25_IN: (
+        "PM25 Indoor",
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        SENSOR,
+        None,
+    ),
+    TYPE_PM25_IN_24H: (
+        "PM25 Indoor 24h Avg",
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        SENSOR,
+        None,
+    ),
+    TYPE_PM25: ("PM25", CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, SENSOR, None),
+    TYPE_PM25IN_BATT: (
+        "PM25 Indoor Battery",
+        None,
+        BINARY_SENSOR,
+        DEVICE_CLASS_BATTERY,
+    ),
     TYPE_RELAY10: ("Relay 10", None, BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
     TYPE_RELAY1: ("Relay 1", None, BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
     TYPE_RELAY2: ("Relay 2", None, BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
@@ -191,54 +228,57 @@ SENSOR_TYPES = {
     TYPE_RELAY7: ("Relay 7", None, BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
     TYPE_RELAY8: ("Relay 8", None, BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
     TYPE_RELAY9: ("Relay 9", None, BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
-    TYPE_SOILHUM10: ("Soil Humidity 10", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_SOILHUM1: ("Soil Humidity 1", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_SOILHUM2: ("Soil Humidity 2", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_SOILHUM3: ("Soil Humidity 3", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_SOILHUM4: ("Soil Humidity 4", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_SOILHUM5: ("Soil Humidity 5", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_SOILHUM6: ("Soil Humidity 6", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_SOILHUM7: ("Soil Humidity 7", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_SOILHUM8: ("Soil Humidity 8", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_SOILHUM9: ("Soil Humidity 9", PERCENTAGE, SENSOR, "humidity"),
-    TYPE_SOILTEMP10F: ("Soil Temp 10", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_SOILTEMP1F: ("Soil Temp 1", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_SOILTEMP2F: ("Soil Temp 2", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_SOILTEMP3F: ("Soil Temp 3", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_SOILTEMP4F: ("Soil Temp 4", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_SOILTEMP5F: ("Soil Temp 5", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_SOILTEMP6F: ("Soil Temp 6", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_SOILTEMP7F: ("Soil Temp 7", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_SOILTEMP8F: ("Soil Temp 8", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_SOILTEMP9F: ("Soil Temp 9", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_SOILHUM10: ("Soil Humidity 10", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_SOILHUM1: ("Soil Humidity 1", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_SOILHUM2: ("Soil Humidity 2", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_SOILHUM3: ("Soil Humidity 3", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_SOILHUM4: ("Soil Humidity 4", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_SOILHUM5: ("Soil Humidity 5", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_SOILHUM6: ("Soil Humidity 6", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_SOILHUM7: ("Soil Humidity 7", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_SOILHUM8: ("Soil Humidity 8", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_SOILHUM9: ("Soil Humidity 9", PERCENTAGE, SENSOR, DEVICE_CLASS_HUMIDITY),
+    TYPE_SOILTEMP10F: (
+        "Soil Temp 10",
+        TEMP_FAHRENHEIT,
+        SENSOR,
+        DEVICE_CLASS_TEMPERATURE,
+    ),
+    TYPE_SOILTEMP1F: ("Soil Temp 1", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
+    TYPE_SOILTEMP2F: ("Soil Temp 2", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
+    TYPE_SOILTEMP3F: ("Soil Temp 3", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
+    TYPE_SOILTEMP4F: ("Soil Temp 4", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
+    TYPE_SOILTEMP5F: ("Soil Temp 5", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
+    TYPE_SOILTEMP6F: ("Soil Temp 6", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
+    TYPE_SOILTEMP7F: ("Soil Temp 7", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
+    TYPE_SOILTEMP8F: ("Soil Temp 8", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
+    TYPE_SOILTEMP9F: ("Soil Temp 9", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
     TYPE_SOLARRADIATION: (
         "Solar Rad",
         IRRADIATION_WATTS_PER_SQUARE_METER,
         SENSOR,
         None,
     ),
-    TYPE_SOLARRADIATION_LX: ("Solar Rad (lx)", LIGHT_LUX, SENSOR, "illuminance"),
-    TYPE_TEMP10F: ("Temp 10", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_TEMP1F: ("Temp 1", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_TEMP2F: ("Temp 2", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_TEMP3F: ("Temp 3", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_TEMP4F: ("Temp 4", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_TEMP5F: ("Temp 5", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_TEMP6F: ("Temp 6", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_TEMP7F: ("Temp 7", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_TEMP8F: ("Temp 8", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_TEMP9F: ("Temp 9", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_TEMPF: ("Temp", TEMP_FAHRENHEIT, SENSOR, "temperature"),
-    TYPE_TEMPINF: ("Inside Temp", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_SOLARRADIATION_LX: (
+        "Solar Rad (lx)",
+        LIGHT_LUX,
+        SENSOR,
+        DEVICE_CLASS_ILLUMINANCE,
+    ),
+    TYPE_TEMP10F: ("Temp 10", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
+    TYPE_TEMP1F: ("Temp 1", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
+    TYPE_TEMP2F: ("Temp 2", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
+    TYPE_TEMP3F: ("Temp 3", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
+    TYPE_TEMP4F: ("Temp 4", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
+    TYPE_TEMP5F: ("Temp 5", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
+    TYPE_TEMP6F: ("Temp 6", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
+    TYPE_TEMP7F: ("Temp 7", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
+    TYPE_TEMP8F: ("Temp 8", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
+    TYPE_TEMP9F: ("Temp 9", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
+    TYPE_TEMPF: ("Temp", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
+    TYPE_TEMPINF: ("Inside Temp", TEMP_FAHRENHEIT, SENSOR, DEVICE_CLASS_TEMPERATURE),
     TYPE_TOTALRAININ: ("Lifetime Rain", "in", SENSOR, None),
     TYPE_UV: ("uv", "Index", SENSOR, None),
-    TYPE_PM25: ("PM25", CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, SENSOR, None),
-    TYPE_PM25_24H: (
-        "PM25 24h Avg",
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        SENSOR,
-        None,
-    ),
     TYPE_WEEKLYRAININ: ("Weekly Rain", "in", SENSOR, None),
     TYPE_WINDDIR: ("Wind Dir", DEGREE, SENSOR, None),
     TYPE_WINDDIR_AVG10M: ("Wind Dir Avg 10m", DEGREE, SENSOR, None),
@@ -271,7 +311,6 @@ async def async_setup(hass, config):
 
     if DOMAIN not in config:
         return True
-
     conf = config[DOMAIN]
 
     # Store config for use during entry setup:
@@ -294,7 +333,6 @@ async def async_setup_entry(hass, config_entry):
         hass.config_entries.async_update_entry(
             config_entry, unique_id=config_entry.data[CONF_APP_KEY]
         )
-
     session = aiohttp_client.async_get_clientsession(hass)
 
     try:
@@ -316,7 +354,11 @@ async def async_setup_entry(hass, config_entry):
     async def _async_disconnect_websocket(*_):
         await ambient.client.websocket.disconnect()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect_websocket)
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _async_disconnect_websocket
+        )
+    )
 
     return True
 
@@ -326,14 +368,7 @@ async def async_unload_entry(hass, config_entry):
     ambient = hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
     hass.async_create_task(ambient.ws_disconnect())
 
-    tasks = [
-        hass.config_entries.async_forward_entry_unload(config_entry, platform)
-        for platform in PLATFORMS
-    ]
-
-    await asyncio.gather(*tasks)
-
-    return True
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass, config_entry):
@@ -352,7 +387,6 @@ async def async_migrate_entry(hass, config_entry):
 
         version = config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry)
-
     LOGGER.info("Migration to version %s successful", version)
 
     return True
@@ -410,7 +444,6 @@ class AmbientStation:
             for station in data["devices"]:
                 if station["macAddress"] in self.stations:
                     continue
-
                 LOGGER.debug("New station subscription: %s", data)
 
                 # Only create entities based on the data coming through the socket.
@@ -421,7 +454,6 @@ class AmbientStation:
                 ]
                 if TYPE_SOLARRADIATION in monitored_conditions:
                     monitored_conditions.append(TYPE_SOLARRADIATION_LX)
-
                 self.stations[station["macAddress"]] = {
                     ATTR_LAST_DATA: station["lastData"],
                     ATTR_LOCATION: station.get("info", {}).get("location"),
@@ -430,20 +462,15 @@ class AmbientStation:
                         "name", station["macAddress"]
                     ),
                 }
-
             # If the websocket disconnects and reconnects, the on_subscribed
             # handler will get called again; in that case, we don't want to
             # attempt forward setup of the config entry (because it will have
             # already been done):
             if not self._entry_setup_complete:
-                for platform in PLATFORMS:
-                    self._hass.async_create_task(
-                        self._hass.config_entries.async_forward_entry_setup(
-                            self._config_entry, platform
-                        )
-                    )
+                self._hass.config_entries.async_setup_platforms(
+                    self._config_entry, PLATFORMS
+                )
                 self._entry_setup_complete = True
-
             self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
 
         self.client.websocket.on_connect(on_connect)

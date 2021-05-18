@@ -1,4 +1,5 @@
 """Support for BME280 temperature, humidity and pressure sensor."""
+from contextlib import suppress
 from datetime import timedelta
 from functools import partial
 import logging
@@ -7,7 +8,7 @@ from i2csense.bme280 import BME280  # pylint: disable=import-error
 import smbus
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
@@ -15,7 +16,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
@@ -111,13 +111,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sensor_handler = await hass.async_add_executor_job(BME280Handler, sensor)
 
     dev = []
-    try:
+    with suppress(KeyError):
         for variable in config[CONF_MONITORED_CONDITIONS]:
             dev.append(
                 BME280Sensor(sensor_handler, variable, SENSOR_TYPES[variable][1], name)
             )
-    except KeyError:
-        pass
 
     async_add_entities(dev, True)
 
@@ -136,7 +134,7 @@ class BME280Handler:
         self.sensor.update(first_reading)
 
 
-class BME280Sensor(Entity):
+class BME280Sensor(SensorEntity):
     """Implementation of the BME280 sensor."""
 
     def __init__(self, bme280_client, sensor_type, temp_unit, name):

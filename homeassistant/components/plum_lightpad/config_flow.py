@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from aiohttp import ContentTypeError
 from requests.exceptions import ConnectTimeout, HTTPError
@@ -10,9 +9,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 from .utils import load_plum
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,9 +35,7 @@ class PlumLightpadConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_user(
-        self, user_input: ConfigType | None = None
-    ) -> dict[str, Any]:
+    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
         """Handle a flow initialized by the user or redirected to by import."""
         if not user_input:
             return self._show_form()
@@ -59,8 +57,6 @@ class PlumLightpadConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=username, data={CONF_USERNAME: username, CONF_PASSWORD: password}
         )
 
-    async def async_step_import(
-        self, import_config: ConfigType | None
-    ) -> dict[str, Any]:
+    async def async_step_import(self, import_config: ConfigType | None) -> FlowResult:
         """Import a config entry from configuration.yaml."""
         return await self.async_step_user(import_config)

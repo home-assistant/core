@@ -1,6 +1,6 @@
 """Local IP constants."""
 
 DOMAIN = "local_ip"
-PLATFORM = "sensor"
+PLATFORMS = ["sensor"]
 
 SENSOR = "address"

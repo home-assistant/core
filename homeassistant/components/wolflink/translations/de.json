@@ -12,13 +12,15 @@
             "device": {
                 "data": {
                     "device_name": "Ger\u00e4t"
-                }
+                },
+                "title": "WOLF-Ger\u00e4t ausw\u00e4hlen"
             },
             "user": {
                 "data": {
                     "password": "Passwort",
                     "username": "Benutzername"
-                }
+                },
+                "title": "WOLF SmartSet-Verbindung"
             }
         }
     }

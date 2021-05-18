@@ -90,15 +90,15 @@ def install_package(
             # Workaround for incompatible prefix setting
             # See http://stackoverflow.com/a/4495175
             args += ["--prefix="]
-    process = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
-    _, stderr = process.communicate()
-    if process.returncode != 0:
-        _LOGGER.error(
-            "Unable to install package %s: %s",
-            package,
-            stderr.decode("utf-8").lstrip().strip(),
-        )
-        return False
+    with Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env) as process:
+        _, stderr = process.communicate()
+        if process.returncode != 0:
+            _LOGGER.error(
+                "Unable to install package %s: %s",
+                package,
+                stderr.decode("utf-8").lstrip().strip(),
+            )
+            return False
 
     return True
 

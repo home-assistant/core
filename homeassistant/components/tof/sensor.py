@@ -7,10 +7,9 @@ from VL53L1X2 import VL53L1X  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components import rpi_gpio
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, LENGTH_MILLIMETERS
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 CONF_I2C_ADDRESS = "i2c_address"
 CONF_I2C_BUS = "i2c_bus"
@@ -65,7 +64,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(dev, True)
 
 
-class VL53L1XSensor(Entity):
+class VL53L1XSensor(SensorEntity):
     """Implementation of VL53L1X sensor."""
 
     def __init__(self, vl53l1x_sensor, name, unit, i2c_address):

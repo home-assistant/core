@@ -75,7 +75,7 @@ class BboxDeviceScanner(DeviceScanner):
 
         Returns boolean if scanning successful.
         """
-        _LOGGER.info("Scanning...")
+        _LOGGER.info("Scanning")
 
         box = pybbox.Bbox(ip=self.host)
         result = box.get_all_connected_devices()

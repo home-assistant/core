@@ -4,9 +4,8 @@
             "already_configured": "Perangkat sudah dikonfigurasi"
         },
         "error": {
-            "connection_exception": "Gagal terhubung",
+            "cannot_connect": "Gagal terhubung",
             "invalid_auth": "Autentikasi tidak valid",
-            "unauthenticated_exception": "Autentikasi tidak valid",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {

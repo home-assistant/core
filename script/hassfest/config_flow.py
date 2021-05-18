@@ -1,6 +1,7 @@
 """Generate config flow file."""
+from __future__ import annotations
+
 import json
-from typing import Dict
 
 from .model import Config, Integration
 
@@ -90,7 +91,7 @@ def validate_integration(config: Config, integration: Integration):
     )
 
 
-def generate_and_validate(integrations: Dict[str, Integration], config: Config):
+def generate_and_validate(integrations: dict[str, Integration], config: Config):
     """Validate and generate config flow data."""
     domains = []
 
@@ -117,7 +118,7 @@ def generate_and_validate(integrations: Dict[str, Integration], config: Config):
     return BASE.format(json.dumps(domains, indent=4))
 
 
-def validate(integrations: Dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config):
     """Validate config flow file."""
     config_flow_path = config.root / "homeassistant/generated/config_flows.py"
     config.cache["config_flow"] = content = generate_and_validate(integrations, config)
@@ -136,7 +137,7 @@ def validate(integrations: Dict[str, Integration], config: Config):
         return
 
 
-def generate(integrations: Dict[str, Integration], config: Config):
+def generate(integrations: dict[str, Integration], config: Config):
     """Generate config flow file."""
     config_flow_path = config.root / "homeassistant/generated/config_flows.py"
     with open(str(config_flow_path), "w") as fp:

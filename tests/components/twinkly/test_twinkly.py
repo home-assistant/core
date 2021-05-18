@@ -1,5 +1,6 @@
 """Tests for the integration of a twinly device."""
-from typing import Tuple
+from __future__ import annotations
+
 from unittest.mock import patch
 
 from homeassistant.components.twinkly.const import (
@@ -190,7 +191,7 @@ async def test_unload(hass: HomeAssistant):
 
 async def _create_entries(
     hass: HomeAssistant, client=None
-) -> Tuple[RegistryEntry, DeviceEntry, ClientMock]:
+) -> tuple[RegistryEntry, DeviceEntry, ClientMock]:
     client = ClientMock() if client is None else client
 
     def get_client_mock(client, _):

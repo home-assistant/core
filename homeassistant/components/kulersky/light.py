@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Callable
 
 import pykulersky
 
@@ -19,12 +18,11 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
 
-from .const import DOMAIN
+from .const import DATA_ADDRESSES, DATA_DISCOVERY_SUBSCRIPTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,15 +32,11 @@ DISCOVERY_INTERVAL = timedelta(seconds=60)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Kuler sky light devices."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-    if "addresses" not in hass.data[DOMAIN]:
-        hass.data[DOMAIN]["addresses"] = set()
 
     async def discover(*args):
         """Attempt to discover new lights."""
@@ -52,12 +46,12 @@ async def async_setup_entry(
         new_lights = [
             light
             for light in lights
-            if light.address not in hass.data[DOMAIN]["addresses"]
+            if light.address not in hass.data[DOMAIN][DATA_ADDRESSES]
         ]
 
         new_entities = []
         for light in new_lights:
-            hass.data[DOMAIN]["addresses"].add(light.address)
+            hass.data[DOMAIN][DATA_ADDRESSES].add(light.address)
             new_entities.append(KulerskyLight(light))
 
         async_add_entities(new_entities, update_before_add=True)
@@ -66,12 +60,9 @@ async def async_setup_entry(
     hass.async_create_task(discover())
 
     # Perform recurring discovery of new devices
-    async_track_time_interval(hass, discover, DISCOVERY_INTERVAL)
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Cleanup the Kuler sky integration."""
-    hass.data.pop(DOMAIN, None)
+    hass.data[DOMAIN][DATA_DISCOVERY_SUBSCRIPTION] = async_track_time_interval(
+        hass, discover, DISCOVERY_INTERVAL
+    )
 
 
 class KulerskyLight(LightEntity):

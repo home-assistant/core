@@ -3,6 +3,7 @@ import enum
 import logging
 
 from PyViCare.PyViCareDevice import Device
+from PyViCare.PyViCareFuelCell import FuelCell
 from PyViCare.PyViCareGazBoiler import GazBoiler
 from PyViCare.PyViCareHeatPump import HeatPump
 import voluptuous as vol
@@ -33,12 +34,12 @@ DEFAULT_HEATING_TYPE = "generic"
 
 
 class HeatingType(enum.Enum):
-    # pylint: disable=invalid-name
     """Possible options for heating type."""
 
     generic = "generic"
     gas = "gas"
     heatpump = "heatpump"
+    fuelcell = "fuelcell"
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -78,6 +79,8 @@ def setup(hass, config):
             vicare_api = GazBoiler(conf[CONF_USERNAME], conf[CONF_PASSWORD], **params)
         elif heating_type == HeatingType.heatpump:
             vicare_api = HeatPump(conf[CONF_USERNAME], conf[CONF_PASSWORD], **params)
+        elif heating_type == HeatingType.fuelcell:
+            vicare_api = FuelCell(conf[CONF_USERNAME], conf[CONF_PASSWORD], **params)
         else:
             vicare_api = Device(conf[CONF_USERNAME], conf[CONF_PASSWORD], **params)
     except AttributeError:

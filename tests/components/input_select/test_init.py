@@ -156,19 +156,19 @@ async def test_select_option(hass):
     entity_id = "input_select.test_1"
 
     state = hass.states.get(entity_id)
-    assert "some option" == state.state
+    assert state.state == "some option"
 
     select_option(hass, entity_id, "another option")
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert "another option" == state.state
+    assert state.state == "another option"
 
     select_option(hass, entity_id, "non existing option")
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert "another option" == state.state
+    assert state.state == "another option"
 
 
 async def test_select_next(hass):
@@ -188,19 +188,19 @@ async def test_select_next(hass):
     entity_id = "input_select.test_1"
 
     state = hass.states.get(entity_id)
-    assert "middle option" == state.state
+    assert state.state == "middle option"
 
     select_next(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert "last option" == state.state
+    assert state.state == "last option"
 
     select_next(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert "first option" == state.state
+    assert state.state == "first option"
 
 
 async def test_select_previous(hass):
@@ -220,19 +220,19 @@ async def test_select_previous(hass):
     entity_id = "input_select.test_1"
 
     state = hass.states.get(entity_id)
-    assert "middle option" == state.state
+    assert state.state == "middle option"
 
     select_previous(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert "first option" == state.state
+    assert state.state == "first option"
 
     select_previous(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert "last option" == state.state
+    assert state.state == "last option"
 
 
 async def test_select_first_last(hass):
@@ -252,19 +252,19 @@ async def test_select_first_last(hass):
     entity_id = "input_select.test_1"
 
     state = hass.states.get(entity_id)
-    assert "middle option" == state.state
+    assert state.state == "middle option"
 
     select_first(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert "first option" == state.state
+    assert state.state == "first option"
 
     select_last(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert "last option" == state.state
+    assert state.state == "last option"
 
 
 async def test_config_options(hass):
@@ -297,14 +297,14 @@ async def test_config_options(hass):
     assert state_1 is not None
     assert state_2 is not None
 
-    assert "1" == state_1.state
-    assert ["1", "2"] == state_1.attributes.get(ATTR_OPTIONS)
+    assert state_1.state == "1"
+    assert state_1.attributes.get(ATTR_OPTIONS) == ["1", "2"]
     assert ATTR_ICON not in state_1.attributes
 
-    assert "Better Option" == state_2.state
-    assert test_2_options == state_2.attributes.get(ATTR_OPTIONS)
-    assert "Hello World" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
-    assert "mdi:work" == state_2.attributes.get(ATTR_ICON)
+    assert state_2.state == "Better Option"
+    assert state_2.attributes.get(ATTR_OPTIONS) == test_2_options
+    assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World"
+    assert state_2.attributes.get(ATTR_ICON) == "mdi:work"
 
 
 async def test_set_options_service(hass):
@@ -324,24 +324,24 @@ async def test_set_options_service(hass):
     entity_id = "input_select.test_1"
 
     state = hass.states.get(entity_id)
-    assert "middle option" == state.state
+    assert state.state == "middle option"
 
     data = {ATTR_OPTIONS: ["test1", "test2"], "entity_id": entity_id}
     await hass.services.async_call(DOMAIN, SERVICE_SET_OPTIONS, data)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert "test1" == state.state
+    assert state.state == "test1"
 
     select_option(hass, entity_id, "first option")
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert "test1" == state.state
+    assert state.state == "test1"
 
     select_option(hass, entity_id, "test2")
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert "test2" == state.state
+    assert state.state == "test2"
 
 
 async def test_restore_state(hass):
@@ -453,8 +453,8 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
     assert state_1 is not None
     assert state_2 is not None
     assert state_3 is None
-    assert "middle option" == state_1.state
-    assert "an option" == state_2.state
+    assert state_1.state == "middle option"
+    assert state_2.state == "an option"
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is not None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is None
@@ -499,8 +499,8 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
     assert state_1 is None
     assert state_2 is not None
     assert state_3 is not None
-    assert "an option" == state_2.state
-    assert "newer option" == state_3.state
+    assert state_2.state == "an option"
+    assert state_3.state == "newer option"
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is not None

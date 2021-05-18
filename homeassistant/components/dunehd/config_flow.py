@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 def host_valid(host):
     """Return True if hostname or IP address is valid."""
     try:
-        if ipaddress.ip_address(host).version == (4 or 6):
+        if ipaddress.ip_address(host).version in [4, 6]:
             return True
     except ValueError:
         if len(host) > 253:
@@ -30,7 +30,6 @@ class DuneHDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Dune HD integration."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize."""
@@ -74,8 +73,7 @@ class DuneHDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle configuration by yaml file."""
         self.host = user_input[CONF_HOST]
 
-        if self.host_already_configured(self.host):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: self.host})
 
         try:
             await self.init_device(self.host)

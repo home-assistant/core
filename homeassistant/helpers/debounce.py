@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable
 from logging import Logger
-from typing import Any, Awaitable, Callable
+from typing import Any, Callable
 
 from homeassistant.core import HassJob, HomeAssistant, callback
 

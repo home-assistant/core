@@ -28,6 +28,8 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .utils import brightness_to_rflink
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_EVENT = "event"
@@ -246,7 +248,7 @@ async def async_setup(hass, config):
 
         # If HA is not stopping, initiate new connection
         if hass.state != CoreState.stopping:
-            _LOGGER.warning("disconnected from Rflink, reconnecting")
+            _LOGGER.warning("Disconnected from Rflink, reconnecting")
             hass.async_create_task(connect())
 
     async def connect():
@@ -509,7 +511,7 @@ class RflinkCommand(RflinkDevice):
 
         elif command == "dim":
             # convert brightness to rflink dim level
-            cmd = str(int(args[0] / 17))
+            cmd = str(brightness_to_rflink(args[0]))
             self._state = True
 
         elif command == "toggle":

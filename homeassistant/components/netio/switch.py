@@ -169,7 +169,7 @@ class NetioSwitch(SwitchEntity):
         self.netio.update()
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return optional state attributes."""
         return {
             ATTR_TOTAL_CONSUMPTION_KWH: self.cumulated_consumption_kwh,

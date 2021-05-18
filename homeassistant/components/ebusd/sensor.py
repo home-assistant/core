@@ -2,7 +2,7 @@
 import datetime
 import logging
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class EbusdSensor(Entity):
+class EbusdSensor(SensorEntity):
     """Ebusd component sensor methods definition."""
 
     def __init__(self, data, sensor, name):

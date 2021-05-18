@@ -10,9 +10,8 @@ from typing import Any
 from aiohttp import ClientError
 from bond_api import BPUPSubscriptions
 
-from homeassistant.const import ATTR_NAME
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN
@@ -65,18 +64,24 @@ class BondEntity(Entity):
         return False
 
     @property
-    def device_info(self) -> dict[str, Any] | None:
+    def device_info(self) -> DeviceInfo:
         """Get a an HA device representing this Bond controlled device."""
-        device_info = {
-            ATTR_NAME: self.name,
+        device_info: DeviceInfo = {
             "manufacturer": self._hub.make,
-            "identifiers": {(DOMAIN, self._hub.bond_id, self._device.device_id)},
-            "suggested_area": self._device.location,
-            "via_device": (DOMAIN, self._hub.bond_id),
+            # type ignore: tuple items should not be Optional
+            "identifiers": {(DOMAIN, self._hub.bond_id, self._device.device_id)},  # type: ignore[arg-type]
         }
+        if self.name is not None:
+            device_info["name"] = self.name
+        if self._hub.bond_id is not None:
+            device_info["via_device"] = (DOMAIN, self._hub.bond_id)
+        if self._device.location is not None:
+            device_info["suggested_area"] = self._device.location
         if not self._hub.is_bridge:
-            device_info["model"] = self._hub.model
-            device_info["sw_version"] = self._hub.fw_ver
+            if self._hub.model is not None:
+                device_info["model"] = self._hub.model
+            if self._hub.fw_ver is not None:
+                device_info["sw_version"] = self._hub.fw_ver
         else:
             model_data = []
             if self._device.branding_profile:
@@ -104,7 +109,12 @@ class BondEntity(Entity):
 
     async def _async_update_if_bpup_not_alive(self, *_: Any) -> None:
         """Fetch via the API if BPUP is not alive."""
-        if self._bpup_subs.alive and self._initialized and self._available:
+        if (
+            self.hass.is_stopping
+            or self._bpup_subs.alive
+            and self._initialized
+            and self._available
+        ):
             return
 
         assert self._update_lock is not None

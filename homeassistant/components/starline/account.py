@@ -8,6 +8,7 @@ from starline import StarlineApi, StarlineDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
@@ -116,7 +117,7 @@ class StarlineAccount:
 
     def unload(self):
         """Unload StarLine API."""
-        _LOGGER.debug("Unloading StarLine API.")
+        _LOGGER.debug("Unloading StarLine API")
         if self._unsubscribe_auto_updater is not None:
             self._unsubscribe_auto_updater()
             self._unsubscribe_auto_updater = None
@@ -125,7 +126,7 @@ class StarlineAccount:
             self._unsubscribe_auto_obd_updater = None
 
     @staticmethod
-    def device_info(device: StarlineDevice) -> dict[str, Any]:
+    def device_info(device: StarlineDevice) -> DeviceInfo:
         """Device information for entities."""
         return {
             "identifiers": {(DOMAIN, device.device_id)},

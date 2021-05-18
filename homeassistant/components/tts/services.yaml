@@ -1,7 +1,7 @@
 # Describes the format for available TTS services
 
 say:
-  name: Say an TTS message
+  name: Say a TTS message
   description: Say something using text-to-speech on a media player.
   fields:
     entity_id:
@@ -33,10 +33,14 @@ say:
       selector:
         text:
     options:
+      name: Options
       description:
         A dictionary containing platform-specific options. Optional depending on
         the platform.
+      advanced: true
       example: platform specific
+      selector:
+        object:
 
 clear_cache:
   name: Clear TTS cache

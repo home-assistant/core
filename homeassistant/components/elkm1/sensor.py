@@ -8,6 +8,7 @@ from elkm1_lib.const import (
 from elkm1_lib.util import pretty_const, username
 import voluptuous as vol
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import VOLT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
@@ -38,7 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     create_elk_entities(elk_data, elk.zones, "zone", ElkZone, entities)
     async_add_entities(entities, True)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_SENSOR_COUNTER_REFRESH,
@@ -67,7 +68,7 @@ def temperature_to_state(temperature, undefined_temperature):
     return temperature if temperature > undefined_temperature else None
 
 
-class ElkSensor(ElkAttachedEntity):
+class ElkSensor(ElkAttachedEntity, SensorEntity):
     """Base representation of Elk-M1 sensor."""
 
     def __init__(self, element, elk, elk_data):

@@ -1,11 +1,11 @@
 """Sensor platform for FireServiceRota integration."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DATA_CLIENT, DOMAIN as FIRESERVICEROTA_DOMAIN
 
@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up FireServiceRota sensor based on a config entry."""
     client = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id][DATA_CLIENT]
@@ -21,7 +21,7 @@ async def async_setup_entry(
     async_add_entities([IncidentsSensor(client)])
 
 
-class IncidentsSensor(RestoreEntity):
+class IncidentsSensor(RestoreEntity, SensorEntity):
     """Representation of FireServiceRota incidents sensor."""
 
     def __init__(self, client):

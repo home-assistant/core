@@ -10,7 +10,7 @@ from oauthlib.oauth2.rfc6749.errors import MismatchingStateError, MissingTokenEr
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_CLIENT_ID,
@@ -25,7 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.network import get_url
 from homeassistant.util.json import load_json, save_json
@@ -347,7 +346,7 @@ class FitbitAuthCallbackView(HomeAssistantView):
         self.oauth = oauth
 
     @callback
-    def get(self, request):
+    async def get(self, request):
         """Finish OAuth callback request."""
         hass = request.app["hass"]
         data = request.query
@@ -360,7 +359,9 @@ class FitbitAuthCallbackView(HomeAssistantView):
             redirect_uri = f"{get_url(hass, require_current_request=True)}{FITBIT_AUTH_CALLBACK_PATH}"
 
             try:
-                result = self.oauth.fetch_access_token(data.get("code"), redirect_uri)
+                result = await hass.async_add_executor_job(
+                    self.oauth.fetch_access_token, data.get("code"), redirect_uri
+                )
             except MissingTokenError as error:
                 _LOGGER.error("Missing token: %s", error)
                 response_message = f"""Something went wrong when
@@ -403,7 +404,7 @@ class FitbitAuthCallbackView(HomeAssistantView):
         return html_response
 
 
-class FitbitSensor(Entity):
+class FitbitSensor(SensorEntity):
     """Implementation of a Fitbit sensor."""
 
     def __init__(

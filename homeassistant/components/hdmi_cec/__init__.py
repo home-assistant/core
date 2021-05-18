@@ -187,7 +187,7 @@ def parse_mapping(mapping, parents=None):
                 yield (val, pad_physical_address(cur))
 
 
-def setup(hass: HomeAssistant, base_config):
+def setup(hass: HomeAssistant, base_config):  # noqa: C901
     """Set up the CEC capability."""
 
     # Parse configuration into a dict of device name to physical address
@@ -218,7 +218,7 @@ def setup(hass: HomeAssistant, base_config):
         _LOGGER.debug("Reached _adapter_watchdog")
         event.async_call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog)
         if not adapter.initialized:
-            _LOGGER.info("Adapter not initialized. Trying to restart.")
+            _LOGGER.info("Adapter not initialized; Trying to restart")
             hass.bus.fire(EVENT_HDMI_CEC_UNAVAILABLE)
             adapter.init()
 

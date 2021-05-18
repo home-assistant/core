@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_DEVICE
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 from .gateway import create_sms_gateway
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +40,6 @@ class SMSFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SMS integration."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

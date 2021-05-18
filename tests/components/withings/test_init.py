@@ -125,7 +125,10 @@ async def test_async_setup_no_config(hass: HomeAssistant) -> None:
     ],
 )
 async def test_auth_failure(
-    hass: HomeAssistant, component_factory: ComponentFactory, exception: Exception
+    hass: HomeAssistant,
+    component_factory: ComponentFactory,
+    exception: Exception,
+    current_request_with_host,
 ) -> None:
     """Test auth failure."""
     person0 = new_profile_config(

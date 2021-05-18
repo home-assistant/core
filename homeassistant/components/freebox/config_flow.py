@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 from .router import get_api
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,7 +17,6 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize Freebox config flow."""

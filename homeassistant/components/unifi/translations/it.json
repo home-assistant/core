@@ -10,7 +10,7 @@
             "service_unavailable": "Impossibile connettersi",
             "unknown_client_mac": "Nessun client disponibile su quell'indirizzo MAC"
         },
-        "flow_title": "Rete UniFi {site} ({host})",
+        "flow_title": "{site} ({host})",
         "step": {
             "user": {
                 "data": {

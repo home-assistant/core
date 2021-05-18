@@ -142,7 +142,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             or self._templates[CONF_STATE_TEMPLATE] is None
         )
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self):  # noqa: C901
         """(Re)Subscribe to topics."""
         for tpl in self._templates.values():
             if tpl is not None:
@@ -417,7 +417,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             and self._templates[CONF_GREEN_TEMPLATE] is not None
             and self._templates[CONF_BLUE_TEMPLATE] is not None
         ):
-            features = features | SUPPORT_COLOR
+            features = features | SUPPORT_COLOR | SUPPORT_BRIGHTNESS
         if self._config.get(CONF_EFFECT_LIST) is not None:
             features = features | SUPPORT_EFFECT
         if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:

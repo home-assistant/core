@@ -1,0 +1,39 @@
+{
+  "title": "Waze Travel Time",
+  "config": {
+    "step": {
+      "user": {
+        "description": "For Origin and Destination, enter the address or the GPS coordinates of the location (GPS coordinates has to be separated by a comma). You can also enter an entity id which provides this information in its state, an entity id with latitude and longitude attributes, or zone friendly name.",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "origin": "Origin",
+          "destination": "Destination",
+          "region": "Region"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "The `substring` inputs will allow you to force the integration to use a particular route or avoid a particular route in its time travel calculation.",
+        "data": {
+          "units": "Units",
+          "vehicle_type": "Vehicle Type",
+          "incl_filter": "Substring in Description of Selected Route",
+          "excl_filter": "Substring NOT in Description of Selected Route",
+          "realtime": "Realtime Travel Time?",
+          "avoid_toll_roads": "Avoid Toll Roads?",
+          "avoid_ferries": "Avoid Ferries?",
+          "avoid_subscription_roads": "Avoid Roads Needing a Vignette / Subscription?"
+        }
+      }
+    }
+  }
+}

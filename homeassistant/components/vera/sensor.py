@@ -2,15 +2,19 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Callable, cast
+from typing import cast
 
 import pyvera as veraApi
 
-from homeassistant.components.sensor import DOMAIN as PLATFORM_DOMAIN, ENTITY_ID_FORMAT
+from homeassistant.components.sensor import (
+    DOMAIN as PLATFORM_DOMAIN,
+    ENTITY_ID_FORMAT,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import convert
 
 from . import VeraDevice
@@ -22,7 +26,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
     controller_data = get_controller_data(hass, entry)
@@ -35,7 +39,7 @@ async def async_setup_entry(
     )
 
 
-class VeraSensor(VeraDevice[veraApi.VeraSensor], Entity):
+class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
     """Representation of a Vera Sensor."""
 
     def __init__(

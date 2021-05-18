@@ -44,6 +44,11 @@ def is_local(address: IPv4Address | IPv6Address) -> bool:
     return is_loopback(address) or is_private(address)
 
 
+def is_invalid(address: IPv4Address | IPv6Address) -> bool:
+    """Check if an address is invalid."""
+    return bool(address == ip_address("0.0.0.0"))
+
+
 def is_ip_address(address: str) -> bool:
     """Check if a given string is an IP address."""
     try:

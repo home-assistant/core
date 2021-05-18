@@ -12,7 +12,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Volumio."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize flow."""

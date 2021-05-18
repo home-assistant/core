@@ -4,11 +4,13 @@ from __future__ import annotations
 import asyncio
 import base64
 import collections
+from contextlib import suppress
 from datetime import timedelta
 import functools as ft
 import hashlib
 import logging
 import secrets
+from typing import final
 from urllib.parse import urlparse
 
 from aiohttp import web
@@ -64,6 +66,7 @@ from homeassistant.loader import bind_hass
 from .const import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
+    ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_ARTIST,
@@ -94,11 +97,14 @@ from .const import (
     MEDIA_CLASS_DIRECTORY,
     REPEAT_MODES,
     SERVICE_CLEAR_PLAYLIST,
+    SERVICE_JOIN,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    SERVICE_UNJOIN,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_GROUPING,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -300,6 +306,12 @@ async def async_setup(hass, config):
         [SUPPORT_SEEK],
     )
     component.async_register_entity_service(
+        SERVICE_JOIN,
+        {vol.Required(ATTR_GROUP_MEMBERS): vol.All(cv.ensure_list, [cv.entity_id])},
+        "async_join_players",
+        [SUPPORT_GROUPING],
+    )
+    component.async_register_entity_service(
         SERVICE_SELECT_SOURCE,
         {vol.Required(ATTR_INPUT_SOURCE): cv.string},
         "async_select_source",
@@ -329,6 +341,9 @@ async def async_setup(hass, config):
         {vol.Required(ATTR_MEDIA_SHUFFLE): cv.boolean},
         "async_set_shuffle",
         [SUPPORT_SHUFFLE_SET],
+    )
+    component.async_register_entity_service(
+        SERVICE_UNJOIN, {}, "async_unjoin_player", [SUPPORT_GROUPING]
     )
 
     component.async_register_entity_service(
@@ -538,6 +553,11 @@ class MediaPlayerEntity(Entity):
         return None
 
     @property
+    def group_members(self):
+        """List of members which are currently grouped together."""
+        return None
+
+    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         return 0
@@ -738,6 +758,11 @@ class MediaPlayerEntity(Entity):
         """Boolean if shuffle is supported."""
         return bool(self.supported_features & SUPPORT_SHUFFLE_SET)
 
+    @property
+    def support_grouping(self):
+        """Boolean if player grouping is supported."""
+        return bool(self.supported_features & SUPPORT_GROUPING)
+
     async def async_toggle(self):
         """Toggle the power on the media player."""
         if hasattr(self, "toggle"):
@@ -830,6 +855,7 @@ class MediaPlayerEntity(Entity):
 
         return data
 
+    @final
     @property
     def state_attributes(self):
         """Return the state attributes."""
@@ -846,6 +872,9 @@ class MediaPlayerEntity(Entity):
         if self.media_image_remotely_accessible:
             state_attr["entity_picture_local"] = self.media_image_local
 
+        if self.support_grouping:
+            state_attr[ATTR_GROUP_MEMBERS] = self.group_members
+
         return state_attr
 
     async def async_browse_media(
@@ -859,6 +888,22 @@ class MediaPlayerEntity(Entity):
         "media_player/browse_media" websocket command.
         """
         raise NotImplementedError()
+
+    def join_players(self, group_members):
+        """Join `group_members` as a player group with the current player."""
+        raise NotImplementedError()
+
+    async def async_join_players(self, group_members):
+        """Join `group_members` as a player group with the current player."""
+        await self.hass.async_add_executor_job(self.join_players, group_members)
+
+    def unjoin_player(self):
+        """Remove this player from any group."""
+        raise NotImplementedError()
+
+    async def async_unjoin_player(self):
+        """Remove this player from any group."""
+        await self.hass.async_add_executor_job(self.unjoin_player)
 
     async def _async_fetch_image_from_cache(self, url):
         """Fetch image.
@@ -891,18 +936,13 @@ class MediaPlayerEntity(Entity):
         """Retrieve an image."""
         content, content_type = (None, None)
         websession = async_get_clientsession(self.hass)
-        try:
-            with async_timeout.timeout(10):
-                response = await websession.get(url)
-
-                if response.status == HTTP_OK:
-                    content = await response.read()
-                    content_type = response.headers.get(CONTENT_TYPE)
-                    if content_type:
-                        content_type = content_type.split(";")[0]
-
-        except asyncio.TimeoutError:
-            pass
+        with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
+            response = await websession.get(url)
+            if response.status == HTTP_OK:
+                content = await response.read()
+                content_type = response.headers.get(CONTENT_TYPE)
+                if content_type:
+                    content_type = content_type.split(";")[0]
 
         if content is None:
             _LOGGER.warning("Error retrieving proxied image from %s", url)

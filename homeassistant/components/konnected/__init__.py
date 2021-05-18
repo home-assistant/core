@@ -1,5 +1,4 @@
 """Support for Konnected devices."""
-import asyncio
 import copy
 import hmac
 import json
@@ -261,10 +260,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # async_connect will handle retries until it establishes a connection
     await client.async_connect()
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     # config entry specific data to enable unload
     hass.data[DOMAIN][entry.entry_id] = {
@@ -275,14 +271,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
 
@@ -360,8 +349,14 @@ class KonnectedView(HomeAssistantView):
         try:
             zone_num = str(payload.get(CONF_ZONE) or PIN_TO_ZONE[payload[CONF_PIN]])
             payload[CONF_ZONE] = zone_num
-            zone_data = device[CONF_BINARY_SENSORS].get(zone_num) or next(
-                (s for s in device[CONF_SENSORS] if s[CONF_ZONE] == zone_num), None
+            zone_data = (
+                device[CONF_BINARY_SENSORS].get(zone_num)
+                or next(
+                    (s for s in device[CONF_SWITCHES] if s[CONF_ZONE] == zone_num), None
+                )
+                or next(
+                    (s for s in device[CONF_SENSORS] if s[CONF_ZONE] == zone_num), None
+                )
             )
         except KeyError:
             zone_data = None

@@ -1,16 +1,18 @@
 """Support for WUnderground weather service."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
 import re
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable
 
 import aiohttp
 import async_timeout
 import voluptuous as vol
 
 from homeassistant.components import sensor
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -31,11 +33,11 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 _RESOURCE = "http://api.wunderground.com/api/{}/{}/{}/q/"
@@ -64,10 +66,10 @@ class WUSensorConfig:
 
     def __init__(
         self,
-        friendly_name: Union[str, Callable],
+        friendly_name: str | Callable,
         feature: str,
-        value: Callable[["WUndergroundData"], Any],
-        unit_of_measurement: Optional[str] = None,
+        value: Callable[[WUndergroundData], Any],
+        unit_of_measurement: str | None = None,
         entity_picture=None,
         icon: str = "mdi:gauge",
         extra_state_attributes=None,
@@ -99,10 +101,10 @@ class WUCurrentConditionsSensorConfig(WUSensorConfig):
 
     def __init__(
         self,
-        friendly_name: Union[str, Callable],
+        friendly_name: str | Callable,
         field: str,
-        icon: Optional[str] = "mdi:gauge",
-        unit_of_measurement: Optional[str] = None,
+        icon: str | None = "mdi:gauge",
+        unit_of_measurement: str | None = None,
         device_class=None,
     ):
         """Initialize current conditions sensor configuration.
@@ -131,9 +133,7 @@ class WUCurrentConditionsSensorConfig(WUSensorConfig):
 class WUDailyTextForecastSensorConfig(WUSensorConfig):
     """Helper for defining sensor configurations for daily text forecasts."""
 
-    def __init__(
-        self, period: int, field: str, unit_of_measurement: Optional[str] = None
-    ):
+    def __init__(self, period: int, field: str, unit_of_measurement: str | None = None):
         """Initialize daily text forecast sensor configuration.
 
         :param period: forecast period number
@@ -166,8 +166,8 @@ class WUDailySimpleForecastSensorConfig(WUSensorConfig):
         friendly_name: str,
         period: int,
         field: str,
-        wu_unit: Optional[str] = None,
-        ha_unit: Optional[str] = None,
+        wu_unit: str | None = None,
+        ha_unit: str | None = None,
         icon=None,
         device_class=None,
     ):
@@ -273,7 +273,7 @@ class WUAlmanacSensorConfig(WUSensorConfig):
 
     def __init__(
         self,
-        friendly_name: Union[str, Callable],
+        friendly_name: str | Callable,
         field: str,
         value_type: str,
         wu_unit: str,
@@ -303,7 +303,7 @@ class WUAlmanacSensorConfig(WUSensorConfig):
 class WUAlertsSensorConfig(WUSensorConfig):
     """Helper for defining field configuration for alerts."""
 
-    def __init__(self, friendly_name: Union[str, Callable]):
+    def __init__(self, friendly_name: str | Callable):
         """Initialiize alerts sensor configuration.
 
         :param friendly_name: Friendly name
@@ -1085,7 +1085,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up the WUnderground sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
@@ -1117,10 +1117,10 @@ async def async_setup_platform(
     async_add_entities(sensors, True)
 
 
-class WUndergroundSensor(Entity):
+class WUndergroundSensor(SensorEntity):
     """Implementing the WUnderground sensor."""
 
-    def __init__(self, hass: HomeAssistantType, rest, condition, unique_id_base: str):
+    def __init__(self, hass: HomeAssistant, rest, condition, unique_id_base: str):
         """Initialize the sensor."""
         self.rest = rest
         self._condition = condition

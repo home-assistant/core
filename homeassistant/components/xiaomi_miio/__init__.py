@@ -35,24 +35,20 @@ VACUUM_PLATFORMS = ["vacuum"]
 AIR_MONITOR_PLATFORMS = ["air_quality", "sensor"]
 
 
-async def async_setup(hass: core.HomeAssistant, config: dict):
-    """Set up the Xiaomi Miio component."""
-    return True
-
-
 async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up the Xiaomi Miio components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    if entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
-        if not await async_setup_gateway_entry(hass, entry):
-            return False
-    if entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
-        if not await async_setup_device_entry(hass, entry):
-            return False
+    if entry.data[
+        CONF_FLOW_TYPE
+    ] == CONF_GATEWAY and not await async_setup_gateway_entry(hass, entry):
+        return False
 
-    return True
+    return bool(
+        entry.data[CONF_FLOW_TYPE] != CONF_DEVICE
+        or await async_setup_device_entry(hass, entry)
+    )
 
 
 async def async_setup_gateway_entry(

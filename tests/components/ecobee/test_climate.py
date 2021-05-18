@@ -83,14 +83,14 @@ async def test_target_temperature_low(ecobee_fixture, thermostat):
     """Test target low temperature."""
     assert thermostat.target_temperature_low == 40
     ecobee_fixture["runtime"]["desiredHeat"] = 502
-    assert thermostat.target_temperature_low == 50.2
+    assert thermostat.target_temperature_low == 50
 
 
 async def test_target_temperature_high(ecobee_fixture, thermostat):
     """Test target high temperature."""
     assert thermostat.target_temperature_high == 20
-    ecobee_fixture["runtime"]["desiredCool"] = 103
-    assert thermostat.target_temperature_high == 10.3
+    ecobee_fixture["runtime"]["desiredCool"] = 679
+    assert thermostat.target_temperature_high == 68
 
 
 async def test_target_temperature(ecobee_fixture, thermostat):
@@ -117,9 +117,9 @@ async def test_fan(ecobee_fixture, thermostat):
     """Test fan property."""
     assert const.STATE_ON == thermostat.fan
     ecobee_fixture["equipmentStatus"] = ""
-    assert STATE_OFF == thermostat.fan
+    assert thermostat.fan == STATE_OFF
     ecobee_fixture["equipmentStatus"] = "heatPump, heatPump2"
-    assert STATE_OFF == thermostat.fan
+    assert thermostat.fan == STATE_OFF
 
 
 async def test_hvac_mode(ecobee_fixture, thermostat):
@@ -164,6 +164,7 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "fan_min_on_time": 10,
         "equipment_running": "auxHeat2",
     } == thermostat.extra_state_attributes
+
     ecobee_fixture["equipmentStatus"] = "compCool1"
     assert {
         "fan": "off",
@@ -319,7 +320,7 @@ async def test_set_fan_mode_on(thermostat, data):
     data.reset_mock()
     thermostat.set_fan_mode("on")
     data.ecobee.set_fan_mode.assert_has_calls(
-        [mock.call(1, "on", 20, 40, "nextTransition")]
+        [mock.call(1, "on", "nextTransition", holdHours=None)]
     )
 
 
@@ -328,5 +329,5 @@ async def test_set_fan_mode_auto(thermostat, data):
     data.reset_mock()
     thermostat.set_fan_mode("auto")
     data.ecobee.set_fan_mode.assert_has_calls(
-        [mock.call(1, "auto", 20, 40, "nextTransition")]
+        [mock.call(1, "auto", "nextTransition", holdHours=None)]
     )

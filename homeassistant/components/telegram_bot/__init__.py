@@ -282,7 +282,7 @@ def load_data(
             _LOGGER.warning("Can't load data in %s after %s retries", url, retry_num)
         elif filepath is not None:
             if hass.config.is_allowed_path(filepath):
-                return open(filepath, "rb")
+                return open(filepath, "rb")  # pylint: disable=consider-using-with
 
             _LOGGER.warning("'%s' are not secure to load data from!", filepath)
         else:
@@ -303,9 +303,7 @@ async def async_setup(hass, config):
 
         p_type = p_config.get(CONF_PLATFORM)
 
-        platform = importlib.import_module(
-            ".{}".format(p_config[CONF_PLATFORM]), __name__
-        )
+        platform = importlib.import_module(f".{p_config[CONF_PLATFORM]}", __name__)
 
         _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
         try:

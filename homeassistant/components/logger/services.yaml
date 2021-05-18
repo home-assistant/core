@@ -21,23 +21,63 @@ set_level:
   description: Set log level for integrations.
   fields:
     homeassistant.core:
+      name: Home Assistant Core
       description:
         "Example on how to change the logging level for a Home Assistant Core
-        integrations. Possible values are debug, info, warn, warning, error,
-        fatal, critical."
+        integrations."
       example: debug
+      selector:
+        select:
+          options:
+            - 'debug'
+            - 'critical'
+            - 'error'
+            - 'fatal'
+            - 'info'
+            - 'warn'
+            - 'warning'
     homeassistant.components.mqtt:
+      name: Home Assistant components mqtt
       description:
-        "Example on how to change the logging level for an Integration. Possible
-        values are debug, info, warn, warning, error, fatal, critical."
+        "Example on how to change the logging level for an Integration."
       example: warning
+      selector:
+        select:
+          options:
+            - 'debug'
+            - 'critical'
+            - 'error'
+            - 'fatal'
+            - 'info'
+            - 'warn'
+            - 'warning'
     custom_components.my_integration:
+      name: Custom components "my_integation"
       description:
-        "Example on how to change the logging level for a Custom Integration.
-        Possible values are debug, info, warn, warning, error, fatal, critical."
+        "Example on how to change the logging level for a Custom Integration."
       example: debug
+      selector:
+        select:
+          options:
+            - 'debug'
+            - 'critical'
+            - 'error'
+            - 'fatal'
+            - 'info'
+            - 'warn'
+            - 'warning'
     aiohttp:
+      name: aioHttp
       description:
-        "Example on how to change the logging level for a Python module.
-        Possible values are debug, info, warn, warning, error, fatal, critical."
+        "Example on how to change the logging level for a Python module."
       example: error
+      selector:
+        select:
+          options:
+            - 'debug'
+            - 'critical'
+            - 'error'
+            - 'fatal'
+            - 'info'
+            - 'warn'
+            - 'warning'

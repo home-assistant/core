@@ -37,6 +37,7 @@ from .test_common import (
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_connection,
     help_test_entity_device_info_with_identifier,
+    help_test_entity_disabled_by_default,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
     help_test_setting_attribute_via_mqtt_json_message,
@@ -630,5 +631,12 @@ async def test_entity_debug_info_remove(hass, mqtt_mock):
 async def test_entity_debug_info_update_entity_id(hass, mqtt_mock):
     """Test MQTT sensor debug info."""
     await help_test_entity_debug_info_update_entity_id(
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_entity_disabled_by_default(hass, mqtt_mock):
+    """Test entity disabled by default."""
+    await help_test_entity_disabled_by_default(
         hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
     )

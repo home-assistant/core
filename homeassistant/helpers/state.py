@@ -3,10 +3,11 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from collections.abc import Iterable
 import datetime as dt
 import logging
 from types import ModuleType, TracebackType
-from typing import Any, Iterable
+from typing import Any
 
 from homeassistant.components.sun import STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
 from homeassistant.const import (
@@ -20,12 +21,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
-from homeassistant.core import Context, State
+from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.loader import IntegrationNotFound, async_get_integration, bind_hass
 import homeassistant.util.dt as dt_util
 
 from .frame import report
-from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class AsyncTrackStates:
     Warning added via `get_changed_since`.
     """
 
-    def __init__(self, hass: HomeAssistantType) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a TrackStates block."""
         self.hass = hass
         self.states: list[State] = []
@@ -77,7 +77,7 @@ def get_changed_since(
 
 @bind_hass
 async def async_reproduce_state(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     states: State | Iterable[State],
     *,
     context: Context | None = None,

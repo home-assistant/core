@@ -1,5 +1,4 @@
 """The Control4 integration."""
-import asyncio
 import json
 import logging
 
@@ -42,17 +41,9 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["light"]
 
 
-async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Stub to allow setting up this component.
-
-    Configuration through YAML is not supported at this time.
-    """
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Control4 from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
     entry_data = hass.data[DOMAIN].setdefault(entry.entry_id, {})
     account_session = aiohttp_client.async_get_clientsession(hass)
 
@@ -115,10 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     entry_data[CONF_CONFIG_LISTENER] = entry.add_update_listener(update_listener)
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -131,14 +119,8 @@ async def update_listener(hass, config_entry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
     hass.data[DOMAIN][entry.entry_id][CONF_CONFIG_LISTENER]()
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)

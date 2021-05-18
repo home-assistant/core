@@ -3,8 +3,9 @@ Support for the Withings API.
 
 For more details about this platform, please refer to the documentation at
 """
+from __future__ import annotations
+
 import asyncio
-from typing import Optional
 
 from aiohttp.web import Request, Response
 import voluptuous as vol
@@ -20,7 +21,6 @@ from homeassistant.components.webhook import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
@@ -120,9 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data_manager = await async_get_data_manager(hass, entry)
 
     _LOGGER.debug("Confirming %s is authenticated to withings", data_manager.profile)
-    await data_manager.poll_data_update_coordinator.async_refresh()
-    if not data_manager.poll_data_update_coordinator.last_update_success:
-        raise ConfigEntryNotReady()
+    await data_manager.poll_data_update_coordinator.async_config_entry_first_refresh()
 
     webhook.async_register(
         hass,
@@ -175,7 +173,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_webhook_handler(
     hass: HomeAssistant, webhook_id: str, request: Request
-) -> Optional[Response]:
+) -> Response | None:
     """Handle webhooks calls."""
     # Handle http head calls to the path.
     # When creating a notify subscription, Withings will check that the endpoint is running by sending a HEAD request.

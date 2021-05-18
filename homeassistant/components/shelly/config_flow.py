@@ -16,8 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import aiohttp_client
 
-from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, DOMAIN
 from .utils import get_coap_context, get_device_sleep_period
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,7 +59,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Shelly."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
+
     host = None
     info = None
     device_info = None
@@ -147,21 +146,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="credentials", data_schema=schema, errors=errors
         )
 
-    async def async_step_zeroconf(self, zeroconf_info):
+    async def async_step_zeroconf(self, discovery_info):
         """Handle zeroconf discovery."""
         try:
-            self.info = info = await self._async_get_info(zeroconf_info["host"])
+            self.info = info = await self._async_get_info(discovery_info["host"])
         except HTTP_CONNECT_ERRORS:
             return self.async_abort(reason="cannot_connect")
         except aioshelly.FirmwareUnsupported:
             return self.async_abort(reason="unsupported_firmware")
 
         await self.async_set_unique_id(info["mac"])
-        self._abort_if_unique_id_configured({CONF_HOST: zeroconf_info["host"]})
-        self.host = zeroconf_info["host"]
+        self._abort_if_unique_id_configured({CONF_HOST: discovery_info["host"]})
+        self.host = discovery_info["host"]
 
         self.context["title_placeholders"] = {
-            "name": zeroconf_info.get("name", "").split(".")[0]
+            "name": discovery_info.get("name", "").split(".")[0]
         }
 
         if info["auth"]:

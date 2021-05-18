@@ -33,6 +33,7 @@
             "invalid_serial": "Invalid serial port",
             "invalid_subscribe_topic": "Invalid subscribe topic",
             "invalid_version": "Invalid MySensors version",
+            "mqtt_required": "The MQTT integration is not set up",
             "not_a_number": "Please enter a number",
             "port_out_of_range": "Port number must be at least 1 and at most 65535",
             "same_topic": "Subscribe and publish topics are the same",

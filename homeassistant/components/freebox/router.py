@@ -13,11 +13,12 @@ from freebox_api.exceptions import HttpRequestError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
 
 from .const import (
@@ -34,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-async def get_api(hass: HomeAssistantType, host: str) -> Freepybox:
+async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
     """Get the Freebox API."""
     freebox_path = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY).path
 
@@ -49,7 +50,7 @@ async def get_api(hass: HomeAssistantType, host: str) -> Freepybox:
 class FreeboxRouter:
     """Representation of a Freebox router."""
 
-    def __init__(self, hass: HomeAssistantType, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize a Freebox router."""
         self.hass = hass
         self._entry = entry
@@ -180,7 +181,7 @@ class FreeboxRouter:
         self._api = None
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self.mac)},

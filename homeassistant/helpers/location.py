@@ -1,14 +1,13 @@
 """Location helpers for Home Assistant."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 import logging
-from typing import Sequence
 
 import voluptuous as vol
 
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
-from homeassistant.core import State
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant, State
 from homeassistant.util import location as loc_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +25,7 @@ def has_location(state: State) -> bool:
     )
 
 
-def closest(latitude: float, longitude: float, states: Sequence[State]) -> State | None:
+def closest(latitude: float, longitude: float, states: Iterable[State]) -> State | None:
     """Return closest state to point.
 
     Async friendly.
@@ -49,7 +48,7 @@ def closest(latitude: float, longitude: float, states: Sequence[State]) -> State
 
 
 def find_coordinates(
-    hass: HomeAssistantType, entity_id: str, recursion_history: list | None = None
+    hass: HomeAssistant, entity_id: str, recursion_history: list | None = None
 ) -> str | None:
     """Find the gps coordinates of the entity in the form of '90.000,180.000'."""
     entity_state = hass.states.get(entity_id)
@@ -106,4 +105,4 @@ def find_coordinates(
 def _get_location_from_attributes(entity_state: State) -> str:
     """Get the lat/long string from an entities attributes."""
     attr = entity_state.attributes
-    return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
+    return f"{attr.get(ATTR_LATITUDE)},{attr.get(ATTR_LONGITUDE)}"

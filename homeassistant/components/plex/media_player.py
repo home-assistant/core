@@ -41,6 +41,7 @@ from .const import (
     PLEX_UPDATE_MEDIA_PLAYER_SIGNAL,
     PLEX_UPDATE_SENSOR_SIGNAL,
     SERVERS,
+    TRANSIENT_DEVICE_MODELS,
 )
 from .media_browser import browse_media
 
@@ -543,6 +544,15 @@ class PlexMediaPlayer(MediaPlayerEntity):
         """Return a device description for device registry."""
         if self.machine_identifier is None:
             return None
+
+        if self.device_product in TRANSIENT_DEVICE_MODELS:
+            return {
+                "identifiers": {(PLEX_DOMAIN, "plex.tv-clients")},
+                "name": "Plex Client Service",
+                "manufacturer": "Plex",
+                "model": "Plex Clients",
+                "entry_type": "service",
+            }
 
         return {
             "identifiers": {(PLEX_DOMAIN, self.machine_identifier)},

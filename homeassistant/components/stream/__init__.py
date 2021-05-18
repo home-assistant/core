@@ -14,7 +14,10 @@ are no active output formats, the background worker is shut down and access
 tokens are expired. Alternatively, a Stream can be configured with keepalive
 to always keep workers active.
 """
+from __future__ import annotations
+
 import logging
+import re
 import secrets
 import threading
 import time
@@ -33,10 +36,17 @@ from .const import (
     STREAM_RESTART_INCREMENT,
     STREAM_RESTART_RESET_TIME,
 )
-from .core import PROVIDERS, IdleTimer
+from .core import PROVIDERS, IdleTimer, StreamOutput
 from .hls import async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
+
+STREAM_SOURCE_RE = re.compile("//.*:.*@")
+
+
+def redact_credentials(data):
+    """Redact credentials from string data."""
+    return STREAM_SOURCE_RE.sub("//****:****@", data)
 
 
 def create_stream(hass, stream_source, options=None):
@@ -110,13 +120,13 @@ class Stream:
         self.access_token = None
         self._thread = None
         self._thread_quit = threading.Event()
-        self._outputs = {}
+        self._outputs: dict[str, StreamOutput] = {}
         self._fast_restart_once = False
 
         if self.options is None:
             self.options = {}
 
-    def endpoint_url(self, fmt):
+    def endpoint_url(self, fmt: str) -> str:
         """Start the stream and returns a url for the output format."""
         if fmt not in self._outputs:
             raise ValueError(f"Stream is not configured for format '{fmt}'")
@@ -173,7 +183,7 @@ class Stream:
                 target=self._run_worker,
             )
             self._thread.start()
-            _LOGGER.info("Started stream: %s", self.source)
+            _LOGGER.info("Started stream: %s", redact_credentials(str(self.source)))
 
     def update_source(self, new_source):
         """Restart the stream with a new stream source."""
@@ -239,7 +249,7 @@ class Stream:
             self._thread_quit.set()
             self._thread.join()
             self._thread = None
-            _LOGGER.info("Stopped stream: %s", self.source)
+            _LOGGER.info("Stopped stream: %s", redact_credentials(str(self.source)))
 
     async def async_record(self, video_path, duration=30, lookback=5):
         """Make a .mp4 recording from a provided stream."""
@@ -266,4 +276,4 @@ class Stream:
             num_segments = min(int(lookback // hls.target_duration), MAX_SEGMENTS)
             # Wait for latest segment, then add the lookback
             await hls.recv()
-            recorder.prepend(list(hls.get_segment())[-num_segments:])
+            recorder.prepend(list(hls.get_segments())[-num_segments:])

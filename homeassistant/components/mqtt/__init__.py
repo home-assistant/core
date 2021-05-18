@@ -31,11 +31,18 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import CoreState, Event, HassJob, ServiceCall, callback
+from homeassistant.core import (
+    CoreState,
+    Event,
+    HassJob,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
+from homeassistant.helpers.typing import ConfigType, ServiceDataType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -245,7 +252,7 @@ def _build_publish_data(topic: Any, qos: int, retain: bool) -> ServiceDataType:
 
 
 @bind_hass
-def publish(hass: HomeAssistantType, topic, payload, qos=None, retain=None) -> None:
+def publish(hass: HomeAssistant, topic, payload, qos=None, retain=None) -> None:
     """Publish message to an MQTT topic."""
     hass.add_job(async_publish, hass, topic, payload, qos, retain)
 
@@ -253,7 +260,7 @@ def publish(hass: HomeAssistantType, topic, payload, qos=None, retain=None) -> N
 @callback
 @bind_hass
 def async_publish(
-    hass: HomeAssistantType, topic: Any, payload, qos=None, retain=None
+    hass: HomeAssistant, topic: Any, payload, qos=None, retain=None
 ) -> None:
     """Publish message to an MQTT topic."""
     data = _build_publish_data(topic, qos, retain)
@@ -263,7 +270,7 @@ def async_publish(
 
 @bind_hass
 def publish_template(
-    hass: HomeAssistantType, topic, payload_template, qos=None, retain=None
+    hass: HomeAssistant, topic, payload_template, qos=None, retain=None
 ) -> None:
     """Publish message to an MQTT topic."""
     hass.add_job(async_publish_template, hass, topic, payload_template, qos, retain)
@@ -271,7 +278,7 @@ def publish_template(
 
 @bind_hass
 def async_publish_template(
-    hass: HomeAssistantType, topic, payload_template, qos=None, retain=None
+    hass: HomeAssistant, topic, payload_template, qos=None, retain=None
 ) -> None:
     """Publish message to an MQTT topic using a template payload."""
     data = _build_publish_data(topic, qos, retain)
@@ -308,7 +315,7 @@ def wrap_msg_callback(msg_callback: MessageCallbackType) -> MessageCallbackType:
 
 @bind_hass
 async def async_subscribe(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     topic: str,
     msg_callback: MessageCallbackType,
     qos: int = DEFAULT_QOS,
@@ -353,7 +360,7 @@ async def async_subscribe(
 
 @bind_hass
 def subscribe(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     topic: str,
     msg_callback: MessageCallbackType,
     qos: int = DEFAULT_QOS,
@@ -372,7 +379,7 @@ def subscribe(
 
 
 async def _async_setup_discovery(
-    hass: HomeAssistantType, conf: ConfigType, config_entry
+    hass: HomeAssistant, conf: ConfigType, config_entry
 ) -> bool:
     """Try to start the discovery of MQTT devices.
 
@@ -385,7 +392,7 @@ async def _async_setup_discovery(
     return success
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Start the MQTT protocol service."""
     conf: ConfigType | None = config.get(DOMAIN)
 
@@ -542,7 +549,7 @@ class MQTT:
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         config_entry,
         conf,
     ) -> None:

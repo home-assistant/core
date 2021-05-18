@@ -21,6 +21,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP,
     StateVacuumEntity,
 )
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import Entity
 
 from . import roomba_reported_state
@@ -92,13 +93,18 @@ class IRobotEntity(Entity):
     @property
     def device_info(self):
         """Return the device info of the vacuum cleaner."""
-        return {
+        info = {
             "identifiers": {(DOMAIN, self.robot_unique_id)},
             "manufacturer": "iRobot",
             "name": str(self._name),
             "sw_version": self._version,
             "model": self._sku,
         }
+        if mac_address := self.vacuum_state.get("hwPartsRev", {}).get(
+            "wlan0HwAddr", self.vacuum_state.get("mac")
+        ):
+            info["connections"] = {(dr.CONNECTION_NETWORK_MAC, mac_address)}
+        return info
 
     @property
     def _battery_level(self):

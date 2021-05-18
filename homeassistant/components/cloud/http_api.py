@@ -27,7 +27,6 @@ from homeassistant.const import (
     HTTP_OK,
     HTTP_UNAUTHORIZED,
 )
-from homeassistant.core import callback
 
 from .const import (
     DOMAIN,
@@ -225,6 +224,7 @@ class CloudLoginView(HomeAssistantView):
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
         await cloud.login(data["email"], data["password"])
+
         return self.json({"success": True})
 
 
@@ -310,15 +310,15 @@ class CloudForgotPasswordView(HomeAssistantView):
         return self.json_message("ok")
 
 
-@callback
-def websocket_cloud_status(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_cloud_status(hass, connection, msg):
     """Handle request for account info.
 
     Async friendly.
     """
     cloud = hass.data[DOMAIN]
     connection.send_message(
-        websocket_api.result_message(msg["id"], _account_data(cloud))
+        websocket_api.result_message(msg["id"], await _account_data(cloud))
     )
 
 
@@ -446,7 +446,7 @@ async def websocket_hook_delete(hass, connection, msg):
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
-def _account_data(cloud):
+async def _account_data(cloud):
     """Generate the auth data JSON response."""
 
     if not cloud.is_logged_in:
@@ -455,6 +455,8 @@ def _account_data(cloud):
     claims = cloud.claims
     client = cloud.client
     remote = cloud.remote
+
+    gconf = await client.get_google_config()
 
     # Load remote certificate
     if remote.certificate:
@@ -467,6 +469,7 @@ def _account_data(cloud):
         "email": claims["email"],
         "cloud": cloud.iot.state,
         "prefs": client.prefs.as_dict(),
+        "google_registered": gconf.has_registered_user_agent,
         "google_entities": client.google_user_config["filter"].config,
         "alexa_entities": client.alexa_user_config["filter"].config,
         "remote_domain": remote.instance_domain,
@@ -485,7 +488,7 @@ async def websocket_remote_connect(hass, connection, msg):
     cloud = hass.data[DOMAIN]
     await cloud.client.prefs.async_update(remote_enabled=True)
     await cloud.remote.connect()
-    connection.send_result(msg["id"], _account_data(cloud))
+    connection.send_result(msg["id"], await _account_data(cloud))
 
 
 @websocket_api.require_admin
@@ -498,7 +501,7 @@ async def websocket_remote_disconnect(hass, connection, msg):
     cloud = hass.data[DOMAIN]
     await cloud.client.prefs.async_update(remote_enabled=False)
     await cloud.remote.disconnect()
-    connection.send_result(msg["id"], _account_data(cloud))
+    connection.send_result(msg["id"], await _account_data(cloud))
 
 
 @websocket_api.require_admin

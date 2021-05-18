@@ -1,0 +1,21 @@
+{
+  "title": "Legrand Home+ Control",
+  "config": {
+    "step": {
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  }
+}

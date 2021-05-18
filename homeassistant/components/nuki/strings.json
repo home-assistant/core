@@ -7,12 +7,22 @@
                     "port": "[%key:common::config_flow::data::port%]",
                     "token": "[%key:common::config_flow::data::access_token%]"
                 }
+            },
+            "reauth_confirm": {
+                "title": "[%key:common::config_flow::title::reauth%]",
+                "description": "The Nuki integration needs to re-authenticate with your bridge.",
+                "data": {
+                    "token": "[%key:common::config_flow::data::access_token%]"
+                }
             }
         },
         "error": {
             "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
             "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
             "unknown": "[%key:common::config_flow::error::unknown%]"
+        },
+        "abort": {
+            "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
         }
     }
 }

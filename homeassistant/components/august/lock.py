@@ -1,9 +1,9 @@
 """Support for August lock."""
 import logging
 
-from august.activity import ActivityType
-from august.lock import LockStatus
-from august.util import update_lock_detail_from_activity
+from yalexs.activity import SOURCE_PUBNUB, ActivityType
+from yalexs.lock import LockStatus
+from yalexs.util import update_lock_detail_from_activity
 
 from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity
 from homeassistant.const import ATTR_BATTERY_LEVEL
@@ -19,13 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up August locks."""
     data = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
-    devices = []
-
-    for lock in data.locks:
-        _LOGGER.debug("Adding lock for %s", lock.device_name)
-        devices.append(AugustLock(data, lock))
-
-    async_add_entities(devices, True)
+    async_add_entities([AugustLock(data, lock) for lock in data.locks])
 
 
 class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
@@ -73,12 +67,23 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     def _update_from_data(self):
         """Get the latest state of the sensor and update activity."""
         lock_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id, [ActivityType.LOCK_OPERATION]
+            self._device_id,
+            {ActivityType.LOCK_OPERATION, ActivityType.LOCK_OPERATION_WITHOUT_OPERATOR},
         )
 
         if lock_activity is not None:
             self._changed_by = lock_activity.operated_by
             update_lock_detail_from_activity(self._detail, lock_activity)
+            # If the source is pubnub the lock must be online since its a live update
+            if lock_activity.source == SOURCE_PUBNUB:
+                self._detail.set_online(True)
+
+        bridge_activity = self._data.activity_stream.get_latest_device_activity(
+            self._device_id, {ActivityType.BRIDGE_OPERATION}
+        )
+
+        if bridge_activity is not None:
+            update_lock_detail_from_activity(self._detail, bridge_activity)
 
         self._update_lock_status_from_detail()
 

@@ -92,7 +92,10 @@ async def test_if_fires_on_entity_change_below(hass, calls, below):
                     "entity_id": "test.entity",
                     "below": below,
                 },
-                "action": {"service": "test.automation"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"id": "{{ trigger.id}}"},
+                },
             }
         },
     )
@@ -114,6 +117,7 @@ async def test_if_fires_on_entity_change_below(hass, calls, below):
     hass.states.async_set("test.entity", 9)
     await hass.async_block_till_done()
     assert len(calls) == 1
+    assert calls[0].data["id"] == 0
 
 
 @pytest.mark.parametrize("below", (10, "input_number.value_10"))

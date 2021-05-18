@@ -3,6 +3,7 @@ import socket
 
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
@@ -53,7 +54,9 @@ async def async_setup(hass, config):
             }
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": "import"}, data=entry_config
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_IMPORT},
+                    data=entry_config,
                 )
             )
 

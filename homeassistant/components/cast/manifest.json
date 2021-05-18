@@ -3,8 +3,16 @@
   "name": "Google Cast",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/cast",
-  "requirements": ["pychromecast==9.1.1"],
-  "after_dependencies": ["cloud", "http", "media_source", "plex", "tts", "zeroconf"],
+  "requirements": ["pychromecast==9.1.2"],
+  "after_dependencies": [
+    "cloud",
+    "http",
+    "media_source",
+    "plex",
+    "tts",
+    "zeroconf"
+  ],
   "zeroconf": ["_googlecast._tcp.local."],
-  "codeowners": ["@emontnemery"]
+  "codeowners": ["@emontnemery"],
+  "iot_class": "local_polling"
 }

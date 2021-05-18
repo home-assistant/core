@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
@@ -40,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class IncomfortSensor(IncomfortChild):
+class IncomfortSensor(IncomfortChild, SensorEntity):
     """Representation of an InComfort/InTouch sensor device."""
 
     def __init__(self, client, heater, name) -> None:

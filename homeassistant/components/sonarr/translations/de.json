@@ -26,5 +26,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "upcoming_days": "Anzahl der anzuzeigenden Tage",
+                    "wanted_max_items": "Maximale Anzahl der anzuzeigenden gesuchten Elemente"
+                }
+            }
+        }
     }
 }

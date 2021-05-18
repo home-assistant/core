@@ -43,7 +43,7 @@
         "step": {
             "user": {
                 "data": {
-                    "scan_interval": "Scan Interval (seconds)"
+                    "scan_interval": "\uc2a4\uce94 \uac04\uaca9 (\ucd08)"
                 },
                 "description": "\ub370\uc774\ud130\ub97c \ub354 \uc790\uc8fc \ud3f4\ub9c1\ud558\ub824\uba74 \uac80\uc0c9 \uac04\uaca9\uc744 \uc5c5\ub370\uc774\ud2b8\ud574\uc8fc\uc138\uc694.",
                 "title": "Hive \uc635\uc158"

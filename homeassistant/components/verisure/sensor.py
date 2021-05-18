@@ -1,16 +1,16 @@
 """Support for Verisure sensors."""
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable
-
 from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
+    SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_GIID, DEVICE_TYPE_NAME, DOMAIN
@@ -20,7 +20,7 @@ from .coordinator import VerisureDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[Iterable[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Verisure sensors based on a config entry."""
     coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -45,7 +45,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class VerisureThermometer(CoordinatorEntity, Entity):
+class VerisureThermometer(CoordinatorEntity, SensorEntity):
     """Representation of a Verisure thermometer."""
 
     coordinator: VerisureDataUpdateCoordinator
@@ -74,7 +74,7 @@ class VerisureThermometer(CoordinatorEntity, Entity):
         return DEVICE_CLASS_TEMPERATURE
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         device_type = self.coordinator.data["climate"][self.serial_number].get(
             "deviceType"
@@ -109,7 +109,7 @@ class VerisureThermometer(CoordinatorEntity, Entity):
         return TEMP_CELSIUS
 
 
-class VerisureHygrometer(CoordinatorEntity, Entity):
+class VerisureHygrometer(CoordinatorEntity, SensorEntity):
     """Representation of a Verisure hygrometer."""
 
     coordinator: VerisureDataUpdateCoordinator
@@ -138,7 +138,7 @@ class VerisureHygrometer(CoordinatorEntity, Entity):
         return DEVICE_CLASS_HUMIDITY
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         device_type = self.coordinator.data["climate"][self.serial_number].get(
             "deviceType"
@@ -173,7 +173,7 @@ class VerisureHygrometer(CoordinatorEntity, Entity):
         return PERCENTAGE
 
 
-class VerisureMouseDetection(CoordinatorEntity, Entity):
+class VerisureMouseDetection(CoordinatorEntity, SensorEntity):
     """Representation of a Verisure mouse detector."""
 
     coordinator: VerisureDataUpdateCoordinator
@@ -197,7 +197,7 @@ class VerisureMouseDetection(CoordinatorEntity, Entity):
         return f"{self.serial_number}_mice"
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         area = self.coordinator.data["mice"][self.serial_number]["area"]
         return {

@@ -1,7 +1,7 @@
 """Sensor platform for local_ip."""
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import get_local_ip
 
 from .const import DOMAIN, SENSOR
@@ -13,7 +13,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([IPSensor(name)], True)
 
 
-class IPSensor(Entity):
+class IPSensor(SensorEntity):
     """A simple sensor."""
 
     def __init__(self, name):

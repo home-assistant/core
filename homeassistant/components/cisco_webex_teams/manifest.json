@@ -3,5 +3,6 @@
   "name": "Cisco Webex Teams",
   "documentation": "https://www.home-assistant.io/integrations/cisco_webex_teams",
   "requirements": ["webexteamssdk==1.1.1"],
-  "codeowners": ["@fbradyirl"]
+  "codeowners": ["@fbradyirl"],
+  "iot_class": "cloud_push"
 }

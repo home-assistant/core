@@ -4,7 +4,6 @@
             "addon_get_discovery_info_failed": "Kunne ikke hente oppdagelsesinformasjon om Z-Wave JS-tillegg",
             "addon_info_failed": "Kunne ikke hente informasjon om Z-Wave JS-tillegg",
             "addon_install_failed": "Kunne ikke installere Z-Wave JS-tillegg",
-            "addon_missing_discovery_info": "Manglende oppdagelsesinformasjon for Z-Wave JS-tillegg",
             "addon_set_config_failed": "Kunne ikke angi Z-Wave JS-konfigurasjon",
             "addon_start_failed": "Kunne ikke starte Z-Wave JS-tillegget.",
             "already_configured": "Enheten er allerede konfigurert",
@@ -49,11 +48,6 @@
             },
             "start_addon": {
                 "title": "Z-Wave JS-tillegget starter"
-            },
-            "user": {
-                "data": {
-                    "url": "URL"
-                }
             }
         }
     },

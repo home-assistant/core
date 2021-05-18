@@ -9,7 +9,7 @@
             "invalid_auth": "Autenticazione non valida",
             "resolve_error": "Impossibile risolvere l'indirizzo dell'ESP. Se questo errore persiste, impostare un indirizzo IP statico: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
-        "flow_title": "ESPHome: {name}",
+        "flow_title": "{name}",
         "step": {
             "authenticate": {
                 "data": {

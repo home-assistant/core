@@ -377,9 +377,8 @@ async def test_get_cloud_url(hass: HomeAssistant):
         hass.components.cloud,
         "async_remote_ui_url",
         side_effect=cloud.CloudNotAvailable,
-    ):
-        with pytest.raises(NoURLAvailableError):
-            _get_cloud_url(hass)
+    ), pytest.raises(NoURLAvailableError):
+        _get_cloud_url(hass)
 
 
 async def test_get_external_url_cloud_fallback(hass: HomeAssistant):

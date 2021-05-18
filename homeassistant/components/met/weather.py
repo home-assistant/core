@@ -230,14 +230,13 @@ class MetWeather(CoordinatorEntity, WeatherEntity):
                 for k, v in FORECAST_MAP.items()
                 if met_item.get(v) is not None
             }
-            if not self._is_metric:
-                if ATTR_FORECAST_PRECIPITATION in ha_item:
-                    precip_inches = convert_distance(
-                        ha_item[ATTR_FORECAST_PRECIPITATION],
-                        LENGTH_MILLIMETERS,
-                        LENGTH_INCHES,
-                    )
-                    ha_item[ATTR_FORECAST_PRECIPITATION] = round(precip_inches, 2)
+            if not self._is_metric and ATTR_FORECAST_PRECIPITATION in ha_item:
+                precip_inches = convert_distance(
+                    ha_item[ATTR_FORECAST_PRECIPITATION],
+                    LENGTH_MILLIMETERS,
+                    LENGTH_INCHES,
+                )
+                ha_item[ATTR_FORECAST_PRECIPITATION] = round(precip_inches, 2)
             if ha_item.get(ATTR_FORECAST_CONDITION):
                 ha_item[ATTR_FORECAST_CONDITION] = format_condition(
                     ha_item[ATTR_FORECAST_CONDITION]

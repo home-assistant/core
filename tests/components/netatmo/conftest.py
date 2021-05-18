@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from .common import ALL_SCOPES, fake_post_request, fake_post_request_no_data
+from .common import ALL_SCOPES, TEST_TIME, fake_post_request, fake_post_request_no_data
 
 from tests.common import MockConfigEntry
 
@@ -73,15 +73,18 @@ async def mock_entry_fixture(hass, config_entry):
     """Mock setup of all platforms."""
     with selected_platforms():
         await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.async_block_till_done()
     return config_entry
 
 
 @pytest.fixture(name="sensor_entry")
 async def mock_sensor_entry_fixture(hass, config_entry):
     """Mock setup of sensor platform."""
-    with selected_platforms(["sensor"]):
+    with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
         await hass.config_entries.async_setup(config_entry.entry_id)
-    return config_entry
+        await hass.async_block_till_done()
+        yield config_entry
 
 
 @pytest.fixture(name="camera_entry")
@@ -89,6 +92,8 @@ async def mock_camera_entry_fixture(hass, config_entry):
     """Mock setup of camera platform."""
     with selected_platforms(["camera"]):
         await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.async_block_till_done()
     return config_entry
 
 
@@ -97,6 +102,8 @@ async def mock_light_entry_fixture(hass, config_entry):
     """Mock setup of light platform."""
     with selected_platforms(["light"]):
         await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.async_block_till_done()
     return config_entry
 
 
@@ -123,5 +130,5 @@ async def mock_entry_error_fixture(hass, config_entry):
         mock_auth.return_value.post_request.side_effect = fake_post_request_no_data
         await hass.config_entries.async_setup(config_entry.entry_id)
 
-    await hass.async_block_till_done()
-    return config_entry
+        await hass.async_block_till_done()
+        yield config_entry

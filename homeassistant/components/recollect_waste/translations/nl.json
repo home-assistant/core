@@ -18,6 +18,9 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "friendly_name": "Gebruik vriendelijke namen voor afhaaltypes (indien mogelijk)"
+                },
                 "title": "Configureer Recollect Waste"
             }
         }

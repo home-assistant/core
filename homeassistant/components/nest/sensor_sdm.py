@@ -7,6 +7,7 @@ from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import HumidityTrait, TemperatureTrait
 from google_nest_sdm.exceptions import GoogleNestException
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
@@ -14,9 +15,8 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DATA_SUBSCRIBER, DOMAIN
 from .device_info import DeviceInfo
@@ -33,7 +33,7 @@ DEVICE_TYPE_MAP = {
 
 
 async def async_setup_sdm_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the sensors."""
 
@@ -53,7 +53,7 @@ async def async_setup_sdm_entry(
     async_add_entities(entities)
 
 
-class SensorBase(Entity):
+class SensorBase(SensorEntity):
     """Representation of a dynamically updated Sensor."""
 
     def __init__(self, device: Device):

@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_ID,
@@ -18,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt, slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,7 +70,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class MQTTRoomSensor(Entity):
+class MQTTRoomSensor(SensorEntity):
     """Representation of a room sensor that is updated via MQTT."""
 
     def __init__(self, name, state_topic, device_id, timeout, consider_home):
@@ -121,7 +120,7 @@ class MQTTRoomSensor(Entity):
                     if (
                         device.get(ATTR_ROOM) == self._state
                         or device.get(ATTR_DISTANCE) < self._distance
-                        or timediff.seconds >= self._timeout
+                        or timediff.total_seconds() >= self._timeout
                     ):
                         update_state(**device)
 

@@ -219,9 +219,9 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
     def test_setallzones_service_call_with_entity_id(self):
         """Test set all zone source service call with entity id."""
         self.media_player.update()
-        assert "Zone name" == self.media_player.name
-        assert STATE_ON == self.media_player.state
-        assert "one" == self.media_player.source
+        assert self.media_player.name == "Zone name"
+        assert self.media_player.state == STATE_ON
+        assert self.media_player.source == "one"
 
         # Call set all zones service
         self.hass.services.call(
@@ -232,16 +232,16 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
         )
 
         # Check that source was changed
-        assert 3 == self.blackbird.zones[3].av
+        assert self.blackbird.zones[3].av == 3
         self.media_player.update()
-        assert "three" == self.media_player.source
+        assert self.media_player.source == "three"
 
     def test_setallzones_service_call_without_entity_id(self):
         """Test set all zone source service call without entity id."""
         self.media_player.update()
-        assert "Zone name" == self.media_player.name
-        assert STATE_ON == self.media_player.state
-        assert "one" == self.media_player.source
+        assert self.media_player.name == "Zone name"
+        assert self.media_player.state == STATE_ON
+        assert self.media_player.source == "one"
 
         # Call set all zones service
         self.hass.services.call(
@@ -249,9 +249,9 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
         )
 
         # Check that source was changed
-        assert 3 == self.blackbird.zones[3].av
+        assert self.blackbird.zones[3].av == 3
         self.media_player.update()
-        assert "three" == self.media_player.source
+        assert self.media_player.source == "three"
 
     def test_update(self):
         """Test updating values from blackbird."""
@@ -260,23 +260,23 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
 
         self.media_player.update()
 
-        assert STATE_ON == self.media_player.state
-        assert "one" == self.media_player.source
+        assert self.media_player.state == STATE_ON
+        assert self.media_player.source == "one"
 
     def test_name(self):
         """Test name property."""
-        assert "Zone name" == self.media_player.name
+        assert self.media_player.name == "Zone name"
 
     def test_state(self):
         """Test state property."""
         assert self.media_player.state is None
 
         self.media_player.update()
-        assert STATE_ON == self.media_player.state
+        assert self.media_player.state == STATE_ON
 
         self.blackbird.zones[3].power = False
         self.media_player.update()
-        assert STATE_OFF == self.media_player.state
+        assert self.media_player.state == STATE_OFF
 
     def test_supported_features(self):
         """Test supported features property."""
@@ -289,54 +289,54 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
         """Test source property."""
         assert self.media_player.source is None
         self.media_player.update()
-        assert "one" == self.media_player.source
+        assert self.media_player.source == "one"
 
     def test_media_title(self):
         """Test media title property."""
         assert self.media_player.media_title is None
         self.media_player.update()
-        assert "one" == self.media_player.media_title
+        assert self.media_player.media_title == "one"
 
     def test_source_list(self):
         """Test source list property."""
         # Note, the list is sorted!
-        assert ["one", "two", "three"] == self.media_player.source_list
+        assert self.media_player.source_list == ["one", "two", "three"]
 
     def test_select_source(self):
         """Test source selection methods."""
         self.media_player.update()
 
-        assert "one" == self.media_player.source
+        assert self.media_player.source == "one"
 
         self.media_player.select_source("two")
-        assert 2 == self.blackbird.zones[3].av
+        assert self.blackbird.zones[3].av == 2
         self.media_player.update()
-        assert "two" == self.media_player.source
+        assert self.media_player.source == "two"
 
         # Trying to set unknown source.
         self.media_player.select_source("no name")
-        assert 2 == self.blackbird.zones[3].av
+        assert self.blackbird.zones[3].av == 2
         self.media_player.update()
-        assert "two" == self.media_player.source
+        assert self.media_player.source == "two"
 
     def test_turn_on(self):
         """Testing turning on the zone."""
         self.blackbird.zones[3].power = False
         self.media_player.update()
-        assert STATE_OFF == self.media_player.state
+        assert self.media_player.state == STATE_OFF
 
         self.media_player.turn_on()
         assert self.blackbird.zones[3].power
         self.media_player.update()
-        assert STATE_ON == self.media_player.state
+        assert self.media_player.state == STATE_ON
 
     def test_turn_off(self):
         """Testing turning off the zone."""
         self.blackbird.zones[3].power = True
         self.media_player.update()
-        assert STATE_ON == self.media_player.state
+        assert self.media_player.state == STATE_ON
 
         self.media_player.turn_off()
         assert not self.blackbird.zones[3].power
         self.media_player.update()
-        assert STATE_OFF == self.media_player.state
+        assert self.media_player.state == STATE_OFF

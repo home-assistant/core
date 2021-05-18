@@ -1,4 +1,5 @@
 """Support for media browsing."""
+from contextlib import suppress
 import logging
 import urllib.parse
 
@@ -75,10 +76,8 @@ def build_item_response(media_library, payload, get_thumbnail_url=None):
 
     children = []
     for item in media:
-        try:
+        with suppress(UnknownMediaType):
             children.append(item_payload(item, get_thumbnail_url))
-        except UnknownMediaType:
-            pass
 
     return BrowseMedia(
         title=title,
@@ -136,10 +135,8 @@ def library_payload(media_library, get_thumbnail_url=None):
 
     children = []
     for item in media_library.browse():
-        try:
+        with suppress(UnknownMediaType):
             children.append(item_payload(item, get_thumbnail_url))
-        except UnknownMediaType:
-            pass
 
     return BrowseMedia(
         title="Music Library",

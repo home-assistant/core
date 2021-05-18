@@ -1,9 +1,7 @@
 """The DirecTV integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
-from typing import Any
 
 from directv import DIRECTV, DIRECTVError
 
@@ -13,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
     ATTR_IDENTIFIERS,
@@ -30,12 +28,6 @@ PLATFORMS = ["media_player", "remote"]
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the DirecTV component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up DirecTV from a config entry."""
     dtv = DIRECTV(entry.data[CONF_HOST], session=async_get_clientsession(hass))
@@ -45,27 +37,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except DIRECTVError as err:
         raise ConfigEntryNotReady from err
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = dtv
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
-
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
@@ -89,7 +71,7 @@ class DIRECTVEntity(Entity):
         return self._name
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this DirecTV receiver."""
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self._device_id)},

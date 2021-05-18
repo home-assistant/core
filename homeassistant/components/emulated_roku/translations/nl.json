@@ -6,8 +6,8 @@
         "step": {
             "user": {
                 "data": {
-                    "advertise_ip": "Ip adres ontdekbaar",
-                    "advertise_port": "Adverteer Poort",
+                    "advertise_ip": "Toegekend IP-adres",
+                    "advertise_port": "Toegekende Poort",
                     "host_ip": "Host IP",
                     "listen_port": "Luisterpoort",
                     "name": "Naam",

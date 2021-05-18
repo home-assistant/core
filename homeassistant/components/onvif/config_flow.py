@@ -22,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-# pylint: disable=unused-import
 from .const import (
     CONF_DEVICE_ID,
     CONF_RTSP_TRANSPORT,
@@ -50,7 +49,7 @@ def wsdiscovery() -> list[Service]:
 
 async def async_discovery(hass) -> bool:
     """Return if there are devices that can be discovered."""
-    LOGGER.debug("Starting ONVIF discovery...")
+    LOGGER.debug("Starting ONVIF discovery")
     services = await hass.async_add_executor_job(wsdiscovery)
 
     devices = []
@@ -77,7 +76,6 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a ONVIF config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback

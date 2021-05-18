@@ -7,11 +7,11 @@ import voluptuous as vol
 from homeassistant.components import number
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from . import (
     CONF_COMMAND_TOPIC,
@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT number through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)

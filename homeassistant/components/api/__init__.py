@@ -1,5 +1,6 @@
 """Rest API for Home Assistant."""
 import asyncio
+from contextlib import suppress
 import json
 import logging
 
@@ -196,15 +197,11 @@ class APIDiscoveryView(HomeAssistantView):
             ATTR_VERSION: __version__,
         }
 
-        try:
+        with suppress(NoURLAvailableError):
             data["external_url"] = get_url(hass, allow_internal=False)
-        except NoURLAvailableError:
-            pass
 
-        try:
+        with suppress(NoURLAvailableError):
             data["internal_url"] = get_url(hass, allow_external=False)
-        except NoURLAvailableError:
-            pass
 
         # Set old base URL based on external or internal
         data["base_url"] = data["external_url"] or data["internal_url"]

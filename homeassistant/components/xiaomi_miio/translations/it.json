@@ -9,7 +9,7 @@
             "no_device_selected": "Nessun dispositivo selezionato, selezionare un dispositivo.",
             "unknown_device": "Il modello del dispositivo non \u00e8 noto, non \u00e8 possibile configurare il dispositivo utilizzando il flusso di configurazione."
         },
-        "flow_title": "Xiaomi Miio: {name}",
+        "flow_title": "{name}",
         "step": {
             "device": {
                 "data": {

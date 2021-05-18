@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Callable
 
 from pyisy.constants import (
     CMD_OFF,
@@ -26,9 +25,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -60,9 +59,9 @@ DEVICE_PARENT_REQUIRED = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> bool:
     """Set up the ISY994 binary sensor platform."""
     devices = []
@@ -281,15 +280,17 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
         """
         self._negative_node = child
 
-        if self._negative_node.status != ISY_VALUE_UNKNOWN:
-            # If the negative node has a value, it means the negative node is
-            # in use for this device. Next we need to check to see if the
-            # negative and positive nodes disagree on the state (both ON or
-            # both OFF).
-            if self._negative_node.status == self._node.status:
-                # The states disagree, therefore we cannot determine the state
-                # of the sensor until we receive our first ON event.
-                self._computed_state = None
+        # If the negative node has a value, it means the negative node is
+        # in use for this device. Next we need to check to see if the
+        # negative and positive nodes disagree on the state (both ON or
+        # both OFF).
+        if (
+            self._negative_node.status != ISY_VALUE_UNKNOWN
+            and self._negative_node.status == self._node.status
+        ):
+            # The states disagree, therefore we cannot determine the state
+            # of the sensor until we receive our first ON event.
+            self._computed_state = None
 
     def _negative_node_control_handler(self, event: object) -> None:
         """Handle an "On" control event from the "negative" node."""

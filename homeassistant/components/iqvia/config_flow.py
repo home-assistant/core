@@ -6,14 +6,13 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_ZIP_CODE, DOMAIN  # pylint:disable=unused-import
+from .const import CONF_ZIP_CODE, DOMAIN
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an IQVIA config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize the config flow."""

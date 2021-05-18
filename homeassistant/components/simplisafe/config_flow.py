@@ -13,7 +13,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
 from . import async_get_client_id
-from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
+from .const import DOMAIN, LOGGER
 
 FULL_DATA_SCHEMA = vol.Schema(
     {
@@ -29,7 +29,6 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a SimpliSafe config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize the config flow."""

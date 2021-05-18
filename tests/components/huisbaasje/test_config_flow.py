@@ -26,8 +26,6 @@ async def test_form(hass):
         "huisbaasje.Huisbaasje.get_user_id",
         return_value="test-id",
     ) as mock_get_user_id, patch(
-        "homeassistant.components.huisbaasje.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.huisbaasje.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -49,7 +47,6 @@ async def test_form(hass):
     }
     assert len(mock_authenticate.mock_calls) == 1
     assert len(mock_get_user_id.mock_calls) == 1
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -94,7 +91,7 @@ async def test_form_cannot_connect(hass):
         )
 
     assert form_result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert form_result["errors"] == {"base": "connection_exception"}
+    assert form_result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_unknown_error(hass):
@@ -139,8 +136,6 @@ async def test_form_entry_exists(hass):
     with patch("huisbaasje.Huisbaasje.authenticate", return_value=None), patch(
         "huisbaasje.Huisbaasje.get_user_id",
         return_value="test-id",
-    ), patch(
-        "homeassistant.components.huisbaasje.async_setup", return_value=True
     ), patch(
         "homeassistant.components.huisbaasje.async_setup_entry",
         return_value=True,

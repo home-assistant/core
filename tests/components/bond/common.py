@@ -1,8 +1,10 @@
 """Common methods used across tests for Bond."""
+from __future__ import annotations
+
 from asyncio import TimeoutError as AsyncIOTimeoutError
 from contextlib import nullcontext
 from datetime import timedelta
-from typing import Any, Dict, Optional
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from homeassistant import core
@@ -54,14 +56,14 @@ async def setup_bond_entity(
 async def setup_platform(
     hass: core.HomeAssistant,
     platform: str,
-    discovered_device: Dict[str, Any],
+    discovered_device: dict[str, Any],
     *,
     bond_device_id: str = "bond-device-id",
-    bond_version: Dict[str, Any] = None,
-    props: Dict[str, Any] = None,
-    state: Dict[str, Any] = None,
-    bridge: Dict[str, Any] = None,
-    token: Dict[str, Any] = None,
+    bond_version: dict[str, Any] = None,
+    props: dict[str, Any] = None,
+    state: dict[str, Any] = None,
+    bridge: dict[str, Any] = None,
+    token: dict[str, Any] = None,
 ):
     """Set up the specified Bond platform."""
     mock_entry = MockConfigEntry(
@@ -70,26 +72,29 @@ async def setup_platform(
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.bond.PLATFORMS", [platform]):
-        with patch_bond_version(return_value=bond_version), patch_bond_bridge(
-            return_value=bridge
-        ), patch_bond_token(return_value=token), patch_bond_device_ids(
-            return_value=[bond_device_id]
-        ), patch_start_bpup(), patch_bond_device(
-            return_value=discovered_device
-        ), patch_bond_device_properties(
-            return_value=props
-        ), patch_bond_device_state(
-            return_value=state
-        ):
-            assert await async_setup_component(hass, BOND_DOMAIN, {})
-            await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.bond.PLATFORMS", [platform]
+    ), patch_bond_version(return_value=bond_version), patch_bond_bridge(
+        return_value=bridge
+    ), patch_bond_token(
+        return_value=token
+    ), patch_bond_device_ids(
+        return_value=[bond_device_id]
+    ), patch_start_bpup(), patch_bond_device(
+        return_value=discovered_device
+    ), patch_bond_device_properties(
+        return_value=props
+    ), patch_bond_device_state(
+        return_value=state
+    ):
+        assert await async_setup_component(hass, BOND_DOMAIN, {})
+        await hass.async_block_till_done()
 
     return mock_entry
 
 
 def patch_bond_version(
-    enabled: bool = True, return_value: Optional[dict] = None, side_effect=None
+    enabled: bool = True, return_value: dict | None = None, side_effect=None
 ):
     """Patch Bond API version endpoint."""
     if not enabled:
@@ -106,7 +111,7 @@ def patch_bond_version(
 
 
 def patch_bond_bridge(
-    enabled: bool = True, return_value: Optional[dict] = None, side_effect=None
+    enabled: bool = True, return_value: dict | None = None, side_effect=None
 ):
     """Patch Bond API bridge endpoint."""
     if not enabled:
@@ -127,7 +132,7 @@ def patch_bond_bridge(
 
 
 def patch_bond_token(
-    enabled: bool = True, return_value: Optional[dict] = None, side_effect=None
+    enabled: bool = True, return_value: dict | None = None, side_effect=None
 ):
     """Patch Bond API token endpoint."""
     if not enabled:
@@ -203,7 +208,7 @@ def patch_bond_device_state(return_value=None, side_effect=None):
 
 
 async def help_test_entity_available(
-    hass: core.HomeAssistant, domain: str, device: Dict[str, Any], entity_id: str
+    hass: core.HomeAssistant, domain: str, device: dict[str, Any], entity_id: str
 ):
     """Run common test to verify available property."""
     await setup_platform(hass, domain, device)

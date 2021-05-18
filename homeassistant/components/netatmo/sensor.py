@@ -1,6 +1,7 @@
 """Support for the Netatmo Weather Service."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
@@ -260,7 +261,7 @@ async def async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) ->
     async_dispatcher_send(hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}")
 
 
-class NetatmoSensor(NetatmoBase):
+class NetatmoSensor(NetatmoBase, SensorEntity):
     """Implementation of a Netatmo sensor."""
 
     def __init__(self, data_handler, data_class_name, module_info, sensor_type):
@@ -332,7 +333,7 @@ class NetatmoSensor(NetatmoBase):
         return self._enabled_default
 
     @callback
-    def async_update_callback(self):
+    def async_update_callback(self):  # noqa: C901
         """Update the entity's state."""
         if self._data is None:
             if self._state is None:
@@ -489,7 +490,7 @@ def process_wifi(strength):
     return "Full"
 
 
-class NetatmoPublicSensor(NetatmoBase):
+class NetatmoPublicSensor(NetatmoBase, SensorEntity):
     """Represent a single sensor in a Netatmo."""
 
     def __init__(self, data_handler, area, sensor_type):
@@ -640,7 +641,7 @@ class NetatmoPublicSensor(NetatmoBase):
         elif self.type == "guststrength":
             data = self._data.get_latest_gust_strengths()
 
-        if not data:
+        if data is None:
             if self._state is None:
                 return
             _LOGGER.debug(
@@ -649,8 +650,8 @@ class NetatmoPublicSensor(NetatmoBase):
             self._state = None
             return
 
-        values = [x for x in data.values() if x is not None]
-        if self._mode == "avg":
-            self._state = round(sum(values) / len(values), 1)
-        elif self._mode == "max":
-            self._state = max(values)
+        if values := [x for x in data.values() if x is not None]:
+            if self._mode == "avg":
+                self._state = round(sum(values) / len(values), 1)
+            elif self._mode == "max":
+                self._state = max(values)

@@ -6,6 +6,7 @@
         "error": {
             "invalid_auth": "Autenticazione non valida"
         },
+        "flow_title": "{ip}",
         "step": {
             "user": {
                 "data": {
