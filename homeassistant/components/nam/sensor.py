@@ -22,7 +22,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add a Nettigo Air Monitor entities from a config_entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: NAMDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors: list[NAMSensor | NAMSensorUptime] = []
     for sensor in SENSORS:
