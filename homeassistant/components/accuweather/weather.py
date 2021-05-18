@@ -42,9 +42,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add a AccuWeather weather entity from a config_entry."""
-    name = entry.data[CONF_NAME]
+    name: str = entry.data[CONF_NAME]
 
-    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
+    coordinator: AccuWeatherDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        COORDINATOR
+    ]
 
     async_add_entities([AccuWeatherEntity(name, coordinator)])
 

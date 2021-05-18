@@ -32,11 +32,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add AccuWeather entities from a config_entry."""
-    name = entry.data[CONF_NAME]
+    name: str = entry.data[CONF_NAME]
 
-    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
+    coordinator: AccuWeatherDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        COORDINATOR
+    ]
 
-    sensors = []
+    sensors: list[AccuWeatherSensor] = []
     for sensor in SENSOR_TYPES:
         sensors.append(AccuWeatherSensor(name, sensor, coordinator))
 
@@ -69,6 +71,7 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         if forecast_day is None:
             self._description = SENSOR_TYPES[kind]
+            self._sensor_data: dict[str, Any]
             if kind == "Precipitation":
                 self._sensor_data = coordinator.data["PrecipitationSummary"][kind]
             else:
