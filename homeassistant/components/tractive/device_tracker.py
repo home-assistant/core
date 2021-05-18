@@ -5,8 +5,10 @@ import logging
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DOMAIN
+from .const import DOMAIN, TRACKER_STATUS_RECEIVED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +53,7 @@ class TractiveDeviceTracker(TrackerEntity):
         self._battery_level = hw_info["battery_level"]
         self._latitude = pos_report["latlong"][0]
         self._longitude = pos_report["latlong"][1]
+        self._accuracy = pos_report["pos_uncertainty"]
 
     @property
     def name(self):
@@ -97,6 +100,30 @@ class TractiveDeviceTracker(TrackerEntity):
         return self._longitude
 
     @property
+    def location_accuracy(self):
+        """Return the gps accuracy of the device."""
+        return self._accuracy
+
+    @property
     def battery_level(self):
         """Return the battery level of the device."""
         return self._battery_level
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+
+        @callback
+        def handle_status_update(event):
+            self._latitude = event["latitude"]
+            self._longitude = event["longitude"]
+            self._battery_level = event["battery_level"]
+            self._accuracy = event["accuracy"]
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{TRACKER_STATUS_RECEIVED}-{self._trackable['device_id']}",
+                handle_status_update,
+            )
+        )

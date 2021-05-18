@@ -9,8 +9,9 @@ import aiotractive
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN
+from .const import DOMAIN, TRACKER_STATUS_RECEIVED
 
 PLATFORMS = ["device_tracker"]
 
@@ -28,10 +29,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = aiotractive.Tractive(data[CONF_USERNAME], data[CONF_PASSWORD])
 
     tractive = TractiveClient(hass, client)
-    tractive.subscribe()
     hass.data[DOMAIN][entry.entry_id] = tractive
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await asyncio.sleep(5)
+    tractive.subscribe()
 
     async def cancel_listen_task(_):
         await tractive.unsubscribe()
@@ -81,5 +83,21 @@ class TractiveClient:
 
     async def _listen(self):
         async for event in self._client.events():
-            pass
-            # _LOGGER.warning(event)
+            if event["message"] != "tracker_status":
+                continue
+            tracker_id = event["tracker_id"]
+            battery_level = event["hardware"]["battery_level"]
+            latitude = event["position"]["latlong"][0]
+            longitude = event["position"]["latlong"][1]
+            accuracy = event["position"]["accuracy"]
+
+            async_dispatcher_send(
+                self._hass,
+                f"{TRACKER_STATUS_RECEIVED}-{tracker_id}",
+                {
+                    "battery_level": battery_level,
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "accuracy": accuracy,
+                },
+            )
