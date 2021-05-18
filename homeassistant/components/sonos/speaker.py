@@ -386,7 +386,7 @@ class SonosSpeaker:
         if event is None:
             return
 
-        new_available_alarms, all_alarm_ids = await self.hass.async_add_executor_job(
+        self.available_alarms, all_alarm_ids = await self.hass.async_add_executor_job(
             fetch_alarms_for_speaker, self.soco
         )
 
@@ -394,11 +394,12 @@ class SonosSpeaker:
             if alarm_id not in all_alarm_ids:
                 self.hass.data[DATA_SONOS].alarms.remove(alarm_id)
 
-        if new_available_alarms != self.available_alarms:
-            self.available_alarms = new_available_alarms
-            dispatcher_send(self.hass, SONOS_CREATE_ALARM, self)
-
         async_dispatcher_send(self.hass, SONOS_ALARM_UPDATE, self)
+
+        for alarm in self.available_alarms:
+            if alarm.alarm_id not in self.hass.data[DATA_SONOS].alarms:
+                dispatcher_send(self.hass, SONOS_CREATE_ALARM, self)
+
         self.async_write_entity_states()
 
     async def async_update_battery_info(self, battery_dict: dict[str, Any]) -> None:
