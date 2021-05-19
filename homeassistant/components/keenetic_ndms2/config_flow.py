@@ -1,7 +1,6 @@
 """Config flow for Keenetic NDMS2."""
 from __future__ import annotations
 
-from typing import Any
 from urllib.parse import urlparse
 
 from ndms2_client import Client, ConnectionException, InterfaceInfo, TelnetConnection
@@ -18,7 +17,9 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_CONSIDER_HOME,
@@ -49,13 +50,11 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return KeeneticOptionsFlowHandler(config_entry)
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            host = self.context.get(CONF_HOST, user_input.get(CONF_HOST))
+            host = self.context.get(CONF_HOST) or user_input[CONF_HOST]
             self._async_abort_entries_match({CONF_HOST: host})
 
             _client = Client(
@@ -97,12 +96,12 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+        self, user_input: ConfigType | None = None
+    ) -> FlowResult:
         """Import a config entry."""
         return await self.async_step_user(user_input)
 
-    async def async_step_ssdp(self, discovery_info: dict[str, Any]) -> dict[str, Any]:
+    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
         """Handle a discovered device."""
         friendly_name = discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "")
 
@@ -137,8 +136,8 @@ class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
         self._interface_options = {}
 
     async def async_step_init(
-        self, _user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+        self, _user_input: ConfigType | None = None
+    ) -> FlowResult:
         """Manage the options."""
         router: KeeneticRouter = self.hass.data[DOMAIN][self.config_entry.entry_id][
             ROUTER
@@ -155,9 +154,7 @@ class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
         }
         return await self.async_step_user()
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
         """Manage the device tracker options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

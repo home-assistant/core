@@ -18,7 +18,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "no_udn": "SSDP discovery info has no UDN",
-      "not_keenetic_ndms2": "Discovered item is no a Keenetic router"
+      "not_keenetic_ndms2": "Discovered item is not a Keenetic router"
     }
   },
   "options": {

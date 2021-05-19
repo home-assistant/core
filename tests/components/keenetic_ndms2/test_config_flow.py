@@ -44,7 +44,7 @@ def mock_keenetic_connect_failed():
         yield
 
 
-async def test_flow_works(hass: HomeAssistant, connect):
+async def test_flow_works(hass: HomeAssistant, connect) -> None:
     """Test config flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -68,7 +68,7 @@ async def test_flow_works(hass: HomeAssistant, connect):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import_works(hass: HomeAssistant, connect):
+async def test_import_works(hass: HomeAssistant, connect) -> None:
     """Test config flow."""
 
     with patch(
@@ -87,7 +87,7 @@ async def test_import_works(hass: HomeAssistant, connect):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_options(hass: HomeAssistant):
+async def test_options(hass: HomeAssistant) -> None:
     """Test updating options."""
     entry = MockConfigEntry(domain=keenetic.DOMAIN, data=MOCK_DATA)
     entry.add_to_hass(hass)
@@ -128,7 +128,7 @@ async def test_options(hass: HomeAssistant):
     assert result2["data"] == MOCK_OPTIONS
 
 
-async def test_host_already_configured(hass: HomeAssistant, connect):
+async def test_host_already_configured(hass: HomeAssistant, connect) -> None:
     """Test host already configured."""
 
     entry = MockConfigEntry(
@@ -148,7 +148,7 @@ async def test_host_already_configured(hass: HomeAssistant, connect):
     assert result2["reason"] == "already_configured"
 
 
-async def test_connection_error(hass: HomeAssistant, connect_error):
+async def test_connection_error(hass: HomeAssistant, connect_error) -> None:
     """Test error when connection is unsuccessful."""
 
     result = await hass.config_entries.flow.async_init(
@@ -161,7 +161,7 @@ async def test_connection_error(hass: HomeAssistant, connect_error):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_ssdp_works(hass: HomeAssistant, connect):
+async def test_ssdp_works(hass: HomeAssistant, connect) -> None:
     """Test host already configured and discovered."""
 
     discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
@@ -192,7 +192,7 @@ async def test_ssdp_works(hass: HomeAssistant, connect):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_ssdp_already_configured(hass: HomeAssistant):
+async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
     """Test host already configured and discovered."""
 
     entry = MockConfigEntry(
@@ -211,7 +211,7 @@ async def test_ssdp_already_configured(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
-async def test_ssdp_reject_no_udn(hass: HomeAssistant):
+async def test_ssdp_reject_no_udn(hass: HomeAssistant) -> None:
     """Discovered device has no UDN."""
 
     discovery_info = {
@@ -229,7 +229,7 @@ async def test_ssdp_reject_no_udn(hass: HomeAssistant):
     assert result["reason"] == "no_udn"
 
 
-async def test_ssdp_reject_non_keenetic(hass: HomeAssistant):
+async def test_ssdp_reject_non_keenetic(hass: HomeAssistant) -> None:
     """Discovered device does not look like a keenetic router."""
 
     discovery_info = {
