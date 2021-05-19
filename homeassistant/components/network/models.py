@@ -25,6 +25,7 @@ class Adapter(TypedDict):
 
     name: str
     enabled: bool
+    auto: bool
     default: bool
     ipv6: list[IPv6ConfiguredAddress]
     ipv4: list[IPv4ConfiguredAddress]
