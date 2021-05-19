@@ -21,7 +21,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from icmplib import NameLookupError, async_ping
 
-from . import async_get_next_ping_id
 from .const import DOMAIN, ICMP_TIMEOUT, PING_PRIVS, PING_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
@@ -140,10 +139,10 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
         attributes = last_state.attributes
         self._ping.is_alive = True
         self._ping.data = {
-            "min": attributes[ATTR_ROUND_TRIP_TIME_AVG],
+            "min": attributes[ATTR_ROUND_TRIP_TIME_MIN],
             "max": attributes[ATTR_ROUND_TRIP_TIME_MAX],
-            "avg": attributes[ATTR_ROUND_TRIP_TIME_MDEV],
-            "mdev": attributes[ATTR_ROUND_TRIP_TIME_MIN],
+            "avg": attributes[ATTR_ROUND_TRIP_TIME_AVG],
+            "mdev": attributes[ATTR_ROUND_TRIP_TIME_MDEV],
         }
 
 
@@ -175,7 +174,6 @@ class PingDataICMPLib(PingData):
                 self._ip_address,
                 count=self._count,
                 timeout=ICMP_TIMEOUT,
-                id=async_get_next_ping_id(self.hass),
                 privileged=self._privileged,
             )
         except NameLookupError:
