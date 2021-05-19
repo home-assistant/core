@@ -618,7 +618,7 @@ fortiosapi==0.10.8
 freebox-api==0.0.10
 
 # homeassistant.components.free_mobile
-freesms==0.1.2
+freesms==0.2.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
@@ -735,7 +735,7 @@ hass-nabucasa==0.43.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.2.12
+hatasmota==0.2.13
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.2
@@ -1286,7 +1286,7 @@ pyarlo==0.2.4
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==4.2.2
+pyatmo==4.2.3
 
 # homeassistant.components.atome
 pyatome==0.1.1
@@ -1741,7 +1741,7 @@ pysnmp==4.4.12
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.45
+pysonos==0.0.47
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
