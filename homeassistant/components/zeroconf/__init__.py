@@ -68,11 +68,14 @@ MAX_NAME_LEN = 63
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_DEFAULT_INTERFACE): cv.boolean,
-                vol.Optional(CONF_IPV6, default=DEFAULT_IPV6): cv.boolean,
-            }
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_DEFAULT_INTERFACE),
+            vol.Schema(
+                {
+                    vol.Optional(CONF_DEFAULT_INTERFACE): cv.boolean,
+                    vol.Optional(CONF_IPV6, default=DEFAULT_IPV6): cv.boolean,
+                }
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
