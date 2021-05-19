@@ -117,13 +117,13 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     async def _async_set_arm_state(self, state) -> None:
         """Send set arm state command."""
         if state == "arm":
-            await self.hass.async_add_executor_job(self.coordinator._yale.arm_full)  # type: ignore[attr-defined] # pylint: disable=protected-access
+            await self.hass.async_add_executor_job(self.coordinator.yale.arm_full)  # type: ignore[attr-defined] # pylint: disable=protected-access
             self._state = STATE_ALARM_ARMED_AWAY
         elif state == "home":
-            await self.hass.async_add_executor_job(self.coordinator._yale.arm_partial)  # type: ignore[attr-defined] # pylint: disable=protected-access
+            await self.hass.async_add_executor_job(self.coordinator.yale.arm_partial)  # type: ignore[attr-defined] # pylint: disable=protected-access
             self._state = STATE_ALARM_ARMED_HOME
         elif state == "disarm":
-            await self.hass.async_add_executor_job(self.coordinator._yale.disarm)  # type: ignore[attr-defined] # pylint: disable=protected-access
+            await self.hass.async_add_executor_job(self.coordinator.yale.disarm)  # type: ignore[attr-defined] # pylint: disable=protected-access
             self._state = STATE_ALARM_DISARMED
 
         LOGGER.debug("Yale set arm state %s", state)

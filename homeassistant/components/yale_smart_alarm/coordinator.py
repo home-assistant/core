@@ -20,7 +20,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize the Verisure hub."""
         self._entry = entry
         self._hass = hass
-        self._yale = None
+        self.yale = None
 
         super().__init__(
             hass,
@@ -32,8 +32,8 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch data from Yale."""
 
-        if self._yale is None:
-            self._yale = await self._hass.async_add_executor_job(
+        if self.yale is None:
+            self.yale = await self._hass.async_add_executor_job(
                 YaleSmartAlarmClient,
                 self._entry.data[CONF_USERNAME],
                 self._entry.data[CONF_PASSWORD],
@@ -41,13 +41,13 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             arm_status = await self._hass.async_add_executor_job(
-                self._yale.get_armed_status  # type: ignore[attr-defined]
+                self.yale.get_armed_status  # type: ignore[attr-defined]
             )
             door_locks = await self._hass.async_add_executor_job(
-                self._yale.get_locks_status  # type: ignore[attr-defined]
+                self.yale.get_locks_status  # type: ignore[attr-defined]
             )
             door_status = await self._hass.async_add_executor_job(
-                self._yale.get_doors_status  # type: ignore[attr-defined]
+                self.yale.get_doors_status  # type: ignore[attr-defined]
             )
 
         except AuthenticationError as error:
