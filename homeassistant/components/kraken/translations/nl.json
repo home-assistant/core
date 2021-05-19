@@ -3,8 +3,16 @@
         "abort": {
             "already_configured": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
         },
+        "error": {
+            "one": "Leeg",
+            "other": "Leeg"
+        },
         "step": {
             "user": {
+                "data": {
+                    "one": "Leeg",
+                    "other": "Leeg"
+                },
                 "description": "Wil je beginnen met instellen?"
             }
         }
@@ -13,7 +21,8 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Update-interval"
+                    "scan_interval": "Update-interval",
+                    "tracked_asset_pairs": "Bijgehouden activaparen"
                 }
             }
         }
