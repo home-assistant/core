@@ -1,7 +1,7 @@
 """Network helper class for the network integration."""
 from __future__ import annotations
 
-from ipaddress import IPv4Address, IPv6Address, ip_address
+from ipaddress import ip_address
 import logging
 from typing import Any, Iterable, cast
 
@@ -137,7 +137,8 @@ def _adapter_has_external_address(adapter: Adapter) -> bool:
     )
 
 
-def _has_external_address(ip_addr: IPv4Address | IPv6Address):
+def _has_external_address(ip_str: str):
+    ip_addr = ip_address(ip_str)
     return (
         not ip_addr.is_multicast
         and not ip_addr.is_loopback
@@ -159,21 +160,29 @@ def load_adapters(next_hop: str | None) -> list[Adapter]:
 
         for ip_config in adapter.ips:
             if ip_config.is_IPv6:
+                try:
+                    ip_addr = ip_address(ip_config.ip[0])
+                except ValueError:
+                    continue
                 ip_v6: IPv6ConfiguredAddress = {
-                    "address": ip_address(ip_config.ip[0]),
+                    "address": ip_config.ip[0],
                     "flowinfo": ip_config.ip[1],
                     "scope_id": ip_config.ip[2],
                     "network_prefix": ip_config.network_prefix,
                 }
-                if next_hop and ip_v6["address"] == next_hop_address:
+                if next_hop and ip_addr == next_hop_address:
                     default = True
                 ip_v6s.append(ip_v6)
             else:
+                try:
+                    ip_addr = ip_address(ip_config.ip)
+                except ValueError:
+                    continue
                 ip_v4: IPv4ConfiguredAddress = {
-                    "address": ip_address(ip_config.ip),
+                    "address": ip_config.ip,
                     "network_prefix": ip_config.network_prefix,
                 }
-                if next_hop and ip_v4["address"] == next_hop_address:
+                if next_hop and ip_addr == next_hop_address:
                     default = True
                 ip_v4s.append(ip_v4)
 
