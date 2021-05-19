@@ -165,14 +165,20 @@ class SpeedTestDataCoordinator(DataUpdateCoordinator):
             server_id = self.config_entry.options.get(CONF_SERVER_ID)
             self.api.get_servers(servers=[server_id])
 
-        self.api.get_best_server()
-        _LOGGER.debug(
-            "Executing speedtest.net speed test with server_id: %s", self.api.best["id"]
-        )
+        try:
+            self.api.get_best_server()
+            _LOGGER.debug(
+                "Executing speedtest.net speed test with server_id: %s",
+                self.api.best["id"],
+            )
 
-        self.api.download()
-        self.api.upload()
-        return self.api.results.dict()
+            self.api.download()
+            self.api.upload()
+            return self.api.results.dict()
+        except speedtest.SpeedtestBestServerFailure as err:
+            raise UpdateFailed(
+                "Failed to retrieve best server for speedtest", err
+            ) from err
 
     async def async_update(self, *_):
         """Update Speedtest data."""
