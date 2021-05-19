@@ -14,7 +14,7 @@ from homeassistant.helpers.storage import Store
 from .const import (
     ATTR_CONFIGURED_ADAPTERS,
     DEFAULT_CONFIGURED_ADAPTERS,
-    INTERFACES_SCHEMA,
+    NETWORK_CONFIG_SCHEMA,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
@@ -80,7 +80,7 @@ class Network:
 
     async def async_reconfig(self, config: dict[str, Any]) -> None:
         """Reconfigure network."""
-        config = INTERFACES_SCHEMA(config)
+        config = NETWORK_CONFIG_SCHEMA(config)
         self._data[ATTR_CONFIGURED_ADAPTERS] = config[ATTR_CONFIGURED_ADAPTERS]
         for adapter in self._adapters:
             adapter["enabled"] = False

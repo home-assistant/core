@@ -7,10 +7,14 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 
-from .const import ATTR_ADAPTERS, ATTR_CONFIGURED_ADAPTERS, DOMAIN
+from .const import (
+    ATTR_ADAPTERS,
+    ATTR_CONFIGURED_ADAPTERS,
+    DOMAIN,
+    NETWORK_CONFIG_SCHEMA,
+)
 from .models import Adapter
 from .network import Network
 
@@ -65,9 +69,7 @@ async def websocket_network_adapters(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "network/configure",
-        vol.Required(ATTR_CONFIGURED_ADAPTERS): vol.Schema(
-            vol.All(cv.ensure_list, [cv.string])
-        ),
+        vol.Required("config", default={}): NETWORK_CONFIG_SCHEMA,
     }
 )
 async def websocket_network_adapters_configure(
@@ -78,7 +80,7 @@ async def websocket_network_adapters_configure(
     """Update network config."""
     network: Network = hass.data[DOMAIN]
 
-    await network.async_reconfig(msg)
+    await network.async_reconfig(msg["config"])
 
     connection.send_result(
         msg["id"],
