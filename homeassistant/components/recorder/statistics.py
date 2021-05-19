@@ -112,7 +112,6 @@ def get_last_statistics(hass, number_of_stats, statistic_id=None):
 
         if statistic_id is not None:
             baked_query += lambda q: q.filter_by(statistic_id=bindparam("statistic_id"))
-            statistic_id = statistic_id.lower()
 
         baked_query += lambda q: q.order_by(
             Statistics.statistic_id, Statistics.start.desc()
