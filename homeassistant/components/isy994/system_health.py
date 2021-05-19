@@ -20,7 +20,9 @@ async def system_health_info(hass):
     """Get info for the info page."""
 
     health_info = {}
-    config_entry_id = next(iter(hass.data[DOMAIN]))  # Only first ISY is supported for now
+    config_entry_id = next(
+        iter(hass.data[DOMAIN])
+    )  # Only first ISY is supported for now
     isy: ISY = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
 
     entry = hass.config_entries.async_get_entry(config_entry_id)
