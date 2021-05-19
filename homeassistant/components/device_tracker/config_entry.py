@@ -82,19 +82,19 @@ class TrackerEntity(BaseTrackerEntity):
         return 0
 
     @property
-    def location_name(self) -> str:
+    def location_name(self) -> str | None:
         """Return a location name for the current location of the device."""
         return None
 
     @property
-    def latitude(self) -> float:
+    def latitude(self) -> float | None:
         """Return latitude value of the device."""
-        return NotImplementedError
+        raise NotImplementedError
 
     @property
-    def longitude(self) -> float:
+    def longitude(self) -> float | None:
         """Return longitude value of the device."""
-        return NotImplementedError
+        raise NotImplementedError
 
     @property
     def state(self):
@@ -102,7 +102,7 @@ class TrackerEntity(BaseTrackerEntity):
         if self.location_name:
             return self.location_name
 
-        if self.latitude is not None:
+        if self.latitude is not None and self.longitude is not None:
             zone_state = zone.async_active_zone(
                 self.hass, self.latitude, self.longitude, self.location_accuracy
             )

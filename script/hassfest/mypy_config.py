@@ -44,7 +44,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.deconz.*",
     "homeassistant.components.demo.*",
     "homeassistant.components.denonavr.*",
-    "homeassistant.components.device_tracker.*",
     "homeassistant.components.devolo_home_control.*",
     "homeassistant.components.dhcp.*",
     "homeassistant.components.directv.*",
