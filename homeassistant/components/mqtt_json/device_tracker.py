@@ -5,7 +5,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import mqtt
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    PLATFORM_SCHEMA as PLATFORM_SCHEMA_BASE,
+)
 from homeassistant.components.mqtt import CONF_QOS
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -29,7 +31,7 @@ GPS_JSON_PAYLOAD_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend(
+PLATFORM_SCHEMA = PLATFORM_SCHEMA_BASE.extend(mqtt.SCHEMA_BASE).extend(
     {vol.Required(CONF_DEVICES): {cv.string: mqtt.valid_subscribe_topic}}
 )
 

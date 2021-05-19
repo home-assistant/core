@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PLATFORM_SCHEMA_BASE,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
@@ -24,7 +24,7 @@ DEFAULT_HOST = "192.168.1.254"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PLATFORM_SCHEMA_BASE.extend(
     {vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string}
 )
 
