@@ -1,4 +1,4 @@
-"""Entity representing a Sonos battery level."""
+"""Entity representing a Sonos Alarm."""
 from __future__ import annotations
 
 import datetime
@@ -12,7 +12,6 @@ from homeassistant.const import ATTR_TIME
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import SonosData
 from .const import (
     DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
@@ -42,7 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for alarm in speaker.available_alarms:
             if alarm.alarm_id not in data_sonos.alarms:
                 _LOGGER.debug("Creating alarm with id %s", alarm.alarm_id)
-                entity = SonosAlarmEntity(alarm, data_sonos, speaker)
+                entity = SonosAlarmEntity(alarm, speaker)
                 async_add_entities([entity])
                 data_sonos.alarms.append(alarm.alarm_id)
                 config_entry.async_on_unload(
@@ -56,23 +55,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-def get_speaker_from_uid(uid: str, data_sonos: SonosData) -> SonosSpeaker:
-    """Get speaker from player uid."""
-    for discovered_uid in data_sonos.discovered.keys():
-        if discovered_uid == uid:
-            return data_sonos.discovered[discovered_uid]
-
-    raise RuntimeError("No configured Sonos speaker has been found to match the alarm.")
-
-
 class SonosAlarmEntity(SonosEntity, SwitchEntity):
     """Representation of a Sonos Alarm entity."""
 
-    def __init__(
-        self, alarm: Alarm, data_sonos: SonosData, speaker: SonosSpeaker
-    ) -> None:
+    def __init__(self, alarm: Alarm, speaker: SonosSpeaker) -> None:
         """Initialize the switch."""
-        self.data_sonos = data_sonos
         self.alarm = alarm
         self.entity_id = ENTITY_ID_FORMAT.format(f"sonos_alarm_{self.alarm_id}")
         self._is_on = self.alarm.enabled
@@ -116,7 +103,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
 
     async def async_remove_if_not_available(self):
         """Remove alarm entity if not available."""
-        if self.alarm.alarm_id in self.data_sonos.alarms:
+        if self.alarm.alarm_id in self.hass.data[DATA_SONOS].alarms:
             return
 
         _LOGGER.debug("The alarm is removed from hass because it has been deleted")
@@ -159,7 +146,14 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         """Update the state of the alarm."""
         _LOGGER.debug("Updating the state of the alarm")
         if self.speaker.soco.uid != self.alarm.zone.uid:
-            self.speaker = get_speaker_from_uid(self.alarm.zone.uid, self.data_sonos)
+            self.speaker = self.hass.data[DATA_SONOS].discovered.get(
+                self.alarm.zone.uid
+            )
+            if self.speaker is None:
+                raise RuntimeError(
+                    "No configured Sonos speaker has been found to match the alarm."
+                )
+
             self.speaker.available_alarms.add(self.alarm)
             self._update_device()
 
@@ -194,7 +188,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         return self._is_on
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return attributes of Sonos alarm switch."""
         return self._attributes
 

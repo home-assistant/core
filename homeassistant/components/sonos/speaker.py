@@ -398,7 +398,7 @@ class SonosSpeaker:
 
         for alarm in self.available_alarms:
             if alarm.alarm_id not in self.hass.data[DATA_SONOS].alarms:
-                dispatcher_send(self.hass, SONOS_CREATE_ALARM, self)
+                async_dispatcher_send(self.hass, SONOS_CREATE_ALARM, self)
 
         self.async_write_entity_states()
 
