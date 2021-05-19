@@ -26,7 +26,9 @@ MDNS_TARGET_IP = "224.0.0.251"
 _LOGGER = logging.getLogger(__name__)
 
 
-ZC_CONF_DEFAULT_INTERFACE = "default_interface"
+ZC_CONF_DEFAULT_INTERFACE = (
+    "default_interface"  # cannot import from zeroconf due to circular dep
+)
 
 
 class Network:
@@ -68,22 +70,29 @@ class Network:
             self._data[ATTR_CONFIGURED_ADAPTERS] = _adapters_with_exernal_addresses(
                 self._adapters
             )
-            await self.async_save(self._data)
+            await self._async_save()
 
     def async_configure(self) -> None:
         """Configure from storage."""
         if not _enable_adapters(self._adapters, self._data[ATTR_CONFIGURED_ADAPTERS]):
             _auto_detect_adapters(self._adapters)
 
+    async def async_reconfig(self, config: dict[str, Any]) -> None:
+        """Reconfigure network."""
+        config = INTERFACES_SCHEMA(config)
+        self._data[ATTR_CONFIGURED_ADAPTERS] = config[ATTR_CONFIGURED_ADAPTERS]
+        for adapter in self._adapters:
+            adapter["enabled"] = False
+        _enable_adapters(self._adapters, self._data[ATTR_CONFIGURED_ADAPTERS])
+        await self._async_save()
+
     async def async_load(self) -> None:
         """Load config."""
         if stored := await self._store.async_load():
             self._data = cast(dict[str, Any], stored)
 
-    async def async_save(self, config: dict) -> None:
+    async def _async_save(self) -> None:
         """Save preferences."""
-        config = INTERFACES_SCHEMA(config)
-        self._data[ATTR_CONFIGURED_ADAPTERS] = config[ATTR_CONFIGURED_ADAPTERS]
         await self._store.async_save(self._data)
 
 

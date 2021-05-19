@@ -11,7 +11,7 @@ from .const import ATTR_ADAPTERS, ATTR_CONFIGURED_ADAPTERS, DOMAIN, INTERFACES_S
 from .models import Adapter
 from .network import Network
 
-ZEROCONF_DOMAIN = "zeroconf"
+ZEROCONF_DOMAIN = "zeroconf"  # cannot import from zeroconf due to circular dep
 
 
 @bind_hass
@@ -29,16 +29,16 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     await network.async_migrate_from_zeroconf(config.get(ZEROCONF_DOMAIN, {}))
     network.async_configure()
 
-    websocket_api.async_register_command(hass, websocket_network)
     websocket_api.async_register_command(hass, websocket_network_adapters)
+    websocket_api.async_register_command(hass, websocket_network_adapters_configure)
 
     return True
 
 
 @websocket_api.require_admin  # type: ignore[arg-type]
 @websocket_api.async_response
-@websocket_api.websocket_command({vol.Required("type"): "network"})
-async def websocket_network(
+@websocket_api.websocket_command({vol.Required("type"): "network/adapters"})
+async def websocket_network_adapters(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
     msg: dict,
@@ -58,11 +58,11 @@ async def websocket_network(
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "network/adapters",
+        vol.Required("type"): "network/adapters/configure",
         vol.Required("config", default={}): INTERFACES_SCHEMA,
     }
 )
-async def websocket_network_adapters(
+async def websocket_network_adapters_configure(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
     msg: dict,
@@ -70,7 +70,7 @@ async def websocket_network_adapters(
     """Update network config."""
     network: Network = hass.data[DOMAIN]
 
-    await network.async_save(msg[ATTR_CONFIGURED_ADAPTERS])
+    await network.async_reconfig(msg)
 
     connection.send_result(
         msg["id"],
