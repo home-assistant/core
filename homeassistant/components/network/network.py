@@ -149,53 +149,56 @@ def _ip_address_is_external(ip_addr: IPv4Address | IPv6Address) -> bool:
 def load_adapters(next_hop: str | None) -> list[Adapter]:
     """Load adapters."""
     adapters = ifaddr.get_adapters()
-    ha_adapters: list[Adapter] = []
-    if next_hop:
-        next_hop_address = ip_address(next_hop)
-    default_adapter_is_auto = False
+    next_hop_address = ip_address(next_hop) if next_hop else None
 
-    for adapter in adapters:
-        ip_v4s: list[IPv4ConfiguredAddress] = []
-        ip_v6s: list[IPv6ConfiguredAddress] = []
-        default = False
-        auto = False
+    ha_adapters: list[Adapter] = [
+        _ifaddr_adapter_to_ha(adapter, next_hop_address) for adapter in adapters
+    ]
 
-        for ip_config in adapter.ips:
-            if ip_config.is_IPv6:
-                try:
-                    ip_addr = ip_address(ip_config.ip[0])
-                except ValueError:
-                    continue
-                ip_v6s.append(_ip_v6_from_adapter(ip_config))
-            else:
-                try:
-                    ip_addr = ip_address(ip_config.ip)
-                except ValueError:
-                    continue
-                ip_v4s.append(_ip_v4_from_adapter(ip_config))
-
-            if next_hop and ip_addr == next_hop_address:
-                default = True
-            if default and _ip_address_is_external(ip_addr):
-                auto = True
-                default_adapter_is_auto = True
-
-        ha_adapter: Adapter = {
-            "name": adapter.nice_name,
-            "enabled": False,
-            "auto": auto,
-            "default": default,
-            "ipv4": ip_v4s,
-            "ipv6": ip_v6s,
-        }
-        ha_adapters.append(ha_adapter)
-
-    if not default_adapter_is_auto:
+    if not any(adapter["default"] and adapter["auto"] for adapter in ha_adapters):
         for adapter in ha_adapters:
             if _adapter_has_external_address(adapter):
                 adapter["auto"] = True
 
     return ha_adapters
+
+
+def _ifaddr_adapter_to_ha(
+    adapter: ifaddr.Adapter, next_hop_address: None | IPv4Address | IPv6Address
+) -> Adapter:
+    """Convert an ifaddr adapter to ha."""
+    ip_v4s: list[IPv4ConfiguredAddress] = []
+    ip_v6s: list[IPv6ConfiguredAddress] = []
+    default = False
+    auto = False
+
+    for ip_config in adapter.ips:
+        if ip_config.is_IPv6:
+            try:
+                ip_addr = ip_address(ip_config.ip[0])
+            except ValueError:
+                continue
+            ip_v6s.append(_ip_v6_from_adapter(ip_config))
+        else:
+            try:
+                ip_addr = ip_address(ip_config.ip)
+            except ValueError:
+                continue
+            ip_v4s.append(_ip_v4_from_adapter(ip_config))
+
+        if ip_addr == next_hop_address:
+            default = True
+            if _ip_address_is_external(ip_addr):
+                auto = True
+
+    return {
+        "name": adapter.nice_name,
+        "enabled": False,
+        "auto": auto,
+        "default": default,
+        "ipv4": ip_v4s,
+        "ipv6": ip_v6s,
+    }
 
 
 def _ip_v6_from_adapter(ip_config: ifaddr.IP) -> IPv6ConfiguredAddress:
