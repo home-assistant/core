@@ -1,7 +1,7 @@
 """Network helper class for the network integration."""
 from __future__ import annotations
 
-from ipaddress import ip_address
+from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 from typing import Any, Iterable, cast
 
@@ -76,7 +76,7 @@ class Network:
     def async_configure(self) -> None:
         """Configure from storage."""
         if not _enable_adapters(self._adapters, self.configured_adapters):
-            _auto_detect_adapters(self._adapters)
+            _enable_auto_detected_adapters(self._adapters)
 
     async def async_reconfig(self, config: dict[str, Any]) -> None:
         """Reconfigure network."""
@@ -111,14 +111,11 @@ def _enable_adapters(adapters: list[Adapter], enabled_interfaces: list[str]) -> 
     return found_adapter
 
 
-def _auto_detect_adapters(adapters: list[Adapter]) -> None:
-    """Enable the default adapter or all adapters with external addresses."""
-    for adapter in adapters:
-        if adapter["default"] and _adapter_has_external_address(adapter):
-            adapter["enabled"] = True
-            return
-
-    _enable_adapters(adapters, _adapters_with_exernal_addresses(adapters))
+def _enable_auto_detected_adapters(adapters: list[Adapter]) -> None:
+    """Enable auto detected adapters."""
+    _enable_adapters(
+        adapters, [adapter["name"] for adapter in adapters if adapter["auto"]]
+    )
 
 
 def _adapters_with_exernal_addresses(adapters: list[Adapter]) -> list[str]:
@@ -139,8 +136,11 @@ def _adapter_has_external_address(adapter: Adapter) -> bool:
     )
 
 
-def _has_external_address(ip_str: str):
-    ip_addr = ip_address(ip_str)
+def _has_external_address(ip_str: str) -> bool:
+    return _ip_address_is_external(ip_address(ip_str))
+
+
+def _ip_address_is_external(ip_addr: IPv4Address | IPv6Address) -> bool:
     return (
         not ip_addr.is_multicast
         and not ip_addr.is_loopback
@@ -154,6 +154,7 @@ def load_adapters(next_hop: str | None) -> list[Adapter]:
     ha_adapters: list[Adapter] = []
     if next_hop:
         next_hop_address = ip_address(next_hop)
+    default_adapter_is_auto = False
 
     for adapter in adapters:
         ip_v4s: list[IPv4ConfiguredAddress] = []
@@ -172,8 +173,6 @@ def load_adapters(next_hop: str | None) -> list[Adapter]:
                     "scope_id": ip_config.ip[2],
                     "network_prefix": ip_config.network_prefix,
                 }
-                if next_hop and ip_addr == next_hop_address:
-                    default = True
                 ip_v6s.append(ip_v6)
             else:
                 try:
@@ -184,18 +183,28 @@ def load_adapters(next_hop: str | None) -> list[Adapter]:
                     "address": str(ip_addr),
                     "network_prefix": ip_config.network_prefix,
                 }
-                if next_hop and ip_addr == next_hop_address:
-                    default = True
                 ip_v4s.append(ip_v4)
+
+            if next_hop and ip_addr == next_hop_address:
+                default = True
+            if default and _ip_address_is_external(ip_addr):
+                auto = True
+                default_adapter_is_auto = True
 
         ha_adapter: Adapter = {
             "name": adapter.nice_name,
             "enabled": False,
+            "auto": auto,
             "default": default,
             "ipv4": ip_v4s,
             "ipv6": ip_v6s,
         }
         ha_adapters.append(ha_adapter)
+
+    if not default_adapter_is_auto:
+        for adapter in ha_adapters:
+            if _adapter_has_external_address(adapter):
+                adapter["auto"] = True
 
     return ha_adapters
 
