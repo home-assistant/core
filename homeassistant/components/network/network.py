@@ -52,9 +52,9 @@ class Network:
 
     async def async_setup(self) -> None:
         """Set up the network config."""
-        self._next_broadcast_hop = await async_default_next_broadcast_hop(self.hass)
+        self._next_broadcast_hop = await _async_default_next_broadcast_hop(self.hass)
         await self.async_load()
-        self._adapters = load_adapters(self._next_broadcast_hop)
+        self._adapters = _load_adapters(self._next_broadcast_hop)
 
     async def async_migrate_from_zeroconf(self, zc_config: dict[str, Any]) -> None:
         """Migrate configuration from zeroconf."""
@@ -146,7 +146,7 @@ def _ip_address_is_external(ip_addr: IPv4Address | IPv6Address) -> bool:
     )
 
 
-def load_adapters(next_hop: str | None) -> list[Adapter]:
+def _load_adapters(next_hop: str | None) -> list[Adapter]:
     """Load adapters."""
     adapters = ifaddr.get_adapters()
     next_hop_address = ip_address(next_hop) if next_hop else None
@@ -232,7 +232,7 @@ def _first_ip_nexthop_from_route(routes: Iterable) -> str | None:
     return None
 
 
-async def async_default_next_broadcast_hop(hass: HomeAssistant) -> None | str:
+async def _async_default_next_broadcast_hop(hass: HomeAssistant) -> None | str:
     """Auto detect the default next broadcast hop."""
     try:
         routes: Iterable = await hass.async_add_executor_job(
