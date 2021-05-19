@@ -119,6 +119,6 @@ class SensorEntity(Entity):
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         if last_reset := self.last_reset:
-            return {ATTR_LAST_RESET: last_reset}
+            return {ATTR_LAST_RESET: last_reset.isoformat()}
 
         return None
