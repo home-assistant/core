@@ -3,7 +3,7 @@ from datetime import timedelta
 import json
 from unittest.mock import patch
 
-from homeassistant.components.metoffice.const import DOMAIN
+from homeassistant.components.metoffice.const import DOMAIN, METOFFICE_DATA
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.util import utcnow
 
@@ -43,6 +43,64 @@ async def test_site_cannot_connect(hass, requests_mock, legacy_patchable_time):
         sensor_name, sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
         sensor = hass.states.get(f"sensor.wavertree_{sensor_name}")
         assert sensor is None
+
+
+@patch(
+    "datapoint.Forecast.datetime.datetime",
+    NewDateTime,
+)
+async def test_site_list_cannot_update(hass, requests_mock, legacy_patchable_time):
+    """Test we handle cannot connect error."""
+
+    # all metoffice test data encapsulated in here
+    mock_json = json.loads(load_fixture("metoffice.json"))
+    all_sites = json.dumps(mock_json["all_sites"])
+    wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
+    wavertree_daily = json.dumps(mock_json["wavertree_daily"])
+
+    requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
+    requests_mock.get(
+        "/public/data/val/wxfcs/all/json/354107?res=3hourly", text=wavertree_hourly
+    )
+    requests_mock.get(
+        "/public/data/val/wxfcs/all/json/354107?res=daily", text=wavertree_daily
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=METOFFICE_CONFIG_WAVERTREE,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity = hass.states.get("weather.met_office_wavertree_3_hourly")
+    assert entity
+
+    entity = hass.states.get("weather.met_office_wavertree_daily")
+    assert entity
+
+    requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text="")
+    requests_mock.get(
+        "/public/data/val/wxfcs/all/json/354107?res=3hourly", text=wavertree_hourly
+    )
+    requests_mock.get(
+        "/public/data/val/wxfcs/all/json/354107?res=daily", text=wavertree_daily
+    )
+
+    # Make site list unavailable
+    data = hass.data[DOMAIN][entry.entry_id][METOFFICE_DATA]
+    await data.async_update_site()
+
+    future_time = utcnow() + timedelta(minutes=20)
+    async_fire_time_changed(hass, future_time)
+    await hass.async_block_till_done()
+
+    entity = hass.states.get("weather.met_office_wavertree_3_hourly")
+    assert entity.state == STATE_UNAVAILABLE
+
+    entity = hass.states.get("weather.met_office_wavertree_daily")
+    assert entity.state == STATE_UNAVAILABLE
 
 
 @patch(
