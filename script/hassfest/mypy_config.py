@@ -201,7 +201,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.system_log.*",
     "homeassistant.components.tado.*",
     "homeassistant.components.tasmota.*",
-    "homeassistant.components.tcp.*",
     "homeassistant.components.telegram_bot.*",
     "homeassistant.components.template.*",
     "homeassistant.components.tesla.*",
