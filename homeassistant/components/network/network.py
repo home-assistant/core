@@ -36,8 +36,8 @@ class Network:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Network class."""
-        self.hass: HomeAssistant = hass
-        self._store: Store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self.hass = hass
+        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self._data: dict[str, Any] = {}
         self._adapters: list[Adapter] = []
         self._next_broadcast_hop: str | None = None
