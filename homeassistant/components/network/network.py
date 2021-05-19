@@ -235,11 +235,11 @@ async def async_default_next_broadcast_hop(hass: HomeAssistant) -> None | str:
         )
         return None
     else:
-        if not (first_ip := _first_ip_nexthop_from_route(routes)):
-            _LOGGER.debug(
-                "The system could not auto detect the nexthop for %s on your operating system",
-                MDNS_TARGET_IP,
-            )
-            return None
+        if first_ip := _first_ip_nexthop_from_route(routes):
+            return first_ip
 
-        return first_ip
+    _LOGGER.debug(
+        "The system could not auto detect the nexthop for %s on your operating system",
+        MDNS_TARGET_IP,
+    )
+    return None
