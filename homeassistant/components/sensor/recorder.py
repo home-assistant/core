@@ -85,13 +85,13 @@ def compile_statistics(
         if "sum" in wanted_statistics:
             old_last_reset = None
             old_state = None
-            sum = 0
+            _sum = 0
             last_stats = statistics.get_last_statistics(hass, entity_id)  # type: ignore
             if entity_id in last_stats:
                 # We have compiled history for this sensor before, use that as a starting point
                 last_reset = old_last_reset = last_stats[entity_id][0]["last_reset"]
                 new_state = old_state = last_stats[entity_id][0]["state"]
-                sum = last_stats[entity_id][0]["sum"]
+                _sum = last_stats[entity_id][0]["sum"]
 
             for fstate, state in fstates:
                 if "last_reset" not in state.attributes:
@@ -99,7 +99,7 @@ def compile_statistics(
                 if (last_reset := state.attributes["last_reset"]) != old_last_reset:
                     # The sensor has been reset, update the sum
                     if old_state is not None:
-                        sum += new_state - old_state
+                        _sum += new_state - old_state
                     # ..and update the starting point
                     new_state = fstate
                     old_last_reset = last_reset
@@ -108,9 +108,9 @@ def compile_statistics(
                     new_state = fstate
 
             # Update the sum with the last state
-            sum += new_state - old_state
+            _sum += new_state - old_state
             result[entity_id]["last_reset"] = dt_util.parse_datetime(last_reset)
-            result[entity_id]["sum"] = sum
+            result[entity_id]["sum"] = _sum
             result[entity_id]["state"] = new_state
 
     return result
