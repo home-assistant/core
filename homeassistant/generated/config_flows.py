@@ -167,7 +167,6 @@ FLOWS = [
     "neato",
     "nest",
     "netatmo",
-    "network",
     "nexia",
     "nightscout",
     "notion",
