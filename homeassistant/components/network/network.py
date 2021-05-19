@@ -1,7 +1,7 @@
 """Network helper class for the network integration."""
 from __future__ import annotations
 
-from ipaddress import ip_address
+from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 from typing import Any, Iterable, cast
 
@@ -130,23 +130,19 @@ def _adapters_with_exernal_addresses(adapters: list[Adapter]) -> list[str]:
 
 def _adapter_has_external_address(adapter: Adapter) -> bool:
     """Adapter has a non-loopback and non-link-local address."""
-    for ip_v4_config in adapter["ipv4"]:
-        if (
-            not ip_v4_config["address"].is_multicast
-            and not ip_v4_config["address"].is_loopback
-            and not ip_v4_config["address"].is_link_local
-        ):
-            return True
+    return any(
+        _has_external_address(v4_config["address"]) for v4_config in adapter["ipv4"]
+    ) or any(
+        _has_external_address(v6_config["address"]) for v6_config in adapter["ipv6"]
+    )
 
-    for ip_v6_config in adapter["ipv6"]:
-        if (
-            not ip_v4_config["address"].is_multicast
-            and not ip_v6_config["address"].is_loopback
-            and not ip_v6_config["address"].is_link_local
-        ):
-            return True
 
-    return False
+def _has_external_address(ip_addr: IPv4Address | IPv6Address):
+    return (
+        not ip_addr.is_multicast
+        and not ip_addr.is_loopback
+        and not ip_addr.is_link_local
+    )
 
 
 def load_adapters(next_hop: str | None) -> list[Adapter]:
