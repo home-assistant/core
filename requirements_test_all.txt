@@ -323,7 +323,7 @@ fritzconnection==1.4.0
 gTTS==2.2.2
 
 # homeassistant.components.garmin_connect
-garminconnect==0.1.19
+garminconnect==0.1.22
 
 # homeassistant.components.geo_json_events
 # homeassistant.components.usgs_earthquakes_feed
