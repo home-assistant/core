@@ -58,6 +58,68 @@ TEST_EVENT = {
     "status": "confirmed",
 }
 
+TEST_OTHER_EVENT = {
+    "summary": "Test Other All Day Event",
+    "start": {},
+    "end": {},
+    "location": "Test Cases",
+    "description": "test event",
+    "kind": "calendar#event",
+    "created": "2016-06-23T16:37:57.000Z",
+    "transparency": "transparent",
+    "updated": "2016-06-24T01:57:21.045Z",
+    "reminders": {"useDefault": True},
+    "organizer": {
+        "email": "uvrttabwegnui4gtia3vyqb@import.calendar.google.com",
+        "displayName": "Organizer Name",
+        "self": True,
+    },
+    "sequence": 0,
+    "creator": {
+        "email": "uvrttabwegnui4gtia3vyqb@import.calendar.google.com",
+        "displayName": "Organizer Name",
+        "self": True,
+    },
+    "id": "_c8rinwq863h45qnucyoi43ny8",
+    "etag": '"2933466882090000"',
+    "htmlLink": "https://www.google.com/calendar/event?eid=*******",
+    "iCalUID": "cydrevtfuybguinhomj@google.com",
+    "status": "confirmed",
+}
+
+TEST_UPCOMING_EVENT = {
+    "summary": "Test Upcoming All Day Event",
+    "start": {},
+    "end": {},
+    "location": "Test Cases",
+    "description": "test event",
+    "kind": "calendar#event",
+    "created": "2016-06-23T16:37:57.000Z",
+    "transparency": "transparent",
+    "updated": "2016-06-24T01:57:21.045Z",
+    "reminders": {"useDefault": True},
+    "organizer": {
+        "email": "uvrttabwegnui4gtia3vyqb@import.calendar.google.com",
+        "displayName": "Organizer Name",
+        "self": True,
+    },
+    "sequence": 0,
+    "creator": {
+        "email": "uvrttabwegnui4gtia3vyqb@import.calendar.google.com",
+        "displayName": "Organizer Name",
+        "self": True,
+    },
+    "id": "_c8rinwq863h45qnucyoi43ny8",
+    "etag": '"2933466882090000"',
+    "htmlLink": "https://www.google.com/calendar/event?eid=*******",
+    "iCalUID": "cydrevtfuybguinhomj@google.com",
+    "status": "confirmed",
+}
+
+TEST_MULTIPLE_EVENTS = [TEST_EVENT, TEST_OTHER_EVENT]
+
+TEST_UPCOMING_EVENTS = [TEST_EVENT, TEST_UPCOMING_EVENT]
+
 
 def get_calendar_info(calendar):
     """Convert data from Google into DEVICE_SCHEMA."""
@@ -126,10 +188,12 @@ async def test_all_day_event(hass, mock_next_event):
     week_from_today = dt_util.dt.date.today() + dt_util.dt.timedelta(days=7)
     end_event = week_from_today + dt_util.dt.timedelta(days=1)
     event = copy.deepcopy(TEST_EVENT)
+
     start = week_from_today.isoformat()
     end = end_event.isoformat()
     event["start"]["date"] = start
     event["end"]["date"] = end
+    event["upcoming_events"] = []
     mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -147,6 +211,7 @@ async def test_all_day_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "upcoming_events": event["upcoming_events"],
     }
 
 
@@ -159,6 +224,7 @@ async def test_future_event(hass, mock_next_event):
     event = copy.deepcopy(TEST_EVENT)
     event["start"]["dateTime"] = start
     event["end"]["dateTime"] = end
+    event["upcoming_events"] = []
     mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -176,6 +242,63 @@ async def test_future_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "upcoming_events": event["upcoming_events"],
+    }
+
+
+async def test_upcoming_events(hass, mock_next_event):
+    """Test that we can create upcoming events trigger on device."""
+    middle_of_event = dt_util.now() - dt_util.dt.timedelta(minutes=30)
+    end_event = middle_of_event + dt_util.dt.timedelta(minutes=60)
+    start = middle_of_event.isoformat()
+    end = end_event.isoformat()
+
+    events = copy.deepcopy(TEST_UPCOMING_EVENTS)
+
+    event = copy.deepcopy(events[0])
+    event["start"]["dateTime"] = start
+    event["end"]["dateTime"] = end
+
+    mock_next_event.return_value.event = event
+
+    upcoming_events = []
+    for i in range(len(events)):
+        upcoming_event = copy.deepcopy(events[i])
+        middle_of_other_event = dt_util.now() - dt_util.dt.timedelta(minutes=30)
+        end_other_event = middle_of_other_event + dt_util.dt.timedelta(minutes=60)
+
+        if i > 0:
+            upcoming_events.append(
+                {
+                    "friendly_name": TEST_ENTITY_NAME,
+                    "message": upcoming_event["summary"],
+                    "all_day": False,
+                    "offset_reached": False,
+                    "start_time": middle_of_other_event.strftime(DATE_STR_FORMAT),
+                    "end_time": end_other_event.strftime(DATE_STR_FORMAT),
+                    "location": upcoming_event["location"],
+                    "description": upcoming_event["description"],
+                }
+            )
+
+    event["upcoming_events"] = upcoming_events
+
+    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_ON
+    assert dict(state.attributes) == {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": event["summary"],
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": middle_of_event.strftime(DATE_STR_FORMAT),
+        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+        "upcoming_events": event["upcoming_events"],
     }
 
 
@@ -188,6 +311,7 @@ async def test_in_progress_event(hass, mock_next_event):
     event = copy.deepcopy(TEST_EVENT)
     event["start"]["dateTime"] = start
     event["end"]["dateTime"] = end
+    event["upcoming_events"] = []
     mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -205,6 +329,7 @@ async def test_in_progress_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "upcoming_events": event["upcoming_events"],
     }
 
 
@@ -219,6 +344,7 @@ async def test_offset_in_progress_event(hass, mock_next_event):
     event["start"]["dateTime"] = start
     event["end"]["dateTime"] = end
     event["summary"] = f"{event_summary} !!-15"
+    event["upcoming_events"] = []
     mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -236,6 +362,7 @@ async def test_offset_in_progress_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "upcoming_events": event["upcoming_events"],
     }
 
 
@@ -251,6 +378,7 @@ async def test_all_day_offset_in_progress_event(hass, mock_next_event):
     event["start"]["date"] = start
     event["end"]["date"] = end
     event["summary"] = f"{event_summary} !!-25:0"
+    event["upcoming_events"] = []
     mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -268,6 +396,7 @@ async def test_all_day_offset_in_progress_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "upcoming_events": event["upcoming_events"],
     }
 
 
@@ -283,6 +412,7 @@ async def test_all_day_offset_event(hass, mock_next_event):
     event["start"]["date"] = start
     event["end"]["date"] = end
     event["summary"] = f"{event_summary} !!-{offset_hours}:0"
+    event["upcoming_events"] = []
     mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -300,14 +430,28 @@ async def test_all_day_offset_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "upcoming_events": event["upcoming_events"],
     }
 
 
-async def test_update_error(hass, google_service):
+async def test_update_error(hass, google_service, mock_next_event):
     """Test that the calendar handles a server error."""
+    tomorrow = dt_util.dt.date.today() + dt_util.dt.timedelta(days=2)
+    end_event = tomorrow + dt_util.dt.timedelta(days=1)
+    start = tomorrow.isoformat()
+    end = end_event.isoformat()
+    offset_hours = 1 + dt_util.now().hour
+    event_summary = "Test All Day Event Offset"
+    event = copy.deepcopy(TEST_EVENT)
+    event["start"]["date"] = start
+    event["end"]["date"] = end
+    event["summary"] = f"{event_summary} !!-{offset_hours}:0"
     google_service.return_value.get = Mock(
         side_effect=httplib2.ServerNotFoundError("unit test")
     )
+
+    mock_next_event.return_value.event = event
+
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
     await hass.async_block_till_done()
 

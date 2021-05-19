@@ -9,6 +9,7 @@ from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
     CalendarEventDevice,
     calculate_offset,
+    get_normalized_event,
     is_offset_reached,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
@@ -114,7 +115,12 @@ class GoogleCalendarData:
     """Class to utilize calendar service object to get next event."""
 
     def __init__(
-        self, calendar_service, calendar_id, search, ignore_availability, max_results
+        self,
+        calendar_service,
+        calendar_id,
+        search,
+        ignore_availability,
+        max_results,
     ):
         """Set up how we are going to search the google calendar."""
         self.calendar_service = calendar_service
@@ -123,6 +129,7 @@ class GoogleCalendarData:
         self.ignore_availability = ignore_availability
         self.max_results = max_results
         self.event = None
+        self.upcoming_events = []
 
     def _prepare_query(self):
         try:
@@ -160,6 +167,17 @@ class GoogleCalendarData:
                 event_list.append(item)
         return event_list
 
+    @staticmethod
+    def get_date_time(input_value):
+        """Parse and format dateTime."""
+        output_date_time = None
+        if "dateTime" in input_value:
+            output_date_time = dt.parse_datetime(input_value["dateTime"]).isoformat("T")
+        else:
+            output_date_time = dt.parse_datetime(input_value["date"]).isoformat("T")
+
+        return output_date_time
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data."""
@@ -184,3 +202,19 @@ class GoogleCalendarData:
                 break
 
         self.event = new_event
+
+        if new_event is not None:
+
+            upcoming_events = []
+            td = timedelta(days=7)
+            params["timeMax"] = (dt.now() + td).isoformat("T")
+
+            events = service.events()
+            result = events.list(**params).execute()
+
+            items = result.get("items", [])
+            for item in items:
+                if new_event is not item:
+                    upcoming_events.append(get_normalized_event(item))
+
+            self.event["upcoming_events"] = upcoming_events
