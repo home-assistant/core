@@ -20,6 +20,7 @@ homeassistant.components.calendar.*
 homeassistant.components.camera.*
 homeassistant.components.cover.*
 homeassistant.components.device_automation.*
+homeassistant.components.device_tracker.*
 homeassistant.components.elgato.*
 homeassistant.components.fitbit.*
 homeassistant.components.fritzbox.*
