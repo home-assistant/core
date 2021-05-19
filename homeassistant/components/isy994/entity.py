@@ -179,6 +179,27 @@ class ISYNodeEntity(ISYEntity):
             )
         await self._node.send_cmd(command, value, unit_of_measurement, parameters)
 
+    async def async_get_zwave_parameter(self, parameter):
+        """Repsond to an entity service command to request a Z-Wave device parameter from the ISY."""
+        if not hasattr(self._node, "protocol") or self._node.protocol != PROTO_ZWAVE:
+            raise HomeAssistantError(
+                f"Invalid service call: cannot request Z-Wave Parameter for non-Z-Wave device {self.entity_id}"
+            )
+        await self._node.get_zwave_parameter(parameter)
+
+    async def async_set_zwave_parameter(self, parameter, value, size):
+        """Repsond to an entity service command to set a Z-Wave device parameter via the ISY."""
+        if not hasattr(self._node, "protocol") or self._node.protocol != PROTO_ZWAVE:
+            raise HomeAssistantError(
+                f"Invalid service call: cannot set Z-Wave Parameter for non-Z-Wave device {self.entity_id}"
+            )
+        await self._node.set_zwave_parameter(parameter, value, size)
+        await self._node.get_zwave_parameter(parameter)
+
+    async def async_rename_node(self, name):
+        """Repsond to an entity service command to rename a node on the ISY."""
+        await self._node.rename(name)
+
 
 class ISYProgramEntity(ISYEntity):
     """Representation of an ISY994 program base."""
