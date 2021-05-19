@@ -23,7 +23,7 @@ from .const import (
 )
 from .router import KeeneticRouter
 
-PLATFORMS = [DEVICE_TRACKER_DOMAIN, BINARY_SENSOR_DOMAIN]
+PLATFORMS = [BINARY_SENSOR_DOMAIN, DEVICE_TRACKER_DOMAIN]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -65,8 +65,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         _LOGGER.debug(
             "Removing device_tracker entities since some interfaces are now untracked"
         )
-        ent_reg = await entity_registry.async_get_registry(hass)
-        dev_reg = await device_registry.async_get_registry(hass)
+        ent_reg = entity_registry.async_get(hass)
+        dev_reg = device_registry.async_get(hass)
         for entity_entry in list(ent_reg.entities.values()):
             if (
                 entity_entry.config_entry_id == config_entry.entry_id
