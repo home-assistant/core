@@ -134,7 +134,7 @@ def process_before_send(
     # Filter out handled events by default
     if (
         "tags" in event
-        and event.tags.get("handled", "no") == "yes"  # type: ignore[attr-defined]
+        and event["tags"].get("handled", "no") == "yes"
         and not options.get(CONF_EVENT_HANDLED)
     ):
         return None
