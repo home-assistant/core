@@ -9,19 +9,16 @@ import ifaddr
 from pyroute2 import IPRoute
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.storage import Store
 
 from .const import (
     ATTR_CONFIGURED_ADAPTERS,
     DEFAULT_CONFIGURED_ADAPTERS,
+    MDNS_TARGET_IP,
     NETWORK_CONFIG_SCHEMA,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
 from .models import Adapter, IPv4ConfiguredAddress, IPv6ConfiguredAddress
-
-MDNS_TARGET_IP = "224.0.0.251"
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,8 +33,8 @@ class Network:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Network class."""
-        self.hass: HomeAssistant = hass
-        self._store: Store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self.hass = hass
+        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self._data: dict[str, Any] = {}
         self._adapters: list[Adapter] = []
         self._next_broadcast_hop: str | None = None
