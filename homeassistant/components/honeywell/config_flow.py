@@ -1,8 +1,8 @@
 """Config flow to configure the honeywell integration."""
-import somecomfort
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.honeywell import get_somecomfort_client
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN
@@ -37,13 +37,14 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def is_valid(self, **kwargs) -> bool:
         """Check if login credentials are valid."""
-        try:
-            await self.hass.async_add_executor_job(
-                somecomfort.SomeComfort, kwargs[CONF_USERNAME], kwargs[CONF_PASSWORD]
-            )
+        client = await self.hass.async_add_executor_job(
+            get_somecomfort_client, kwargs[CONF_USERNAME], kwargs[CONF_PASSWORD]
+        )
+
+        if client is not None:
             return True
-        except somecomfort.SomeComfortError:
-            return False
+
+        return False
 
     async def async_step_import(self, import_data):
         """Import entry from configuration.yaml."""
