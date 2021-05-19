@@ -19,6 +19,7 @@ emoji==1.2.0
 hass-nabucasa==0.43.0
 home-assistant-frontend==20210518.0
 httpx==0.18.0
+ifaddr==0.1.7
 jinja2>=3.0.1
 netdisco==2.8.3
 paho-mqtt==1.5.1
