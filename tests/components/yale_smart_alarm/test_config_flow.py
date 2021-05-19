@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.yale_smart_alarm.config_flow import (
+    AlreadyConfigured,
     CannotConnect,
     InvalidAuth,
 )
@@ -100,3 +101,28 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "connection_error"}
+
+
+async def test_form_already_configured(hass: HomeAssistant) -> None:
+    """Test we handle already configured error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.yale_smart_alarm.config_flow.validate_input",
+        side_effect=AlreadyConfigured,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+                "code": "12345",
+                "name": "Yale Smart Alarm",
+                "area_id": "1",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "already_configured"}

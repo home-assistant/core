@@ -107,12 +107,3 @@ class AlreadyConfigured(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
-
-
-class InvalidInput(exceptions.HomeAssistantError):
-    """Error to indicate input data is invalid."""
-
-    def __init__(self, error: str) -> None:
-        """Initialize error."""
-        super().__init__()
-        self.error = error
