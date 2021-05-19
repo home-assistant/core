@@ -15,7 +15,7 @@ from numbers import Number
 import os
 import re
 from socket import _GLOBAL_DEFAULT_TIMEOUT  # type: ignore # private, not in typeshed
-from typing import Any, Callable, Dict, TypeVar, cast
+from typing import Any, Callable, TypeVar, cast
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -770,24 +770,24 @@ def deprecated(
 
 
 def key_value_schemas(
-    key: str, value_schemas: dict[str, vol.Schema]
-) -> Callable[[Any], dict[str, Any]]:
+    key: str, value_schemas: dict[Hashable, vol.Schema]
+) -> Callable[[Any], dict[Hashable, Any]]:
     """Create a validator that validates based on a value for specific key.
 
     This gives better error messages.
     """
 
-    def key_value_validator(value: Any) -> dict[str, Any]:
+    def key_value_validator(value: Any) -> dict[Hashable, Any]:
         if not isinstance(value, dict):
             raise vol.Invalid("Expected a dictionary")
 
         key_value = value.get(key)
 
-        if isinstance(key_value, str) and key_value in value_schemas:
-            return cast(Dict[str, Any], value_schemas[key_value](value))
+        if isinstance(key_value, Hashable) and key_value in value_schemas:
+            return cast(dict[Hashable, Any], value_schemas[key_value](value))
 
         raise vol.Invalid(
-            f"Unexpected value for {key}: '{key_value}'. Expected {', '.join(value_schemas)}"
+            f"Unexpected value for {key}: '{key_value}'. Expected {', '.join(str(key) for key in value_schemas)}"
         )
 
     return key_value_validator
