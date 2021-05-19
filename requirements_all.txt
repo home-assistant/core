@@ -581,7 +581,7 @@ eternalegypt==0.0.12
 # evdev==1.4.0
 
 # homeassistant.components.evohome
-evohome-async==0.3.8
+evohome-async==0.3.15
 
 # homeassistant.components.faa_delays
 faadelays==0.0.7
