@@ -3,11 +3,13 @@
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_COVERS,
+    CONF_LIGHTS,
     CONF_SENSORS,
     CONF_SWITCHES,
 )
@@ -25,8 +27,6 @@ CONF_DATA_TYPE = "data_type"
 CONF_HUB = "hub"
 CONF_INPUTS = "inputs"
 CONF_INPUT_TYPE = "input_type"
-CONF_LIGHT = "light"
-CONF_LIGHTS = "lights"
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
 CONF_PARITY = "parity"
@@ -101,9 +101,10 @@ DEFAULT_TEMP_UNIT = "C"
 MODBUS_DOMAIN = "modbus"
 
 PLATFORMS = (
+    (BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS),
     (CLIMATE_DOMAIN, CONF_CLIMATES),
     (COVER_DOMAIN, CONF_COVERS),
-    (BINARY_SENSOR_DOMAIN, CONF_BINARY_SENSORS),
+    (LIGHT_DOMAIN, CONF_LIGHTS),
     (SENSOR_DOMAIN, CONF_SENSORS),
     (SWITCH_DOMAIN, CONF_SWITCHES),
 )

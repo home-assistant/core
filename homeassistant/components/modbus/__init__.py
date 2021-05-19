@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_DELAY,
     CONF_DEVICE_CLASS,
     CONF_HOST,
+    CONF_LIGHTS,
     CONF_METHOD,
     CONF_NAME,
     CONF_OFFSET,
@@ -291,6 +292,7 @@ MODBUS_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_CLIMATES): vol.All(cv.ensure_list, [CLIMATE_SCHEMA]),
         vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
+        vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHT_SCHEMA]),
         vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSOR_SCHEMA]),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
     }
