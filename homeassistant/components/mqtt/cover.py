@@ -71,7 +71,6 @@ CONF_STATE_OPEN = "state_open"
 CONF_STATE_OPENING = "state_opening"
 CONF_STATE_STOPPED = "state_stopped"
 CONF_TILT_CLOSED_POSITION = "tilt_closed_value"
-CONF_TILT_INVERT_STATE = "tilt_invert_state"
 CONF_TILT_MAX = "tilt_max"
 CONF_TILT_MIN = "tilt_min"
 CONF_TILT_OPEN_POSITION = "tilt_opened_value"
@@ -90,7 +89,6 @@ DEFAULT_POSITION_OPEN = 100
 DEFAULT_RETAIN = False
 DEFAULT_STATE_STOPPED = "stopped"
 DEFAULT_TILT_CLOSED_POSITION = 0
-DEFAULT_TILT_INVERT_STATE = False
 DEFAULT_TILT_MAX = 100
 DEFAULT_TILT_MIN = 0
 DEFAULT_TILT_OPEN_POSITION = 100
@@ -112,25 +110,34 @@ def validate_options(value):
     """
     if CONF_SET_POSITION_TOPIC in value and CONF_GET_POSITION_TOPIC not in value:
         raise vol.Invalid(
-            "'set_position_topic' must be set together with 'position_topic'."
+            f"'{CONF_SET_POSITION_TOPIC}' must be set together with '{CONF_GET_POSITION_TOPIC}'."
         )
 
-    if (
-        CONF_GET_POSITION_TOPIC in value
-        and CONF_STATE_TOPIC not in value
-        and CONF_VALUE_TEMPLATE in value
-    ):
-        _LOGGER.warning(
-            "Using 'value_template' for 'position_topic' is deprecated "
-            "and will be removed from Home Assistant in version 2021.6, "
-            "please replace it with 'position_template'"
+    # if templates are set make sure the topic for the template is also set
+
+    if CONF_VALUE_TEMPLATE in value and CONF_STATE_TOPIC not in value:
+        raise vol.Invalid(
+            f"'{CONF_VALUE_TEMPLATE}' must be set together with '{CONF_STATE_TOPIC}'."
         )
 
-    if CONF_TILT_INVERT_STATE in value:
-        _LOGGER.warning(
-            "'tilt_invert_state' is deprecated "
-            "and will be removed from Home Assistant in version 2021.6, "
-            "please invert tilt using 'tilt_min' & 'tilt_max'"
+    if CONF_GET_POSITION_TEMPLATE in value and CONF_GET_POSITION_TOPIC not in value:
+        raise vol.Invalid(
+            f"'{CONF_GET_POSITION_TEMPLATE}' must be set together with '{CONF_GET_POSITION_TOPIC}'."
+        )
+
+    if CONF_SET_POSITION_TEMPLATE in value and CONF_SET_POSITION_TOPIC not in value:
+        raise vol.Invalid(
+            f"'{CONF_SET_POSITION_TEMPLATE}' must be set together with '{CONF_SET_POSITION_TOPIC}'."
+        )
+
+    if CONF_TILT_COMMAND_TEMPLATE in value and CONF_TILT_COMMAND_TOPIC not in value:
+        raise vol.Invalid(
+            f"'{CONF_TILT_COMMAND_TEMPLATE}' must be set together with '{CONF_TILT_COMMAND_TOPIC}'."
+        )
+
+    if CONF_TILT_STATUS_TEMPLATE in value and CONF_TILT_STATUS_TOPIC not in value:
+        raise vol.Invalid(
+            f"'{CONF_TILT_STATUS_TEMPLATE}' must be set together with '{CONF_TILT_STATUS_TOPIC}'."
         )
 
     return value
@@ -164,7 +171,6 @@ PLATFORM_SCHEMA = vol.All(
                 CONF_TILT_CLOSED_POSITION, default=DEFAULT_TILT_CLOSED_POSITION
             ): int,
             vol.Optional(CONF_TILT_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_TILT_INVERT_STATE): cv.boolean,
             vol.Optional(CONF_TILT_MAX, default=DEFAULT_TILT_MAX): int,
             vol.Optional(CONF_TILT_MIN, default=DEFAULT_TILT_MIN): int,
             vol.Optional(
@@ -332,12 +338,6 @@ class MqttCover(MqttEntity, CoverEntity):
             payload = msg.payload
 
             template = self._config.get(CONF_GET_POSITION_TEMPLATE)
-
-            # To be removed in 2021.6:
-            # allow using `value_template` as position template if no `state_topic`
-            if template is None and self._config.get(CONF_STATE_TOPIC) is None:
-                template = self._config.get(CONF_VALUE_TEMPLATE)
-
             if template is not None:
                 variables = {
                     "entity_id": self.entity_id,
@@ -665,8 +665,7 @@ class MqttCover(MqttEntity, CoverEntity):
         max_percent = 100
         min_percent = 0
         position_percentage = min(max(position_percentage, min_percent), max_percent)
-        if range_type == TILT_PAYLOAD and self._config.get(CONF_TILT_INVERT_STATE):
-            return 100 - position_percentage
+
         return position_percentage
 
     def find_in_range_from_percent(self, percentage, range_type=TILT_PAYLOAD):
@@ -689,8 +688,6 @@ class MqttCover(MqttEntity, CoverEntity):
         position = round(current_range * (percentage / 100.0))
         position += offset
 
-        if range_type == TILT_PAYLOAD and self._config.get(CONF_TILT_INVERT_STATE):
-            position = max_range - position + offset
         return position
 
     def tilt_payload_received(self, _payload):
