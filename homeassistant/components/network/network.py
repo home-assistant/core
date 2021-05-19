@@ -160,6 +160,7 @@ def load_adapters(next_hop: str | None) -> list[Adapter]:
         ip_v4s: list[IPv4ConfiguredAddress] = []
         ip_v6s: list[IPv6ConfiguredAddress] = []
         default = False
+        auto = False
 
         for ip_config in adapter.ips:
             if ip_config.is_IPv6:
