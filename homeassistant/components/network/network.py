@@ -90,7 +90,7 @@ class Network:
     async def async_load(self) -> None:
         """Load config."""
         if stored := await self._store.async_load():
-            self._data = cast(dict[str, Any], stored)
+            self._data = cast(dict, stored)
 
     async def _async_save(self) -> None:
         """Save preferences."""
