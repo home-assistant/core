@@ -35,7 +35,7 @@ def test_compile_hourly_statistics(hass_recorder):
                 "min": 10.0,
                 "max": 20.0,
                 "last_reset": None,
-                "abs_value": None,
+                "state": None,
                 "sum": None,
             }
         ]
@@ -69,7 +69,7 @@ def test_compile_hourly_energy_statistics(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(zero),
-                "abs_value": 20.0,
+                "state": 20.0,
                 "sum": 10.0,
             },
             {
@@ -79,7 +79,7 @@ def test_compile_hourly_energy_statistics(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(four),
-                "abs_value": 40.0,
+                "state": 40.0,
                 "sum": 10.0,
             },
             {
@@ -89,7 +89,7 @@ def test_compile_hourly_energy_statistics(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(four),
-                "abs_value": 70.0,
+                "state": 70.0,
                 "sum": 40.0,
             },
         ]
@@ -117,7 +117,7 @@ def test_compile_hourly_statistics_unchanged(hass_recorder):
                 "min": 20.0,
                 "max": 20.0,
                 "last_reset": None,
-                "abs_value": None,
+                "state": None,
                 "sum": None,
             }
         ]
@@ -145,7 +145,7 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder):
                 "min": 10.0,
                 "max": 25.0,
                 "last_reset": None,
-                "abs_value": None,
+                "state": None,
                 "sum": None,
             }
         ]

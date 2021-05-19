@@ -224,7 +224,7 @@ class Statistics(Base):  # type: ignore
     min = Column(Float())
     max = Column(Float())
     last_reset = Column(DATETIME_TYPE)
-    abs_value = Column(Float())
+    state = Column(Float())
     sum = Column(Float())
 
     __table_args__ = (

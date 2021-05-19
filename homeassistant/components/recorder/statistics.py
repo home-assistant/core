@@ -26,7 +26,7 @@ QUERY_STATISTICS = [
     Statistics.min,
     Statistics.max,
     Statistics.last_reset,
-    Statistics.abs_value,
+    Statistics.state,
     Statistics.sum,
 ]
 
@@ -158,7 +158,7 @@ def _sorted_statistics_to_dict(
                 "min": db_state.min,
                 "max": db_state.max,
                 "last_reset": _process_timestamp_to_utc_isoformat(db_state.last_reset),
-                "abs_value": db_state.abs_value,
+                "state": db_state.state,
                 "sum": db_state.sum,
             }
             for db_state in group
