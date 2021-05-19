@@ -159,8 +159,9 @@ class SonosSpeaker:
         self, target: SubscriptionBase, sub_callback: Callable
     ) -> None:
         """Create a Sonos subscription."""
-        subscription = await target.subscribe(auto_renew=True)
+        subscription = await target.subscribe(auto_renew=True, requested_timeout=1200)
         subscription.callback = sub_callback
+        subscription.auto_renew_fail = self.async_renew_failed
         self._subscriptions.append(subscription)
 
     @callback
@@ -241,11 +242,19 @@ class SonosSpeaker:
 
         self.async_write_entity_states()
 
+    @callback
+    def async_renew_failed(self, exception: Exception) -> None:
+        """Handle a failed subscription renewal."""
+        if self.available:
+            self.hass.async_add_job(self.async_unseen)
+
     async def async_unseen(self, now: datetime.datetime | None = None) -> None:
         """Make this player unavailable when it was not seen recently."""
         self.async_write_entity_states()
 
-        self._seen_timer = None
+        if self._seen_timer:
+            self._seen_timer()
+            self._seen_timer = None
 
         if self._poll_timer:
             self._poll_timer()
