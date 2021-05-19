@@ -146,7 +146,7 @@ class SonosSpeaker:
 
         self.mac_address = speaker_info["mac_address"]
         self.model_name = speaker_info["model_name"]
-        self.version = speaker_info["software_version"]
+        self.version = speaker_info["display_version"]
         self.zone_name = speaker_info["zone_name"]
 
         self.battery_info: dict[str, Any] | None = None
