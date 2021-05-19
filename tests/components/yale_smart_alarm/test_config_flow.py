@@ -124,5 +124,5 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] == "abort"
     assert result2["errors"] == {"base": "already_configured"}
