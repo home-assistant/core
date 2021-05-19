@@ -125,7 +125,7 @@ async def test_form_homekit(hass):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "homekit"},
+        context={"source": config_entries.SOURCE_HOMEKIT},
         data={"properties": {"id": "AA:BB:CC:DD:EE:FF"}},
     )
     assert result["type"] == "form"
@@ -144,7 +144,7 @@ async def test_form_homekit(hass):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "homekit"},
+        context={"source": config_entries.SOURCE_HOMEKIT},
         data={"properties": {"id": "AA:BB:CC:DD:EE:FF"}},
     )
     assert result["type"] == "abort"

@@ -7,7 +7,7 @@
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "not_supported": "\u4e0d\u652f\u63f4\u6b64\u6b3e\u4e09\u661f\u96fb\u8996\u3002"
         },
-        "flow_title": "\u4e09\u661f\u96fb\u8996\uff1a{model}",
+        "flow_title": "{model}",
         "step": {
             "confirm": {
                 "description": "\u662f\u5426\u8981\u8a2d\u5b9a\u4e09\u661f\u96fb\u8996 {model}\uff1f\u5047\u5982\u60a8\u4e4b\u524d\u672a\u66fe\u9023\u7dda\u81f3 Home Assistant\uff0c\u61c9\u8a72\u6703\u65bc\u96fb\u8996\u4e0a\u6536\u5230\u9a57\u8b49\u8a0a\u606f\u3002\u624b\u52d5\u8a2d\u5b9a\u5c07\u6703\u8986\u84cb\u539f\u8a2d\u5b9a\u3002",

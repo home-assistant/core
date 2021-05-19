@@ -17,7 +17,7 @@
             "unable_to_pair": "Kunne ikke koble til, vennligst pr\u00f8v igjen.",
             "unknown_error": "Enheten rapporterte en ukjent feil. Sammenkobling mislyktes."
         },
-        "flow_title": "{name} via HomeKit tilbeh\u00f8rsprotokoll",
+        "flow_title": "{name}",
         "step": {
             "busy_error": {
                 "description": "Avbryt sammenkobling p\u00e5 alle kontrollere, eller pr\u00f8v \u00e5 starte enheten p\u00e5 nytt, og fortsett deretter med \u00e5 fortsette sammenkoblingen.",

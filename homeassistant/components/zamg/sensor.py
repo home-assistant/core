@@ -7,7 +7,6 @@ import logging
 import os
 
 from aiohttp.hdrs import USER_AGENT
-import pytz
 import requests
 import voluptuous as vol
 
@@ -28,7 +27,7 @@ from homeassistant.const import (
     __version__,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +40,7 @@ CONF_STATION_ID = "station_id"
 DEFAULT_NAME = "zamg"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
+VIENNA_TIME_ZONE = dt_util.get_time_zone("Europe/Vienna")
 
 SENSOR_TYPES = {
     "pressure": ("Pressure", PRESSURE_HPA, "LDstat hPa", float),
@@ -187,7 +187,7 @@ class ZamgData:
         date, time = self.data.get("update_date"), self.data.get("update_time")
         if date is not None and time is not None:
             return datetime.strptime(date + time, "%d-%m-%Y%H:%M").replace(
-                tzinfo=pytz.timezone("Europe/Vienna")
+                tzinfo=VIENNA_TIME_ZONE
             )
 
     @classmethod
@@ -208,7 +208,7 @@ class ZamgData:
         """Get the latest data from ZAMG."""
         if self.last_update and (
             self.last_update + timedelta(hours=1)
-            > datetime.utcnow().replace(tzinfo=pytz.utc)
+            > datetime.utcnow().replace(tzinfo=dt_util.UTC)
         ):
             return  # Not time to update yet; data is only hourly
 

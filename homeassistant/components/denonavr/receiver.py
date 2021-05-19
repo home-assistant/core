@@ -20,7 +20,6 @@ class ConnectDenonAVR:
         zone2: bool,
         zone3: bool,
         async_client_getter: Callable,
-        entry_state: str | None = None,
     ):
         """Initialize the class."""
         self._async_client_getter = async_client_getter
@@ -28,7 +27,6 @@ class ConnectDenonAVR:
         self._host = host
         self._show_all_inputs = show_all_inputs
         self._timeout = timeout
-        self._entry_state = entry_state
 
         self._zones = {}
         if zone2:

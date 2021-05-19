@@ -7,7 +7,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .const import MOCK_HOST, MOCK_PORT
@@ -15,7 +15,7 @@ from .const import MOCK_HOST, MOCK_PORT
 from tests.common import MockConfigEntry
 
 
-async def test_setup(hass: HomeAssistantType, router: Mock):
+async def test_setup(hass: HomeAssistant, router: Mock):
     """Test setup of integration."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -44,7 +44,7 @@ async def test_setup(hass: HomeAssistantType, router: Mock):
         mock_service.assert_called_once()
 
 
-async def test_setup_import(hass: HomeAssistantType, router: Mock):
+async def test_setup_import(hass: HomeAssistant, router: Mock):
     """Test setup of integration from import."""
     await async_setup_component(hass, "persistent_notification", {})
 
@@ -66,7 +66,7 @@ async def test_setup_import(hass: HomeAssistantType, router: Mock):
     assert hass.services.has_service(DOMAIN, SERVICE_REBOOT)
 
 
-async def test_unload_remove(hass: HomeAssistantType, router: Mock):
+async def test_unload_remove(hass: HomeAssistant, router: Mock):
     """Test unload and remove of integration."""
     entity_id_dt = f"{DT_DOMAIN}.freebox_server_r2"
     entity_id_sensor = f"{SENSOR_DOMAIN}.freebox_download_speed"

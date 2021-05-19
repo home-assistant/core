@@ -884,7 +884,7 @@ MOCK_SYSBUS_DEVICES = {
             {
                 "entity_id": "sensor.42_111111111112_temperature",
                 "unique_id": "/sys/bus/w1/devices/42-111111111112/w1_slave",
-                "injected_value": [UnsupportResponseException] * 9 + ["27.993"],
+                "injected_value": [UnsupportResponseException] * 9 + [27.993],
                 "result": "28.0",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,
@@ -902,7 +902,7 @@ MOCK_SYSBUS_DEVICES = {
             {
                 "entity_id": "sensor.42_111111111113_temperature",
                 "unique_id": "/sys/bus/w1/devices/42-111111111113/w1_slave",
-                "injected_value": [UnsupportResponseException] * 10 + ["27.993"],
+                "injected_value": [UnsupportResponseException] * 10 + [27.993],
                 "result": "unknown",
                 "unit": TEMP_CELSIUS,
                 "class": DEVICE_CLASS_TEMPERATURE,

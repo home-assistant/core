@@ -280,7 +280,7 @@ def _request_oauth_completion(hass, config):
     )
 
 
-def setup(hass, config):
+def setup(hass, config):  # noqa: C901
     """Set up the Wink component."""
 
     if hass.data.get(DOMAIN) is None:

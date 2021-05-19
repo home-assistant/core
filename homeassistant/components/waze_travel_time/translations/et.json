@@ -10,6 +10,7 @@
             "user": {
                 "data": {
                     "destination": "Sihtkoht",
+                    "name": "Nimi",
                     "origin": "L\u00e4htekoht",
                     "region": "Piirkond"
                 },

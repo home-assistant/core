@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity import DeviceInfo
 
 from .board import FirmataPinType
 from .const import DOMAIN, FIRMATA_MANUFACTURER
@@ -16,7 +17,7 @@ class FirmataEntity:
         self._api = api
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
         return {
             "connections": {},

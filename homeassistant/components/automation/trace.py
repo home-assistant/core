@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from typing import Any
 
 from homeassistant.components.trace import ActionTrace, async_store_trace
+from homeassistant.components.trace.const import CONF_STORED_TRACES
 from homeassistant.core import Context
 
 # mypy: allow-untyped-calls, allow-untyped-defs
@@ -38,10 +39,12 @@ class AutomationTrace(ActionTrace):
 
 
 @contextmanager
-def trace_automation(hass, automation_id, config, blueprint_inputs, context):
+def trace_automation(
+    hass, automation_id, config, blueprint_inputs, context, trace_config
+):
     """Trace action execution of automation with automation_id."""
     trace = AutomationTrace(automation_id, config, blueprint_inputs, context)
-    async_store_trace(hass, trace)
+    async_store_trace(hass, trace, trace_config[CONF_STORED_TRACES])
 
     try:
         yield trace

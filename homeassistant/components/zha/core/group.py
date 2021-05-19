@@ -8,8 +8,8 @@ from typing import Any
 
 import zigpy.exceptions
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_entries_for_device
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .helpers import LogMixin
 from .typing import (
@@ -113,12 +113,12 @@ class ZHAGroup(LogMixin):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         zha_gateway: ZhaGatewayType,
         zigpy_group: ZigpyGroupType,
     ):
         """Initialize the group."""
-        self.hass: HomeAssistantType = hass
+        self.hass: HomeAssistant = hass
         self._zigpy_group: ZigpyGroupType = zigpy_group
         self._zha_gateway: ZhaGatewayType = zha_gateway
 

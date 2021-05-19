@@ -82,7 +82,6 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a tuya config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize flow."""
@@ -90,7 +89,6 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._password = None
         self._platform = None
         self._username = None
-        self._is_import = False
 
     def _save_entry(self):
         return self.async_create_entry(
@@ -117,11 +115,6 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return RESULT_SUCCESS
 
-    async def async_step_import(self, user_input=None):
-        """Handle configuration by yaml file."""
-        self._is_import = True
-        return await self.async_step_user(user_input)
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
@@ -140,12 +133,7 @@ class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if result == RESULT_SUCCESS:
                 return self._save_entry()
-            if result != RESULT_AUTH_FAILED or self._is_import:
-                if self._is_import:
-                    _LOGGER.error(
-                        "Error importing from configuration.yaml: %s",
-                        RESULT_LOG_MESSAGE.get(result, "Generic Error"),
-                    )
+            if result != RESULT_AUTH_FAILED:
                 return self.async_abort(reason=result)
             errors["base"] = result
 

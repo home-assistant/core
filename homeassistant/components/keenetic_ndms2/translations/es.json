@@ -10,7 +10,6 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "name": "Nombre",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto",
                     "username": "Usuario"

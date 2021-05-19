@@ -4,12 +4,12 @@ from unittest.mock import patch
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.config_entries import SOURCE_HOMEKIT, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
 from tests.components.roku import (
@@ -26,7 +26,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_duplicate_error(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that errors are shown when duplicates are added."""
     await setup_integration(hass, aioclient_mock, skip_entry_setup=True)
@@ -57,9 +57,7 @@ async def test_duplicate_error(
     assert result["reason"] == "already_configured"
 
 
-async def test_form(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_form(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test the user step."""
     await async_setup_component(hass, "persistent_notification", {})
     mock_connection(aioclient_mock)
@@ -90,7 +88,7 @@ async def test_form(
 
 
 async def test_form_cannot_connect(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we handle cannot connect roku error."""
     mock_connection(aioclient_mock, error=True)
@@ -107,7 +105,7 @@ async def test_form_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unknown_error(hass: HomeAssistantType) -> None:
+async def test_form_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
@@ -130,7 +128,7 @@ async def test_form_unknown_error(hass: HomeAssistantType) -> None:
 
 
 async def test_homekit_cannot_connect(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort homekit flow on connection error."""
     mock_connection(
@@ -151,7 +149,7 @@ async def test_homekit_cannot_connect(
 
 
 async def test_homekit_unknown_error(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort homekit flow on unknown error."""
     discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO.copy()
@@ -170,7 +168,7 @@ async def test_homekit_unknown_error(
 
 
 async def test_homekit_discovery(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the homekit discovery flow."""
     mock_connection(aioclient_mock, device="rokutv", host=HOMEKIT_HOST)
@@ -213,7 +211,7 @@ async def test_homekit_discovery(
 
 
 async def test_ssdp_cannot_connect(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort SSDP flow on connection error."""
     mock_connection(aioclient_mock, error=True)
@@ -230,7 +228,7 @@ async def test_ssdp_cannot_connect(
 
 
 async def test_ssdp_unknown_error(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort SSDP flow on unknown error."""
     discovery_info = MOCK_SSDP_DISCOVERY_INFO.copy()
@@ -249,7 +247,7 @@ async def test_ssdp_unknown_error(
 
 
 async def test_ssdp_discovery(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the SSDP discovery flow."""
     mock_connection(aioclient_mock)

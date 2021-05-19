@@ -170,7 +170,7 @@ async def test_discovery(hass):
     """Test discovery flow works."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=TEST_DISCOVERY
     )
 
     with patch(
@@ -200,7 +200,7 @@ async def test_discovery_cannot_connect(hass):
     """Test discovery aborts if cannot connect."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=TEST_DISCOVERY
     )
 
     with patch(
@@ -219,13 +219,13 @@ async def test_discovery_cannot_connect(hass):
 async def test_discovery_duplicate_data(hass):
     """Test discovery aborts if same mDNS packet arrives."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=TEST_DISCOVERY
     )
     assert result["type"] == "form"
     assert result["step_id"] == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=TEST_DISCOVERY
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_in_progress"
@@ -252,7 +252,9 @@ async def test_discovery_updates_unique_id(hass):
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "zeroconf"}, data=TEST_DISCOVERY
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=TEST_DISCOVERY,
         )
         await hass.async_block_till_done()
 

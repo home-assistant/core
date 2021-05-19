@@ -1,8 +1,6 @@
 """Support for Canary sensors."""
 from __future__ import annotations
 
-from typing import Callable
-
 from canary.api import SensorType
 
 from homeassistant.components.sensor import SensorEntity
@@ -17,7 +15,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
@@ -57,7 +55,7 @@ STATE_AIR_QUALITY_VERY_ABNORMAL = "very_abnormal"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Canary sensors based on a config entry."""
     coordinator: CanaryDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][

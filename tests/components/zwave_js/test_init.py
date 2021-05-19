@@ -10,7 +10,6 @@ from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import (
-    CONN_CLASS_LOCAL_PUSH,
     DISABLED_USER,
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
@@ -584,7 +583,6 @@ async def test_start_addon(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={"use_addon": True, "usb_path": device, "network_key": network_key},
     )
     entry.add_to_hass(hass)
@@ -616,7 +614,6 @@ async def test_install_addon(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={"use_addon": True, "usb_path": device, "network_key": network_key},
     )
     entry.add_to_hass(hass)
@@ -650,7 +647,6 @@ async def test_addon_info_failure(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={"use_addon": True, "usb_path": device, "network_key": network_key},
     )
     entry.add_to_hass(hass)
@@ -700,7 +696,6 @@ async def test_update_addon(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={
             "url": "ws://host1:3001",
             "use_addon": True,
@@ -742,7 +737,6 @@ async def test_stop_addon(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={
             "url": "ws://host1:3001",
             "use_addon": True,
@@ -773,7 +767,6 @@ async def test_remove_entry(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={"integration_created_addon": False},
     )
     entry.add_to_hass(hass)
@@ -789,7 +782,6 @@ async def test_remove_entry(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         data={"integration_created_addon": True},
     )
     entry.add_to_hass(hass)

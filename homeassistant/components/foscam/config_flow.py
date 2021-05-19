@@ -41,20 +41,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for foscam."""
 
     VERSION = 2
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def _validate_and_create(self, data):
         """Validate the user input allows us to connect.
 
         Data has the keys from DATA_SCHEMA with values provided by the user.
         """
-
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if (
-                entry.data[CONF_HOST] == data[CONF_HOST]
-                and entry.data[CONF_PORT] == data[CONF_PORT]
-            ):
-                raise AbortFlow("already_configured")
+        self._async_abort_entries_match(
+            {CONF_HOST: data[CONF_HOST], CONF_PORT: data[CONF_PORT]}
+        )
 
         camera = FoscamCamera(
             data[CONF_HOST],

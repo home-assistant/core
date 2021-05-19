@@ -6,9 +6,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import get_local_ip
 
 from .const import (
@@ -30,6 +31,8 @@ from .device import Device
 NOTIFICATION_ID = "upnp_notification"
 NOTIFICATION_TITLE = "UPnP/IGD Setup"
 
+PLATFORMS = ["sensor"]
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -42,7 +45,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_construct_device(hass: HomeAssistantType, udn: str, st: str) -> Device:
+async def async_construct_device(hass: HomeAssistant, udn: str, st: str) -> Device:
     """Discovery devices and construct a Device for one."""
     # pylint: disable=invalid-name
     _LOGGER.debug("Constructing device: %s::%s", udn, st)
@@ -66,7 +69,7 @@ async def async_construct_device(hass: HomeAssistantType, udn: str, st: str) -> 
     return await Device.async_create_device(hass, location)
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType):
     """Set up UPnP component."""
     _LOGGER.debug("async_setup, config: %s", config)
     conf_default = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
@@ -89,7 +92,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up UPnP/IGD device from a config entry."""
     _LOGGER.debug("Setting up config entry: %s", config_entry.unique_id)
 
@@ -143,9 +146,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
 
     # Create sensors.
     _LOGGER.debug("Enabling sensors")
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-    )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     # Start device updater.
     await device.async_start()
@@ -153,9 +154,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a UPnP/IGD device from a config entry."""
     _LOGGER.debug("Unloading config entry: %s", config_entry.unique_id)
 
@@ -167,4 +166,4 @@ async def async_unload_entry(
         del hass.data[DOMAIN][DOMAIN_DEVICES][udn]
 
     _LOGGER.debug("Deleting sensors")
-    return await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)

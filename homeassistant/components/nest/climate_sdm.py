@@ -35,8 +35,8 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DATA_SUBSCRIBER, DOMAIN
 from .device_info import DeviceInfo
@@ -78,7 +78,7 @@ MAX_FAN_DURATION = 43200  # 15 hours is the max in the SDM API
 
 
 async def async_setup_sdm_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the client entities."""
 

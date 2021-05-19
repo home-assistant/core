@@ -130,6 +130,13 @@ class Channels:
         await self.zdo_channel.async_configure()
         self.zdo_channel.debug("'async_configure' stage succeeded")
         await asyncio.gather(*(pool.async_configure() for pool in self.pools))
+        async_dispatcher_send(
+            self.zha_device.hass,
+            const.ZHA_CHANNEL_MSG,
+            {
+                const.ATTR_TYPE: const.ZHA_CHANNEL_CFG_DONE,
+            },
+        )
 
     @callback
     def async_new_entity(

@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_DSN,
@@ -36,7 +37,6 @@ class SentryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Sentry config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @staticmethod
     @callback
@@ -48,7 +48,7 @@ class SentryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Handle a user config flow."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -79,7 +79,7 @@ class SentryOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    ) -> FlowResult:
         """Manage Sentry options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

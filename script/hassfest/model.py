@@ -33,7 +33,7 @@ class Config:
     errors: list[Error] = attr.ib(factory=list)
     cache: dict[str, Any] = attr.ib(factory=dict)
 
-    def add_error(self, *args, **kwargs):
+    def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""
         self.errors.append(Error(*args, **kwargs))
 
@@ -83,7 +83,7 @@ class Integration:
 
     @property
     def disabled(self) -> str | None:
-        """List of disabled."""
+        """Return if integration is disabled."""
         return self.manifest.get("disabled")
 
     @property
@@ -96,11 +96,11 @@ class Integration:
         """List of dependencies."""
         return self.manifest.get("dependencies", [])
 
-    def add_error(self, *args, **kwargs):
+    def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""
         self.errors.append(Error(*args, **kwargs))
 
-    def add_warning(self, *args, **kwargs):
+    def add_warning(self, *args: Any, **kwargs: Any) -> None:
         """Add an warning."""
         self.warnings.append(Error(*args, **kwargs))
 

@@ -74,11 +74,7 @@ class WebSocketHandler:
                 if message is None:
                     break
 
-                if not isinstance(message, str):
-                    message = message_to_json(message)
-
                 self._logger.debug("Sending %s", message)
-
                 await self.wsock.send_str(message)
 
         # Clean up the peaker checker when we shut down the writer
@@ -94,6 +90,9 @@ class WebSocketHandler:
 
         Async friendly.
         """
+        if not isinstance(message, str):
+            message = message_to_json(message)
+
         try:
             self._to_write.put_nowait(message)
         except asyncio.QueueFull:

@@ -346,7 +346,7 @@ class FitbitAuthCallbackView(HomeAssistantView):
         self.oauth = oauth
 
     @callback
-    def get(self, request):
+    async def get(self, request):
         """Finish OAuth callback request."""
         hass = request.app["hass"]
         data = request.query
@@ -359,7 +359,9 @@ class FitbitAuthCallbackView(HomeAssistantView):
             redirect_uri = f"{get_url(hass, require_current_request=True)}{FITBIT_AUTH_CALLBACK_PATH}"
 
             try:
-                result = self.oauth.fetch_access_token(data.get("code"), redirect_uri)
+                result = await hass.async_add_executor_job(
+                    self.oauth.fetch_access_token, data.get("code"), redirect_uri
+                )
             except MissingTokenError as error:
                 _LOGGER.error("Missing token: %s", error)
                 response_message = f"""Something went wrong when

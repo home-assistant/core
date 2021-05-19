@@ -19,8 +19,7 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import Context, State
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import Context, HomeAssistant, State
 
 from .const import (
     ATTR_INPUT_SOURCE,
@@ -40,7 +39,7 @@ from .const import (
 
 
 async def _async_reproduce_states(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     state: State,
     *,
     context: Context | None = None,
@@ -104,7 +103,7 @@ async def _async_reproduce_states(
 
 
 async def async_reproduce_states(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     states: Iterable[State],
     *,
     context: Context | None = None,

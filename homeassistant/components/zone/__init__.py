@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -163,7 +163,7 @@ class ZoneStorageCollection(collection.StorageCollection):
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        return cast(Dict, self.CREATE_SCHEMA(data))
+        return cast(dict, self.CREATE_SCHEMA(data))
 
     @callback
     def _get_suggested_id(self, info: dict) -> str:
@@ -291,7 +291,7 @@ class Zone(entity.Entity):
         """Return entity instance initialized from yaml storage."""
         zone = cls(config)
         zone.editable = False
-        zone._generate_attrs()  # pylint:disable=protected-access
+        zone._generate_attrs()
         return zone
 
     @property

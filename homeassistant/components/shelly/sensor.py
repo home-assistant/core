@@ -135,12 +135,14 @@ SENSORS = {
         unit=temperature_unit,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_TEMPERATURE,
+        available=lambda block: block.extTemp != 999,
     ),
     ("sensor", "humidity"): BlockAttributeDescription(
         name="Humidity",
         unit=PERCENTAGE,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_HUMIDITY,
+        available=lambda block: block.extTemp != 999,
     ),
     ("sensor", "luminosity"): BlockAttributeDescription(
         name="Luminosity",

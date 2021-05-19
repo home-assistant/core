@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import operator
+from typing import Any
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
@@ -16,11 +17,11 @@ from pyicloud.services.findmyiphone import AppleDevice
 from homeassistant.components.zone import async_active_zone
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.dt import utcnow
@@ -76,7 +77,7 @@ class IcloudAccount:
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         username: str,
         password: str,
         icloud_dir: Store,
@@ -355,7 +356,7 @@ class IcloudAccount:
         return self._fetch_interval
 
     @property
-    def devices(self) -> dict[str, any]:
+    def devices(self) -> dict[str, Any]:
         """Return the account devices."""
         return self._devices
 
@@ -496,11 +497,11 @@ class IcloudDevice:
         return self._battery_status
 
     @property
-    def location(self) -> dict[str, any]:
+    def location(self) -> dict[str, Any]:
         """Return the Apple device location."""
         return self._location
 
     @property
-    def extra_state_attributes(self) -> dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the attributes."""
         return self._attrs

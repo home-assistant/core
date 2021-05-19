@@ -1,8 +1,13 @@
 """Voluptuous schemas for the KNX integration."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 from xknx.devices.climate import SetpointShiftMode
+from xknx.exceptions import CouldNotParseAddress
 from xknx.io import DEFAULT_MCAST_PORT
-from xknx.telegram.address import GroupAddress, IndividualAddress
+from xknx.telegram.address import IndividualAddress, parse_device_group_address
 
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -29,11 +34,20 @@ from .const import (
 # KNX VALIDATORS
 ##################
 
-ga_validator = vol.Any(
-    cv.matches_regex(GroupAddress.ADDRESS_RE.pattern),
-    vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
-    msg="value does not match pattern for KNX group address '<main>/<middle>/<sub>', '<main>/<sub>' or '<free>' (eg.'1/2/3', '9/234', '123')",
-)
+
+def ga_validator(value: Any) -> str | int:
+    """Validate that value is parsable as GroupAddress or InternalGroupAddress."""
+    if isinstance(value, (str, int)):
+        try:
+            parse_device_group_address(value)
+            return value
+        except CouldNotParseAddress:
+            pass
+    raise vol.Invalid(
+        f"value '{value}' is not a valid KNX group address '<main>/<middle>/<sub>', '<main>/<sub>' or '<free>' (eg.'1/2/3', '9/234', '123'), nor xknx internal address 'i-<string>'."
+    )
+
+
 ga_list_validator = vol.All(cv.ensure_list, [ga_validator])
 
 ia_validator = vol.Any(
@@ -92,6 +106,7 @@ class BinarySensorSchema:
     DEFAULT_NAME = "KNX Binary Sensor"
 
     SCHEMA = vol.All(
+        # deprecated since September 2020
         cv.deprecated("significant_bit"),
         cv.deprecated("automation"),
         vol.Schema(
@@ -154,13 +169,11 @@ class ClimateSchema:
     DEFAULT_ON_OFF_INVERT = False
 
     SCHEMA = vol.All(
+        # deprecated since September 2020
         cv.deprecated("setpoint_shift_step", replacement_key=CONF_TEMPERATURE_STEP),
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(
-                    CONF_SETPOINT_SHIFT_MODE, default=DEFAULT_SETPOINT_SHIFT_MODE
-                ): vol.All(vol.Upper, cv.enum(SetpointShiftMode)),
                 vol.Optional(
                     CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX
                 ): vol.All(int, vol.Range(min=0, max=32)),
@@ -173,8 +186,21 @@ class ClimateSchema:
                 vol.Required(CONF_TEMPERATURE_ADDRESS): ga_list_validator,
                 vol.Required(CONF_TARGET_TEMPERATURE_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_TARGET_TEMPERATURE_ADDRESS): ga_list_validator,
-                vol.Optional(CONF_SETPOINT_SHIFT_ADDRESS): ga_list_validator,
-                vol.Optional(CONF_SETPOINT_SHIFT_STATE_ADDRESS): ga_list_validator,
+                vol.Inclusive(
+                    CONF_SETPOINT_SHIFT_ADDRESS,
+                    "setpoint_shift",
+                    msg="'setpoint_shift_address' and 'setpoint_shift_state_address' "
+                    "are required for setpoint_shift configuration",
+                ): ga_list_validator,
+                vol.Inclusive(
+                    CONF_SETPOINT_SHIFT_STATE_ADDRESS,
+                    "setpoint_shift",
+                    msg="'setpoint_shift_address' and 'setpoint_shift_state_address' "
+                    "are required for setpoint_shift configuration",
+                ): ga_list_validator,
+                vol.Optional(CONF_SETPOINT_SHIFT_MODE): vol.Maybe(
+                    vol.All(vol.Upper, cv.enum(SetpointShiftMode))
+                ),
                 vol.Optional(CONF_OPERATION_MODE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): ga_list_validator,
@@ -228,26 +254,37 @@ class CoverSchema:
     DEFAULT_TRAVEL_TIME = 25
     DEFAULT_NAME = "KNX Cover"
 
-    SCHEMA = vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_MOVE_LONG_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_MOVE_SHORT_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_STOP_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_POSITION_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_POSITION_STATE_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_ANGLE_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_ANGLE_STATE_ADDRESS): ga_list_validator,
-            vol.Optional(
-                CONF_TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME
-            ): cv.positive_float,
-            vol.Optional(
-                CONF_TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME
-            ): cv.positive_float,
-            vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
-            vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
-            vol.Optional(CONF_DEVICE_CLASS): cv.string,
-        }
+    SCHEMA = vol.All(
+        vol.Schema(
+            {
+                vol.Required(
+                    vol.Any(CONF_MOVE_LONG_ADDRESS, CONF_POSITION_ADDRESS),
+                    msg=f"At least one of '{CONF_MOVE_LONG_ADDRESS}' or '{CONF_POSITION_ADDRESS}' is required.",
+                ): object,
+            },
+            extra=vol.ALLOW_EXTRA,
+        ),
+        vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_MOVE_LONG_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_MOVE_SHORT_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_STOP_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_POSITION_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_POSITION_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_ANGLE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_ANGLE_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(
+                    CONF_TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME
+                ): cv.positive_float,
+                vol.Optional(
+                    CONF_TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME
+                ): cv.positive_float,
+                vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
+                vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
+                vol.Optional(CONF_DEVICE_CLASS): cv.string,
+            }
+        ),
     )
 
 
@@ -350,9 +387,21 @@ class LightSchema:
                 vol.Optional(CONF_BRIGHTNESS_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): ga_list_validator,
                 vol.Exclusive(CONF_INDIVIDUAL_COLORS, "color"): {
-                    vol.Inclusive(CONF_RED, "colors"): COLOR_SCHEMA,
-                    vol.Inclusive(CONF_GREEN, "colors"): COLOR_SCHEMA,
-                    vol.Inclusive(CONF_BLUE, "colors"): COLOR_SCHEMA,
+                    vol.Inclusive(
+                        CONF_RED,
+                        "individual_colors",
+                        msg="'red', 'green' and 'blue' are required for individual colors configuration",
+                    ): COLOR_SCHEMA,
+                    vol.Inclusive(
+                        CONF_GREEN,
+                        "individual_colors",
+                        msg="'red', 'green' and 'blue' are required for individual colors configuration",
+                    ): COLOR_SCHEMA,
+                    vol.Inclusive(
+                        CONF_BLUE,
+                        "individual_colors",
+                        msg="'red', 'green' and 'blue' are required for individual colors configuration",
+                    ): COLOR_SCHEMA,
                     vol.Optional(CONF_WHITE): COLOR_SCHEMA,
                 },
                 vol.Exclusive(CONF_COLOR_ADDRESS, "color"): ga_list_validator,
@@ -373,14 +422,11 @@ class LightSchema:
             }
         ),
         vol.Any(
-            # either global "address" or all addresses for individual colors are required
+            # either global "address" or "individual_colors" is required
             vol.Schema(
                 {
-                    vol.Required(CONF_INDIVIDUAL_COLORS): {
-                        vol.Required(CONF_RED): {vol.Required(KNX_ADDRESS): object},
-                        vol.Required(CONF_GREEN): {vol.Required(KNX_ADDRESS): object},
-                        vol.Required(CONF_BLUE): {vol.Required(KNX_ADDRESS): object},
-                    },
+                    # brightness addresses are required in COLOR_SCHEMA
+                    vol.Required(CONF_INDIVIDUAL_COLORS): object,
                 },
                 extra=vol.ALLOW_EXTRA,
             ),
@@ -417,7 +463,9 @@ class SceneSchema:
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Required(KNX_ADDRESS): ga_list_validator,
-            vol.Required(CONF_SCENE_NUMBER): cv.positive_int,
+            vol.Required(CONF_SCENE_NUMBER): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=64)
+            ),
         }
     )
 

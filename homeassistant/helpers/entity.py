@@ -7,8 +7,10 @@ from collections.abc import Awaitable, Iterable, Mapping
 from datetime import datetime, timedelta
 import functools as ft
 import logging
+import math
+import sys
 from timeit import default_timer as timer
-from typing import Any
+from typing import Any, TypedDict
 
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
@@ -42,6 +44,10 @@ SLOW_UPDATE_WARNING = 10
 DATA_ENTITY_SOURCE = "entity_info"
 SOURCE_CONFIG_ENTRY = "config_entry"
 SOURCE_PLATFORM_CONFIG = "platform_config"
+
+# Used when converting float states to string: limit precision according to machine
+# epsilon to make the string representation readable
+FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
 
 
 @callback
@@ -104,6 +110,23 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
     return entry.supported_features or 0
 
 
+class DeviceInfo(TypedDict, total=False):
+    """Entity device information for device registry."""
+
+    name: str
+    connections: set[tuple[str, str]]
+    identifiers: set[tuple[str, str]]
+    manufacturer: str
+    model: str
+    suggested_area: str
+    sw_version: str
+    via_device: tuple[str, str]
+    entry_type: str | None
+    default_name: str
+    default_manufacturer: str
+    default_model: str
+
+
 class Entity(ABC):
     """An abstract class for Home Assistant entities."""
 
@@ -115,7 +138,6 @@ class Entity(ABC):
     # Owning hass instance. Will be set by EntityPlatform
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
-    # Ignore types: https://github.com/PyCQA/pylint/issues/3167
     hass: HomeAssistant = None  # type: ignore
 
     # Owning platform instance. Will be set by EntityPlatform
@@ -208,7 +230,7 @@ class Entity(ABC):
         return None
 
     @property
-    def device_info(self) -> Mapping[str, Any] | None:
+    def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes.
 
         Implemented by platform classes.
@@ -327,6 +349,19 @@ class Entity(ABC):
 
         self._async_write_ha_state()
 
+    def _stringify_state(self) -> str:
+        """Convert state to string."""
+        if not self.available:
+            return STATE_UNAVAILABLE
+        state = self.state
+        if state is None:
+            return STATE_UNKNOWN
+        if isinstance(state, float):
+            # If the entity's state is a float, limit precision according to machine
+            # epsilon to make the string representation readable
+            return f"{state:.{FLOAT_PRECISION}}"
+        return str(state)
+
     @callback
     def _async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
@@ -346,11 +381,8 @@ class Entity(ABC):
         attr = self.capability_attributes
         attr = dict(attr) if attr else {}
 
-        if not self.available:
-            state = STATE_UNAVAILABLE
-        else:
-            sstate = self.state
-            state = STATE_UNKNOWN if sstate is None else str(sstate)
+        state = self._stringify_state()
+        if self.available:
             attr.update(self.state_attributes or {})
             extra_state_attributes = self.extra_state_attributes
             # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
@@ -717,7 +749,7 @@ class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """Return the state."""
         return STATE_ON if self.is_on else STATE_OFF
 

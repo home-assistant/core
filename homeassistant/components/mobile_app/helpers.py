@@ -15,9 +15,9 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST,
     HTTP_OK,
 )
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     ATTR_APP_DATA,
@@ -139,7 +139,7 @@ def safe_registration(registration: dict) -> dict:
     }
 
 
-def savable_state(hass: HomeAssistantType) -> dict:
+def savable_state(hass: HomeAssistant) -> dict:
     """Return a clean object containing things that should be saved."""
     return {
         DATA_DELETED_IDS: hass.data[DOMAIN][DATA_DELETED_IDS],
@@ -167,12 +167,12 @@ def webhook_response(
     )
 
 
-def device_info(registration: dict) -> dict:
+def device_info(registration: dict) -> DeviceInfo:
     """Return the device info for this registration."""
     return {
         "identifiers": {(DOMAIN, registration[ATTR_DEVICE_ID])},
         "manufacturer": registration[ATTR_MANUFACTURER],
         "model": registration[ATTR_MODEL],
-        "device_name": registration[ATTR_DEVICE_NAME],
+        "name": registration[ATTR_DEVICE_NAME],
         "sw_version": registration[ATTR_OS_VERSION],
     }

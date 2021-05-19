@@ -12,6 +12,12 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
@@ -21,7 +27,8 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
-    CALL_TYPE_REGISTER_INPUT,
+    CALL_TYPE_WRITE_COIL,
+    CALL_TYPE_WRITE_REGISTER,
     CONF_REGISTER,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
@@ -33,6 +40,7 @@ from .const import (
 )
 from .modbus import ModbusHub
 
+PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -87,29 +95,38 @@ class ModbusCover(CoverEntity, RestoreEntity):
         # If we read cover status from coil, and not from optional status register,
         # we interpret boolean value False as closed cover, and value True as open cover.
         # Intermediate states are not supported in such a setup.
-        if self._coil is not None and self._status_register is None:
-            self._state_closed = False
-            self._state_open = True
-            self._state_closing = None
-            self._state_opening = None
+        if self._coil is not None:
+            self._write_type = CALL_TYPE_WRITE_COIL
+            if self._status_register is None:
+                self._state_closed = False
+                self._state_open = True
+                self._state_closing = None
+                self._state_opening = None
 
         # If we read cover status from the main register (i.e., an optional
         # status register is not specified), we need to make sure the register_type
         # is set to "holding".
-        if self._register is not None and self._status_register is None:
-            self._status_register = self._register
-            self._status_register_type = CALL_TYPE_REGISTER_HOLDING
+        if self._register is not None:
+            self._write_type = CALL_TYPE_WRITE_REGISTER
+            if self._status_register is None:
+                self._status_register = self._register
+                self._status_register_type = CALL_TYPE_REGISTER_HOLDING
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         state = await self.async_get_last_state()
-        if not state:
-            return
-        self._value = state.state
+        if state:
+            convert = {
+                STATE_CLOSED: self._state_closed,
+                STATE_CLOSING: self._state_closing,
+                STATE_OPENING: self._state_opening,
+                STATE_OPEN: self._state_open,
+                STATE_UNAVAILABLE: None,
+                STATE_UNKNOWN: None,
+            }
+            self._value = convert[state.state]
 
-        async_track_time_interval(
-            self.hass, lambda arg: self._update(), self._scan_interval
-        )
+        async_track_time_interval(self.hass, self.async_update, self._scan_interval)
 
     @property
     def device_class(self) -> str | None:
@@ -155,43 +172,38 @@ class ModbusCover(CoverEntity, RestoreEntity):
         # Handle polling directly in this entity
         return False
 
-    def open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
-        if self._coil is not None:
-            self._write_coil(True)
-        else:
-            self._write_register(self._state_open)
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._register, self._state_open, self._write_type
+        )
+        self._available = result is not None
+        self.async_update()
 
-        self._update()
-
-    def close_cover(self, **kwargs: Any) -> None:
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        if self._coil is not None:
-            self._write_coil(False)
-        else:
-            self._write_register(self._state_closed)
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._register, self._state_closed, self._write_type
+        )
+        self._available = result is not None
+        self.async_update()
 
-        self._update()
-
-    def _update(self):
+    async def async_update(self, now=None):
         """Update the state of the cover."""
+        # remark "now" is a dummy parameter to avoid problems with
+        # async_track_time_interval
         if self._coil is not None and self._status_register is None:
-            self._value = self._read_coil()
+            self._value = await self._async_read_coil()
         else:
-            self._value = self._read_status_register()
+            self._value = await self._async_read_status_register()
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def _read_status_register(self) -> int | None:
+    async def _async_read_status_register(self) -> int | None:
         """Read status register using the Modbus hub slave."""
-        if self._status_register_type == CALL_TYPE_REGISTER_INPUT:
-            result = self._hub.read_input_registers(
-                self._slave, self._status_register, 1
-            )
-        else:
-            result = self._hub.read_holding_registers(
-                self._slave, self._status_register, 1
-            )
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._status_register, 1, self._status_register_type
+        )
         if result is None:
             self._available = False
             return None
@@ -201,20 +213,14 @@ class ModbusCover(CoverEntity, RestoreEntity):
 
         return value
 
-    def _write_register(self, value):
-        """Write holding register using the Modbus hub slave."""
-        self._available = self._hub.write_register(self._slave, self._register, value)
-
-    def _read_coil(self) -> bool | None:
+    async def _async_read_coil(self) -> bool | None:
         """Read coil using the Modbus hub slave."""
-        result = self._hub.read_coils(self._slave, self._coil, 1)
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._coil, 1, CALL_TYPE_COIL
+        )
         if result is None:
             self._available = False
             return None
 
         value = bool(result.bits[0] & 1)
         return value
-
-    def _write_coil(self, value):
-        """Write coil using the Modbus hub slave."""
-        self._available = self._hub.write_coil(self._slave, self._coil, value)

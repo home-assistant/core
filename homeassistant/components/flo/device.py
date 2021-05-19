@@ -9,7 +9,7 @@ from aioflo.api import API
 from aioflo.errors import RequestError
 from async_timeout import timeout
 
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
@@ -20,10 +20,10 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     """Flo device object."""
 
     def __init__(
-        self, hass: HomeAssistantType, api_client: API, location_id: str, device_id: str
+        self, hass: HomeAssistant, api_client: API, location_id: str, device_id: str
     ):
         """Initialize the device."""
-        self.hass: HomeAssistantType = hass
+        self.hass: HomeAssistant = hass
         self.api_client: API = api_client
         self._flo_location_id: str = location_id
         self._flo_device_id: str = device_id

@@ -153,7 +153,7 @@ def _register_services(hass):
         # Call the set scene function on each bridge
         tasks = [
             bridge.hue_activate_scene(
-                call.data, updated=skip_reload, hide_warnings=skip_reload
+                call.data, skip_reload=skip_reload, hide_warnings=skip_reload
             )
             for bridge in hass.data[DOMAIN].values()
             if isinstance(bridge, HueBridge)
