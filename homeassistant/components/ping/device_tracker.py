@@ -18,9 +18,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.process import kill_subprocess
-from icmplib import async_ping
+from icmplib import async_multiping
 
-from . import async_get_next_ping_id
 from .const import DOMAIN, ICMP_TIMEOUT, PING_ATTEMPTS_COUNT, PING_PRIVS, PING_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,18 +117,11 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
         async def async_update(now):
             """Update all the hosts on every interval time."""
-            responses = await gather_with_concurrency(
-                ASYNC_CONCURRENT_PING_LIMIT,
-                *[
-                    async_ping(
-                        ip_address,
-                        count=PING_ATTEMPTS_COUNT,
-                        timeout=ICMP_TIMEOUT,
-                        id=async_get_next_ping_id(hass),
-                        privileged=privileged,
-                    )
-                    for ip_address in ip_to_dev_id
-                ],
+            responses = await async_multiping(
+                list(ip_to_dev_id),
+                count=PING_ATTEMPTS_COUNT,
+                timeout=ICMP_TIMEOUT,
+                privileged=privileged,
             )
             _LOGGER.debug("Multiping responses: %s", responses)
             await asyncio.gather(
