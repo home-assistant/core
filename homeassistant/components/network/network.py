@@ -210,12 +210,12 @@ def load_adapters(next_hop: str | None) -> list[Adapter]:
     return ha_adapters
 
 
-def _get_ip_route(dst_ip: str) -> Any:
+def _get_ip_route(dst_ip: str) -> Iterable:
     """Get ip next hop."""
     return IPRoute().route("get", dst=dst_ip)
 
 
-def _first_ip_nexthop_from_route(routes: Iterable) -> None | str:
+def _first_ip_nexthop_from_route(routes: Iterable) -> str | None:
     """Find the first RTA_PREFSRC in the routes."""
     _LOGGER.debug("Routes: %s", routes)
     for route in routes:
