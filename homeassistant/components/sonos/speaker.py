@@ -226,7 +226,7 @@ class SonosSpeaker:
     async def async_handle_new_entity(self, entity_type: str) -> None:
         """Listen to new entities to trigger first subscription."""
         self._platforms_ready.add(entity_type)
-        if self._platforms_ready == PLATFORMS:
+        if self._platforms_ready == PLATFORMS and not self._subscriptions:
             self._resubscription_lock = asyncio.Lock()
             await self.async_subscribe()
             self._is_ready = True
