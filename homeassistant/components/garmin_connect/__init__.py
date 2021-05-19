@@ -21,7 +21,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
-MIN_SCAN_INTERVAL = timedelta(minutes=10)
+MIN_SCAN_INTERVAL = timedelta(minutes=5)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
