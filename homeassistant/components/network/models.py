@@ -1,14 +1,13 @@
 """Models helper class for the network integration."""
 from __future__ import annotations
 
-from ipaddress import IPv4Address, IPv6Address
 from typing import TypedDict
 
 
 class IPv6ConfiguredAddress(TypedDict):
     """Represent an IPv6 address."""
 
-    address: IPv6Address
+    address: str
     flowinfo: int
     scope_id: int
     network_prefix: int
@@ -17,7 +16,7 @@ class IPv6ConfiguredAddress(TypedDict):
 class IPv4ConfiguredAddress(TypedDict):
     """Represent an IPv4 address."""
 
-    address: IPv4Address
+    address: str
     network_prefix: int
 
 
