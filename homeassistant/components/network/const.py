@@ -13,7 +13,7 @@ ATTR_ADAPTERS = "adapters"
 ATTR_CONFIGURED_ADAPTERS = "configured_adapters"
 DEFAULT_CONFIGURED_ADAPTERS: list[str] = []
 
-INTERFACES_SCHEMA = vol.Schema(
+NETWORK_CONFIG_SCHEMA = vol.Schema(
     {
         vol.Optional(
             ATTR_CONFIGURED_ADAPTERS, default=DEFAULT_CONFIGURED_ADAPTERS
