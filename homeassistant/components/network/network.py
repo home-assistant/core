@@ -52,9 +52,9 @@ class Network:
 
     async def async_setup(self) -> None:
         """Set up the network config."""
-        self._next_broadcast_hop = await async_default_next_broadcast_hop(self.hass)
+        self._next_broadcast_hop = await _async_default_next_broadcast_hop(self.hass)
         await self.async_load()
-        self._adapters = load_adapters(self._next_broadcast_hop)
+        self._adapters = _load_adapters(self._next_broadcast_hop)
 
     async def async_migrate_from_zeroconf(self, zc_config: dict[str, Any]) -> None:
         """Migrate configuration from zeroconf."""
@@ -146,66 +146,75 @@ def _ip_address_is_external(ip_addr: IPv4Address | IPv6Address) -> bool:
     )
 
 
-def load_adapters(next_hop: str | None) -> list[Adapter]:
+def _load_adapters(next_hop: str | None) -> list[Adapter]:
     """Load adapters."""
     adapters = ifaddr.get_adapters()
-    ha_adapters: list[Adapter] = []
-    if next_hop:
-        next_hop_address = ip_address(next_hop)
-    default_adapter_is_auto = False
+    next_hop_address = ip_address(next_hop) if next_hop else None
 
-    for adapter in adapters:
-        ip_v4s: list[IPv4ConfiguredAddress] = []
-        ip_v6s: list[IPv6ConfiguredAddress] = []
-        default = False
-        auto = False
+    ha_adapters: list[Adapter] = [
+        _ifaddr_adapter_to_ha(adapter, next_hop_address) for adapter in adapters
+    ]
 
-        for ip_config in adapter.ips:
-            if ip_config.is_IPv6:
-                try:
-                    ip_addr = ip_address(ip_config.ip[0])
-                except ValueError:
-                    continue
-                ip_v6: IPv6ConfiguredAddress = {
-                    "address": str(ip_addr),
-                    "flowinfo": ip_config.ip[1],
-                    "scope_id": ip_config.ip[2],
-                    "network_prefix": ip_config.network_prefix,
-                }
-                ip_v6s.append(ip_v6)
-            else:
-                try:
-                    ip_addr = ip_address(ip_config.ip)
-                except ValueError:
-                    continue
-                ip_v4: IPv4ConfiguredAddress = {
-                    "address": str(ip_addr),
-                    "network_prefix": ip_config.network_prefix,
-                }
-                ip_v4s.append(ip_v4)
-
-            if next_hop and ip_addr == next_hop_address:
-                default = True
-            if default and _ip_address_is_external(ip_addr):
-                auto = True
-                default_adapter_is_auto = True
-
-        ha_adapter: Adapter = {
-            "name": adapter.nice_name,
-            "enabled": False,
-            "auto": auto,
-            "default": default,
-            "ipv4": ip_v4s,
-            "ipv6": ip_v6s,
-        }
-        ha_adapters.append(ha_adapter)
-
-    if not default_adapter_is_auto:
+    if not any(adapter["default"] and adapter["auto"] for adapter in ha_adapters):
         for adapter in ha_adapters:
             if _adapter_has_external_address(adapter):
                 adapter["auto"] = True
 
     return ha_adapters
+
+
+def _ifaddr_adapter_to_ha(
+    adapter: ifaddr.Adapter, next_hop_address: None | IPv4Address | IPv6Address
+) -> Adapter:
+    """Convert an ifaddr adapter to ha."""
+    ip_v4s: list[IPv4ConfiguredAddress] = []
+    ip_v6s: list[IPv6ConfiguredAddress] = []
+    default = False
+    auto = False
+
+    for ip_config in adapter.ips:
+        if ip_config.is_IPv6:
+            try:
+                ip_addr = ip_address(ip_config.ip[0])
+            except ValueError:
+                continue
+            ip_v6s.append(_ip_v6_from_adapter(ip_config))
+        else:
+            try:
+                ip_addr = ip_address(ip_config.ip)
+            except ValueError:
+                continue
+            ip_v4s.append(_ip_v4_from_adapter(ip_config))
+
+        if ip_addr == next_hop_address:
+            default = True
+            if _ip_address_is_external(ip_addr):
+                auto = True
+
+    return {
+        "name": adapter.nice_name,
+        "enabled": False,
+        "auto": auto,
+        "default": default,
+        "ipv4": ip_v4s,
+        "ipv6": ip_v6s,
+    }
+
+
+def _ip_v6_from_adapter(ip_config: ifaddr.IP) -> IPv6ConfiguredAddress:
+    return {
+        "address": ip_config.ip[0],
+        "flowinfo": ip_config.ip[1],
+        "scope_id": ip_config.ip[2],
+        "network_prefix": ip_config.network_prefix,
+    }
+
+
+def _ip_v4_from_adapter(ip_config: ifaddr.IP) -> IPv4ConfiguredAddress:
+    return {
+        "address": ip_config.ip,
+        "network_prefix": ip_config.network_prefix,
+    }
 
 
 def _get_ip_route(dst_ip: str) -> Iterable:
@@ -223,7 +232,7 @@ def _first_ip_nexthop_from_route(routes: Iterable) -> str | None:
     return None
 
 
-async def async_default_next_broadcast_hop(hass: HomeAssistant) -> None | str:
+async def _async_default_next_broadcast_hop(hass: HomeAssistant) -> None | str:
     """Auto detect the default next broadcast hop."""
     try:
         routes: Iterable = await hass.async_add_executor_job(
