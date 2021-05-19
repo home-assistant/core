@@ -208,12 +208,13 @@ class ModbusThermostat(ClimateEntity):
         )
         byte_string = struct.pack(self._structure, target_temperature)
         register_value = struct.unpack(">h", byte_string[0:2])[0]
-        self._available = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pymodbus_call(
             self._slave,
             self._target_temperature_register,
             register_value,
             CALL_TYPE_WRITE_REGISTERS,
         )
+        self._available = result is not None
         await self.async_update()
 
     @property
