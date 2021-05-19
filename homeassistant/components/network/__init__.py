@@ -21,6 +21,40 @@ INTERFACE_ALL = "all"
 INTERFACE_MANUAL = "manual"
 
 
+#import ifaddr
+#
+#adapters = ifaddr.get_adapters()
+#
+#for adapter in adapters:
+#    print("IPs of network adapter " + adapter.nice_name)
+#    for ip in adapter.ips:
+#        print("   %s/%s" % (ip.ip, ip.network_prefix))
+
+# Auto Detection
+
+# 1 async_detect_interfaces_setting
+# if it would be all use `ifaddr.get_adapters()` and elminate link local, loopback, docker0
+# - need an ipv4 list 
+# - need an ipv6 list
+
+# https://github.com/jstasiak/python-zeroconf/blob/master/zeroconf/__init__.py#L2083
+
+# Manual config has to be remembered by adapter since ip addresses can change
+
+
+
+#def get_all_addresses() -> List[str]:
+#    return list(set(addr.ip for iface in ifaddr.get_adapters() for addr in iface.ips if addr.is_IPv4))
+
+
+#def get_all_addresses_v6() -> List[Tuple[Tuple[str, int, int], int]]:
+#    # IPv6 multicast uses positive indexes for interfaces
+#    # TODO: What about multi-address interfaces?
+#    return list(
+#        set((addr.ip, iface.index) for iface in ifaddr.get_adapters() for addr in iface.ips if addr.is_IPv6)
+#    )
+
+
 class Interface(enum.Enum):
     """Represent the inteface."""
 
