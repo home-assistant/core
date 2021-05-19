@@ -19,7 +19,7 @@ class BroadlinkHeartbeat:
     feeds their watchdog timers so they can be used offline.
     """
 
-    INTERVAL = dt.timedelta(minutes=2)
+    HEARTBEAT_INTERVAL = dt.timedelta(minutes=2)
 
     def __init__(self, hass):
         """Initialize the heartbeat."""
@@ -31,7 +31,7 @@ class BroadlinkHeartbeat:
         if self._unsubscribe is None:
             await self.async_heartbeat(dt.datetime.now())
             self._unsubscribe = event.async_track_time_interval(
-                self._hass, self.async_heartbeat, self.INTERVAL
+                self._hass, self.async_heartbeat, self.HEARTBEAT_INTERVAL
             )
 
     async def async_unload(self):

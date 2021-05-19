@@ -40,7 +40,9 @@ async def test_heartbeat_trigger_right_time(hass):
     await hass.async_block_till_done()
 
     with patch(DEVICE_PING) as mock_ping:
-        async_fire_time_changed(hass, dt.utcnow() + BroadlinkHeartbeat.INTERVAL)
+        async_fire_time_changed(
+            hass, dt.utcnow() + BroadlinkHeartbeat.HEARTBEAT_INTERVAL
+        )
         await hass.async_block_till_done()
 
     assert mock_ping.call_count == 1
@@ -57,7 +59,7 @@ async def test_heartbeat_do_not_trigger_before_time(hass):
     with patch(DEVICE_PING) as mock_ping:
         async_fire_time_changed(
             hass,
-            dt.utcnow() + BroadlinkHeartbeat.INTERVAL // 2,
+            dt.utcnow() + BroadlinkHeartbeat.HEARTBEAT_INTERVAL // 2,
         )
         await hass.async_block_till_done()
 
@@ -75,7 +77,9 @@ async def test_heartbeat_unload(hass):
     await hass.async_block_till_done()
 
     with patch(DEVICE_PING) as mock_ping:
-        async_fire_time_changed(hass, dt.utcnow() + BroadlinkHeartbeat.INTERVAL)
+        async_fire_time_changed(
+            hass, dt.utcnow() + BroadlinkHeartbeat.HEARTBEAT_INTERVAL
+        )
 
     assert mock_ping.call_count == 0
 
@@ -93,7 +97,9 @@ async def test_heartbeat_do_not_unload(hass):
     await hass.async_block_till_done()
 
     with patch(DEVICE_PING) as mock_ping:
-        async_fire_time_changed(hass, dt.utcnow() + BroadlinkHeartbeat.INTERVAL)
+        async_fire_time_changed(
+            hass, dt.utcnow() + BroadlinkHeartbeat.HEARTBEAT_INTERVAL
+        )
         await hass.async_block_till_done()
 
     assert mock_ping.call_count == 1
