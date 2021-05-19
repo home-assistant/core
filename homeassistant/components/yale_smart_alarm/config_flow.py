@@ -29,12 +29,12 @@ async def validate_input(hass: core.HomeAssistant, username, password):
 
     try:
         await hass.async_add_executor_job(YaleSmartAlarmClient, username, password)
-    except AuthenticationError as e:
-        LOGGER.error("Authentication failed. Check credentials %s", e)
-        raise InvalidAuth
-    except Exception as e:
-        LOGGER.error("Connection could not be made %s", e)
-        raise CannotConnect
+    except AuthenticationError as error:
+        LOGGER.error("Authentication failed. Check credentials %s", error)
+        raise InvalidAuth from error
+    except Exception as error:
+        LOGGER.error("Connection could not be made %s", error)
+        raise CannotConnect from error
 
     return True
 
@@ -89,7 +89,6 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_AREA_ID: area,
                 },
             )
-            LOGGER.info("Config entry created successfully")
 
         return self.async_show_form(
             step_id="user",

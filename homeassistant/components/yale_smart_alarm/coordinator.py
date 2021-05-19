@@ -50,8 +50,8 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                 self._yale.get_doors_status  # type: ignore[attr-defined]
             )
 
-        except AuthenticationError as ae:
-            LOGGER.error("Authentication failed. Check credentials %s", ae)
+        except AuthenticationError as error:
+            LOGGER.error("Authentication failed. Check credentials %s", error)
             raise
 
         return {
