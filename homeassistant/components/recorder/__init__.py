@@ -63,7 +63,6 @@ from .util import (
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_PURGE = "purge"
-SERVICE_STATISTICS = "statistics"
 SERVICE_ENABLE = "enable"
 SERVICE_DISABLE = "disable"
 
@@ -106,8 +105,6 @@ CONF_COMMIT_INTERVAL = "commit_interval"
 
 INVALIDATED_ERR = "Database connection invalidated"
 CONNECTIVITY_ERR = "Error in database connectivity during commit"
-
-DISABLE_STATISTICS = "recorder_disable_statistics"
 
 EXCLUDE_SCHEMA = INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER.extend(
     {vol.Optional(CONF_EVENT_TYPES): vol.All(cv.ensure_list, [cv.string])}
@@ -513,11 +510,10 @@ class Recorder(threading.Thread):
         async_track_time_change(
             self.hass, self.async_nightly_tasks, hour=4, minute=12, second=0
         )
-        if not self.hass.data.get(DISABLE_STATISTICS):
-            # Compile hourly statistics every hour at *:12
-            async_track_time_change(
-                self.hass, self.async_hourly_statistics, minute=12, second=0
-            )
+        # Compile hourly statistics every hour at *:12
+        async_track_time_change(
+            self.hass, self.async_hourly_statistics, minute=12, second=0
+        )
 
     def run(self):
         """Start processing events to save."""

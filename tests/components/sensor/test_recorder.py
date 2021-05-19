@@ -3,8 +3,6 @@
 from datetime import timedelta
 from unittest.mock import patch, sentinel
 
-import pytest
-
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
@@ -13,25 +11,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import get_test_home_assistant, init_recorder_component
 from tests.components.recorder.common import wait_recording_done
-
-
-@pytest.fixture
-def hass_recorder():
-    """Home Assistant fixture with in-memory recorder."""
-    hass = get_test_home_assistant()
-
-    def setup_recorder(config=None):
-        """Set up with params."""
-        init_recorder_component(hass, config)
-        hass.start()
-        hass.block_till_done()
-        hass.data[DATA_INSTANCE].block_till_done()
-        return hass
-
-    yield setup_recorder
-    hass.stop()
 
 
 def test_compile_hourly_statistics(hass_recorder):
