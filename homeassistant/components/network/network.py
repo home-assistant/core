@@ -9,19 +9,16 @@ import ifaddr
 from pyroute2 import IPRoute
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.storage import Store
 
 from .const import (
     ATTR_CONFIGURED_ADAPTERS,
     DEFAULT_CONFIGURED_ADAPTERS,
+    MDNS_TARGET_IP,
     NETWORK_CONFIG_SCHEMA,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
 from .models import Adapter, IPv4ConfiguredAddress, IPv6ConfiguredAddress
-
-MDNS_TARGET_IP = "224.0.0.251"
-
 
 _LOGGER = logging.getLogger(__name__)
 
