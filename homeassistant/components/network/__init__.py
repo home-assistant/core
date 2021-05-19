@@ -1,6 +1,8 @@
 """The Network Configuration integration."""
 from __future__ import annotations
 
+import logging
+
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -12,6 +14,7 @@ from .models import Adapter
 from .network import Network
 
 ZEROCONF_DOMAIN = "zeroconf"  # cannot import from zeroconf due to circular dep
+_LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
@@ -28,6 +31,8 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     await network.async_setup()
     await network.async_migrate_from_zeroconf(config.get(ZEROCONF_DOMAIN, {}))
     network.async_configure()
+
+    _LOGGER.debug("Adapters: %s", network.adapters)
 
     websocket_api.async_register_command(hass, websocket_network_adapters)
     websocket_api.async_register_command(hass, websocket_network_adapters_configure)
