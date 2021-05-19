@@ -251,7 +251,7 @@ async def _async_register_hass_zc_service(
 class FlowDispatcher:
     """Dispatch discovery flows."""
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Init the discovery dispatcher."""
         self.hass = hass
         self.pending_flows: list[ZeroconfFlow] = []

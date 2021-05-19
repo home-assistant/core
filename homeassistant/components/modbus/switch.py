@@ -22,6 +22,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CALL_TYPE_COIL,
+    CALL_TYPE_WRITE_COIL,
+    CALL_TYPE_WRITE_REGISTER,
     CONF_INPUT_TYPE,
     CONF_STATE_OFF,
     CONF_STATE_ON,
@@ -59,7 +61,10 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         self._available = True
         self._scan_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
         self._address = config[CONF_ADDRESS]
-        self._write_type = config[CONF_WRITE_TYPE]
+        if config[CONF_WRITE_TYPE] == CALL_TYPE_COIL:
+            self._write_type = CALL_TYPE_WRITE_COIL
+        else:
+            self._write_type = CALL_TYPE_WRITE_REGISTER
         self._command_on = config[CONF_COMMAND_ON]
         self._command_off = config[CONF_COMMAND_OFF]
         if CONF_VERIFY in config:
@@ -111,7 +116,7 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         result = await self._hub.async_pymodbus_call(
             self._slave, self._address, self._command_on, self._write_type
         )
-        if result is False:
+        if result is None:
             self._available = False
             self.async_write_ha_state()
         else:
@@ -127,7 +132,7 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         result = await self._hub.async_pymodbus_call(
             self._slave, self._address, self._command_off, self._write_type
         )
-        if result is False:
+        if result is None:
             self._available = False
             self.async_write_ha_state()
         else:
