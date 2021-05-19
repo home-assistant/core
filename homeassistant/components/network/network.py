@@ -165,7 +165,7 @@ def load_adapters(next_hop: str | None) -> list[Adapter]:
                 except ValueError:
                     continue
                 ip_v6: IPv6ConfiguredAddress = {
-                    "address": ip_config.ip[0],
+                    "address": str(ip_addr),
                     "flowinfo": ip_config.ip[1],
                     "scope_id": ip_config.ip[2],
                     "network_prefix": ip_config.network_prefix,
@@ -179,7 +179,7 @@ def load_adapters(next_hop: str | None) -> list[Adapter]:
                 except ValueError:
                     continue
                 ip_v4: IPv4ConfiguredAddress = {
-                    "address": ip_config.ip,
+                    "address": str(ip_addr),
                     "network_prefix": ip_config.network_prefix,
                 }
                 if next_hop and ip_addr == next_hop_address:
