@@ -57,19 +57,19 @@ send_node_command:
       selector:
         select:
           options:
-            - 'beep'
-            - 'brighten'
-            - 'dim'
-            - 'disable'
-            - 'enable'
-            - 'fade_down'
-            - 'fade_stop'
-            - 'fade_up'
-            - 'fast_off'
-            - 'fast_on'
-            - 'query'
+            - "beep"
+            - "brighten"
+            - "dim"
+            - "disable"
+            - "enable"
+            - "fade_down"
+            - "fade_stop"
+            - "fade_up"
+            - "fast_off"
+            - "fast_on"
+            - "query"
 set_on_level:
-  name: Set on level
+  name: Set On Level
   description: Send a ISY set_on_level command to a Node.
   target:
     entity:
@@ -188,14 +188,14 @@ send_program_command:
       selector:
         select:
           options:
-            - 'disable'
-            - 'disable_run_at_startup'
-            - 'enable'
-            - 'enable_run_at_startup'
-            - 'run'
-            - 'run_else'
-            - 'run_then'
-            - 'stop'
+            - "disable"
+            - "disable_run_at_startup"
+            - "enable"
+            - "enable_run_at_startup"
+            - "run"
+            - "run_else"
+            - "run_then"
+            - "stop"
     isy:
       name: ISY
       description: If you have more than one ISY connected, provide the name of the ISY to query (as shown on the Device Registry or as the top-first node in the ISY Admin Console).  If you have the same program name or address on multiple ISYs, omitting this will run the command on them all.

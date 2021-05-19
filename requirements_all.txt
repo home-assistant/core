@@ -396,7 +396,7 @@ bravia-tv==1.0.11
 broadlink==0.17.0
 
 # homeassistant.components.brother
-brother==1.0.1
+brother==1.0.2
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -768,7 +768,7 @@ hole==0.5.1
 holidays==0.11.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210517.0
+home-assistant-frontend==20210518.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1491,7 +1491,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==2.1.1
+pyisy==3.0.0
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -1753,7 +1753,7 @@ pysnmp==4.4.12
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.48
+pysonos==0.0.49
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0

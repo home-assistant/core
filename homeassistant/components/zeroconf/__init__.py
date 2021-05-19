@@ -279,7 +279,7 @@ async def _async_register_hass_zc_service(
 class FlowDispatcher:
     """Dispatch discovery flows."""
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Init the discovery dispatcher."""
         self.hass = hass
         self.pending_flows: list[ZeroconfFlow] = []
@@ -467,8 +467,8 @@ def handle_homekit(
     for test_model in homekit_models:
         if (
             model != test_model
-            and not model.startswith(f"{test_model} ")
-            and not model.startswith(f"{test_model}-")
+            and not model.startswith((f"{test_model} ", f"{test_model}-"))
+            and not fnmatch.fnmatch(model, test_model)
         ):
             continue
 

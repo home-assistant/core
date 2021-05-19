@@ -181,6 +181,11 @@ class FritzBoxTracker(ScannerEntity):
             return "mdi:lan-connect"
         return "mdi:lan-disconnect"
 
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return False
+
     @callback
     def async_process_update(self) -> None:
         """Update device."""
