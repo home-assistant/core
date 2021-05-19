@@ -27,17 +27,7 @@ class HassLoggerFormatChecker(BaseChecker):
             "All logger messages must start with a capital letter",
         ),
     }
-    options = (
-        (
-            "hass-logger",
-            {
-                "default": "properties",
-                "help": (
-                    "Validate _LOGGER or LOGGER messages conform to Home Assistant standards."
-                ),
-            },
-        ),
-    )
+    options = ()
 
     def visit_call(self, node):
         """Called when a :class:`.astroid.node_classes.Call` node is visited.
@@ -67,14 +57,14 @@ class HassLoggerFormatChecker(BaseChecker):
             return
 
         if log_message[-1] == ".":
-            self.add_message("hass-logger-period", args=node.args, node=node)
+            self.add_message("hass-logger-period", node=node)
 
         if (
             isinstance(node.func.attrname, str)
             and node.func.attrname not in LOG_LEVEL_ALLOWED_LOWER_START
             and log_message[0].upper() != log_message[0]
         ):
-            self.add_message("hass-logger-capital", args=node.args, node=node)
+            self.add_message("hass-logger-capital", node=node)
 
 
 def register(linter):
