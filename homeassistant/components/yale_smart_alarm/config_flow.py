@@ -4,7 +4,7 @@ from __future__ import annotations
 import voluptuous as vol
 from yalesmartalarmclient.client import AuthenticationError, YaleSmartAlarmClient
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_CODE, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
@@ -19,24 +19,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_AREA_ID, default=DEFAULT_AREA_ID): cv.string,
     }
 )
-
-
-async def validate_input(hass: core.HomeAssistant, username, password):
-    """Validate the user input allows us to connect."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data["username"] == username:
-            raise AlreadyConfigured
-
-    try:
-        await hass.async_add_executor_job(YaleSmartAlarmClient, username, password)
-    except AuthenticationError as error:
-        LOGGER.error("Authentication failed. Check credentials %s", error)
-        raise InvalidAuth from error
-    except Exception as error:
-        LOGGER.error("Connection could not be made %s", error)
-        raise CannotConnect from error
-
-    return True
 
 
 class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -57,30 +39,23 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             area = user_input.get(CONF_AREA_ID, DEFAULT_AREA_ID)
 
             try:
-                await validate_input(self.hass, username, password)
-            except AlreadyConfigured:
-                return self.async_abort(reason="already_configured")
-            except InvalidAuth:
+                await self.hass.async_add_executor_job(
+                    YaleSmartAlarmClient, username, password
+                )
+            except AuthenticationError as error:
+                LOGGER.error("Authentication failed. Check credentials %s", error)
                 return self.async_show_form(
                     step_id="user",
                     data_schema=DATA_SCHEMA,
                     errors={"base": "invalid_auth"},
                     description_placeholders={},
                 )
-            except CannotConnect:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=DATA_SCHEMA,
-                    errors={"base": "connection_error"},
-                    description_placeholders={},
-                )
 
-            unique_id = username
-            await self.async_set_unique_id(unique_id)
+            await self.async_set_unique_id(username)
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
-                title=unique_id,
+                title=username,
                 data={
                     CONF_USERNAME: username,
                     CONF_PASSWORD: password,
@@ -103,7 +78,3 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class AlreadyConfigured(exceptions.HomeAssistantError):
     """Error to indicate host is already configured."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
