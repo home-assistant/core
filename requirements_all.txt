@@ -830,6 +830,9 @@ ifaddr==0.1.7
 # homeassistant.components.network
 ifaddr==0.1.7
 
+# homeassistant.components.network
+ifaddr==0.1.7
+
 # homeassistant.components.iglo
 iglo==1.2.7
 
