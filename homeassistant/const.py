@@ -229,7 +229,7 @@ EVENT_TIME_CHANGED: Final = "time_changed"
 # #### DEVICE CLASSES ####
 DEVICE_CLASS_BATTERY: Final = "battery"
 DEVICE_CLASS_CO: Final = "carbon_monoxide"
-DEVICE_CLASS_CO2 = "carbon_dioxide"
+DEVICE_CLASS_CO2: Final = "carbon_dioxide"
 DEVICE_CLASS_HUMIDITY: Final = "humidity"
 DEVICE_CLASS_ILLUMINANCE: Final = "illuminance"
 DEVICE_CLASS_SIGNAL_STRENGTH: Final = "signal_strength"
