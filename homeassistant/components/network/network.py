@@ -166,23 +166,13 @@ def load_adapters(next_hop: str | None) -> list[Adapter]:
                     ip_addr = ip_address(ip_config.ip[0])
                 except ValueError:
                     continue
-                ip_v6: IPv6ConfiguredAddress = {
-                    "address": str(ip_addr),
-                    "flowinfo": ip_config.ip[1],
-                    "scope_id": ip_config.ip[2],
-                    "network_prefix": ip_config.network_prefix,
-                }
-                ip_v6s.append(ip_v6)
+                ip_v6s.append(_ip_v6_from_adapter(ip_config))
             else:
                 try:
                     ip_addr = ip_address(ip_config.ip)
                 except ValueError:
                     continue
-                ip_v4: IPv4ConfiguredAddress = {
-                    "address": str(ip_addr),
-                    "network_prefix": ip_config.network_prefix,
-                }
-                ip_v4s.append(ip_v4)
+                ip_v4s.append(_ip_v4_from_adapter(ip_config))
 
             if next_hop and ip_addr == next_hop_address:
                 default = True
@@ -206,6 +196,22 @@ def load_adapters(next_hop: str | None) -> list[Adapter]:
                 adapter["auto"] = True
 
     return ha_adapters
+
+
+def _ip_v6_from_adapter(ip_config: ifaddr.IP) -> IPv6ConfiguredAddress:
+    return {
+        "address": ip_config.ip[0],
+        "flowinfo": ip_config.ip[1],
+        "scope_id": ip_config.ip[2],
+        "network_prefix": ip_config.network_prefix,
+    }
+
+
+def _ip_v4_from_adapter(ip_config: ifaddr.IP) -> IPv4ConfiguredAddress:
+    return {
+        "address": ip_config.ip,
+        "network_prefix": ip_config.network_prefix,
+    }
 
 
 def _get_ip_route(dst_ip: str) -> Iterable:
