@@ -23,13 +23,15 @@ async def test_heartbeat_trigger_startup(hass):
     assert mock_ping.call_args == call(device.host)
 
 
-async def test_heartbeat_ignore_oserror(hass):
+async def test_heartbeat_ignore_oserror(hass, caplog):
     """Test that an OSError is ignored."""
     device = get_device("Office")
 
     with patch(DEVICE_PING, side_effect=OSError()):
         await device.setup_entry(hass)
         await hass.async_block_till_done()
+
+    assert "Failed to send heartbeat to" in caplog.text
 
 
 async def test_heartbeat_trigger_right_time(hass):
