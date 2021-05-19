@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .const import (
@@ -29,7 +30,7 @@ async def async_get_adapters(hass: HomeAssistant) -> list[Adapter]:
     return network.adapters
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up network for Home Assistant."""
 
     hass.data[DOMAIN] = network = Network(hass)

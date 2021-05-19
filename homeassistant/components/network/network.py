@@ -58,7 +58,7 @@ class Network:
         await self.async_load()
         self._adapters = load_adapters(self._next_broadcast_hop)
 
-    async def async_migrate_from_zeroconf(self, zc_config) -> None:
+    async def async_migrate_from_zeroconf(self, zc_config: dict[str, Any]) -> None:
         """Migrate configuration from zeroconf."""
         if self._data:
             return
@@ -210,12 +210,12 @@ def load_adapters(next_hop: str | None) -> list[Adapter]:
     return ha_adapters
 
 
-def _get_ip_route(dst_ip: str) -> Any:
+def _get_ip_route(dst_ip: str) -> Iterable:
     """Get ip next hop."""
-    return IPRoute().route("get", dst=dst_ip)
+    return cast(Iterable, IPRoute().route("get", dst=dst_ip))
 
 
-def _first_ip_nexthop_from_route(routes: Iterable) -> None | str:
+def _first_ip_nexthop_from_route(routes: Iterable) -> str | None:
     """Find the first RTA_PREFSRC in the routes."""
     _LOGGER.debug("Routes: %s", routes)
     for route in routes:
@@ -227,21 +227,22 @@ def _first_ip_nexthop_from_route(routes: Iterable) -> None | str:
 
 async def async_default_next_broadcast_hop(hass: HomeAssistant) -> None | str:
     """Auto detect the default next broadcast hop."""
-    routes = []
     try:
-        routes = await hass.async_add_executor_job(_get_ip_route, MDNS_TARGET_IP)
+        routes: Iterable = await hass.async_add_executor_job(
+            _get_ip_route, MDNS_TARGET_IP
+        )
     except Exception as ex:  # pylint: disable=broad-except
         _LOGGER.debug(
             "The system could not auto detect routing data on your operating system",
             exc_info=ex,
         )
         return None
+    else:
+        if not (first_ip := _first_ip_nexthop_from_route(routes)):
+            _LOGGER.debug(
+                "The system could not auto detect the nexthop for %s on your operating system",
+                MDNS_TARGET_IP,
+            )
+            return None
 
-    if not (first_ip := _first_ip_nexthop_from_route(routes)):
-        _LOGGER.debug(
-            "The system could not auto detect the nexthop for %s on your operating system",
-            MDNS_TARGET_IP,
-        )
-        return None
-
-    return first_ip
+        return first_ip
