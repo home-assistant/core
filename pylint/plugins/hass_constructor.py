@@ -1,11 +1,12 @@
-from astroid.node_classes import Const
-from astroid.nodes import ClassDef
+"""Plugin for constructor definitions."""
+from astroid import ClassDef, Const, FunctionDef
 from pylint.checkers import BaseChecker
 from pylint.interfaces import IAstroidChecker
+from pylint.lint import PyLinter
 
 
-class HassConstructorFormatChecker(BaseChecker):
-    """Check that __init__ return type is present."""
+class HassConstructorFormatChecker(BaseChecker):  # type: ignore[misc]
+    """Checker for __init__ definitions."""
 
     __implements__ = IAstroidChecker
 
@@ -21,22 +22,23 @@ class HassConstructorFormatChecker(BaseChecker):
     }
     options = ()
 
-    def visit_functiondef(self, node):
-        """Called when a :class:`.astroid.node_classes.FunctionDef` node is visited.
-        See :mod:`astroid` for the description of available nodes.
-        :param node: The node to check.
-        :type node: astroid.node_classes.FunctionDef
-        """
+    def visit_functiondef(self, node: FunctionDef) -> None:
+        """Called when a FunctionDef node is visited."""
         if not node.is_method() or node.name != "__init__":
             return
 
         # Check that all arguments are annotated.
         # The first argument is "self".
+        args = node.args
         annotations = (
-            node.args.posonlyargs_annotations
-            + node.args.annotations
-            + node.args.kwonlyargs_annotations
+            args.posonlyargs_annotations
+            + args.annotations
+            + args.kwonlyargs_annotations
         )[1:]
+        if args.vararg is not None:
+            annotations.append(args.varargannotation)
+        if args.kwarg is not None:
+            annotations.append(args.kwargannotation)
         if not annotations or any(hint is None for hint in annotations):
             return
 
@@ -45,9 +47,6 @@ class HassConstructorFormatChecker(BaseChecker):
             self.add_message("hass-constructor-return", node=node)
 
 
-def register(linter):
-    """This required method auto registers the checker.
-    :param linter: The linter to register the checker to.
-    :type linter: pylint.lint.PyLinter
-    """
+def register(linter: PyLinter) -> None:
+    """Register the checker."""
     linter.register_checker(HassConstructorFormatChecker(linter))

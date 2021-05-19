@@ -1,18 +1,18 @@
+"""Plugin for logger invocations."""
 import astroid
 from pylint.checkers import BaseChecker
 from pylint.interfaces import IAstroidChecker
+from pylint.lint import PyLinter
 
 LOGGER_NAMES = ("LOGGER", "_LOGGER")
 LOG_LEVEL_ALLOWED_LOWER_START = ("debug",)
 
-# This is our checker class.
-# Checkers should always inherit from `BaseChecker`.
-class HassLoggerFormatChecker(BaseChecker):
-    """Add class member attributes to the class locals dictionary."""
+
+class HassLoggerFormatChecker(BaseChecker):  # type: ignore[misc]
+    """Checker for logger invocations."""
 
     __implements__ = IAstroidChecker
 
-    # The name defines a custom section of the config for this checker.
     name = "hass_logger"
     priority = -1
     msgs = {
@@ -29,12 +29,8 @@ class HassLoggerFormatChecker(BaseChecker):
     }
     options = ()
 
-    def visit_call(self, node):
-        """Called when a :class:`.astroid.node_classes.Call` node is visited.
-        See :mod:`astroid` for the description of available nodes.
-        :param node: The node to check.
-        :type node: astroid.node_classes.Call
-        """
+    def visit_call(self, node: astroid.Call) -> None:
+        """Called when a Call node is visited."""
         if not isinstance(node.func, astroid.Attribute) or not isinstance(
             node.func.expr, astroid.Name
         ):
@@ -67,9 +63,6 @@ class HassLoggerFormatChecker(BaseChecker):
             self.add_message("hass-logger-capital", node=node)
 
 
-def register(linter):
-    """This required method auto registers the checker.
-    :param linter: The linter to register the checker to.
-    :type linter: pylint.lint.PyLinter
-    """
+def register(linter: PyLinter) -> None:
+    """Register the checker."""
     linter.register_checker(HassLoggerFormatChecker(linter))
