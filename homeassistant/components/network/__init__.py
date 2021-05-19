@@ -30,7 +30,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     hass.data[DOMAIN] = network = Network(hass)
     await network.async_setup()
     await network.async_migrate_from_zeroconf(config.get(ZEROCONF_DOMAIN, {}))
-    await network.async_configure()
+    network.async_configure()
 
     _LOGGER.debug("Adapters: %s", network.adapters)
 
