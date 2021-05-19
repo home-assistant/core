@@ -796,7 +796,7 @@ MOCK_OWPROXY_DEVICES = {
                 "class": DEVICE_CLASS_TEMPERATURE,
             },
             {
-                "entity_id": "sensor.7e_222222222222_pressure",
+                "entity_id": "sensor.7E_222222222222_pressure",
                 "unique_id": "/7E.222222222222/EDS0066/pressure",
                 "injected_value": b"  1012.21",
                 "result": "1012.2",
