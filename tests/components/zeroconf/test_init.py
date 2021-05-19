@@ -702,7 +702,7 @@ async def test_async_detect_interfaces_setting_non_loopback_route(hass, mock_zer
     with patch.object(hass.config_entries.flow, "async_init"), patch.object(
         zeroconf, "HaServiceBrowser", side_effect=service_update_mock
     ), patch(
-        "homeassistant.components.zeroconf.IPRoute.route",
+        "homeassistant.components.network.network.IPRoute.route",
         return_value=_ROUTE_NO_LOOPBACK,
     ), patch(
         "homeassistant.components.zeroconf.ServiceInfo",
@@ -720,7 +720,8 @@ async def test_async_detect_interfaces_setting_loopback_route(hass, mock_zerocon
     with patch.object(hass.config_entries.flow, "async_init"), patch.object(
         zeroconf, "HaServiceBrowser", side_effect=service_update_mock
     ), patch(
-        "homeassistant.components.zeroconf.IPRoute.route", return_value=_ROUTE_LOOPBACK
+        "homeassistant.components.network.network.IPRoute.route",
+        return_value=_ROUTE_LOOPBACK,
     ), patch(
         "homeassistant.components.zeroconf.ServiceInfo",
         side_effect=get_service_info_mock,
@@ -736,7 +737,9 @@ async def test_async_detect_interfaces_setting_empty_route(hass, mock_zeroconf):
     """Test without default interface config and the route returns nothing."""
     with patch.object(hass.config_entries.flow, "async_init"), patch.object(
         zeroconf, "HaServiceBrowser", side_effect=service_update_mock
-    ), patch("homeassistant.components.zeroconf.IPRoute.route", return_value=[]), patch(
+    ), patch(
+        "homeassistant.components.network.network.IPRoute.route", return_value=[]
+    ), patch(
         "homeassistant.components.zeroconf.ServiceInfo",
         side_effect=get_service_info_mock,
     ):
@@ -752,7 +755,8 @@ async def test_async_detect_interfaces_setting_exception(hass, mock_zeroconf):
     with patch.object(hass.config_entries.flow, "async_init"), patch.object(
         zeroconf, "HaServiceBrowser", side_effect=service_update_mock
     ), patch(
-        "homeassistant.components.zeroconf.IPRoute.route", side_effect=AttributeError
+        "homeassistant.components.network.network.IPRoute.route",
+        side_effect=AttributeError,
     ), patch(
         "homeassistant.components.zeroconf.ServiceInfo",
         side_effect=get_service_info_mock,
