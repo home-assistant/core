@@ -49,6 +49,53 @@ async def async_get_interface_config(hass: HomeAssistant) -> HaZeroconf:
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up network for Home Assistant."""
     network_config = config.get(DOMAIN, {})
+    websocket_api.async_register_command(hass, websocket_analytics)
+    websocket_api.async_register_command(hass, websocket_analytics_preferences)
+
+    hass.data[DOMAIN] = analytics
+    return True
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command({vol.Required("type"): "analytics"})
+async def websocket_analytics(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Return analytics preferences."""
+    analytics: Analytics = hass.data[DOMAIN]
+    connection.send_result(
+        msg["id"],
+        {ATTR_PREFERENCES: analytics.preferences, ATTR_ONBOARDED: analytics.onboarded},
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "analytics/preferences",
+        vol.Required("preferences", default={}): PREFERENCE_SCHEMA,
+    }
+)
+async def websocket_analytics_preferences(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Update analytics preferences."""
+    preferences = msg[ATTR_PREFERENCES]
+    analytics: Analytics = hass.data[DOMAIN]
+
+    await analytics.save_preferences(preferences)
+    await analytics.send_analytics()
+
+    connection.send_result(
+        msg["id"],
+        {ATTR_PREFERENCES: analytics.preferences},
+    )
 
 
 def _get_ip_route(dst_ip: str) -> Any:
