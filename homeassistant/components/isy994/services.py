@@ -86,7 +86,7 @@ VALID_PROGRAM_COMMANDS = [
     "enable_run_at_startup",
     "disable_run_at_startup",
 ]
-VALID_PARAMETER_SIZES = ["1", 1, "2", 2, "4", 4]
+VALID_PARAMETER_SIZES = [1, 2, 4]
 
 
 def valid_isy_commands(value: Any) -> str:
@@ -129,7 +129,7 @@ SERVICE_GET_ZWAVE_PARAMETER_SCHEMA = {vol.Required(CONF_PARAMETER): vol.Coerce(i
 SERVICE_SET_ZWAVE_PARAMETER_SCHEMA = {
     vol.Required(CONF_PARAMETER): vol.Coerce(int),
     vol.Required(CONF_VALUE): vol.Coerce(int),
-    vol.Required(CONF_SIZE): vol.In(VALID_PARAMETER_SIZES),
+    vol.Required(CONF_SIZE): vol.All(vol.Coerce(int), vol.In(VALID_PARAMETER_SIZES)),
 }
 
 SERVICE_SET_VARIABLE_SCHEMA = vol.All(
