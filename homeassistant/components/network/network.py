@@ -102,12 +102,13 @@ def _enable_adapters(adapters: list[Adapter], enabled_interfaces: list[str]) -> 
     if not enabled_interfaces:
         return False
 
+    found_adapter = False
     for adapter in adapters:
         if adapter["name"] in enabled_interfaces:
             adapter["enabled"] = True
-            return True
+            found_adapter = True
 
-    return False
+    return found_adapter
 
 
 def _auto_detect_adapters(adapters: list[Adapter]) -> None:
