@@ -613,20 +613,20 @@ def enable_statistics():
 def hass_recorder(enable_statistics):
     """Home Assistant fixture with in-memory recorder."""
     hass = get_test_home_assistant()
+    stats = recorder.Recorder.async_hourly_statistics if enable_statistics else None
+    with patch(
+        "homeassistant.components.recorder.Recorder.async_hourly_statistics",
+        side_effect=stats,
+        autospec=True,
+    ):
 
-    def setup_recorder(config=None):
-        """Set up with params."""
-        stats = recorder.Recorder.async_hourly_statistics if enable_statistics else None
-        with patch(
-            "homeassistant.components.recorder.Recorder.async_hourly_statistics",
-            side_effect=stats,
-            autospec=True,
-        ):
+        def setup_recorder(config=None):
+            """Set up with params."""
             init_recorder_component(hass, config)
             hass.start()
             hass.block_till_done()
             hass.data[recorder.DATA_INSTANCE].block_till_done()
             return hass
 
-    yield setup_recorder
-    hass.stop()
+        yield setup_recorder
+        hass.stop()
