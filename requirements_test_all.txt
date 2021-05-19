@@ -471,6 +471,9 @@ ifaddr==0.1.7
 # homeassistant.components.network
 ifaddr==0.1.7
 
+# homeassistant.components.network
+ifaddr==0.1.7
+
 # homeassistant.components.influxdb
 influxdb-client==1.14.0
 
