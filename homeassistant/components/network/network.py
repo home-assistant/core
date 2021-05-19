@@ -1,12 +1,11 @@
 """Network helper class for the network integration."""
 from __future__ import annotations
 
-from ipaddress import ip_address
+from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
 from typing import Any, Iterable, cast
 
 import ifaddr
-from models import Adapter, IPv4ConfiguredAddress, IPv6ConfiguredAddress
 from pyroute2 import IPRoute
 
 from homeassistant.core import HomeAssistant
@@ -19,6 +18,7 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+from .models import Adapter, IPv4ConfiguredAddress, IPv6ConfiguredAddress
 
 MDNS_TARGET_IP = "224.0.0.251"
 
@@ -130,14 +130,19 @@ def _adapters_with_exernal_addresses(adapters: list[Adapter]) -> list[str]:
 
 def _adapter_has_external_address(adapter: Adapter) -> bool:
     """Adapter has a non-loopback and non-link-local address."""
-    for ip_config in adapter["ipv4"] + adapter["ipv6"]:
-        if (
-            not ip_config["address"].is_loopback
-            and not ip_config["address"].is_link_local
-        ):
-            return True
+    return any(
+        _has_external_address(v4_config["address"]) for v4_config in adapter["ipv4"]
+    ) or any(
+        _has_external_address(v6_config["address"]) for v6_config in adapter["ipv6"]
+    )
 
-    return False
+
+def _has_external_address(ip_addr: IPv4Address | IPv6Address):
+    return (
+        not ip_addr.is_multicast
+        and not ip_addr.is_loopback
+        and not ip_addr.is_link_local
+    )
 
 
 def load_adapters(next_hop: str | None) -> list[Adapter]:
@@ -173,7 +178,7 @@ def load_adapters(next_hop: str | None) -> list[Adapter]:
                 ip_v4s.append(ip_v4)
 
         ha_adapter: Adapter = {
-            "adapter": adapter.nice_name,
+            "name": adapter.nice_name,
             "enabled": False,
             "default": default,
             "ipv4": ip_v4s,
