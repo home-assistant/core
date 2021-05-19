@@ -32,7 +32,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     except ConnectionError as exception:
         _LOGGER.error("Unable to fetch data from Wallbox Switch. %s", exception)
-
         return False
 
     hass.data.setdefault(DOMAIN, {CONF_CONNECTIONS: {}})
