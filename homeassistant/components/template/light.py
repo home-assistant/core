@@ -55,6 +55,7 @@ CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 CONF_WHITE_VALUE_ACTION = "set_white_value"
 CONF_EFFECT_ACTION = "set_effect"
 CONF_EFFECT_LIST_TEMPLATE = "effect_list_template"
+CONF_EFFECT_TEMPLATE = "effect_template"
 CONF_MAX_MIREDS_TEMPLATE = "max_mireds_template"
 CONF_MIN_MIREDS_TEMPLATE = "min_mireds_template"
 CONF_SUPPORTS_TRANSITION = "supports_transition_template"
@@ -80,6 +81,7 @@ LIGHT_SCHEMA = vol.All(
             vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_WHITE_VALUE_ACTION): cv.SCRIPT_SCHEMA,
             vol.Inclusive(CONF_EFFECT_LIST_TEMPLATE, "effect"): cv.template,
+            vol.Inclusive(CONF_EFFECT_TEMPLATE, "effect"): cv.template,
             vol.Inclusive(CONF_EFFECT_ACTION, "effect"): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_MAX_MIREDS_TEMPLATE): cv.template,
             vol.Optional(CONF_MIN_MIREDS_TEMPLATE): cv.template,
@@ -124,6 +126,7 @@ async def _async_create_entities(hass, config):
 
         effect_action = device_config.get(CONF_EFFECT_ACTION)
         effect_list_template = device_config.get(CONF_EFFECT_LIST_TEMPLATE)
+        effect_template = device_config.get(CONF_EFFECT_TEMPLATE)
 
         max_mireds_template = device_config.get(CONF_MAX_MIREDS_TEMPLATE)
         min_mireds_template = device_config.get(CONF_MIN_MIREDS_TEMPLATE)
@@ -151,6 +154,7 @@ async def _async_create_entities(hass, config):
                 white_value_template,
                 effect_action,
                 effect_list_template,
+                effect_template,
                 max_mireds_template,
                 min_mireds_template,
                 supports_transition_template,
@@ -190,6 +194,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         white_value_template,
         effect_action,
         effect_list_template,
+        effect_template,
         max_mireds_template,
         min_mireds_template,
         supports_transition_template,
@@ -233,6 +238,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         if effect_action is not None:
             self._effect_script = Script(hass, effect_action, friendly_name, domain)
         self._effect_list_template = effect_list_template
+        self._effect_template = effect_template
         self._max_mireds_template = max_mireds_template
         self._min_mireds_template = min_mireds_template
         self._supports_transition_template = supports_transition_template
@@ -390,6 +396,14 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._update_effect_list,
                 none_on_template_error=True,
             )
+        if self._effect_template:
+            self.add_template_attribute(
+                "_effect",
+                self._effect_template,
+                None,
+                self._update_effect,
+                none_on_template_error=True,
+            )
         if self._supports_transition_template:
             self.add_template_attribute(
                 "_supports_transition_template",
@@ -475,10 +489,8 @@ class LightTemplate(TemplateEntity, LightEntity):
             )
         elif ATTR_BRIGHTNESS in kwargs and self._level_script:
             await self._level_script.async_run(common_params, context=self._context)
-        elif ATTR_TRANSITION in kwargs and self._supports_transition is True:
-            await self._on_script.async_run(common_params, context=self._context)
         else:
-            await self._on_script.async_run(context=self._context)
+            await self._on_script.async_run(common_params, context=self._context)
 
         if optimistic_set:
             self.async_write_ha_state()
@@ -486,7 +498,9 @@ class LightTemplate(TemplateEntity, LightEntity):
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         if ATTR_TRANSITION in kwargs and self._supports_transition is True:
-            await self._off_script.async_run({"transition": kwargs[ATTR_TRANSITION]}, context=self._context)
+            await self._off_script.async_run(
+                {"transition": kwargs[ATTR_TRANSITION]}, context=self._context
+            )
         else:
             await self._off_script.async_run(context=self._context)
         if self._template is None:
@@ -550,7 +564,29 @@ class LightTemplate(TemplateEntity, LightEntity):
             self._effect_list = None
             return
 
+        if len(effect_list) == 0:
+            self._effect_list = None
+            return
+
         self._effect_list = effect_list
+
+    @callback
+    def _update_effect(self, effect):
+        """Update the effect from the template."""
+        if effect in ("None", ""):
+            self._effect = None
+            return
+
+        if effect not in self._effect_list:
+            _LOGGER.error(
+                "Received invalid effect: %s. Expected one of: %s",
+                effect,
+                self._effect_list,
+            )
+            self._effect = None
+            return
+
+        self._effect = effect
 
     @callback
     def _update_state(self, result):
@@ -654,7 +690,6 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_min_mireds(self, render):
         """Update the min mireds from the template."""
-
         try:
             if render in ("None", ""):
                 self._min_mireds = None
@@ -670,7 +705,6 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_supports_transition(self, render):
         """Update the supports transition from the template."""
-
         try:
             if render in ("None", ""):
                 self._supports_transition = False
