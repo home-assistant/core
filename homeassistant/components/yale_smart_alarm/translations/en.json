@@ -1,0 +1,22 @@
+{
+    "config": {
+      "abort": {
+        "already_configured": "Connection already configured for this account"
+      },
+      "error": {
+        "auth_error": "Authentication error",
+        "connection_error": "Connection error"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "username": "Username",
+            "password": "Password",
+            "code": "Code to open/close door lock",
+            "name": "Name of integration",
+            "area_id": "Area ID"
+          }
+        }
+      }
+    }
+  }
