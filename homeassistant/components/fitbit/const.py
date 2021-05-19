@@ -43,7 +43,7 @@ DEFAULT_CONFIG: Final[dict[str, str]] = {
 }
 DEFAULT_CLOCK_FORMAT: Final = "24H"
 
-FITBIT_RESOURCES_LIST: Final[dict[str, tuple[str, str | None, str | None]]] = {
+FITBIT_RESOURCES_LIST: Final[dict[str, tuple[str, str | None, str]]] = {
     "activities/activityCalories": ("Activity Calories", "cal", "fire"),
     "activities/calories": ("Calories", "cal", "fire"),
     "activities/caloriesBMR": ("Calories BMR", "cal", "fire"),
@@ -89,7 +89,7 @@ FITBIT_RESOURCES_LIST: Final[dict[str, tuple[str, str | None, str | None]]] = {
     "body/bmi": ("BMI", "BMI", "human"),
     "body/fat": ("Body Fat", PERCENTAGE, "human"),
     "body/weight": ("Weight", "", "human"),
-    "devices/battery": ("Battery", None, None),
+    "devices/battery": ("Battery", None, "battery"),
     "sleep/awakeningsCount": ("Awakenings Count", "times awaken", "sleep"),
     "sleep/efficiency": ("Sleep Efficiency", PERCENTAGE, "sleep"),
     "sleep/minutesAfterWakeup": ("Minutes After Wakeup", TIME_MINUTES, "sleep"),

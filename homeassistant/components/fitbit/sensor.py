@@ -82,7 +82,7 @@ def request_app_setup(
     """Assist user with configuring the Fitbit dev application."""
     configurator = hass.components.configurator
 
-    def fitbit_configuration_callback(callback_data: Any) -> None:
+    def fitbit_configuration_callback(fields: list[dict[str, str]]) -> None:
         """Handle configuration updates."""
         config_path = hass.config.path(FITBIT_CONFIG_FILE)
         if os.path.isfile(config_path):
@@ -130,7 +130,7 @@ def request_oauth_completion(hass: HomeAssistant) -> None:
 
         return
 
-    def fitbit_configuration_callback(callback_data: Any) -> None:
+    def fitbit_configuration_callback(fields: list[dict[str, str]]) -> None:
         """Handle configuration updates."""
 
     start_url = f"{get_url(hass)}{FITBIT_AUTH_START}"
@@ -384,7 +384,7 @@ class FitbitSensor(SensorEntity):
         return self._unit_of_measurement
 
     @property
-    def icon(self) -> str | None:
+    def icon(self) -> str:
         """Icon to use in the frontend, if any."""
         if self.resource_type == "devices/battery" and self.extra is not None:
             extra_battery = self.extra.get("battery")
@@ -392,10 +392,8 @@ class FitbitSensor(SensorEntity):
                 battery_level = BATTERY_LEVELS.get(extra_battery)
                 if battery_level is not None:
                     return icon_for_battery_level(battery_level=battery_level)
-        fitbit_ressource = FITBIT_RESOURCES_LIST.get(self.resource_type)
-        if fitbit_ressource is not None:
-            return f"mdi:{fitbit_ressource[2]}"
-        return None
+        fitbit_ressource = FITBIT_RESOURCES_LIST[self.resource_type]
+        return f"mdi:{fitbit_ressource[2]}"
 
     @property
     def extra_state_attributes(self) -> dict[str, str | None]:
