@@ -29,7 +29,7 @@ async def async_get_adapters(hass: HomeAssistant) -> list[Adapter]:
     return network.adapters
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up network for Home Assistant."""
 
     hass.data[DOMAIN] = network = Network(hass)
