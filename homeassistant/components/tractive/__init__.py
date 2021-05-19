@@ -11,7 +11,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTAN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN, TRACKER_STATUS_RECEIVED
+from .const import DOMAIN, TRACKER_HARDWARE_STATUS_UPDATED, TRACKER_POSITION_UPDATED
 
 PLATFORMS = ["device_tracker"]
 
@@ -85,19 +85,37 @@ class TractiveClient:
         async for event in self._client.events():
             if event["message"] != "tracker_status":
                 continue
-            tracker_id = event["tracker_id"]
-            battery_level = event["hardware"]["battery_level"]
-            latitude = event["position"]["latlong"][0]
-            longitude = event["position"]["latlong"][1]
-            accuracy = event["position"]["accuracy"]
 
-            async_dispatcher_send(
-                self._hass,
-                f"{TRACKER_STATUS_RECEIVED}-{tracker_id}",
-                {
-                    "battery_level": battery_level,
-                    "latitude": latitude,
-                    "longitude": longitude,
-                    "accuracy": accuracy,
-                },
-            )
+            _LOGGER.warning("Event received. Payload=%s", event)
+
+            if "hardware" in event:
+                self._send_hardware_update(event)
+
+            if "position" in event:
+                self._send_position_update(event)
+
+    def _send_hardware_update(self, event):
+        payload = {"battery_level": event["hardware"]["battery_level"]}
+        self._dispatch_tracker_event(
+            TRACKER_HARDWARE_STATUS_UPDATED, event["tracker_id"], payload
+        )
+
+    def _send_position_update(self, event):
+        payload = {
+            "latitude": event["position"]["latlong"][0],
+            "longitude": event["position"]["latlong"][1],
+            "accuracy": event["position"]["accuracy"],
+        }
+        self._dispatch_tracker_event(
+            TRACKER_POSITION_UPDATED, event["tracker_id"], payload
+        )
+
+    def _dispatch_tracker_event(self, event_name, tracker_id, payload):
+        _LOGGER.warning(
+            "Dispatching event %s-%s payload=%s", event_name, tracker_id, payload
+        )
+        async_dispatcher_send(
+            self._hass,
+            f"{event_name}-{tracker_id}",
+            payload,
+        )

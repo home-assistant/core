@@ -8,7 +8,7 @@ from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DOMAIN, TRACKER_STATUS_RECEIVED
+from .const import DOMAIN, TRACKER_HARDWARE_STATUS_UPDATED, TRACKER_POSITION_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,13 +54,13 @@ class TractiveDeviceTracker(TrackerEntity):
         self._latitude = pos_report["latlong"][0]
         self._longitude = pos_report["latlong"][1]
         self._accuracy = pos_report["pos_uncertainty"]
+        self._tracker_id = self._tracker_details["_id"]
 
     @property
     def name(self):
         """Return the name of the sensor."""
         pet_name = self._trackable["details"]["name"]
-        device_id = self._trackable["device_id"]
-        return f"{device_id} {pet_name}"
+        return f"{self._tracker_id} {pet_name}"
 
     @property
     def unique_id(self):
@@ -81,8 +81,8 @@ class TractiveDeviceTracker(TrackerEntity):
     def device_info(self):
         """Return device information."""
         return {
-            "identifiers": {(DOMAIN, self._tracker_details["_id"])},
-            "name": f"Tractive ({self._tracker_details['_id']})",
+            "identifiers": {(DOMAIN, self._tracker_id)},
+            "name": f"Tractive ({self._tracker_id})",
             "manufacturer": "Tractive GmbH",
             "sw_version": self._tracker_details["fw_version"],
             "entry_type": None,
@@ -113,17 +113,39 @@ class TractiveDeviceTracker(TrackerEntity):
         """Handle entity which will be added."""
 
         @callback
-        def handle_status_update(event):
+        def handle_hardware_status_update(event):
+            _LOGGER.warning(
+                "[%s] Hardware status event received. payload=%s",
+                self._tracker_id,
+                event,
+            )
+            self._battery_level = event["battery_level"]
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{TRACKER_HARDWARE_STATUS_UPDATED}-{self._tracker_id}",
+                handle_hardware_status_update,
+            )
+        )
+
+        @callback
+        def handle_position_update(event):
+            _LOGGER.warning(
+                "[%s] Position updated event received.payload=%s",
+                self._tracker_id,
+                event,
+            )
             self._latitude = event["latitude"]
             self._longitude = event["longitude"]
-            self._battery_level = event["battery_level"]
             self._accuracy = event["accuracy"]
             self.async_write_ha_state()
 
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{TRACKER_STATUS_RECEIVED}-{self._trackable['device_id']}",
-                handle_status_update,
+                f"{TRACKER_POSITION_UPDATED}-{self._tracker_id}",
+                handle_position_update,
             )
         )
