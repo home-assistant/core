@@ -3,7 +3,7 @@
   "name": "Network Configuration",
   "documentation": "https://www.home-assistant.io/integrations/network",
   "requirements": [
-    "pyroute2==0.5.19",
+    "pyroute2==0.5.18",
     "ifaddr==0.1.7"
   ],
   "codeowners": [],
