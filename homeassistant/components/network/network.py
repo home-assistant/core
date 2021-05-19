@@ -1,9 +1,10 @@
 """Network helper class for the network integration."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
-from typing import Any, Iterable, cast
+from typing import Any, cast
 
 import ifaddr
 from pyroute2 import IPRoute
