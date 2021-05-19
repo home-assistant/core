@@ -5,10 +5,11 @@ from __future__ import annotations
 import asyncio
 import base64
 import binascii
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 import functools
 import logging
-from typing import Any, AsyncGenerator, Callable
+from typing import Any, Callable
 
 from aiohttp import web
 from hyperion import client
