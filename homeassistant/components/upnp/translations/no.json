@@ -21,7 +21,17 @@
             "user": {
                 "data": {
                     "scan_interval": "Oppdateringsintervall (sekunder, minimum 30)",
+                    "unique_id": "Enhet",
                     "usn": "Enhet"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Oppdateringsintervall (sekunder, minimum 30)"
                 }
             }
         }
