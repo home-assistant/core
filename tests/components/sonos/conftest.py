@@ -10,6 +10,18 @@ from homeassistant.const import CONF_HOSTS
 from tests.common import MockConfigEntry
 
 
+class SonosMockEvent:
+    """Mock a sonos Event used in callbacks."""
+
+    def __init__(self, soco, variables):
+        """Initialize the instance."""
+        self.sid = f"{soco.uid}_sub0000000001"
+        self.seq = "0"
+        self.timestamp = 1621000000.0
+        self.service = dummy_soco_service_fixture
+        self.variables = variables
+
+
 @pytest.fixture(name="config_entry")
 def config_entry_fixture():
     """Create a mock Sonos config entry."""
@@ -95,3 +107,13 @@ def battery_info_fixture():
         "Temperature": "NORMAL",
         "PowerSource": "SONOS_CHARGING_RING",
     }
+
+
+@pytest.fixture(name="battery_event")
+def battery_event_fixture(soco):
+    """Create battery_event fixture."""
+    variables = {
+        "zone_name": "Zone A",
+        "more_info": "BattChg:NOT_CHARGING,RawBattPct:100,BattPct:100,BattTmp:25",
+    }
+    return SonosMockEvent(soco, variables)

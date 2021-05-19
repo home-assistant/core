@@ -183,15 +183,21 @@ class SonosSpeaker:
             self.hass, f"{SONOS_SEEN}-{self.soco.uid}", self.async_seen
         )
 
-        if battery_info := fetch_battery_info_or_none(self.soco):
-            # Battery events can be infrequent, polling is still necessary
-            self.battery_info = battery_info
-            self._battery_poll_timer = self.hass.helpers.event.track_time_interval(
-                self.async_poll_battery, BATTERY_SCAN_INTERVAL
-            )
-            dispatcher_send(self.hass, SONOS_CREATE_BATTERY, self)
-        else:
+        if (battery_info := fetch_battery_info_or_none(self.soco)) is None:
             self._platforms_ready.update({BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN})
+        else:
+            self.battery_info = battery_info
+            # Only create a polling task if successful, may fail on S1 firmware
+            if battery_info:
+                # Battery events can be infrequent, polling is still necessary
+                self._battery_poll_timer = self.hass.helpers.event.track_time_interval(
+                    self.async_poll_battery, BATTERY_SCAN_INTERVAL
+                )
+            else:
+                _LOGGER.warning(
+                    "S1 firmware detected, battery sensor may update infrequently"
+                )
+            dispatcher_send(self.hass, SONOS_CREATE_BATTERY, self)
 
         dispatcher_send(self.hass, SONOS_CREATE_MEDIA_PLAYER, self)
 
@@ -370,6 +376,17 @@ class SonosSpeaker:
         self._last_battery_event = dt_util.utcnow()
 
         is_charging = EVENT_CHARGING[battery_dict["BattChg"]]
+
+        if not self._battery_poll_timer:
+            # Battery info received for an S1 speaker
+            self.battery_info.update(
+                {
+                    "Level": int(battery_dict["BattPct"]),
+                    "PowerSource": "EXTERNAL" if is_charging else "BATTERY",
+                }
+            )
+            return
+
         if is_charging == self.charging:
             self.battery_info.update({"Level": int(battery_dict["BattPct"])})
         else:
@@ -384,17 +401,21 @@ class SonosSpeaker:
         return self.coordinator is None
 
     @property
-    def power_source(self) -> str:
+    def power_source(self) -> str | None:
         """Return the name of the current power source.
 
         Observed to be either BATTERY or SONOS_CHARGING_RING or USB_POWER.
+
+        May be an empty dict if used with an S1 Move.
         """
-        return self.battery_info["PowerSource"]
+        return self.battery_info.get("PowerSource")
 
     @property
-    def charging(self) -> bool:
+    def charging(self) -> bool | None:
         """Return the charging status of the speaker."""
-        return self.power_source != "BATTERY"
+        if self.power_source:
+            return self.power_source != "BATTERY"
+        return None
 
     async def async_poll_battery(self, now: datetime.datetime | None = None) -> None:
         """Poll the device for the current battery state."""
