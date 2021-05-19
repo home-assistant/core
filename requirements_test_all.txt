@@ -963,7 +963,7 @@ pyrisco==0.3.1
 pyrituals==0.0.3
 
 # homeassistant.components.network
-pyroute2==0.5.19
+pyroute2==0.5.18
 
 # homeassistant.components.ruckus_unleashed
 pyruckus==0.12
