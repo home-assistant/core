@@ -86,7 +86,7 @@ class TractiveClient:
             if event["message"] != "tracker_status":
                 continue
 
-            _LOGGER.warning("Event received. Payload=%s", event)
+            _LOGGER.debug("Event received. Payload=%s.", event)
 
             if "hardware" in event:
                 self._send_hardware_update(event)
@@ -111,8 +111,8 @@ class TractiveClient:
         )
 
     def _dispatch_tracker_event(self, event_name, tracker_id, payload):
-        _LOGGER.warning(
-            "Dispatching event %s-%s payload=%s", event_name, tracker_id, payload
+        _LOGGER.debug(
+            "Dispatching event %s-%s payload=%s.", event_name, tracker_id, payload
         )
         async_dispatcher_send(
             self._hass,

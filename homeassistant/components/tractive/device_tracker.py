@@ -114,8 +114,8 @@ class TractiveDeviceTracker(TrackerEntity):
 
         @callback
         def handle_hardware_status_update(event):
-            _LOGGER.warning(
-                "[%s] Hardware status event received. payload=%s",
+            _LOGGER.debug(
+                "[%s] Hardware status event received. payload=%s.",
                 self._tracker_id,
                 event,
             )
@@ -132,8 +132,8 @@ class TractiveDeviceTracker(TrackerEntity):
 
         @callback
         def handle_position_update(event):
-            _LOGGER.warning(
-                "[%s] Position updated event received.payload=%s",
+            _LOGGER.debug(
+                "[%s] Position updated event received.payload=%s.",
                 self._tracker_id,
                 event,
             )
