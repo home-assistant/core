@@ -72,10 +72,12 @@ class Network:
             )
             await self._async_save()
 
-    def async_configure(self) -> None:
+    async def async_configure(self) -> None:
         """Configure from storage."""
         if not _enable_adapters(self._adapters, self.configured_adapters):
             _auto_detect_adapters(self._adapters)
+        if not self._data:
+            await self._async_save()
 
     async def async_reconfig(self, config: dict[str, Any]) -> None:
         """Reconfigure network."""
