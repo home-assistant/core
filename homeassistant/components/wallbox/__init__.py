@@ -27,7 +27,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
     )
-
     try:
         await hass.async_add_executor_job(wallbox.authenticate)
 
