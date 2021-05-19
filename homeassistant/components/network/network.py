@@ -210,7 +210,7 @@ def load_adapters(next_hop: str | None) -> list[Adapter]:
     return ha_adapters
 
 
-def _get_ip_route(dst_ip: str) -> Any:
+def _get_ip_route(dst_ip: str) -> Iterable:
     """Get ip next hop."""
     return IPRoute().route("get", dst=dst_ip)
 
