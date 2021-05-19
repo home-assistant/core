@@ -45,8 +45,8 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
 
 
-@websocket_api.require_admin  # type: ignore[arg-type]
 @websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "network"})
 async def websocket_network_adapters(
     hass: HomeAssistant,
