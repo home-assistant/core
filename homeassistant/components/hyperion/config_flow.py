@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
 from contextlib import suppress
 import logging
 from typing import Any
@@ -322,13 +321,6 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    def _create_task(self, target: Coroutine) -> asyncio.tasks.Task:
-        """Create a task."""
-        # This call is pulled out into a function to allow narrowly targeted
-        # patching for test purposes, see the
-        # test_auth_create_token_approval_declined_task_canceled test.
-        return self.hass.async_create_task(target)
-
     async def async_step_create_token(
         self, user_input: ConfigType | None = None
     ) -> FlowResult:
@@ -348,7 +340,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         # wait on the response (which includes the user needing to visit the Hyperion
         # UI to approve the request for a new token).
         assert self._auth_id is not None
-        self._request_token_task = self._create_task(
+        self._request_token_task = self.hass.async_create_task(
             self._request_token_task_func(self._auth_id)
         )
         return self.async_external_step(

@@ -5,9 +5,10 @@ from __future__ import annotations
 import asyncio
 import base64
 import binascii
+from contextlib import asynccontextmanager
 import functools
 import logging
-from typing import Any, Callable
+from typing import Any, AsyncGenerator, Callable
 
 from aiohttp import web
 from hyperion import client
@@ -155,7 +156,6 @@ class HyperionCamera(Camera):
         """Return server availability."""
         return bool(self._client.has_loaded_state)
 
-    @callback
     async def _update_imagestream(self, img: dict[str, Any] | None = None) -> None:
         """Update Hyperion components."""
         if not img:
@@ -200,27 +200,34 @@ class HyperionCamera(Camera):
             self.is_streaming = False
             self.async_write_ha_state()
 
+    @asynccontextmanager
+    async def _image_streaming(self) -> AsyncGenerator:
+        """Async context manager to start/stop image streaming."""
+        try:
+            yield await self._start_image_streaming_for_client()
+        finally:
+            await self._stop_image_streaming_for_client()
+
     async def async_camera_image(self) -> bytes | None:
         """Return single camera image bytes."""
-        if not await self._start_image_streaming_for_client():
-            return None
-        image = await self._async_wait_for_camera_image()
-        await self._stop_image_streaming_for_client()
-        return image
+        async with self._image_streaming() as is_streaming:
+            if is_streaming:
+                return await self._async_wait_for_camera_image()
+        return None
 
     async def handle_async_mjpeg_stream(
         self, request: web.Request
     ) -> web.StreamResponse | None:
         """Serve an HTTP MJPEG stream from the camera."""
-        if not await self._start_image_streaming_for_client():
-            return None
-        try:
-            response = await async_get_still_stream(
-                request, self._async_wait_for_camera_image, DEFAULT_CONTENT_TYPE, 0.0
-            )
-        finally:
-            await self._stop_image_streaming_for_client()
-        return response
+        async with self._image_streaming() as is_streaming:
+            if is_streaming:
+                return await async_get_still_stream(
+                    request,
+                    self._async_wait_for_camera_image,
+                    DEFAULT_CONTENT_TYPE,
+                    0.0,
+                )
+        return None
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity added to hass."""

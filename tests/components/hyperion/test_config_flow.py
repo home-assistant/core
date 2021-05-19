@@ -442,17 +442,15 @@ async def test_auth_create_token_approval_declined_task_canceled(
     ), patch(
         "homeassistant.components.hyperion.config_flow.client.generate_random_auth_id",
         return_value=TEST_AUTH_ID,
-    ), patch(
-        "homeassistant.components.hyperion.config_flow.HyperionConfigFlow._create_task",
-        side_effect=create_task,
     ):
         result = await _configure_flow(
             hass, result, user_input={CONF_CREATE_TOKEN: True}
         )
         assert result["step_id"] == "create_token"
 
-        result = await _configure_flow(hass, result)
-        assert result["step_id"] == "create_token_external"
+        with patch.object(hass, "async_create_task", side_effect=create_task):
+            result = await _configure_flow(hass, result)
+            assert result["step_id"] == "create_token_external"
 
         result = await _configure_flow(hass, result)
 
