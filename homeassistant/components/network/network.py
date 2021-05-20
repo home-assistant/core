@@ -66,7 +66,7 @@ class Network:
         """Reconfigure network."""
         config = NETWORK_CONFIG_SCHEMA(config)
         self._data[ATTR_CONFIGURED_ADAPTERS] = config[ATTR_CONFIGURED_ADAPTERS]
-        enable_adapters(self.adapters, self.configured_adapters)
+        self.async_configure()
         await self._async_save()
 
     async def async_load(self) -> None:
