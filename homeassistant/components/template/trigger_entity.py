@@ -29,7 +29,7 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
         hass: HomeAssistant,
         coordinator: TriggerUpdateCoordinator,
         config: dict,
-    ):
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
 
