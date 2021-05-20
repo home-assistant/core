@@ -99,7 +99,7 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         update_interval = timedelta(minutes=40)
         if self.forecast:
             update_interval *= 2
-        _LOGGER.debug("Data will be update every %s", str(update_interval))
+        _LOGGER.debug("Data will be update every %s", update_interval)
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
