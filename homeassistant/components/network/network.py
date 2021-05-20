@@ -50,10 +50,7 @@ class Network:
         if self._data:
             return
 
-        if (
-            ZC_CONF_DEFAULT_INTERFACE in zc_config
-            and not zc_config[ZC_CONF_DEFAULT_INTERFACE]
-        ):
+        if zc_config.get(ZC_CONF_DEFAULT_INTERFACE) is False:
             self._data[ATTR_CONFIGURED_ADAPTERS] = adapters_with_exernal_addresses(
                 self.adapters
             )
