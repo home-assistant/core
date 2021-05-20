@@ -86,7 +86,7 @@ def _async_migrate_unique_id(
 class KNXCover(KnxEntity, CoverEntity):
     """Representation of a KNX cover."""
 
-    def __init__(self, xknx: XKNX, config: ConfigType):
+    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize the cover."""
         self._device: XknxCover
         super().__init__(
