@@ -96,7 +96,7 @@ async def async_setup_entry(
 class WLEDMasterLight(LightEntity, WLEDDeviceEntity):
     """Defines a WLED master light."""
 
-    def __init__(self, entry_id: str, coordinator: WLEDDataUpdateCoordinator):
+    def __init__(self, entry_id: str, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED master light."""
         super().__init__(
             entry_id=entry_id,
@@ -177,7 +177,7 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
 
     def __init__(
         self, entry_id: str, coordinator: WLEDDataUpdateCoordinator, segment: int
-    ):
+    ) -> None:
         """Initialize WLED segment light."""
         self._rgbw = coordinator.data.info.leds.rgbw
         self._segment = segment
