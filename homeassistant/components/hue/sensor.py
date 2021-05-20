@@ -6,7 +6,7 @@ from aiohue.sensors import (
     TYPE_ZLL_TEMPERATURE,
 )
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -77,6 +77,7 @@ class HueTemperature(GenericHueGaugeSensorEntity):
     """The temperature sensor entity for a Hue motion sensor device."""
 
     device_class = DEVICE_CLASS_TEMPERATURE
+    state_class = STATE_CLASS_MEASUREMENT
     unit_of_measurement = TEMP_CELSIUS
 
     @property
