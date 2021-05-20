@@ -22,12 +22,13 @@ _LOGGER = logging.getLogger(__name__)
 class AuroraDevice(Entity):
     """Representation of an Aurora ABB PowerOne device."""
 
-    def __init__(self, client: AuroraSerialClient, config_entry: ConfigEntry):
+    def __init__(self, client: AuroraSerialClient, config_entry: ConfigEntry) -> None:
         """Initialise the basic device."""
         self.config_entry = config_entry
         self.type = "device"
         self.client = client
         self._available = True
+        return None
 
     @property
     def unique_id(self) -> str:
