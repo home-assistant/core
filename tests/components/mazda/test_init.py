@@ -12,7 +12,12 @@ from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
 )
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_REGION
+from homeassistant.const import (
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    CONF_REGION,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
@@ -102,14 +107,57 @@ async def test_update_auth_failure(hass: HomeAssistant):
     assert flows[0]["step_id"] == "user"
 
 
+async def test_update_general_failure(hass: HomeAssistant):
+    """Test general failure during data update."""
+    get_vehicles_fixture = json.loads(load_fixture("mazda/get_vehicles.json"))
+    get_vehicle_status_fixture = json.loads(
+        load_fixture("mazda/get_vehicle_status.json")
+    )
+
+    with patch(
+        "homeassistant.components.mazda.MazdaAPI.validate_credentials",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.mazda.MazdaAPI.get_vehicles",
+        return_value=get_vehicles_fixture,
+    ), patch(
+        "homeassistant.components.mazda.MazdaAPI.get_vehicle_status",
+        return_value=get_vehicle_status_fixture,
+    ):
+        config_entry = MockConfigEntry(domain=DOMAIN, data=FIXTURE_USER_INPUT)
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state == ENTRY_STATE_LOADED
+
+    with patch(
+        "homeassistant.components.mazda.MazdaAPI.get_vehicles",
+        side_effect=Exception("Unknown exception"),
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=61))
+        await hass.async_block_till_done()
+
+    entity = hass.states.get("sensor.my_mazda3_fuel_remaining_percentage")
+    assert entity is not None
+    assert entity.state == STATE_UNAVAILABLE
+
+
 async def test_unload_config_entry(hass: HomeAssistant) -> None:
     """Test the Mazda configuration entry unloading."""
-    entry = await init_integration(hass)
+    await init_integration(hass)
     assert hass.data[DOMAIN]
 
-    await hass.config_entries.async_unload(entry.entry_id)
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state == ENTRY_STATE_LOADED
+
+    await hass.config_entries.async_unload(entries[0].entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entries[0].state == ENTRY_STATE_NOT_LOADED
 
 
 async def test_device_nickname(hass):

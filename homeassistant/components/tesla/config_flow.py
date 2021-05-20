@@ -36,7 +36,7 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the tesla flow."""
         self.username = None
         self.reauth = False
@@ -149,7 +149,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
 
     config = {}
-    async_client = httpx.AsyncClient(headers={USER_AGENT: SERVER_SOFTWARE})
+    async_client = httpx.AsyncClient(headers={USER_AGENT: SERVER_SOFTWARE}, timeout=60)
 
     try:
         controller = TeslaAPI(

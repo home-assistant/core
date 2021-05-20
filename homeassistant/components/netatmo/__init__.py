@@ -19,7 +19,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_entry_oauth2_flow,
+    config_validation as cv,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -102,8 +106,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not entry.unique_id:
         hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
 
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     hass.data[DOMAIN][entry.entry_id] = {
-        AUTH: api.ConfigEntryNetatmoAuth(hass, entry, implementation)
+        AUTH: api.AsyncConfigEntryNetatmoAuth(
+            aiohttp_client.async_get_clientsession(hass), session
+        )
     }
 
     data_handler = NetatmoDataHandler(hass, entry)
@@ -122,6 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             {"type": "None", "data": {"push_type": "webhook_deactivation"}},
         )
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+        await hass.data[DOMAIN][entry.entry_id][AUTH].async_dropwebhook()
 
     async def register_webhook(event):
         if CONF_WEBHOOK_ID not in entry.data:
@@ -175,11 +183,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 handle_event,
             )
 
-            activation_timeout = async_call_later(hass, 10, unregister_webhook)
+            activation_timeout = async_call_later(hass, 30, unregister_webhook)
 
-            await hass.async_add_executor_job(
-                hass.data[DOMAIN][entry.entry_id][AUTH].addwebhook, webhook_url
-            )
+            await hass.data[DOMAIN][entry.entry_id][AUTH].async_addwebhook(webhook_url)
             _LOGGER.info("Register Netatmo webhook: %s", webhook_url)
         except pyatmo.ApiError as err:
             _LOGGER.error("Error during webhook registration - %s", err)
@@ -202,9 +208,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     if CONF_WEBHOOK_ID in entry.data:
-        await hass.async_add_executor_job(
-            hass.data[DOMAIN][entry.entry_id][AUTH].dropwebhook
-        )
+        webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+        await hass.data[DOMAIN][entry.entry_id][AUTH].async_dropwebhook()
         _LOGGER.info("Unregister Netatmo webhook")
 
     await hass.data[DOMAIN][entry.entry_id][DATA_HANDLER].async_cleanup()

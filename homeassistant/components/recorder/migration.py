@@ -11,7 +11,7 @@ from sqlalchemy.exc import (
 )
 from sqlalchemy.schema import AddConstraint, DropConstraint
 
-from .models import SCHEMA_VERSION, TABLE_STATES, Base, SchemaChanges
+from .models import SCHEMA_VERSION, TABLE_STATES, Base, SchemaChanges, Statistics
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -444,6 +444,11 @@ def _apply_update(engine, session, new_version, old_version):
     elif new_version == 14:
         _modify_columns(connection, engine, "events", ["event_type VARCHAR(64)"])
     elif new_version == 15:
+        if sqlalchemy.inspect(engine).has_table(Statistics.__tablename__):
+            # Recreate the statistics table
+            Statistics.__table__.drop(engine)
+            Statistics.__table__.create(engine)
+    elif new_version == 16:
         _drop_foreign_key_constraints(
             connection, engine, TABLE_STATES, ["old_state_id"]
         )

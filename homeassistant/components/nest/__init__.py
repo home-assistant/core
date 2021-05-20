@@ -106,7 +106,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 class SignalUpdateCallback:
     """An EventCallback invoked when new events arrive from subscriber."""
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize EventCallback."""
         self._hass = hass
 

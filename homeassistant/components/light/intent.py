@@ -2,7 +2,7 @@
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
@@ -10,10 +10,11 @@ import homeassistant.util.color as color_util
 from . import (
     ATTR_BRIGHTNESS_PCT,
     ATTR_RGB_COLOR,
+    ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN,
     SERVICE_TURN_ON,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    brightness_supported,
+    color_supported,
 )
 
 INTENT_SET = "HassLightSet"
@@ -22,6 +23,24 @@ INTENT_SET = "HassLightSet"
 async def async_setup_intents(hass: HomeAssistant) -> None:
     """Set up the light intents."""
     hass.helpers.intent.async_register(SetIntentHandler())
+
+
+def _test_supports_color(state: State) -> None:
+    """Test if state supports colors."""
+    supported_color_modes = state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
+    if not color_supported(supported_color_modes):
+        raise intent.IntentHandleError(
+            f"Entity {state.name} does not support changing colors"
+        )
+
+
+def _test_supports_brightness(state: State) -> None:
+    """Test if state supports brightness."""
+    supported_color_modes = state.attributes.get(ATTR_SUPPORTED_COLOR_MODES)
+    if not brightness_supported(supported_color_modes):
+        raise intent.IntentHandleError(
+            f"Entity {state.name} does not support changing brightness"
+        )
 
 
 class SetIntentHandler(intent.IntentHandler):
@@ -46,14 +65,14 @@ class SetIntentHandler(intent.IntentHandler):
         speech_parts = []
 
         if "color" in slots:
-            intent.async_test_feature(state, SUPPORT_COLOR, "changing colors")
+            _test_supports_color(state)
             service_data[ATTR_RGB_COLOR] = slots["color"]["value"]
             # Use original passed in value of the color because we don't have
             # human readable names for that internally.
             speech_parts.append(f"the color {intent_obj.slots['color']['value']}")
 
         if "brightness" in slots:
-            intent.async_test_feature(state, SUPPORT_BRIGHTNESS, "changing brightness")
+            _test_supports_brightness(state)
             service_data[ATTR_BRIGHTNESS_PCT] = slots["brightness"]["value"]
             speech_parts.append(f"{slots['brightness']['value']}% brightness")
 

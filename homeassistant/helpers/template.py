@@ -24,7 +24,7 @@ import weakref
 import jinja2
 from jinja2 import contextfilter, contextfunction
 from jinja2.sandbox import ImmutableSandboxedEnvironment
-from jinja2.utils import Namespace  # type: ignore
+from jinja2.utils import Namespace
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -581,9 +581,8 @@ class Template:
         self._strict = strict
         env = self._env
 
-        self._compiled = cast(
-            jinja2.Template,
-            jinja2.Template.from_code(env, self._compiled_code, env.globals, None),
+        self._compiled = jinja2.Template.from_code(
+            env, self._compiled_code, env.globals, None
         )
 
         return self._compiled

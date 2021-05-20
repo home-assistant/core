@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_SHOW_ON_MAP,
     PERCENTAGE,
-    PRESSURE_PA,
+    PRESSURE_HPA,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
@@ -47,8 +47,8 @@ TOPIC_UPDATE = f"{DOMAIN}_data_update"
 SENSORS = {
     SENSOR_TEMPERATURE: ["Temperature", "mdi:thermometer", TEMP_CELSIUS],
     SENSOR_HUMIDITY: ["Humidity", "mdi:water-percent", PERCENTAGE],
-    SENSOR_PRESSURE: ["Pressure", "mdi:arrow-down-bold", PRESSURE_PA],
-    SENSOR_PRESSURE_AT_SEALEVEL: ["Pressure at sealevel", "mdi:download", PRESSURE_PA],
+    SENSOR_PRESSURE: ["Pressure", "mdi:arrow-down-bold", PRESSURE_HPA],
+    SENSOR_PRESSURE_AT_SEALEVEL: ["Pressure at sealevel", "mdi:download", PRESSURE_HPA],
     SENSOR_PM10: [
         "PM10",
         "mdi:thought-bubble",
@@ -70,18 +70,21 @@ SENSOR_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_SENSOR_ID): cv.positive_int,
-                vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-                vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.time_period,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_SENSOR_ID): cv.positive_int,
+                    vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+                    vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                    ): cv.time_period,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 

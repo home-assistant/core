@@ -9,7 +9,7 @@
             "invalid_host": "De hostvermelding had de niet volledig URL-indeling, bijvoorbeeld http://192.168.10.100:80",
             "unknown": "Onverwachte fout"
         },
-        "flow_title": "Universele apparaten ISY994 {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

@@ -64,7 +64,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class RitualsDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Rituals Perufme Genie device data from single endpoint."""
 
-    def __init__(self, hass: HomeAssistant, device: Diffuser):
+    def __init__(self, hass: HomeAssistant, device: Diffuser) -> None:
         """Initialize global Rituals Perufme Genie data updater."""
         self._device = device
         super().__init__(

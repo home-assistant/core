@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -21,14 +21,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): str,
     }
 )
-
-
-@callback
-def configured_instances(hass):
-    """Return a set of configured Kostal Plenticore HOSTS."""
-    return {
-        entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
-    }
 
 
 async def test_connection(hass: HomeAssistant, data) -> str:
@@ -56,8 +48,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         hostname = None
 
         if user_input is not None:
-            if user_input[CONF_HOST] in configured_instances(self.hass):
-                return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+
             try:
                 hostname = await test_connection(self.hass, user_input)
             except PlenticoreAuthenticationException as ex:

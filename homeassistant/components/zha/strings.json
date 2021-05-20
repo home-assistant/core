@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "ZHA: {name}",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "title": "ZHA",

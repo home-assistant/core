@@ -10,7 +10,7 @@
         "error": {
             "invalid_auth": "Invalid authentication"
         },
-        "flow_title": "AVM FRITZ!SmartHome: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {

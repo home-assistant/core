@@ -16,6 +16,11 @@ HOMEKIT_DISCOVERY_INFO = {
     "properties": {"id": "AA::BB::CC::DD::EE::FF"},
 }
 
+ZEROCONF_DISCOVERY_INFO = {
+    "name": "Hunter Douglas Powerview Hub._powerview._tcp.local.",
+    "host": "1.2.3.4",
+}
+
 DHCP_DISCOVERY_INFO = {"hostname": "Hunter Douglas Powerview Hub", "ip": "1.2.3.4"}
 
 DISCOVERY_DATA = [
@@ -27,6 +32,7 @@ DISCOVERY_DATA = [
         config_entries.SOURCE_DHCP,
         DHCP_DISCOVERY_INFO,
     ),
+    (config_entries.SOURCE_ZEROCONF, ZEROCONF_DISCOVERY_INFO),
 ]
 
 

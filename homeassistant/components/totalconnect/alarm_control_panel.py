@@ -89,10 +89,10 @@ class TotalConnectAlarm(alarm.AlarmControlPanelEntity):
 
         if self._client.locations[self._location_id].is_disarmed():
             state = STATE_ALARM_DISARMED
-        elif self._client.locations[self._location_id].is_armed_home():
-            state = STATE_ALARM_ARMED_HOME
         elif self._client.locations[self._location_id].is_armed_night():
             state = STATE_ALARM_ARMED_NIGHT
+        elif self._client.locations[self._location_id].is_armed_home():
+            state = STATE_ALARM_ARMED_HOME
         elif self._client.locations[self._location_id].is_armed_away():
             state = STATE_ALARM_ARMED_AWAY
         elif self._client.locations[self._location_id].is_armed_custom_bypass():

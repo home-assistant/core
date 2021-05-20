@@ -4,7 +4,6 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import re
-from typing import Callable
 
 from WazeRouteCalculator import WazeRouteCalculator, WRCError
 import voluptuous as vol
@@ -24,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import Config, CoreState, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_DESTINATION,
@@ -112,7 +112,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list[SensorEntity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Waze travel time sensor entry."""
     defaults = {

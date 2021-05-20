@@ -224,7 +224,7 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         device_class: str | None,
         attribute_templates: dict[str, template.Template],
         unique_id: str | None,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(
             attribute_templates=attribute_templates,

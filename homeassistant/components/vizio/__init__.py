@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_APPS, CONF_DEVICE_CLASS, DOMAIN, VIZIO_SCHEMA
 
@@ -106,10 +106,26 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator):
             update_method=self._async_update_data,
         )
         self.data = APPS
+        self.fail_count = 0
+        self.fail_threshold = 10
 
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Update data via library."""
         data = await gen_apps_list_from_url(session=async_get_clientsession(self.hass))
         if not data:
-            raise UpdateFailed
+            if self.fail_count == self.fail_threshold:
+                _LOGGER.warning(
+                    (
+                        "Unable to retrieve the apps list from the external server "
+                        "for the last %s days"
+                    ),
+                    self.fail_threshold,
+                )
+                self.fail_count = 0
+                self.fail_threshold += 10
+            else:
+                self.fail_count += 1
+            return self.data
+        self.fail_count = 0
+        self.fail_threshold = 10
         return sorted(data, key=lambda app: app["name"])

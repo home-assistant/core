@@ -32,7 +32,7 @@ from homeassistant.setup import async_setup_component
 
 
 @pytest.mark.parametrize(
-    "config, expected_calls, expected_to_succeed, expected_config_flow_user_input",
+    "config, expected_calls, expected_to_succeed, expected_config_entry_data",
     [
         (
             {
@@ -52,13 +52,19 @@ from homeassistant.setup import async_setup_component
             },
             1,
             True,
-            {
-                CONF_GATEWAY_TYPE: CONF_GATEWAY_TYPE_SERIAL,
-                CONF_DEVICE: "COM5",
-                CONF_PERSISTENCE_FILE: "bla.json",
-                CONF_BAUD_RATE: 57600,
-                CONF_VERSION: "2.3",
-            },
+            [
+                {
+                    CONF_GATEWAY_TYPE: CONF_GATEWAY_TYPE_SERIAL,
+                    CONF_DEVICE: "COM5",
+                    CONF_PERSISTENCE_FILE: "bla.json",
+                    CONF_BAUD_RATE: 57600,
+                    CONF_VERSION: "2.3",
+                    CONF_TCP_PORT: 5003,
+                    CONF_TOPIC_IN_PREFIX: "",
+                    CONF_TOPIC_OUT_PREFIX: "",
+                    CONF_RETAIN: True,
+                }
+            ],
         ),
         (
             {
@@ -78,13 +84,19 @@ from homeassistant.setup import async_setup_component
             },
             1,
             True,
-            {
-                CONF_GATEWAY_TYPE: CONF_GATEWAY_TYPE_TCP,
-                CONF_DEVICE: "127.0.0.1",
-                CONF_PERSISTENCE_FILE: "blub.pickle",
-                CONF_TCP_PORT: 343,
-                CONF_VERSION: "2.4",
-            },
+            [
+                {
+                    CONF_GATEWAY_TYPE: CONF_GATEWAY_TYPE_TCP,
+                    CONF_DEVICE: "127.0.0.1",
+                    CONF_PERSISTENCE_FILE: "blub.pickle",
+                    CONF_TCP_PORT: 343,
+                    CONF_VERSION: "2.4",
+                    CONF_BAUD_RATE: 115200,
+                    CONF_TOPIC_IN_PREFIX: "",
+                    CONF_TOPIC_OUT_PREFIX: "",
+                    CONF_RETAIN: False,
+                }
+            ],
         ),
         (
             {
@@ -100,12 +112,19 @@ from homeassistant.setup import async_setup_component
             },
             1,
             True,
-            {
-                CONF_GATEWAY_TYPE: CONF_GATEWAY_TYPE_TCP,
-                CONF_DEVICE: "127.0.0.1",
-                CONF_TCP_PORT: 5003,
-                CONF_VERSION: DEFAULT_VERSION,
-            },
+            [
+                {
+                    CONF_GATEWAY_TYPE: CONF_GATEWAY_TYPE_TCP,
+                    CONF_DEVICE: "127.0.0.1",
+                    CONF_TCP_PORT: 5003,
+                    CONF_VERSION: DEFAULT_VERSION,
+                    CONF_BAUD_RATE: 115200,
+                    CONF_TOPIC_IN_PREFIX: "",
+                    CONF_TOPIC_OUT_PREFIX: "",
+                    CONF_RETAIN: False,
+                    CONF_PERSISTENCE_FILE: "mysensors1.pickle",
+                }
+            ],
         ),
         (
             {
@@ -125,13 +144,19 @@ from homeassistant.setup import async_setup_component
             },
             1,
             True,
-            {
-                CONF_GATEWAY_TYPE: CONF_GATEWAY_TYPE_MQTT,
-                CONF_DEVICE: "mqtt",
-                CONF_VERSION: DEFAULT_VERSION,
-                CONF_TOPIC_OUT_PREFIX: "outtopic",
-                CONF_TOPIC_IN_PREFIX: "intopic",
-            },
+            [
+                {
+                    CONF_GATEWAY_TYPE: CONF_GATEWAY_TYPE_MQTT,
+                    CONF_DEVICE: "mqtt",
+                    CONF_VERSION: DEFAULT_VERSION,
+                    CONF_BAUD_RATE: 115200,
+                    CONF_TCP_PORT: 5003,
+                    CONF_TOPIC_OUT_PREFIX: "outtopic",
+                    CONF_TOPIC_IN_PREFIX: "intopic",
+                    CONF_RETAIN: False,
+                    CONF_PERSISTENCE_FILE: "mysensors1.pickle",
+                }
+            ],
         ),
         (
             {
@@ -149,7 +174,7 @@ from homeassistant.setup import async_setup_component
             },
             0,
             True,
-            {},
+            [{}],
         ),
         (
             {
@@ -177,7 +202,30 @@ from homeassistant.setup import async_setup_component
             },
             2,
             True,
-            {},
+            [
+                {
+                    CONF_DEVICE: "mqtt",
+                    CONF_PERSISTENCE_FILE: "bla.json",
+                    CONF_TOPIC_OUT_PREFIX: "out",
+                    CONF_TOPIC_IN_PREFIX: "in",
+                    CONF_BAUD_RATE: 115200,
+                    CONF_TCP_PORT: 5003,
+                    CONF_VERSION: "2.4",
+                    CONF_RETAIN: False,
+                    CONF_GATEWAY_TYPE: CONF_GATEWAY_TYPE_MQTT,
+                },
+                {
+                    CONF_DEVICE: "COM6",
+                    CONF_PERSISTENCE_FILE: "bla2.json",
+                    CONF_TOPIC_OUT_PREFIX: "",
+                    CONF_TOPIC_IN_PREFIX: "",
+                    CONF_BAUD_RATE: 115200,
+                    CONF_TCP_PORT: 5003,
+                    CONF_VERSION: "2.4",
+                    CONF_RETAIN: False,
+                    CONF_GATEWAY_TYPE: CONF_GATEWAY_TYPE_SERIAL,
+                },
+            ],
         ),
         (
             {
@@ -203,7 +251,7 @@ from homeassistant.setup import async_setup_component
             },
             0,
             False,
-            {},
+            [{}],
         ),
         (
             {
@@ -223,7 +271,47 @@ from homeassistant.setup import async_setup_component
             },
             0,
             True,
-            {},
+            [{}],
+        ),
+        (
+            {
+                DOMAIN: {
+                    CONF_GATEWAYS: [
+                        {
+                            CONF_DEVICE: "COM1",
+                        },
+                        {
+                            CONF_DEVICE: "COM2",
+                        },
+                    ],
+                }
+            },
+            2,
+            True,
+            [
+                {
+                    CONF_DEVICE: "COM1",
+                    CONF_PERSISTENCE_FILE: "mysensors1.pickle",
+                    CONF_TOPIC_OUT_PREFIX: "",
+                    CONF_TOPIC_IN_PREFIX: "",
+                    CONF_BAUD_RATE: 115200,
+                    CONF_TCP_PORT: 5003,
+                    CONF_VERSION: "1.4",
+                    CONF_RETAIN: True,
+                    CONF_GATEWAY_TYPE: CONF_GATEWAY_TYPE_SERIAL,
+                },
+                {
+                    CONF_DEVICE: "COM2",
+                    CONF_PERSISTENCE_FILE: "mysensors2.pickle",
+                    CONF_TOPIC_OUT_PREFIX: "",
+                    CONF_TOPIC_IN_PREFIX: "",
+                    CONF_BAUD_RATE: 115200,
+                    CONF_TCP_PORT: 5003,
+                    CONF_VERSION: "1.4",
+                    CONF_RETAIN: True,
+                    CONF_GATEWAY_TYPE: CONF_GATEWAY_TYPE_SERIAL,
+                },
+            ],
         ),
     ],
 )
@@ -233,7 +321,7 @@ async def test_import(
     config: ConfigType,
     expected_calls: int,
     expected_to_succeed: bool,
-    expected_config_flow_user_input: dict[str, Any],
+    expected_config_entry_data: list[dict[str, Any]],
 ) -> None:
     """Test importing a gateway."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -249,8 +337,13 @@ async def test_import(
 
     assert len(mock_setup_entry.mock_calls) == expected_calls
 
-    if expected_calls > 0:
-        config_flow_user_input = mock_setup_entry.mock_calls[0][1][1].data
-        for key, value in expected_config_flow_user_input.items():
-            assert key in config_flow_user_input
-            assert config_flow_user_input[key] == value
+    for idx in range(expected_calls):
+        config_entry = mock_setup_entry.mock_calls[idx][1][1]
+        expected_persistence_file = expected_config_entry_data[idx].pop(
+            CONF_PERSISTENCE_FILE
+        )
+        expected_persistence_path = hass.config.path(expected_persistence_file)
+        config_entry_data = dict(config_entry.data)
+        persistence_path = config_entry_data.pop(CONF_PERSISTENCE_FILE)
+        assert persistence_path == expected_persistence_path
+        assert config_entry_data == expected_config_entry_data[idx]

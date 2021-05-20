@@ -95,21 +95,21 @@ def valid_supported_color_modes(color_modes: Iterable[str]) -> set[str]:
     return color_modes
 
 
-def brightness_supported(color_modes: Iterable[str]) -> bool:
+def brightness_supported(color_modes: Iterable[str] | None) -> bool:
     """Test if brightness is supported."""
     if not color_modes:
         return False
     return any(mode in COLOR_MODES_BRIGHTNESS for mode in color_modes)
 
 
-def color_supported(color_modes: Iterable[str]) -> bool:
+def color_supported(color_modes: Iterable[str] | None) -> bool:
     """Test if color is supported."""
     if not color_modes:
         return False
     return any(mode in COLOR_MODES_COLOR for mode in color_modes)
 
 
-def color_temp_supported(color_modes: Iterable[str]) -> bool:
+def color_temp_supported(color_modes: Iterable[str] | None) -> bool:
     """Test if color temperature is supported."""
     if not color_modes:
         return False
@@ -343,7 +343,7 @@ async def async_setup(hass, config):  # noqa: C901
             rgb_color = params.pop(ATTR_RGB_COLOR)
             if COLOR_MODE_RGBW in supported_color_modes:
                 params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
-            if COLOR_MODE_RGBWW in supported_color_modes:
+            elif COLOR_MODE_RGBWW in supported_color_modes:
                 params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
                     *rgb_color, light.min_mireds, light.max_mireds
                 )
@@ -488,7 +488,7 @@ class Profile:
 class Profiles:
     """Representation of available color profiles."""
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize profiles."""
         self.hass = hass
         self.data: dict[str, Profile] = {}

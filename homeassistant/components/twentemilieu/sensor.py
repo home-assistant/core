@@ -1,8 +1,6 @@
 """Support for Twente Milieu sensors."""
 from __future__ import annotations
 
-from typing import Callable
-
 from twentemilieu import (
     WASTE_TYPE_NON_RECYCLABLE,
     WASTE_TYPE_ORGANIC,
@@ -14,11 +12,12 @@ from twentemilieu import (
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ID
+from homeassistant.const import ATTR_IDENTIFIERS, ATTR_MANUFACTURER, ATTR_NAME, CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_UPDATE, DOMAIN
 
@@ -28,7 +27,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Twente Milieu sensor based on a config entry."""
     twentemilieu = hass.data[DOMAIN][entry.data[CONF_ID]]
@@ -90,7 +89,6 @@ class TwenteMilieuSensor(SensorEntity):
         self._name = name
         self._twentemilieu = twentemilieu
         self._waste_type = waste_type
-        self._unsub_dispatcher = None
 
         self._state = None
 
@@ -121,13 +119,11 @@ class TwenteMilieuSensor(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Connect to dispatcher listening for entity data notifications."""
-        self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, DATA_UPDATE, self._schedule_immediate_update
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, DATA_UPDATE, self._schedule_immediate_update
+            )
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect from update signal."""
-        self._unsub_dispatcher()
 
     @callback
     def _schedule_immediate_update(self, unique_id: str) -> None:
@@ -150,7 +146,7 @@ class TwenteMilieuSensor(SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about Twente Milieu."""
         return {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "name": "Twente Milieu",
-            "manufacturer": "Twente Milieu",
+            ATTR_IDENTIFIERS: {(DOMAIN, self._unique_id)},
+            ATTR_NAME: "Twente Milieu",
+            ATTR_MANUFACTURER: "Twente Milieu",
         }

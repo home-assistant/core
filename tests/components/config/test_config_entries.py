@@ -287,7 +287,7 @@ async def test_abort(hass, client):
     }
 
 
-async def test_create_account(hass, client):
+async def test_create_account(hass, client, enable_custom_integrations):
     """Test a flow that creates an account."""
     mock_entity_platform(hass, "config_flow.test", None)
 
@@ -333,10 +333,11 @@ async def test_create_account(hass, client):
         },
         "description": None,
         "description_placeholders": None,
+        "options": {},
     }
 
 
-async def test_two_step_flow(hass, client):
+async def test_two_step_flow(hass, client, enable_custom_integrations):
     """Test we can finish a two step flow."""
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
@@ -403,6 +404,7 @@ async def test_two_step_flow(hass, client):
             },
             "description": None,
             "description_placeholders": None,
+            "options": {},
         }
 
 

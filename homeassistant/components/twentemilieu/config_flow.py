@@ -66,10 +66,7 @@ class TwenteMilieuFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_address"
             return await self._show_setup_form(errors)
 
-        entries = self._async_current_entries()
-        for entry in entries:
-            if entry.data[CONF_ID] == unique_id:
-                return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_ID: unique_id})
 
         return self.async_create_entry(
             title=str(unique_id),

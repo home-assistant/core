@@ -1,7 +1,6 @@
 """Support for Modbus Coil and Discrete Input sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -21,9 +20,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .base_platform import BasePlatform
 from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
@@ -36,6 +35,7 @@ from .const import (
     MODBUS_DOMAIN,
 )
 
+PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -91,85 +91,33 @@ async def async_setup_platform(
             hub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         if CONF_SCAN_INTERVAL not in entry:
             entry[CONF_SCAN_INTERVAL] = DEFAULT_SCAN_INTERVAL
-        sensors.append(
-            ModbusBinarySensor(
-                hub,
-                entry[CONF_NAME],
-                entry.get(CONF_SLAVE),
-                entry[CONF_ADDRESS],
-                entry.get(CONF_DEVICE_CLASS),
-                entry[CONF_INPUT_TYPE],
-                entry[CONF_SCAN_INTERVAL],
-            )
-        )
+        sensors.append(ModbusBinarySensor(hub, entry))
 
     async_add_entities(sensors)
 
 
-class ModbusBinarySensor(BinarySensorEntity):
+class ModbusBinarySensor(BasePlatform, BinarySensorEntity):
     """Modbus binary sensor."""
-
-    def __init__(
-        self, hub, name, slave, address, device_class, input_type, scan_interval
-    ):
-        """Initialize the Modbus binary sensor."""
-        self._hub = hub
-        self._name = name
-        self._slave = int(slave) if slave else None
-        self._address = int(address)
-        self._device_class = device_class
-        self._input_type = input_type
-        self._value = None
-        self._available = True
-        self._scan_interval = timedelta(seconds=scan_interval)
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-        async_track_time_interval(
-            self.hass, lambda arg: self.update(), self._scan_interval
-        )
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        await self.async_base_added_to_hass()
 
     @property
     def is_on(self):
         """Return the state of the sensor."""
         return self._value
 
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-
-        # Handle polling directly in this entity
-        return False
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
-
-    def update(self):
+    async def async_update(self, now=None):
         """Update the state of the sensor."""
-        if self._input_type == CALL_TYPE_COIL:
-            result = self._hub.read_coils(self._slave, self._address, 1)
-        else:
-            result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._address, 1, self._input_type
+        )
         if result is None:
             self._available = False
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
             return
 
         self._value = result.bits[0] & 1
         self._available = True
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
