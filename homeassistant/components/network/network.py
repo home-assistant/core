@@ -15,10 +15,9 @@ from .const import (
 from .models import Adapter
 from .util import (
     adapters_with_exernal_addresses,
-    async_default_next_broadcast_hop,
+    async_load_adapters,
     enable_adapters,
     enable_auto_detected_adapters,
-    load_adapters,
 )
 
 ZC_CONF_DEFAULT_INTERFACE = (
@@ -35,7 +34,6 @@ class Network:
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self._data: dict[str, Any] = {}
         self._adapters: list[Adapter] = []
-        self._next_broadcast_hop: str | None = None
 
     @property
     def adapters(self) -> list[Adapter]:
@@ -49,9 +47,8 @@ class Network:
 
     async def async_setup(self) -> None:
         """Set up the network config."""
-        self._next_broadcast_hop = await async_default_next_broadcast_hop(self.hass)
         await self.async_load()
-        self._adapters = load_adapters(self._next_broadcast_hop)
+        self._adapters = await async_load_adapters(self.hass)
 
     async def async_migrate_from_zeroconf(self, zc_config: dict[str, Any]) -> None:
         """Migrate configuration from zeroconf."""

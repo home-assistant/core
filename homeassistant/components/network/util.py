@@ -17,6 +17,24 @@ from .models import Adapter, IPv4ConfiguredAddress, IPv6ConfiguredAddress
 _LOGGER = logging.getLogger(__name__)
 
 
+async def async_load_adapters(hass: HomeAssistant) -> list[Adapter]:
+    """Load adapters."""
+    next_hop = await _async_default_next_broadcast_hop(hass)
+    next_hop_address = ip_address(next_hop) if next_hop else None
+
+    ha_adapters: list[Adapter] = [
+        _ifaddr_adapter_to_ha(adapter, next_hop_address)
+        for adapter in ifaddr.get_adapters()
+    ]
+
+    if not any(adapter["default"] and adapter["auto"] for adapter in ha_adapters):
+        for adapter in ha_adapters:
+            if _adapter_has_external_address(adapter):
+                adapter["auto"] = True
+
+    return ha_adapters
+
+
 def enable_adapters(adapters: list[Adapter], enabled_interfaces: list[str]) -> bool:
     """Enable configured adapters."""
     _reset_enabled_adapters(adapters)
@@ -73,23 +91,6 @@ def _ip_address_is_external(ip_addr: IPv4Address | IPv6Address) -> bool:
 def _reset_enabled_adapters(adapters: list[Adapter]) -> None:
     for adapter in adapters:
         adapter["enabled"] = False
-
-
-def load_adapters(next_hop: str | None) -> list[Adapter]:
-    """Load adapters."""
-    next_hop_address = ip_address(next_hop) if next_hop else None
-
-    ha_adapters: list[Adapter] = [
-        _ifaddr_adapter_to_ha(adapter, next_hop_address)
-        for adapter in ifaddr.get_adapters()
-    ]
-
-    if not any(adapter["default"] and adapter["auto"] for adapter in ha_adapters):
-        for adapter in ha_adapters:
-            if _adapter_has_external_address(adapter):
-                adapter["auto"] = True
-
-    return ha_adapters
 
 
 def _ifaddr_adapter_to_ha(
@@ -155,7 +156,7 @@ def _first_ip_nexthop_from_route(routes: Iterable) -> str | None:
     return None
 
 
-async def async_default_next_broadcast_hop(hass: HomeAssistant) -> None | str:
+async def _async_default_next_broadcast_hop(hass: HomeAssistant) -> None | str:
     """Auto detect the default next broadcast hop."""
     try:
         routes: Iterable = await hass.async_add_executor_job(
