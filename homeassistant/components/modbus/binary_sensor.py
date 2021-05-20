@@ -36,6 +36,7 @@ from .const import (
     MODBUS_DOMAIN,
 )
 
+PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -114,9 +115,7 @@ class ModbusBinarySensor(BinarySensorEntity):
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-        async_track_time_interval(
-            self._hass, lambda arg: self.update(), self._scan_interval
-        )
+        async_track_time_interval(self._hass, self.async_update, self._scan_interval)
 
     @property
     def name(self):
@@ -148,17 +147,18 @@ class ModbusBinarySensor(BinarySensorEntity):
         """Return True if entity is available."""
         return self._available
 
-    def update(self):
+    async def async_update(self, now=None):
         """Update the state of the sensor."""
-        if self._input_type == CALL_TYPE_COIL:
-            result = self._hub.read_coils(self._slave, self._address, 1)
-        else:
-            result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
+        # remark "now" is a dummy parameter to avoid problems with
+        # async_track_time_interval
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._address, 1, self._input_type
+        )
         if result is None:
             self._available = False
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
             return
 
         self._value = result.bits[0] & 1
         self._available = True
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

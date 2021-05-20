@@ -66,7 +66,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
         camera_id: str,
         camera_type: str,
         home_id: str,
-    ):
+    ) -> None:
         """Initialize a Netatmo Presence camera light."""
         LightEntity.__init__(self)
         super().__init__(data_handler)

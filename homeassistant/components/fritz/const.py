@@ -12,7 +12,7 @@ DEFAULT_PORT = 49000
 DEFAULT_USERNAME = ""
 
 ERROR_AUTH_INVALID = "invalid_auth"
-ERROR_CONNECTION_ERROR = "connection_error"
+ERROR_CANNOT_CONNECT = "cannot_connect"
 ERROR_UNKNOWN = "unknown_error"
 
 FRITZ_SERVICES = "fritz_services"

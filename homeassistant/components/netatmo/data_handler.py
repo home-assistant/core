@@ -52,7 +52,7 @@ SCAN_INTERVAL = 60
 class NetatmoDataHandler:
     """Manages the Netatmo data handling."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize self."""
         self.hass = hass
         self._auth = hass.data[DOMAIN][entry.entry_id][AUTH]

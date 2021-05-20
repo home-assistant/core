@@ -749,7 +749,7 @@ class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """Return the state."""
         return STATE_ON if self.is_on else STATE_OFF
 

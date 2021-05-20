@@ -580,9 +580,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 schedule_id = sid
 
         if not schedule_id:
-            _LOGGER.error(
-                "%s is not a invalid schedule", kwargs.get(ATTR_SCHEDULE_NAME)
-            )
+            _LOGGER.error("%s is not a valid schedule", kwargs.get(ATTR_SCHEDULE_NAME))
             return
 
         await self._data.async_switch_home_schedule(

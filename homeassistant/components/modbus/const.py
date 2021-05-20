@@ -75,6 +75,10 @@ CALL_TYPE_COIL = "coil"
 CALL_TYPE_DISCRETE = "discrete_input"
 CALL_TYPE_REGISTER_HOLDING = "holding"
 CALL_TYPE_REGISTER_INPUT = "input"
+CALL_TYPE_WRITE_COIL = "write_coil"
+CALL_TYPE_WRITE_COILS = "write_coils"
+CALL_TYPE_WRITE_REGISTER = "write_register"
+CALL_TYPE_WRITE_REGISTERS = "write_registers"
 
 # service calls
 SERVICE_WRITE_COIL = "write_coil"

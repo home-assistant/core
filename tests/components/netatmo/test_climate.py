@@ -459,7 +459,7 @@ async def test_service_schedule_thermostats(hass, config_entry, caplog, netatmo_
         await hass.async_block_till_done()
         mock_switch_home_schedule.assert_not_called()
 
-    assert "summer is not a invalid schedule" in caplog.text
+    assert "summer is not a valid schedule" in caplog.text
 
 
 async def test_service_preset_mode_already_boost_valves(

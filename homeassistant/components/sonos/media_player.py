@@ -119,6 +119,7 @@ ATTR_ENABLED = "enabled"
 ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
 ATTR_MASTER = "master"
 ATTR_WITH_GROUP = "with_group"
+ATTR_BUTTONS_ENABLED = "buttons_enabled"
 ATTR_NIGHT_SOUND = "night_sound"
 ATTR_SPEECH_ENHANCE = "speech_enhance"
 ATTR_QUEUE_POSITION = "queue_position"
@@ -229,6 +230,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(  # type: ignore
         SERVICE_SET_OPTION,
         {
+            vol.Optional(ATTR_BUTTONS_ENABLED): cv.boolean,
             vol.Optional(ATTR_NIGHT_SOUND): cv.boolean,
             vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
             vol.Optional(ATTR_STATUS_LIGHT): cv.boolean,
@@ -439,7 +441,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         elif source == SOURCE_TV:
             soco.switch_to_tv()
         else:
-            fav = [fav for fav in self.coordinator.favorites if fav.title == source]
+            fav = [fav for fav in self.speaker.favorites if fav.title == source]
             if len(fav) == 1:
                 src = fav.pop()
                 uri = src.reference.get_uri()
@@ -456,7 +458,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @property  # type: ignore[misc]
     def source_list(self) -> list[str]:
         """List of available input sources."""
-        sources = [fav.title for fav in self.coordinator.favorites]
+        sources = [fav.title for fav in self.speaker.favorites]
 
         model = self.coordinator.model_name.upper()
         if "PLAY:5" in model or "CONNECT" in model:
@@ -605,11 +607,15 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @soco_error()
     def set_option(
         self,
+        buttons_enabled: bool | None = None,
         night_sound: bool | None = None,
         speech_enhance: bool | None = None,
         status_light: bool | None = None,
     ) -> None:
         """Modify playback options."""
+        if buttons_enabled is not None:
+            self.soco.buttons_enabled = buttons_enabled
+
         if night_sound is not None and self.speaker.night_mode is not None:
             self.soco.night_mode = night_sound
 

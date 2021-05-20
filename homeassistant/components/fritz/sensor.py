@@ -8,7 +8,7 @@ from typing import Callable, TypedDict
 from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import HomeAssistant
@@ -72,33 +72,34 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up FRITZ!Box sensors")
-    fritzbox_tools = hass.data[DOMAIN][entry.entry_id]
+    fritzbox_tools: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
 
     if "WANIPConn1" not in fritzbox_tools.connection.services:
         # Only routers are supported at the moment
         return
 
+    entities = []
     for sensor_type in SENSOR_DATA:
-        async_add_entities(
-            [FritzBoxSensor(fritzbox_tools, entry.title, sensor_type)],
-            True,
-        )
+        entities.append(FritzBoxSensor(fritzbox_tools, entry.title, sensor_type))
+
+    if entities:
+        async_add_entities(entities, True)
 
 
-class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
+class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
     """Define FRITZ!Box connectivity class."""
 
     def __init__(
-        self, fritzbox_tools: FritzBoxTools, device_friendlyname: str, sensor_type: str
+        self, fritzbox_tools: FritzBoxTools, device_friendly_name: str, sensor_type: str
     ) -> None:
         """Init FRITZ!Box connectivity class."""
         self._sensor_data: SensorData = SENSOR_DATA[sensor_type]
         self._unique_id = f"{fritzbox_tools.unique_id}-{sensor_type}"
-        self._name = f"{device_friendlyname} {self._sensor_data['name']}"
+        self._name = f"{device_friendly_name} {self._sensor_data['name']}"
         self._is_available = True
         self._last_value: str | None = None
         self._state: str | None = None
-        super().__init__(fritzbox_tools, device_friendlyname)
+        super().__init__(fritzbox_tools, device_friendly_name)
 
     @property
     def _state_provider(self) -> Callable:
@@ -140,7 +141,7 @@ class FritzBoxSensor(FritzBoxBaseEntity, BinarySensorEntity):
         _LOGGER.debug("Updating FRITZ!Box sensors")
 
         try:
-            status: FritzStatus = self._fritzbox_tools.fritzstatus
+            status: FritzStatus = self._fritzbox_tools.fritz_status
             self._is_available = True
         except FritzConnectionException:
             _LOGGER.error("Error getting the state from the FRITZ!Box", exc_info=True)

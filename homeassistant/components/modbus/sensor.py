@@ -59,6 +59,7 @@ from .const import (
     MODBUS_DOMAIN,
 )
 
+PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -141,11 +142,13 @@ async def async_setup_platform(
             _LOGGER.error("Error in sensor %s structure: %s", entry[CONF_NAME], err)
             continue
 
-        if entry[CONF_COUNT] * 2 != size:
+        bytecount = entry[CONF_COUNT] * 2
+        if bytecount != size:
             _LOGGER.error(
-                "Structure size (%d bytes) mismatch registers count (%d words)",
+                "Structure request %d bytes, but %d registers have a size of %d bytes",
                 size,
                 entry[CONF_COUNT],
+                bytecount,
             )
             continue
 
@@ -226,9 +229,7 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
         if state:
             self._value = state.state
 
-        async_track_time_interval(
-            self.hass, lambda arg: self.update(), self._scan_interval
-        )
+        async_track_time_interval(self.hass, self.async_update, self._scan_interval)
 
     @property
     def state(self):
@@ -280,19 +281,16 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
             registers.reverse()
         return registers
 
-    def update(self):
+    async def async_update(self, now=None):
         """Update the state of the sensor."""
-        if self._register_type == CALL_TYPE_REGISTER_INPUT:
-            result = self._hub.read_input_registers(
-                self._slave, self._register, self._count
-            )
-        else:
-            result = self._hub.read_holding_registers(
-                self._slave, self._register, self._count
-            )
+        # remark "now" is a dummy parameter to avoid problems with
+        # async_track_time_interval
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._register, self._count, self._register_type
+        )
         if result is None:
             self._available = False
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
             return
 
         registers = self._swap_registers(result.registers)
@@ -332,4 +330,4 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
                     self._value = f"{float(val):.{self._precision}f}"
 
         self._available = True
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

@@ -1920,6 +1920,10 @@ class AlexaEqualizerController(AlexaCapability):
         """
         return [{"name": "mode"}]
 
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return True
+
     def get_property(self, name):
         """Read and return a property."""
         if name != "mode":

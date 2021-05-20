@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+        },
+        "step": {
+            "user": {
+                "description": "Vols comen\u00e7ar la configuraci\u00f3?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Interval d'actualitzaci\u00f3",
+                    "tracked_asset_pairs": "Parells de recursos en seguiment"
+                }
+            }
+        }
+    }
+}

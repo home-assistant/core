@@ -54,19 +54,22 @@ PLATFORMS = [
 ]
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> None:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Aqualink component."""
     conf = config.get(DOMAIN)
 

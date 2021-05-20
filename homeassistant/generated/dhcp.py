@@ -67,6 +67,10 @@ DHCP = [
         "hostname": "flume-gw-*"
     },
     {
+        "domain": "goalzero",
+        "hostname": "yeti*"
+    },
+    {
         "domain": "gogogate2",
         "hostname": "ismartgate*"
     },

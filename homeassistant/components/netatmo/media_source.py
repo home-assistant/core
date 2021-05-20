@@ -41,7 +41,7 @@ class NetatmoSource(MediaSource):
 
     name: str = MANUFACTURER
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize Netatmo source."""
         super().__init__(DOMAIN)
         self.hass = hass

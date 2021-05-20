@@ -17,7 +17,7 @@
             "unable_to_pair": "Nie mo\u017cna sparowa\u0107, spr\u00f3buj ponownie",
             "unknown_error": "Urz\u0105dzenie zg\u0142osi\u0142o nieznany b\u0142\u0105d. Parowanie nie powiod\u0142o si\u0119."
         },
-        "flow_title": "{name} poprzez akcesorium HomeKit",
+        "flow_title": "{name}",
         "step": {
             "busy_error": {
                 "description": "Przerwij parowanie we wszystkich kontrolerach lub spr\u00f3buj ponownie uruchomi\u0107 urz\u0105dzenie, a nast\u0119pnie wzn\u00f3w parowanie",

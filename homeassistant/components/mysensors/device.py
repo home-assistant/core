@@ -43,7 +43,7 @@ class MySensorsDevice:
         node_id: int,
         child_id: int,
         value_type: int,
-    ):
+    ) -> None:
         """Set up the MySensors device."""
         self.gateway_id: GatewayId = gateway_id
         self.gateway: BaseAsyncGateway = gateway
