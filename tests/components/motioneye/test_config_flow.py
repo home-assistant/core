@@ -69,6 +69,58 @@ async def test_user_success(hass: HomeAssistant) -> None:
     assert mock_client.async_client_close.called
 
 
+async def test_hassio_success(hass: HomeAssistant) -> None:
+    """Test successful Supervisor flow."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data={"addon": "motionEye Add-on", "url": TEST_URL},
+        context={"source": config_entries.SOURCE_HASSIO},
+    )
+
+    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("step_id") == "hassio_confirm"
+    assert result.get("description_placeholders") == {"addon": "motionEye Add-on"}
+    assert "flow_id" in result
+
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result2.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result2.get("step_id") == "user"
+    assert "flow_id" in result2
+
+    mock_client = create_mock_motioneye_client()
+
+    with patch(
+        "homeassistant.components.motioneye.MotionEyeClient",
+        return_value=mock_client,
+    ), patch(
+        "homeassistant.components.motioneye.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_ADMIN_USERNAME: "admin-username",
+                CONF_ADMIN_PASSWORD: "admin-password",
+                CONF_SURVEILLANCE_USERNAME: "surveillance-username",
+                CONF_SURVEILLANCE_PASSWORD: "surveillance-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result3.get("title") == "motionEye Add-on"
+    assert result3.get("data") == {
+        CONF_URL: TEST_URL,
+        CONF_ADMIN_USERNAME: "admin-username",
+        CONF_ADMIN_PASSWORD: "admin-password",
+        CONF_SURVEILLANCE_USERNAME: "surveillance-username",
+        CONF_SURVEILLANCE_PASSWORD: "surveillance-password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert mock_client.async_client_close.called
+
+
 async def test_user_invalid_auth(hass: HomeAssistant) -> None:
     """Test invalid auth is handled correctly."""
     result = await hass.config_entries.flow.async_init(
