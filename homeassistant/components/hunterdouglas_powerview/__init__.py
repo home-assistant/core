@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 from aiopvapi.helpers.aiorequest import AioRequest
+from aiopvapi.helpers.api_base import ApiEntryPoint
 from aiopvapi.helpers.constants import ATTR_ID
 from aiopvapi.helpers.tools import base64_to_unicode
 from aiopvapi.rooms import Rooms
@@ -20,7 +21,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    API_PATH_FWVERSION,
     COORDINATOR,
+    DEFAULT_LEGACY_MAINPROCESSOR,
     DEVICE_FIRMWARE,
     DEVICE_INFO,
     DEVICE_MAC_ADDRESS,
@@ -30,17 +33,11 @@ from .const import (
     DEVICE_SERIAL_NUMBER,
     DOMAIN,
     FIRMWARE,
-    FIRMWARE_BUILD,
     FIRMWARE_MAINPROCESSOR,
     FIRMWARE_NAME,
     FIRMWARE_REVISION,
-    FIRMWARE_SUB_REVISION,
     HUB_EXCEPTIONS,
     HUB_NAME,
-    LEGACY_DEVICE_BUILD,
-    LEGACY_DEVICE_MODEL,
-    LEGACY_DEVICE_REVISION,
-    LEGACY_DEVICE_SUB_REVISION,
     MAC_ADDRESS_IN_USERDATA,
     PV_API,
     PV_ROOM_DATA,
@@ -141,12 +138,13 @@ async def async_get_device_info(pv_request):
         main_processor_info = userdata_data[FIRMWARE][FIRMWARE_MAINPROCESSOR]
     else:
         # Legacy devices
-        main_processor_info = {
-            FIRMWARE_REVISION: LEGACY_DEVICE_REVISION,
-            FIRMWARE_SUB_REVISION: LEGACY_DEVICE_SUB_REVISION,
-            FIRMWARE_BUILD: LEGACY_DEVICE_BUILD,
-            FIRMWARE_NAME: LEGACY_DEVICE_MODEL,
-        }
+        fwversion = ApiEntryPoint(pv_request, API_PATH_FWVERSION)
+        resources = await fwversion.get_resources()
+
+        if FIRMWARE in resources:
+            main_processor_info = resources[FIRMWARE][FIRMWARE_MAINPROCESSOR]
+        else:
+            main_processor_info = DEFAULT_LEGACY_MAINPROCESSOR
 
     return {
         DEVICE_NAME: base64_to_unicode(userdata_data[HUB_NAME]),
