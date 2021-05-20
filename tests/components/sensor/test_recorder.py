@@ -47,7 +47,13 @@ def test_compile_hourly_energy_statistics(hass_recorder):
     hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
     setup_component(hass, "sensor", {})
-    zero, four, eight, states = record_energy_states(hass)
+    sns1_attr = {"device_class": "energy", "state_class": "measurement"}
+    sns2_attr = {"device_class": "energy"}
+    sns3_attr = {}
+
+    zero, four, eight, states = record_energy_states(
+        hass, sns1_attr, sns2_attr, sns3_attr
+    )
     hist = history.get_significant_states(
         hass, zero - timedelta.resolution, eight + timedelta.resolution
     )
@@ -93,6 +99,130 @@ def test_compile_hourly_energy_statistics(hass_recorder):
                 "sum": 40.0,
             },
         ]
+    }
+
+
+def test_compile_hourly_energy_statistics2(hass_recorder):
+    """Test compiling hourly statistics."""
+    hass = hass_recorder()
+    recorder = hass.data[DATA_INSTANCE]
+    setup_component(hass, "sensor", {})
+    sns1_attr = {"device_class": "energy", "state_class": "measurement"}
+    sns2_attr = {"device_class": "energy", "state_class": "measurement"}
+    sns3_attr = {"device_class": "energy", "state_class": "measurement"}
+
+    zero, four, eight, states = record_energy_states(
+        hass, sns1_attr, sns2_attr, sns3_attr
+    )
+    hist = history.get_significant_states(
+        hass, zero - timedelta.resolution, eight + timedelta.resolution
+    )
+    assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
+
+    recorder.do_adhoc_statistics(period="hourly", start=zero)
+    wait_recording_done(hass)
+    recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=1))
+    wait_recording_done(hass)
+    recorder.do_adhoc_statistics(period="hourly", start=zero + timedelta(hours=2))
+    wait_recording_done(hass)
+    stats = statistics_during_period(hass, zero)
+    assert stats == {
+        "sensor.test1": [
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(zero),
+                "state": 20.0,
+                "sum": 10.0,
+            },
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(four),
+                "state": 40.0,
+                "sum": 10.0,
+            },
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(four),
+                "state": 70.0,
+                "sum": 40.0,
+            },
+        ],
+        "sensor.test2": [
+            {
+                "statistic_id": "sensor.test2",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(zero),
+                "state": 20.0,
+                "sum": 10.0,
+            },
+            {
+                "statistic_id": "sensor.test2",
+                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(four),
+                "state": 40.0,
+                "sum": 10.0,
+            },
+            {
+                "statistic_id": "sensor.test2",
+                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(four),
+                "state": 70.0,
+                "sum": 40.0,
+            },
+        ],
+        "sensor.test3": [
+            {
+                "statistic_id": "sensor.test3",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(zero),
+                "state": 20.0,
+                "sum": 10.0,
+            },
+            {
+                "statistic_id": "sensor.test3",
+                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=1)),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(four),
+                "state": 40.0,
+                "sum": 10.0,
+            },
+            {
+                "statistic_id": "sensor.test3",
+                "start": process_timestamp_to_utc_isoformat(zero + timedelta(hours=2)),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(four),
+                "state": 70.0,
+                "sum": 40.0,
+            },
+        ],
     }
 
 
@@ -217,7 +347,7 @@ def record_states(hass):
     return zero, four, states
 
 
-def record_energy_states(hass):
+def record_energy_states(hass, _sns1_attr, _sns2_attr, _sns3_attr):
     """Record some test states.
 
     We inject a bunch of state updates for energy sensors.
@@ -225,9 +355,6 @@ def record_energy_states(hass):
     sns1 = "sensor.test1"
     sns2 = "sensor.test2"
     sns3 = "sensor.test3"
-    sns1_attr = {"device_class": "energy", "state_class": "measurement"}
-    sns2_attr = {"device_class": "energy"}
-    sns3_attr = {}
 
     def set_state(entity_id, state, **kwargs):
         """Set the state."""
@@ -245,13 +372,9 @@ def record_energy_states(hass):
     seven = six + timedelta(minutes=15)
     eight = seven + timedelta(minutes=30)
 
-    sns1_attr = {
-        "device_class": "energy",
-        "state_class": "measurement",
-        "last_reset": zero.isoformat(),
-    }
-    sns2_attr = {"device_class": "energy"}
-    sns3_attr = {}
+    sns1_attr = {**_sns1_attr, "last_reset": zero.isoformat()}
+    sns2_attr = {**_sns2_attr, "last_reset": zero.isoformat()}
+    sns3_attr = {**_sns3_attr, "last_reset": zero.isoformat()}
 
     states = {sns1: [], sns2: [], sns3: []}
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=zero):
@@ -261,32 +384,47 @@ def record_energy_states(hass):
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=one):
         states[sns1].append(set_state(sns1, "15", attributes=sns1_attr))  # Sum 5
+        states[sns2].append(set_state(sns2, "15", attributes=sns2_attr))  # Sum 5
+        states[sns3].append(set_state(sns3, "15", attributes=sns3_attr))  # Sum 5
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=two):
         states[sns1].append(set_state(sns1, "20", attributes=sns1_attr))  # Sum 10
+        states[sns2].append(set_state(sns2, "20", attributes=sns2_attr))  # Sum 10
+        states[sns3].append(set_state(sns3, "20", attributes=sns3_attr))  # Sum 10
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=three):
         states[sns1].append(set_state(sns1, "10", attributes=sns1_attr))  # Sum 0
+        states[sns2].append(set_state(sns2, "10", attributes=sns2_attr))  # Sum 0
+        states[sns3].append(set_state(sns3, "10", attributes=sns3_attr))  # Sum 0
 
-    sns1_attr = {
-        "device_class": "energy",
-        "state_class": "measurement",
-        "last_reset": four.isoformat(),
-    }
+    sns1_attr = {**_sns1_attr, "last_reset": four.isoformat()}
+    sns2_attr = {**_sns2_attr, "last_reset": four.isoformat()}
+    sns3_attr = {**_sns3_attr, "last_reset": four.isoformat()}
+
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=four):
         states[sns1].append(set_state(sns1, "30", attributes=sns1_attr))  # Sum 0
+        states[sns2].append(set_state(sns2, "30", attributes=sns2_attr))  # Sum 0
+        states[sns3].append(set_state(sns3, "30", attributes=sns3_attr))  # Sum 0
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=five):
         states[sns1].append(set_state(sns1, "40", attributes=sns1_attr))  # Sum 10
+        states[sns2].append(set_state(sns2, "40", attributes=sns2_attr))  # Sum 10
+        states[sns3].append(set_state(sns3, "40", attributes=sns3_attr))  # Sum 10
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=six):
         states[sns1].append(set_state(sns1, "50", attributes=sns1_attr))  # Sum 20
+        states[sns2].append(set_state(sns2, "50", attributes=sns2_attr))  # Sum 20
+        states[sns3].append(set_state(sns3, "50", attributes=sns3_attr))  # Sum 20
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=seven):
         states[sns1].append(set_state(sns1, "60", attributes=sns1_attr))  # Sum 30
+        states[sns2].append(set_state(sns2, "60", attributes=sns2_attr))  # Sum 30
+        states[sns3].append(set_state(sns3, "60", attributes=sns3_attr))  # Sum 30
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=eight):
         states[sns1].append(set_state(sns1, "70", attributes=sns1_attr))  # Sum 40
+        states[sns2].append(set_state(sns2, "70", attributes=sns2_attr))  # Sum 40
+        states[sns3].append(set_state(sns3, "70", attributes=sns3_attr))  # Sum 40
 
     return zero, four, eight, states
 

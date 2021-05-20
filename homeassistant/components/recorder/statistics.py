@@ -117,7 +117,6 @@ def get_last_statistics(hass, number_of_stats, statistic_id=None):
             Statistics.statistic_id, Statistics.start.desc()
         )
 
-        number_of_stats = 1
         baked_query += lambda q: q.limit(bindparam("number_of_stats"))
 
         stats = execute(
