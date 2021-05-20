@@ -12,8 +12,8 @@ from .const import (
     DEVICE_NAME,
     DEVICE_SERIAL_NUMBER,
     DOMAIN,
+    FIRMWARE,
     FIRMWARE_BUILD,
-    FIRMWARE_IN_SHADE,
     FIRMWARE_REVISION,
     FIRMWARE_SUB_REVISION,
     MANUFACTURER,
@@ -74,10 +74,10 @@ class ShadeEntity(HDEntity):
             "via_device": (DOMAIN, self._device_info[DEVICE_SERIAL_NUMBER]),
         }
 
-        if FIRMWARE_IN_SHADE not in self._shade.raw_data:
+        if FIRMWARE not in self._shade.raw_data:
             return device_info
 
-        firmware = self._shade.raw_data[FIRMWARE_IN_SHADE]
+        firmware = self._shade.raw_data[FIRMWARE]
         sw_version = f"{firmware[FIRMWARE_REVISION]}.{firmware[FIRMWARE_SUB_REVISION]}.{firmware[FIRMWARE_BUILD]}"
         model = self._shade.raw_data[ATTR_TYPE]
         for shade in self._shade.shade_types:

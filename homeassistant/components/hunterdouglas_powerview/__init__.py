@@ -29,8 +29,11 @@ from .const import (
     DEVICE_REVISION,
     DEVICE_SERIAL_NUMBER,
     DOMAIN,
+    FIRMWARE,
     FIRMWARE_BUILD,
-    FIRMWARE_IN_USERDATA,
+    FIRMWARE_MAINPROCESSOR,
+    FIRMWARE_NAME,
+    FIRMWARE_REVISION,
     FIRMWARE_SUB_REVISION,
     HUB_EXCEPTIONS,
     HUB_NAME,
@@ -39,14 +42,11 @@ from .const import (
     LEGACY_DEVICE_REVISION,
     LEGACY_DEVICE_SUB_REVISION,
     MAC_ADDRESS_IN_USERDATA,
-    MAINPROCESSOR_IN_USERDATA_FIRMWARE,
-    MODEL_IN_MAINPROCESSOR,
     PV_API,
     PV_ROOM_DATA,
     PV_SCENE_DATA,
     PV_SHADE_DATA,
     PV_SHADES,
-    REVISION_IN_MAINPROCESSOR,
     ROOM_DATA,
     SCENE_DATA,
     SERIAL_NUMBER_IN_USERDATA,
@@ -137,26 +137,24 @@ async def async_get_device_info(pv_request):
     resources = await userdata.get_resources()
     userdata_data = resources[USER_DATA]
 
-    if FIRMWARE_IN_USERDATA in userdata_data:
-        main_processor_info = userdata_data[FIRMWARE_IN_USERDATA][
-            MAINPROCESSOR_IN_USERDATA_FIRMWARE
-        ]
+    if FIRMWARE in userdata_data:
+        main_processor_info = userdata_data[FIRMWARE][FIRMWARE_MAINPROCESSOR]
     else:
         # Legacy devices
         main_processor_info = {
-            REVISION_IN_MAINPROCESSOR: LEGACY_DEVICE_REVISION,
+            FIRMWARE_REVISION: LEGACY_DEVICE_REVISION,
             FIRMWARE_SUB_REVISION: LEGACY_DEVICE_SUB_REVISION,
             FIRMWARE_BUILD: LEGACY_DEVICE_BUILD,
-            MODEL_IN_MAINPROCESSOR: LEGACY_DEVICE_MODEL,
+            FIRMWARE_NAME: LEGACY_DEVICE_MODEL,
         }
 
     return {
         DEVICE_NAME: base64_to_unicode(userdata_data[HUB_NAME]),
         DEVICE_MAC_ADDRESS: userdata_data[MAC_ADDRESS_IN_USERDATA],
         DEVICE_SERIAL_NUMBER: userdata_data[SERIAL_NUMBER_IN_USERDATA],
-        DEVICE_REVISION: main_processor_info[REVISION_IN_MAINPROCESSOR],
+        DEVICE_REVISION: main_processor_info[FIRMWARE_REVISION],
         DEVICE_FIRMWARE: main_processor_info,
-        DEVICE_MODEL: main_processor_info[MODEL_IN_MAINPROCESSOR],
+        DEVICE_MODEL: main_processor_info[FIRMWARE_NAME],
     }
 
 
