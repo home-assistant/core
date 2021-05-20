@@ -43,7 +43,8 @@ async def async_setup_entry(hass, config):
 
     data = HoneywellService(hass, client, username, password, devices[0])
     await data.update()
-    hass.data[DOMAIN] = data
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][config.entry_id] = data
     hass.config_entries.async_setup_platforms(config, PLATFORMS)
 
     return True

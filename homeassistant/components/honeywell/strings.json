@@ -11,7 +11,7 @@
       }
     },
     "error": {
-      "auth_error": "Login was unsuccessful."
+      "auth_error": "[%key:common::config_flow::error::invalid_auth%]"
     }
   }
 }

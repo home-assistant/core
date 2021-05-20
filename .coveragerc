@@ -424,6 +424,7 @@ omit =
     homeassistant/components/home_plus_control/helpers.py
     homeassistant/components/home_plus_control/switch.py
     homeassistant/components/homeworks/*
+    homeassistant/components/honeywell/climate.py
     homeassistant/components/horizon/media_player.py
     homeassistant/components/hp_ilo/sensor.py
     homeassistant/components/htu21d/sensor.py
