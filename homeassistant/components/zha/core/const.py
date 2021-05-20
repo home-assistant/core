@@ -258,7 +258,7 @@ class RadioType(enum.Enum):
                 return radio.name
         raise ValueError
 
-    def __init__(self, description: str, controller_cls: CALLABLE_T):
+    def __init__(self, description: str, controller_cls: CALLABLE_T) -> None:
         """Init instance."""
         self._desc = description
         self._ctrl_cls = controller_cls

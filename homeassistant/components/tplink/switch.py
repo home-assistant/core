@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entitie
 class SmartPlugSwitch(SwitchEntity):
     """Representation of a TPLink Smart Plug switch."""
 
-    def __init__(self, smartplug: SmartPlug):
+    def __init__(self, smartplug: SmartPlug) -> None:
         """Initialize the switch."""
         self.smartplug = smartplug
         self._sysinfo = None
