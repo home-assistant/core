@@ -124,8 +124,6 @@ class HoneywellUSThermostat(ClimateEntity):
         self._heat_away_temp = heat_away_temp
         self._away = False
 
-        _LOGGER.debug("latestData = %s ", data.device._data)
-
         self._unique_id = homeassistant.helpers.device_registry.format_mac(
             data.device.mac_address
         )

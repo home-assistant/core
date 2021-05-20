@@ -25,7 +25,7 @@ class HoneywellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
-            errors["base"] = "auth_error"
+            errors["base"] = "invalid_auth"
 
         data_schema = {
             vol.Required(CONF_USERNAME): str,
