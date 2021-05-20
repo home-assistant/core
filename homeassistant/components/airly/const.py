@@ -4,6 +4,8 @@ from __future__ import annotations
 from typing import Final
 
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
@@ -20,15 +22,17 @@ ATTR_API_CAQI: Final = "CAQI"
 ATTR_API_CAQI_DESCRIPTION: Final = "DESCRIPTION"
 ATTR_API_CAQI_LEVEL: Final = "LEVEL"
 ATTR_API_HUMIDITY: Final = "HUMIDITY"
-ATTR_API_PM1: Final = "PM1"
 ATTR_API_PM10: Final = "PM10"
 ATTR_API_PM10_LIMIT: Final = "PM10_LIMIT"
 ATTR_API_PM10_PERCENT: Final = "PM10_PERCENT"
+ATTR_API_PM1: Final = "PM1"
 ATTR_API_PM25: Final = "PM25"
 ATTR_API_PM25_LIMIT: Final = "PM25_LIMIT"
 ATTR_API_PM25_PERCENT: Final = "PM25_PERCENT"
 ATTR_API_PRESSURE: Final = "PRESSURE"
 ATTR_API_TEMPERATURE: Final = "TEMPERATURE"
+ATTR_LABEL: Final = "label"
+ATTR_UNIT: Final = "unit"
 
 ATTRIBUTION: Final = "Data provided by Airly"
 CONF_USE_NEAREST: Final = "use_nearest"
@@ -42,27 +46,27 @@ NO_AIRLY_SENSORS: Final = "There are no Airly sensors in this area yet."
 
 SENSOR_TYPES: dict[str, SensorDescription] = {
     ATTR_API_PM1: {
-        "device_class": None,
-        "icon": "mdi:blur",
-        "label": ATTR_API_PM1,
-        "unit": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ATTR_DEVICE_CLASS: None,
+        ATTR_ICON: "mdi:blur",
+        ATTR_LABEL: ATTR_API_PM1,
+        ATTR_UNIT: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     },
     ATTR_API_HUMIDITY: {
-        "device_class": DEVICE_CLASS_HUMIDITY,
-        "icon": None,
-        "label": ATTR_API_HUMIDITY.capitalize(),
-        "unit": PERCENTAGE,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
+        ATTR_ICON: None,
+        ATTR_LABEL: ATTR_API_HUMIDITY.capitalize(),
+        ATTR_UNIT: PERCENTAGE,
     },
     ATTR_API_PRESSURE: {
-        "device_class": DEVICE_CLASS_PRESSURE,
-        "icon": None,
-        "label": ATTR_API_PRESSURE.capitalize(),
-        "unit": PRESSURE_HPA,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
+        ATTR_ICON: None,
+        ATTR_LABEL: ATTR_API_PRESSURE.capitalize(),
+        ATTR_UNIT: PRESSURE_HPA,
     },
     ATTR_API_TEMPERATURE: {
-        "device_class": DEVICE_CLASS_TEMPERATURE,
-        "icon": None,
-        "label": ATTR_API_TEMPERATURE.capitalize(),
-        "unit": TEMP_CELSIUS,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+        ATTR_ICON: None,
+        ATTR_LABEL: ATTR_API_TEMPERATURE.capitalize(),
+        ATTR_UNIT: TEMP_CELSIUS,
     },
 }
