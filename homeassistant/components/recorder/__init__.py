@@ -63,7 +63,6 @@ from .util import (
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_PURGE = "purge"
-SERVICE_STATISTICS = "statistics"
 SERVICE_ENABLE = "enable"
 SERVICE_DISABLE = "disable"
 
