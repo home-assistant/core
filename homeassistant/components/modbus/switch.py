@@ -52,7 +52,7 @@ async def async_setup_platform(
 class ModbusSwitch(SwitchEntity, RestoreEntity):
     """Base class representing a Modbus switch."""
 
-    def __init__(self, hub: ModbusHub, config: dict):
+    def __init__(self, hub: ModbusHub, config: dict) -> None:
         """Initialize the switch."""
         self._hub: ModbusHub = hub
         self._name = config[CONF_NAME]

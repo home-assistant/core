@@ -106,7 +106,7 @@ class ModbusThermostat(ClimateEntity):
         self,
         hub: ModbusHub,
         config: dict[str, Any],
-    ):
+    ) -> None:
         """Initialize the modbus thermostat."""
         self._hub: ModbusHub = hub
         self._name = config[CONF_NAME]
