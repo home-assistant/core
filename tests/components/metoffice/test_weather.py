@@ -89,7 +89,9 @@ async def test_site_list_cannot_update(hass, requests_mock, legacy_patchable_tim
     )
 
     # Make site list unavailable
+    # Datapoint API caches requests for 1 hour so we need to reset the timer here
     data = hass.data[DOMAIN][entry.entry_id][METOFFICE_DATA]
+    data._datapoint.forecast_sites_last_update = 0
     await data.async_update_site()
 
     future_time = utcnow() + timedelta(minutes=20)
