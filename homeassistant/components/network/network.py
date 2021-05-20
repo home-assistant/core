@@ -33,12 +33,7 @@ class Network:
         self.hass = hass
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self._data: dict[str, Any] = {}
-        self._adapters: list[Adapter] = []
-
-    @property
-    def adapters(self) -> list[Adapter]:
-        """Return the list of adapters."""
-        return self._adapters
+        self.adapters: list[Adapter] = []
 
     @property
     def configured_adapters(self) -> list[str]:
@@ -48,7 +43,7 @@ class Network:
     async def async_setup(self) -> None:
         """Set up the network config."""
         await self.async_load()
-        self._adapters = await async_load_adapters(self.hass)
+        self.adapters = await async_load_adapters(self.hass)
 
     async def async_migrate_from_zeroconf(self, zc_config: dict[str, Any]) -> None:
         """Migrate configuration from zeroconf."""
@@ -60,21 +55,21 @@ class Network:
             and not zc_config[ZC_CONF_DEFAULT_INTERFACE]
         ):
             self._data[ATTR_CONFIGURED_ADAPTERS] = adapters_with_exernal_addresses(
-                self._adapters
+                self.adapters
             )
             await self._async_save()
 
     @callback
     def async_configure(self) -> None:
         """Configure from storage."""
-        if not enable_adapters(self._adapters, self.configured_adapters):
-            enable_auto_detected_adapters(self._adapters)
+        if not enable_adapters(self.adapters, self.configured_adapters):
+            enable_auto_detected_adapters(self.adapters)
 
     async def async_reconfig(self, config: dict[str, Any]) -> None:
         """Reconfigure network."""
         config = NETWORK_CONFIG_SCHEMA(config)
         self._data[ATTR_CONFIGURED_ADAPTERS] = config[ATTR_CONFIGURED_ADAPTERS]
-        enable_adapters(self._adapters, self.configured_adapters)
+        enable_adapters(self.adapters, self.configured_adapters)
         await self._async_save()
 
     async def async_load(self) -> None:
