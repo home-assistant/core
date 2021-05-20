@@ -39,7 +39,7 @@ class HassConstructorFormatChecker(BaseChecker):  # type: ignore[misc]
             annotations.append(args.varargannotation)
         if args.kwarg is not None:
             annotations.append(args.kwargannotation)
-        if not annotations or any(hint is None for hint in annotations):
+        if not annotations or None in annotations:
             return
 
         # Check that return type is specified and it is "None".
