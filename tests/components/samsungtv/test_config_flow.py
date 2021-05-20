@@ -49,21 +49,21 @@ MOCK_SSDP_DATA = {
     ATTR_UPNP_FRIENDLY_NAME: "[TV] fake_name",
     ATTR_UPNP_MANUFACTURER: "fake_manufacturer",
     ATTR_UPNP_MODEL_NAME: "fake_model",
-    ATTR_UPNP_UDN: "uuid:fake_uuid",
+    ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172de",
 }
 MOCK_SSDP_DATA_NOPREFIX = {
     ATTR_SSDP_LOCATION: "http://fake2_host:12345/test",
     ATTR_UPNP_FRIENDLY_NAME: "fake2_name",
     ATTR_UPNP_MANUFACTURER: "fake2_manufacturer",
     ATTR_UPNP_MODEL_NAME: "fake2_model",
-    ATTR_UPNP_UDN: "fake2_uuid",
+    ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172df",
 }
 MOCK_SSDP_DATA_WRONGMODEL = {
     ATTR_SSDP_LOCATION: "http://fake2_host:12345/test",
     ATTR_UPNP_FRIENDLY_NAME: "fake2_name",
     ATTR_UPNP_MANUFACTURER: "fake2_manufacturer",
     ATTR_UPNP_MODEL_NAME: "HW-Qfake",
-    ATTR_UPNP_UDN: "fake2_uuid",
+    ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172df",
 }
 MOCK_ZEROCONF_DATA = {
     CONF_HOST: "fake_host",
@@ -155,14 +155,14 @@ async def test_user_websocket(hass: HomeAssistant, remotews: Mock):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA
         )
-        # legacy tv entry created
+        # websocket tv entry created
         assert result["type"] == "create_entry"
-        assert result["title"] == "fake_name"
+        assert result["title"] == "Living Room (82GXARRS)"
         assert result["data"][CONF_HOST] == "fake_host"
-        assert result["data"][CONF_NAME] == "fake_name"
+        assert result["data"][CONF_NAME] == "Living Room"
         assert result["data"][CONF_METHOD] == "websocket"
-        assert result["data"][CONF_MANUFACTURER] is None
-        assert result["data"][CONF_MODEL] is None
+        assert result["data"][CONF_MANUFACTURER] == "Samsung"
+        assert result["data"][CONF_MODEL] == "82GXARRS"
         assert result["result"].unique_id is None
 
 
