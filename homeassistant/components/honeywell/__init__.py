@@ -4,6 +4,7 @@ from datetime import timedelta
 import somecomfort
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util import Throttle
 
 from .const import _LOGGER, CONF_DEV_ID, CONF_LOC_ID, DOMAIN
@@ -27,15 +28,23 @@ async def async_setup_entry(hass, config):
     loc_id = config.data.get(CONF_LOC_ID)
     dev_id = config.data.get(CONF_DEV_ID)
 
+    devices = []
+
     for location in client.locations_by_id.values():
         for device in location.devices_by_id.values():
             if (not loc_id or location.locationid == loc_id) and (
                 not dev_id or device.deviceid == dev_id
             ):
-                data = HoneywellService(hass, client, username, password, device)
-                await data.update()
-                hass.data[DOMAIN] = data
-                hass.config_entries.async_setup_platforms(config, PLATFORMS)
+                devices.append(device)
+
+    if len(devices) != 1:
+        _LOGGER.debug("Honeyell integration only supports a single device")
+        return False
+
+    data = HoneywellService(hass, client, username, password, devices[0])
+    await data.update()
+    hass.data[DOMAIN] = data
+    hass.config_entries.async_setup_platforms(config, PLATFORMS)
 
     return True
 
@@ -47,13 +56,12 @@ def get_somecomfort_client(username, password):
     except somecomfort.AuthError:
         _LOGGER.error("Failed to login to honeywell account %s", username)
         return None
-    except somecomfort.SomeComfortError:
-        _LOGGER.error(
+    except somecomfort.SomeComfortError as ex:
+        raise ConfigEntryNotReady(
             "Failed to initialize the Honeywell client: "
             "Check your configuration (username, password), "
             "or maybe you have exceeded the API rate limit?"
-        )
-        return None
+        ) from ex
 
 
 class HoneywellService:
@@ -65,7 +73,7 @@ class HoneywellService:
         self._client = client
         self._username = username
         self._password = password
-        self._device = device
+        self.device = device
 
     def _retry(self) -> bool:
         """Recreate a new somecomfort client.
@@ -82,14 +90,14 @@ class HoneywellService:
             device
             for location in self._client.locations_by_id.values()
             for device in location.devices_by_id.values()
-            if device.name == self._device.name
+            if device.name == self.device.name
         ]
 
         if len(devices) != 1:
-            _LOGGER.error("Failed to find device %s", self._device.name)
+            _LOGGER.error("Failed to find device %s", self.device.name)
             return False
 
-        self._device = devices[0]
+        self.device = devices[0]
         return True
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -98,7 +106,7 @@ class HoneywellService:
         retries = 3
         while retries > 0:
             try:
-                await self._hass.async_add_executor_job(self._device.refresh)
+                await self._hass.async_add_executor_job(self.device.refresh)
                 break
             except (
                 somecomfort.client.APIRateLimited,
@@ -113,5 +121,5 @@ class HoneywellService:
                 _LOGGER.error("SomeComfort update failed, Retrying - Error: %s", exp)
 
         _LOGGER.debug(
-            "latestData = %s ", self._device._data  # pylint: disable=protected-access
+            "latestData = %s ", self.device._data  # pylint: disable=protected-access
         )
