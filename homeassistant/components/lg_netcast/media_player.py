@@ -119,11 +119,11 @@ class LgTVDevice(MediaPlayerEntity):
                 channel_info = client.query_data("cur_channel")
                 if channel_info:
                     channel_info = channel_info[0]
-                    self._channel_id = channel_info.find("major")
+                    channel_id = channel_info.find("major")
                     self._channel_name = channel_info.find("chname").text
                     self._program_name = channel_info.find("progName").text
-                    if self._channel_id is not None:
-                        self._channel_id = int(self._channel_id.text)
+                    if channel_id is not None:
+                        self._channel_id = int(channel_id.text)
                     if self._channel_name is None:
                         self._channel_name = channel_info.find("inputSourceName").text
                     if self._program_name is None:
@@ -266,9 +266,13 @@ class LgTVDevice(MediaPlayerEntity):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Tune to channel."""
-        if media_type == MEDIA_TYPE_CHANNEL:
-            for name, channel in self._sources.items():
-                channel_id = channel.find("major")
-                if channel_id is not None and int(channel_id.text) == int(media_id):
-                    self.select_source(name)
-                    break
+        if media_type != MEDIA_TYPE_CHANNEL:
+            raise ValueError(f"Invalid media type: {media_type}")
+
+        for name, channel in self._sources.items():
+            channel_id = channel.find("major")
+            if channel_id is not None and int(channel_id.text) == int(media_id):
+                self.select_source(name)
+                return
+
+        raise ValueError(f"Invalid media id: {media_id}")
