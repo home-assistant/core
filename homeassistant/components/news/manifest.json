@@ -1,0 +1,10 @@
+{
+  "domain": "news",
+  "name": "News",
+  "documentation": "https://www.home-assistant.io/integrations/news",
+  "codeowners": [
+    "@home-assistant/core"
+  ],
+  "iot_class": "calculated",
+  "quality_scale": "internal"
+}
