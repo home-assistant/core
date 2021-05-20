@@ -25,7 +25,7 @@ from homeassistant.components.websocket_api.const import (
     ERR_NOT_SUPPORTED,
     ERR_UNKNOWN_ERROR,
 )
-from homeassistant.config_entries import ENTRY_STATE_LOADED, ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -85,7 +85,7 @@ def async_get_entry(orig_func: Callable) -> Callable:
             )
             return
 
-        if entry.state != ENTRY_STATE_LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             connection.send_error(
                 msg[ID], ERR_NOT_LOADED, f"Config entry {entry_id} not loaded"
             )
