@@ -201,7 +201,7 @@ class AqualinkEntity(Entity):
     class.
     """
 
-    def __init__(self, dev: AqualinkDevice):
+    def __init__(self, dev: AqualinkDevice) -> None:
         """Initialize the entity."""
         self.dev = dev
 

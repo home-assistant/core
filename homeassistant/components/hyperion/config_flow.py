@@ -432,7 +432,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 class HyperionOptionsFlow(OptionsFlow):
     """Hyperion options flow."""
 
-    def __init__(self, config_entry: ConfigEntry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize a Hyperion options flow."""
         self._config_entry = config_entry
 
