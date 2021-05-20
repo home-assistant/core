@@ -56,7 +56,7 @@ async def async_setup_sdm_entry(
 class SensorBase(SensorEntity):
     """Representation of a dynamically updated Sensor."""
 
-    def __init__(self, device: Device):
+    def __init__(self, device: Device) -> None:
         """Initialize the sensor."""
         self._device = device
         self._device_info = DeviceInfo(device)

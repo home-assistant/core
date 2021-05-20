@@ -25,6 +25,8 @@ from homeassistant.util.dt import utc_from_timestamp
 
 from . import AccuWeatherDataUpdateCoordinator
 from .const import (
+    API_IMPERIAL,
+    API_METRIC,
     ATTR_FORECAST,
     ATTRIBUTION,
     CONDITION_CLASSES,
@@ -61,7 +63,7 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
         """Initialize."""
         super().__init__(coordinator)
         self._name = name
-        self._unit_system = "Metric" if self.coordinator.is_metric else "Imperial"
+        self._unit_system = API_METRIC if self.coordinator.is_metric else API_IMPERIAL
 
     @property
     def name(self) -> str:

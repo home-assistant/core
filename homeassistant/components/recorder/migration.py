@@ -11,7 +11,7 @@ from sqlalchemy.exc import (
 )
 from sqlalchemy.schema import AddConstraint, DropConstraint
 
-from .models import SCHEMA_VERSION, TABLE_STATES, Base, SchemaChanges
+from .models import SCHEMA_VERSION, TABLE_STATES, Base, SchemaChanges, Statistics
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -447,6 +447,10 @@ def _apply_update(engine, session, new_version, old_version):
         _drop_foreign_key_constraints(
             connection, engine, TABLE_STATES, ["old_state_id"]
         )
+        if sqlalchemy.inspect(engine).has_table(Statistics.__tablename__):
+            # Recreate the statistics table
+            Statistics.__table__.drop(engine)
+            Statistics.__table__.create(engine)
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 

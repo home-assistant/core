@@ -54,7 +54,7 @@ async def async_get_scanner(hass, config):
 class UPCDeviceScanner(DeviceScanner):
     """This class queries a router running UPC ConnectBox firmware."""
 
-    def __init__(self, connect_box: ConnectBox):
+    def __init__(self, connect_box: ConnectBox) -> None:
         """Initialize the scanner."""
         self.connect_box: ConnectBox = connect_box
 

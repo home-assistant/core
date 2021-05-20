@@ -87,7 +87,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 class SmartMeterTexasData:
     """Manages coordinatation of API data updates."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, account: Account):
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, account: Account
+    ) -> None:
         """Initialize the data coordintator."""
         self._entry = entry
         self.account = account

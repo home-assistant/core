@@ -53,7 +53,7 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
         coordinator: VerisureDataUpdateCoordinator,
         serial_number: str,
         directory_path: str,
-    ):
+    ) -> None:
         """Initialize Verisure File Camera component."""
         super().__init__(coordinator)
         Camera.__init__(self)

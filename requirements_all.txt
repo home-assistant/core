@@ -563,7 +563,7 @@ env_canada==0.2.5
 # envirophat==0.0.6
 
 # homeassistant.components.enphase_envoy
-envoy_reader==0.18.4
+envoy_reader==0.19.0
 
 # homeassistant.components.season
 ephem==3.7.7.0
@@ -635,7 +635,7 @@ fritzconnection==1.4.2
 gTTS==2.2.2
 
 # homeassistant.components.garages_amsterdam
-garages-amsterdam==2.0.4
+garages-amsterdam==2.0.5
 
 # homeassistant.components.garmin_connect
 garminconnect==0.1.19
@@ -1313,7 +1313,7 @@ pyarlo==0.2.4
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==4.2.3
+pyatmo==5.0.1
 
 # homeassistant.components.atome
 pyatome==0.1.1
@@ -2350,7 +2350,7 @@ wakeonlan==2.0.1
 waqiasync==1.0.0
 
 # homeassistant.components.folder_watcher
-watchdog==2.1.1
+watchdog==2.1.2
 
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0

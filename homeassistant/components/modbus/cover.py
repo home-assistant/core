@@ -1,17 +1,14 @@
 """Support for Modbus covers."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 from typing import Any
 
 from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN, CoverEntity
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_COVERS,
-    CONF_DEVICE_CLASS,
     CONF_NAME,
-    CONF_SCAN_INTERVAL,
-    CONF_SLAVE,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
@@ -20,15 +17,16 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .base_platform import BasePlatform
 from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_WRITE_COIL,
     CALL_TYPE_WRITE_REGISTER,
+    CONF_INPUT_TYPE,
     CONF_REGISTER,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
@@ -67,30 +65,26 @@ async def async_setup_platform(
     async_add_entities(covers)
 
 
-class ModbusCover(CoverEntity, RestoreEntity):
+class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
     """Representation of a Modbus cover."""
 
     def __init__(
         self,
         hub: ModbusHub,
         config: dict[str, Any],
-    ):
+    ) -> None:
         """Initialize the modbus cover."""
-        self._hub: ModbusHub = hub
+        config[CONF_ADDRESS] = "0"
+        config[CONF_INPUT_TYPE] = ""
+        super().__init__(hub, config)
         self._coil = config.get(CALL_TYPE_COIL)
-        self._device_class = config.get(CONF_DEVICE_CLASS)
-        self._name = config[CONF_NAME]
         self._register = config.get(CONF_REGISTER)
-        self._slave = config.get(CONF_SLAVE)
         self._state_closed = config[CONF_STATE_CLOSED]
         self._state_closing = config[CONF_STATE_CLOSING]
         self._state_open = config[CONF_STATE_OPEN]
         self._state_opening = config[CONF_STATE_OPENING]
         self._status_register = config.get(CONF_STATUS_REGISTER)
         self._status_register_type = config[CONF_STATUS_REGISTER_TYPE]
-        self._scan_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
-        self._value = None
-        self._available = True
 
         # If we read cover status from coil, and not from optional status register,
         # we interpret boolean value False as closed cover, and value True as open cover.
@@ -114,6 +108,7 @@ class ModbusCover(CoverEntity, RestoreEntity):
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
+        await self.async_base_added_to_hass()
         state = await self.async_get_last_state()
         if state:
             convert = {
@@ -126,27 +121,10 @@ class ModbusCover(CoverEntity, RestoreEntity):
             }
             self._value = convert[state.state]
 
-        async_track_time_interval(self.hass, self.async_update, self._scan_interval)
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
     @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
 
     @property
     def is_opening(self):
@@ -162,15 +140,6 @@ class ModbusCover(CoverEntity, RestoreEntity):
     def is_closed(self):
         """Return if the cover is closed or not."""
         return self._value == self._state_closed
-
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        # Handle polling directly in this entity
-        return False
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
