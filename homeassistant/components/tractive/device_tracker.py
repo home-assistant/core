@@ -8,7 +8,12 @@ from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DOMAIN, TRACKER_HARDWARE_STATUS_UPDATED, TRACKER_POSITION_UPDATED
+from .const import (
+    DOMAIN,
+    SERVER_UNAVAILABLE,
+    TRACKER_HARDWARE_STATUS_UPDATED,
+    TRACKER_POSITION_UPDATED,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,9 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Tractive device trackers."""
     client = hass.data[DOMAIN][entry.entry_id]
+
     trackables = await client.trackable_objects()
 
-    # TODO: use concurrency
     entities = await asyncio.gather(
         *[create_trackable_entity(client, trackable) for trackable in trackables]
     )
@@ -133,7 +138,7 @@ class TractiveDeviceTracker(TrackerEntity):
         @callback
         def handle_position_update(event):
             _LOGGER.debug(
-                "[%s] Position updated event received.payload=%s.",
+                "[%s] Position updated event received. Payload=%s.",
                 self._tracker_id,
                 event,
             )
@@ -147,5 +152,22 @@ class TractiveDeviceTracker(TrackerEntity):
                 self.hass,
                 f"{TRACKER_POSITION_UPDATED}-{self._tracker_id}",
                 handle_position_update,
+            )
+        )
+
+        @callback
+        def handle_server_unavailable():
+            _LOGGER.debug("[%s] Server unavailable event received", self._tracker_id)
+            self._latitude = None
+            self._longitude = None
+            self._accuracy = None
+            self._battery_level = None
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SERVER_UNAVAILABLE}-{self._client.user_id}",
+                handle_server_unavailable,
             )
         )

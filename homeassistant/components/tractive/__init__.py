@@ -9,9 +9,17 @@ import aiotractive
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN, TRACKER_HARDWARE_STATUS_UPDATED, TRACKER_POSITION_UPDATED
+from .const import (
+    DOMAIN,
+    RECONNECT_INTERVAL,
+    SERVER_AVAILABLE,
+    SERVER_UNAVAILABLE,
+    TRACKER_HARDWARE_STATUS_UPDATED,
+    TRACKER_POSITION_UPDATED,
+)
 
 PLATFORMS = ["device_tracker"]
 
@@ -27,12 +35,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN] = {}
 
     client = aiotractive.Tractive(data[CONF_USERNAME], data[CONF_PASSWORD])
+    try:
+        creds = await client.authenticate()
+    except aiotractive.exceptions.TractiveError as error:
+        await client.close()
+        raise ConfigEntryNotReady from error
 
-    tractive = TractiveClient(hass, client)
+    tractive = TractiveClient(hass, client, creds["user_id"])
     hass.data[DOMAIN][entry.entry_id] = tractive
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-    await asyncio.sleep(5)
+    await asyncio.sleep(5)  # TODO: remove it
     tractive.subscribe()
 
     async def cancel_listen_task(_):
@@ -57,11 +70,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class TractiveClient:
     """A Tractive client."""
 
-    def __init__(self, hass, client):
+    def __init__(self, hass, client, user_id):
         """Initialize the client."""
         self._hass = hass
         self._client = client
+        self._user_id = user_id
         self._listen_task = None
+
+    @property
+    def user_id(self):
+        """Return user id."""
+        return self._user_id
 
     async def trackable_objects(self):
         """Get list of trackable objects."""
@@ -82,17 +101,37 @@ class TractiveClient:
         await self._client.close()
 
     async def _listen(self):
-        async for event in self._client.events():
-            if event["message"] != "tracker_status":
+        server_was_unavailable = False
+        while True:
+            try:
+                async for event in self._client.events():
+                    if server_was_unavailable:
+                        _LOGGER.info("Tractive is back online")
+                        async_dispatcher_send(
+                            self._hass, f"{SERVER_AVAILABLE}-{self._user_id}"
+                        )
+                        server_was_unavailable = False
+                    if event["message"] != "tracker_status":
+                        continue
+
+                    _LOGGER.debug("Event received. Payload=%s.", event)
+
+                    if "hardware" in event:
+                        self._send_hardware_update(event)
+
+                    if "position" in event:
+                        self._send_position_update(event)
+            except aiotractive.exceptions.TractiveError:
+                _LOGGER.debug(
+                    "Tractive is not available. Internet connection is down? Sleeping %i seconds and retrying",
+                    RECONNECT_INTERVAL.total_seconds(),
+                )
+                async_dispatcher_send(
+                    self._hass, f"{SERVER_UNAVAILABLE}-{self._user_id}"
+                )
+                await asyncio.sleep(RECONNECT_INTERVAL.total_seconds())
+                server_was_unavailable = True
                 continue
-
-            _LOGGER.debug("Event received. Payload=%s.", event)
-
-            if "hardware" in event:
-                self._send_hardware_update(event)
-
-            if "position" in event:
-                self._send_position_update(event)
 
     def _send_hardware_update(self, event):
         payload = {"battery_level": event["hardware"]["battery_level"]}
