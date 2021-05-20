@@ -10,7 +10,14 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import NAMDataUpdateCoordinator
-from .const import AIR_QUALITY_SENSORS, DEFAULT_NAME, DOMAIN, SUFFIX_P1, SUFFIX_P2
+from .const import (
+    AIR_QUALITY_SENSORS,
+    ATTR_MHZ14A_CARBON_DIOXIDE,
+    DEFAULT_NAME,
+    DOMAIN,
+    SUFFIX_P1,
+    SUFFIX_P2,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -61,7 +68,9 @@ class NAMAirQuality(CoordinatorEntity, AirQualityEntity):
     @property
     def carbon_dioxide(self) -> StateType:
         """Return the particulate matter 10 level."""
-        return round_state(getattr(self.coordinator.data, "conc_co2_ppm", None))
+        return round_state(
+            getattr(self.coordinator.data, ATTR_MHZ14A_CARBON_DIOXIDE, None)
+        )
 
     @property
     def unique_id(self) -> str:

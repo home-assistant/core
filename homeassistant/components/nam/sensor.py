@@ -14,7 +14,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
 from . import NAMDataUpdateCoordinator
-from .const import ATTR_ENABLED, ATTR_LABEL, ATTR_UNIT, DOMAIN, SENSORS
+from .const import ATTR_ENABLED, ATTR_LABEL, ATTR_UNIT, ATTR_UPTIME, DOMAIN, SENSORS
 
 PARALLEL_UPDATES = 1
 
@@ -28,7 +28,7 @@ async def async_setup_entry(
     sensors: list[NAMSensor | NAMSensorUptime] = []
     for sensor in SENSORS:
         if sensor in coordinator.data:
-            if sensor == "uptime":
+            if sensor == ATTR_UPTIME:
                 sensors.append(NAMSensorUptime(coordinator, sensor))
             else:
                 sensors.append(NAMSensor(coordinator, sensor))
