@@ -451,6 +451,10 @@ def _apply_update(engine, session, new_version, old_version):
             # Recreate the statistics table
             Statistics.__table__.drop(engine)
             Statistics.__table__.create(engine)
+    elif new_version == 16:
+        _drop_foreign_key_constraints(
+            connection, engine, TABLE_STATES, ["old_state_id"]
+        )
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
