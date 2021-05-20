@@ -28,7 +28,6 @@ class AuroraDevice(Entity):
         self.type = "device"
         self.client = client
         self._available = True
-        return None
 
     @property
     def unique_id(self) -> str:
