@@ -132,18 +132,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Netatmo weather and homecoach platform."""
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    await data_handler.register_data_class(
-        WEATHERSTATION_DATA_CLASS_NAME, WEATHERSTATION_DATA_CLASS_NAME, None
-    )
-    await data_handler.register_data_class(
-        HOMECOACH_DATA_CLASS_NAME, HOMECOACH_DATA_CLASS_NAME, None
-    )
-
     async def find_entities(data_class_name):
         """Find all entities."""
-        if data_class_name not in data_handler.data:
-            raise PlatformNotReady
-
         all_module_infos = {}
         data = data_handler.data
 
@@ -167,11 +157,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 _LOGGER.debug("Skipping module %s", module.get("module_name"))
                 continue
 
-            _LOGGER.debug(
-                "Adding module %s %s",
-                module.get("module_name"),
-                module.get("_id"),
-            )
             conditions = [
                 c.lower()
                 for c in data_class.get_monitored_conditions(module_id=module["_id"])
@@ -188,14 +173,19 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     NetatmoSensor(data_handler, data_class_name, module, condition)
                 )
 
-        await data_handler.unregister_data_class(data_class_name, None)
-
+        _LOGGER.debug("Adding weather sensors %s", entities)
         return entities
 
     for data_class_name in [
         WEATHERSTATION_DATA_CLASS_NAME,
         HOMECOACH_DATA_CLASS_NAME,
     ]:
+        await data_handler.register_data_class(data_class_name, data_class_name, None)
+        data_class = data_handler.data.get(data_class_name)
+
+        if not data_class or not data_class.raw_data:
+            raise PlatformNotReady
+
         async_add_entities(await find_entities(data_class_name), True)
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
@@ -410,6 +400,8 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
             self._state = None
             return
 
+        self.async_write_ha_state()
+
 
 def fix_angle(angle: int) -> int:
     """Fix angle when value is negative."""
@@ -615,13 +607,6 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
     @callback
     def async_update_callback(self):
         """Update the entity's state."""
-        if self._data is None:
-            if self._state is None:
-                return
-            _LOGGER.warning("No data from update")
-            self._state = None
-            return
-
         data = None
 
         if self.type == "temperature":
@@ -655,3 +640,5 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
                 self._state = round(sum(values) / len(values), 1)
             elif self._mode == "max":
                 self._state = max(values)
+
+        self.async_write_ha_state()
