@@ -136,7 +136,7 @@ async def async_get_device_info(pv_request):
 
     if FIRMWARE in userdata_data:
         main_processor_info = userdata_data[FIRMWARE][FIRMWARE_MAINPROCESSOR]
-    else:
+    elif userdata_data:
         # Legacy devices
         fwversion = ApiEntryPoint(pv_request, API_PATH_FWVERSION)
         resources = await fwversion.get_resources()
