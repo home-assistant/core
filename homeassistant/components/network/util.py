@@ -75,8 +75,9 @@ def _reset_enabled_adapters(adapters: list[Adapter]) -> None:
         adapter["enabled"] = False
 
 
-def load_adapters(next_hop: str | None) -> list[Adapter]:
+async def async_load_adapters(hass: HomeAssistant) -> list[Adapter]:
     """Load adapters."""
+    next_hop = await _async_default_next_broadcast_hop(hass)
     next_hop_address = ip_address(next_hop) if next_hop else None
 
     ha_adapters: list[Adapter] = [
@@ -155,7 +156,7 @@ def _first_ip_nexthop_from_route(routes: Iterable) -> str | None:
     return None
 
 
-async def async_default_next_broadcast_hop(hass: HomeAssistant) -> None | str:
+async def _async_default_next_broadcast_hop(hass: HomeAssistant) -> None | str:
     """Auto detect the default next broadcast hop."""
     try:
         routes: Iterable = await hass.async_add_executor_job(
