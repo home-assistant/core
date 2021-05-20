@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import ATTR_ICON, DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -14,8 +14,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import BrotherDataUpdateCoordinator
 from .const import (
     ATTR_COUNTER,
+    ATTR_ENABLED,
+    ATTR_LABEL,
     ATTR_MANUFACTURER,
     ATTR_REMAINING_PAGES,
+    ATTR_UNIT,
     ATTR_UPTIME,
     ATTRS_MAP,
     DATA_CONFIG_ENTRY,
@@ -58,7 +61,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
         self._description = SENSOR_TYPES[kind]
-        self._name = f"{coordinator.data.model} {self._description['label']}"
+        self._name = f"{coordinator.data.model} {self._description[ATTR_LABEL]}"
         self._unique_id = f"{coordinator.data.serial.lower()}_{kind}"
         self._device_info = device_info
         self.kind = kind
@@ -97,7 +100,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     @property
     def icon(self) -> str | None:
         """Return the icon."""
-        return self._description["icon"]
+        return self._description[ATTR_ICON]
 
     @property
     def unique_id(self) -> str:
@@ -107,7 +110,7 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
-        return self._description["unit"]
+        return self._description[ATTR_UNIT]
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -117,4 +120,4 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return self._description["enabled"]
+        return self._description[ATTR_ENABLED]
