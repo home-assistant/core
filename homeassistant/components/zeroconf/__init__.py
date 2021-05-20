@@ -161,10 +161,6 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     if not zc_config.get(CONF_IPV6, DEFAULT_IPV6):
         zc_args["ip_version"] = IPVersion.V4Only
 
-    import pprint
-
-    pprint.pprint(zc_args)
-
     aio_zc = await _async_get_instance(hass, **zc_args)
     zeroconf = aio_zc.zeroconf
 
