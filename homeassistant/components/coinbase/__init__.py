@@ -96,12 +96,12 @@ class CoinbaseData:
             # Most of Coinbase's API seems paginated now (25 items per page, but first page has 24).
             # This API gives a 'next_starting_after' property to send back as a 'starting_after' param.
             # Their API documentation is not up to date when writing these lines (2021-05-20)
-            next = response.pagination.next_starting_after
+            next_starting_after = response.pagination.next_starting_after
 
-            while next:
-                response = self.client.get_accounts(starting_after=next)
+            while next_starting_after:
+                response = self.client.get_accounts(starting_after=next_starting_after)
                 accounts = accounts + response["data"]
-                next = response.pagination.next_starting_after
+                next_starting_after = response.pagination.next_starting_after
 
             self.accounts = accounts
 
