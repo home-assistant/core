@@ -74,7 +74,7 @@ class ModbusCover(CoverEntity, RestoreEntity):
         self,
         hub: ModbusHub,
         config: dict[str, Any],
-    ):
+    ) -> None:
         """Initialize the modbus cover."""
         self._hub: ModbusHub = hub
         self._coil = config.get(CALL_TYPE_COIL)

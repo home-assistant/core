@@ -488,7 +488,7 @@ class Profile:
 class Profiles:
     """Representation of available color profiles."""
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize profiles."""
         self.hass = hass
         self.data: dict[str, Profile] = {}

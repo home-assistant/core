@@ -15,7 +15,7 @@ class ConfigEntryNetatmoAuth(pyatmo.auth.NetatmoOAuth2):
         hass: core.HomeAssistant,
         config_entry: config_entries.ConfigEntry,
         implementation: config_entry_oauth2_flow.AbstractOAuth2Implementation,
-    ):
+    ) -> None:
         """Initialize Netatmo Auth."""
         self.hass = hass
         self.session = config_entry_oauth2_flow.OAuth2Session(
