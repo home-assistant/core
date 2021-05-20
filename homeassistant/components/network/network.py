@@ -80,7 +80,6 @@ class Network:
         """Reconfigure network."""
         config = NETWORK_CONFIG_SCHEMA(config)
         self._data[ATTR_CONFIGURED_ADAPTERS] = config[ATTR_CONFIGURED_ADAPTERS]
-        _reset_enabled_adapters(self._adapters)
         _enable_adapters(self._adapters, self.configured_adapters)
         await self._async_save()
 
@@ -96,6 +95,8 @@ class Network:
 
 def _enable_adapters(adapters: list[Adapter], enabled_interfaces: list[str]) -> bool:
     """Enable configured adapters."""
+    _reset_enabled_adapters(adapters)
+
     if not enabled_interfaces:
         return False
 
