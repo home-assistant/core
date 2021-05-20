@@ -6,20 +6,12 @@ import struct
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
-    SensorEntity,
-)
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
-    CONF_ADDRESS,
     CONF_COUNT,
-    CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_OFFSET,
-    CONF_SCAN_INTERVAL,
     CONF_SENSORS,
-    CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_UNIT_OF_MEASUREMENT,
 )
@@ -28,33 +20,17 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import number
 from .base_platform import BasePlatform
 from .const import (
-    CALL_TYPE_REGISTER_HOLDING,
-    CALL_TYPE_REGISTER_INPUT,
     CONF_DATA_TYPE,
-    CONF_HUB,
-    CONF_INPUT_TYPE,
     CONF_PRECISION,
-    CONF_REGISTER,
-    CONF_REGISTER_TYPE,
     CONF_REGISTERS,
-    CONF_REVERSE_ORDER,
     CONF_SCALE,
     CONF_SWAP,
     CONF_SWAP_BYTE,
-    CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
-    DATA_TYPE_CUSTOM,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_INT,
     DATA_TYPE_STRING,
-    DATA_TYPE_UINT,
-    DEFAULT_HUB,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
 )
 
@@ -62,37 +38,10 @@ PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_REGISTERS): [
-            {
-                vol.Required(CONF_NAME): cv.string,
-                vol.Required(CONF_REGISTER): cv.positive_int,
-                vol.Optional(CONF_COUNT, default=1): cv.positive_int,
-                vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT): vol.In(
-                    [
-                        DATA_TYPE_INT,
-                        DATA_TYPE_UINT,
-                        DATA_TYPE_FLOAT,
-                        DATA_TYPE_STRING,
-                        DATA_TYPE_CUSTOM,
-                    ]
-                ),
-                vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-                vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-                vol.Optional(CONF_OFFSET, default=0): number,
-                vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
-                vol.Optional(
-                    CONF_REGISTER_TYPE, default=CALL_TYPE_REGISTER_HOLDING
-                ): vol.In([CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]),
-                vol.Optional(CONF_REVERSE_ORDER, default=False): cv.boolean,
-                vol.Optional(CONF_SCALE, default=1): number,
-                vol.Optional(CONF_SLAVE): cv.positive_int,
-                vol.Optional(CONF_STRUCTURE): cv.string,
-                vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            }
-        ]
-    }
+PLATFORM_SCHEMA = vol.All(
+    # Deprecated in Home Assistant 2021.7
+    cv.deprecated(CONF_REGISTERS),
+    {CONF_REGISTERS: vol.Schema({})},
 )
 
 
@@ -105,91 +54,12 @@ async def async_setup_platform(
     """Set up the Modbus sensors."""
     sensors = []
 
-    #  check for old config:
-    if discovery_info is None:
-        _LOGGER.warning(
-            "Sensor configuration is deprecated, will be removed in a future release"
-        )
-        discovery_info = {
-            CONF_NAME: "no name",
-            CONF_SENSORS: config[CONF_REGISTERS],
-        }
-        for entry in discovery_info[CONF_SENSORS]:
-            entry[CONF_ADDRESS] = entry[CONF_REGISTER]
-            entry[CONF_INPUT_TYPE] = entry[CONF_REGISTER_TYPE]
-            del entry[CONF_REGISTER]
-            del entry[CONF_REGISTER_TYPE]
+    if discovery_info is None:  # pragma: no cover
+        return
 
     for entry in discovery_info[CONF_SENSORS]:
-        if entry[CONF_DATA_TYPE] == DATA_TYPE_STRING:
-            structure = str(entry[CONF_COUNT] * 2) + "s"
-        elif entry[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
-            try:
-                structure = f">{DEFAULT_STRUCT_FORMAT[entry[CONF_DATA_TYPE]][entry[CONF_COUNT]]}"
-            except KeyError:
-                _LOGGER.error(
-                    "Unable to detect data type for %s sensor, try a custom type",
-                    entry[CONF_NAME],
-                )
-                continue
-        else:
-            structure = entry.get(CONF_STRUCTURE)
-
-        try:
-            size = struct.calcsize(structure)
-        except struct.error as err:
-            _LOGGER.error("Error in sensor %s structure: %s", entry[CONF_NAME], err)
-            continue
-
-        bytecount = entry[CONF_COUNT] * 2
-        if bytecount != size:
-            _LOGGER.error(
-                "Structure request %d bytes, but %d registers have a size of %d bytes",
-                size,
-                entry[CONF_COUNT],
-                bytecount,
-            )
-            continue
-
-        if CONF_REVERSE_ORDER in entry:
-            if entry[CONF_REVERSE_ORDER]:
-                entry[CONF_SWAP] = CONF_SWAP_WORD
-            else:
-                entry[CONF_SWAP] = CONF_SWAP_NONE
-            del entry[CONF_REVERSE_ORDER]
-        if entry.get(CONF_SWAP) != CONF_SWAP_NONE:
-            if entry[CONF_SWAP] == CONF_SWAP_BYTE:
-                regs_needed = 1
-            else:  # CONF_SWAP_WORD_BYTE, CONF_SWAP_WORD
-                regs_needed = 2
-            if (
-                entry[CONF_COUNT] < regs_needed
-                or (entry[CONF_COUNT] % regs_needed) != 0
-            ):
-                _LOGGER.error(
-                    "Error in sensor %s swap(%s) not possible due to count: %d",
-                    entry[CONF_NAME],
-                    entry[CONF_SWAP],
-                    entry[CONF_COUNT],
-                )
-                continue
-        if CONF_HUB in entry:
-            # from old config!
-            hub = hass.data[MODBUS_DOMAIN][entry[CONF_HUB]]
-        else:
-            hub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
-        if CONF_SCAN_INTERVAL not in entry:
-            entry[CONF_SCAN_INTERVAL] = DEFAULT_SCAN_INTERVAL
-        sensors.append(
-            ModbusRegisterSensor(
-                hub,
-                entry,
-                structure,
-            )
-        )
-
-    if not sensors:
-        return
+        hub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+        sensors.append(ModbusRegisterSensor(hub, entry))
     async_add_entities(sensors)
 
 
@@ -200,7 +70,6 @@ class ModbusRegisterSensor(BasePlatform, RestoreEntity, SensorEntity):
         self,
         hub,
         entry,
-        structure,
     ):
         """Initialize the modbus register sensor."""
         super().__init__(hub, entry)
@@ -212,7 +81,7 @@ class ModbusRegisterSensor(BasePlatform, RestoreEntity, SensorEntity):
         self._scale = entry[CONF_SCALE]
         self._offset = entry[CONF_OFFSET]
         self._precision = entry[CONF_PRECISION]
-        self._structure = structure
+        self._structure = entry.get(CONF_STRUCTURE)
         self._data_type = entry[CONF_DATA_TYPE]
 
     async def async_added_to_hass(self):
