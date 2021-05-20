@@ -187,23 +187,32 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _async_start_discovery_for_host(self, host):
         """Start discovery for a host."""
-        self._host = host
-        self._async_abort_entries_match({CONF_HOST: host})
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data[CONF_HOST] == host:
+                if self.unique_id and entry.unique_id is None:
+                    self.hass.config_entries.async_update_entry(
+                        entry, unique_id=self.unique_id
+                    )
+                raise data_entry_flow.AbortFlow("already_configured")
+
         self.context[CONF_HOST] = host
         for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == self.discovered_ip:
+            if progress.get("context", {}).get(CONF_HOST) == host:
                 raise data_entry_flow.AbortFlow("already_in_progress")
+
+        self._host = host
 
     async def async_step_ssdp(self, discovery_info: DiscoveryInfoType):
         """Handle a flow initialized by ssdp discovery."""
+        await self._async_set_unique_id_from_udn(discovery_info.get(ATTR_UPNP_UDN))
         self._async_start_discovery_for_host(
             urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         )
-        await self._async_set_unique_id_from_udn(discovery_info.get(ATTR_UPNP_UDN))
 
         self._manufacturer = discovery_info.get(ATTR_UPNP_MANUFACTURER)
-        self._model = discovery_info.get(ATTR_UPNP_MODEL_NAME)
-        self._title = self._model
+        self._name = self._title = self._model = discovery_info.get(
+            ATTR_UPNP_MODEL_NAME
+        )
 
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()

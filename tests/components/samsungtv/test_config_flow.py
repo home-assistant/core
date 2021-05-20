@@ -77,7 +77,7 @@ MOCK_ZEROCONF_DATA = {
 }
 MOCK_OLD_ENTRY = {
     CONF_HOST: "fake_host",
-    CONF_ID: "fake_uuid_old",
+    CONF_ID: "0d1cef00-00dc-1000-9c80-4844f7b172de_old",
     CONF_IP_ADDRESS: "fake_ip_old",
     CONF_METHOD: "legacy",
     CONF_PORT: None,
@@ -260,10 +260,10 @@ async def test_ssdp(hass: HomeAssistant, remote: Mock):
     assert result["type"] == "create_entry"
     assert result["title"] == "fake_model"
     assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_NAME] == "fake_manufacturer fake_model"
+    assert result["data"][CONF_NAME] == "fake_model"
     assert result["data"][CONF_MANUFACTURER] == "fake_manufacturer"
     assert result["data"][CONF_MODEL] == "fake_model"
-    assert result["result"].unique_id == "fake_uuid"
+    assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
 async def test_ssdp_noprefix(hass: HomeAssistant, remote: Mock):
@@ -285,10 +285,10 @@ async def test_ssdp_noprefix(hass: HomeAssistant, remote: Mock):
     assert result["type"] == "create_entry"
     assert result["title"] == "fake2_model"
     assert result["data"][CONF_HOST] == "fake2_host"
-    assert result["data"][CONF_NAME] == "fake2_manufacturer fake2_model"
+    assert result["data"][CONF_NAME] == "fake2_model"
     assert result["data"][CONF_MANUFACTURER] == "fake2_manufacturer"
     assert result["data"][CONF_MODEL] == "fake2_model"
-    assert result["result"].unique_id == "fake2_uuid"
+    assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172df"
 
 
 async def test_ssdp_legacy_missing_auth(hass: HomeAssistant, remote: Mock):
@@ -461,7 +461,7 @@ async def test_ssdp_already_configured(hass: HomeAssistant, remote: Mock):
     assert result2["reason"] == RESULT_ALREADY_CONFIGURED
 
     # check updated device info
-    assert entry.unique_id == "fake_uuid"
+    assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
 async def test_zeroconf(hass: HomeAssistant, remote: Mock):
@@ -660,7 +660,7 @@ async def test_update_old_entry(hass: HomeAssistant, remote: Mock):
         config_entries_domain = hass.config_entries.async_entries(DOMAIN)
         assert len(config_entries_domain) == 1
         assert entry is config_entries_domain[0]
-        assert entry.data[CONF_ID] == "fake_uuid_old"
+        assert entry.data[CONF_ID] == "0d1cef00-00dc-1000-9c80-4844f7b172de_old"
         assert entry.data[CONF_IP_ADDRESS] == "fake_ip_old"
         assert not entry.unique_id
 
@@ -681,4 +681,4 @@ async def test_update_old_entry(hass: HomeAssistant, remote: Mock):
         # check updated device info
         assert entry2.data.get(CONF_ID) is not None
         assert entry2.data.get(CONF_IP_ADDRESS) is not None
-        assert entry2.unique_id == "fake_uuid"
+        assert entry2.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
