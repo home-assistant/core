@@ -174,16 +174,10 @@ def _ifaddr_adapter_to_ha(
 
     for ip_config in adapter.ips:
         if ip_config.is_IPv6:
-            try:
-                ip_addr = ip_address(ip_config.ip[0])
-            except ValueError:
-                continue
+            ip_addr = ip_address(ip_config.ip[0])
             ip_v6s.append(_ip_v6_from_adapter(ip_config))
         else:
-            try:
-                ip_addr = ip_address(ip_config.ip)
-            except ValueError:
-                continue
+            ip_addr = ip_address(ip_config.ip)
             ip_v4s.append(_ip_v4_from_adapter(ip_config))
 
         if ip_addr == next_hop_address:
