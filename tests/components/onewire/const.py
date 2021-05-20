@@ -788,7 +788,7 @@ MOCK_OWPROXY_DEVICES = {
         },
         SENSOR_DOMAIN: [
             {
-                "entity_id": "sensor.7E_222222222222_temperature",
+                "entity_id": "sensor.7e_222222222222_temperature",
                 "unique_id": "/7E.222222222222/EDS0066/temperature",
                 "injected_value": b"    13.9375",
                 "result": "13.9",
