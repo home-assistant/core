@@ -4,11 +4,13 @@ from unittest.mock import Mock
 
 import aiohue
 
+from homeassistant.components.hue import sensor_base
 from homeassistant.components.hue.hue_event import CONF_HUE_EVENT
+from homeassistant.util import dt as dt_util
 
 from .conftest import create_mock_bridge, setup_bridge_for_sensors as setup_bridge
 
-from tests.common import async_capture_events
+from tests.common import async_capture_events, async_fire_time_changed
 
 PRESENCE_SENSOR_1_PRESENT = {
     "state": {"presence": True, "lastupdated": "2019-01-01T01:00:00"},
@@ -452,7 +454,9 @@ async def test_hue_events(hass, mock_bridge):
     mock_bridge.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
-    await mock_bridge.sensor_manager.coordinator.async_refresh()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + sensor_base.SensorManager.SCAN_INTERVAL
+    )
     await hass.async_block_till_done()
 
     assert len(mock_bridge.mock_requests) == 2
@@ -473,7 +477,9 @@ async def test_hue_events(hass, mock_bridge):
     mock_bridge.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
-    await mock_bridge.sensor_manager.coordinator.async_refresh()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + sensor_base.SensorManager.SCAN_INTERVAL
+    )
     await hass.async_block_till_done()
 
     assert len(mock_bridge.mock_requests) == 3
@@ -495,7 +501,9 @@ async def test_hue_events(hass, mock_bridge):
     mock_bridge.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
-    await mock_bridge.sensor_manager.coordinator.async_refresh()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + sensor_base.SensorManager.SCAN_INTERVAL
+    )
     await hass.async_block_till_done()
 
     assert len(mock_bridge.mock_requests) == 4
@@ -538,7 +546,9 @@ async def test_hue_events(hass, mock_bridge):
     mock_bridge.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
-    await mock_bridge.sensor_manager.coordinator.async_refresh()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + sensor_base.SensorManager.SCAN_INTERVAL
+    )
     await hass.async_block_till_done()
 
     assert len(mock_bridge.mock_requests) == 5
@@ -550,7 +560,9 @@ async def test_hue_events(hass, mock_bridge):
     mock_bridge.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
-    await mock_bridge.sensor_manager.coordinator.async_refresh()
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + sensor_base.SensorManager.SCAN_INTERVAL
+    )
     await hass.async_block_till_done()
 
     assert len(mock_bridge.mock_requests) == 6

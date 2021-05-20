@@ -4,6 +4,7 @@
 
 homeassistant.components
 homeassistant.components.acer_projector.*
+homeassistant.components.accuweather.*
 homeassistant.components.actiontec.*
 homeassistant.components.aftership.*
 homeassistant.components.air_quality.*

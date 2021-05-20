@@ -17,7 +17,7 @@ defusedxml==0.7.1
 distro==1.5.0
 emoji==1.2.0
 hass-nabucasa==0.43.0
-home-assistant-frontend==20210504.0
+home-assistant-frontend==20210518.0
 httpx==0.18.0
 jinja2>=2.11.3
 netdisco==2.8.3
@@ -34,7 +34,7 @@ sqlalchemy==1.4.13
 voluptuous-serialize==2.4.0
 voluptuous==0.12.1
 yarl==1.6.3
-zeroconf==0.30.0
+zeroconf==0.31.0
 
 pycryptodome>=3.6.6
 

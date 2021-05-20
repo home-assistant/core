@@ -28,7 +28,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .const import (
     ATTR_TEMPERATURE,
     CALL_TYPE_REGISTER_HOLDING,
-    CALL_TYPE_REGISTER_INPUT,
+    CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
     CONF_CURRENT_TEMP,
     CONF_CURRENT_TEMP_REGISTER_TYPE,
@@ -208,11 +208,13 @@ class ModbusThermostat(ClimateEntity):
         )
         byte_string = struct.pack(self._structure, target_temperature)
         register_value = struct.unpack(">h", byte_string[0:2])[0]
-        self._available = await self._hub.async_write_registers(
+        result = await self._hub.async_pymodbus_call(
             self._slave,
             self._target_temperature_register,
             register_value,
+            CALL_TYPE_WRITE_REGISTERS,
         )
+        self._available = result is not None
         await self.async_update()
 
     @property
@@ -235,14 +237,9 @@ class ModbusThermostat(ClimateEntity):
 
     async def _async_read_register(self, register_type, register) -> float | None:
         """Read register using the Modbus hub slave."""
-        if register_type == CALL_TYPE_REGISTER_INPUT:
-            result = await self._hub.async_read_input_registers(
-                self._slave, register, self._count
-            )
-        else:
-            result = await self._hub.async_read_holding_registers(
-                self._slave, register, self._count
-            )
+        result = await self._hub.async_pymodbus_call(
+            self._slave, register, self._count, register_type
+        )
         if result is None:
             self._available = False
             return -1

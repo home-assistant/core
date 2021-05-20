@@ -11,6 +11,7 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
+    COLOR_MODE_RGB,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
@@ -324,20 +325,31 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         add_topic(CONF_BRIGHTNESS_STATE_TOPIC, brightness_received)
         restore_state(ATTR_BRIGHTNESS)
 
+        def _rgbx_received(msg, template, color_mode, convert_color):
+            """Handle new MQTT messages for RGBW and RGBWW."""
+            payload = self._value_templates[template](msg.payload, None)
+            if not payload:
+                _LOGGER.debug(
+                    "Ignoring empty %s message from '%s'", color_mode, msg.topic
+                )
+                return None
+            color = tuple(int(val) for val in payload.split(","))
+            if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is None:
+                rgb = convert_color(*color)
+                percent_bright = float(color_util.color_RGB_to_hsv(*rgb)[2]) / 100.0
+                self._brightness = percent_bright * 255
+            return color
+
         @callback
         @log_messages(self.hass, self.entity_id)
         def rgb_received(msg):
             """Handle new MQTT messages for RGB."""
-            payload = self._value_templates[CONF_RGB_VALUE_TEMPLATE](msg.payload, None)
-            if not payload:
-                _LOGGER.debug("Ignoring empty rgb message from '%s'", msg.topic)
+            rgb = _rgbx_received(
+                msg, CONF_RGB_VALUE_TEMPLATE, COLOR_MODE_RGB, lambda *x: x
+            )
+            if not rgb:
                 return
-
-            rgb = [int(val) for val in payload.split(",")]
             self._hs_color = color_util.color_RGB_to_hs(*rgb)
-            if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is None:
-                percent_bright = float(color_util.color_RGB_to_hsv(*rgb)[2]) / 100.0
-                self._brightness = percent_bright * 255
             self.async_write_ha_state()
 
         add_topic(CONF_RGB_STATE_TOPIC, rgb_received)
@@ -385,9 +397,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             if not payload:
                 _LOGGER.debug("Ignoring empty hs message from '%s'", msg.topic)
                 return
-
             try:
-                hs_color = [float(val) for val in payload.split(",", 2)]
+                hs_color = tuple(float(val) for val in payload.split(",", 2))
                 self._hs_color = hs_color
                 self.async_write_ha_state()
             except ValueError:
@@ -424,7 +435,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 _LOGGER.debug("Ignoring empty xy-color message from '%s'", msg.topic)
                 return
 
-            xy_color = [float(val) for val in payload.split(",")]
+            xy_color = tuple(float(val) for val in payload.split(","))
             self._hs_color = color_util.color_xy_to_hs(*xy_color)
             self.async_write_ha_state()
 
@@ -550,6 +561,29 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 self._config[CONF_RETAIN],
             )
 
+        def scale_rgbx(color, brightness=None):
+            """Scale RGBx for brightness."""
+            if brightness is None:
+                # If there's a brightness topic set, we don't want to scale the RGBx
+                # values given using the brightness.
+                if self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None:
+                    brightness = 255
+                else:
+                    brightness = kwargs.get(
+                        ATTR_BRIGHTNESS, self._brightness if self._brightness else 255
+                    )
+            return tuple(int(channel * brightness / 255) for channel in color)
+
+        def render_rgbx(color, template):
+            """Render RGBx payload."""
+            tpl = self._command_templates[template]
+            if tpl:
+                keys = ["red", "green", "blue"]
+                rgb_color_str = tpl(zip(keys, color))
+            else:
+                rgb_color_str = ",".join(str(channel) for channel in color)
+            return rgb_color_str
+
         def set_optimistic(attribute, value, condition_attribute=None):
             """Optimistically update a state attribute."""
             if condition_attribute is None:
@@ -569,38 +603,20 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         elif on_command_type == "brightness" and ATTR_BRIGHTNESS not in kwargs:
             kwargs[ATTR_BRIGHTNESS] = self._brightness if self._brightness else 255
 
-        if ATTR_HS_COLOR in kwargs and self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
-
-            hs_color = kwargs[ATTR_HS_COLOR]
-
-            # If there's a brightness topic set, we don't want to scale the RGB
-            # values given using the brightness.
-            if self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None:
-                brightness = 255
-            else:
-                brightness = kwargs.get(
-                    ATTR_BRIGHTNESS, self._brightness if self._brightness else 255
-                )
-            rgb = color_util.color_hsv_to_RGB(
-                hs_color[0], hs_color[1], brightness / 255 * 100
-            )
-            tpl = self._command_templates[CONF_RGB_COMMAND_TEMPLATE]
-            if tpl:
-                rgb_color_str = tpl({"red": rgb[0], "green": rgb[1], "blue": rgb[2]})
-            else:
-                rgb_color_str = f"{rgb[0]},{rgb[1]},{rgb[2]}"
-
-            publish(CONF_RGB_COMMAND_TOPIC, rgb_color_str)
+        hs_color = kwargs.get(ATTR_HS_COLOR)
+        if hs_color and self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
+            # Convert HS to RGB
+            rgb = scale_rgbx(color_util.color_hsv_to_RGB(*hs_color, 100))
+            rgb_s = render_rgbx(rgb, CONF_RGB_COMMAND_TEMPLATE)
+            publish(CONF_RGB_COMMAND_TOPIC, rgb_s)
             should_update |= set_optimistic(ATTR_HS_COLOR, hs_color, ATTR_RGB_COLOR)
 
-        if ATTR_HS_COLOR in kwargs and self._topic[CONF_HS_COMMAND_TOPIC] is not None:
-            hs_color = kwargs[ATTR_HS_COLOR]
+        if hs_color and self._topic[CONF_HS_COMMAND_TOPIC] is not None:
             publish(CONF_HS_COMMAND_TOPIC, f"{hs_color[0]},{hs_color[1]}")
             should_update |= set_optimistic(ATTR_HS_COLOR, hs_color)
 
-        if ATTR_HS_COLOR in kwargs and self._topic[CONF_XY_COMMAND_TOPIC] is not None:
-
-            xy_color = color_util.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
+        if hs_color and self._topic[CONF_XY_COMMAND_TOPIC] is not None:
+            xy_color = color_util.color_hs_to_xy(*hs_color)
             publish(CONF_XY_COMMAND_TOPIC, f"{xy_color[0]},{xy_color[1]}")
             should_update |= set_optimistic(ATTR_HS_COLOR, hs_color, ATTR_XY_COLOR)
 
@@ -623,16 +639,10 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             and self._topic[CONF_RGB_COMMAND_TOPIC] is not None
         ):
             hs_color = self._hs_color if self._hs_color is not None else (0, 0)
-            rgb = color_util.color_hsv_to_RGB(
-                hs_color[0], hs_color[1], kwargs[ATTR_BRIGHTNESS] / 255 * 100
-            )
-            tpl = self._command_templates[CONF_RGB_COMMAND_TEMPLATE]
-            if tpl:
-                rgb_color_str = tpl({"red": rgb[0], "green": rgb[1], "blue": rgb[2]})
-            else:
-                rgb_color_str = f"{rgb[0]},{rgb[1]},{rgb[2]}"
-
-            publish(CONF_RGB_COMMAND_TOPIC, rgb_color_str)
+            brightness = kwargs[ATTR_BRIGHTNESS]
+            rgb = scale_rgbx(color_util.color_hsv_to_RGB(*hs_color, 100), brightness)
+            rgb_s = render_rgbx(rgb, CONF_RGB_COMMAND_TEMPLATE)
+            publish(CONF_RGB_COMMAND_TOPIC, rgb_s)
             should_update |= set_optimistic(ATTR_BRIGHTNESS, kwargs[ATTR_BRIGHTNESS])
 
         if (
@@ -641,7 +651,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         ):
             color_temp = int(kwargs[ATTR_COLOR_TEMP])
             tpl = self._command_templates[CONF_COLOR_TEMP_COMMAND_TEMPLATE]
-
             if tpl:
                 color_temp = tpl({"value": color_temp})
 

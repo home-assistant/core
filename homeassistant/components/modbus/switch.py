@@ -22,9 +22,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CALL_TYPE_COIL,
-    CALL_TYPE_DISCRETE,
-    CALL_TYPE_REGISTER_HOLDING,
-    CALL_TYPE_REGISTER_INPUT,
+    CALL_TYPE_WRITE_COIL,
+    CALL_TYPE_WRITE_REGISTER,
     CONF_INPUT_TYPE,
     CONF_STATE_OFF,
     CONF_STATE_ON,
@@ -63,13 +62,11 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
         self._scan_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
         self._address = config[CONF_ADDRESS]
         if config[CONF_WRITE_TYPE] == CALL_TYPE_COIL:
-            self._async_write_func = self._hub.async_write_coil
-            self._command_on = 0x01
-            self._command_off = 0x00
+            self._write_type = CALL_TYPE_WRITE_COIL
         else:
-            self._async_write_func = self._hub.async_write_register
-            self._command_on = config[CONF_COMMAND_ON]
-            self._command_off = config[CONF_COMMAND_OFF]
+            self._write_type = CALL_TYPE_WRITE_REGISTER
+        self._command_on = config[CONF_COMMAND_ON]
+        self._command_off = config[CONF_COMMAND_OFF]
         if CONF_VERIFY in config:
             if config[CONF_VERIFY] is None:
                 config[CONF_VERIFY] = {}
@@ -82,15 +79,6 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
             )
             self._state_on = config[CONF_VERIFY].get(CONF_STATE_ON, self._command_on)
             self._state_off = config[CONF_VERIFY].get(CONF_STATE_OFF, self._command_off)
-
-            if self._verify_type == CALL_TYPE_REGISTER_HOLDING:
-                self._async_read_func = self._hub.async_read_holding_registers
-            elif self._verify_type == CALL_TYPE_DISCRETE:
-                self._async_read_func = self._hub.async_read_discrete_inputs
-            elif self._verify_type == CALL_TYPE_REGISTER_INPUT:
-                self._async_read_func = self._hub.async_read_input_registers
-            else:  # self._verify_type == CALL_TYPE_COIL:
-                self._async_read_func = self._hub.async_read_coils
         else:
             self._verify_active = False
 
@@ -125,10 +113,10 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
     async def async_turn_on(self, **kwargs):
         """Set switch on."""
 
-        result = await self._async_write_func(
-            self._slave, self._address, self._command_on
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._address, self._command_on, self._write_type
         )
-        if result is False:
+        if result is None:
             self._available = False
             self.async_write_ha_state()
         else:
@@ -141,10 +129,10 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
 
     async def async_turn_off(self, **kwargs):
         """Set switch off."""
-        result = await self._async_write_func(
-            self._slave, self._address, self._command_off
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._address, self._command_off, self._write_type
         )
-        if result is False:
+        if result is None:
             self._available = False
             self.async_write_ha_state()
         else:
@@ -164,7 +152,9 @@ class ModbusSwitch(SwitchEntity, RestoreEntity):
             self.async_write_ha_state()
             return
 
-        result = await self._async_read_func(self._slave, self._verify_address, 1)
+        result = await self._hub.async_pymodbus_call(
+            self._slave, self._verify_address, 1, self._verify_type
+        )
         if result is None:
             self._available = False
             self.async_write_ha_state()

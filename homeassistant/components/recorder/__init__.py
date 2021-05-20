@@ -54,6 +54,7 @@ from .util import (
     dburl_to_path,
     end_incomplete_runs,
     move_away_broken_database,
+    perodic_db_cleanups,
     session_scope,
     setup_connection_for_dialect,
     validate_or_move_away_sqlite_database,
@@ -62,7 +63,6 @@ from .util import (
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_PURGE = "purge"
-SERVICE_STATISTICS = "statistics"
 SERVICE_ENABLE = "enable"
 SERVICE_DISABLE = "disable"
 
@@ -278,6 +278,10 @@ class PurgeTask(NamedTuple):
     apply_filter: bool
 
 
+class PerodicCleanupTask:
+    """An object to insert into the recorder to trigger cleanup tasks when auto purge is disabled."""
+
+
 class StatisticsTask(NamedTuple):
     """An object to insert into the recorder queue to run a statistics task."""
 
@@ -484,9 +488,15 @@ class Recorder(threading.Thread):
         self.async_recorder_ready.set()
 
     @callback
-    def async_purge(self, now):
+    def async_nightly_tasks(self, now):
         """Trigger the purge."""
-        self.queue.put(PurgeTask(self.keep_days, repack=False, apply_filter=False))
+        if self.auto_purge:
+            # Purge will schedule the perodic cleanups
+            # after it completes to ensure it does not happen
+            # until after the database is vacuumed
+            self.queue.put(PurgeTask(self.keep_days, repack=False, apply_filter=False))
+        else:
+            self.queue.put(PerodicCleanupTask())
 
     @callback
     def async_hourly_statistics(self, now):
@@ -496,11 +506,10 @@ class Recorder(threading.Thread):
 
     def _async_setup_periodic_tasks(self):
         """Prepare periodic tasks."""
-        if self.auto_purge:
-            # Purge every night at 4:12am
-            async_track_time_change(
-                self.hass, self.async_purge, hour=4, minute=12, second=0
-            )
+        # Run nightly tasks at 4:12am
+        async_track_time_change(
+            self.hass, self.async_nightly_tasks, hour=4, minute=12, second=0
+        )
         # Compile hourly statistics every hour at *:12
         async_track_time_change(
             self.hass, self.async_hourly_statistics, minute=12, second=0
@@ -646,6 +655,10 @@ class Recorder(threading.Thread):
     def _run_purge(self, keep_days, repack, apply_filter):
         """Purge the database."""
         if purge.purge_old_data(self, keep_days, repack, apply_filter):
+            # We always need to do the db cleanups after a purge
+            # is finished to ensure the WAL checkpoint and other
+            # tasks happen after a vacuum.
+            perodic_db_cleanups(self)
             return
         # Schedule a new purge task if this one didn't finish
         self.queue.put(PurgeTask(keep_days, repack, apply_filter))
@@ -661,6 +674,9 @@ class Recorder(threading.Thread):
         """Process one event."""
         if isinstance(event, PurgeTask):
             self._run_purge(event.keep_days, event.repack, event.apply_filter)
+            return
+        if isinstance(event, PerodicCleanupTask):
+            perodic_db_cleanups(self)
             return
         if isinstance(event, StatisticsTask):
             self._run_statistics(event.start)

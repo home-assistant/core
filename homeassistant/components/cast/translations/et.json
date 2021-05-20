@@ -29,7 +29,7 @@
                     "ignore_cec": "Eira CEC-i",
                     "uuid": "Lubatud UUID-d"
                 },
-                "description": "Lubatud UUID-d - komadega eraldatud loetelu UUID-dest, mida soovitakse lisada Home Assistant'ile. Kasuta ainult siis, kui ei soovi lisada k\u00f5iki olemasolevaid Cast seadmeid.\nIgnore CEC - komadega eraldatud loetelu Chromecastidest, mis peaksid aktiivse sisendi m\u00e4\u00e4ramisel CEC-andmeid ignoreerima. See edastatakse pychromecast.IGNORE_CEC.",
+                "description": "Lubatud UUID-d - komadega eraldatud loetelu UUID-dest, mida soovitakse lisada Home Assistant'ile. Kasuta ainult siis,kui ei soovi lisada k\u00f5iki olemasolevaid Cast seadmeid.\nIgnore CEC - komadega eraldatud loetelu Chromecastidest, mis peaksid aktiivse sisendi m\u00e4\u00e4ramisel CEC-andmeid ignoreerima. See edastatakse pychromecast.IGNORE_CEC.",
                 "title": "Google Casti seadistamise t\u00e4psemad valikud"
             },
             "basic_options": {

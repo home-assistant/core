@@ -28,7 +28,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 14
+SCHEMA_VERSION = 15
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,6 @@ TABLE_EVENTS = "events"
 TABLE_STATES = "states"
 TABLE_RECORDER_RUNS = "recorder_runs"
 TABLE_SCHEMA_CHANGES = "schema_changes"
-
 TABLE_STATISTICS = "statistics"
 
 ALL_TABLES = [
@@ -223,6 +222,9 @@ class Statistics(Base):  # type: ignore
     mean = Column(Float())
     min = Column(Float())
     max = Column(Float())
+    last_reset = Column(DATETIME_TYPE)
+    state = Column(Float())
+    sum = Column(Float())
 
     __table_args__ = (
         # Used for fetching statistics for a certain entity at a specific time

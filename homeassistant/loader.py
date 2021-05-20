@@ -506,31 +506,35 @@ async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration
 
     event = cache[domain] = asyncio.Event()
 
+    try:
+        integration = await _async_get_integration(hass, domain)
+    except Exception:  # pylint: disable=broad-except
+        # Remove event from cache.
+        cache.pop(domain)
+        event.set()
+        raise
+
+    cache[domain] = integration
+    event.set()
+    return integration
+
+
+async def _async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
     # Instead of using resolve_from_root we use the cache of custom
     # components to find the integration.
-    integration = (await async_get_custom_components(hass)).get(domain)
-    if integration is not None:
+    if integration := (await async_get_custom_components(hass)).get(domain):
         validate_custom_integration_version(integration)
         _LOGGER.warning(CUSTOM_WARNING, integration.domain)
-        cache[domain] = integration
-        event.set()
         return integration
 
     from homeassistant import components  # pylint: disable=import-outside-toplevel
 
-    integration = await hass.async_add_executor_job(
+    if integration := await hass.async_add_executor_job(
         Integration.resolve_from_root, hass, components, domain
-    )
-    event.set()
+    ):
+        return integration
 
-    if not integration:
-        # Remove event from cache.
-        cache.pop(domain)
-        raise IntegrationNotFound(domain)
-
-    cache[domain] = integration
-
-    return integration
+    raise IntegrationNotFound(domain)
 
 
 class LoaderError(Exception):
