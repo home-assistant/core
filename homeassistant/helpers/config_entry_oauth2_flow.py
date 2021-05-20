@@ -107,7 +107,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         client_secret: str,
         authorize_url: str,
         token_url: str,
-    ):
+    ) -> None:
         """Initialize local auth implementation."""
         self.hass = hass
         self._domain = domain
@@ -437,7 +437,7 @@ class OAuth2Session:
         hass: HomeAssistant,
         config_entry: config_entries.ConfigEntry,
         implementation: AbstractOAuth2Implementation,
-    ):
+    ) -> None:
         """Initialize an OAuth2 session."""
         self.hass = hass
         self.config_entry = config_entry
