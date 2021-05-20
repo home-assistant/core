@@ -1,0 +1,14 @@
+{
+    "domain": "hifiberry",
+    "name": "hifiberry",
+    "config_flow": true,
+    "documentation": "https://www.home-assistant.io/integrations/hifiberry",
+    "requirements": ["pyhifiberry==0.0.2"],
+    "zeroconf": [
+        {"type": "_mpd._tcp.local.", "name": "music player*"}
+    ],
+    "dependencies": [],
+    "codeowners": ["@willholdoway", "@dgomes"],
+    "version": "0.0.2",
+    "iot_class": "local_polling"
+}
