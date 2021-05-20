@@ -131,7 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 class WemoDispatcher:
     """Dispatch WeMo devices to the correct platform."""
 
-    def __init__(self, config_entry: ConfigEntry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the WemoDispatcher."""
         self._config_entry = config_entry
         self._added_serial_numbers = set()
