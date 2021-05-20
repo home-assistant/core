@@ -1,59 +1,21 @@
 """Config flow for Wallbox integration."""
-import logging
-
-import requests
 import voluptuous as vol
-from wallbox import Wallbox
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, core
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN
+from . import CannotConnect, InvalidAuth, WallboxHub
+from .const import CONF_STATION, DOMAIN
 
 COMPONENT_DOMAIN = DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        "station": str,
-        "username": str,
-        "password": str,
+        vol.Required(CONF_STATION): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
     }
 )
-
-
-class PlaceholderHub:
-    """Wallbox Hub class."""
-
-    def __init__(self, station, username, password):
-        """Initialize."""
-        self._station = station
-        self._username = username
-        self._password = password
-
-    def authenticate(self) -> bool:
-        """Authenticate using Wallbox API."""
-        try:
-            wallbox = Wallbox(self._username, self._password)
-            wallbox.authenticate()
-            return True
-        except requests.exceptions.HTTPError as wallbox_connection_error:
-            if wallbox_connection_error.response.status_code == 403:
-                raise InvalidAuth from wallbox_connection_error
-            raise ConnectionError from wallbox_connection_error
-
-    def get_data(self) -> bool:
-        """Get new sensor data for Wallbox component."""
-
-        try:
-            wallbox = Wallbox(self._username, self._password)
-            wallbox.authenticate()
-            wallbox.getChargerStatus(self._station)
-            return True
-        except requests.exceptions.HTTPError as wallbox_connection_error:
-            if wallbox_connection_error.response.status_code == 403:
-                raise InvalidAuth from wallbox_connection_error
-            raise ConnectionError from wallbox_connection_error
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -61,8 +23,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-
-    hub = PlaceholderHub(data["station"], data["username"], data["password"])
+    hub = WallboxHub(data["station"], data["username"], data["password"])
 
     await hass.async_add_executor_job(
         hub.authenticate,
@@ -93,22 +54,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=COMPONENT_DOMAIN):
         try:
             info = await validate_input(self.hass, user_input)
         except CannotConnect:
-            _LOGGER.error("Cannot get MyWallbox data, is station serial correct?")
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-            _LOGGER.error("Cannot authenticate for MyWallbox")
         else:
             return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""

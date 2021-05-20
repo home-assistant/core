@@ -17,9 +17,10 @@ CONF_STATION = "station"
 _LOGGER = logging.getLogger(__name__)
 
 
-def wallbox_updater(wallbox, station):
+async def wallbox_updater(wallbox, hass):
     """Get new sensor data for Wallbox component."""
-    data = wallbox.getChargerStatus(station)
+    data = await hass.async_add_executor_job(wallbox.get_data)
+
     filtered_data = {k: data[k] for k in SENSOR_TYPES if k in data}
 
     for key, value in filtered_data.items():
@@ -35,18 +36,10 @@ def wallbox_updater(wallbox, station):
 
 async def async_setup_entry(hass, config, async_add_entities):
     """Create wallbox sensor entities in HASS."""
-
     wallbox = hass.data[DOMAIN][CONF_CONNECTIONS][config.entry_id]
-    station = config.data[CONF_STATION]
 
     async def async_update_data():
-
-        try:
-            return await hass.async_add_executor_job(wallbox_updater, wallbox, station)
-
-        except ConnectionError:
-            _LOGGER.error("Error getting data from wallbox API")
-            return
+        return await wallbox_updater(wallbox, hass)
 
     coordinator = DataUpdateCoordinator(
         hass,

@@ -1,7 +1,6 @@
 """Test the Wallbox config flow."""
 from unittest.mock import patch
 
-import requests_mock
 from voluptuous.schema_builder import raises
 
 from homeassistant import config_entries, data_entry_flow
@@ -28,7 +27,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.wallbox.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.wallbox.config_flow.WallboxHub.authenticate",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -51,7 +50,7 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.wallbox.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.wallbox.config_flow.WallboxHub.authenticate",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -65,44 +64,6 @@ async def test_form_cannot_connect(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
-
-
-def test_hub_class():
-    """Test hub class."""
-
-    station = ("12345",)
-    username = ("test-username",)
-    password = "test-password"
-
-    hub = config_flow.PlaceholderHub(station, username, password)
-
-    with requests_mock.Mocker() as m:
-        m.get(
-            "https://api.wall-box.com/auth/token/user",
-            text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
-            status_code=200,
-        )
-        m.get(
-            "https://api.wall-box.com/chargers/status/('12345',)",
-            text='{"Temperature": 100, "Location": "Toronto", "Datetime": "2020-07-23", "Units": "Celsius"}',
-            status_code=200,
-        )
-        assert hub.authenticate()
-        assert hub.get_data()
-
-    with requests_mock.Mocker() as m, raises(InvalidAuth):
-        m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=403)
-
-        assert hub.authenticate()
-
-    with requests_mock.Mocker() as m, raises(InvalidAuth):
-        m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=403)
-        m.get(
-            "https://api.wall-box.com/chargers/status/test",
-            text="data",
-            status_code=403,
-        )
-        assert hub.get_data()
 
 
 async def test_validate_input(hass):
