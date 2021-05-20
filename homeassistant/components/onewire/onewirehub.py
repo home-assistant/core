@@ -23,7 +23,7 @@ DEVICE_COUPLERS = {
 class OneWireHub:
     """Hub to communicate with SysBus or OWServer."""
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize."""
         self.hass = hass
         self.type: str | None = None
