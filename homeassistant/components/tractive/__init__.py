@@ -42,11 +42,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from error
 
     tractive = TractiveClient(hass, client, creds["user_id"])
+    tractive.subscribe()
+
     hass.data[DOMAIN][entry.entry_id] = tractive
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-    await asyncio.sleep(5)  # TODO: remove it
-    tractive.subscribe()
 
     async def cancel_listen_task(_):
         await tractive.unsubscribe()
