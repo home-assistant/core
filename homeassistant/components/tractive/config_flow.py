@@ -8,6 +8,7 @@ import aiotractive
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -16,7 +17,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({"username": str, "password": str})
+STEP_USER_DATA_SCHEMA = vol.Schema({CONF_EMAIL: str, CONF_PASSWORD: str})
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -25,7 +26,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    client = aiotractive.api.API(data["username"], data["password"])
+    client = aiotractive.api.API(data[CONF_EMAIL], data[CONF_PASSWORD])
     try:
         user_id = await client.user_id()
     except aiotractive.exceptions.UnauthorizedError as error:
@@ -33,7 +34,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     finally:
         await client.close()
 
-    return {"title": data["username"], "user_id": user_id}
+    return {"title": data[CONF_EMAIL], "user_id": user_id}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
