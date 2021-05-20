@@ -170,7 +170,7 @@ class ClimateSchema:
     SCHEMA = vol.All(
         # deprecated since September 2020
         cv.deprecated("setpoint_shift_step", replacement_key=CONF_TEMPERATURE_STEP),
-        # deprecated since 2021.5
+        # deprecated since 2021.6
         cv.deprecated("create_temperature_sensors"),
         vol.Schema(
             {
