@@ -80,8 +80,6 @@ class Network:
         """Reconfigure network."""
         config = NETWORK_CONFIG_SCHEMA(config)
         self._data[ATTR_CONFIGURED_ADAPTERS] = config[ATTR_CONFIGURED_ADAPTERS]
-        for adapter in self._adapters:
-            adapter["enabled"] = False
         _enable_adapters(self._adapters, self.configured_adapters)
         await self._async_save()
 
@@ -97,6 +95,8 @@ class Network:
 
 def _enable_adapters(adapters: list[Adapter], enabled_interfaces: list[str]) -> bool:
     """Enable configured adapters."""
+    _reset_enabled_adapters(adapters)
+
     if not enabled_interfaces:
         return False
 
@@ -144,6 +144,11 @@ def _ip_address_is_external(ip_addr: IPv4Address | IPv6Address) -> bool:
         and not ip_addr.is_loopback
         and not ip_addr.is_link_local
     )
+
+
+def _reset_enabled_adapters(adapters: list[Adapter]) -> None:
+    for adapter in adapters:
+        adapter["enabled"] = False
 
 
 def _load_adapters(next_hop: str | None) -> list[Adapter]:
