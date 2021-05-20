@@ -159,7 +159,6 @@ class ClimateSchema:
     CONF_ON_OFF_INVERT = "on_off_invert"
     CONF_MIN_TEMP = "min_temp"
     CONF_MAX_TEMP = "max_temp"
-    CONF_CREATE_TEMPERATURE_SENSORS = "create_temperature_sensors"
 
     DEFAULT_NAME = "KNX Climate"
     DEFAULT_SETPOINT_SHIFT_MODE = "DPT6010"
@@ -171,6 +170,8 @@ class ClimateSchema:
     SCHEMA = vol.All(
         # deprecated since September 2020
         cv.deprecated("setpoint_shift_step", replacement_key=CONF_TEMPERATURE_STEP),
+        # deprecated since 2021.6
+        cv.deprecated("create_temperature_sensors"),
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -228,9 +229,6 @@ class ClimateSchema:
                 ),
                 vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
                 vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
-                vol.Optional(
-                    CONF_CREATE_TEMPERATURE_SENSORS, default=False
-                ): cv.boolean,
             }
         ),
     )
