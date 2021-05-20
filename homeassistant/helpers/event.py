@@ -534,7 +534,7 @@ class _TrackStateChangeFiltered:
         hass: HomeAssistant,
         track_states: TrackStates,
         action: Callable[[Event], Any],
-    ):
+    ) -> None:
         """Handle removal / refresh of tracker init."""
         self.hass = hass
         self._action = action
@@ -775,7 +775,7 @@ class _TrackTemplateResultInfo:
         hass: HomeAssistant,
         track_templates: Iterable[TrackTemplate],
         action: Callable,
-    ):
+    ) -> None:
         """Handle removal / refresh of tracker init."""
         self.hass = hass
         self._job = HassJob(action)

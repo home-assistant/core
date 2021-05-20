@@ -73,7 +73,7 @@ class ServiceParams(TypedDict):
 class ServiceTargetSelector:
     """Class to hold a target selector for a service."""
 
-    def __init__(self, service_call: ServiceCall):
+    def __init__(self, service_call: ServiceCall) -> None:
         """Extract ids from service call data."""
         entity_ids: str | list | None = service_call.data.get(ATTR_ENTITY_ID)
         device_ids: str | list | None = service_call.data.get(ATTR_DEVICE_ID)

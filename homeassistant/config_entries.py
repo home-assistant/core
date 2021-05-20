@@ -569,7 +569,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
     def __init__(
         self, hass: HomeAssistant, config_entries: ConfigEntries, hass_config: dict
-    ):
+    ) -> None:
         """Initialize the config entry flow manager."""
         super().__init__(hass)
         self.config_entries = config_entries
