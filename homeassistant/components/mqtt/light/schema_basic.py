@@ -290,7 +290,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         self._optimistic = optimistic or topic[CONF_STATE_TOPIC] is None
         self._optimistic_rgb_color = optimistic or topic[CONF_RGB_STATE_TOPIC] is None
         self._optimistic_rgbw_color = optimistic or topic[CONF_RGBW_STATE_TOPIC] is None
-        self._optimistic_rgbww_color = optimistic or topic[CONF_RGBWW_STATE_TOPIC] is None
+        self._optimistic_rgbww_color = (
+            optimistic or topic[CONF_RGBWW_STATE_TOPIC] is None
+        )
         self._optimistic_brightness = (
             optimistic
             or (
@@ -825,7 +827,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             rgb = scale_rgbx(color_util.color_hsv_to_RGB(*hs_color, 100))
             rgb_s = render_rgbx(rgb, CONF_RGB_COMMAND_TEMPLATE, COLOR_MODE_RGB)
             publish(CONF_RGB_COMMAND_TOPIC, rgb_s)
-            should_update |= set_optimistic(ATTR_HS_COLOR, hs_color, condition_attribute=ATTR_RGB_COLOR)
+            should_update |= set_optimistic(
+                ATTR_HS_COLOR, hs_color, condition_attribute=ATTR_RGB_COLOR
+            )
 
         if hs_color and self._topic[CONF_HS_COMMAND_TOPIC] is not None:
             publish(CONF_HS_COMMAND_TOPIC, f"{hs_color[0]},{hs_color[1]}")
@@ -839,7 +843,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             # Legacy mode: Convert HS to XY
             xy_color = color_util.color_hs_to_xy(*hs_color)
             publish(CONF_XY_COMMAND_TOPIC, f"{xy_color[0]},{xy_color[1]}")
-            should_update |= set_optimistic(ATTR_HS_COLOR, hs_color, condition_attribute=ATTR_XY_COLOR)
+            should_update |= set_optimistic(
+                ATTR_HS_COLOR, hs_color, condition_attribute=ATTR_XY_COLOR
+            )
 
         if (
             (rgb := kwargs.get(ATTR_RGB_COLOR))
@@ -872,7 +878,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             should_update |= set_optimistic(ATTR_RGBWW_COLOR, rgbww, COLOR_MODE_RGBWW)
 
         if (
-            (xy := kwargs.get(ATTR_XY_COLOR))
+            (xy := kwargs.get(ATTR_XY_COLOR))  # pylint: disable=invalid-name
             and self._topic[CONF_XY_COMMAND_TOPIC] is not None
             and not self._legacy_mode
         ):
@@ -952,7 +958,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 color_temp = tpl({"value": color_temp})
 
             publish(CONF_COLOR_TEMP_COMMAND_TOPIC, color_temp)
-            should_update |= set_optimistic(ATTR_COLOR_TEMP, kwargs[ATTR_COLOR_TEMP], COLOR_MODE_COLOR_TEMP)
+            should_update |= set_optimistic(
+                ATTR_COLOR_TEMP, kwargs[ATTR_COLOR_TEMP], COLOR_MODE_COLOR_TEMP
+            )
 
         if ATTR_EFFECT in kwargs and self._topic[CONF_EFFECT_COMMAND_TOPIC] is not None:
             effect = kwargs[ATTR_EFFECT]
