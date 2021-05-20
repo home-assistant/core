@@ -525,6 +525,7 @@ class WeatherSchema:
     DEFAULT_NAME = "KNX Weather Station"
 
     SCHEMA = vol.All(
+        # deprecated since 2021.6
         cv.deprecated("create_sensors"),
         vol.Schema(
             {
