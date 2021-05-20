@@ -5,8 +5,7 @@
             "unknown": "Unexpected error"
         },
         "error": {
-            "cannot_connect": "Failed to connect",
-            "invalid_host": "Invalid MAC address"
+            "cannot_connect": "Failed to connect"
         },
         "flow_title": "{name}",
         "step": {
@@ -15,8 +14,7 @@
                 "data": {
                     "name": "Name",
                     "password": "Password",
-                    "mac": "Mac",
-                    "type": "Type"
+                    "mac": "Mac"
                 },
                 "title": "Setup Switchbot device"
             }

@@ -861,6 +861,7 @@ pyfttt==0.3
 
 # homeassistant.components.bluetooth_le_tracker
 # homeassistant.components.skybeacon
+# homeassistant.components.switchbot
 pygatt[GATTTOOL]==4.0.5
 
 # homeassistant.components.hvv_departures

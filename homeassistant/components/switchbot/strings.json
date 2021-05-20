@@ -7,14 +7,12 @@
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "mac": "Device MAC address",
-          "type": "Device Type"
+          "mac": "Device MAC address"
         }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
