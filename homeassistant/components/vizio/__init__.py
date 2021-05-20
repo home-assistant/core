@@ -10,7 +10,7 @@ from pyvizio.util import gen_apps_list_from_url
 import voluptuous as vol
 
 from homeassistant.components.media_player import DEVICE_CLASS_TV
-from homeassistant.config_entries import ENTRY_STATE_LOADED, SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -80,7 +80,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     )
     # Exclude this config entry because its not unloaded yet
     if not any(
-        entry.state == ENTRY_STATE_LOADED
+        entry.state is ConfigEntryState.LOADED
         and entry.entry_id != config_entry.entry_id
         and entry.data[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
         for entry in hass.config_entries.async_entries(DOMAIN)
