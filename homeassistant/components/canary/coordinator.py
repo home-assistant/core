@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 class CanaryDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Canary data."""
 
-    def __init__(self, hass: HomeAssistant, *, api: Api):
+    def __init__(self, hass: HomeAssistant, *, api: Api) -> None:
         """Initialize global Canary data updater."""
         self.canary = api
         update_interval = timedelta(seconds=30)
