@@ -39,7 +39,7 @@ async def test_setup_platform(hass, dsmr_connection_fixture):
 
     serial_data = {"serial_id": "1234", "serial_id_gas": "5678"}
 
-    with patch("homeassistant.components.dsmr.async_setup", return_value=True), patch(
+    with patch(
         "homeassistant.components.dsmr.async_setup_entry", return_value=True
     ), patch(
         "homeassistant.components.dsmr.config_flow._validate_dsmr_connection",

@@ -165,7 +165,7 @@ class TariffSelect(RestoreEntity):
         return self._current_tariff
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_TARIFFS: self._tariffs}
 

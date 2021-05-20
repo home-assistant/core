@@ -17,7 +17,6 @@ async def setup_ozw(hass, entry=None, fixture=None):
         entry = MockConfigEntry(
             domain=DOMAIN,
             title="Z-Wave",
-            connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         )
 
         entry.add_to_hass(hass)

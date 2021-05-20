@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     _LOGGER,
     CONF_APP_ID,
     CONF_APP_SECRET,
@@ -28,7 +28,6 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a StarLine config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize flow."""

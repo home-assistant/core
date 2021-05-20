@@ -1,14 +1,13 @@
 """Support for the Tesla sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import DEVICE_CLASSES
+from homeassistant.components.sensor import DEVICE_CLASSES, SensorEntity
 from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.util.distance import convert
 
 from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
@@ -27,7 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class TeslaSensor(TeslaDevice, Entity):
+class TeslaSensor(TeslaDevice, SensorEntity):
     """Representation of Tesla sensors."""
 
     def __init__(self, tesla_device, coordinator, sensor_type=None):

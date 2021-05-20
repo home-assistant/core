@@ -1,19 +1,20 @@
 """Middleware to handle forwarded data by a reverse proxy."""
+from __future__ import annotations
+
+from collections.abc import Awaitable, Callable
 from ipaddress import ip_address
 import logging
 
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
-from aiohttp.web import HTTPBadRequest, middleware
+from aiohttp.web import Application, HTTPBadRequest, Request, StreamResponse, middleware
 
 from homeassistant.core import callback
 
 _LOGGER = logging.getLogger(__name__)
 
-# mypy: allow-untyped-defs
-
 
 @callback
-def async_setup_forwarded(app, trusted_proxies):
+def async_setup_forwarded(app: Application, trusted_proxies: list[str]) -> None:
     """Create forwarded middleware for the app.
 
     Process IP addresses, proto and host information in the forwarded for headers.
@@ -60,17 +61,20 @@ def async_setup_forwarded(app, trusted_proxies):
     """
 
     @middleware
-    async def forwarded_middleware(request, handler):
+    async def forwarded_middleware(
+        request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
+    ) -> StreamResponse:
         """Process forwarded data by a reverse proxy."""
-        overrides = {}
+        overrides: dict[str, str] = {}
 
         # Handle X-Forwarded-For
-        forwarded_for_headers = request.headers.getall(X_FORWARDED_FOR, [])
+        forwarded_for_headers: list[str] = request.headers.getall(X_FORWARDED_FOR, [])
         if not forwarded_for_headers:
             # No forwarding headers, continue as normal
             return await handler(request)
 
         # Ensure the IP of the connected peer is trusted
+        assert request.transport is not None
         connected_ip = ip_address(request.transport.get_extra_info("peername")[0])
         if not any(connected_ip in trusted_proxy for trusted_proxy in trusted_proxies):
             _LOGGER.warning(
@@ -111,7 +115,9 @@ def async_setup_forwarded(app, trusted_proxies):
             overrides["remote"] = str(forwarded_for[-1])
 
         # Handle X-Forwarded-Proto
-        forwarded_proto_headers = request.headers.getall(X_FORWARDED_PROTO, [])
+        forwarded_proto_headers: list[str] = request.headers.getall(
+            X_FORWARDED_PROTO, []
+        )
         if forwarded_proto_headers:
             if len(forwarded_proto_headers) > 1:
                 _LOGGER.error(
@@ -151,7 +157,7 @@ def async_setup_forwarded(app, trusted_proxies):
                 overrides["scheme"] = forwarded_proto[forwarded_for_index]
 
         # Handle X-Forwarded-Host
-        forwarded_host_headers = request.headers.getall(X_FORWARDED_HOST, [])
+        forwarded_host_headers: list[str] = request.headers.getall(X_FORWARDED_HOST, [])
         if forwarded_host_headers:
             # Multiple X-Forwarded-Host headers
             if len(forwarded_host_headers) > 1:
@@ -168,7 +174,7 @@ def async_setup_forwarded(app, trusted_proxies):
             overrides["host"] = forwarded_host
 
         # Done, create a new request based on gathered data.
-        request = request.clone(**overrides)
+        request = request.clone(**overrides)  # type: ignore[arg-type]
         return await handler(request)
 
     app.middlewares.append(forwarded_middleware)

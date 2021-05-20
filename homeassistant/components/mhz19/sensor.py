@@ -5,7 +5,7 @@ import logging
 from pmsensor import co2sensor
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -14,7 +14,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
@@ -69,7 +68,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class MHZ19Sensor(Entity):
+class MHZ19Sensor(SensorEntity):
     """Representation of an CO2 sensor."""
 
     def __init__(self, mhz_client, sensor_type, temp_unit, name):

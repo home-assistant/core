@@ -20,17 +20,16 @@ from .const import (
     DEFAULT_FORECAST_MODE,
     DEFAULT_LANGUAGE,
     DEFAULT_NAME,
+    DOMAIN,
     FORECAST_MODES,
     LANGUAGES,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 
 class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for OpenWeatherMap."""
 
     VERSION = CONFIG_FLOW_VERSION
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @staticmethod
     @callback

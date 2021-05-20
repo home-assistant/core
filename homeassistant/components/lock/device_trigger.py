@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_FOR,
     CONF_PLATFORM,
     CONF_TYPE,
     STATE_LOCKED,
@@ -27,6 +28,7 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
+        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
@@ -42,26 +44,27 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
             continue
 
         # Add triggers for each entity that belongs to this integration
-        triggers.append(
+        triggers += [
             {
                 CONF_PLATFORM: "device",
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
                 CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "locked",
+                CONF_TYPE: trigger,
             }
-        )
-        triggers.append(
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "unlocked",
-            }
-        )
+            for trigger in TRIGGER_TYPES
+        ]
 
     return triggers
+
+
+async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
+    """List trigger capabilities."""
+    return {
+        "extra_fields": vol.Schema(
+            {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+        )
+    }
 
 
 async def async_attach_trigger(
@@ -71,8 +74,6 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
-
     if config[CONF_TYPE] == "locked":
         to_state = STATE_LOCKED
     else:
@@ -83,6 +84,8 @@ async def async_attach_trigger(
         CONF_ENTITY_ID: config[CONF_ENTITY_ID],
         state_trigger.CONF_TO: to_state,
     }
+    if CONF_FOR in config:
+        state_config[CONF_FOR] = config[CONF_FOR]
     state_config = state_trigger.TRIGGER_SCHEMA(state_config)
     return await state_trigger.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"

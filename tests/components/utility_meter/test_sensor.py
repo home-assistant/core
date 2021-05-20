@@ -161,6 +161,7 @@ async def test_state(hass):
 
 async def test_restore_state(hass):
     """Test utility sensor restore state."""
+    last_reset = "2020-12-21T00:00:00.013073+00:00"
     config = {
         "utility_meter": {
             "energy_bill": {
@@ -177,7 +178,7 @@ async def test_restore_state(hass):
                 "3",
                 attributes={
                     ATTR_STATUS: PAUSED,
-                    ATTR_LAST_RESET: "2020-12-21T00:00:00.013073+00:00",
+                    ATTR_LAST_RESET: last_reset,
                 },
             ),
             State(
@@ -185,7 +186,7 @@ async def test_restore_state(hass):
                 "6",
                 attributes={
                     ATTR_STATUS: COLLECTING,
-                    ATTR_LAST_RESET: "2020-12-21T00:00:00.013073+00:00",
+                    ATTR_LAST_RESET: last_reset,
                 },
             ),
         ],
@@ -199,10 +200,12 @@ async def test_restore_state(hass):
     state = hass.states.get("sensor.energy_bill_onpeak")
     assert state.state == "3"
     assert state.attributes.get("status") == PAUSED
+    assert state.attributes.get("last_reset") == dt_util.parse_datetime(last_reset)
 
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state.state == "6"
     assert state.attributes.get("status") == COLLECTING
+    assert state.attributes.get("last_reset") == dt_util.parse_datetime(last_reset)
 
     # utility_meter is loaded, now set sensors according to utility_meter:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -304,15 +307,15 @@ def gen_config(cycle, offset=None):
 
 async def _test_self_reset(hass, config, start_time, expect_reset=True):
     """Test energy sensor self reset."""
-    assert await async_setup_component(hass, DOMAIN, config)
-    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
-    await hass.async_block_till_done()
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-    entity_id = config[DOMAIN]["energy_bill"]["source"]
-
     now = dt_util.parse_datetime(start_time)
     with alter_time(now):
+        assert await async_setup_component(hass, DOMAIN, config)
+        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
+        await hass.async_block_till_done()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        entity_id = config[DOMAIN]["energy_bill"]["source"]
+
         async_fire_time_changed(hass, now)
         hass.states.async_set(
             entity_id, 1, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
@@ -345,10 +348,12 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
     state = hass.states.get("sensor.energy_bill")
     if expect_reset:
         assert state.attributes.get("last_period") == "2"
+        assert state.attributes.get("last_reset") == now
         assert state.state == "3"
     else:
         assert state.attributes.get("last_period") == 0
         assert state.state == "5"
+        assert state.attributes.get("last_reset") == dt_util.parse_datetime(start_time)
 
 
 async def test_self_reset_quarter_hourly(hass, legacy_patchable_time):

@@ -1,6 +1,7 @@
 """Support for Homekit device discovery."""
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import aiohomekit
@@ -13,6 +14,7 @@ from aiohomekit.model.characteristics import (
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components import zeroconf
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import Entity
 
@@ -227,6 +229,16 @@ async def async_setup(hass, config):
     hass.data[CONTROLLER] = aiohomekit.Controller(zeroconf_instance=zeroconf_instance)
     hass.data[KNOWN_DEVICES] = {}
     hass.data[TRIGGERS] = {}
+
+    async def _async_stop_homekit_controller(event):
+        await asyncio.gather(
+            *[
+                connection.async_unload()
+                for connection in hass.data[KNOWN_DEVICES].values()
+            ]
+        )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_homekit_controller)
 
     return True
 

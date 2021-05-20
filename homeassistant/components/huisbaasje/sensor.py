@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, POWER_WATT
 from homeassistant.core import HomeAssistant
@@ -23,7 +24,7 @@ async def async_setup_entry(
     )
 
 
-class HuisbaasjeSensor(CoordinatorEntity):
+class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
     """Defines a Huisbaasje sensor."""
 
     def __init__(

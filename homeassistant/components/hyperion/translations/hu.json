@@ -23,5 +23,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "effect_show_list": "Megjelen\u00edtend\u0151 Hyperion effektusok"
+                }
+            }
+        }
     }
 }

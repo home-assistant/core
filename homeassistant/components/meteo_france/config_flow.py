@@ -9,8 +9,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
 from homeassistant.core import callback
 
-from .const import CONF_CITY, FORECAST_MODE, FORECAST_MODE_DAILY
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import CONF_CITY, DOMAIN, FORECAST_MODE, FORECAST_MODE_DAILY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +18,6 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Meteo-France config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Init MeteoFranceFlowHandler."""

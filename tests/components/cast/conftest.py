@@ -40,6 +40,7 @@ def mz_mock():
 def pycast_mock(castbrowser_mock, castbrowser_constructor_mock):
     """Mock pychromecast."""
     pycast_mock = MagicMock()
+    pycast_mock.IGNORE_CEC = []
     pycast_mock.discovery.CastBrowser = castbrowser_constructor_mock
     pycast_mock.discovery.CastBrowser.return_value = castbrowser_mock
     pycast_mock.discovery.AbstractCastListener = (

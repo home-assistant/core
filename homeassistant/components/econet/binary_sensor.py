@@ -2,8 +2,10 @@
 from pyeconet.equipment import EquipmentType
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_LOCK,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_SOUND,
     BinarySensorEntity,
 )
 
@@ -12,27 +14,40 @@ from .const import DOMAIN, EQUIPMENT
 
 SENSOR_NAME_RUNNING = "running"
 SENSOR_NAME_SHUTOFF_VALVE = "shutoff_valve"
-SENSOR_NAME_VACATION = "vacation"
+SENSOR_NAME_RUNNING = "running"
+SENSOR_NAME_SCREEN_LOCKED = "screen_locked"
+SENSOR_NAME_BEEP_ENABLED = "beep_enabled"
+
+ATTR = "attr"
+DEVICE_CLASS = "device_class"
+SENSORS = {
+    SENSOR_NAME_SHUTOFF_VALVE: {
+        ATTR: "shutoff_valve_open",
+        DEVICE_CLASS: DEVICE_CLASS_OPENING,
+    },
+    SENSOR_NAME_RUNNING: {ATTR: "running", DEVICE_CLASS: DEVICE_CLASS_POWER},
+    SENSOR_NAME_SCREEN_LOCKED: {
+        ATTR: "screen_locked",
+        DEVICE_CLASS: DEVICE_CLASS_LOCK,
+    },
+    SENSOR_NAME_BEEP_ENABLED: {
+        ATTR: "beep_enabled",
+        DEVICE_CLASS: DEVICE_CLASS_SOUND,
+    },
+}
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up EcoNet binary sensor based on a config entry."""
     equipment = hass.data[DOMAIN][EQUIPMENT][entry.entry_id]
     binary_sensors = []
-    for water_heater in equipment[EquipmentType.WATER_HEATER]:
-        if water_heater.has_shutoff_valve:
-            binary_sensors.append(
-                EcoNetBinarySensor(
-                    water_heater,
-                    SENSOR_NAME_SHUTOFF_VALVE,
-                )
-            )
-        if water_heater.running is not None:
-            binary_sensors.append(EcoNetBinarySensor(water_heater, SENSOR_NAME_RUNNING))
-        if water_heater.vacation is not None:
-            binary_sensors.append(
-                EcoNetBinarySensor(water_heater, SENSOR_NAME_VACATION)
-            )
+    all_equipment = equipment[EquipmentType.WATER_HEATER].copy()
+    all_equipment.extend(equipment[EquipmentType.THERMOSTAT].copy())
+    for _equip in all_equipment:
+        for sensor_name, sensor in SENSORS.items():
+            if getattr(_equip, sensor[ATTR], None) is not None:
+                binary_sensors.append(EcoNetBinarySensor(_equip, sensor_name))
+
     async_add_entities(binary_sensors)
 
 
@@ -48,22 +63,12 @@ class EcoNetBinarySensor(EcoNetEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        if self._device_name == SENSOR_NAME_SHUTOFF_VALVE:
-            return self._econet.shutoff_valve_open
-        if self._device_name == SENSOR_NAME_RUNNING:
-            return self._econet.running
-        if self._device_name == SENSOR_NAME_VACATION:
-            return self._econet.vacation
-        return False
+        return getattr(self._econet, SENSORS[self._device_name][ATTR])
 
     @property
     def device_class(self):
         """Return the class of this sensor, from DEVICE_CLASSES."""
-        if self._device_name == SENSOR_NAME_SHUTOFF_VALVE:
-            return DEVICE_CLASS_OPENING
-        if self._device_name == SENSOR_NAME_RUNNING:
-            return DEVICE_CLASS_POWER
-        return None
+        return SENSORS[self._device_name][DEVICE_CLASS]
 
     @property
     def name(self):

@@ -144,9 +144,7 @@ async def async_setup(hass, config):
     @callback
     def connection_fail_callback(data):
         """Network failure callback."""
-        _LOGGER.error(
-            "Could not establish a connection with the Envisalink- retrying..."
-        )
+        _LOGGER.error("Could not establish a connection with the Envisalink- retrying")
         if not sync_connect.done():
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
             sync_connect.set_result(True)
@@ -162,13 +160,13 @@ async def async_setup(hass, config):
     @callback
     def zones_updated_callback(data):
         """Handle zone timer updates."""
-        _LOGGER.debug("Envisalink sent a zone update event. Updating zones...")
+        _LOGGER.debug("Envisalink sent a zone update event. Updating zones")
         async_dispatcher_send(hass, SIGNAL_ZONE_UPDATE, data)
 
     @callback
     def alarm_data_updated_callback(data):
         """Handle non-alarm based info updates."""
-        _LOGGER.debug("Envisalink sent new alarm info. Updating alarms...")
+        _LOGGER.debug("Envisalink sent new alarm info. Updating alarms")
         async_dispatcher_send(hass, SIGNAL_KEYPAD_UPDATE, data)
 
     @callback

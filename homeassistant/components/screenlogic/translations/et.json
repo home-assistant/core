@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus"
         },
-        "flow_title": "ScreenLogic {name}",
+        "flow_title": "{name}",
         "step": {
             "gateway_entry": {
                 "data": {

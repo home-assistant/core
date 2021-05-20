@@ -167,7 +167,7 @@ class KeeneticRouter:
 
     def _update_devices(self):
         """Get ARP from keenetic router."""
-        _LOGGER.debug("Fetching devices from router...")
+        _LOGGER.debug("Fetching devices from router")
 
         try:
             _response = self._client.get_devices(

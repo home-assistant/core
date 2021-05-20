@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Hashable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Callable, Hashable
+from typing import Any, Callable
 
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.util.dt as dt_util

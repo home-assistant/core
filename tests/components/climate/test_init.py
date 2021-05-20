@@ -1,5 +1,6 @@
 """The tests for the climate component."""
-from typing import List
+from __future__ import annotations
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -58,7 +59,7 @@ class MockClimateEntity(ClimateEntity):
         return HVAC_MODE_HEAT
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes.
 
         Need to be a subset of HVAC_MODES.

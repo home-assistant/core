@@ -3,19 +3,18 @@ import asyncio
 import logging
 
 from aiohue.util import normalize_bridge_id
+import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.components import persistent_notification
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.service import verify_domain_control
 
-from .bridge import (
+from .bridge import HueBridge
+from .const import (
     ATTR_GROUP_NAME,
     ATTR_SCENE_NAME,
-    SCENE_SCHEMA,
-    SERVICE_HUE_SCENE,
-    HueBridge,
-)
-from .const import (
+    ATTR_TRANSITION,
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
     DEFAULT_ALLOW_HUE_GROUPS,
@@ -24,46 +23,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass, config):
-    """Set up the Hue platform."""
-
-    async def hue_activate_scene(call, skip_reload=True):
-        """Handle activation of Hue scene."""
-        # Get parameters
-        group_name = call.data[ATTR_GROUP_NAME]
-        scene_name = call.data[ATTR_SCENE_NAME]
-
-        # Call the set scene function on each bridge
-        tasks = [
-            bridge.hue_activate_scene(
-                call, updated=skip_reload, hide_warnings=skip_reload
-            )
-            for bridge in hass.data[DOMAIN].values()
-            if isinstance(bridge, HueBridge)
-        ]
-        results = await asyncio.gather(*tasks)
-
-        # Did *any* bridge succeed? If not, refresh / retry
-        # Note that we'll get a "None" value for a successful call
-        if None not in results:
-            if skip_reload:
-                await hue_activate_scene(call, skip_reload=False)
-                return
-            _LOGGER.warning(
-                "No bridge was able to activate " "scene %s in group %s",
-                scene_name,
-                group_name,
-            )
-
-    # Register a local handler for scene activation
-    hass.services.async_register(
-        DOMAIN, SERVICE_HUE_SCENE, hue_activate_scene, schema=SCENE_SCHEMA
-    )
-
-    hass.data[DOMAIN] = {}
-    return True
+SERVICE_HUE_SCENE = "hue_activate_scene"
 
 
 async def async_setup_entry(
@@ -104,7 +64,9 @@ async def async_setup_entry(
     if not await bridge.async_setup():
         return False
 
-    hass.data[DOMAIN][entry.entry_id] = bridge
+    _register_services(hass)
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = bridge
     config = bridge.api.config
 
     # For backwards compat
@@ -172,5 +134,55 @@ async def async_setup_entry(
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     bridge = hass.data[DOMAIN].pop(entry.entry_id)
-    hass.services.async_remove(DOMAIN, SERVICE_HUE_SCENE)
+    if len(hass.data[DOMAIN]) == 0:
+        hass.data.pop(DOMAIN)
+        hass.services.async_remove(DOMAIN, SERVICE_HUE_SCENE)
     return await bridge.async_reset()
+
+
+@core.callback
+def _register_services(hass):
+    """Register Hue services."""
+
+    async def hue_activate_scene(call, skip_reload=True):
+        """Handle activation of Hue scene."""
+        # Get parameters
+        group_name = call.data[ATTR_GROUP_NAME]
+        scene_name = call.data[ATTR_SCENE_NAME]
+
+        # Call the set scene function on each bridge
+        tasks = [
+            bridge.hue_activate_scene(
+                call.data, skip_reload=skip_reload, hide_warnings=skip_reload
+            )
+            for bridge in hass.data[DOMAIN].values()
+            if isinstance(bridge, HueBridge)
+        ]
+        results = await asyncio.gather(*tasks)
+
+        # Did *any* bridge succeed? If not, refresh / retry
+        # Note that we'll get a "None" value for a successful call
+        if None not in results:
+            if skip_reload:
+                await hue_activate_scene(call, skip_reload=False)
+                return
+            _LOGGER.warning(
+                "No bridge was able to activate " "scene %s in group %s",
+                scene_name,
+                group_name,
+            )
+
+    if DOMAIN not in hass.data:
+        # Register a local handler for scene activation
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_HUE_SCENE,
+            verify_domain_control(hass, DOMAIN)(hue_activate_scene),
+            schema=vol.Schema(
+                {
+                    vol.Required(ATTR_GROUP_NAME): cv.string,
+                    vol.Required(ATTR_SCENE_NAME): cv.string,
+                    vol.Optional(ATTR_TRANSITION): cv.positive_int,
+                }
+            ),
+        )

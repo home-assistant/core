@@ -3,7 +3,10 @@ from zwave_js_server.event import Event
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
+    DEVICE_CLASS_BLIND,
     DEVICE_CLASS_GARAGE,
+    DEVICE_CLASS_SHUTTER,
+    DEVICE_CLASS_WINDOW,
     DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
@@ -19,6 +22,8 @@ from homeassistant.const import (
 
 WINDOW_COVER_ENTITY = "cover.zws_12"
 GDC_COVER_ENTITY = "cover.aeon_labs_garage_door_controller_gen5"
+BLIND_COVER_ENTITY = "cover.window_blind_controller"
+SHUTTER_COVER_ENTITY = "cover.flush_shutter_dc"
 
 
 async def test_window_cover(hass, client, chain_actuator_zws12, integration):
@@ -27,6 +32,8 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     state = hass.states.get(WINDOW_COVER_ENTITY)
 
     assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_WINDOW
+
     assert state.state == "closed"
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
@@ -38,8 +45,8 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 1
-    args = client.async_send_command_no_wait.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 6
     assert args["valueId"] == {
@@ -60,7 +67,7 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     }
     assert args["value"] == 50
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test setting position
     await hass.services.async_call(
@@ -70,8 +77,8 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 1
-    args = client.async_send_command_no_wait.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 6
     assert args["valueId"] == {
@@ -92,7 +99,7 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     }
     assert args["value"] == 0
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test opening
     await hass.services.async_call(
@@ -102,8 +109,8 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 1
-    args = client.async_send_command_no_wait.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 6
     assert args["valueId"] == {
@@ -124,7 +131,7 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     }
     assert args["value"]
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
     # Test stop after opening
     await hass.services.async_call(
         "cover",
@@ -133,8 +140,8 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 2
-    open_args = client.async_send_command_no_wait.call_args_list[0][0][0]
+    assert len(client.async_send_command.call_args_list) == 2
+    open_args = client.async_send_command.call_args_list[0][0][0]
     assert open_args["command"] == "node.set_value"
     assert open_args["nodeId"] == 6
     assert open_args["valueId"] == {
@@ -153,7 +160,7 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     }
     assert not open_args["value"]
 
-    close_args = client.async_send_command_no_wait.call_args_list[1][0][0]
+    close_args = client.async_send_command.call_args_list[1][0][0]
     assert close_args["command"] == "node.set_value"
     assert close_args["nodeId"] == 6
     assert close_args["valueId"] == {
@@ -191,7 +198,7 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
         },
     )
     node.receive_event(event)
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     state = hass.states.get(WINDOW_COVER_ENTITY)
     assert state.state == "open"
@@ -203,8 +210,8 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
         {"entity_id": WINDOW_COVER_ENTITY},
         blocking=True,
     )
-    assert len(client.async_send_command_no_wait.call_args_list) == 1
-    args = client.async_send_command_no_wait.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 6
     assert args["valueId"] == {
@@ -225,7 +232,7 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     }
     assert args["value"] == 0
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test stop after closing
     await hass.services.async_call(
@@ -235,8 +242,8 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 2
-    open_args = client.async_send_command_no_wait.call_args_list[0][0][0]
+    assert len(client.async_send_command.call_args_list) == 2
+    open_args = client.async_send_command.call_args_list[0][0][0]
     assert open_args["command"] == "node.set_value"
     assert open_args["nodeId"] == 6
     assert open_args["valueId"] == {
@@ -255,7 +262,7 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     }
     assert not open_args["value"]
 
-    close_args = client.async_send_command_no_wait.call_args_list[1][0][0]
+    close_args = client.async_send_command.call_args_list[1][0][0]
     assert close_args["command"] == "node.set_value"
     assert close_args["nodeId"] == 6
     assert close_args["valueId"] == {
@@ -274,7 +281,7 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     }
     assert not close_args["value"]
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     event = Event(
         type="value updated",
@@ -299,6 +306,22 @@ async def test_window_cover(hass, client, chain_actuator_zws12, integration):
     assert state.state == "closed"
 
 
+async def test_blind_cover(hass, client, iblinds_v2, integration):
+    """Test a blind cover entity."""
+    state = hass.states.get(BLIND_COVER_ENTITY)
+
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_BLIND
+
+
+async def test_shutter_cover(hass, client, qubino_shutter, integration):
+    """Test a shutter cover entity."""
+    state = hass.states.get(SHUTTER_COVER_ENTITY)
+
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_SHUTTER
+
+
 async def test_motor_barrier_cover(hass, client, gdc_zw062, integration):
     """Test the cover entity."""
     node = gdc_zw062
@@ -314,8 +337,8 @@ async def test_motor_barrier_cover(hass, client, gdc_zw062, integration):
         DOMAIN, SERVICE_OPEN_COVER, {"entity_id": GDC_COVER_ENTITY}, blocking=True
     )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 1
-    args = client.async_send_command_no_wait.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 12
     assert args["value"] == 255
@@ -341,15 +364,15 @@ async def test_motor_barrier_cover(hass, client, gdc_zw062, integration):
     state = hass.states.get(GDC_COVER_ENTITY)
     assert state.state == STATE_CLOSED
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test close
     await hass.services.async_call(
         DOMAIN, SERVICE_CLOSE_COVER, {"entity_id": GDC_COVER_ENTITY}, blocking=True
     )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 1
-    args = client.async_send_command_no_wait.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 12
     assert args["value"] == 0
@@ -375,7 +398,7 @@ async def test_motor_barrier_cover(hass, client, gdc_zw062, integration):
     state = hass.states.get(GDC_COVER_ENTITY)
     assert state.state == STATE_CLOSED
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Barrier sends an opening state
     event = Event(

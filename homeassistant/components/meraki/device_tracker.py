@@ -56,7 +56,7 @@ class MerakiView(HomeAssistantView):
             return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
         _LOGGER.debug("Meraki Data from Post: %s", json.dumps(data))
         if not data.get("secret", False):
-            _LOGGER.error("secret invalid")
+            _LOGGER.error("The secret is invalid")
             return self.json_message("No secret", HTTP_UNPROCESSABLE_ENTITY)
         if data["secret"] != self.secret:
             _LOGGER.error("Invalid Secret received from Meraki")

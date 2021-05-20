@@ -12,13 +12,15 @@
             "device": {
                 "data": {
                     "device_name": "Apparaat"
-                }
+                },
+                "title": "Selecteer WOLF-apparaat"
             },
             "user": {
                 "data": {
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
-                }
+                },
+                "title": "WOLF SmartSet-verbinding"
             }
         }
     }

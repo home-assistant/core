@@ -3,6 +3,7 @@
 from pymfy.api.devices.category import Category
 from pymfy.api.devices.thermostat import Thermostat
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 
 from . import SomfyEntity
@@ -26,7 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors)
 
 
-class SomfyThermostatBatterySensor(SomfyEntity):
+class SomfyThermostatBatterySensor(SomfyEntity, SensorEntity):
     """Representation of a Somfy thermostat battery."""
 
     def __init__(self, coordinator, device_id, api):

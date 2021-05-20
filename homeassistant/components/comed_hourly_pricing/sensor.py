@@ -8,11 +8,10 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_OFFSET
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://hourlypricing.comed.com/api"
@@ -65,7 +64,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(dev, True)
 
 
-class ComedHourlyPricingSensor(Entity):
+class ComedHourlyPricingSensor(SensorEntity):
     """Implementation of a ComEd Hourly Pricing sensor."""
 
     def __init__(self, loop, websession, sensor_type, offset, name):

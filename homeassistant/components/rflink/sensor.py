@@ -2,7 +2,7 @@
 from rflink.parser import PACKET_FIELDS, UNITS
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICES,
@@ -98,7 +98,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_SENSOR] = add_new_device
 
 
-class RflinkSensor(RflinkDevice):
+class RflinkSensor(RflinkDevice, SensorEntity):
     """Representation of a Rflink sensor."""
 
     def __init__(

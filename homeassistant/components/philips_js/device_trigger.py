@@ -45,6 +45,7 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE | None:
     """Attach a trigger."""
+    trigger_id = automation_info.get("trigger_id") if automation_info else None
     registry: DeviceRegistry = await async_get_registry(hass)
     if config[CONF_TYPE] == TRIGGER_TYPE_TURN_ON:
         variables = {
@@ -53,6 +54,7 @@ async def async_attach_trigger(
                 "domain": DOMAIN,
                 "device_id": config[CONF_DEVICE_ID],
                 "description": f"philips_js '{config[CONF_TYPE]}' event",
+                "id": trigger_id,
             }
         }
 

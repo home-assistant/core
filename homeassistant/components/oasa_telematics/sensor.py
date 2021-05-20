@@ -6,10 +6,9 @@ from operator import itemgetter
 import oasatelematics
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, DEVICE_CLASS_TIMESTAMP
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([OASATelematicsSensor(data, stop_id, route_id, name)], True)
 
 
-class OASATelematicsSensor(Entity):
+class OASATelematicsSensor(SensorEntity):
     """Implementation of the OASA Telematics sensor."""
 
     def __init__(self, data, stop_id, route_id, name):

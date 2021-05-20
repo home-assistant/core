@@ -100,10 +100,7 @@ async def async_setup_entry(hass, entry):
         ),
     }
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     if hass.services.has_service(DOMAIN, "update"):
         return True
@@ -124,15 +121,7 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload Ring entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
-    if not unload_ok:
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
 
     hass.data[DOMAIN].pop(entry.entry_id)

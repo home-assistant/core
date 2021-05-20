@@ -9,7 +9,7 @@
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
         },
-        "flow_title": "Sonarr\uff1a{name}",
+        "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
                 "description": "Sonarr \u6574\u5408\u9700\u8981\u624b\u52d5\u91cd\u65b0\u8a8d\u8b49 Sonarr API\uff1a{host}",

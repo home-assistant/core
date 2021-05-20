@@ -107,10 +107,8 @@ async def test_send_no_wait(hass, monkeypatch):
     # setup mocking rflink module
     _, _, protocol, _ = await mock_rflink(hass, config, domain, monkeypatch)
 
-    hass.async_create_task(
-        hass.services.async_call(
-            domain, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.test"}
-        )
+    await hass.services.async_call(
+        domain, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.test"}
     )
     await hass.async_block_till_done()
     assert protocol.send_command.call_args_list[0][0][0] == "protocol_0_0"
@@ -133,10 +131,8 @@ async def test_cover_send_no_wait(hass, monkeypatch):
     # setup mocking rflink module
     _, _, protocol, _ = await mock_rflink(hass, config, domain, monkeypatch)
 
-    hass.async_create_task(
-        hass.services.async_call(
-            domain, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: "cover.test"}
-        )
+    await hass.services.async_call(
+        domain, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: "cover.test"}
     )
     await hass.async_block_till_done()
     assert protocol.send_command.call_args_list[0][0][0] == "RTS_0100F2_0"
@@ -151,12 +147,10 @@ async def test_send_command(hass, monkeypatch):
     # setup mocking rflink module
     _, _, protocol, _ = await mock_rflink(hass, config, domain, monkeypatch)
 
-    hass.async_create_task(
-        hass.services.async_call(
-            domain,
-            SERVICE_SEND_COMMAND,
-            {"device_id": "newkaku_0000c6c2_1", "command": "on"},
-        )
+    await hass.services.async_call(
+        domain,
+        SERVICE_SEND_COMMAND,
+        {"device_id": "newkaku_0000c6c2_1", "command": "on"},
     )
     await hass.async_block_till_done()
     assert protocol.send_command_ack.call_args_list[0][0][0] == "newkaku_0000c6c2_1"
@@ -215,24 +209,22 @@ async def test_send_command_event_propagation(hass, monkeypatch):
     # default value = 'off'
     assert hass.states.get(f"{domain}.test1").state == "off"
 
-    hass.async_create_task(
-        hass.services.async_call(
-            "rflink",
-            SERVICE_SEND_COMMAND,
-            {"device_id": "protocol_0_1", "command": "on"},
-        )
+    await hass.services.async_call(
+        "rflink",
+        SERVICE_SEND_COMMAND,
+        {"device_id": "protocol_0_1", "command": "on"},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert protocol.send_command_ack.call_args_list[0][0][0] == "protocol_0_1"
     assert protocol.send_command_ack.call_args_list[0][0][1] == "on"
     assert hass.states.get(f"{domain}.test1").state == "on"
 
-    hass.async_create_task(
-        hass.services.async_call(
-            "rflink",
-            SERVICE_SEND_COMMAND,
-            {"device_id": "protocol_0_1", "command": "alloff"},
-        )
+    await hass.services.async_call(
+        "rflink",
+        SERVICE_SEND_COMMAND,
+        {"device_id": "protocol_0_1", "command": "alloff"},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert protocol.send_command_ack.call_args_list[1][0][0] == "protocol_0_1"

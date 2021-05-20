@@ -4,10 +4,9 @@ from datetime import timedelta
 from pyirishrail.pyirishrail import IrishRailRTPI
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 ATTR_STATION = "Station"
 ATTR_ORIGIN = "Origin"
@@ -64,7 +63,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class IrishRailTransportSensor(Entity):
+class IrishRailTransportSensor(SensorEntity):
     """Implementation of an irish rail public transport sensor."""
 
     def __init__(self, data, station, direction, destination, stops_at, name):

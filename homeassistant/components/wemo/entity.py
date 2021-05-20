@@ -1,14 +1,16 @@
 """Classes shared among Wemo entities."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Generator
 import contextlib
 import logging
-from typing import Any, Dict, Generator, Optional
 
 import async_timeout
 from pywemo import WeMoDevice
 from pywemo.exceptions import ActionException
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN as WEMO_DOMAIN
 
@@ -19,7 +21,7 @@ class ExceptionHandlerStatus:
     """Exit status from the _wemo_exception_handler context manager."""
 
     # An exception if one was raised in the _wemo_exception_handler.
-    exception: Optional[Exception] = None
+    exception: Exception | None = None
 
     @property
     def success(self) -> bool:
@@ -68,7 +70,7 @@ class WemoEntity(Entity):
                 _LOGGER.info("Reconnected to %s", self.name)
                 self._available = True
 
-    def _update(self, force_update: Optional[bool] = True):
+    def _update(self, force_update: bool | None = True):
         """Update the device state."""
         raise NotImplementedError()
 
@@ -91,7 +93,7 @@ class WemoEntity(Entity):
 
         try:
             async with async_timeout.timeout(
-                self.platform.scan_interval.seconds - 0.1
+                self.platform.scan_interval.total_seconds() - 0.1
             ) as timeout:
                 await asyncio.shield(self._async_locked_update(True, timeout))
         except asyncio.TimeoutError:
@@ -99,7 +101,7 @@ class WemoEntity(Entity):
             self._available = False
 
     async def _async_locked_update(
-        self, force_update: bool, timeout: Optional[async_timeout.timeout] = None
+        self, force_update: bool, timeout: async_timeout.timeout | None = None
     ) -> None:
         """Try updating within an async lock."""
         async with self._update_lock:
@@ -124,7 +126,7 @@ class WemoSubscriptionEntity(WemoEntity):
         return self.wemo.serialnumber
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return {
             "name": self.name,

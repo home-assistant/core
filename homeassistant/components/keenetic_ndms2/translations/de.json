@@ -10,7 +10,6 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "name": "Name",
                     "password": "Passwort",
                     "port": "Port",
                     "username": "Benutzername"
@@ -22,6 +21,7 @@
         "step": {
             "user": {
                 "data": {
+                    "interfaces": "Schnittstellen zum Scannen ausw\u00e4hlen",
                     "scan_interval": "Scanintervall"
                 }
             }

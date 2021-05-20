@@ -4,11 +4,10 @@ from datetime import timedelta
 from pysochain import ChainSo
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_ADDRESS, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 ATTRIBUTION = "Data provided by chain.so"
 
@@ -40,7 +39,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([SochainSensor(name, network.upper(), chainso)], True)
 
 
-class SochainSensor(Entity):
+class SochainSensor(SensorEntity):
     """Representation of a Sochain sensor."""
 
     def __init__(self, name, unit_of_measurement, chainso):

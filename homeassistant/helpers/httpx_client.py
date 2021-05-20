@@ -7,9 +7,8 @@ from typing import Any, Callable
 import httpx
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
-from homeassistant.core import Event, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.frame import warn_use
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 
 DATA_ASYNC_CLIENT = "httpx_async_client"
@@ -22,9 +21,7 @@ USER_AGENT = "User-Agent"
 
 @callback
 @bind_hass
-def get_async_client(
-    hass: HomeAssistantType, verify_ssl: bool = True
-) -> httpx.AsyncClient:
+def get_async_client(hass: HomeAssistant, verify_ssl: bool = True) -> httpx.AsyncClient:
     """Return default httpx AsyncClient.
 
     This method must be run in the event loop.
@@ -39,9 +36,20 @@ def get_async_client(
     return client
 
 
+class HassHttpXAsyncClient(httpx.AsyncClient):
+    """httpx AsyncClient that suppresses context management."""
+
+    async def __aenter__(self: HassHttpXAsyncClient) -> HassHttpXAsyncClient:
+        """Prevent an integration from reopen of the client via context manager."""
+        return self
+
+    async def __aexit__(self, *args: Any) -> None:
+        """Prevent an integration from close of the client via context manager."""
+
+
 @callback
 def create_async_httpx_client(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     verify_ssl: bool = True,
     auto_cleanup: bool = True,
     **kwargs: Any,
@@ -53,7 +61,7 @@ def create_async_httpx_client(
 
     This method must be run in the event loop.
     """
-    client = httpx.AsyncClient(
+    client = HassHttpXAsyncClient(
         verify=verify_ssl,
         headers={USER_AGENT: SERVER_SOFTWARE},
         **kwargs,
@@ -73,7 +81,7 @@ def create_async_httpx_client(
 
 @callback
 def _async_register_async_client_shutdown(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     client: httpx.AsyncClient,
     original_aclose: Callable[..., Any],
 ) -> None:

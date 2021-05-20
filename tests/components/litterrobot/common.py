@@ -1,4 +1,6 @@
 """Common utils for Litter-Robot tests."""
+from datetime import datetime
+
 from homeassistant.components.litterrobot import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
@@ -9,7 +11,7 @@ ROBOT_NAME = "Test"
 ROBOT_SERIAL = "LR3C012345"
 ROBOT_DATA = {
     "powerStatus": "AC",
-    "lastSeen": "2021-02-01T15:30:00.000000",
+    "lastSeen": datetime.now().isoformat(),
     "cleanCycleWaitTimeMinutes": "7",
     "unitStatus": "RDY",
     "litterRobotNickname": ROBOT_NAME,
@@ -22,3 +24,5 @@ ROBOT_DATA = {
     "nightLightActive": "1",
     "sleepModeActive": "112:50:19",
 }
+
+VACUUM_ENTITY_ID = "vacuum.test_litter_box"

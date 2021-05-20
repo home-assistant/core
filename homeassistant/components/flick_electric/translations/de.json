@@ -15,7 +15,8 @@
                     "client_secret": "Client Secret (optional)",
                     "password": "Passwort",
                     "username": "Benutzername"
-                }
+                },
+                "title": "Flick Anmeldedaten"
             }
         }
     }

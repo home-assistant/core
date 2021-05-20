@@ -10,7 +10,7 @@ from homeassistant.config_entries import (
     ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_RETRY,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from tests.components.wilight import (
     HOST,
@@ -43,16 +43,14 @@ def mock_dummy_device_from_host():
         yield device
 
 
-async def test_config_entry_not_ready(hass: HomeAssistantType) -> None:
+async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
     """Test the WiLight configuration entry not ready."""
     entry = await setup_integration(hass)
 
     assert entry.state == ENTRY_STATE_SETUP_RETRY
 
 
-async def test_unload_config_entry(
-    hass: HomeAssistantType, dummy_device_from_host
-) -> None:
+async def test_unload_config_entry(hass: HomeAssistant, dummy_device_from_host) -> None:
     """Test the WiLight configuration entry unloading."""
     entry = await setup_integration(hass)
 

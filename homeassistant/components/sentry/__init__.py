@@ -40,11 +40,6 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 LOGGER_INFO_REGEX = re.compile(r"^(\w+)\.?(\w+)?\.?(\w+)?\.?(\w+)?(?:\..*)?$")
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the Sentry component."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sentry from a config entry."""
 
@@ -81,6 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ),
         }
 
+    # pylint: disable=abstract-class-instantiated
     sentry_sdk.init(
         dsn=entry.data[CONF_DSN],
         environment=entry.options.get(CONF_ENVIRONMENT),

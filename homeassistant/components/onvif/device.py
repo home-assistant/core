@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import datetime as dt
 import os
 
@@ -241,25 +242,19 @@ class ONVIFDevice:
     async def async_get_capabilities(self):
         """Obtain information about the available services on the device."""
         snapshot = False
-        try:
+        with suppress(ONVIFError, Fault, RequestError):
             media_service = self.device.create_media_service()
             media_capabilities = await media_service.GetServiceCapabilities()
             snapshot = media_capabilities and media_capabilities.SnapshotUri
-        except (ONVIFError, Fault, RequestError):
-            pass
 
         pullpoint = False
-        try:
+        with suppress(ONVIFError, Fault, RequestError):
             pullpoint = await self.events.async_start()
-        except (ONVIFError, Fault, RequestError):
-            pass
 
         ptz = False
-        try:
+        with suppress(ONVIFError, Fault, RequestError):
             self.device.get_definition("ptz")
             ptz = True
-        except (ONVIFError, Fault, RequestError):
-            pass
 
         return Capabilities(snapshot, pullpoint, ptz)
 
@@ -439,7 +434,7 @@ class ONVIFDevice:
                 await ptz_service.Stop(req)
         except ONVIFError as err:
             if "Bad Request" in err.reason:
-                LOGGER.warning("Device '%s' doesn't support PTZ.", self.name)
+                LOGGER.warning("Device '%s' doesn't support PTZ", self.name)
             else:
                 LOGGER.error("Error trying to perform PTZ action: %s", err)
 

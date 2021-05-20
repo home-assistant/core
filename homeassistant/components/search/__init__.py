@@ -19,7 +19,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "search/related",
@@ -38,12 +37,13 @@ async def async_setup(hass: HomeAssistant, config: dict):
         vol.Required("item_id"): str,
     }
 )
-async def websocket_search_related(hass, connection, msg):
+@callback
+def websocket_search_related(hass, connection, msg):
     """Handle search."""
     searcher = Searcher(
         hass,
-        await device_registry.async_get_registry(hass),
-        await entity_registry.async_get_registry(hass),
+        device_registry.async_get(hass),
+        entity_registry.async_get(hass),
     )
     connection.send_result(
         msg["id"], searcher.async_search(msg["item_type"], msg["item_id"])
@@ -127,6 +127,12 @@ class Searcher:
         ):
             self._add_or_resolve("entity", entity_entry.entity_id)
 
+        for entity_id in script.scripts_with_area(self.hass, area_id):
+            self._add_or_resolve("entity", entity_id)
+
+        for entity_id in automation.automations_with_area(self.hass, area_id):
+            self._add_or_resolve("entity", entity_id)
+
     @callback
     def _resolve_device(self, device_id) -> None:
         """Resolve a device."""
@@ -198,6 +204,9 @@ class Searcher:
         for device in automation.devices_in_automation(self.hass, automation_entity_id):
             self._add_or_resolve("device", device)
 
+        for area in automation.areas_in_automation(self.hass, automation_entity_id):
+            self._add_or_resolve("area", area)
+
     @callback
     def _resolve_script(self, script_entity_id) -> None:
         """Resolve a script.
@@ -209,6 +218,9 @@ class Searcher:
 
         for device in script.devices_in_script(self.hass, script_entity_id):
             self._add_or_resolve("device", device)
+
+        for area in script.areas_in_script(self.hass, script_entity_id):
+            self._add_or_resolve("area", area)
 
     @callback
     def _resolve_group(self, group_entity_id) -> None:

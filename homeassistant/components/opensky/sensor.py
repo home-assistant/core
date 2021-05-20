@@ -4,7 +4,7 @@ from datetime import timedelta
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -17,7 +17,6 @@ from homeassistant.const import (
     LENGTH_METERS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import distance as util_distance, location as util_location
 
 CONF_ALTITUDE = "altitude"
@@ -87,7 +86,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class OpenSkySensor(Entity):
+class OpenSkySensor(SensorEntity):
     """Open Sky Network Sensor."""
 
     def __init__(self, hass, name, latitude, longitude, radius, altitude):

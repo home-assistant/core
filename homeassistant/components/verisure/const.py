@@ -2,6 +2,13 @@
 from datetime import timedelta
 import logging
 
+from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING,
+)
+
 DOMAIN = "verisure"
 
 LOGGER = logging.getLogger(__package__)
@@ -31,6 +38,9 @@ DEVICE_TYPE_NAME = {
     "WATER1": "Water detector",
 }
 
-# Legacy; to remove after YAML removal
-CONF_CODE_DIGITS = "code_digits"
-CONF_DEFAULT_LOCK_CODE = "default_lock_code"
+ALARM_STATE_TO_HA = {
+    "DISARMED": STATE_ALARM_DISARMED,
+    "ARMED_HOME": STATE_ALARM_ARMED_HOME,
+    "ARMED_AWAY": STATE_ALARM_ARMED_AWAY,
+    "PENDING": STATE_ALARM_PENDING,
+}

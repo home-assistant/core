@@ -1,5 +1,4 @@
 """Platform for binary sensor integration."""
-from datetime import datetime, timedelta
 import logging
 
 from smarttub import SpaReminder
@@ -17,8 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 
 # whether the reminder has been snoozed (bool)
 ATTR_REMINDER_SNOOZED = "snoozed"
-# the date at which the reminder will be activated
-ATTR_REMINDER_DATE = "date"
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -43,6 +40,14 @@ class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(coordinator, spa, "Online", "online")
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry.
+
+        This seems to be very noisy and not generally useful, so disable by default.
+        """
+        return False
 
     @property
     def is_on(self) -> bool:
@@ -75,7 +80,7 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
     @property
     def reminder(self) -> SpaReminder:
         """Return the underlying SpaReminder object for this entity."""
-        return self.coordinator.data[self.spa.id]["reminders"][self.reminder_id]
+        return self.coordinator.data[self.spa.id][ATTR_REMINDERS][self.reminder_id]
 
     @property
     def is_on(self) -> bool:
@@ -83,12 +88,10 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
         return self.reminder.remaining_days == 0
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        when = datetime.now() + timedelta(days=self.reminder.remaining_days)
         return {
             ATTR_REMINDER_SNOOZED: self.reminder.snoozed,
-            ATTR_REMINDER_DATE: when.date().isoformat(),
         }
 
     @property

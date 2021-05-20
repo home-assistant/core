@@ -152,7 +152,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
         return self._total_matches
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {ATTR_MATCHES: self._matches, ATTR_TOTAL_MATCHES: self._total_matches}
 

@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 import logging
 from types import MappingProxyType
-from typing import Any, Iterable
+from typing import Any
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -13,8 +14,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Context, State
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import Context, HomeAssistant, State
 
 from . import (
     ATTR_DIRECTION,
@@ -43,7 +43,7 @@ ATTRIBUTES = {  # attribute: service
 
 
 async def _async_reproduce_state(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     state: State,
     *,
     context: Context | None = None,
@@ -97,7 +97,7 @@ async def _async_reproduce_state(
 
 
 async def async_reproduce_states(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     states: Iterable[State],
     *,
     context: Context | None = None,

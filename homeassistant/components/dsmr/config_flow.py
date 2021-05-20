@@ -16,7 +16,7 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 
-from .const import (  # pylint:disable=unused-import
+from .const import (
     CONF_DSMR_VERSION,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
@@ -123,7 +123,6 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for DSMR."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     @staticmethod
     @callback

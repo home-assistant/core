@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Iterator
 import fnmatch
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, TextIO, TypeVar, Union, overload
+from typing import Any, TextIO, TypeVar, Union, overload
 
 import yaml
 
@@ -17,8 +18,8 @@ from .objects import Input, NodeListClass, NodeStrClass
 
 # mypy: allow-untyped-calls, no-warn-return-any
 
-JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
-DICT_T = TypeVar("DICT_T", bound=Dict)  # pylint: disable=invalid-name
+JSON_TYPE = Union[list, dict, str]  # pylint: disable=invalid-name
+DICT_T = TypeVar("DICT_T", bound=dict)  # pylint: disable=invalid-name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +78,7 @@ class Secrets:
                     _LOGGER.setLevel(logging.DEBUG)
                 else:
                     _LOGGER.error(
-                        "secrets.yaml: 'logger: debug' expected, but 'logger: %s' found",
+                        "Error in secrets.yaml: 'logger: debug' expected, but 'logger: %s' found",
                         logger,
                     )
                 del secrets["logger"]

@@ -7,6 +7,7 @@ of entities and react to changes.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Collection, Coroutine, Iterable, Mapping
 import datetime
 import enum
 import functools
@@ -17,19 +18,7 @@ import re
 import threading
 from time import monotonic
 from types import MappingProxyType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Awaitable,
-    Callable,
-    Collection,
-    Coroutine,
-    Iterable,
-    Mapping,
-    Optional,
-    TypeVar,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, cast
 
 import attr
 import voluptuous as vol
@@ -58,12 +47,14 @@ from homeassistant.const import (
     EVENT_TIMER_OUT_OF_SYNC,
     LENGTH_METERS,
     MATCH_ALL,
+    MAX_LENGTH_EVENT_TYPE,
     __version__,
 )
 from homeassistant.exceptions import (
     HomeAssistantError,
     InvalidEntityFormatError,
     InvalidStateError,
+    MaxLengthExceeded,
     ServiceNotFound,
     Unauthorized,
 )
@@ -83,6 +74,11 @@ if TYPE_CHECKING:
     from homeassistant.auth import AuthManager
     from homeassistant.components.http import HomeAssistantHTTP
     from homeassistant.config_entries import ConfigEntries
+
+
+STAGE_1_SHUTDOWN_TIMEOUT = 100
+STAGE_2_SHUTDOWN_TIMEOUT = 60
+STAGE_3_SHUTDOWN_TIMEOUT = 30
 
 
 block_async_io.enable()
@@ -150,7 +146,6 @@ def is_callback(func: Callable[..., Any]) -> bool:
 
 @enum.unique
 class HassJobType(enum.Enum):
-    # pylint: disable=invalid-name
     """Represent a job type."""
 
     Coroutinefunction = 1
@@ -196,7 +191,6 @@ def _get_callable_job_type(target: Callable) -> HassJobType:
 
 
 class CoreState(enum.Enum):
-    # pylint: disable=invalid-name
     """Represent the current state of Home Assistant."""
 
     not_running = "NOT_RUNNING"
@@ -214,9 +208,9 @@ class CoreState(enum.Enum):
 class HomeAssistant:
     """Root object of the Home Assistant home automation."""
 
-    auth: "AuthManager"
-    http: "HomeAssistantHTTP" = None  # type: ignore
-    config_entries: "ConfigEntries" = None  # type: ignore
+    auth: AuthManager
+    http: HomeAssistantHTTP = None  # type: ignore
+    config_entries: ConfigEntries = None  # type: ignore
 
     def __init__(self) -> None:
         """Initialize new Home Assistant object."""
@@ -379,6 +373,13 @@ class HomeAssistant:
 
         return task
 
+    def create_task(self, target: Coroutine) -> None:
+        """Add task to the executor pool.
+
+        target: target to call.
+        """
+        self.loop.call_soon_threadsafe(self.async_create_task, target)
+
     @callback
     def async_create_task(self, target: Coroutine) -> asyncio.tasks.Task:
         """Create a task from within the eventloop.
@@ -515,18 +516,20 @@ class HomeAssistant:
             if self.state == CoreState.not_running:  # just ignore
                 return
             if self.state in [CoreState.stopping, CoreState.final_write]:
-                _LOGGER.info("async_stop called twice: ignored")
+                _LOGGER.info("Additional call to async_stop was ignored")
                 return
             if self.state == CoreState.starting:
                 # This may not work
-                _LOGGER.warning("async_stop called before startup is complete")
+                _LOGGER.warning(
+                    "Stopping Home Assistant before startup has completed may fail"
+                )
 
         # stage 1
         self.state = CoreState.stopping
         self.async_track_tasks()
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         try:
-            async with self.timeout.async_timeout(120):
+            async with self.timeout.async_timeout(STAGE_1_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
@@ -537,7 +540,7 @@ class HomeAssistant:
         self.state = CoreState.final_write
         self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
         try:
-            async with self.timeout.async_timeout(60):
+            async with self.timeout.async_timeout(STAGE_2_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
@@ -556,7 +559,7 @@ class HomeAssistant:
         shutdown_run_callback_threadsafe(self.loop)
 
         try:
-            async with self.timeout.async_timeout(30):
+            async with self.timeout.async_timeout(STAGE_3_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
@@ -584,7 +587,6 @@ class Context:
 
 
 class EventOrigin(enum.Enum):
-    # pylint: disable=invalid-name
     """Represent the origin of an event."""
 
     local = "LOCAL"
@@ -698,6 +700,9 @@ class EventBus:
 
         This method must be run in the event loop.
         """
+        if len(event_type) > MAX_LENGTH_EVENT_TYPE:
+            raise MaxLengthExceeded(event_type, "event_type", MAX_LENGTH_EVENT_TYPE)
+
         listeners = self._listeners.get(event_type, [])
 
         # EVENT_HOMEASSISTANT_CLOSE should go only to his listeners
@@ -775,7 +780,9 @@ class EventBus:
 
         return remove_listener
 
-    def listen_once(self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
+    def listen_once(
+        self, event_type: str, listener: Callable[[Event], None]
+    ) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``
@@ -1531,7 +1538,7 @@ class Config:
         self.longitude: float = 0
         self.elevation: int = 0
         self.location_name: str = "Home"
-        self.time_zone: datetime.tzinfo = dt_util.UTC
+        self.time_zone: str = "UTC"
         self.units: UnitSystem = METRIC_SYSTEM
         self.internal_url: str | None = None
         self.external_url: str | None = None
@@ -1621,17 +1628,13 @@ class Config:
 
         Async friendly.
         """
-        time_zone = dt_util.UTC.zone
-        if self.time_zone and getattr(self.time_zone, "zone"):
-            time_zone = getattr(self.time_zone, "zone")
-
         return {
             "latitude": self.latitude,
             "longitude": self.longitude,
             "elevation": self.elevation,
             "unit_system": self.units.as_dict(),
             "location_name": self.location_name,
-            "time_zone": time_zone,
+            "time_zone": self.time_zone,
             "components": self.components,
             "config_dir": self.config_dir,
             # legacy, backwards compat
@@ -1651,7 +1654,7 @@ class Config:
         time_zone = dt_util.get_time_zone(time_zone_str)
 
         if time_zone:
-            self.time_zone = time_zone
+            self.time_zone = time_zone_str
             dt_util.set_default_time_zone(time_zone)
         else:
             raise ValueError(f"Received invalid time zone {time_zone_str}")
@@ -1721,17 +1724,13 @@ class Config:
 
     async def async_store(self) -> None:
         """Store [homeassistant] core config."""
-        time_zone = dt_util.UTC.zone
-        if self.time_zone and getattr(self.time_zone, "zone"):
-            time_zone = getattr(self.time_zone, "zone")
-
         data = {
             "latitude": self.latitude,
             "longitude": self.longitude,
             "elevation": self.elevation,
             "unit_system": self.units.name,
             "location_name": self.location_name,
-            "time_zone": time_zone,
+            "time_zone": self.time_zone,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
         }

@@ -1,7 +1,7 @@
 """Generic Z-Wave Entity Class."""
+from __future__ import annotations
 
 import logging
-from typing import List, Optional, Union
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
@@ -9,7 +9,7 @@ from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
@@ -36,6 +36,11 @@ class ZWaveBaseEntity(Entity):
         )
         # entities requiring additional values, can add extra ids to this list
         self.watched_value_ids = {self.info.primary_value.value_id}
+
+        if self.info.additional_value_ids_to_watch:
+            self.watched_value_ids = self.watched_value_ids.union(
+                self.info.additional_value_ids_to_watch
+            )
 
     @callback
     def on_value_update(self) -> None:
@@ -87,7 +92,7 @@ class ZWaveBaseEntity(Entity):
         )
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Return device information for the device registry."""
         # device is precreated in main handler
         return {
@@ -97,8 +102,9 @@ class ZWaveBaseEntity(Entity):
     def generate_name(
         self,
         include_value_name: bool = False,
-        alternate_value_name: Optional[str] = None,
-        additional_info: Optional[List[str]] = None,
+        alternate_value_name: str | None = None,
+        additional_info: list[str] | None = None,
+        name_suffix: str | None = None,
     ) -> str:
         """Generate entity name."""
         if additional_info is None:
@@ -108,6 +114,8 @@ class ZWaveBaseEntity(Entity):
             or self.info.node.device_config.description
             or f"Node {self.info.node.node_id}"
         )
+        if name_suffix:
+            name = f"{name} {name_suffix}"
         if include_value_name:
             value_name = (
                 alternate_value_name
@@ -167,13 +175,13 @@ class ZWaveBaseEntity(Entity):
     @callback
     def get_zwave_value(
         self,
-        value_property: Union[str, int],
-        command_class: Optional[int] = None,
-        endpoint: Optional[int] = None,
-        value_property_key: Optional[int] = None,
+        value_property: str | int,
+        command_class: int | None = None,
+        endpoint: int | None = None,
+        value_property_key: int | None = None,
         add_to_watched_value_ids: bool = True,
         check_all_endpoints: bool = False,
-    ) -> Optional[ZwaveValue]:
+    ) -> ZwaveValue | None:
         """Return specific ZwaveValue on this ZwaveNode."""
         # use commandclass and endpoint from primary value if omitted
         return_value = None
@@ -221,3 +229,8 @@ class ZWaveBaseEntity(Entity):
     def should_poll(self) -> bool:
         """No polling needed."""
         return False
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return True if unable to access real state of the entity."""
+        return self.info.assumed_state

@@ -3,12 +3,11 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-from typing import Callable
 
 import herepy
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -26,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType
 import homeassistant.util.dt as dt
 
@@ -146,7 +145,7 @@ PLATFORM_SCHEMA = vol.All(
 async def async_setup_platform(
     hass: HomeAssistant,
     config: dict[str, str | bool],
-    async_add_entities: Callable,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the HERE travel time platform."""
@@ -215,7 +214,7 @@ def _are_valid_client_credentials(here_client: herepy.RoutingApi) -> bool:
     return True
 
 
-class HERETravelTimeSensor(Entity):
+class HERETravelTimeSensor(SensorEntity):
     """Representation of a HERE travel time sensor."""
 
     def __init__(
@@ -225,7 +224,7 @@ class HERETravelTimeSensor(Entity):
         destination: str,
         origin_entity_id: str,
         destination_entity_id: str,
-        here_data: "HERETravelTimeData",
+        here_data: HERETravelTimeData,
     ) -> None:
         """Initialize the sensor."""
         self._name = name
@@ -259,9 +258,8 @@ class HERETravelTimeSensor(Entity):
     @property
     def state(self) -> str | None:
         """Return the state of the sensor."""
-        if self._here_data.traffic_mode:
-            if self._here_data.traffic_time is not None:
-                return str(round(self._here_data.traffic_time / 60))
+        if self._here_data.traffic_mode and self._here_data.traffic_time is not None:
+            return str(round(self._here_data.traffic_time / 60))
         if self._here_data.base_time is not None:
             return str(round(self._here_data.base_time / 60))
 

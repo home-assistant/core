@@ -132,8 +132,8 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
         else:
             hvac_mode = TARGET_HEATER_COOLER_STATE_HOMEKIT_TO_HASS.get(state)
             _LOGGER.warning(
-                "HomeKit device %s: Setting temperature in %s mode is not supported yet."
-                " Consider raising a ticket if you have this device and want to help us implement this feature.",
+                "HomeKit device %s: Setting temperature in %s mode is not supported yet;"
+                " Consider raising a ticket if you have this device and want to help us implement this feature",
                 self.entity_id,
                 hvac_mode,
             )
@@ -147,8 +147,8 @@ class HomeKitHeaterCoolerEntity(HomeKitEntity, ClimateEntity):
             return
         if hvac_mode not in {HVAC_MODE_HEAT, HVAC_MODE_COOL}:
             _LOGGER.warning(
-                "HomeKit device %s: Setting temperature in %s mode is not supported yet."
-                " Consider raising a ticket if you have this device and want to help us implement this feature.",
+                "HomeKit device %s: Setting temperature in %s mode is not supported yet;"
+                " Consider raising a ticket if you have this device and want to help us implement this feature",
                 self.entity_id,
                 hvac_mode,
             )

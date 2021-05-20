@@ -31,7 +31,7 @@ def entity_reg(hass):
     return mock_registry(hass)
 
 
-async def test_get_actions(hass, device_reg, entity_reg):
+async def test_get_actions(hass, device_reg, entity_reg, enable_custom_integrations):
     """Test we get the expected actions from a cover."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -73,7 +73,9 @@ async def test_get_actions(hass, device_reg, entity_reg):
     assert_lists_same(actions, expected_actions)
 
 
-async def test_get_actions_tilt(hass, device_reg, entity_reg):
+async def test_get_actions_tilt(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected actions from a cover."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -127,7 +129,9 @@ async def test_get_actions_tilt(hass, device_reg, entity_reg):
     assert_lists_same(actions, expected_actions)
 
 
-async def test_get_actions_set_pos(hass, device_reg, entity_reg):
+async def test_get_actions_set_pos(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected actions from a cover."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -157,7 +161,9 @@ async def test_get_actions_set_pos(hass, device_reg, entity_reg):
     assert_lists_same(actions, expected_actions)
 
 
-async def test_get_actions_set_tilt_pos(hass, device_reg, entity_reg):
+async def test_get_actions_set_tilt_pos(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected actions from a cover."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -205,7 +211,9 @@ async def test_get_actions_set_tilt_pos(hass, device_reg, entity_reg):
     assert_lists_same(actions, expected_actions)
 
 
-async def test_get_action_capabilities(hass, device_reg, entity_reg):
+async def test_get_action_capabilities(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected capabilities from a cover action."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -233,7 +241,9 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
         assert capabilities == {"extra_fields": []}
 
 
-async def test_get_action_capabilities_set_pos(hass, device_reg, entity_reg):
+async def test_get_action_capabilities_set_pos(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected capabilities from a cover action."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -276,7 +286,9 @@ async def test_get_action_capabilities_set_pos(hass, device_reg, entity_reg):
             assert capabilities == {"extra_fields": []}
 
 
-async def test_get_action_capabilities_set_tilt_pos(hass, device_reg, entity_reg):
+async def test_get_action_capabilities_set_tilt_pos(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected capabilities from a cover action."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -319,7 +331,7 @@ async def test_get_action_capabilities_set_tilt_pos(hass, device_reg, entity_reg
             assert capabilities == {"extra_fields": []}
 
 
-async def test_action(hass):
+async def test_action(hass, enable_custom_integrations):
     """Test for cover actions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -385,7 +397,7 @@ async def test_action(hass):
     assert len(stop_calls) == 1
 
 
-async def test_action_tilt(hass):
+async def test_action_tilt(hass, enable_custom_integrations):
     """Test for cover tilt actions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -438,7 +450,7 @@ async def test_action_tilt(hass):
     assert len(close_calls) == 1
 
 
-async def test_action_set_position(hass):
+async def test_action_set_position(hass, enable_custom_integrations):
     """Test for cover set position actions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()

@@ -1,8 +1,6 @@
 """Support for Verisure binary sensors."""
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_OPENING,
@@ -10,7 +8,8 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_GIID, DOMAIN
@@ -20,7 +19,7 @@ from .coordinator import VerisureDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[Iterable[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Verisure binary sensors based on a config entry."""
     coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -58,7 +57,7 @@ class VerisureDoorWindowSensor(CoordinatorEntity, BinarySensorEntity):
         return f"{self.serial_number}_door_window"
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         area = self.coordinator.data["door_window"][self.serial_number]["area"]
         return {
@@ -107,7 +106,7 @@ class VerisureEthernetStatus(CoordinatorEntity, BinarySensorEntity):
         return f"{self.coordinator.entry.data[CONF_GIID]}_ethernet"
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         return {
             "name": "Verisure Alarm",

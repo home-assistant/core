@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from json import JSONEncoder
 import logging
 import os
 from typing import Any, Callable
 
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
-from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.loader import bind_hass
 from homeassistant.util import json as json_util
@@ -168,7 +169,7 @@ class Store:
         )
 
     @callback
-    def _async_ensure_final_write_listener(self):
+    def _async_ensure_final_write_listener(self) -> None:
         """Ensure that we write if we quit before delay has passed."""
         if self._unsub_final_write_listener is None:
             self._unsub_final_write_listener = self.hass.bus.async_listen_once(
@@ -176,14 +177,14 @@ class Store:
             )
 
     @callback
-    def _async_cleanup_final_write_listener(self):
+    def _async_cleanup_final_write_listener(self) -> None:
         """Clean up a stop listener."""
         if self._unsub_final_write_listener is not None:
             self._unsub_final_write_listener()
             self._unsub_final_write_listener = None
 
     @callback
-    def _async_cleanup_delay_listener(self):
+    def _async_cleanup_delay_listener(self) -> None:
         """Clean up a delay listener."""
         if self._unsub_delay_listener is not None:
             self._unsub_delay_listener()
@@ -197,7 +198,7 @@ class Store:
             return
         await self._async_handle_write_data()
 
-    async def _async_callback_final_write(self, _event):
+    async def _async_callback_final_write(self, _event: Event) -> None:
         """Handle a write because Home Assistant is in final write state."""
         self._unsub_final_write_listener = None
         await self._async_handle_write_data()
@@ -238,12 +239,10 @@ class Store:
         """Migrate to the new version."""
         raise NotImplementedError
 
-    async def async_remove(self):
+    async def async_remove(self) -> None:
         """Remove all data."""
         self._async_cleanup_delay_listener()
         self._async_cleanup_final_write_listener()
 
-        try:
+        with suppress(FileNotFoundError):
             await self.hass.async_add_executor_job(os.unlink, self.path)
-        except FileNotFoundError:
-            pass

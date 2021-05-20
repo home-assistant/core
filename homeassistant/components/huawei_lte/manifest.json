@@ -15,5 +15,6 @@
       "manufacturer": "Huawei"
     }
   ],
-  "codeowners": ["@scop", "@fphammerle"]
+  "codeowners": ["@scop", "@fphammerle"],
+  "iot_class": "local_polling"
 }

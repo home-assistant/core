@@ -1,8 +1,9 @@
 """Common fixtures and objects for the Switcher integration tests."""
+from __future__ import annotations
 
 from asyncio import Queue
 from datetime import datetime
-from typing import Any, Generator, Optional
+from typing import Any, Generator
 from unittest.mock import AsyncMock, patch
 
 from pytest import fixture
@@ -56,7 +57,7 @@ class MockSwitcherV2Device:
         return DUMMY_DEVICE_STATE
 
     @property
-    def remaining_time(self) -> Optional[str]:
+    def remaining_time(self) -> str | None:
         """Return the time left to auto-off."""
         return DUMMY_REMAINING_TIME
 

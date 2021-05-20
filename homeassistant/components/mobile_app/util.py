@@ -43,7 +43,7 @@ def supports_push(hass, webhook_id: str) -> bool:
 @callback
 def get_notify_service(hass, webhook_id: str) -> str | None:
     """Return the notify service for this webhook ID."""
-    notify_service: "MobileAppNotificationService" = hass.data[DOMAIN][DATA_NOTIFY]
+    notify_service: MobileAppNotificationService = hass.data[DOMAIN][DATA_NOTIFY]
 
     for target_service, target_webhook_id in notify_service.registered_targets.items():
         if target_webhook_id == webhook_id:

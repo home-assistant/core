@@ -4,6 +4,7 @@ import logging
 
 from ondilo import OndiloError
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_BATTERY,
@@ -83,7 +84,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class OndiloICO(CoordinatorEntity):
+class OndiloICO(CoordinatorEntity, SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(

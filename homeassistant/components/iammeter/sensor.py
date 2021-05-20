@@ -8,7 +8,7 @@ from iammeter import real_time_api
 from iammeter.power_meter import IamMeterError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import debounce
@@ -74,7 +74,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class IamMeter(CoordinatorEntity):
+class IamMeter(CoordinatorEntity, SensorEntity):
     """Class for a sensor."""
 
     def __init__(self, coordinator, uid, sensor_name, unit, dev_name):

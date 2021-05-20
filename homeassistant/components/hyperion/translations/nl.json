@@ -26,6 +26,10 @@
                 "description": "Wilt u deze Hyperion Ambilight toevoegen aan Home Assistant? \n\n ** Host: ** {host}\n ** Poort: ** {port}\n ** ID **: {id}",
                 "title": "Bevestig de toevoeging van Hyperion Ambilight-service"
             },
+            "create_token": {
+                "description": "Kies **Submit** hieronder om een nieuw authenticatie token aan te vragen. U wordt doorgestuurd naar de Hyperion UI om de aanvraag goed te keuren. Controleer of de getoonde id \"{auth_id}\" is.",
+                "title": "Automatisch nieuw authenticatie token aanmaken"
+            },
             "create_token_external": {
                 "title": "Accepteer nieuwe token in Hyperion UI"
             },
@@ -33,6 +37,16 @@
                 "data": {
                     "host": "Host",
                     "port": "Poort"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "effect_show_list": "Hyperion-effecten om te laten zien",
+                    "priority": "Hyperion prioriteit te gebruiken voor kleuren en effecten"
                 }
             }
         }

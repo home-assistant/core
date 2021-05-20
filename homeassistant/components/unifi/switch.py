@@ -18,6 +18,7 @@ from aiounifi.events import (
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -86,7 +87,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             add_dpi_entities(controller, async_add_entities, dpi_groups)
 
     for signal in (controller.signal_update, controller.signal_options_update):
-        controller.listeners.append(async_dispatcher_connect(hass, signal, items_added))
+        config_entry.async_on_unload(
+            async_dispatcher_connect(hass, signal, items_added)
+        )
 
     items_added()
     known_poe_clients.clear()
@@ -279,10 +282,11 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the clients state."""
-        if self.client.last_updated == SOURCE_EVENT:
-
-            if self.client.event.event in CLIENT_BLOCKED + CLIENT_UNBLOCKED:
-                self._is_blocked = self.client.event.event in CLIENT_BLOCKED
+        if (
+            self.client.last_updated == SOURCE_EVENT
+            and self.client.event.event in CLIENT_BLOCKED + CLIENT_UNBLOCKED
+        ):
+            self._is_blocked = self.client.event.event in CLIENT_BLOCKED
 
         super().async_update_callback()
 
@@ -359,7 +363,7 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
             await self.remove_item({self.key})
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Return a service description for device registry."""
         return {
             "identifiers": {(DOMAIN, f"unifi_controller_{self._item.site_id}")},

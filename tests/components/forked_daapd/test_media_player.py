@@ -54,7 +54,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
 )
-from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -284,7 +284,6 @@ def config_entry_fixture():
         options={CONF_TTS_PAUSE_TIME: 0},
         system_options={},
         source=SOURCE_USER,
-        connection_class=CONN_CLASS_LOCAL_PUSH,
         entry_id=1,
     )
 

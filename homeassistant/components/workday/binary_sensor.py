@@ -171,7 +171,7 @@ class IsWorkdaySensor(BinarySensorEntity):
         return False
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the entity."""
         # return self._attributes
         return {

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Callable
 
 from plumlightpad import Plum
 
@@ -16,7 +15,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
 from .const import DOMAIN
@@ -25,7 +24,7 @@ from .const import DOMAIN
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Plum Lightpad dimmer lights and glow rings."""
 

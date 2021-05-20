@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import re
-from typing import cast
+from typing import cast, final
 
 from aiohttp import web
 
@@ -129,13 +129,14 @@ def is_offset_reached(event):
 
 
 class CalendarEventDevice(Entity):
-    """A calendar event device."""
+    """Base class for calendar event entities."""
 
     @property
     def event(self):
         """Return the next upcoming event."""
         raise NotImplementedError()
 
+    @final
     @property
     def state_attributes(self):
         """Return the entity state attributes."""

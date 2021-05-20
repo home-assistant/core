@@ -1,13 +1,16 @@
 """Test smarttub setup process."""
 
 import asyncio
+from unittest.mock import patch
 
 from smarttub import LoginFailed
 
 from homeassistant.components import smarttub
+from homeassistant.components.smarttub.const import DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
+    SOURCE_REAUTH,
 )
 from homeassistant.setup import async_setup_component
 
@@ -35,8 +38,18 @@ async def test_setup_auth_failed(setup_component, hass, config_entry, smarttub_a
     smarttub_api.login.side_effect = LoginFailed
 
     config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ENTRY_STATE_SETUP_ERROR
+    with patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert config_entry.state == ENTRY_STATE_SETUP_ERROR
+        mock_flow_init.assert_called_with(
+            DOMAIN,
+            context={
+                "source": SOURCE_REAUTH,
+                "entry_id": config_entry.entry_id,
+                "unique_id": config_entry.unique_id,
+            },
+            data=config_entry.data,
+        )
 
 
 async def test_config_passed_to_config_entry(hass, config_entry, config_data):

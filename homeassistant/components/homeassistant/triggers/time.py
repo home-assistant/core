@@ -39,6 +39,7 @@ TRIGGER_SCHEMA = vol.Schema(
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
+    trigger_id = automation_info.get("trigger_id") if automation_info else None
     entities = {}
     removes = []
     job = HassJob(action)
@@ -54,6 +55,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
                     "now": now,
                     "description": description,
                     "entity_id": entity_id,
+                    "id": trigger_id,
                 }
             },
         )
@@ -93,8 +95,14 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
             if has_date:
                 # If input_datetime has date, then track point in time.
-                trigger_dt = dt_util.DEFAULT_TIME_ZONE.localize(
-                    datetime(year, month, day, hour, minute, second)
+                trigger_dt = datetime(
+                    year,
+                    month,
+                    day,
+                    hour,
+                    minute,
+                    second,
+                    tzinfo=dt_util.DEFAULT_TIME_ZONE,
                 )
                 # Only set up listener if time is now or in the future.
                 if trigger_dt >= dt_util.now():

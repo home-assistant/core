@@ -21,8 +21,8 @@ from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get_registry
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     _LOGGER,
@@ -326,7 +326,7 @@ def _categorize_programs(hass_isy_data: dict, programs: Programs) -> None:
 
             actions = None
             status = entity_folder.get_by_name(KEY_STATUS)
-            if not status or not status.protocol == PROTO_PROGRAM:
+            if not status or status.protocol != PROTO_PROGRAM:
                 _LOGGER.warning(
                     "Program %s entity '%s' not loaded, invalid/missing status program",
                     platform,
@@ -336,7 +336,7 @@ def _categorize_programs(hass_isy_data: dict, programs: Programs) -> None:
 
             if platform != BINARY_SENSOR:
                 actions = entity_folder.get_by_name(KEY_ACTIONS)
-                if not actions or not actions.protocol == PROTO_PROGRAM:
+                if not actions or actions.protocol != PROTO_PROGRAM:
                     _LOGGER.warning(
                         "Program %s entity '%s' not loaded, invalid/missing actions program",
                         platform,
@@ -366,7 +366,7 @@ def _categorize_variables(
 
 
 async def migrate_old_unique_ids(
-    hass: HomeAssistantType, platform: str, devices: list[Any] | None
+    hass: HomeAssistant, platform: str, devices: list[Any] | None
 ) -> None:
     """Migrate to new controller-specific unique ids."""
     registry = await async_get_registry(hass)

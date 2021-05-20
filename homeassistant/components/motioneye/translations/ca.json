@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "invalid_url": "URL inv\u00e0lid",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "admin_password": "Contrasenya d'administrador",
+                    "admin_username": "Nom d'usuari d'usuari",
+                    "surveillance_password": "Contrasenya de vigilant",
+                    "surveillance_username": "Nom d'usuari de vigilant",
+                    "url": "URL"
+                }
+            }
+        }
+    }
+}

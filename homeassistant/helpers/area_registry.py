@@ -2,16 +2,15 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from typing import Container, Iterable, MutableMapping, cast
+from collections.abc import Container, Iterable, MutableMapping
+from typing import cast
 
 import attr
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
-
-from .typing import HomeAssistantType
 
 # mypy: disallow-any-generics
 
@@ -43,7 +42,7 @@ class AreaEntry:
 class AreaRegistry:
     """Class to hold a registry of areas."""
 
-    def __init__(self, hass: HomeAssistantType) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the area registry."""
         self.hass = hass
         self.areas: MutableMapping[str, AreaEntry] = {}
@@ -134,11 +133,8 @@ class AreaRegistry:
 
         normalized_name = normalize_area_name(name)
 
-        if normalized_name != old.normalized_name:
-            if self.async_get_area_by_name(name):
-                raise ValueError(
-                    f"The name {name} ({normalized_name}) is already in use"
-                )
+        if normalized_name != old.normalized_name and self.async_get_area_by_name(name):
+            raise ValueError(f"The name {name} ({normalized_name}) is already in use")
 
         changes["name"] = name
         changes["normalized_name"] = normalized_name
@@ -189,12 +185,12 @@ class AreaRegistry:
 
 
 @callback
-def async_get(hass: HomeAssistantType) -> AreaRegistry:
+def async_get(hass: HomeAssistant) -> AreaRegistry:
     """Get area registry."""
     return cast(AreaRegistry, hass.data[DATA_REGISTRY])
 
 
-async def async_load(hass: HomeAssistantType) -> None:
+async def async_load(hass: HomeAssistant) -> None:
     """Load area registry."""
     assert DATA_REGISTRY not in hass.data
     hass.data[DATA_REGISTRY] = AreaRegistry(hass)
@@ -202,7 +198,7 @@ async def async_load(hass: HomeAssistantType) -> None:
 
 
 @bind_hass
-async def async_get_registry(hass: HomeAssistantType) -> AreaRegistry:
+async def async_get_registry(hass: HomeAssistant) -> AreaRegistry:
     """Get area registry.
 
     This is deprecated and will be removed in the future. Use async_get instead.

@@ -8,6 +8,7 @@ from homeassistant.components.deconz.const import (
     CONF_BRIDGE_ID,
     DOMAIN as DECONZ_DOMAIN,
 )
+from homeassistant.components.deconz.deconz_event import CONF_DECONZ_EVENT
 from homeassistant.components.deconz.services import (
     DECONZ_SERVICES,
     SERVICE_CONFIGURE_DEVICE,
@@ -30,6 +31,8 @@ from .test_gateway import (
     mock_deconz_request,
     setup_deconz_integration,
 )
+
+from tests.common import async_capture_events
 
 
 async def test_service_setup(hass):
@@ -229,6 +232,70 @@ async def test_service_refresh_devices(hass, aioclient_mock):
     assert len(hass.states.async_all()) == 4
 
 
+async def test_service_refresh_devices_trigger_no_state_update(hass, aioclient_mock):
+    """Verify that gateway.ignore_state_updates are honored."""
+    data = {
+        "sensors": {
+            "1": {
+                "name": "Switch 1",
+                "type": "ZHASwitch",
+                "state": {"buttonevent": 1000},
+                "config": {"battery": 100},
+                "uniqueid": "00:00:00:00:00:00:00:01-00",
+            }
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+
+    assert len(hass.states.async_all()) == 1
+
+    captured_events = async_capture_events(hass, CONF_DECONZ_EVENT)
+
+    aioclient_mock.clear_requests()
+
+    data = {
+        "groups": {
+            "1": {
+                "id": "Group 1 id",
+                "name": "Group 1 name",
+                "type": "LightGroup",
+                "state": {},
+                "action": {},
+                "scenes": [{"id": "1", "name": "Scene 1"}],
+                "lights": ["1"],
+            }
+        },
+        "lights": {
+            "1": {
+                "name": "Light 1 name",
+                "state": {"reachable": True},
+                "type": "Light",
+                "uniqueid": "00:00:00:00:00:00:00:01-00",
+            }
+        },
+        "sensors": {
+            "1": {
+                "name": "Switch 1",
+                "type": "ZHASwitch",
+                "state": {"buttonevent": 1000},
+                "config": {"battery": 100},
+                "uniqueid": "00:00:00:00:00:00:00:01-00",
+            }
+        },
+    }
+
+    mock_deconz_request(aioclient_mock, config_entry.data, data)
+
+    await hass.services.async_call(
+        DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH, service_data={CONF_BRIDGE_ID: BRIDGEID}
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 4
+    assert len(captured_events) == 0
+
+
 async def test_remove_orphaned_entries_service(hass, aioclient_mock):
     """Test service works and also don't remove more than expected."""
     data = {
@@ -255,7 +322,8 @@ async def test_remove_orphaned_entries_service(hass, aioclient_mock):
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id, identifiers={("mac", "123")}
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "123")},
     )
 
     assert (

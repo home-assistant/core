@@ -1,5 +1,7 @@
 """WebSocket based API for Home Assistant."""
-from typing import Optional, Union, cast
+from __future__ import annotations
+
+from typing import cast
 
 import voluptuous as vol
 
@@ -43,9 +45,9 @@ DEPENDENCIES = ("http",)
 @callback
 def async_register_command(
     hass: HomeAssistant,
-    command_or_handler: Union[str, const.WebSocketCommandHandler],
-    handler: Optional[const.WebSocketCommandHandler] = None,
-    schema: Optional[vol.Schema] = None,
+    command_or_handler: str | const.WebSocketCommandHandler,
+    handler: const.WebSocketCommandHandler | None = None,
+    schema: vol.Schema | None = None,
 ) -> None:
     """Register a websocket command."""
     # pylint: disable=protected-access

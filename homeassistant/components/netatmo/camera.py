@@ -99,7 +99,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     await data_handler.unregister_data_class(CAMERA_DATA_CLASS_NAME, None)
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_SET_PERSONS_HOME,
@@ -350,7 +350,7 @@ class NetatmoCamera(NetatmoBase, Camera):
     def _service_set_camera_light(self, **kwargs):
         """Service to set light mode."""
         mode = kwargs.get(ATTR_CAMERA_LIGHT_MODE)
-        _LOGGER.debug("Turn camera '%s' %s", self._name, mode)
+        _LOGGER.debug("Turn %s camera light for '%s'", mode, self._name)
         self._data.set_state(
             home_id=self._home_id,
             camera_id=self._id,

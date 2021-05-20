@@ -1,5 +1,6 @@
 """Webhook handlers for mobile_app."""
 import asyncio
+from contextlib import suppress
 from functools import wraps
 import logging
 import secrets
@@ -32,7 +33,7 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST,
     HTTP_CREATED,
 )
-from homeassistant.core import EventOrigin
+from homeassistant.core import EventOrigin, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
 from homeassistant.helpers import (
     config_validation as cv,
@@ -41,7 +42,6 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -144,7 +144,7 @@ def validate_schema(schema):
 
 
 async def handle_webhook(
-    hass: HomeAssistantType, webhook_id: str, request: Request
+    hass: HomeAssistant, webhook_id: str, request: Request
 ) -> Response:
     """Handle webhook callback."""
     if webhook_id in hass.data[DOMAIN][DATA_DELETED_IDS]:
@@ -471,6 +471,7 @@ async def webhook_update_sensor_states(hass, config_entry, data):
 
     device_name = config_entry.data[ATTR_DEVICE_NAME]
     resp = {}
+
     for sensor in data:
         entity_type = sensor[ATTR_SENSOR_TYPE]
 
@@ -494,8 +495,6 @@ async def webhook_update_sensor_states(hass, config_entry, data):
             }
             continue
 
-        entry = {CONF_WEBHOOK_ID: config_entry.data[CONF_WEBHOOK_ID]}
-
         try:
             sensor = sensor_schema_full(sensor)
         except vol.Invalid as err:
@@ -512,9 +511,8 @@ async def webhook_update_sensor_states(hass, config_entry, data):
             }
             continue
 
-        new_state = {**entry, **sensor}
-
-        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, new_state)
+        sensor[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
+        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, sensor)
 
         resp[unique_id] = {"success": True}
 
@@ -551,10 +549,8 @@ async def webhook_get_config(hass, config_entry, data):
     if CONF_CLOUDHOOK_URL in config_entry.data:
         resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
 
-    try:
+    with suppress(hass.components.cloud.CloudNotAvailable):
         resp[CONF_REMOTE_UI_URL] = hass.components.cloud.async_remote_ui_url()
-    except hass.components.cloud.CloudNotAvailable:
-        pass
 
     return webhook_response(resp, registration=config_entry.data)
 
