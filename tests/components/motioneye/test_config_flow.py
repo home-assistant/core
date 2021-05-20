@@ -339,3 +339,34 @@ async def test_duplicate(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert mock_client.async_client_close.called
+
+
+async def test_hassio_already_configured(hass: HomeAssistant) -> None:
+    """Test we don't discover when already configured."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: TEST_URL},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data={"addon": "motionEye Add-on", "url": TEST_URL},
+        context={"source": config_entries.SOURCE_HASSIO},
+    )
+    assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
+    assert result.get("reason") == "already_configured"
+
+
+async def test_hassio_ignored(hass: HomeAssistant) -> None:
+    """Test Supervisor discovered instance can be ignored."""
+    MockConfigEntry(domain=DOMAIN, source=config_entries.SOURCE_IGNORE).add_to_hass(
+        hass
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data={"addon": "motionEye Add-on", "url": TEST_URL},
+        context={"source": config_entries.SOURCE_HASSIO},
+    )
+    assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
+    assert result.get("reason") == "already_configured"
