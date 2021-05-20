@@ -19,7 +19,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
+    def __init__(self):
         """Init MeteoFranceFlowHandler."""
         self.places = []
 

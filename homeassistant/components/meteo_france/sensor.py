@@ -78,7 +78,7 @@ async def async_setup_entry(
 class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Meteo-France sensor."""
 
-    def __init__(self, sensor_type: str, coordinator: DataUpdateCoordinator):
+    def __init__(self, sensor_type: str, coordinator: DataUpdateCoordinator) -> None:
         """Initialize the Meteo-France sensor."""
         super().__init__(coordinator)
         self._type = sensor_type
