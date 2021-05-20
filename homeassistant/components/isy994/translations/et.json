@@ -9,7 +9,7 @@
             "invalid_host": "Hostikirje ei olnud sobivas URL-vormingus, nt http://192.168.10.100:80",
             "unknown": "Tundmatu viga"
         },
-        "flow_title": "",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

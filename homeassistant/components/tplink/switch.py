@@ -12,9 +12,9 @@ from homeassistant.components.switch import (
     SwitchEntity,
 )
 from homeassistant.const import ATTR_VOLTAGE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.typing import HomeAssistantType
 
 from . import CONF_SWITCH, DOMAIN as TPLINK_DOMAIN
 from .common import add_available_devices
@@ -30,7 +30,7 @@ MAX_ATTEMPTS = 300
 SLEEP_TIME = 2
 
 
-async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
     """Set up switches."""
     entities = await hass.async_add_executor_job(
         add_available_devices, hass, CONF_SWITCH, SmartPlugSwitch
@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_ent
 class SmartPlugSwitch(SwitchEntity):
     """Representation of a TPLink Smart Plug switch."""
 
-    def __init__(self, smartplug: SmartPlug):
+    def __init__(self, smartplug: SmartPlug) -> None:
         """Initialize the switch."""
         self.smartplug = smartplug
         self._sysinfo = None

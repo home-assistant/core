@@ -5,7 +5,6 @@ import random
 from unittest.mock import patch
 
 import pytest
-import pytz
 import voluptuous as vol
 
 from homeassistant.components import group
@@ -19,7 +18,7 @@ from homeassistant.const import (
     VOLUME_LITERS,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
+from homeassistant.helpers import device_registry as dr, template
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
@@ -763,7 +762,7 @@ def test_render_with_possible_json_value_non_string_value(hass):
         hass,
     )
     value = datetime(2019, 1, 18, 12, 13, 14)
-    expected = str(pytz.utc.localize(value))
+    expected = str(value.replace(tzinfo=dt_util.UTC))
     assert tpl.async_render_with_possible_json_value(value) == expected
 
 
@@ -1504,7 +1503,7 @@ async def test_device_entities(hass):
     # Test device without entities
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={("mac", "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     info = render_to_info(hass, f"{{{{ device_entities('{device_entry.id}') }}}}")
     assert_result_info(info, [])

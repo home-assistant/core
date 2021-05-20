@@ -3,19 +3,6 @@ import re
 
 from simplipy.errors import SimplipyError
 from simplipy.system import SystemStates
-from simplipy.websocket import (
-    EVENT_ALARM_CANCELED,
-    EVENT_ALARM_TRIGGERED,
-    EVENT_ARMED_AWAY,
-    EVENT_ARMED_AWAY_BY_KEYPAD,
-    EVENT_ARMED_AWAY_BY_REMOTE,
-    EVENT_ARMED_HOME,
-    EVENT_AWAY_EXIT_DELAY_BY_KEYPAD,
-    EVENT_AWAY_EXIT_DELAY_BY_REMOTE,
-    EVENT_DISARMED_BY_MASTER_PIN,
-    EVENT_DISARMED_BY_REMOTE,
-    EVENT_HOME_EXIT_DELAY,
-)
 
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
@@ -95,21 +82,6 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             self._state = STATE_ALARM_DISARMED
         else:
             self._state = None
-
-        for event_type in (
-            EVENT_ALARM_CANCELED,
-            EVENT_ALARM_TRIGGERED,
-            EVENT_ARMED_AWAY,
-            EVENT_ARMED_AWAY_BY_KEYPAD,
-            EVENT_ARMED_AWAY_BY_REMOTE,
-            EVENT_ARMED_HOME,
-            EVENT_AWAY_EXIT_DELAY_BY_KEYPAD,
-            EVENT_AWAY_EXIT_DELAY_BY_REMOTE,
-            EVENT_DISARMED_BY_MASTER_PIN,
-            EVENT_DISARMED_BY_REMOTE,
-            EVENT_HOME_EXIT_DELAY,
-        ):
-            self.websocket_events_to_listen_for.append(event_type)
 
     @property
     def changed_by(self):
@@ -237,33 +209,3 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             self._state = STATE_ALARM_DISARMED
         else:
             self._state = None
-
-    @callback
-    def async_update_from_websocket_event(self, event):
-        """Update the entity with the provided websocket API event data."""
-        if event.event_type in (
-            EVENT_ALARM_CANCELED,
-            EVENT_DISARMED_BY_MASTER_PIN,
-            EVENT_DISARMED_BY_REMOTE,
-        ):
-            self._state = STATE_ALARM_DISARMED
-        elif event.event_type == EVENT_ALARM_TRIGGERED:
-            self._state = STATE_ALARM_TRIGGERED
-        elif event.event_type in (
-            EVENT_ARMED_AWAY,
-            EVENT_ARMED_AWAY_BY_KEYPAD,
-            EVENT_ARMED_AWAY_BY_REMOTE,
-        ):
-            self._state = STATE_ALARM_ARMED_AWAY
-        elif event.event_type == EVENT_ARMED_HOME:
-            self._state = STATE_ALARM_ARMED_HOME
-        elif event.event_type in (
-            EVENT_AWAY_EXIT_DELAY_BY_KEYPAD,
-            EVENT_AWAY_EXIT_DELAY_BY_REMOTE,
-            EVENT_HOME_EXIT_DELAY,
-        ):
-            self._state = STATE_ALARM_ARMING
-        else:
-            self._state = None
-
-        self._changed_by = event.changed_by

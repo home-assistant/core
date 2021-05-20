@@ -46,7 +46,7 @@ def api_error(error_message: str) -> Callable[[F], F]:
             try:
                 return_value = await func(*args, **kwargs)
             except HassioAPIError as err:
-                raise AddonError(error_message) from err
+                raise AddonError(f"{error_message}: {err}") from err
 
             return return_value
 

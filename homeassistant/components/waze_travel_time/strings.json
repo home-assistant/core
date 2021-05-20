@@ -5,6 +5,7 @@
       "user": {
         "description": "For Origin and Destination, enter the address or the GPS coordinates of the location (GPS coordinates has to be separated by a comma). You can also enter an entity id which provides this information in its state, an entity id with latitude and longitude attributes, or zone friendly name.",
         "data": {
+          "name": "[%key:common::config_flow::data::name%]",
           "origin": "Origin",
           "destination": "Destination",
           "region": "Region"

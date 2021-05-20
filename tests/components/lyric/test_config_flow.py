@@ -109,7 +109,7 @@ async def test_full_flow(
 
     assert DOMAIN in hass.config.components
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.state == config_entries.ENTRY_STATE_LOADED
+    assert entry.state is config_entries.ConfigEntryState.LOADED
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
@@ -160,7 +160,7 @@ async def test_reauthentication_flow(
     old_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "reauth"}, data=old_entry.data
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=old_entry.data
     )
 
     flows = hass.config_entries.flow.async_progress()

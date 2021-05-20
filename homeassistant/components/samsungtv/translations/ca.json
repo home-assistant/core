@@ -7,7 +7,7 @@
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "not_supported": "Actualment aquest televisor Samsung no \u00e9s compatible."
         },
-        "flow_title": "Televisor Samsung: {model}",
+        "flow_title": "{model}",
         "step": {
             "confirm": {
                 "description": "Vols configurar el televisior Samsung {model}? Si mai abans l'has connectat a Home Assistant haur\u00edes de veure una finestra emergent a la pantalla del televisor demanant autenticaci\u00f3. Les configuracions manuals d'aquest televisor es sobreescriuran.",

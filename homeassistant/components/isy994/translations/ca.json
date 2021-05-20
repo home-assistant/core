@@ -9,7 +9,7 @@
             "invalid_host": "L'entrada de l'amfitri\u00f3 no t\u00e9 el fromat d'URL complet, ex: http://192.168.10.100:80",
             "unknown": "Error inesperat"
         },
-        "flow_title": "Dispositius universals ISY994 {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

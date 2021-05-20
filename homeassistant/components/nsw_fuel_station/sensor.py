@@ -81,7 +81,7 @@ class StationPriceSensor(CoordinatorEntity, SensorEntity):
         coordinator: DataUpdateCoordinator[StationPriceData],
         station_id: int,
         fuel_type: str,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 

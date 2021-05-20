@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any, Callable, Dict, List, cast
+from typing import Any, Dict, List, cast
 
 import attr
 from stringcase import snakecase
@@ -15,11 +15,11 @@ from homeassistant.components.device_tracker.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HuaweiLteBaseEntity, Router
 from .const import (
@@ -52,9 +52,9 @@ def _get_hosts(
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
 
@@ -103,7 +103,7 @@ async def async_setup_entry(
     disconnect_dispatcher = async_dispatcher_connect(
         hass, UPDATE_SIGNAL, _async_maybe_add_new_entities
     )
-    router.unload_handlers.append(disconnect_dispatcher)
+    config_entry.async_on_unload(disconnect_dispatcher)
 
     # Add new entities from initial scan
     async_add_new_entities(hass, router.url, async_add_entities, tracked)
@@ -129,9 +129,9 @@ def _is_us(host: _HostType) -> bool:
 
 @callback
 def async_add_new_entities(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     router_url: str,
-    async_add_entities: Callable[[list[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
     tracked: set[str],
 ) -> None:
     """Add new entities that are not already being tracked."""

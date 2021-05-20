@@ -76,7 +76,7 @@ class EntityComponent:
         domain: str,
         hass: HomeAssistant,
         scan_interval: timedelta = DEFAULT_SCAN_INTERVAL,
-    ):
+    ) -> None:
         """Initialize an entity component."""
         self.logger = logger
         self.hass = hass
@@ -246,9 +246,7 @@ class EntityComponent:
                 platform_type, platform, scan_interval, entity_namespace
             )
 
-        await self._platforms[key].async_setup(  # type: ignore
-            platform_config, discovery_info
-        )
+        await self._platforms[key].async_setup(platform_config, discovery_info)
 
     async def _async_reset(self) -> None:
         """Remove entities and reset the entity component to initial values.

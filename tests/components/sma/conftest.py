@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components.sma.const import DOMAIN
 
 from . import MOCK_CUSTOM_SETUP_DATA, MOCK_DEVICE
@@ -18,7 +19,7 @@ def mock_config_entry():
         title=MOCK_DEVICE["name"],
         unique_id=MOCK_DEVICE["serial"],
         data=MOCK_CUSTOM_SETUP_DATA,
-        source="import",
+        source=config_entries.SOURCE_IMPORT,
     )
 
 

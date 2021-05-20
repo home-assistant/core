@@ -152,7 +152,7 @@ class NMBSLiveBoard(SensorEntity):
         """Set the state equal to the next departure."""
         liveboard = self._api_client.get_liveboard(self._station)
 
-        if liveboard is None or not liveboard["departures"]:
+        if liveboard is None or not liveboard.get("departures"):
             return
 
         next_departure = liveboard["departures"]["departure"][0]
@@ -269,7 +269,7 @@ class NMBSSensor(SensorEntity):
             self._station_from, self._station_to
         )
 
-        if connections is None or not connections["connection"]:
+        if connections is None or not connections.get("connection"):
             return
 
         if int(connections["connection"][0]["departure"]["left"]) > 0:

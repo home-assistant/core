@@ -13,6 +13,7 @@ from . import (
     json,
     manifest,
     mqtt,
+    mypy_config,
     requirements,
     services,
     ssdp,
@@ -36,6 +37,7 @@ INTEGRATION_PLUGINS = [
 ]
 HASS_PLUGINS = [
     coverage,
+    mypy_config,
 ]
 
 

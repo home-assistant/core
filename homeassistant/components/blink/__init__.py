@@ -1,5 +1,4 @@
 """Support for Blink Home Camera System."""
-import asyncio
 from copy import deepcopy
 import logging
 
@@ -86,10 +85,7 @@ async def async_setup_entry(hass, entry):
     if not hass.data[DOMAIN][entry.entry_id].available:
         raise ConfigEntryNotReady
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     def blink_refresh(event_time=None):
         """Call blink to refresh info."""
@@ -130,14 +126,7 @@ def _async_import_options_from_data_if_missing(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload Blink entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if not unload_ok:
         return False
