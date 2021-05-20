@@ -6,6 +6,7 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -13,7 +14,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
 from . import NAMDataUpdateCoordinator
-from .const import DOMAIN, SENSORS
+from .const import ATTR_ENABLED, ATTR_LABEL, ATTR_UNIT, ATTR_UPTIME, DOMAIN, SENSORS
 
 PARALLEL_UPDATES = 1
 
@@ -27,7 +28,7 @@ async def async_setup_entry(
     sensors: list[NAMSensor | NAMSensorUptime] = []
     for sensor in SENSORS:
         if sensor in coordinator.data:
-            if sensor == "uptime":
+            if sensor == ATTR_UPTIME:
                 sensors.append(NAMSensorUptime(coordinator, sensor))
             else:
                 sensors.append(NAMSensor(coordinator, sensor))
@@ -49,7 +50,7 @@ class NAMSensor(CoordinatorEntity, SensorEntity):
     @property
     def name(self) -> str:
         """Return the name."""
-        return self._description["label"]
+        return self._description[ATTR_LABEL]
 
     @property
     def state(self) -> Any:
@@ -59,22 +60,22 @@ class NAMSensor(CoordinatorEntity, SensorEntity):
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
-        return self._description["unit"]
+        return self._description[ATTR_UNIT]
 
     @property
     def device_class(self) -> str | None:
         """Return the class of this sensor."""
-        return self._description["device_class"]
+        return self._description[ATTR_DEVICE_CLASS]
 
     @property
     def icon(self) -> str | None:
         """Return the icon."""
-        return self._description["icon"]
+        return self._description[ATTR_ICON]
 
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        return self._description["enabled"]
+        return self._description[ATTR_ENABLED]
 
     @property
     def unique_id(self) -> str:
