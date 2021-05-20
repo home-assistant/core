@@ -12,6 +12,8 @@ from .const import (
     EVENT_TYPE_LIGHT_MODE,
     MANUFACTURER,
     SIGNAL_NAME,
+    WEBHOOK_LIGHT_MODE,
+    WEBHOOK_PUSH_TYPE,
 )
 from .data_handler import CAMERA_DATA_CLASS_NAME, NetatmoDataHandler
 from .netatmo_entity_base import NetatmoBase
@@ -105,7 +107,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
         if (
             data["home_id"] == self._home_id
             and data["camera_id"] == self._id
-            and data["push_type"] == "NOC-light_mode"
+            and data[WEBHOOK_PUSH_TYPE] == WEBHOOK_LIGHT_MODE
         ):
             self._is_on = bool(data["sub_type"] == "on")
 
