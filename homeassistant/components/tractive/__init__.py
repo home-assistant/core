@@ -114,15 +114,13 @@ class TractiveClient:
                     if event["message"] != "tracker_status":
                         continue
 
-                    _LOGGER.debug("Event received. Payload=%s.", event)
-
                     if "hardware" in event:
                         self._send_hardware_update(event)
 
                     if "position" in event:
                         self._send_position_update(event)
             except aiotractive.exceptions.TractiveError:
-                _LOGGER.debug(
+                _LOGGER.info(
                     "Tractive is not available. Internet connection is down? Sleeping %i seconds and retrying",
                     RECONNECT_INTERVAL.total_seconds(),
                 )
@@ -150,9 +148,6 @@ class TractiveClient:
         )
 
     def _dispatch_tracker_event(self, event_name, tracker_id, payload):
-        _LOGGER.debug(
-            "Dispatching event %s-%s payload=%s.", event_name, tracker_id, payload
-        )
         async_dispatcher_send(
             self._hass,
             f"{event_name}-{tracker_id}",

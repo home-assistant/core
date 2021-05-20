@@ -119,11 +119,6 @@ class TractiveDeviceTracker(TrackerEntity):
 
         @callback
         def handle_hardware_status_update(event):
-            _LOGGER.debug(
-                "[%s] Hardware status event received. payload=%s.",
-                self._tracker_id,
-                event,
-            )
             self._battery_level = event["battery_level"]
             self.async_write_ha_state()
 
@@ -137,11 +132,6 @@ class TractiveDeviceTracker(TrackerEntity):
 
         @callback
         def handle_position_update(event):
-            _LOGGER.debug(
-                "[%s] Position updated event received. Payload=%s.",
-                self._tracker_id,
-                event,
-            )
             self._latitude = event["latitude"]
             self._longitude = event["longitude"]
             self._accuracy = event["accuracy"]
@@ -157,7 +147,6 @@ class TractiveDeviceTracker(TrackerEntity):
 
         @callback
         def handle_server_unavailable():
-            _LOGGER.debug("[%s] Server unavailable event received", self._tracker_id)
             self._latitude = None
             self._longitude = None
             self._accuracy = None
