@@ -83,8 +83,8 @@ def compile_statistics(
             result[entity_id]["mean"] = fmean(*itertools.islice(zip(*fstates), 1))
 
         if "sum" in wanted_statistics:
-            old_last_reset = None
-            old_state = None
+            last_reset = old_last_reset = None
+            new_state = old_state = None
             _sum = 0
             last_stats = statistics.get_last_statistics(hass, 1, entity_id)  # type: ignore
             if entity_id in last_stats:
@@ -106,6 +106,11 @@ def compile_statistics(
                     old_state = new_state
                 else:
                     new_state = fstate
+
+            if last_reset is None or new_state is None or old_state is None:
+                # No valid updates
+                result.pop(entity_id)
+                continue
 
             # Update the sum with the last state
             _sum += new_state - old_state

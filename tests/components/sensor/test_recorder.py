@@ -167,8 +167,8 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(zero),
-                "state": 20.0,
-                "sum": 10.0,
+                "state": 130.0,
+                "sum": 20.0,
             },
             {
                 "statistic_id": "sensor.test2",
@@ -177,8 +177,8 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(four),
-                "state": 40.0,
-                "sum": 10.0,
+                "state": 45.0,
+                "sum": -95.0,
             },
             {
                 "statistic_id": "sensor.test2",
@@ -187,8 +187,8 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(four),
-                "state": 70.0,
-                "sum": 40.0,
+                "state": 75.0,
+                "sum": -65.0,
             },
         ],
         "sensor.test3": [
@@ -199,8 +199,8 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(zero),
-                "state": 20.0,
-                "sum": 10.0,
+                "state": 5.0,
+                "sum": 5.0,
             },
             {
                 "statistic_id": "sensor.test3",
@@ -209,8 +209,8 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(four),
-                "state": 40.0,
-                "sum": 10.0,
+                "state": 50.0,
+                "sum": 30.0,
             },
             {
                 "statistic_id": "sensor.test3",
@@ -219,8 +219,8 @@ def test_compile_hourly_energy_statistics2(hass_recorder):
                 "mean": None,
                 "min": None,
                 "last_reset": process_timestamp_to_utc_isoformat(four),
-                "state": 70.0,
-                "sum": 40.0,
+                "state": 90.0,
+                "sum": 70.0,
             },
         ],
     }
@@ -355,6 +355,7 @@ def record_energy_states(hass, _sns1_attr, _sns2_attr, _sns3_attr):
     sns1 = "sensor.test1"
     sns2 = "sensor.test2"
     sns3 = "sensor.test3"
+    sns4 = "sensor.test4"
 
     def set_state(entity_id, state, **kwargs):
         """Set the state."""
@@ -375,27 +376,32 @@ def record_energy_states(hass, _sns1_attr, _sns2_attr, _sns3_attr):
     sns1_attr = {**_sns1_attr, "last_reset": zero.isoformat()}
     sns2_attr = {**_sns2_attr, "last_reset": zero.isoformat()}
     sns3_attr = {**_sns3_attr, "last_reset": zero.isoformat()}
+    sns4_attr = {**_sns3_attr}
 
-    states = {sns1: [], sns2: [], sns3: []}
+    states = {sns1: [], sns2: [], sns3: [], sns4: []}
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=zero):
         states[sns1].append(set_state(sns1, "10", attributes=sns1_attr))  # Sum 0
-        states[sns2].append(set_state(sns2, "10", attributes=sns2_attr))
-        states[sns3].append(set_state(sns3, "10", attributes=sns3_attr))
+        states[sns2].append(set_state(sns2, "110", attributes=sns2_attr))  # Sum 0
+        states[sns3].append(set_state(sns3, "0", attributes=sns3_attr))  # Sum 0
+        states[sns4].append(set_state(sns4, "0", attributes=sns4_attr))  # -
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=one):
         states[sns1].append(set_state(sns1, "15", attributes=sns1_attr))  # Sum 5
-        states[sns2].append(set_state(sns2, "15", attributes=sns2_attr))  # Sum 5
-        states[sns3].append(set_state(sns3, "15", attributes=sns3_attr))  # Sum 5
+        states[sns2].append(set_state(sns2, "120", attributes=sns2_attr))  # Sum 10
+        states[sns3].append(set_state(sns3, "0", attributes=sns3_attr))  # Sum 0
+        states[sns4].append(set_state(sns4, "0", attributes=sns4_attr))  # -
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=two):
         states[sns1].append(set_state(sns1, "20", attributes=sns1_attr))  # Sum 10
-        states[sns2].append(set_state(sns2, "20", attributes=sns2_attr))  # Sum 10
-        states[sns3].append(set_state(sns3, "20", attributes=sns3_attr))  # Sum 10
+        states[sns2].append(set_state(sns2, "130", attributes=sns2_attr))  # Sum 20
+        states[sns3].append(set_state(sns3, "5", attributes=sns3_attr))  # Sum 5
+        states[sns4].append(set_state(sns4, "5", attributes=sns4_attr))  # -
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=three):
         states[sns1].append(set_state(sns1, "10", attributes=sns1_attr))  # Sum 0
-        states[sns2].append(set_state(sns2, "10", attributes=sns2_attr))  # Sum 0
-        states[sns3].append(set_state(sns3, "10", attributes=sns3_attr))  # Sum 0
+        states[sns2].append(set_state(sns2, "0", attributes=sns2_attr))  # Sum -110
+        states[sns3].append(set_state(sns3, "10", attributes=sns3_attr))  # Sum 10
+        states[sns4].append(set_state(sns4, "10", attributes=sns4_attr))  # -
 
     sns1_attr = {**_sns1_attr, "last_reset": four.isoformat()}
     sns2_attr = {**_sns2_attr, "last_reset": four.isoformat()}
@@ -403,28 +409,32 @@ def record_energy_states(hass, _sns1_attr, _sns2_attr, _sns3_attr):
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=four):
         states[sns1].append(set_state(sns1, "30", attributes=sns1_attr))  # Sum 0
-        states[sns2].append(set_state(sns2, "30", attributes=sns2_attr))  # Sum 0
-        states[sns3].append(set_state(sns3, "30", attributes=sns3_attr))  # Sum 0
+        states[sns2].append(set_state(sns2, "30", attributes=sns2_attr))  # Sum -110
+        states[sns3].append(set_state(sns3, "30", attributes=sns3_attr))  # Sum 10
+        states[sns4].append(set_state(sns4, "30", attributes=sns4_attr))  # -
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=five):
         states[sns1].append(set_state(sns1, "40", attributes=sns1_attr))  # Sum 10
-        states[sns2].append(set_state(sns2, "40", attributes=sns2_attr))  # Sum 10
-        states[sns3].append(set_state(sns3, "40", attributes=sns3_attr))  # Sum 10
+        states[sns2].append(set_state(sns2, "45", attributes=sns2_attr))  # Sum -95
+        states[sns3].append(set_state(sns3, "50", attributes=sns3_attr))  # Sum 30
+        states[sns4].append(set_state(sns4, "50", attributes=sns4_attr))  # -
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=six):
         states[sns1].append(set_state(sns1, "50", attributes=sns1_attr))  # Sum 20
-        states[sns2].append(set_state(sns2, "50", attributes=sns2_attr))  # Sum 20
-        states[sns3].append(set_state(sns3, "50", attributes=sns3_attr))  # Sum 20
+        states[sns2].append(set_state(sns2, "55", attributes=sns2_attr))  # Sum -85
+        states[sns3].append(set_state(sns3, "60", attributes=sns3_attr))  # Sum 40
+        states[sns4].append(set_state(sns4, "60", attributes=sns4_attr))  # -
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=seven):
         states[sns1].append(set_state(sns1, "60", attributes=sns1_attr))  # Sum 30
-        states[sns2].append(set_state(sns2, "60", attributes=sns2_attr))  # Sum 30
-        states[sns3].append(set_state(sns3, "60", attributes=sns3_attr))  # Sum 30
+        states[sns2].append(set_state(sns2, "65", attributes=sns2_attr))  # Sum -75
+        states[sns3].append(set_state(sns3, "80", attributes=sns3_attr))  # Sum 60
+        states[sns4].append(set_state(sns4, "80", attributes=sns4_attr))  # -
 
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=eight):
         states[sns1].append(set_state(sns1, "70", attributes=sns1_attr))  # Sum 40
-        states[sns2].append(set_state(sns2, "70", attributes=sns2_attr))  # Sum 40
-        states[sns3].append(set_state(sns3, "70", attributes=sns3_attr))  # Sum 40
+        states[sns2].append(set_state(sns2, "75", attributes=sns2_attr))  # Sum -65
+        states[sns3].append(set_state(sns3, "90", attributes=sns3_attr))  # Sum 70
 
     return zero, four, eight, states
 
