@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import voluptuous as vol
 
@@ -35,7 +34,6 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     MODBUS_DOMAIN,
 )
-from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
@@ -100,10 +98,6 @@ async def async_setup_platform(
 
 class ModbusBinarySensor(BasePlatform, BinarySensorEntity):
     """Modbus binary sensor."""
-
-    def __init__(self, hub: ModbusHub, entry: dict[str, Any]):
-        """Initialize the Modbus binary sensor."""
-        super().__init__(hub, entry)
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
