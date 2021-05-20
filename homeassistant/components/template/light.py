@@ -705,14 +705,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_supports_transition(self, render):
         """Update the supports transition from the template."""
-        try:
-            if render in ("None", ""):
-                self._supports_transition = False
-                return
-            self._supports_transition = bool(render)
-        except ValueError:
-            _LOGGER.error(
-                "Template must supply an boolean value",
-                exc_info=True,
-            )
+        if render in ("None", ""):
             self._supports_transition = False
+            return
+        self._supports_transition = bool(render)
