@@ -5,12 +5,12 @@ import logging
 import socket
 from typing import Any
 
+from pynobo import nobo
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from pynobo import nobo
 
 from ...const import CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_IP_ADDRESS
 from ...exceptions import HomeAssistantError
@@ -43,24 +43,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 serial = user_input.get(CONF_SERIAL)
-                ip = user_input.get(CONF_IP_ADDRESS)
+                ip_address = user_input.get(CONF_IP_ADDRESS)
                 if serial is None or not len(serial) == 12 or not serial.isdigit():
                     raise InvalidSerial()
-                if ip is not None:
+                if ip_address is not None:
                     try:
-                        socket.inet_aton(ip)
+                        socket.inet_aton(ip_address)
                     except OSError:
-                        raise InvalidIP()
+                        raise InvalidIP() from OSError
                 else:
                     for (discovered_ip, serial_prefix) in self.discovered_hubs:
                         if serial.startswith(serial_prefix):
-                            ip = discovered_ip
+                            ip_address = discovered_ip
                             break
-                    if ip is None:
+                    if ip_address is None:
                         raise DeviceNotFound()
                 # Test connection
-                hub = nobo(serial=serial, ip=ip, discover=False, loop=self.hass.loop)
-                if await hub.async_connect_hub(ip, serial):
+                hub = nobo(
+                    serial=serial, ip=ip_address, discover=False, loop=self.hass.loop
+                )
+                if await hub.async_connect_hub(ip_address, serial):
                     await hub.close()
                     await self.async_set_unique_id(serial, raise_on_progress=False)
                     self._abort_if_unique_id_configured(
@@ -69,8 +71,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return self.async_create_entry(
                         title=hub.hub_info["name"], data=user_input
                     )
-                else:
-                    raise CannotConnect()
+                raise CannotConnect()
             except InvalidSerial:
                 errors["base"] = "invalid_serial"
             except InvalidIP:
@@ -99,7 +100,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     def _prefill_identifier(self):
-        for (ip, serial) in self.discovered_hubs:
+        for (_, serial) in self.discovered_hubs:
             return serial + "XXX"
         return ""
 
@@ -146,10 +147,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             )
 
             on_commands = {}
-            for k, v in user_input.items():
-                if k.startswith(CONF_COMMAND_ON + "_zone_") and v != "Default":
-                    zone = k.removeprefix(CONF_COMMAND_ON + "_zone_")
-                    on_commands[hub.zones[zone]["name"].replace("\xa0", " ")] = v
+            for key, value in user_input.items():
+                if key.startswith(CONF_COMMAND_ON + "_zone_") and value != "Default":
+                    zone = key.removeprefix(CONF_COMMAND_ON + "_zone_")
+                    on_commands[hub.zones[zone]["name"].replace("\xa0", " ")] = value
 
             data = {CONF_COMMAND_OFF: off_command, CONF_COMMAND_ON: on_commands}
 
@@ -160,11 +161,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if on_commands is None:
             on_commands = {}
 
-        profileNames = [
+        profile_names = [
             k["name"].replace("\xa0", " ") for k in hub.week_profiles.values()
         ]
-        profileNames.insert(0, "")
-        profiles = vol.Schema(vol.In(profileNames))
+        profile_names.insert(0, "")
+        profiles = vol.Schema(vol.In(profile_names))
 
         schema = vol.Schema(
             {

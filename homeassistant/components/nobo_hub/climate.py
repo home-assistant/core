@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
+from pynobo import nobo
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
@@ -33,7 +34,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-from pynobo import nobo
 
 from .const import DOMAIN, HUB
 
@@ -68,13 +68,13 @@ async def async_setup_platform(
     """Set up the Nobø Ecohub platform from configuration.yaml."""
 
     serial = config.get(CONF_HOST)
-    ip = config.get(CONF_IP_ADDRESS)
-    if ip == "discover":
+    ip_address = config.get(CONF_IP_ADDRESS)
+    if ip_address == "discover":
         _LOGGER.debug("discovering and connecting to %s", serial)
         hub = nobo(serial=serial)
     else:
-        _LOGGER.debug("connecting to %s:%s", ip, serial)
-        hub = nobo(serial=serial, ip=ip, discover=False)
+        _LOGGER.debug("connecting to %s:%s", ip_address, serial)
+        hub = nobo(serial=serial, ip=ip_address, discover=False)
     return await _setup(hass, config, async_add_entities, hub)
 
 
@@ -125,34 +125,7 @@ async def _setup(
                     "Not possible to turn on any zone, because ON week profile was not specified"
                 )
             else:
-                for zone_id, zone in hub.zones.items():
-                    zone_name = zone["name"].replace("\xa0", " ")
-                    if zone_name in command_on_dict:
-                        command_on_name = command_on_dict[zone_name]
-                        if command_on_name is None or command_on_name == "":
-                            _LOGGER.warning(
-                                "Can not turn on (or off) zone '%s', because ON week profile was not specified",
-                                zone_name,
-                            )
-                        else:
-                            command_on_id = _get_id_from_name(
-                                command_on_name, hub.week_profiles
-                            )
-                            if command_on_id is None or command_on_id == "":
-                                _LOGGER.warning(
-                                    "Can not turn on (or off) zone '%s', because ON week profile '%s' was not found",
-                                    zone_name,
-                                    command_on_name,
-                                )
-                            else:
-                                _LOGGER.debug(
-                                    "To turn on heater %s '%s', week profile %s '%s' will be used",
-                                    zone_id,
-                                    zone_name,
-                                    command_on_id,
-                                    command_on_name,
-                                )
-                                command_on_by_id[zone_id] = command_on_id
+                _set_on_commands(command_on_by_id, command_on_dict, hub)
 
     # Add devices
     async_add_devices(
@@ -163,6 +136,35 @@ async def _setup(
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hub.stop)
 
     return True
+
+
+def _set_on_commands(command_on_by_id, command_on_dict, hub):
+    for zone_id, zone in hub.zones.items():
+        zone_name = zone["name"].replace("\xa0", " ")
+        if zone_name in command_on_dict:
+            command_on_name = command_on_dict[zone_name]
+            if command_on_name is None or command_on_name == "":
+                _LOGGER.warning(
+                    "Can not turn on (or off) zone '%s', because ON week profile was not specified",
+                    zone_name,
+                )
+            else:
+                command_on_id = _get_id_from_name(command_on_name, hub.week_profiles)
+                if command_on_id is None or command_on_id == "":
+                    _LOGGER.warning(
+                        "Can not turn on (or off) zone '%s', because ON week profile '%s' was not found",
+                        zone_name,
+                        command_on_name,
+                    )
+                else:
+                    _LOGGER.debug(
+                        "To turn on heater %s '%s', week profile %s '%s' will be used",
+                        zone_id,
+                        zone_name,
+                        command_on_id,
+                        command_on_name,
+                    )
+                    command_on_by_id[zone_id] = command_on_id
 
 
 def _get_id_from_name(name, dictionary):
@@ -176,11 +178,11 @@ def _get_id_from_name(name, dictionary):
 class NoboZone(ClimateEntity):
     """Representation of a Nobø zone. A Nobø zone consists of a group of physical devices that are controlled as a unity."""
 
-    def __init__(self, id, hub: nobo, command_off_id, command_on_id):
+    def __init__(self, zone_id, hub: nobo, command_off_id, command_on_id):
         """Initialize the climate device."""
-        self._id = id
+        self._id = zone_id
         self._nobo = hub
-        self._unique_id = hub.hub_serial + ":" + id
+        self._unique_id = hub.hub_serial + ":" + zone_id
         self._name = self._nobo.zones[self._id]["name"]
         self._current_mode = HVAC_MODE_AUTO
         self._command_off_id = command_off_id
@@ -246,8 +248,7 @@ class NoboZone(ClimateEntity):
         # Only enable off-command if on- and off-command exists for this zone:
         if self.can_turn_off():
             return HVAC_MODES
-        else:
-            return HVAC_MODES_WITHOUT_OFF
+        return HVAC_MODES_WITHOUT_OFF
 
     @property
     def hvac_mode(self):
@@ -306,8 +307,8 @@ class NoboZone(ClimateEntity):
             # When switching between AUTO and OFF an immediate update does not work (the Nobø API seems to answer with old values), but it works if we add a short delay:
             await asyncio.sleep(0.5)
         elif hvac_mode == HVAC_MODE_OFF:
-            _LOGGER.error(
-                "User tried to turn off zone %s '%s', but this is not configured so this should be impossible.",
+            _LOGGER.warning(
+                "User tried to turn off zone %s '%s', but this is not configured so this should be impossible",
                 self._id,
                 self._name,
             )
@@ -366,14 +367,14 @@ class NoboZone(ClimateEntity):
             self._current_operation = PRESET_COMFORT
 
         if self._nobo.zones[self._id]["override_allowed"] == "1":
-            for o in self._nobo.overrides:
-                if self._nobo.overrides[o]["mode"] == "0":
+            for override in self._nobo.overrides:
+                if self._nobo.overrides[override]["mode"] == "0":
                     continue  # "normal" overrides
-                elif (
-                    self._nobo.overrides[o]["target_type"]
+                if (
+                    self._nobo.overrides[override]["target_type"]
                     == self._nobo.API.OVERRIDE_TARGET_ZONE
                 ):
-                    if self._nobo.overrides[o]["target_id"] == self._id:
+                    if self._nobo.overrides[override]["target_id"] == self._id:
                         self._current_mode = HVAC_MODE_HEAT
 
         self._current_temperature = self._nobo.get_current_zone_temperature(self._id)
