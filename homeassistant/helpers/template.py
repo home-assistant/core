@@ -175,7 +175,7 @@ class TupleWrapper(tuple, ResultWrapper):
 
     # pylint: disable=super-init-not-called
 
-    def __init__(self, value: tuple, *, render_result: str | None = None):
+    def __init__(self, value: tuple, *, render_result: str | None = None) -> None:
         """Initialize a new tuple class."""
         self.render_result = render_result
 

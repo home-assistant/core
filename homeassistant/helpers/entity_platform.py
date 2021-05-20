@@ -85,7 +85,7 @@ class EntityPlatform:
         platform: ModuleType | None,
         scan_interval: timedelta,
         entity_namespace: str | None,
-    ):
+    ) -> None:
         """Initialize the entity platform."""
         self.hass = hass
         self.logger = logger
