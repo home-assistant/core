@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE,
     CONF_NAME,
-    CONF_PORT,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     POWER_WATT,
@@ -66,23 +65,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-async def async_setup_entry(hass, config, async_add_entities) -> None:
+async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     """Set up aurora_abb_powerone sensor based on a config entry."""
     entities = []
-
-    comport = config.data[CONF_PORT]
-    address = config.data[CONF_ADDRESS]
-    client = AuroraSerialClient(address, comport, parity="N", timeout=1)
 
     sensortypes = [
         {"parameter": "instantaneouspower", "name": "Power Output"},
         {"parameter": "temperature", "name": "Temperature"},
     ]
+    client = hass.data[DOMAIN][config_entry.unique_id]
 
     for sens in sensortypes:
-        entities.append(AuroraSensor(client, config, sens["name"], sens["parameter"]))
-
-    hass.data[DOMAIN][config.entry_id] = {"client": client}
+        entities.append(
+            AuroraSensor(client, config_entry, sens["name"], sens["parameter"])
+        )
 
     _LOGGER.debug("async_setup_entry adding %d entities", len(entities))
     async_add_entities(entities, True)

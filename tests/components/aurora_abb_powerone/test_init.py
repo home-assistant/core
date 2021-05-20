@@ -2,6 +2,8 @@
 from unittest.mock import patch
 
 from homeassistant.components.aurora_abb_powerone.const import (
+    ATTR_FIRMWARE,
+    ATTR_MODEL,
     ATTR_SERIAL_NUMBER,
     DOMAIN,
 )
@@ -23,7 +25,9 @@ async def test_unload_entry(hass):
             data={
                 CONF_PORT: "/dev/ttyUSB7",
                 CONF_ADDRESS: 7,
+                ATTR_MODEL: "model123",
                 ATTR_SERIAL_NUMBER: "876",
+                ATTR_FIRMWARE: "1.2.3.4",
             },
         )
         mock_entry.add_to_hass(hass)
