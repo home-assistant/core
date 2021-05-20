@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     DOMAIN,
@@ -255,8 +256,8 @@ class Illuminance(Sensor):
 class SmartEnergyMetering(Sensor):
     """Metering sensor."""
 
-    SENSOR_ATTR = "instantaneous_demand"
-    _device_class = DEVICE_CLASS_POWER
+    SENSOR_ATTR = "current_summ_delivered"
+    _device_class = DEVICE_CLASS_ENERGY
 
     def formatter(self, value: int) -> int | float:
         """Pass through channel formatter."""
