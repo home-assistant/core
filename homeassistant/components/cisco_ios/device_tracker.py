@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as PLATFORM_SCHEMA_BASE,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA_BASE.extend(
+    PARENT_PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_HOST): cv.string,
             vol.Required(CONF_USERNAME): cv.string,

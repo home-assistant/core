@@ -8,7 +8,7 @@ import pygatt
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as PLATFORM_SCHEMA_BASE,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
 )
 from homeassistant.components.device_tracker.const import (
     CONF_SCAN_INTERVAL,
@@ -38,7 +38,7 @@ DATA_BLE_ADAPTER = "ADAPTER"
 BLE_PREFIX = "BLE_"
 MIN_SEEN_NEW = 5
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA_BASE.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_TRACK_BATTERY, default=False): cv.boolean,
         vol.Optional(

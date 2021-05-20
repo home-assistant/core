@@ -5,7 +5,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as PLATFORM_SCHEMA_BASE,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SOURCE_TYPE_ROUTER,
 )
 from homeassistant.components.http import HomeAssistantView
@@ -22,7 +22,7 @@ VERSION = "2.0"
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA_BASE.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_VALIDATOR): cv.string, vol.Required(CONF_SECRET): cv.string}
 )
 
