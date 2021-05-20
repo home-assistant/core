@@ -31,6 +31,9 @@ from .const import (
     SERVICE_SET_PERSON_AWAY,
     SERVICE_SET_PERSONS_HOME,
     SIGNAL_NAME,
+    WEBHOOK_LIGHT_MODE,
+    WEBHOOK_NACAMERA_CONNECTION,
+    WEBHOOK_PUSH_TYPE,
 )
 from .data_handler import CAMERA_DATA_CLASS_NAME
 from .netatmo_entity_base import NetatmoBase
@@ -158,13 +161,16 @@ class NetatmoCamera(NetatmoBase, Camera):
             return
 
         if data["home_id"] == self._home_id and data["camera_id"] == self._id:
-            if data["push_type"] in ["NACamera-off", "NACamera-disconnection"]:
+            if data[WEBHOOK_PUSH_TYPE] in ["NACamera-off", "NACamera-disconnection"]:
                 self.is_streaming = False
                 self._status = "off"
-            elif data["push_type"] in ["NACamera-on", "NACamera-connection"]:
+            elif data[WEBHOOK_PUSH_TYPE] in [
+                "NACamera-on",
+                WEBHOOK_NACAMERA_CONNECTION,
+            ]:
                 self.is_streaming = True
                 self._status = "on"
-            elif data["push_type"] == "NOC-light_mode":
+            elif data[WEBHOOK_PUSH_TYPE] == WEBHOOK_LIGHT_MODE:
                 self._light_state = data["sub_type"]
 
             self.async_write_ha_state()
@@ -176,8 +182,10 @@ class NetatmoCamera(NetatmoBase, Camera):
             return await self._data.async_get_live_snapshot(camera_id=self._id)
         except (
             aiohttp.ClientPayloadError,
-            pyatmo.exceptions.ApiError,
             aiohttp.ContentTypeError,
+            aiohttp.ServerDisconnectedError,
+            aiohttp.ClientConnectorError,
+            pyatmo.exceptions.ApiError,
         ) as err:
             _LOGGER.debug("Could not fetch live camera image (%s)", err)
         return None
