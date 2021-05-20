@@ -32,7 +32,7 @@ async def async_setup_entry(
 class EsphomeCamera(Camera, EsphomeBaseEntity):
     """A camera implementation for ESPHome."""
 
-    def __init__(self, entry_id: str, component_key: str, key: int):
+    def __init__(self, entry_id: str, component_key: str, key: int) -> None:
         """Initialize."""
         Camera.__init__(self)
         EsphomeBaseEntity.__init__(self, entry_id, component_key, key)
