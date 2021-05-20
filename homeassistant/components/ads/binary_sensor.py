@@ -1,9 +1,8 @@
 """Support for ADS binary sensors."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOVING,
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
     BinarySensorEntity,
@@ -12,8 +11,6 @@ from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE, AdsEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "ADS binary sensor"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -43,7 +40,7 @@ class AdsBinarySensor(AdsEntity, BinarySensorEntity):
     def __init__(self, ads_hub, name, ads_var, device_class):
         """Initialize ADS binary sensor."""
         super().__init__(ads_hub, name, ads_var)
-        self._device_class = device_class or "moving"
+        self._device_class = device_class or DEVICE_CLASS_MOVING
 
     async def async_added_to_hass(self):
         """Register device notification."""

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "no_stations": "No s'han trobat estacions de control d'inundacions."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "station": "Estaci\u00f3"
+                },
+                "description": "Selecciona l'estaci\u00f3 a monitoritzar",
+                "title": "Seguiment d'estaci\u00f3 de control d'inundacions"
+            }
+        }
+    }
+}

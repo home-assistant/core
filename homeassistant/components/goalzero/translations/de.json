@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_host": "Ung\u00fcltiger Hostname oder IP Adresse",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name"
+                },
+                "description": "Zun\u00e4chst musst du die Goal Zero App herunterladen: https://www.goalzero.com/product-features/yeti-app/\n\nFolge den Anweisungen, um deinen Yeti mit deinem Wifi-Netzwerk zu verbinden. Bekomme dann die Host-IP von deinem Router. DHCP muss in den Router-Einstellungen f\u00fcr das Ger\u00e4t richtig eingerichtet werden, um sicherzustellen, dass sich die Host-IP nicht \u00e4ndert. Schaue hierzu im Benutzerhandbuch deines Routers nach."
+            }
+        }
+    }
+}

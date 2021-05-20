@@ -71,7 +71,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except OSError as msg:
         # occurs if horizon box is offline
         _LOGGER.error("Connection to %s at %s failed: %s", name, host, msg)
-        raise PlatformNotReady
+        raise PlatformNotReady from msg
 
     _LOGGER.info("Connection to %s at %s established", name, host)
 
@@ -184,9 +184,7 @@ class HorizonDevice(MediaPlayerEntity):
             elif channel:
                 self._client.select_channel(channel)
         except OSError as msg:
-            _LOGGER.error(
-                "%s disconnected: %s. Trying to reconnect...", self._name, msg
-            )
+            _LOGGER.error("%s disconnected: %s. Trying to reconnect", self._name, msg)
 
             # for reconnect, first gracefully disconnect
             self._client.disconnect()

@@ -99,15 +99,15 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
         """Return the user the last change was triggered by."""
         return self._changed_by
 
-    def alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        status = self._client.alarm_disarm(self._home_id)
+        status = await self._client.async_alarm_disarm(self._home_id)
         if status:
             self._home["alarm_status"] = "off"
 
-    def alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        status = self._client.alarm_arm(self._home_id)
+        status = await self._client.async_alarm_arm(self._home_id)
         if status:
             self._home["alarm_status"] = "on"
 

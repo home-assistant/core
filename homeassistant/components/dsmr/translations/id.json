@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Interval minimum pembaruan entitas (dalam detik)"
+                },
+                "title": "Opsi DSMR"
+            }
+        }
+    }
+}

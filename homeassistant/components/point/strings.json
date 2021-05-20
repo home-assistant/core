@@ -23,7 +23,7 @@
       "external_setup": "Point successfully configured from another flow.",
       "no_flows": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
-      "authorize_url_fail": "Unknown error generating an authorize url."
+      "unknown_authorize_url_generation": "[%key:common::config_flow::abort::unknown_authorize_url_generation%]"
     }
   }
 }

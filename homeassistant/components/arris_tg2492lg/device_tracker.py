@@ -1,6 +1,5 @@
 """Support for Arris TG2492LG router."""
-import logging
-from typing import List
+from __future__ import annotations
 
 from arris_tg2492lg import ConnectBox, Device
 import voluptuous as vol
@@ -12,8 +11,6 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = "192.168.178.1"
 
@@ -39,7 +36,7 @@ class ArrisDeviceScanner(DeviceScanner):
     def __init__(self, connect_box: ConnectBox):
         """Initialize the scanner."""
         self.connect_box = connect_box
-        self.last_results: List[Device] = []
+        self.last_results: list[Device] = []
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""

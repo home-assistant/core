@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno"
+        },
+        "error": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Jm\u00e9no tohoto p\u0159ipojen\u00ed velbus"
+                }
+            }
+        }
+    }
+}

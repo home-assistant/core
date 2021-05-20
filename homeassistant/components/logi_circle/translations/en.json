@@ -1,18 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_setup": "You can only configure a single Logi Circle account.",
+            "already_configured": "Account is already configured",
             "external_error": "Exception occurred from another flow.",
             "external_setup": "Logi Circle successfully configured from another flow.",
-            "no_flows": "You need to configure Logi Circle before being able to authenticate with it. [Please read the instructions](https://www.home-assistant.io/components/logi_circle/)."
-        },
-        "create_entry": {
-            "default": "Successfully authenticated with Logi Circle."
+            "missing_configuration": "The component is not configured. Please follow the documentation."
         },
         "error": {
-            "auth_error": "API authorization failed.",
-            "auth_timeout": "Authorization timed out when requesting access token.",
-            "follow_link": "Please follow the link and authenticate before pressing Submit."
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "follow_link": "Please follow the link and authenticate before pressing Submit.",
+            "invalid_auth": "Invalid authentication"
         },
         "step": {
             "auth": {

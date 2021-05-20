@@ -34,7 +34,9 @@ async def test_list(hass, hass_ws_client, hass_admin_user):
 
     owner.credentials.append(
         auth_models.Credentials(
-            auth_provider_type="homeassistant", auth_provider_id=None, data={}
+            auth_provider_type="homeassistant",
+            auth_provider_id=None,
+            data={"username": "test-owner"},
         )
     )
 
@@ -46,7 +48,9 @@ async def test_list(hass, hass_ws_client, hass_admin_user):
         id="hij", name="Inactive User", is_active=False, groups=[group]
     ).add_to_hass(hass)
 
-    refresh_token = await hass.auth.async_create_refresh_token(owner, CLIENT_ID)
+    refresh_token = await hass.auth.async_create_refresh_token(
+        owner, CLIENT_ID, credential=owner.credentials[0]
+    )
     access_token = hass.auth.async_create_access_token(refresh_token)
 
     client = await hass_ws_client(hass, access_token)
@@ -58,15 +62,17 @@ async def test_list(hass, hass_ws_client, hass_admin_user):
     assert len(data) == 4
     assert data[0] == {
         "id": hass_admin_user.id,
+        "username": "admin",
         "name": "Mock User",
         "is_owner": False,
         "is_active": True,
         "system_generated": False,
         "group_ids": [group.id for group in hass_admin_user.groups],
-        "credentials": [],
+        "credentials": [{"type": "homeassistant"}],
     }
     assert data[1] == {
         "id": owner.id,
+        "username": "test-owner",
         "name": "Test Owner",
         "is_owner": True,
         "is_active": True,
@@ -76,6 +82,7 @@ async def test_list(hass, hass_ws_client, hass_admin_user):
     }
     assert data[2] == {
         "id": system.id,
+        "username": None,
         "name": "Test Hass.io",
         "is_owner": False,
         "is_active": True,
@@ -85,6 +92,7 @@ async def test_list(hass, hass_ws_client, hass_admin_user):
     }
     assert data[3] == {
         "id": inactive.id,
+        "username": None,
         "name": "Inactive User",
         "is_owner": False,
         "is_active": False,
@@ -279,3 +287,76 @@ async def test_update_system_generated(hass, hass_ws_client):
     assert not result["success"], result
     assert result["error"]["code"] == "cannot_modify_system_generated"
     assert user.name == "Test user"
+
+
+async def test_deactivate(hass, hass_ws_client):
+    """Test deactivation and reactivation of regular user."""
+    client = await hass_ws_client(hass)
+
+    user = await hass.auth.async_create_user("Test user")
+    assert user.is_active is True
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/auth/update",
+            "user_id": user.id,
+            "name": "Updated name",
+            "is_active": False,
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["success"], result
+    data_user = result["result"]["user"]
+    assert data_user["is_active"] is False
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "config/auth/update",
+            "user_id": user.id,
+            "name": "Updated name",
+            "is_active": True,
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["success"], result
+    data_user = result["result"]["user"]
+    assert data_user["is_active"] is True
+
+
+async def test_deactivate_owner(hass, hass_ws_client):
+    """Test that owner cannot be deactivated."""
+    user = MockUser(id="abc", name="Test Owner", is_owner=True).add_to_hass(hass)
+
+    assert user.is_active is True
+    assert user.is_owner is True
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 5, "type": "config/auth/update", "user_id": user.id, "is_active": False}
+    )
+
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "cannot_deactivate_owner"
+
+
+async def test_deactivate_system_generated(hass, hass_ws_client):
+    """Test that owner cannot be deactivated."""
+    client = await hass_ws_client(hass)
+
+    user = await hass.auth.async_create_system_user("Test user")
+    assert user.is_active is True
+    assert user.system_generated is True
+    assert user.is_owner is False
+
+    await client.send_json(
+        {"id": 5, "type": "config/auth/update", "user_id": user.id, "is_active": False}
+    )
+
+    result = await client.receive_json()
+    assert not result["success"], result
+    assert result["error"]["code"] == "cannot_modify_system_generated"

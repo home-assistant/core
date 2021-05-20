@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "access_token": "Neznana napaka pri ustvarjanju \u017eetona za dostop.",
-            "already_setup": "Ra\u010dun Ambiclimate je konfiguriran.",
-            "no_config": "Ambiclimate morate konfigurirati, preden lahko z njo preverjate pristnost. [Preberite navodila] (https://www.home-assistant.io/components/ambiclimate/)."
+            "access_token": "Neznana napaka pri ustvarjanju \u017eetona za dostop."
         },
         "create_entry": {
             "default": "Uspe\u0161no overjeno z funkcijo Ambiclimate"

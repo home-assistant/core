@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Nastavite lahko samo en ra\u010dun Somfy.",
             "authorize_url_timeout": "\u010casovna omejitev za generiranje potrditvenega URL-ja je potekla.",
             "missing_configuration": "Komponenta Somfy ni konfigurirana. Upo\u0161tevajte dokumentacijo."
         },

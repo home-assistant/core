@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "invalid_place_or_service_id": "ID luogo o servizio non valido"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "place_id": "ID luogo",
+                    "service_id": "ID servizio"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "friendly_name": "Usa nomi descrittivi per i tipi di ritiro (quando possibile)"
+                },
+                "title": "Configura la raccolta dei rifiuti"
+            }
+        }
+    }
+}

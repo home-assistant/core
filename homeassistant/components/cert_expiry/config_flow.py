@@ -6,14 +6,14 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .const import DEFAULT_PORT, DOMAIN  # pylint: disable=unused-import
+from .const import DEFAULT_PORT, DOMAIN
 from .errors import (
     ConnectionRefused,
     ConnectionTimeout,
     ResolveFailed,
     ValidationFailure,
 )
-from .helper import get_cert_time_to_expiry
+from .helper import get_cert_expiry_timestamp
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +22,6 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -31,7 +30,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _test_connection(self, user_input=None):
         """Test connection to the server and try to get the certificate."""
         try:
-            await get_cert_time_to_expiry(
+            await get_cert_expiry_timestamp(
                 self.hass,
                 user_input[CONF_HOST],
                 user_input.get(CONF_PORT, DEFAULT_PORT),
@@ -60,11 +59,10 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title_port = f":{port}" if port != DEFAULT_PORT else ""
                 title = f"{host}{title_port}"
                 return self.async_create_entry(
-                    title=title, data={CONF_HOST: host, CONF_PORT: port},
+                    title=title,
+                    data={CONF_HOST: host, CONF_PORT: port},
                 )
-            if (  # pylint: disable=no-member
-                self.context["source"] == config_entries.SOURCE_IMPORT
-            ):
+            if self.context["source"] == config_entries.SOURCE_IMPORT:
                 _LOGGER.error("Config import failed for %s", user_input[CONF_HOST])
                 return self.async_abort(reason="import_failed")
         else:

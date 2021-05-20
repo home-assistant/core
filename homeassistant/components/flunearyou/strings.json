@@ -3,13 +3,18 @@
     "step": {
       "user": {
         "title": "Configure Flu Near You",
-        "description": "Monitor user-based and CDC repots for a pair of coordinates.",
-        "data": { "latitude": "Latitude", "longitude": "Longitude" }
+        "description": "Monitor user-based and CDC reports for a pair of coordinates.",
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
+        }
       }
     },
-    "error": { "general_error": "There was an unknown error." },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "abort": {
-      "already_configured": "These coordinates are already registered."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     }
   }
 }

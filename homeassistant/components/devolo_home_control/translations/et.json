@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto on juba seadistatud"
+        },
+        "error": {
+            "invalid_auth": "Tuvastamise viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Salas\u00f5na",
+                    "username": "E-post / devolo ID"
+                }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Salas\u00f5na",
+                    "username": "E-post / devolo ID"
+                }
+            }
+        }
+    }
+}

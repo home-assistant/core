@@ -1,9 +1,9 @@
 {
     "config": {
         "error": {
-            "communication_error": "Nelze komunikovat s Luftdaten API",
-            "invalid_sensor": "Senzor nen\u00ed k dispozici nebo je neplatn\u00fd",
-            "sensor_exists": "Senzor je ji\u017e zaregistrov\u00e1n"
+            "already_configured": "Slu\u017eba je ji\u017e nastavena",
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "invalid_sensor": "Senzor nen\u00ed k dispozici nebo je neplatn\u00fd"
         },
         "step": {
             "user": {

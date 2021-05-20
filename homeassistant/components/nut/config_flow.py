@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import (
     CONF_ALIAS,
+    CONF_BASE,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -21,12 +22,12 @@ from .const import (
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
     KEY_STATUS,
     KEY_STATUS_DISPLAY,
     SENSOR_NAME,
     SENSOR_TYPES,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,14 +37,22 @@ SENSOR_DICT = {
     for sensor_id, sensor_spec in SENSOR_TYPES.items()
 }
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): str,
-    }
-)
+
+def _base_schema(discovery_info):
+    """Generate base schema."""
+    base_schema = {}
+    if not discovery_info:
+        base_schema.update(
+            {
+                vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+            }
+        )
+    base_schema.update(
+        {vol.Optional(CONF_USERNAME): str, vol.Optional(CONF_PASSWORD): str}
+    )
+
+    return vol.Schema(base_schema)
 
 
 def _resource_schema_base(available_resources, selected_resources):
@@ -75,7 +84,7 @@ def _ups_schema(ups_list):
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
-    Data has the keys from DATA_SCHEMA with values provided by the user.
+    Data has the keys from _base_schema with values provided by the user.
     """
 
     host = data[CONF_HOST]
@@ -107,35 +116,36 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Network UPS Tools (NUT)."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize the nut config flow."""
         self.nut_config = {}
         self.available_resources = {}
+        self.discovery_info = {}
         self.ups_list = None
         self.title = None
 
-    async def async_step_import(self, user_input=None):
-        """Handle the import."""
-        errors = {}
-        if user_input is not None:
-            if self._host_port_alias_already_configured(user_input):
-                return self.async_abort(reason="already_configured")
-            _, errors = await self._async_validate_or_error(user_input)
-
-            if not errors:
-                title = _format_host_port_alias(user_input)
-                return self.async_create_entry(title=title, data=user_input)
-
-        return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
-        )
+    async def async_step_zeroconf(self, discovery_info):
+        """Prepare configuration for a discovered nut device."""
+        self.discovery_info = discovery_info
+        await self._async_handle_discovery_without_unique_id()
+        self.context["title_placeholders"] = {
+            CONF_PORT: discovery_info.get(CONF_PORT, DEFAULT_PORT),
+            CONF_HOST: discovery_info[CONF_HOST],
+        }
+        return await self.async_step_user()
 
     async def async_step_user(self, user_input=None):
         """Handle the user input."""
         errors = {}
         if user_input is not None:
+            if self.discovery_info:
+                user_input.update(
+                    {
+                        CONF_HOST: self.discovery_info[CONF_HOST],
+                        CONF_PORT: self.discovery_info.get(CONF_PORT, DEFAULT_PORT),
+                    }
+                )
             info, errors = await self._async_validate_or_error(user_input)
 
             if not errors:
@@ -150,7 +160,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_resources()
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=_base_schema(self.discovery_info), errors=errors
         )
 
     async def async_step_ups(self, user_input=None):
@@ -167,7 +177,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_resources()
 
         return self.async_show_form(
-            step_id="ups", data_schema=_ups_schema(self.ups_list), errors=errors,
+            step_id="ups",
+            data_schema=_ups_schema(self.ups_list),
+            errors=errors,
         )
 
     async def async_step_resources(self, user_input=None):
@@ -189,6 +201,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         existing_host_port_aliases = {
             _format_host_port_alias(entry.data)
             for entry in self._async_current_entries()
+            if CONF_HOST in entry.data
         }
         return _format_host_port_alias(user_input) in existing_host_port_aliases
 
@@ -198,10 +211,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             info = await validate_input(self.hass, config)
         except CannotConnect:
-            errors["base"] = "cannot_connect"
+            errors[CONF_BASE] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
+            errors[CONF_BASE] = "unknown"
         return info, errors
 
     @staticmethod
@@ -214,7 +227,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for nut."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
@@ -228,7 +241,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
         )
 
-        info = await validate_input(self.hass, self.config_entry.data)
+        errors = {}
+        try:
+            info = await validate_input(self.hass, self.config_entry.data)
+        except CannotConnect:
+            errors[CONF_BASE] = "cannot_connect"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors[CONF_BASE] = "unknown"
+
+        if errors:
+            return self.async_show_form(step_id="abort", errors=errors)
 
         base_schema = _resource_schema_base(info["available_resources"], resources)
         base_schema[
@@ -236,8 +259,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         ] = cv.positive_int
 
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(base_schema),
+            step_id="init", data_schema=vol.Schema(base_schema), errors=errors
         )
+
+    async def async_step_abort(self, user_input=None):
+        """Abort options flow."""
+        return self.async_create_entry(title="", data=self.config_entry.options)
 
 
 class CannotConnect(exceptions.HomeAssistantError):

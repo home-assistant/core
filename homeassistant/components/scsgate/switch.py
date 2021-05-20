@@ -42,7 +42,7 @@ def _setup_traditional_switches(logger, config, scsgate, add_entities_callback):
     switches = []
 
     if traditional:
-        for _, entity_info in traditional.items():
+        for entity_info in traditional.values():
             if entity_info[CONF_SCS_ID] in scsgate.devices:
                 continue
 
@@ -65,7 +65,7 @@ def _setup_scenario_switches(logger, config, scsgate, hass):
     scenario = config.get(CONF_SCENARIO)
 
     if scenario:
-        for _, entity_info in scenario.items():
+        for entity_info in scenario.values():
             if entity_info[CONF_SCS_ID] in scsgate.devices:
                 continue
 

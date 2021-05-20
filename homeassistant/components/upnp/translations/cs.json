@@ -1,9 +1,21 @@
 {
     "config": {
         "abort": {
-            "already_configured": "UPnP/IGD je ji\u017e nakonfigurov\u00e1no",
-            "no_devices_discovered": "Nebyly zji\u0161t\u011bny \u017e\u00e1dn\u00e9 UPnP/IGD",
-            "no_devices_found": "V s\u00edti nejsou nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed UPnP/IGD."
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno",
+            "incomplete_discovery": "Ne\u00fapln\u00e9 objevov\u00e1n\u00ed",
+            "no_devices_found": "V s\u00edti nebyla nalezena \u017e\u00e1dn\u00e1 za\u0159\u00edzen\u00ed"
+        },
+        "flow_title": "UPnP/IGD: {name}",
+        "step": {
+            "ssdp_confirm": {
+                "description": "Chcete nastavit toto za\u0159\u00edzen\u00ed UPnP/IGD?"
+            },
+            "user": {
+                "data": {
+                    "scan_interval": "Interval aktualizace (v sekund\u00e1ch, minim\u00e1ln\u011b 30)",
+                    "usn": "Za\u0159\u00edzen\u00ed"
+                }
+            }
         }
     }
 }

@@ -4,7 +4,7 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar, torna-ho a provar",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "unknown": "Error inesperat"
         },
         "step": {
@@ -33,6 +33,10 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "unknown": "Error inesperat"
+        },
         "step": {
             "init": {
                 "data": {

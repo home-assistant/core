@@ -3,6 +3,7 @@
   "name": "Amazon Alexa",
   "documentation": "https://www.home-assistant.io/integrations/alexa",
   "dependencies": ["http"],
-  "after_dependencies": ["logbook", "camera"],
-  "codeowners": ["@home-assistant/cloud", "@ochlocracy"]
+  "after_dependencies": ["camera"],
+  "codeowners": ["@home-assistant/cloud", "@ochlocracy"],
+  "iot_class": "cloud_push"
 }

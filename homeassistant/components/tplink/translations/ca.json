@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "No s'han trobat dispositius TP-Link a la xarxa.",
-            "single_instance_allowed": "Nom\u00e9s cal una \u00fanica configuraci\u00f3."
+            "no_devices_found": "No s'han trobat dispositius a la xarxa",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "step": {
             "confirm": {

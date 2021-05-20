@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "DirecTV: {name}",
+    "flow_title": "{name}",
     "step": {
       "ssdp_confirm": {
         "data": {},
@@ -17,7 +17,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "unknown": "Unexpected error"
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }
 }

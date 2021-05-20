@@ -1,6 +1,5 @@
 """Support for monitoring juicenet/juicepoint/juicebox based EVSE sensors."""
-import logging
-
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_WATT_HOUR,
@@ -9,12 +8,9 @@ from homeassistant.const import (
     TIME_SECONDS,
     VOLT,
 )
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
 from .entity import JuiceNetDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     "status": ["Charging Status", None],
@@ -40,7 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class JuiceNetSensorDevice(JuiceNetDevice, Entity):
+class JuiceNetSensorDevice(JuiceNetDevice, SensorEntity):
     """Implementation of a JuiceNet sensor."""
 
     def __init__(self, device, sensor_type, coordinator):
@@ -75,7 +71,7 @@ class JuiceNetSensorDevice(JuiceNetDevice, Entity):
         elif self.type == "watts":
             icon = "mdi:flash"
         elif self.type == "charge_time":
-            icon = "mdi:timer"
+            icon = "mdi:timer-outline"
         elif self.type == "energy_added":
             icon = "mdi:flash"
         return icon

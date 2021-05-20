@@ -30,9 +30,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     try:
         plug = _MyStromSwitch(host)
         await plug.get_state()
-    except MyStromConnectionError:
+    except MyStromConnectionError as err:
         _LOGGER.error("No route to myStrom plug: %s", host)
-        raise PlatformNotReady()
+        raise PlatformNotReady() from err
 
     async_add_entities([MyStromSwitch(plug, name)])
 

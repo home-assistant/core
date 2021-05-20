@@ -31,6 +31,7 @@ from .const import (
     IS_WIRELESS,
     MIKROTIK_SERVICES,
     NAME,
+    PLATFORMS,
     WIRELESS,
 )
 from .errors import CannotConnect, LoginError
@@ -53,6 +54,11 @@ class Device:
     def name(self):
         """Return device name."""
         return self._params.get("host-name", self.mac)
+
+    @property
+    def ip_address(self):
+        """Return device primary ip address."""
+        return self._params.get("address")
 
     @property
     def mac(self):
@@ -129,7 +135,11 @@ class MikrotikData:
         """Return device model name."""
         cmd = IDENTITY if param == NAME else INFO
         data = self.command(MIKROTIK_SERVICES[cmd])
-        return data[0].get(param) if data else None
+        return (
+            data[0].get(param)  # pylint: disable=unsubscriptable-object
+            if data
+            else None
+        )
 
     def get_hub_details(self):
         """Get Hub info."""
@@ -229,7 +239,7 @@ class MikrotikData:
         data = self.command(cmd, params)
         if data is not None:
             status = 0
-            for result in data:
+            for result in data:  # pylint: disable=not-an-iterable
                 if "status" in result:
                     status += 1
             if status == len(data):
@@ -253,7 +263,7 @@ class MikrotikData:
             socket.timeout,
         ) as api_error:
             _LOGGER.error("Mikrotik %s connection error %s", self._host, api_error)
-            raise CannotConnect
+            raise CannotConnect from api_error
         except librouteros.exceptions.ProtocolError as api_error:
             _LOGGER.warning(
                 "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s",
@@ -267,9 +277,8 @@ class MikrotikData:
 
     def update(self):
         """Update device_tracker from Mikrotik API."""
-        if not self.available or not self.api:
-            if not self.connect_to_hub():
-                return
+        if (not self.available or not self.api) and not self.connect_to_hub():
+            return
         _LOGGER.debug("updating network devices for host: %s", self._host)
         self.update_devices()
 
@@ -367,8 +376,8 @@ class MikrotikHub:
             api = await self.hass.async_add_executor_job(
                 get_api, self.hass, self.config_entry.data
             )
-        except CannotConnect:
-            raise ConfigEntryNotReady
+        except CannotConnect as api_error:
+            raise ConfigEntryNotReady from api_error
         except LoginError:
             return False
 
@@ -377,11 +386,7 @@ class MikrotikHub:
         await self.hass.async_add_executor_job(self._mk_data.get_hub_details)
         await self.hass.async_add_executor_job(self._mk_data.update)
 
-        self.hass.async_create_task(
-            self.hass.config_entries.async_forward_entry_setup(
-                self.config_entry, "device_tracker"
-            )
-        )
+        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
         return True
 
 
@@ -390,7 +395,7 @@ def get_api(hass, entry):
     _LOGGER.debug("Connecting to Mikrotik hub [%s]", entry[CONF_HOST])
 
     _login_method = (login_plain, login_token)
-    kwargs = {"login_methods": _login_method, "port": entry["port"]}
+    kwargs = {"login_methods": _login_method, "port": entry["port"], "encoding": "utf8"}
 
     if entry[CONF_VERIFY_SSL]:
         ssl_context = ssl.create_default_context()
@@ -401,7 +406,10 @@ def get_api(hass, entry):
 
     try:
         api = librouteros.connect(
-            entry[CONF_HOST], entry[CONF_USERNAME], entry[CONF_PASSWORD], **kwargs,
+            entry[CONF_HOST],
+            entry[CONF_USERNAME],
+            entry[CONF_PASSWORD],
+            **kwargs,
         )
         _LOGGER.debug("Connected to %s successfully", entry[CONF_HOST])
         return api
@@ -412,5 +420,5 @@ def get_api(hass, entry):
     ) as api_error:
         _LOGGER.error("Mikrotik %s error: %s", entry[CONF_HOST], api_error)
         if "invalid user name or password" in str(api_error):
-            raise LoginError
-        raise CannotConnect
+            raise LoginError from api_error
+        raise CannotConnect from api_error

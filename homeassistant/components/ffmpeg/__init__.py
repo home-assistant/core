@@ -1,16 +1,19 @@
 """Support for FFmpeg."""
-import logging
+from __future__ import annotations
+
+import asyncio
 import re
 
-from haffmpeg.tools import FFVersion
+from haffmpeg.tools import IMAGE_JPEG, FFVersion, ImageFrame
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONTENT_TYPE_MULTIPART,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -19,8 +22,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = "ffmpeg"
-
-_LOGGER = logging.getLogger(__name__)
 
 SERVICE_START = "start"
 SERVICE_STOP = "stop"
@@ -88,6 +89,21 @@ async def async_setup(hass, config):
     return True
 
 
+async def async_get_image(
+    hass: HomeAssistant,
+    input_source: str,
+    output_format: str = IMAGE_JPEG,
+    extra_cmd: str | None = None,
+):
+    """Get an image from a frame of an RTSP stream."""
+    manager = hass.data[DATA_FFMPEG]
+    ffmpeg = ImageFrame(manager.binary)
+    image = await asyncio.shield(
+        ffmpeg.get_image(input_source, output_format=output_format, extra_cmd=extra_cmd)
+    )
+    return image
+
+
 class FFmpegManager:
     """Helper for ha-ffmpeg."""
 
@@ -107,7 +123,7 @@ class FFmpegManager:
     async def async_get_version(self):
         """Return ffmpeg version."""
 
-        ffversion = FFVersion(self._bin, self.hass.loop)
+        ffversion = FFVersion(self._bin)
         self._version = await ffversion.get_version()
 
         self._major_version = None
@@ -122,9 +138,9 @@ class FFmpegManager:
     def ffmpeg_stream_content_type(self):
         """Return HTTP content type for ffmpeg stream."""
         if self._major_version is not None and self._major_version > 3:
-            return "multipart/x-mixed-replace;boundary=ffmpeg"
+            return CONTENT_TYPE_MULTIPART.format("ffmpeg")
 
-        return "multipart/x-mixed-replace;boundary=ffserver"
+        return CONTENT_TYPE_MULTIPART.format("ffserver")
 
 
 class FFmpegBase(Entity):

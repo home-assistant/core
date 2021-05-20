@@ -6,6 +6,7 @@ from aiohue import AiohueException, Unauthorized
 from aiohue.sensors import TYPE_ZLL_PRESENCE
 import async_timeout
 
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
 from homeassistant.core import callback
 from homeassistant.helpers import debounce, entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -61,11 +62,11 @@ class SensorManager:
                 return await self.bridge.async_request_call(
                     self.bridge.api.sensors.update
                 )
-        except Unauthorized:
+        except Unauthorized as err:
             await self.bridge.handle_unauthorized_error()
-            raise UpdateFailed("Unauthorized")
+            raise UpdateFailed("Unauthorized") from err
         except AiohueException as err:
-            raise UpdateFailed(f"Hue error: {err}")
+            raise UpdateFailed(f"Hue error: {err}") from err
 
     async def async_register_component(self, platform, async_add_entities):
         """Register async_add_entities methods for components."""
@@ -150,7 +151,9 @@ class SensorManager:
 
         self.bridge.hass.async_create_task(
             remove_devices(
-                self.bridge, [value.uniqueid for value in api.values()], current,
+                self.bridge,
+                [value.uniqueid for value in api.values()],
+                current,
             )
         )
 
@@ -163,9 +166,6 @@ class GenericHueSensor(GenericHueDevice, entity.Entity):
 
     should_poll = False
 
-    async def _async_update_ha_state(self, *args, **kwargs):
-        raise NotImplementedError
-
     @property
     def available(self):
         """Return if sensor is available."""
@@ -175,8 +175,14 @@ class GenericHueSensor(GenericHueDevice, entity.Entity):
             or self.sensor.config.get("reachable", True)
         )
 
+    @property
+    def state_class(self):
+        """Return the state class of this entity, from STATE_CLASSES, if any."""
+        return STATE_CLASS_MEASUREMENT
+
     async def async_added_to_hass(self):
         """When entity is added to hass."""
+        await super().async_added_to_hass()
         self.async_on_remove(
             self.bridge.sensor_manager.coordinator.async_add_listener(
                 self.async_write_ha_state
@@ -195,6 +201,6 @@ class GenericZLLSensor(GenericHueSensor):
     """Representation of a Hue-brand, physical sensor."""
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return {"battery_level": self.sensor.battery}

@@ -1,35 +1,35 @@
 """Config flow to configure esphome component."""
+from __future__ import annotations
+
 from collections import OrderedDict
-from typing import Optional
 
 from aioesphomeapi import APIClient, APIConnectionError
 import voluptuous as vol
 
-from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, ConfigFlow
+from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .entry_data import DATA_KEY, RuntimeEntryData
-
-DOMAIN = "esphome"
+from . import DOMAIN
+from .entry_data import RuntimeEntryData
 
 
 class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a esphome config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize flow."""
-        self._host: Optional[str] = None
-        self._port: Optional[int] = None
-        self._password: Optional[str] = None
+        self._host: str | None = None
+        self._port: int | None = None
+        self._password: str | None = None
 
     async def async_step_user(
-        self, user_input: Optional[ConfigType] = None, error: Optional[str] = None
-    ):
+        self, user_input: ConfigType | None = None, error: str | None = None
+    ):  # pylint: disable=arguments-differ
         """Handle a flow initialized by the user."""
         if user_input is not None:
             return await self._async_authenticate_or_add(user_input)
@@ -48,12 +48,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @property
     def _name(self):
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         return self.context.get(CONF_NAME)
 
     @_name.setter
     def _name(self, value):
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context[CONF_NAME] = value
         self.context["title_placeholders"] = {"name": self._name}
 
@@ -100,15 +98,15 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         for entry in self._async_current_entries():
             already_configured = False
 
-            if (
-                entry.data[CONF_HOST] == address
-                or entry.data[CONF_HOST] == discovery_info[CONF_HOST]
-            ):
+            if CONF_HOST in entry.data and entry.data[CONF_HOST] in [
+                address,
+                discovery_info[CONF_HOST],
+            ]:
                 # Is this address or IP address already configured?
                 already_configured = True
-            elif entry.entry_id in self.hass.data.get(DATA_KEY, {}):
+            elif entry.entry_id in self.hass.data.get(DOMAIN, {}):
                 # Does a config entry with this name already exist?
-                data: RuntimeEntryData = self.hass.data[DATA_KEY][entry.entry_id]
+                data: RuntimeEntryData = self.hass.data[DOMAIN][entry.entry_id]
 
                 # Node names are unique in the network
                 if data.device_info is not None:
@@ -165,7 +163,14 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def fetch_device_info(self):
         """Fetch device info from API and return any errors."""
-        cli = APIClient(self.hass.loop, self._host, self._port, "")
+        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
+        cli = APIClient(
+            self.hass.loop,
+            self._host,
+            self._port,
+            "",
+            zeroconf_instance=zeroconf_instance,
+        )
 
         try:
             await cli.connect()
@@ -181,12 +186,19 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def try_login(self):
         """Try logging in to device and return any errors."""
-        cli = APIClient(self.hass.loop, self._host, self._port, self._password)
+        zeroconf_instance = await zeroconf.async_get_instance(self.hass)
+        cli = APIClient(
+            self.hass.loop,
+            self._host,
+            self._port,
+            self._password,
+            zeroconf_instance=zeroconf_instance,
+        )
 
         try:
             await cli.connect(login=True)
         except APIConnectionError:
             await cli.disconnect(force=True)
-            return "invalid_password"
+            return "invalid_auth"
 
         return None

@@ -2,6 +2,7 @@
 from abc import abstractmethod
 from datetime import timedelta
 import logging
+from typing import final
 
 import voluptuous as vol
 
@@ -172,15 +173,15 @@ class AlarmControlPanelEntity(Entity):
     def supported_features(self) -> int:
         """Return the list of supported features."""
 
+    @final
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        state_attr = {
+        return {
             ATTR_CODE_FORMAT: self.code_format,
             ATTR_CHANGED_BY: self.changed_by,
             ATTR_CODE_ARM_REQUIRED: self.code_arm_required,
         }
-        return state_attr
 
 
 class AlarmControlPanel(AlarmControlPanelEntity):

@@ -2,7 +2,10 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_SMOKE,
+    BinarySensorEntity,
+)
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON
 
 from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
@@ -45,7 +48,7 @@ class TahomaBinarySensor(TahomaDevice, BinarySensorEntity):
     def device_class(self):
         """Return the class of the device."""
         if self.tahoma_device.type == "rtds:RTDSSmokeSensor":
-            return "smoke"
+            return DEVICE_CLASS_SMOKE
         return None
 
     @property
@@ -54,10 +57,10 @@ class TahomaBinarySensor(TahomaDevice, BinarySensorEntity):
         return self._icon
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         attr = {}
-        super_attr = super().device_state_attributes
+        super_attr = super().extra_state_attributes
         if super_attr is not None:
             attr.update(super_attr)
 

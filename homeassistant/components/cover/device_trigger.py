@@ -1,14 +1,14 @@
 """Provides device automations for Cover."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    numeric_state as numeric_state_automation,
-    state as state_automation,
-)
+from homeassistant.components.automation import AutomationActionType
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.homeassistant.triggers import (
+    numeric_state as numeric_state_trigger,
+    state as state_trigger,
+)
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CONF_ABOVE,
@@ -16,8 +16,10 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_FOR,
     CONF_PLATFORM,
     CONF_TYPE,
+    CONF_VALUE_TEMPLATE,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
@@ -58,13 +60,14 @@ STATE_TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(STATE_TRIGGER_TYPES),
+        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
 TRIGGER_SCHEMA = vol.Any(POSITION_TRIGGER_SCHEMA, STATE_TRIGGER_SCHEMA)
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Cover devices."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = []
@@ -82,60 +85,32 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
         supports_open_close = supported_features & (SUPPORT_OPEN | SUPPORT_CLOSE)
 
         # Add triggers for each entity that belongs to this integration
+        base_trigger = {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.entity_id,
+        }
+
         if supports_open_close:
-            triggers.append(
+            triggers += [
                 {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "opened",
+                    **base_trigger,
+                    CONF_TYPE: trigger,
                 }
-            )
-            triggers.append(
-                {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "closed",
-                }
-            )
-            triggers.append(
-                {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "opening",
-                }
-            )
-            triggers.append(
-                {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
-                    CONF_TYPE: "closing",
-                }
-            )
+                for trigger in STATE_TRIGGER_TYPES
+            ]
         if supported_features & SUPPORT_SET_POSITION:
             triggers.append(
                 {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
+                    **base_trigger,
                     CONF_TYPE: "position",
                 }
             )
         if supported_features & SUPPORT_SET_TILT_POSITION:
             triggers.append(
                 {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.entity_id,
+                    **base_trigger,
                     CONF_TYPE: "tilt_position",
                 }
             )
@@ -145,8 +120,12 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
 
 async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
     """List trigger capabilities."""
-    if config[CONF_TYPE] not in ["position", "tilt_position"]:
-        return {}
+    if config[CONF_TYPE] not in POSITION_TRIGGER_TYPES:
+        return {
+            "extra_fields": vol.Schema(
+                {vol.Optional(CONF_FOR): cv.positive_time_period_dict}
+            )
+        }
 
     return {
         "extra_fields": vol.Schema(
@@ -169,8 +148,6 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
-
     if config[CONF_TYPE] in STATE_TRIGGER_TYPES:
         if config[CONF_TYPE] == "opened":
             to_state = STATE_OPEN
@@ -182,12 +159,14 @@ async def async_attach_trigger(
             to_state = STATE_CLOSING
 
         state_config = {
-            state_automation.CONF_PLATFORM: "state",
+            CONF_PLATFORM: "state",
             CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-            state_automation.CONF_TO: to_state,
+            state_trigger.CONF_TO: to_state,
         }
-        state_config = state_automation.TRIGGER_SCHEMA(state_config)
-        return await state_automation.async_attach_trigger(
+        if CONF_FOR in config:
+            state_config[CONF_FOR] = config[CONF_FOR]
+        state_config = state_trigger.TRIGGER_SCHEMA(state_config)
+        return await state_trigger.async_attach_trigger(
             hass, state_config, action, automation_info, platform_type="device"
         )
 
@@ -200,13 +179,13 @@ async def async_attach_trigger(
     value_template = f"{{{{ state.attributes.{position} }}}}"
 
     numeric_state_config = {
-        numeric_state_automation.CONF_PLATFORM: "numeric_state",
-        numeric_state_automation.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        numeric_state_automation.CONF_BELOW: max_pos,
-        numeric_state_automation.CONF_ABOVE: min_pos,
-        numeric_state_automation.CONF_VALUE_TEMPLATE: value_template,
+        CONF_PLATFORM: "numeric_state",
+        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        CONF_BELOW: max_pos,
+        CONF_ABOVE: min_pos,
+        CONF_VALUE_TEMPLATE: value_template,
     }
-    numeric_state_config = numeric_state_automation.TRIGGER_SCHEMA(numeric_state_config)
-    return await numeric_state_automation.async_attach_trigger(
+    numeric_state_config = numeric_state_trigger.TRIGGER_SCHEMA(numeric_state_config)
+    return await numeric_state_trigger.async_attach_trigger(
         hass, numeric_state_config, action, automation_info, platform_type="device"
     )

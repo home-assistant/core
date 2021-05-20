@@ -1,6 +1,4 @@
 """Measurement channels module for Zigbee Home Automation."""
-import logging
-
 import zigpy.zcl.clusters.measurement as measurement
 
 from .. import registries
@@ -11,8 +9,6 @@ from ..const import (
     REPORT_CONFIG_MIN_INT,
 )
 from .base import ZigbeeChannel
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.FlowMeasurement.cluster_id)
@@ -40,7 +36,6 @@ class IlluminanceMeasurement(ZigbeeChannel):
     REPORT_CONFIG = [{"attr": "measured_value", "config": REPORT_CONFIG_DEFAULT}]
 
 
-@registries.BINARY_SENSOR_CLUSTERS.register(measurement.OccupancySensing.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.OccupancySensing.cluster_id)
 class OccupancySensing(ZigbeeChannel):
     """Occupancy Sensing channel."""
@@ -62,7 +57,7 @@ class RelativeHumidity(ZigbeeChannel):
     REPORT_CONFIG = [
         {
             "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
+            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
         }
     ]
 
@@ -77,5 +72,33 @@ class TemperatureMeasurement(ZigbeeChannel):
         {
             "attr": "measured_value",
             "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
+        }
+    ]
+
+
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+    measurement.CarbonMonoxideConcentration.cluster_id
+)
+class CarbonMonoxideConcentration(ZigbeeChannel):
+    """Carbon Monoxide measurement channel."""
+
+    REPORT_CONFIG = [
+        {
+            "attr": "measured_value",
+            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
+        }
+    ]
+
+
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+    measurement.CarbonDioxideConcentration.cluster_id
+)
+class CarbonDioxideConcentration(ZigbeeChannel):
+    """Carbon Dioxide measurement channel."""
+
+    REPORT_CONFIG = [
+        {
+            "attr": "measured_value",
+            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
         }
     ]

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "invalid_dongle_path": "Niepoprawna \u015bcie\u017cka urz\u0105dzenia",
+            "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
+        },
+        "error": {
+            "invalid_dongle_path": "Nie znaleziono urz\u0105dzenia pod wskazan\u0105 \u015bcie\u017ck\u0105"
+        },
+        "step": {
+            "detect": {
+                "data": {
+                    "path": "\u015acie\u017cka urz\u0105dzenia USB"
+                },
+                "title": "Wybierz \u015bcie\u017ck\u0119 urz\u0105dzenia ENOcean"
+            },
+            "manual": {
+                "data": {
+                    "path": "\u015acie\u017cka urz\u0105dzenia USB"
+                },
+                "title": "Podaj \u015bcie\u017ck\u0119 urz\u0105dzenia ENOcean"
+            }
+        }
+    }
+}

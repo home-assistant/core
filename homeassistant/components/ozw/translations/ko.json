@@ -1,12 +1,40 @@
 {
     "config": {
         "abort": {
+            "addon_info_failed": "OpenZWave \uc560\ub4dc\uc628\uc758 \uc815\ubcf4\ub97c \uac00\uc838\uc624\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
+            "addon_install_failed": "OpenZWave \uc560\ub4dc\uc628\uc744 \uc124\uce58\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
+            "addon_set_config_failed": "OpenZWave \uad6c\uc131\uc744 \uc124\uc815\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "already_in_progress": "\uae30\uae30 \uad6c\uc131\uc774 \uc774\ubbf8 \uc9c4\ud589 \uc911\uc785\ub2c8\ub2e4",
             "mqtt_required": "MQTT \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\uac00 \uc124\uc815\ub418\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4",
-            "one_instance_allowed": "\uc774 \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\ub294 \ud558\ub098\uc758 Z-Wave \uc778\uc2a4\ud134\uc2a4\ub9cc \uc9c0\uc6d0\ud569\ub2c8\ub2e4"
+            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uc778\uc2a4\ud134\uc2a4\ub9cc \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
+        },
+        "error": {
+            "addon_start_failed": "OpenZWave \uc560\ub4dc\uc628\uc744 \uc2dc\uc791\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \uad6c\uc131 \ub0b4\uc6a9\uc744 \ud655\uc778\ud574\uc8fc\uc138\uc694."
+        },
+        "progress": {
+            "install_addon": "Openzwave \uc560\ub4dc\uc628\uc758 \uc124\uce58\uac00 \uc644\ub8cc\ub418\ub294 \ub3d9\uc548 \uc7a0\uc2dc \uae30\ub2e4\ub824\uc8fc\uc138\uc694. \uba87 \ubd84 \uc815\ub3c4 \uac78\ub9b4 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
         },
         "step": {
-            "user": {
-                "title": "\uc124\uc815 \ub0b4\uc6a9 \ud655\uc778\ud558\uae30"
+            "hassio_confirm": {
+                "title": "OpenZWave \uc560\ub4dc\uc628\uc73c\ub85c OpenZWave \ud1b5\ud569 \uad6c\uc131\uc694\uc18c \uc124\uc815\ud558\uae30"
+            },
+            "install_addon": {
+                "title": "Openzwave \uc560\ub4dc\uc628 \uc124\uce58\uac00 \uc2dc\uc791\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "OpenZWave Supervisor \uc560\ub4dc\uc628\uc744 \uc0ac\uc6a9\ud558\uae30"
+                },
+                "description": "OpenZWave Supervisor \uc560\ub4dc\uc628\uc744 \uc0ac\uc6a9\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
+                "title": "\uc5f0\uacb0 \ubc29\ubc95 \uc120\ud0dd\ud558\uae30"
+            },
+            "start_addon": {
+                "data": {
+                    "network_key": "\ub124\ud2b8\uc6cc\ud06c \ud0a4",
+                    "usb_path": "USB \uc7a5\uce58 \uacbd\ub85c"
+                },
+                "title": "OpenZWave \uc560\ub4dc\uc628\uc758 \uad6c\uc131\uc744 \uc785\ub825\ud574\uc8fc\uc138\uc694"
             }
         }
     }

@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "name_exists": "A hely m\u00e1r l\u00e9tezik"
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van"
         },
         "step": {
             "user": {

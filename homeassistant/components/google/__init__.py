@@ -15,7 +15,14 @@ import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
 import yaml
 
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_DEVICE_ID,
+    CONF_ENTITIES,
+    CONF_NAME,
+    CONF_OFFSET,
+)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
@@ -30,12 +37,8 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 CONF_TRACK_NEW = "track_new_calendar"
 
 CONF_CAL_ID = "cal_id"
-CONF_DEVICE_ID = "device_id"
-CONF_NAME = "name"
-CONF_ENTITIES = "entities"
 CONF_TRACK = "track"
 CONF_SEARCH = "search"
-CONF_OFFSET = "offset"
 CONF_IGNORE_AVAILABILITY = "ignore_availability"
 CONF_MAX_RESULTS = "max_results"
 
@@ -222,7 +225,7 @@ def check_correct_scopes(token_file):
     """Check for the correct scopes in file."""
     tokenfile = open(token_file).read()
     if "readonly" in tokenfile:
-        _LOGGER.warning("Please re-authenticate with Google.")
+        _LOGGER.warning("Please re-authenticate with Google")
         return False
     return True
 

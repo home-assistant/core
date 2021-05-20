@@ -2,8 +2,10 @@
 
 import re
 from unittest import mock
+from unittest.mock import AsyncMock, patch
 
 import pytest
+import zigpy.profiles.zha
 import zigpy.quirks
 import zigpy.types
 import zigpy.zcl.clusters.closures
@@ -29,8 +31,6 @@ import homeassistant.helpers.entity_registry
 from .common import get_zha_gateway
 from .zha_devices_list import DEVICES
 
-from tests.async_mock import AsyncMock, patch
-
 NO_TAIL_ID = re.compile("_\\d$")
 
 
@@ -44,8 +44,11 @@ def channels_mock(zha_device_mock):
         manufacturer="mock manufacturer",
         model="mock model",
         node_desc=b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00",
+        patch_cluster=False,
     ):
-        zha_dev = zha_device_mock(endpoints, ieee, manufacturer, model, node_desc)
+        zha_dev = zha_device_mock(
+            endpoints, ieee, manufacturer, model, node_desc, patch_cluster=patch_cluster
+        )
         channels = zha_channels.Channels.new(zha_dev)
         return channels
 
@@ -58,12 +61,14 @@ def channels_mock(zha_device_mock):
 )
 @pytest.mark.parametrize("device", DEVICES)
 async def test_devices(
-    device, hass, zigpy_device_mock, monkeypatch, zha_device_joined_restored
+    device,
+    hass_disable_services,
+    zigpy_device_mock,
+    zha_device_joined_restored,
 ):
     """Test device discovery."""
-
-    entity_registry = await homeassistant.helpers.entity_registry.async_get_registry(
-        hass
+    entity_registry = homeassistant.helpers.entity_registry.async_get(
+        hass_disable_services
     )
 
     zigpy_device = zigpy_device_mock(
@@ -72,6 +77,7 @@ async def test_devices(
         device["manufacturer"],
         device["model"],
         node_descriptor=device["node_descriptor"],
+        patch_cluster=False,
     )
 
     cluster_identify = _get_first_identify_cluster(zigpy_device)
@@ -83,14 +89,14 @@ async def test_devices(
     try:
         zha_channels.ChannelPool.async_new_entity = lambda *a, **kw: _dispatch(*a, **kw)
         zha_dev = await zha_device_joined_restored(zigpy_device)
-        await hass.async_block_till_done()
+        await hass_disable_services.async_block_till_done()
     finally:
         zha_channels.ChannelPool.async_new_entity = orig_new_entity
 
-    entity_ids = hass.states.async_entity_ids()
-    await hass.async_block_till_done()
+    entity_ids = hass_disable_services.states.async_entity_ids()
+    await hass_disable_services.async_block_till_done()
     zha_entity_ids = {
-        ent for ent in entity_ids if ent.split(".")[0] in zha_const.COMPONENTS
+        ent for ent in entity_ids if ent.split(".")[0] in zha_const.PLATFORMS
     }
 
     if cluster_identify:
@@ -106,6 +112,7 @@ async def test_devices(
                 0,
                 expect_reply=True,
                 manufacturer=None,
+                tries=1,
                 tsn=None,
             )
 
@@ -157,9 +164,9 @@ def test_discover_entities(m1, m2):
 @pytest.mark.parametrize(
     "device_type, component, hit",
     [
-        (0x0100, zha_const.LIGHT, True),
-        (0x0108, zha_const.SWITCH, True),
-        (0x0051, zha_const.SWITCH, True),
+        (zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT, zha_const.LIGHT, True),
+        (zigpy.profiles.zha.DeviceType.ON_OFF_BALLAST, zha_const.SWITCH, True),
+        (zigpy.profiles.zha.DeviceType.SMART_PLUG, zha_const.SWITCH, True),
         (0xFFFF, None, False),
     ],
 )
@@ -205,17 +212,14 @@ def test_discover_by_device_type_override():
     with mock.patch(
         "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
         get_entity_mock,
-    ):
-        with mock.patch.dict(disc.PROBE._device_configs, overrides, clear=True):
-            disc.PROBE.discover_by_device_type(ep_channels)
-            assert get_entity_mock.call_count == 1
-            assert ep_channels.claim_channels.call_count == 1
-            assert ep_channels.claim_channels.call_args[0][0] is mock.sentinel.claimed
-            assert ep_channels.async_new_entity.call_count == 1
-            assert ep_channels.async_new_entity.call_args[0][0] == zha_const.SWITCH
-            assert (
-                ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
-            )
+    ), mock.patch.dict(disc.PROBE._device_configs, overrides, clear=True):
+        disc.PROBE.discover_by_device_type(ep_channels)
+        assert get_entity_mock.call_count == 1
+        assert ep_channels.claim_channels.call_count == 1
+        assert ep_channels.claim_channels.call_args[0][0] is mock.sentinel.claimed
+        assert ep_channels.async_new_entity.call_count == 1
+        assert ep_channels.async_new_entity.call_args[0][0] == zha_const.SWITCH
+        assert ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
 
 
 def test_discover_probe_single_cluster():
@@ -258,6 +262,7 @@ async def test_discover_endpoint(device_info, channels_mock, hass):
             manufacturer=device_info["manufacturer"],
             model=device_info["model"],
             node_desc=device_info["node_descriptor"],
+            patch_cluster=False,
         )
 
     assert device_info["event_channels"] == sorted(
@@ -364,13 +369,15 @@ def test_single_input_cluster_device_class_by_cluster_class():
         ("switch", "switch.manufacturer_model_77665544_on_off"),
     ],
 )
-async def test_device_override(hass, zigpy_device_mock, setup_zha, override, entity_id):
+async def test_device_override(
+    hass_disable_services, zigpy_device_mock, setup_zha, override, entity_id
+):
     """Test device discovery override."""
 
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                "device_type": 258,
+                "device_type": zigpy.profiles.zha.DeviceType.COLOR_DIMMABLE_LIGHT,
                 "endpoint_id": 1,
                 "in_clusters": [0, 3, 4, 5, 6, 8, 768, 2821, 64513],
                 "out_clusters": [25],
@@ -380,23 +387,26 @@ async def test_device_override(hass, zigpy_device_mock, setup_zha, override, ent
         "00:11:22:33:44:55:66:77",
         "manufacturer",
         "model",
+        patch_cluster=False,
     )
 
     if override is not None:
         override = {"device_config": {"00:11:22:33:44:55:66:77-1": {"type": override}}}
 
     await setup_zha(override)
-    assert hass.states.get(entity_id) is None
-    zha_gateway = get_zha_gateway(hass)
+    assert hass_disable_services.states.get(entity_id) is None
+    zha_gateway = get_zha_gateway(hass_disable_services)
     await zha_gateway.async_device_initialized(zigpy_device)
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id) is not None
+    await hass_disable_services.async_block_till_done()
+    assert hass_disable_services.states.get(entity_id) is not None
 
 
-async def test_group_probe_cleanup_called(hass, setup_zha, config_entry):
+async def test_group_probe_cleanup_called(
+    hass_disable_services, setup_zha, config_entry
+):
     """Test cleanup happens when zha is unloaded."""
     await setup_zha()
     disc.GROUP_PROBE.cleanup = mock.Mock(wraps=disc.GROUP_PROBE.cleanup)
-    await config_entry.async_unload(hass)
-    await hass.async_block_till_done()
+    await config_entry.async_unload(hass_disable_services)
+    await hass_disable_services.async_block_till_done()
     disc.GROUP_PROBE.cleanup.assert_called()

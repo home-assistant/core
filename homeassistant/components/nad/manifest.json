@@ -3,5 +3,6 @@
   "name": "NAD",
   "documentation": "https://www.home-assistant.io/integrations/nad",
   "requirements": ["nad_receiver==0.0.12"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "local_polling"
 }

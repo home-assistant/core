@@ -3,8 +3,12 @@
         "moon__phase": {
             "first_quarter": "Prvn\u00ed \u010dtvr\u0165",
             "full_moon": "\u00dapln\u011bk",
+            "last_quarter": "Posledn\u00ed \u010dtvrt",
+            "new_moon": "Nov",
+            "waning_crescent": "Couvaj\u00edc\u00ed srpek",
+            "waning_gibbous": "Couvaj\u00edc\u00ed m\u011bs\u00edc",
             "waxing_crescent": "Dor\u016fstaj\u00edc\u00ed srpek",
-            "waxing_gibbous": "Prvn\u00ed \u010dtvr\u0165"
+            "waxing_gibbous": "Dor\u016fstaj\u00edc\u00ed m\u011bs\u00edc"
         }
     }
 }

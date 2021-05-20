@@ -1,7 +1,10 @@
 """Support for Home Assistant Cloud binary sensors."""
 import asyncio
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorEntity,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
@@ -44,7 +47,7 @@ class CloudRemoteBinary(BinarySensorEntity):
     @property
     def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return "connectivity"
+        return DEVICE_CLASS_CONNECTIVITY
 
     @property
     def available(self) -> bool:

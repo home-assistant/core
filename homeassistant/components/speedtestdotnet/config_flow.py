@@ -1,6 +1,4 @@
 """Config flow for Speedtest.net."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,17 +13,14 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SERVER,
+    DOMAIN,
 )
-from .const import DOMAIN  # pylint: disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle Speedtest.net config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback
@@ -36,7 +31,7 @@ class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
-            return self.async_abort(reason="one_instance_allowed")
+            return self.async_abort(reason="single_instance_allowed")
 
         if user_input is None:
             return self.async_show_form(step_id="user")
@@ -54,7 +49,7 @@ class SpeedTestFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="wrong_server_id")
 
         import_config[CONF_SCAN_INTERVAL] = int(
-            import_config[CONF_SCAN_INTERVAL].seconds / 60
+            import_config[CONF_SCAN_INTERVAL].total_seconds() / 60
         )
         import_config.pop(CONF_MONITORED_CONDITIONS)
 
@@ -85,7 +80,7 @@ class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
 
         self._servers = self.hass.data[DOMAIN].servers
 
-        server_name = DEFAULT_SERVER
+        server = []
         if self.config_entry.options.get(
             CONF_SERVER_ID
         ) and not self.config_entry.options.get(CONF_SERVER_NAME):
@@ -94,7 +89,7 @@ class SpeedTestOptionsFlowHandler(config_entries.OptionsFlow):
                 for (key, value) in self._servers.items()
                 if value.get("id") == self.config_entry.options[CONF_SERVER_ID]
             ]
-            server_name = server[0]
+        server_name = server[0] if server else DEFAULT_SERVER
 
         options = {
             vol.Optional(

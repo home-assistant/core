@@ -1,7 +1,8 @@
 """Generate zeroconf file."""
+from __future__ import annotations
+
 from collections import OrderedDict, defaultdict
 import json
-from typing import Dict
 
 from .model import Config, Integration
 
@@ -19,7 +20,7 @@ HOMEKIT = {}
 """.strip()
 
 
-def generate_and_validate(integrations: Dict[str, Integration]):
+def generate_and_validate(integrations: dict[str, Integration]):
     """Validate and generate zeroconf data."""
     service_type_dict = defaultdict(list)
     homekit_dict = {}
@@ -34,46 +35,20 @@ def generate_and_validate(integrations: Dict[str, Integration]):
         homekit = integration.manifest.get("homekit", {})
         homekit_models = homekit.get("models", [])
 
-        if not service_types and not homekit_models:
+        if not (service_types or homekit_models):
             continue
 
-        try:
-            with open(str(integration.path / "config_flow.py")) as fp:
-                content = fp.read()
-                uses_discovery_flow = "register_discovery_flow" in content
-                uses_oauth2_flow = "AbstractOAuth2FlowHandler" in content
+        for entry in service_types:
+            data = {"domain": domain}
+            if isinstance(entry, dict):
+                typ = entry["type"]
+                entry_without_type = entry.copy()
+                del entry_without_type["type"]
+                data.update(entry_without_type)
+            else:
+                typ = entry
 
-                if (
-                    service_types
-                    and not uses_discovery_flow
-                    and not uses_oauth2_flow
-                    and " async_step_zeroconf" not in content
-                ):
-                    integration.add_error(
-                        "zeroconf", "Config flow has no async_step_zeroconf"
-                    )
-                    continue
-
-                if (
-                    homekit_models
-                    and not uses_discovery_flow
-                    and not uses_oauth2_flow
-                    and " async_step_homekit" not in content
-                ):
-                    integration.add_error(
-                        "zeroconf", "Config flow has no async_step_homekit"
-                    )
-                    continue
-
-        except FileNotFoundError:
-            integration.add_error(
-                "zeroconf",
-                "Zeroconf info in a manifest requires a config flow to exist",
-            )
-            continue
-
-        for service_type in service_types:
-            service_type_dict[service_type].append(domain)
+            service_type_dict[typ].append(data)
 
         for model in homekit_models:
             if model in homekit_dict:
@@ -115,7 +90,7 @@ def generate_and_validate(integrations: Dict[str, Integration]):
     return BASE.format(json.dumps(zeroconf, indent=4), json.dumps(homekit, indent=4))
 
 
-def validate(integrations: Dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config):
     """Validate zeroconf file."""
     zeroconf_path = config.root / "homeassistant/generated/zeroconf.py"
     config.cache["zeroconf"] = content = generate_and_validate(integrations)
@@ -134,7 +109,7 @@ def validate(integrations: Dict[str, Integration], config: Config):
         return
 
 
-def generate(integrations: Dict[str, Integration], config: Config):
+def generate(integrations: dict[str, Integration], config: Config):
     """Generate zeroconf file."""
     zeroconf_path = config.root / "homeassistant/generated/zeroconf.py"
     with open(str(zeroconf_path), "w") as fp:

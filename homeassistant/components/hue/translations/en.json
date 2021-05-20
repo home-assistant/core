@@ -2,16 +2,16 @@
     "config": {
         "abort": {
             "all_configured": "All Philips Hue bridges are already configured",
-            "already_configured": "Bridge is already configured",
-            "already_in_progress": "Config flow for bridge is already in progress.",
-            "cannot_connect": "Unable to connect to the bridge",
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
+            "cannot_connect": "Failed to connect",
             "discover_timeout": "Unable to discover Hue bridges",
             "no_bridges": "No Philips Hue bridges discovered",
             "not_hue_bridge": "Not a Hue bridge",
-            "unknown": "Unknown error occurred"
+            "unknown": "Unexpected error"
         },
         "error": {
-            "linking": "Unknown linking error occurred.",
+            "linking": "Unexpected error",
             "register_failed": "Failed to register, please try again"
         },
         "step": {
@@ -24,6 +24,12 @@
             "link": {
                 "description": "Press the button on the bridge to register Philips Hue with Home Assistant.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
                 "title": "Link Hub"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Manual configure a Hue bridge"
             }
         }
     },
@@ -46,6 +52,16 @@
             "remote_button_short_release": "\"{subtype}\" button released",
             "remote_double_button_long_press": "Both \"{subtype}\" released after long press",
             "remote_double_button_short_press": "Both \"{subtype}\" released"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_hue_groups": "Allow Hue groups",
+                    "allow_unreachable": "Allow unreachable bulbs to report their state correctly"
+                }
+            }
         }
     }
 }

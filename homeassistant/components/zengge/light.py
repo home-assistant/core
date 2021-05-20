@@ -98,11 +98,6 @@ class ZenggeLight(LightEntity):
         return SUPPORT_ZENGGE_LED
 
     @property
-    def should_poll(self):
-        """Feel free to poll."""
-        return True
-
-    @property
     def assumed_state(self):
         """We can report the actual state."""
         return False

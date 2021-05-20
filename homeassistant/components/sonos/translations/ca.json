@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "No s'han trobat dispositius Sonos a la xarxa.",
-            "single_instance_allowed": "Nom\u00e9s cal una sola configuraci\u00f3 de Sonos."
+            "no_devices_found": "No s'han trobat dispositius a la xarxa",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "step": {
             "confirm": {

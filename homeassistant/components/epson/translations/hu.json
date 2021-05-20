@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hoszt",
+                    "name": "N\u00e9v"
+                }
+            }
+        }
+    }
+}

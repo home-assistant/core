@@ -1,6 +1,4 @@
 """Utility methods for the Insteon platform."""
-import logging
-
 from pyinsteon.device_types import (
     ClimateControl_Thermostat,
     ClimateControl_WirelessThermostat,
@@ -49,8 +47,6 @@ from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.switch import DOMAIN as SWITCH
 
 from .const import ON_OFF_EVENTS
-
-_LOGGER = logging.getLogger(__name__)
 
 DEVICE_PLATFORM = {
     DimmableLightingControl: {LIGHT: [1], ON_OFF_EVENTS: [1]},

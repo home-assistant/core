@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Neveljavna avtentikacija",
+            "unknown": "Nepri\u010dakovana napaka"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Gostitelj",
+                    "password": "Geslo",
+                    "username": "Uporabni\u0161ko ime"
+                }
+            }
+        }
+    }
+}

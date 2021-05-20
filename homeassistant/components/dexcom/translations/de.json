@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "server": "Server",
+                    "username": "Benutzername"
+                },
+                "description": "Anmeldedaten f\u00fcr Dexcom Share eingeben",
+                "title": "Dexcom-Integration einrichten"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_of_measurement": "Ma\u00dfeinheit"
+                }
+            }
+        }
+    }
+}

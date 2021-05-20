@@ -2,6 +2,7 @@
   "domain": "google_translate",
   "name": "Google Translate Text-to-Speech",
   "documentation": "https://www.home-assistant.io/integrations/google_translate",
-  "requirements": ["gTTS-token==1.1.3"],
-  "codeowners": ["@awarecan"]
+  "requirements": ["gTTS==2.2.2"],
+  "codeowners": [],
+  "iot_class": "cloud_push"
 }

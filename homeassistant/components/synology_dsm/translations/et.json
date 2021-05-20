@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamise viga",
+            "missing_data": "Andmed puuduvad: proovi hiljem uuesti v\u00f5i kasuta muid s\u00e4tteid",
+            "otp_failed": "Kaheastmeline autentimine nurjus, proovi uuesti uue p\u00e4\u00e4sukoodiga",
+            "unknown": "Tundmatu viga"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "2sa": {
+                "data": {
+                    "otp_code": "Kood"
+                },
+                "title": "Synology DSM: kaheastmeline autentimine (2FA)"
+            },
+            "link": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "port": "",
+                    "ssl": "Kasutab SSL sertifikaati",
+                    "username": "Kasutajanimi",
+                    "verify_ssl": "Kontrolli SSL sertifikaati"
+                },
+                "description": "Kas soovid seadistada {name}({host})?",
+                "title": ""
+            },
+            "user": {
+                "data": {
+                    "host": "",
+                    "password": "Salas\u00f5na",
+                    "port": "",
+                    "ssl": "Kasutab SSL sertifikaati",
+                    "username": "Kasutajanimi",
+                    "verify_ssl": "Kontrolli SSL sertifikaati"
+                },
+                "title": ""
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "P\u00e4ringute vahe minutites",
+                    "timeout": "Ajal\u00f5pp (sekundites)"
+                }
+            }
+        }
+    }
+}

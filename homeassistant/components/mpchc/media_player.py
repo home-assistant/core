@@ -82,7 +82,9 @@ class MpcHcDevice(MediaPlayerEntity):
                 self._player_variables[var[0]] = var[1].lower()
             self._available = True
         except requests.exceptions.RequestException:
-            _LOGGER.error("Could not connect to MPC-HC at: %s", self._url)
+            if self.available:
+                _LOGGER.error("Could not connect to MPC-HC at: %s", self._url)
+
             self._player_variables = {}
             self._available = False
 

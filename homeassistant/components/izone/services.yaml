@@ -1,0 +1,40 @@
+airflow_min:
+  name: Set minimum airflow
+  description: Set the airflow minimum percent for a zone
+  target:
+    entity:
+      integration: izone
+      domain: climate
+  fields:
+    airflow:
+      name: Percent
+      description: Airflow percent in 5% increments
+      required: true
+      example: 95
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 5
+          unit_of_measurement: "%"
+          mode: slider
+airflow_max:
+  name: Set maximum airflow
+  description: Set the airflow maximum percent for a zone
+  target:
+    entity:
+      integration: izone
+      domain: climate
+  fields:
+    airflow:
+      name: Percent
+      description: Airflow percent in 5% increments
+      required: true
+      example: 95
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 5
+          unit_of_measurement: "%"
+          mode: slider

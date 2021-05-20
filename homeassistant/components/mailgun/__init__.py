@@ -51,11 +51,14 @@ async def handle_webhook(hass, webhook_id, request):
     except ValueError:
         return None
 
-    if isinstance(data, dict) and "signature" in data.keys():
-        if await verify_webhook(hass, **data["signature"]):
-            data["webhook_id"] = webhook_id
-            hass.bus.async_fire(MESSAGE_RECEIVED, data)
-            return
+    if (
+        isinstance(data, dict)
+        and "signature" in data
+        and await verify_webhook(hass, **data["signature"])
+    ):
+        data["webhook_id"] = webhook_id
+        hass.bus.async_fire(MESSAGE_RECEIVED, data)
+        return
 
     _LOGGER.warning(
         "Mailgun webhook received an unauthenticated message - webhook_id: %s",
@@ -95,5 +98,4 @@ async def async_unload_entry(hass, entry):
     return True
 
 
-# pylint: disable=invalid-name
 async_remove_entry = config_entry_flow.webhook_async_remove_entry

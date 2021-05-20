@@ -1,11 +1,11 @@
 """Test data validator decorator."""
+from unittest.mock import Mock
+
 from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-
-from tests.async_mock import Mock
 
 
 async def get_client(aiohttp_client, validator):

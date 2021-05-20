@@ -34,14 +34,16 @@ class NexiaAutomationScene(NexiaEntity, Scene):
     def __init__(self, coordinator, automation):
         """Initialize the automation scene."""
         super().__init__(
-            coordinator, name=automation.name, unique_id=automation.automation_id,
+            coordinator,
+            name=automation.name,
+            unique_id=automation.automation_id,
         )
         self._automation = automation
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the scene specific state attributes."""
-        data = super().device_state_attributes
+        data = super().extra_state_attributes
         data[ATTR_DESCRIPTION] = self._automation.description
         return data
 
@@ -55,6 +57,6 @@ class NexiaAutomationScene(NexiaEntity, Scene):
         await self.hass.async_add_executor_job(self._automation.activate)
 
         async def refresh_callback(_):
-            await self._coordinator.async_refresh()
+            await self.coordinator.async_refresh()
 
         async_call_later(self.hass, SCENE_ACTIVATION_TIME, refresh_callback)

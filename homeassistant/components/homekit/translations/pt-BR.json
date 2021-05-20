@@ -6,11 +6,6 @@
             },
             "cameras": {
                 "title": "Selecione o codec de v\u00eddeo da c\u00e2mera."
-            },
-            "exclude": {
-                "data": {
-                    "exclude_entities": "Entidades para excluir"
-                }
             }
         }
     }

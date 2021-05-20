@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
@@ -17,13 +17,15 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
-    async_track_state_change,
+    async_track_state_change_event,
 )
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.util import dt as dt_util
+
+from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,6 +68,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Statistics sensor."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
     entity_id = config.get(CONF_ENTITY_ID)
     name = config.get(CONF_NAME)
     sampling_size = config.get(CONF_SAMPLING_SIZE)
@@ -79,7 +84,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     return True
 
 
-class StatisticsSensor(Entity):
+class StatisticsSensor(SensorEntity):
     """Representation of a Statistics sensor."""
 
     def __init__(self, entity_id, name, sampling_size, max_age, precision):
@@ -105,8 +110,12 @@ class StatisticsSensor(Entity):
         """Register callbacks."""
 
         @callback
-        def async_stats_sensor_state_listener(entity, old_state, new_state):
+        def async_stats_sensor_state_listener(event):
             """Handle the sensor state changes."""
+            new_state = event.data.get("new_state")
+            if new_state is None:
+                return
+
             self._unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT
             )
@@ -116,12 +125,14 @@ class StatisticsSensor(Entity):
             self.async_schedule_update_ha_state(True)
 
         @callback
-        def async_stats_sensor_startup(event):
+        def async_stats_sensor_startup(_):
             """Add listener and get recorded state."""
             _LOGGER.debug("Startup for %s", self.entity_id)
 
-            async_track_state_change(
-                self.hass, self._entity_id, async_stats_sensor_state_listener
+            self.async_on_remove(
+                async_track_state_change_event(
+                    self.hass, [self._entity_id], async_stats_sensor_state_listener
+                )
             )
 
             if "recorder" in self.hass.config.components:
@@ -172,7 +183,7 @@ class StatisticsSensor(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if not self.is_binary:
             return {
@@ -229,7 +240,7 @@ class StatisticsSensor(Entity):
 
     async def async_update(self):
         """Get the latest data and updates the states."""
-        _LOGGER.debug("%s: updating statistics.", self.entity_id)
+        _LOGGER.debug("%s: updating statistics", self.entity_id)
         if self._max_age is not None:
             self._purge_old()
 
@@ -327,12 +338,12 @@ class StatisticsSensor(Entity):
                 )
                 query = query.filter(States.last_updated >= records_older_then)
             else:
-                _LOGGER.debug("%s: retrieving all records.", self.entity_id)
+                _LOGGER.debug("%s: retrieving all records", self.entity_id)
 
             query = query.order_by(States.last_updated.desc()).limit(
                 self._sampling_size
             )
-            states = execute(query)
+            states = execute(query, to_native=True, validate_entity_ids=False)
 
         for state in reversed(states):
             self._add_state_to_queue(state)

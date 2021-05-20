@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "address_exists": "\u5730\u5740\u5df2\u8a2d\u5b9a\u3002"
+            "already_configured": "\u5ea7\u6a19\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
-            "connection_error": "\u9023\u7dda\u5931\u6557\u3002",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_address": "Twente Milieu \u670d\u52d9\u5340\u57df\u5167\u627e\u4e0d\u5230\u6b64\u5730\u5740\u3002"
         },
         "step": {

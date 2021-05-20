@@ -1,6 +1,4 @@
 """Support for Rflink binary sensors."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -8,16 +6,19 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_FORCE_UPDATE, CONF_NAME
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_DEVICES,
+    CONF_FORCE_UPDATE,
+    CONF_NAME,
+)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.event as evt
 
-from . import CONF_ALIASES, CONF_DEVICES, RflinkDevice
+from . import CONF_ALIASES, RflinkDevice
 
 CONF_OFF_DELAY = "off_delay"
 DEFAULT_FORCE_UPDATE = False
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

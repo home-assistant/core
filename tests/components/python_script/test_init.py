@@ -1,11 +1,11 @@
 """Test the python_script component."""
 import logging
+from unittest.mock import mock_open, patch
 
 from homeassistant.components.python_script import DOMAIN, FOLDER, execute
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import mock_open, patch
 from tests.common import patch_yaml_files
 
 
@@ -60,7 +60,7 @@ async def test_execute_with_data(hass, caplog):
 hass.states.set('test.entity', data.get('name', 'not set'))
     """
 
-    hass.async_add_job(execute, hass, "test.py", source, {"name": "paulus"})
+    hass.async_add_executor_job(execute, hass, "test.py", source, {"name": "paulus"})
     await hass.async_block_till_done()
 
     assert hass.states.is_state("test.entity", "paulus")
@@ -76,7 +76,7 @@ async def test_execute_warns_print(hass, caplog):
 print("This triggers warning.")
     """
 
-    hass.async_add_job(execute, hass, "test.py", source, {})
+    hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
     assert "Don't use print() inside scripts." in caplog.text
@@ -89,7 +89,7 @@ async def test_execute_logging(hass, caplog):
 logger.info('Logging from inside script')
     """
 
-    hass.async_add_job(execute, hass, "test.py", source, {})
+    hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
     assert "Logging from inside script" in caplog.text
@@ -102,7 +102,7 @@ async def test_execute_compile_error(hass, caplog):
 this is not valid Python
     """
 
-    hass.async_add_job(execute, hass, "test.py", source, {})
+    hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
     assert "Error loading script test.py" in caplog.text
@@ -115,7 +115,7 @@ async def test_execute_runtime_error(hass, caplog):
 raise Exception('boom')
     """
 
-    hass.async_add_job(execute, hass, "test.py", source, {})
+    hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
     assert "Error executing script: boom" in caplog.text
@@ -128,7 +128,7 @@ async def test_accessing_async_methods(hass, caplog):
 hass.async_stop()
     """
 
-    hass.async_add_job(execute, hass, "test.py", source, {})
+    hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
     assert "Not allowed to access async methods" in caplog.text
@@ -143,7 +143,7 @@ mylist = [1, 2, 3, 4]
 logger.info('Logging from inside script: %s %s' % (mydict["a"], mylist[2]))
     """
 
-    hass.async_add_job(execute, hass, "test.py", source, {})
+    hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
     assert "Logging from inside script: 1 3" in caplog.text
@@ -160,7 +160,7 @@ async def test_accessing_forbidden_methods(hass, caplog):
         "time.tzset()": "TimeWrapper.tzset",
     }.items():
         caplog.records.clear()
-        hass.async_add_job(execute, hass, "test.py", source, {})
+        hass.async_add_executor_job(execute, hass, "test.py", source, {})
         await hass.async_block_till_done()
         assert f"Not allowed to access {name}" in caplog.text
 
@@ -172,7 +172,7 @@ for i in [1, 2]:
     hass.states.set('hello.{}'.format(i), 'world')
     """
 
-    hass.async_add_job(execute, hass, "test.py", source, {})
+    hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
     assert hass.states.is_state("hello.1", "world")
@@ -190,7 +190,7 @@ hass.states.set('hello.b', b)
 hass.states.set('hello.ab_list', '{}'.format(ab_list))
 """
 
-    hass.async_add_job(execute, hass, "test.py", source, {})
+    hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
     assert hass.states.is_state("hello.a", "1")
@@ -211,7 +211,7 @@ hass.states.set('hello.a', a[0])
 hass.states.set('hello.b', a[1])
 hass.states.set('hello.c', a[2])
 """
-    hass.async_add_job(execute, hass, "test.py", source, {})
+    hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
     assert hass.states.is_state("hello.a", "1")
@@ -232,7 +232,7 @@ hass.states.set('module.datetime',
                 datetime.timedelta(minutes=1).total_seconds())
 """
 
-    hass.async_add_job(execute, hass, "test.py", source, {})
+    hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
     assert hass.states.is_state("module.time", "1986")
@@ -256,7 +256,7 @@ def b():
 
 b()
 """
-    hass.async_add_job(execute, hass, "test.py", source, {})
+    hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
     assert hass.states.is_state("hello.a", "one")
@@ -306,6 +306,7 @@ async def test_service_descriptions(hass):
 
     service_descriptions1 = (
         "hello:\n"
+        "  name: ABC\n"
         "  description: Description of hello.py.\n"
         "  fields:\n"
         "    fake_param:\n"
@@ -333,6 +334,7 @@ async def test_service_descriptions(hass):
 
     assert len(descriptions) == 1
 
+    assert descriptions[DOMAIN]["hello"]["name"] == "ABC"
     assert descriptions[DOMAIN]["hello"]["description"] == "Description of hello.py."
     assert (
         descriptions[DOMAIN]["hello"]["fields"]["fake_param"]["description"]
@@ -343,6 +345,8 @@ async def test_service_descriptions(hass):
         == "This is a test of python_script.hello"
     )
 
+    # Verify default name = file name
+    assert descriptions[DOMAIN]["world_beer"]["name"] == "world_beer"
     assert descriptions[DOMAIN]["world_beer"]["description"] == ""
     assert bool(descriptions[DOMAIN]["world_beer"]["fields"]) is False
 
@@ -400,7 +404,7 @@ time.sleep(5)
 """
 
     with patch("homeassistant.components.python_script.time.sleep"):
-        hass.async_add_job(execute, hass, "test.py", source, {})
+        hass.async_add_executor_job(execute, hass, "test.py", source, {})
         await hass.async_block_till_done()
 
     assert caplog.text.count("time.sleep") == 1

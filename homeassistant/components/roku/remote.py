@@ -1,18 +1,19 @@
 """Support for the Roku remote."""
-from typing import Callable, List
+from __future__ import annotations
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RokuDataUpdateCoordinator, RokuEntity, roku_exception_handler
 from .const import DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List, bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> bool:
     """Load Roku remote based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -47,17 +48,21 @@ class RokuRemote(RokuEntity, RemoteEntity):
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the device on."""
         await self.coordinator.roku.remote("poweron")
+        await self.coordinator.async_request_refresh()
 
     @roku_exception_handler
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the device off."""
         await self.coordinator.roku.remote("poweroff")
+        await self.coordinator.async_request_refresh()
 
     @roku_exception_handler
-    async def async_send_command(self, command: List, **kwargs) -> None:
+    async def async_send_command(self, command: list, **kwargs) -> None:
         """Send a command to one device."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]
 
         for _ in range(num_repeats):
             for single_command in command:
                 await self.coordinator.roku.remote(single_command)
+
+        await self.coordinator.async_request_refresh()

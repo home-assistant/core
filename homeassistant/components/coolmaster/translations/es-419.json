@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "connection_error": "Error al conectarse a la instancia de CoolMasterNet. Por favor revise su host.",
             "no_units": "No se encontraron unidades de HVAC en el host CoolMasterNet."
         },
         "step": {

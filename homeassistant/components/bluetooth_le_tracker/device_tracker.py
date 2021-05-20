@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import logging
 from uuid import UUID
 
-import pygatt  # pylint: disable=import-error
+import pygatt
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
@@ -46,7 +46,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_scanner(hass, config, see, discovery_info=None):
+def setup_scanner(hass, config, see, discovery_info=None):  # noqa: C901
     """Set up the Bluetooth LE Scanner."""
 
     new_devices = {}
@@ -169,7 +169,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
             ):
                 handle = None
                 try:
-                    adapter.start(reset_on_start=True)
+                    adapter.start(reset_on_start=False)
                     _LOGGER.debug("Reading battery for Bluetooth LE device %s", mac)
                     bt_device = adapter.connect(mac)
                     # Try to get the handle; it will raise a BLEError exception if not available

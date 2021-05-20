@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
+        },
+        "create_entry": {
+            "default": "Vellykket godkjenning"
+        },
+        "error": {
+            "invalid_auth": "Ugyldig godkjenning"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Autentiseringstokener ble ugyldige, logg inn for \u00e5 gjenskape dem."
+            },
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "url": "Nettsted",
+                    "username": "Brukernavn"
+                }
+            }
+        }
+    }
+}

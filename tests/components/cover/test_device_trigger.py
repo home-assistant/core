@@ -1,4 +1,6 @@
 """The tests for Cover device triggers."""
+from datetime import timedelta
+
 import pytest
 
 import homeassistant.components.automation as automation
@@ -12,16 +14,19 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
     assert_lists_same,
+    async_fire_time_changed,
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
     mock_device_registry,
     mock_registry,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -42,7 +47,7 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_triggers(hass, device_reg, entity_reg):
+async def test_get_triggers(hass, device_reg, entity_reg, enable_custom_integrations):
     """Test we get the expected triggers from a cover."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -93,7 +98,9 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_get_triggers_set_pos(hass, device_reg, entity_reg):
+async def test_get_triggers_set_pos(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected triggers from a cover."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -151,7 +158,9 @@ async def test_get_triggers_set_pos(hass, device_reg, entity_reg):
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_get_triggers_set_tilt_pos(hass, device_reg, entity_reg):
+async def test_get_triggers_set_tilt_pos(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected triggers from a cover."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -209,7 +218,9 @@ async def test_get_triggers_set_tilt_pos(hass, device_reg, entity_reg):
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
+async def test_get_trigger_capabilities(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected capabilities from a cover trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -233,10 +244,16 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
         capabilities = await async_get_device_automation_capabilities(
             hass, "trigger", trigger
         )
-        assert capabilities == {"extra_fields": []}
+        assert capabilities == {
+            "extra_fields": [
+                {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+            ]
+        }
 
 
-async def test_get_trigger_capabilities_set_pos(hass, device_reg, entity_reg):
+async def test_get_trigger_capabilities_set_pos(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected capabilities from a cover trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -283,10 +300,20 @@ async def test_get_trigger_capabilities_set_pos(hass, device_reg, entity_reg):
         if trigger["type"] == "position":
             assert capabilities == expected_capabilities
         else:
-            assert capabilities == {"extra_fields": []}
+            assert capabilities == {
+                "extra_fields": [
+                    {
+                        "name": "for",
+                        "optional": True,
+                        "type": "positive_time_period_dict",
+                    }
+                ]
+            }
 
 
-async def test_get_trigger_capabilities_set_tilt_pos(hass, device_reg, entity_reg):
+async def test_get_trigger_capabilities_set_tilt_pos(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected capabilities from a cover trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -333,7 +360,15 @@ async def test_get_trigger_capabilities_set_tilt_pos(hass, device_reg, entity_re
         if trigger["type"] == "tilt_position":
             assert capabilities == expected_capabilities
         else:
-            assert capabilities == {"extra_fields": []}
+            assert capabilities == {
+                "extra_fields": [
+                    {
+                        "name": "for",
+                        "optional": True,
+                        "type": "positive_time_period_dict",
+                    }
+                ]
+            }
 
 
 async def test_if_fires_on_state_change(hass, calls):
@@ -458,7 +493,62 @@ async def test_if_fires_on_state_change(hass, calls):
     ] == "closing - device - {} - opening - closing - None".format("cover.entity")
 
 
-async def test_if_fires_on_position(hass, calls):
+async def test_if_fires_on_state_change_with_for(hass, calls):
+    """Test for triggers firing with delay."""
+    entity_id = "cover.entity"
+    hass.states.async_set(entity_id, STATE_CLOSED)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": "",
+                        "entity_id": entity_id,
+                        "type": "opened",
+                        "for": {"seconds": 5},
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "turn_off {{ trigger.%s }}"
+                            % "}} - {{ trigger.".join(
+                                (
+                                    "platform",
+                                    "entity_id",
+                                    "from_state.state",
+                                    "to_state.state",
+                                    "for",
+                                )
+                            )
+                        },
+                    },
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_CLOSED
+    assert len(calls) == 0
+
+    hass.states.async_set(entity_id, STATE_OPEN)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    await hass.async_block_till_done()
+    assert (
+        calls[0].data["some"]
+        == f"turn_off device - {entity_id} - closed - open - 0:00:05"
+    )
+
+
+async def test_if_fires_on_position(hass, calls, enable_custom_integrations):
     """Test for position triggers."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -541,8 +631,12 @@ async def test_if_fires_on_position(hass, calls):
             ]
         },
     )
+    hass.states.async_set(ent.entity_id, STATE_OPEN, attributes={"current_position": 1})
     hass.states.async_set(
-        ent.entity_id, STATE_CLOSED, attributes={"current_position": 50}
+        ent.entity_id, STATE_CLOSED, attributes={"current_position": 95}
+    )
+    hass.states.async_set(
+        ent.entity_id, STATE_OPEN, attributes={"current_position": 50}
     )
     await hass.async_block_till_done()
     assert len(calls) == 3
@@ -550,8 +644,8 @@ async def test_if_fires_on_position(hass, calls):
         [calls[0].data["some"], calls[1].data["some"], calls[2].data["some"]]
     ) == sorted(
         [
-            "is_pos_gt_45_lt_90 - device - cover.set_position_cover - open - closed - None",
-            "is_pos_lt_90 - device - cover.set_position_cover - open - closed - None",
+            "is_pos_gt_45_lt_90 - device - cover.set_position_cover - closed - open - None",
+            "is_pos_lt_90 - device - cover.set_position_cover - closed - open - None",
             "is_pos_gt_45 - device - cover.set_position_cover - open - closed - None",
         ]
     )
@@ -581,7 +675,7 @@ async def test_if_fires_on_position(hass, calls):
     )
 
 
-async def test_if_fires_on_tilt_position(hass, calls):
+async def test_if_fires_on_tilt_position(hass, calls, enable_custom_integrations):
     """Test for tilt position triggers."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -665,7 +759,13 @@ async def test_if_fires_on_tilt_position(hass, calls):
         },
     )
     hass.states.async_set(
-        ent.entity_id, STATE_CLOSED, attributes={"current_tilt_position": 50}
+        ent.entity_id, STATE_OPEN, attributes={"current_tilt_position": 1}
+    )
+    hass.states.async_set(
+        ent.entity_id, STATE_CLOSED, attributes={"current_tilt_position": 95}
+    )
+    hass.states.async_set(
+        ent.entity_id, STATE_OPEN, attributes={"current_tilt_position": 50}
     )
     await hass.async_block_till_done()
     assert len(calls) == 3
@@ -673,8 +773,8 @@ async def test_if_fires_on_tilt_position(hass, calls):
         [calls[0].data["some"], calls[1].data["some"], calls[2].data["some"]]
     ) == sorted(
         [
-            "is_pos_gt_45_lt_90 - device - cover.set_position_cover - open - closed - None",
-            "is_pos_lt_90 - device - cover.set_position_cover - open - closed - None",
+            "is_pos_gt_45_lt_90 - device - cover.set_position_cover - closed - open - None",
+            "is_pos_lt_90 - device - cover.set_position_cover - closed - open - None",
             "is_pos_gt_45 - device - cover.set_position_cover - open - closed - None",
         ]
     )

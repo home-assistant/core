@@ -3,5 +3,6 @@
   "name": "Tahoma",
   "documentation": "https://www.home-assistant.io/integrations/tahoma",
   "requirements": ["tahoma-api==0.0.16"],
-  "codeowners": ["@philklei"]
+  "codeowners": ["@philklei"],
+  "iot_class": "cloud_polling"
 }

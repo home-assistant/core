@@ -1,17 +1,17 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denne JuiceNet-kontoen er allerede konfigurert"
+            "already_configured": "Kontoen er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
         "step": {
             "user": {
                 "data": {
-                    "api_token": "JuiceNet API-token"
+                    "api_token": "API-token"
                 },
                 "description": "Du trenger API-tokenet fra https://home.juice.net/Manage.",
                 "title": "Koble til JuiceNet"

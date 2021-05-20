@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host is already configured."
+            "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "Unable to Connect to host",
-            "name_exists": "Name already exists",
-            "wrong_credentials": "Wrong username or password"
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "name_exists": "Name already exists"
         },
         "step": {
             "user": {
@@ -25,6 +25,8 @@
         "step": {
             "init": {
                 "data": {
+                    "limit": "Limit",
+                    "order": "Order",
                     "scan_interval": "Update frequency"
                 },
                 "title": "Configure options for Transmission"

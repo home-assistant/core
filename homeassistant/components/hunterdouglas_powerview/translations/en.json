@@ -4,7 +4,7 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect, please try again",
+            "cannot_connect": "Failed to connect",
             "unknown": "Unexpected error"
         },
         "step": {
@@ -14,11 +14,10 @@
             },
             "user": {
                 "data": {
-                    "host": "IP address"
+                    "host": "IP Address"
                 },
                 "title": "Connect to the PowerView Hub"
             }
         }
-    },
-    "title": "Hunter Douglas PowerView"
+    }
 }

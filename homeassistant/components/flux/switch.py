@@ -22,6 +22,7 @@ from homeassistant.components.light import (
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_BRIGHTNESS,
     CONF_LIGHTS,
     CONF_MODE,
     CONF_NAME,
@@ -31,8 +32,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers import config_validation as cv, event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
@@ -50,7 +50,6 @@ CONF_STOP_TIME = "stop_time"
 CONF_START_CT = "start_colortemp"
 CONF_SUNSET_CT = "sunset_colortemp"
 CONF_STOP_CT = "stop_colortemp"
-CONF_BRIGHTNESS = "brightness"
 CONF_DISABLE_BRIGHTNESS_ADJUST = "disable_brightness_adjust"
 CONF_INTERVAL = "interval"
 
@@ -224,7 +223,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         if self.is_on:
             return
 
-        self.unsub_tracker = async_track_time_interval(
+        self.unsub_tracker = event.async_track_time_interval(
             self.hass,
             self.async_flux_update,
             datetime.timedelta(seconds=self._interval),

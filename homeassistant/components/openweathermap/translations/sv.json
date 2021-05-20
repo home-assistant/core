@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "OpenWeatherMap-integrationen f\u00f6r dessa koordinater \u00e4r redan konfigurerad."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "OpenWeatherMap API-nyckel",
+                    "language": "Spr\u00e5k",
+                    "mode": "L\u00e4ge",
+                    "name": "Integrationens namn"
+                },
+                "title": "OpenWeatherMap"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language": "Spr\u00e5k",
+                    "mode": "L\u00e4ge"
+                }
+            }
+        }
+    }
+}

@@ -1,6 +1,7 @@
 """Config flow to configure songpal component."""
+from __future__ import annotations
+
 import logging
-from typing import Optional
 from urllib.parse import urlparse
 
 from songpal import Device, SongpalException
@@ -10,7 +11,7 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_NAME
 
-from .const import CONF_ENDPOINT, DOMAIN  # pylint: disable=unused-import
+from .const import CONF_ENDPOINT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,11 +30,10 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Songpal configuration flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the flow."""
-        self.conf: Optional[SongpalConfig] = None
+        self.conf: SongpalConfig | None = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
@@ -74,9 +74,7 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
         # Check if already configured
-        if self._endpoint_already_configured():
-            return self.async_abort(reason="already_configured")
-
+        self._async_abort_entries_match({CONF_ENDPOINT: self.conf.endpoint})
         if user_input is None:
             return self.async_show_form(
                 step_id="init",
@@ -113,7 +111,6 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if "videoScreen" in service_types:
             return self.async_abort(reason="not_songpal_device")
 
-        # pylint: disable=no-member
         self.context["title_placeholders"] = {
             CONF_NAME: friendly_name,
             CONF_HOST: parsed_url.hostname,
@@ -144,10 +141,3 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.conf = SongpalConfig(name, parsed_url.hostname, endpoint)
 
         return await self.async_step_init(user_input)
-
-    def _endpoint_already_configured(self):
-        """See if we already have an endpoint matching user input configured."""
-        existing_endpoints = [
-            entry.data[CONF_ENDPOINT] for entry in self._async_current_entries()
-        ]
-        return self.conf.endpoint in existing_endpoints

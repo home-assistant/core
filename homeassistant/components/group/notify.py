@@ -2,7 +2,6 @@
 import asyncio
 from collections.abc import Mapping
 from copy import deepcopy
-import logging
 
 import voluptuous as vol
 
@@ -17,8 +16,6 @@ from homeassistant.const import ATTR_SERVICE
 import homeassistant.helpers.config_validation as cv
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_SERVICES = "services"
 

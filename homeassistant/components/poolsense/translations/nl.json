@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-mail",
+                    "password": "Wachtwoord"
+                },
+                "description": "Wil je beginnen met instellen?",
+                "title": "PoolSense"
+            }
+        }
+    }
+}

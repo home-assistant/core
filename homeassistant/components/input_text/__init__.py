@@ -1,6 +1,7 @@
 """Support to enter a value into a text box."""
+from __future__ import annotations
+
 import logging
-import typing
 
 import voluptuous as vol
 
@@ -14,14 +15,14 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceCallType
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,7 +112,7 @@ CONFIG_SCHEMA = vol.Schema(
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input text."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
@@ -119,8 +120,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
-    collection.attach_entity_component_collection(
-        component, yaml_collection, InputText.from_yaml
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, yaml_collection, InputText.from_yaml
     )
 
     storage_collection = InputTextStorageCollection(
@@ -128,8 +129,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
-    collection.attach_entity_component_collection(
-        component, storage_collection, InputText
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, storage_collection, InputText
     )
 
     await yaml_collection.async_load(
@@ -141,10 +142,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
-
-    async def reload_service_handler(service_call: ServiceCallType) -> None:
+    async def reload_service_handler(service_call: ServiceCall) -> None:
         """Reload yaml entities."""
         conf = await component.async_prepare_reload(skip_reset=True)
         if conf is None:
@@ -174,16 +172,16 @@ class InputTextStorageCollection(collection.StorageCollection):
     CREATE_SCHEMA = vol.Schema(vol.All(CREATE_FIELDS, _cv_input_text))
     UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
 
-    async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
+    async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         return self.CREATE_SCHEMA(data)
 
     @callback
-    def _get_suggested_id(self, info: typing.Dict) -> str:
+    def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
-    async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
+    async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
         return _cv_input_text({**data, **update_data})
@@ -192,14 +190,14 @@ class InputTextStorageCollection(collection.StorageCollection):
 class InputText(RestoreEntity):
     """Represent a text box."""
 
-    def __init__(self, config: typing.Dict):
+    def __init__(self, config: dict):
         """Initialize a text input."""
         self._config = config
         self.editable = True
         self._current_value = config.get(CONF_INITIAL)
 
     @classmethod
-    def from_yaml(cls, config: typing.Dict) -> "InputText":
+    def from_yaml(cls, config: dict) -> InputText:
         """Return entity instance initialized from yaml storage."""
         input_text = cls(config)
         input_text.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
@@ -242,12 +240,12 @@ class InputText(RestoreEntity):
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
-    def unique_id(self) -> typing.Optional[str]:
+    def unique_id(self) -> str | None:
         """Return unique id for the entity."""
         return self._config[CONF_ID]
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_EDITABLE: self.editable,
@@ -283,7 +281,7 @@ class InputText(RestoreEntity):
         self._current_value = value
         self.async_write_ha_state()
 
-    async def async_update_config(self, config: typing.Dict) -> None:
+    async def async_update_config(self, config: dict) -> None:
         """Handle when the config is updated."""
         self._config = config
         self.async_write_ha_state()

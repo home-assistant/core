@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "connection": "Verbindungsfehler: Bitte \u00fcberpr\u00fcfe Host, Port und SSL",
-            "login": "Login-Fehler: Bitte \u00fcberpr\u00fcfen Sie Ihren Benutzernamen & Passwort",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "missing_data": "Fehlende Daten: Bitte versuchen Sie es sp\u00e4ter noch einmal oder eine andere Konfiguration",
             "otp_failed": "Die zweistufige Authentifizierung ist fehlgeschlagen. Versuchen Sie es erneut mit einem neuen Code",
-            "unknown": "Unbekannter Fehler: Bitte \u00fcberpr\u00fcfen Sie die Protokolle, um weitere Details zu erhalten"
+            "unknown": "Unerwarteter Fehler"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
@@ -22,8 +22,9 @@
                 "data": {
                     "password": "Passwort",
                     "port": "Port",
-                    "ssl": "Verwenden Sie SSL/TLS, um eine Verbindung zu Ihrem NAS herzustellen",
-                    "username": "Benutzername"
+                    "ssl": "Verwendet ein SSL-Zertifikat",
+                    "username": "Benutzername",
+                    "verify_ssl": "SSL Zertifikat verifizieren"
                 },
                 "description": "M\u00f6chten Sie {name} ({host}) einrichten?",
                 "title": "Synology DSM"
@@ -33,8 +34,9 @@
                     "host": "Host",
                     "password": "Passwort",
                     "port": "Port",
-                    "ssl": "Verwenden Sie SSL/TLS, um eine Verbindung zu Ihrem NAS herzustellen",
-                    "username": "Benutzername"
+                    "ssl": "Verwendet ein SSL-Zertifikat",
+                    "username": "Benutzername",
+                    "verify_ssl": "SSL Zertifikat verifizieren"
                 },
                 "title": "Synology DSM"
             }
@@ -44,7 +46,8 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Minuten zwischen den Scans"
+                    "scan_interval": "Minuten zwischen den Scans",
+                    "timeout": "Timeout (Sekunden)"
                 }
             }
         }

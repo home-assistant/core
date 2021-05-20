@@ -15,6 +15,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -29,11 +30,14 @@ def entity_reg(hass):
     return mock_registry(hass)
 
 
-async def test_get_actions_support_open(hass, device_reg, entity_reg):
+async def test_get_actions_support_open(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected actions from a lock which supports open."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -72,11 +76,14 @@ async def test_get_actions_support_open(hass, device_reg, entity_reg):
     assert_lists_same(actions, expected_actions)
 
 
-async def test_get_actions_not_support_open(hass, device_reg, entity_reg):
+async def test_get_actions_not_support_open(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected actions from a lock which doesn't support open."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -146,6 +153,7 @@ async def test_action(hass):
             ]
         },
     )
+    await hass.async_block_till_done()
 
     lock_calls = async_mock_service(hass, "lock", "lock")
     unlock_calls = async_mock_service(hass, "lock", "unlock")

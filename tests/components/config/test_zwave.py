@@ -1,5 +1,6 @@
 """Test Z-Wave config panel."""
 import json
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -8,7 +9,6 @@ from homeassistant.components import config
 from homeassistant.components.zwave import DATA_NETWORK, const
 from homeassistant.const import HTTP_NOT_FOUND
 
-from tests.async_mock import MagicMock, patch
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue
 
 VIEW_NAME = "api:config:zwave:device_config"
@@ -338,7 +338,7 @@ async def test_save_config(hass, client):
     assert resp.status == 200
     result = await resp.json()
     assert network.write_config.called
-    assert result == {"message": "Z-Wave configuration saved to file."}
+    assert result == {"message": "Z-Wave configuration saved to file"}
 
 
 async def test_get_protection_values(hass, client):

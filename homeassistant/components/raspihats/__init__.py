@@ -214,7 +214,7 @@ class I2CHatsManager(threading.Thread):
                 value = i2c_hat.di.value
                 return (value >> channel) & 0x01
             except ResponseException as ex:
-                raise I2CHatsException(str(ex))
+                raise I2CHatsException(str(ex)) from ex
 
     def write_dq(self, address, channel, value):
         """Write a value to a I2C-HAT digital output."""
@@ -228,7 +228,7 @@ class I2CHatsManager(threading.Thread):
             try:
                 i2c_hat.dq.channels[channel] = value
             except ResponseException as ex:
-                raise I2CHatsException(str(ex))
+                raise I2CHatsException(str(ex)) from ex
 
     def read_dq(self, address, channel):
         """Read a value from a I2C-HAT digital output."""
@@ -242,4 +242,4 @@ class I2CHatsManager(threading.Thread):
             try:
                 return i2c_hat.dq.channels[channel]
             except ResponseException as ex:
-                raise I2CHatsException(str(ex))
+                raise I2CHatsException(str(ex)) from ex

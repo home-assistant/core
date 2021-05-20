@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "Instalace dom\u00e1c\u00edho asistenta mus\u00ed b\u00fdt p\u0159\u00edstupn\u00e1 z internetu, aby p\u0159ij\u00edmala zpr\u00e1vy od spole\u010dnosti GPSLogger.",
-            "one_instance_allowed": "Povolena je pouze jedna instance."
+            "single_instance_allowed": "Ji\u017e nastaveno. Je mo\u017en\u00e1 pouze jedin\u00e1 konfigurace.",
+            "webhook_not_internet_accessible": "V\u00e1\u0161 Home Assistant mus\u00ed b\u00fdt p\u0159\u00edstupn\u00fd z internetu, aby mohl p\u0159ij\u00edmat zpr\u00e1vy webhook."
         },
         "create_entry": {
-            "default": "Chcete-li odeslat ud\u00e1losti do aplikace Home Assistant, budete muset nastavit funkci Webhook v n\u00e1stroji GPSLogger. \n\n Vypl\u0148te n\u00e1sleduj\u00edc\u00ed informace: \n\n - URL: ` {webhook_url} ' \n - Metoda: POST \n\n Dal\u0161\u00ed podrobnosti naleznete v [dokumentaci] ( {docs_url} )."
+            "default": "Chcete-li odeslat ud\u00e1losti do Home Assistant, budete muset nastavit funkci Webhook v n\u00e1stroji GPSLogger. \n\nVypl\u0148te n\u00e1sleduj\u00edc\u00ed informace: \n\n - URL: `{webhook_url}`\n - Metoda: POST \n\nDal\u0161\u00ed podrobnosti naleznete v [dokumentaci]({docs_url})."
         },
         "step": {
             "user": {

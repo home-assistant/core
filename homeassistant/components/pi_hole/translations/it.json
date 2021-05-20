@@ -1,20 +1,26 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato",
-            "duplicated_name": "Il nome \u00e8 gi\u00e0 esistente"
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
         },
         "error": {
             "cannot_connect": "Impossibile connettersi"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "Chiave API"
+                }
+            },
             "user": {
                 "data": {
-                    "api_key": "Chiave API (opzionale)",
+                    "api_key": "Chiave API",
                     "host": "Host",
+                    "location": "Posizione",
                     "name": "Nome",
                     "port": "Porta",
-                    "ssl": "Utilizzare SSL",
+                    "ssl": "Utilizza un certificato SSL",
+                    "statistics_only": "Solo Statistiche",
                     "verify_ssl": "Verificare il certificato SSL"
                 }
             }

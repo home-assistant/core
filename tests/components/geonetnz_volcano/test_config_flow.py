@@ -1,5 +1,6 @@
 """Define tests for the GeoNet NZ Volcano config flow."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.geonetnz_volcano import config_flow
@@ -21,7 +22,7 @@ async def test_duplicate_error(hass, config_entry):
     flow.hass = hass
 
     result = await flow.async_step_user(user_input=conf)
-    assert result["errors"] == {"base": "identifier_exists"}
+    assert result["errors"] == {"base": "already_configured"}
 
 
 async def test_show_form(hass):
@@ -48,7 +49,12 @@ async def test_step_import(hass):
     flow = config_flow.GeonetnzVolcanoFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_import(import_config=conf)
+    with patch(
+        "homeassistant.components.geonetnz_volcano.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.geonetnz_volcano.async_setup", return_value=True
+    ):
+        result = await flow.async_step_import(import_config=conf)
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
     assert result["data"] == {
@@ -69,7 +75,12 @@ async def test_step_user(hass):
     flow = config_flow.GeonetnzVolcanoFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_user(user_input=conf)
+    with patch(
+        "homeassistant.components.geonetnz_volcano.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.geonetnz_volcano.async_setup", return_value=True
+    ):
+        result = await flow.async_step_user(user_input=conf)
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
     assert result["data"] == {

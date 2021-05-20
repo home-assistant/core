@@ -1,9 +1,16 @@
 {
     "config": {
+        "abort": {
+            "not_irobot_device": "O dispositivo descoberto n\u00e3o \u00e9 um dispositivo iRobot"
+        },
         "error": {
             "cannot_connect": "Falha ao conectar, tente novamente"
         },
+        "flow_title": "iRobot {name} ({host})",
         "step": {
+            "link": {
+                "title": "Recuperar Palavra-passe"
+            },
             "user": {
                 "data": {
                     "continuous": "Cont\u00ednuo",

@@ -13,6 +13,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -489,7 +490,9 @@ async def test_automation_with_non_existing_integration(hass, caplog):
     assert "Integration 'beer' not found" in caplog.text
 
 
-async def test_automation_with_integration_without_device_action(hass, caplog):
+async def test_automation_with_integration_without_device_action(
+    hass, caplog, enable_custom_integrations
+):
     """Test automation with integration without device action support."""
     assert await async_setup_component(
         hass,
@@ -508,7 +511,9 @@ async def test_automation_with_integration_without_device_action(hass, caplog):
     )
 
 
-async def test_automation_with_integration_without_device_condition(hass, caplog):
+async def test_automation_with_integration_without_device_condition(
+    hass, caplog, enable_custom_integrations
+):
     """Test automation with integration without device condition support."""
     assert await async_setup_component(
         hass,
@@ -533,7 +538,9 @@ async def test_automation_with_integration_without_device_condition(hass, caplog
     )
 
 
-async def test_automation_with_integration_without_device_trigger(hass, caplog):
+async def test_automation_with_integration_without_device_trigger(
+    hass, caplog, enable_custom_integrations
+):
     """Test automation with integration without device trigger support."""
     assert await async_setup_component(
         hass,
@@ -614,7 +621,7 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_automation_with_sub_condition(hass, calls):
+async def test_automation_with_sub_condition(hass, calls, enable_custom_integrations):
     """Test automation with device condition under and/or conditions."""
     DOMAIN = "light"
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -764,7 +771,7 @@ async def test_automation_with_bad_trigger(hass, caplog):
 
 
 async def test_websocket_device_not_found(hass, hass_ws_client):
-    """Test caling command with unknown device."""
+    """Test calling command with unknown device."""
     await async_setup_component(hass, "device_automation", {})
     client = await hass_ws_client(hass)
     await client.send_json(

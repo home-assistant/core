@@ -11,9 +11,9 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
+    PERCENTAGE,
     TIME_DAYS,
     TIME_MINUTES,
-    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -59,7 +59,7 @@ ICON_MAP = {
 
 UNIT_OF_MEASUREMENT_MAP = {
     "auto_watering": "",
-    "battery": UNIT_PERCENTAGE,
+    "battery": PERCENTAGE,
     "is_watering": "",
     "manual_watering": "",
     "next_cycle": "",
@@ -161,12 +161,7 @@ class RainCloudEntity(Entity):
         self.schedule_update_ha_state(True)
 
     @property
-    def unit_of_measurement(self):
-        """Return the units of measurement."""
-        return UNIT_OF_MEASUREMENT_MAP.get(self._sensor_type)
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION, "identifier": self.data.serial}
 

@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components import alexa
 from homeassistant.components.alexa import intent
+from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
@@ -111,7 +112,7 @@ def _intent_req(client, data=None):
     return client.post(
         intent.INTENTS_API_ENDPOINT,
         data=json.dumps(data or {}),
-        headers={"content-type": "application/json"},
+        headers={"content-type": CONTENT_TYPE_JSON},
     )
 
 

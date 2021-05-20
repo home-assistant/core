@@ -1,14 +1,10 @@
 """Support for Melissa climate."""
-import logging
-
 import melissa
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "melissa"
 DATA_MELISSA = "MELISSA"

@@ -8,14 +8,16 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_SERIAL,
 )
-from homeassistant.const import CONF_HOST
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_NAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-HOST = "192.168.1.160"
 NAME = "Roku 3"
+NAME_ROKUTV = '58" Onn Roku TV'
+
+HOST = "192.168.1.160"
 SSDP_LOCATION = "http://192.168.1.160/"
 UPNP_FRIENDLY_NAME = "My Roku 3"
 UPNP_SERIAL = "1GU48T017973"
@@ -26,6 +28,16 @@ MOCK_SSDP_DISCOVERY_INFO = {
     ATTR_UPNP_SERIAL: UPNP_SERIAL,
 }
 
+HOMEKIT_HOST = "192.168.1.161"
+
+MOCK_HOMEKIT_DISCOVERY_INFO = {
+    CONF_NAME: "onn._hap._tcp.local.",
+    CONF_HOST: HOMEKIT_HOST,
+    "properties": {
+        CONF_ID: "2d:97:da:ee:dc:99",
+    },
+}
+
 
 def mock_connection(
     aioclient_mock: AiohttpClientMocker,
@@ -33,6 +45,7 @@ def mock_connection(
     app: str = "roku",
     host: str = HOST,
     power: bool = True,
+    media_state: str = "close",
     error: bool = False,
     server_error: bool = False,
 ) -> None:
@@ -89,13 +102,23 @@ def mock_connection(
         headers={"Content-Type": "text/xml"},
     )
 
-    aioclient_mock.post(
-        re.compile(f"{roku_url}/keypress/.*"), text="OK",
+    aioclient_mock.get(
+        f"{roku_url}/query/media-player",
+        text=load_fixture(f"roku/media-player-{media_state}.xml"),
+        headers={"Content-Type": "text/xml"},
     )
 
     aioclient_mock.post(
-        re.compile(f"{roku_url}/launch/.*"), text="OK",
+        re.compile(f"{roku_url}/keypress/.*"),
+        text="OK",
     )
+
+    aioclient_mock.post(
+        re.compile(f"{roku_url}/launch/.*"),
+        text="OK",
+    )
+
+    aioclient_mock.post(f"{roku_url}/search", text="OK")
 
 
 def mock_connection_error(
@@ -115,6 +138,7 @@ def mock_connection_error(
 
     aioclient_mock.post(re.compile(f"{roku_url}/keypress/.*"), exc=SocketGIAError)
     aioclient_mock.post(re.compile(f"{roku_url}/launch/.*"), exc=SocketGIAError)
+    aioclient_mock.post(f"{roku_url}/search", exc=SocketGIAError)
 
 
 def mock_connection_server_error(
@@ -134,10 +158,11 @@ def mock_connection_server_error(
 
     aioclient_mock.post(re.compile(f"{roku_url}/keypress/.*"), status=500)
     aioclient_mock.post(re.compile(f"{roku_url}/launch/.*"), status=500)
+    aioclient_mock.post(f"{roku_url}/search", status=500)
 
 
 async def setup_integration(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     device: str = "roku3",
     app: str = "roku",
@@ -145,6 +170,7 @@ async def setup_integration(
     unique_id: str = UPNP_SERIAL,
     error: bool = False,
     power: bool = True,
+    media_state: str = "close",
     server_error: bool = False,
     skip_entry_setup: bool = False,
 ) -> MockConfigEntry:
@@ -161,6 +187,7 @@ async def setup_integration(
             host=host,
             error=error,
             power=power,
+            media_state=media_state,
             server_error=server_error,
         )
         await hass.config_entries.async_setup(entry.entry_id)

@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "UPnP/IGD \u5df2\u914d\u7f6e\u5b8c\u6210",
-            "no_devices_discovered": "\u672a\u53d1\u73b0 UPnP/IGD",
             "no_devices_found": "\u6ca1\u6709\u5728\u7f51\u7edc\u4e0a\u627e\u5230 UPnP/IGD \u8bbe\u5907\u3002"
         },
         "step": {

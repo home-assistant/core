@@ -6,7 +6,8 @@
             "open": "{entity_name} opmaachen",
             "open_tilt": "{entity_name} op Kipp stelle",
             "set_position": "{entity_name} positioun programm\u00e9ieren",
-            "set_tilt_position": "{entity_name} kipp positioun programm\u00e9ieren"
+            "set_tilt_position": "{entity_name} kipp positioun programm\u00e9ieren",
+            "stop": "Stop {entity_name}"
         },
         "condition_type": {
             "is_closed": "{entity_name} ass zou",

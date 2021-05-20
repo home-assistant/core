@@ -1,6 +1,4 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
-import logging
-
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
     ATTR_GPS,
@@ -9,14 +7,18 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    ATTR_DEVICE_ID,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     ATTR_ALTITUDE,
     ATTR_COURSE,
-    ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
     ATTR_SPEED,
     ATTR_VERTICAL_ACCURACY,
@@ -24,7 +26,6 @@ from .const import (
 )
 from .helpers import device_info
 
-_LOGGER = logging.getLogger(__name__)
 ATTR_KEYS = (ATTR_ALTITUDE, ATTR_COURSE, ATTR_SPEED, ATTR_VERTICAL_ACCURACY)
 
 
@@ -55,7 +56,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         return self._data.get(ATTR_BATTERY)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific attributes."""
         attrs = {}
         for key in ATTR_KEYS:

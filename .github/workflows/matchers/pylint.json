@@ -1,0 +1,32 @@
+{
+  "problemMatcher": [
+    {
+      "owner": "pylint-error",
+      "severity": "error",
+      "pattern": [
+        {
+          "regexp": "^(.+):(\\d+):(\\d+):\\s(([EF]\\d{4}):\\s.+)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "message": 4,
+          "code": 5
+        }
+      ]
+    },
+    {
+      "owner": "pylint-warning",
+      "severity": "warning",
+      "pattern": [
+        {
+          "regexp": "^(.+):(\\d+):(\\d+):\\s(([CRW]\\d{4}):\\s.+)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "message": 4,
+          "code": 5
+        }
+      ]
+    }
+  ]
+}

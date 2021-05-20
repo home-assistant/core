@@ -10,10 +10,13 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
     ATTR_NAME,
+    ATTR_TIME,
     CONF_HOST,
     CONF_HOSTS,
     CONF_PASSWORD,
+    CONF_PATH,
     CONF_PLATFORM,
+    CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -25,6 +28,7 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     ATTR_ADDRESS,
     ATTR_CHANNEL,
+    ATTR_DEVICE_TYPE,
     ATTR_DISCOVER_DEVICES,
     ATTR_DISCOVERY_TYPE,
     ATTR_ERRORCODE,
@@ -35,7 +39,7 @@ from .const import (
     ATTR_PARAM,
     ATTR_PARAMSET,
     ATTR_PARAMSET_KEY,
-    ATTR_TIME,
+    ATTR_RX_MODE,
     ATTR_UNIQUE_ID,
     ATTR_VALUE,
     ATTR_VALUE_TYPE,
@@ -45,8 +49,6 @@ from .const import (
     CONF_JSONPORT,
     CONF_LOCAL_IP,
     CONF_LOCAL_PORT,
-    CONF_PATH,
-    CONF_PORT,
     CONF_RESOLVENAMES,
     CONF_RESOLVENAMES_OPTIONS,
     DATA_CONF,
@@ -99,6 +101,7 @@ DEVICE_SCHEMA = vol.Schema(
         vol.Required(ATTR_NAME): cv.string,
         vol.Required(ATTR_ADDRESS): cv.string,
         vol.Required(ATTR_INTERFACE): cv.string,
+        vol.Optional(ATTR_DEVICE_TYPE): cv.string,
         vol.Optional(ATTR_CHANNEL, default=DEFAULT_CHANNEL): vol.Coerce(int),
         vol.Optional(ATTR_PARAM): cv.string,
         vol.Optional(ATTR_UNIQUE_ID): cv.string,
@@ -199,13 +202,13 @@ SCHEMA_SERVICE_PUT_PARAMSET = vol.Schema(
         vol.Required(ATTR_ADDRESS): vol.All(cv.string, vol.Upper),
         vol.Required(ATTR_PARAMSET_KEY): vol.All(cv.string, vol.Upper),
         vol.Required(ATTR_PARAMSET): dict,
+        vol.Optional(ATTR_RX_MODE): vol.All(cv.string, vol.Upper),
     }
 )
 
 
 def setup(hass, config):
     """Set up the Homematic component."""
-
     conf = config[DOMAIN]
     hass.data[DATA_CONF] = remotes = {}
     hass.data[DATA_STORE] = set()
@@ -254,7 +257,7 @@ def setup(hass, config):
 
     # Init homematic hubs
     entity_hubs = []
-    for hub_name in conf[CONF_HOSTS].keys():
+    for hub_name in conf[CONF_HOSTS]:
         entity_hubs.append(HMHub(hass, homematic, hub_name))
 
     def _hm_service_virtualkey(service):
@@ -390,15 +393,17 @@ def setup(hass, config):
         # here instead of a dict, so add this explicit cast.
         # The service schema makes sure that this cast works.
         paramset = dict(service.data.get(ATTR_PARAMSET))
+        rx_mode = service.data.get(ATTR_RX_MODE)
 
         _LOGGER.debug(
-            "Calling putParamset: %s, %s, %s, %s",
+            "Calling putParamset: %s, %s, %s, %s, %s",
             interface,
             address,
             paramset_key,
             paramset,
+            rx_mode,
         )
-        homematic.putParamset(interface, address, paramset_key, paramset)
+        homematic.putParamset(interface, address, paramset_key, paramset, rx_mode)
 
     hass.services.register(
         DOMAIN,
@@ -533,6 +538,7 @@ def _get_devices(hass, discovery_type, keys, interface):
                     ATTR_ADDRESS: key,
                     ATTR_INTERFACE: interface,
                     ATTR_NAME: name,
+                    ATTR_DEVICE_TYPE: class_name,
                     ATTR_CHANNEL: channel,
                     ATTR_UNIQUE_ID: unique_id,
                 }
@@ -605,6 +611,8 @@ def _device_from_servicecall(hass, service):
     interface = service.data.get(ATTR_INTERFACE)
     if address == "BIDCOS-RF":
         address = "BidCoS-RF"
+    if address == "HMIP-RCV-1":
+        address = "HmIP-RCV-1"
 
     if interface:
         return hass.data[DATA_HOMEMATIC].devices[interface].get(address)

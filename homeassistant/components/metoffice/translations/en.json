@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                },
+                "description": "The latitude and longitude will be used to find the closest weather station.",
+                "title": "Connect to the UK Met Office"
+            }
+        }
+    }
+}

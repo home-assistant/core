@@ -7,10 +7,9 @@ from urllib.parse import urljoin
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, HTTP_OK
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import CONF_NAME, HTTP_OK, HTTP_UNAUTHORIZED
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +66,7 @@ class SigfoxAPI:
         url = urljoin(API_URL, "devicetypes")
         response = requests.get(url, auth=self._auth, timeout=10)
         if response.status_code != HTTP_OK:
-            if response.status_code == 401:
+            if response.status_code == HTTP_UNAUTHORIZED:
                 _LOGGER.error("Invalid credentials for Sigfox API")
             else:
                 _LOGGER.error(
@@ -109,7 +108,7 @@ class SigfoxAPI:
         return self._devices
 
 
-class SigfoxDevice(Entity):
+class SigfoxDevice(SensorEntity):
     """Class for single sigfox device."""
 
     def __init__(self, device_id, auth, name):
@@ -155,6 +154,6 @@ class SigfoxDevice(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the last message."""
         return self._message_data

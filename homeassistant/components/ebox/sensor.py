@@ -10,19 +10,18 @@ from pyebox import EboxClient
 from pyebox.client import PyEboxError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
     DATA_GIGABITS,
+    PERCENTAGE,
     TIME_DAYS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,8 +35,8 @@ SCAN_INTERVAL = timedelta(minutes=15)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 SENSOR_TYPES = {
-    "usage": ["Usage", UNIT_PERCENTAGE, "mdi:percent"],
-    "balance": ["Balance", PRICE, "mdi:square-inc-cash"],
+    "usage": ["Usage", PERCENTAGE, "mdi:percent"],
+    "balance": ["Balance", PRICE, "mdi:cash-usd"],
     "limit": ["Data limit", DATA_GIGABITS, "mdi:download"],
     "days_left": ["Days left", TIME_DAYS, "mdi:calendar-today"],
     "before_offpeak_download": [
@@ -81,7 +80,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         await ebox_data.async_update()
     except PyEboxError as exp:
         _LOGGER.error("Failed login: %s", exp)
-        raise PlatformNotReady
+        raise PlatformNotReady from exp
 
     sensors = []
     for variable in config[CONF_MONITORED_VARIABLES]:
@@ -90,7 +89,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors, True)
 
 
-class EBoxSensor(Entity):
+class EBoxSensor(SensorEntity):
     """Implementation of a EBox sensor."""
 
     def __init__(self, ebox_data, sensor_type, name):

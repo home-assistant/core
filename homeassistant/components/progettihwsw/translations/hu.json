@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "relay_modes": {
+                "data": {
+                    "relay_1": "Rel\u00e9 1",
+                    "relay_10": "Rel\u00e9 10",
+                    "relay_11": "Rel\u00e9 11",
+                    "relay_12": "Rel\u00e9 12",
+                    "relay_13": "Rel\u00e9 13",
+                    "relay_14": "Rel\u00e9 14",
+                    "relay_15": "Rel\u00e9 15",
+                    "relay_16": "Rel\u00e9 16",
+                    "relay_2": "Rel\u00e9 2",
+                    "relay_3": "Rel\u00e9 3"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Hoszt",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

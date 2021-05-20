@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u042d\u0442\u043e \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432\u043e \u0443\u0436\u0435 \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u043e \u0432 Home Assistant."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "\u0418\u043d\u0442\u0435\u0440\u0432\u0430\u043b \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u044f (\u0432 \u0441\u0435\u043a\u0443\u043d\u0434\u0430\u0445)"
+                },
+                "title": "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 DSMR"
+            }
+        }
+    }
+}

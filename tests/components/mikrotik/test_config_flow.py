@@ -1,10 +1,11 @@
 """Test Mikrotik setup process."""
 from datetime import timedelta
+from unittest.mock import patch
 
 import librouteros
 import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import mikrotik
 from homeassistant.const import (
     CONF_HOST,
@@ -15,7 +16,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 DEMO_USER_INPUT = {
@@ -81,7 +81,9 @@ def mock_api_connection_error():
 async def test_import(hass, api):
     """Test import step."""
     result = await hass.config_entries.flow.async_init(
-        mikrotik.DOMAIN, context={"source": "import"}, data=DEMO_CONFIG
+        mikrotik.DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=DEMO_CONFIG,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -98,7 +100,7 @@ async def test_flow_works(hass, api):
     """Test config flow."""
 
     result = await hass.config_entries.flow.async_init(
-        mikrotik.DOMAIN, context={"source": "user"}
+        mikrotik.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -150,7 +152,7 @@ async def test_host_already_configured(hass, auth_error):
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        mikrotik.DOMAIN, context={"source": "user"}
+        mikrotik.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=DEMO_USER_INPUT
@@ -168,7 +170,7 @@ async def test_name_exists(hass, api):
     user_input[CONF_HOST] = "0.0.0.1"
 
     result = await hass.config_entries.flow.async_init(
-        mikrotik.DOMAIN, context={"source": "user"}
+        mikrotik.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=user_input
@@ -182,7 +184,7 @@ async def test_connection_error(hass, conn_error):
     """Test error when connection is unsuccessful."""
 
     result = await hass.config_entries.flow.async_init(
-        mikrotik.DOMAIN, context={"source": "user"}
+        mikrotik.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=DEMO_USER_INPUT
@@ -195,7 +197,7 @@ async def test_wrong_credentials(hass, auth_error):
     """Test error when credentials are wrong."""
 
     result = await hass.config_entries.flow.async_init(
-        mikrotik.DOMAIN, context={"source": "user"}
+        mikrotik.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=DEMO_USER_INPUT
@@ -203,6 +205,6 @@ async def test_wrong_credentials(hass, auth_error):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {
-        CONF_USERNAME: "wrong_credentials",
-        CONF_PASSWORD: "wrong_credentials",
+        CONF_USERNAME: "invalid_auth",
+        CONF_PASSWORD: "invalid_auth",
     }

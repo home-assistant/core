@@ -1,6 +1,4 @@
 """Support for controlling projector via the PJLink protocol."""
-import logging
-
 from pypjlink import MUTE_AUDIO, Projector
 from pypjlink.projector import ProjectorError
 import voluptuous as vol
@@ -22,12 +20,11 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
-
 CONF_ENCODING = "encoding"
 
 DEFAULT_PORT = 4352
 DEFAULT_ENCODING = "utf-8"
+DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -93,7 +90,9 @@ class PjLinkDevice(MediaPlayerEntity):
     def projector(self):
         """Create PJLink Projector instance."""
 
-        projector = Projector.from_address(self._host, self._port, self._encoding)
+        projector = Projector.from_address(
+            self._host, self._port, self._encoding, DEFAULT_TIMEOUT
+        )
         projector.authenticate(self._password)
         return projector
 

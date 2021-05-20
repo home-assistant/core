@@ -1,22 +1,83 @@
 set_default_level:
-  description: Set the default log level for components.
+  name: Set default level
+  description: Set the default log level for integrations.
   fields:
     level:
-      description: "Default severity level. Possible values are debug, info, warn, warning, error, fatal, critical"
+      name: Level
+      description: Default severity level for all integrations.
       example: debug
+      selector:
+        select:
+          options:
+            - debug
+            - info
+            - warning
+            - error
+            - fatal
+            - critical
 
 set_level:
-  description: Set log level for components.
+  name: Set level
+  description: Set log level for integrations.
   fields:
     homeassistant.core:
-      description: "Example on how to change the logging level for a Home Assistant core components. Possible values are debug, info, warn, warning, error, fatal, critical"
+      name: Home Assistant Core
+      description:
+        "Example on how to change the logging level for a Home Assistant Core
+        integrations."
       example: debug
+      selector:
+        select:
+          options:
+            - 'debug'
+            - 'critical'
+            - 'error'
+            - 'fatal'
+            - 'info'
+            - 'warn'
+            - 'warning'
     homeassistant.components.mqtt:
-      description: "Example on how to change the logging level for an Integration. Possible values are debug, info, warn, warning, error, fatal, critical"
+      name: Home Assistant components mqtt
+      description:
+        "Example on how to change the logging level for an Integration."
       example: warning
+      selector:
+        select:
+          options:
+            - 'debug'
+            - 'critical'
+            - 'error'
+            - 'fatal'
+            - 'info'
+            - 'warn'
+            - 'warning'
     custom_components.my_integration:
-      description: "Example on how to change the logging level for a Custom Integration. Possible values are debug, info, warn, warning, error, fatal, critical"
+      name: Custom components "my_integation"
+      description:
+        "Example on how to change the logging level for a Custom Integration."
       example: debug
+      selector:
+        select:
+          options:
+            - 'debug'
+            - 'critical'
+            - 'error'
+            - 'fatal'
+            - 'info'
+            - 'warn'
+            - 'warning'
     aiohttp:
-      description: "Example on how to change the logging level for a Python module. Possible values are debug, info, warn, warning, error, fatal, critical"
+      name: aioHttp
+      description:
+        "Example on how to change the logging level for a Python module."
       example: error
+      selector:
+        select:
+          options:
+            - 'debug'
+            - 'critical'
+            - 'error'
+            - 'fatal'
+            - 'info'
+            - 'warn'
+            - 'warning'

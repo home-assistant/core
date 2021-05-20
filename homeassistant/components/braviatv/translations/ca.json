@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Aquest televisor ja est\u00e0 configurat.",
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
             "no_ip_control": "El control IP del teu televisor est\u00e0 desactivat o aquest no \u00e9s compatible."
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar, amfitri\u00f3 o codi PIN inv\u00e0lids.",
-            "invalid_host": "Nom de l'amfitri\u00f3 o adre\u00e7a IP inv\u00e0lids.",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_host": "Nom de l'amfitri\u00f3 o adre\u00e7a IP inv\u00e0lids",
             "unsupported_model": "Aquest model de televisor no \u00e9s compatible."
         },
         "step": {

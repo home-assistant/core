@@ -1,14 +1,11 @@
 """Platform to retrieve Islamic prayer times information for Home Assistant."""
-import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 from .const import DATA_UPDATED, DOMAIN, PRAYER_TIMES_ICON, SENSOR_TYPES
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -23,7 +20,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class IslamicPrayerTimeSensor(Entity):
+class IslamicPrayerTimeSensor(SensorEntity):
     """Representation of an Islamic prayer time sensor."""
 
     def __init__(self, sensor_type, client):

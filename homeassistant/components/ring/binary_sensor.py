@@ -1,19 +1,24 @@
 """This component provides HA sensor support for Ring Door Bell/Chimes."""
 from datetime import datetime
-import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OCCUPANCY,
+    BinarySensorEntity,
+)
 from homeassistant.core import callback
 
 from . import DOMAIN
 from .entity import RingEntityMixin
 
-_LOGGER = logging.getLogger(__name__)
-
 # Sensor types: Name, category, device_class
 SENSOR_TYPES = {
-    "ding": ["Ding", ["doorbots", "authorized_doorbots"], "occupancy"],
-    "motion": ["Motion", ["doorbots", "authorized_doorbots", "stickup_cams"], "motion"],
+    "ding": ["Ding", ["doorbots", "authorized_doorbots"], DEVICE_CLASS_OCCUPANCY],
+    "motion": [
+        "Motion",
+        ["doorbots", "authorized_doorbots", "stickup_cams"],
+        DEVICE_CLASS_MOTION,
+    ],
 }
 
 
@@ -47,7 +52,7 @@ class RingBinarySensor(RingEntityMixin, BinarySensorEntity):
         super().__init__(config_entry_id, device)
         self._ring = ring
         self._sensor_type = sensor_type
-        self._name = "{} {}".format(self._device.name, SENSOR_TYPES.get(sensor_type)[0])
+        self._name = f"{self._device.name} {SENSOR_TYPES.get(sensor_type)[0]}"
         self._device_class = SENSOR_TYPES.get(sensor_type)[2]
         self._state = None
         self._unique_id = f"{device.id}-{sensor_type}"
@@ -106,9 +111,9 @@ class RingBinarySensor(RingEntityMixin, BinarySensorEntity):
         return self._unique_id
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        attrs = super().device_state_attributes
+        attrs = super().extra_state_attributes
 
         if self._active_alert is None:
             return attrs

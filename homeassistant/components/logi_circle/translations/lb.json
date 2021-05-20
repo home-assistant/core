@@ -1,18 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Dir k\u00ebnnt n\u00ebmmen een eenzegen Logi Circle Kont konfigur\u00e9ieren.",
+            "already_configured": "Kont ass scho registr\u00e9iert",
             "external_error": "Ausnam vun engem anere Floss.",
             "external_setup": "Logi Circle gouf vun engem anere Floss erfollegr\u00e4ich konfigur\u00e9iert.",
-            "no_flows": "Dir musst Logi Circle konfigur\u00e9ieren, ier Dir d\u00ebs Authentifiz\u00e9ierung k\u00ebnnt benotzen.[Liest w.e.g. d'Instruktioune](https://www.home-assistant.io/components/logi_circle/)."
-        },
-        "create_entry": {
-            "default": "Erfollegr\u00e4ich mat Logi Circle authentifiz\u00e9iert."
+            "missing_configuration": "Komponent net konfigur\u00e9iert. Folleg w.e.g der Dokumentatioun."
         },
         "error": {
-            "auth_error": "Feeler bei der API Autorisatioun.",
-            "auth_timeout": "Z\u00e4it Iwwerschreidung vun der Autorisatioun beim ufroe vum Acc\u00e8s Jeton.",
-            "follow_link": "Follegt w.e.g dem Link an authentifiz\u00e9iert iech ier de op Ofsch\u00e9cken dr\u00e9ckt."
+            "authorize_url_timeout": "Z\u00e4itiwwerschreidung beim erstellen vun der Authorisatiouns URL.",
+            "follow_link": "Follegt w.e.g dem Link an authentifiz\u00e9iert iech ier de op Ofsch\u00e9cken dr\u00e9ckt.",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
         },
         "step": {
             "auth": {

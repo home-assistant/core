@@ -1,9 +1,12 @@
 """Debounce helper."""
-import asyncio
-from logging import Logger
-from typing import Any, Awaitable, Callable, Optional
+from __future__ import annotations
 
-from homeassistant.core import HomeAssistant, callback
+import asyncio
+from collections.abc import Awaitable
+from logging import Logger
+from typing import Any, Callable
+
+from homeassistant.core import HassJob, HomeAssistant, callback
 
 
 class Debouncer:
@@ -16,7 +19,7 @@ class Debouncer:
         *,
         cooldown: float,
         immediate: bool,
-        function: Optional[Callable[..., Awaitable[Any]]] = None,
+        function: Callable[..., Awaitable[Any]] | None = None,
     ):
         """Initialize debounce.
 
@@ -26,16 +29,29 @@ class Debouncer:
         """
         self.hass = hass
         self.logger = logger
-        self.function = function
+        self._function = function
         self.cooldown = cooldown
         self.immediate = immediate
-        self._timer_task: Optional[asyncio.TimerHandle] = None
+        self._timer_task: asyncio.TimerHandle | None = None
         self._execute_at_end_of_timer: bool = False
         self._execute_lock = asyncio.Lock()
+        self._job: HassJob | None = None if function is None else HassJob(function)
+
+    @property
+    def function(self) -> Callable[..., Awaitable[Any]] | None:
+        """Return the function being wrapped by the Debouncer."""
+        return self._function
+
+    @function.setter
+    def function(self, function: Callable[..., Awaitable[Any]]) -> None:
+        """Update the function being wrapped by the Debouncer."""
+        self._function = function
+        if self._job is None or function != self._job.target:
+            self._job = HassJob(function)
 
     async def async_call(self) -> None:
         """Call the function."""
-        assert self.function is not None
+        assert self._job is not None
 
         if self._timer_task:
             if not self._execute_at_end_of_timer:
@@ -57,13 +73,15 @@ class Debouncer:
             if self._timer_task:
                 return
 
-            await self.hass.async_add_job(self.function)  # type: ignore
+            task = self.hass.async_run_hass_job(self._job)
+            if task:
+                await task
 
             self._schedule_timer()
 
     async def _handle_timer_finish(self) -> None:
         """Handle a finished timer."""
-        assert self.function is not None
+        assert self._job is not None
 
         self._timer_task = None
 
@@ -82,7 +100,9 @@ class Debouncer:
                 return  # type: ignore
 
             try:
-                await self.hass.async_add_job(self.function)  # type: ignore
+                task = self.hass.async_run_hass_job(self._job)
+                if task:
+                    await task
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception("Unexpected exception from %s", self.function)
 

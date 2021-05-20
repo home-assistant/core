@@ -1,11 +1,17 @@
 {
+    "device_automation": {
+        "action_type": {
+            "set_hvac_mode": "{entity_name} \u00fczerinde HVAC modunu de\u011fi\u015ftir",
+            "set_preset_mode": "{entity_name} \u00fczerindeki \u00f6n ayar\u0131 de\u011fi\u015ftir"
+        }
+    },
     "state": {
         "_": {
             "auto": "Otomatik",
-            "cool": "Serin",
-            "dry": "Kuru",
+            "cool": "So\u011futma",
+            "dry": "Nem alma",
             "fan_only": "Sadece fan",
-            "heat": "S\u0131cak",
+            "heat": "Is\u0131tma",
             "heat_cool": "Is\u0131tma / So\u011futma",
             "off": "Kapal\u0131"
         }

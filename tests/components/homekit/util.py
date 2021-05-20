@@ -1,6 +1,6 @@
 """Test util for the homekit integration."""
 
-from asynctest import patch
+from unittest.mock import patch
 
 from homeassistant.components.homekit.const import DOMAIN
 from homeassistant.const import CONF_NAME, CONF_PORT

@@ -12,15 +12,80 @@ SSDP = {
             "manufacturer": "ARCAM"
         }
     ],
+    "axis": [
+        {
+            "manufacturer": "AXIS"
+        }
+    ],
+    "control4": [
+        {
+            "st": "c4:director"
+        }
+    ],
     "deconz": [
         {
             "manufacturer": "Royal Philips Electronics"
+        }
+    ],
+    "denonavr": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "Denon"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "DENON"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "DENON PROFESSIONAL"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "Marantz"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+            "manufacturer": "Denon"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+            "manufacturer": "DENON"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+            "manufacturer": "DENON PROFESSIONAL"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+            "manufacturer": "Marantz"
+        },
+        {
+            "deviceType": "urn:schemas-denon-com:device:AiosDevice:1",
+            "manufacturer": "Denon"
+        },
+        {
+            "deviceType": "urn:schemas-denon-com:device:AiosDevice:1",
+            "manufacturer": "DENON"
+        },
+        {
+            "deviceType": "urn:schemas-denon-com:device:AiosDevice:1",
+            "manufacturer": "DENON PROFESSIONAL"
+        },
+        {
+            "deviceType": "urn:schemas-denon-com:device:AiosDevice:1",
+            "manufacturer": "Marantz"
         }
     ],
     "directv": [
         {
             "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
             "manufacturer": "DIRECTV"
+        }
+    ],
+    "fritz": [
+        {
+            "st": "urn:schemas-upnp-org:device:fritzbox:1"
         }
     ],
     "fritzbox": [
@@ -59,6 +124,12 @@ SSDP = {
             "modelName": "Philips hue bridge 2015"
         }
     ],
+    "hyperion": [
+        {
+            "manufacturer": "Hyperion Open Source Ambient Lighting",
+            "st": "urn:hyperion-project.org:device:basic:1"
+        }
+    ],
     "isy994": [
         {
             "deviceType": "urn:udi-com:device:X_Insteon_Lighting_Device:1",
@@ -93,10 +164,28 @@ SSDP = {
             "st": "urn:schemas-upnp-org:device:ZonePlayer:1"
         }
     ],
+    "syncthru": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:Printer:1",
+            "manufacturer": "Samsung Electronics"
+        }
+    ],
     "synology_dsm": [
         {
             "deviceType": "urn:schemas-upnp-org:device:Basic:1",
             "manufacturer": "Synology"
+        }
+    ],
+    "unifi": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "Ubiquiti Networks",
+            "modelDescription": "UniFi Dream Machine Pro"
         }
     ],
     "upnp": [
@@ -110,6 +199,11 @@ SSDP = {
     "wemo": [
         {
             "manufacturer": "Belkin International Inc."
+        }
+    ],
+    "wilight": [
+        {
+            "manufacturer": "All Automacao Ltda"
         }
     ]
 }

@@ -1,5 +1,5 @@
 """Provides device automations for Cover."""
-from typing import List, Optional
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -16,6 +16,7 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
+    SERVICE_STOP_COVER,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry
@@ -31,9 +32,10 @@ from . import (
     SUPPORT_OPEN_TILT,
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
+    SUPPORT_STOP,
 )
 
-CMD_ACTION_TYPES = {"open", "close", "open_tilt", "close_tilt"}
+CMD_ACTION_TYPES = {"open", "close", "stop", "open_tilt", "close_tilt"}
 POSITION_ACTION_TYPES = {"set_position", "set_tilt_position"}
 
 CMD_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
@@ -47,14 +49,16 @@ POSITION_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(POSITION_ACTION_TYPES),
         vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
-        vol.Required("position"): vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
+        vol.Optional("position", default=0): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=100)
+        ),
     }
 )
 
 ACTION_SCHEMA = vol.Any(CMD_ACTION_SCHEMA, POSITION_ACTION_SCHEMA)
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device actions for Cover devices."""
     registry = await entity_registry.async_get_registry(hass)
     actions = []
@@ -99,6 +103,15 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
                         CONF_TYPE: "close",
                     }
                 )
+            if supported_features & SUPPORT_STOP:
+                actions.append(
+                    {
+                        CONF_DEVICE_ID: device_id,
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_ENTITY_ID: entry.entity_id,
+                        CONF_TYPE: "stop",
+                    }
+                )
 
         if supported_features & SUPPORT_SET_TILT_POSITION:
             actions.append(
@@ -140,7 +153,7 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> di
     return {
         "extra_fields": vol.Schema(
             {
-                vol.Optional("position", default=0): vol.All(
+                vol.Optional(ATTR_POSITION, default=0): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=100)
                 )
             }
@@ -149,17 +162,17 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> di
 
 
 async def async_call_action_from_config(
-    hass: HomeAssistant, config: dict, variables: dict, context: Optional[Context]
+    hass: HomeAssistant, config: dict, variables: dict, context: Context | None
 ) -> None:
     """Execute a device action."""
-    config = ACTION_SCHEMA(config)
-
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
 
     if config[CONF_TYPE] == "open":
         service = SERVICE_OPEN_COVER
     elif config[CONF_TYPE] == "close":
         service = SERVICE_CLOSE_COVER
+    elif config[CONF_TYPE] == "stop":
+        service = SERVICE_STOP_COVER
     elif config[CONF_TYPE] == "open_tilt":
         service = SERVICE_OPEN_COVER_TILT
     elif config[CONF_TYPE] == "close_tilt":

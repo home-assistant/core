@@ -14,7 +14,7 @@ from homeassistant.components.remote import (
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 
-from .const import DOMAIN, UNIQUE_ID
+from .const import DOMAIN, HARMONY_DATA, PREVIOUS_ACTIVE_ACTIVITY, UNIQUE_ID
 from .util import (
     find_best_name_for_remote,
     find_unique_id_for_remote,
@@ -48,7 +48,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Logitech Harmony Hub."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the Harmony config flow."""
@@ -86,7 +85,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
         friendly_name = discovery_info[ssdp.ATTR_UPNP_FRIENDLY_NAME]
 
-        # pylint: disable=no-member
+        self._async_abort_entries_match({CONF_HOST: parsed_url.hostname})
+
         self.context["title_placeholders"] = {"name": friendly_name}
 
         self.harmony_config = {
@@ -117,6 +117,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.harmony_config, {}
             )
 
+        self._set_confirm_only()
         return self.async_show_form(
             step_id="link",
             errors=errors,
@@ -124,19 +125,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_HOST: self.harmony_config[CONF_NAME],
                 CONF_NAME: self.harmony_config[CONF_HOST],
             },
-        )
-
-    async def async_step_import(self, validated_input):
-        """Handle import."""
-        await self.async_set_unique_id(
-            validated_input[UNIQUE_ID], raise_on_progress=False
-        )
-        self._abort_if_unique_id_configured()
-
-        # Everything was validated in remote async_setup_platform
-        # all we do now is create.
-        return await self._async_create_entry_from_valid_input(
-            validated_input, validated_input
         )
 
     @staticmethod
@@ -148,7 +136,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_create_entry_from_valid_input(self, validated, user_input):
         """Single path to create the config entry from validated input."""
 
-        data = {CONF_NAME: validated[CONF_NAME], CONF_HOST: validated[CONF_HOST]}
+        data = {
+            CONF_NAME: validated[CONF_NAME],
+            CONF_HOST: validated[CONF_HOST],
+        }
         # Options from yaml are preserved, we will pull them out when
         # we setup the config entry
         data.update(_options_from_user_input(user_input))
@@ -177,7 +168,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        remote = self.hass.data[DOMAIN][self.config_entry.entry_id]
+        remote = self.hass.data[DOMAIN][self.config_entry.entry_id][HARMONY_DATA]
 
         data_schema = vol.Schema(
             {
@@ -188,8 +179,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     ),
                 ): vol.Coerce(float),
                 vol.Optional(
-                    ATTR_ACTIVITY, default=self.config_entry.options.get(ATTR_ACTIVITY),
-                ): vol.In(remote.activity_names),
+                    ATTR_ACTIVITY,
+                    default=self.config_entry.options.get(
+                        ATTR_ACTIVITY, PREVIOUS_ACTIVE_ACTIVITY
+                    ),
+                ): vol.In([PREVIOUS_ACTIVE_ACTIVITY, *remote.activity_names]),
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

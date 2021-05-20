@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Aktivera uppt\u00e4ckt"
                 },
-                "description": "Vill du konfigurera Home Assistant att ansluta till den MQTT-broker som tillhandah\u00e5lls av Hass.io-till\u00e4gget \"{addon}\"?",
-                "title": "MQTT Broker via Hass.io till\u00e4gg"
+                "description": "Vill du konfigurera Home Assistant att ansluta till den MQTT-broker som tillhandah\u00e5lls av Supervisor-till\u00e4gget \"{addon}\"?",
+                "title": "MQTT Broker via Supervisor till\u00e4gg"
             }
         }
     },
@@ -36,6 +36,15 @@
             "button_6": "Sj\u00e4tte knappen",
             "turn_off": "St\u00e4ng av",
             "turn_on": "Starta"
+        }
+    },
+    "options": {
+        "step": {
+            "broker": {
+                "data": {
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
         }
     }
 }

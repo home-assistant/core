@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "already_setup": "Solo puede configurar una cuenta de Netatmo."
-        },
         "create_entry": {
             "default": "Autenticado con \u00e9xito con Netatmo."
         }

@@ -1,12 +1,13 @@
 """Define IQVIA constants."""
+import logging
+
+LOGGER = logging.getLogger(__package__)
+
 DOMAIN = "iqvia"
 
 CONF_ZIP_CODE = "zip_code"
 
-DATA_CLIENT = "client"
-DATA_LISTENER = "listener"
-
-TOPIC_DATA_UPDATE = f"{DOMAIN}_data_update"
+DATA_COORDINATOR = "coordinator"
 
 TYPE_ALLERGY_FORECAST = "allergy_average_forecasted"
 TYPE_ALLERGY_INDEX = "allergy_index"

@@ -48,7 +48,7 @@ def setup(hass, config):
     try:
         apcups_data.update(no_throttle=True)
     except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("Failure while testing APCUPSd status retrieval.")
+        _LOGGER.exception("Failure while testing APCUPSd status retrieval")
         return False
     return True
 

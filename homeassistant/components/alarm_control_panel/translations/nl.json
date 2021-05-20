@@ -25,7 +25,7 @@
     "state": {
         "_": {
             "armed": "Ingeschakeld",
-            "armed_away": "Afwezig Ingeschakeld",
+            "armed_away": "Ingeschakeld afwezig",
             "armed_custom_bypass": "Ingeschakeld met overbrugging(en)",
             "armed_home": "Ingeschakeld thuis",
             "armed_night": "Ingeschakeld nacht",

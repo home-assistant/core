@@ -52,9 +52,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         if bulb.bulb_type != "rgblamp":
             _LOGGER.error("Device %s (%s) is not a myStrom bulb", host, mac)
             return
-    except MyStromConnectionError:
+    except MyStromConnectionError as err:
         _LOGGER.warning("No route to myStrom bulb: %s", host)
-        raise PlatformNotReady()
+        raise PlatformNotReady() from err
 
     async_add_entities([MyStromLight(bulb, name, mac)], True)
 
@@ -145,7 +145,7 @@ class MyStromLight(LightEntity):
         try:
             await self._bulb.set_off()
         except MyStromConnectionError:
-            _LOGGER.warning("myStrom bulb not online")
+            _LOGGER.warning("The myStrom bulb not online")
 
     async def async_update(self):
         """Fetch new state data for this light."""

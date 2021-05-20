@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+        },
+        "flow_title": "ZoneMinder",
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "ssl": "Nutzt ein SSL-Zertifikat",
+                    "username": "Benutzername",
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
+                }
+            }
+        }
+    }
+}

@@ -143,15 +143,16 @@ async def init_integration(
 
     entry.add_to_hass(hass)
 
+    mock_connection(
+        aioclient_mock,
+        host=host,
+        port=port,
+        ssl=ssl,
+        base_path=base_path,
+        conn_error=conn_error,
+    )
+
     if not skip_setup:
-        mock_connection(
-            aioclient_mock,
-            host=host,
-            port=port,
-            ssl=ssl,
-            base_path=base_path,
-            conn_error=conn_error,
-        )
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

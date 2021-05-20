@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+        },
+        "error": {
+            "one": "Vide",
+            "other": "Vide"
+        },
+        "step": {
+            "one": "",
+            "other": "Autre"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Temps minimum entre les mises \u00e0 jour des entit\u00e9s"
+                },
+                "title": "Options DSMR"
+            }
+        }
+    }
+}

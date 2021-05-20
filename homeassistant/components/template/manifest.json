@@ -3,5 +3,7 @@
   "name": "Template",
   "documentation": "https://www.home-assistant.io/integrations/template",
   "codeowners": ["@PhracturedBlue", "@tetienne"],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "after_dependencies": ["group"],
+  "iot_class": "local_push"
 }

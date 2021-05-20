@@ -1,10 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "El compte ja ha estat configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+        },
         "error": {
-            "connection_error": "Error de connexi\u00f3; comprova la xarxa i torna-ho a intentar",
-            "identifier_exists": "Correu electr\u00f2nic ja registrat",
-            "invalid_credentials": "Credencials inv\u00e0lides",
-            "unknown_error": "Error desconegut, si us plau, envia la informaci\u00f3 del registre"
+            "already_configured": "El compte ja ha estat configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
         },
         "step": {
             "user": {

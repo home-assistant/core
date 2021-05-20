@@ -1,4 +1,4 @@
-"""Shared excecption for the august integration."""
+"""Shared exceptions for the august integration."""
 
 from homeassistant import exceptions
 

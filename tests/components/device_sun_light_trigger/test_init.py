@@ -1,6 +1,7 @@
 """The tests device sun light trigger component."""
 # pylint: disable=protected-access
 from datetime import datetime
+from unittest.mock import patch
 
 import pytest
 
@@ -24,12 +25,11 @@ from homeassistant.core import CoreState
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 
 @pytest.fixture
-def scanner(hass):
+def scanner(hass, enable_custom_integrations):
     """Initialize components."""
     scanner = getattr(hass.components, "test.device_tracker").get_scanner(None, None)
 
@@ -100,7 +100,7 @@ async def test_lights_on_when_sun_sets(hass, scanner):
     )
 
 
-async def test_lights_turn_off_when_everyone_leaves(hass):
+async def test_lights_turn_off_when_everyone_leaves(hass, enable_custom_integrations):
     """Test lights turn off when everyone leaves the house."""
     assert await async_setup_component(
         hass, "light", {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -176,6 +176,8 @@ async def test_lights_turn_on_when_coming_home_after_sun_set_person(hass, scanne
             {"person": [{"id": "me", "name": "Me", "device_trackers": [device_1]}]},
         )
 
+        assert await async_setup_component(hass, "group", {})
+        await hass.async_block_till_done()
         await group.Group.async_create_group(hass, "person_me", ["person.me"])
 
         assert await async_setup_component(
@@ -222,7 +224,9 @@ async def test_initialize_start(hass):
     """Test we initialize when HA starts."""
     hass.state = CoreState.not_running
     assert await async_setup_component(
-        hass, device_sun_light_trigger.DOMAIN, {device_sun_light_trigger.DOMAIN: {}},
+        hass,
+        device_sun_light_trigger.DOMAIN,
+        {device_sun_light_trigger.DOMAIN: {}},
     )
 
     with patch(

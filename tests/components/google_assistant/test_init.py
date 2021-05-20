@@ -17,7 +17,9 @@ async def test_request_sync_service(aioclient_mock, hass):
     aioclient_mock.post(ga.const.REQUEST_SYNC_BASE_URL, status=200)
 
     await async_setup_component(
-        hass, "google_assistant", {"google_assistant": DUMMY_CONFIG},
+        hass,
+        "google_assistant",
+        {"google_assistant": DUMMY_CONFIG},
     )
 
     assert aioclient_mock.call_count == 0

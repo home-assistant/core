@@ -1,5 +1,6 @@
 """The test for the here_travel_time sensor platform."""
 import logging
+from unittest.mock import patch
 import urllib
 
 import herepy
@@ -42,7 +43,6 @@ from homeassistant.const import ATTR_ICON, EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed, load_fixture
 
 DOMAIN = "sensor"
@@ -567,7 +567,7 @@ async def test_bicycle(hass, requests_mock_credentials_check):
     assert sensor.attributes.get(ATTR_ICON) == ICON_BICYCLE
 
 
-async def test_location_zone(hass, requests_mock_truck_response):
+async def test_location_zone(hass, requests_mock_truck_response, legacy_patchable_time):
     """Test that origin/destination supplied by a zone works."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
@@ -618,7 +618,9 @@ async def test_location_zone(hass, requests_mock_truck_response):
         _assert_truck_sensor(sensor)
 
 
-async def test_location_sensor(hass, requests_mock_truck_response):
+async def test_location_sensor(
+    hass, requests_mock_truck_response, legacy_patchable_time
+):
     """Test that origin/destination supplied by a sensor works."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
@@ -658,7 +660,9 @@ async def test_location_sensor(hass, requests_mock_truck_response):
         _assert_truck_sensor(sensor)
 
 
-async def test_location_person(hass, requests_mock_truck_response):
+async def test_location_person(
+    hass, requests_mock_truck_response, legacy_patchable_time
+):
     """Test that origin/destination supplied by a person works."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
@@ -707,7 +711,9 @@ async def test_location_person(hass, requests_mock_truck_response):
         _assert_truck_sensor(sensor)
 
 
-async def test_location_device_tracker(hass, requests_mock_truck_response):
+async def test_location_device_tracker(
+    hass, requests_mock_truck_response, legacy_patchable_time
+):
     """Test that origin/destination supplied by a device_tracker works."""
     utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
@@ -757,7 +763,7 @@ async def test_location_device_tracker(hass, requests_mock_truck_response):
 
 
 async def test_location_device_tracker_added_after_update(
-    hass, requests_mock_truck_response, caplog
+    hass, requests_mock_truck_response, legacy_patchable_time, caplog
 ):
     """Test that device_tracker added after first update works."""
     caplog.set_level(logging.ERROR)

@@ -2,16 +2,16 @@
     "config": {
         "abort": {
             "all_configured": "Tutti i bridge di Philips Hue sono gi\u00e0 configurati",
-            "already_configured": "Il bridge \u00e8 gi\u00e0 configurato",
-            "already_in_progress": "Il flusso di configurazione per bridge \u00e8 gi\u00e0 in corso.",
-            "cannot_connect": "Impossibile connettersi al bridge",
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "cannot_connect": "Impossibile connettersi",
             "discover_timeout": "Impossibile trovare i bridge Hue",
             "no_bridges": "Nessun bridge di Philips Hue trovato",
             "not_hue_bridge": "Non \u00e8 un bridge Hue",
-            "unknown": "Si \u00e8 verificato un errore"
+            "unknown": "Errore imprevisto"
         },
         "error": {
-            "linking": "Si \u00e8 verificato un errore sconosciuto in fase di collegamento.",
+            "linking": "Errore imprevisto",
             "register_failed": "Errore in fase di registrazione, riprova"
         },
         "step": {
@@ -24,6 +24,12 @@
             "link": {
                 "description": "Premi il pulsante sul bridge per registrare Philips Hue con Home Assistant\n\n![Posizione del pulsante sul bridge](/static/images/config_philips_hue.jpg)",
                 "title": "Collega Hub"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Configurazione manuale di un bridge Hue"
             }
         }
     },
@@ -46,6 +52,16 @@
             "remote_button_short_release": "Pulsante \"{subtype}\" rilasciato",
             "remote_double_button_long_press": "Entrambi i \"{subtype}\" rilasciati dopo una lunga pressione",
             "remote_double_button_short_press": "Entrambi i \"{subtype}\" rilasciati"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_hue_groups": "Consenti gruppi Hue",
+                    "allow_unreachable": "Consentire alle lampadine irraggiungibili di segnalare correttamente il loro stato"
+                }
+            }
         }
     }
 }

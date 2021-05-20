@@ -1,26 +1,25 @@
 """Support for AlarmDecoder sensors (Shows Panel Display)."""
-import logging
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
-from homeassistant.helpers.entity import Entity
-
-from . import SIGNAL_PANEL_MESSAGE
-
-_LOGGER = logging.getLogger(__name__)
+from .const import SIGNAL_PANEL_MESSAGE
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up for AlarmDecoder sensor devices."""
-    _LOGGER.debug("AlarmDecoderSensor: setup_platform")
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
+    """Set up for AlarmDecoder sensor."""
 
-    device = AlarmDecoderSensor(hass)
+    entity = AlarmDecoderSensor()
+    async_add_entities([entity])
+    return True
 
-    add_entities([device])
 
-
-class AlarmDecoderSensor(Entity):
+class AlarmDecoderSensor(SensorEntity):
     """Representation of an AlarmDecoder keypad."""
 
-    def __init__(self, hass):
+    def __init__(self):
         """Initialize the alarm panel."""
         self._display = ""
         self._state = None

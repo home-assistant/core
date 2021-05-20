@@ -65,7 +65,7 @@ class SonyProjector(SwitchEntity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return state attributes."""
         return self._attributes
 
@@ -80,18 +80,18 @@ class SonyProjector(SwitchEntity):
 
     def turn_on(self, **kwargs):
         """Turn the projector on."""
-        _LOGGER.debug("Powering on projector '%s'...", self.name)
+        _LOGGER.debug("Powering on projector '%s'", self.name)
         if self._sdcp.set_power(True):
-            _LOGGER.debug("Powered on successfully.")
+            _LOGGER.debug("Powered on successfully")
             self._state = STATE_ON
         else:
             _LOGGER.error("Power on command was not successful")
 
     def turn_off(self, **kwargs):
         """Turn the projector off."""
-        _LOGGER.debug("Powering off projector '%s'...", self.name)
+        _LOGGER.debug("Powering off projector '%s'", self.name)
         if self._sdcp.set_power(False):
-            _LOGGER.debug("Powered off successfully.")
+            _LOGGER.debug("Powered off successfully")
             self._state = STATE_OFF
         else:
             _LOGGER.error("Power off command was not successful")

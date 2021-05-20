@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     HTTP_OK,
+    HTTP_UNAUTHORIZED,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -155,7 +156,7 @@ class DdWrtDeviceScanner(DeviceScanner):
             return
         if response.status_code == HTTP_OK:
             return _parse_ddwrt_response(response.text)
-        if response.status_code == 401:
+        if response.status_code == HTTP_UNAUTHORIZED:
             # Authentication error
             _LOGGER.exception(
                 "Failed to authenticate, check your username and password"

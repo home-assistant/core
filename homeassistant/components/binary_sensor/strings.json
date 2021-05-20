@@ -95,6 +95,10 @@
       "off": "Normal",
       "on": "Low"
     },
+    "battery_charging": {
+      "off": "Not charging",
+      "on": "Charging"
+    },
     "cold": {
       "off": "[%key:component::binary_sensor::state::battery::off%]",
       "on": "Cold"
@@ -119,6 +123,10 @@
       "off": "[%key:component::binary_sensor::state::battery::off%]",
       "on": "Hot"
     },
+    "light": {
+      "off": "No light",
+      "on": "Light detected"
+    },
     "lock": {
       "off": "[%key:common::state::locked%]",
       "on": "[%key:common::state::unlocked%]"
@@ -131,6 +139,10 @@
       "off": "[%key:component::binary_sensor::state::gas::off%]",
       "on": "[%key:component::binary_sensor::state::gas::on%]"
     },
+    "moving": {
+      "off": "Not moving",
+      "on": "Moving"
+    },
     "occupancy": {
       "off": "[%key:component::binary_sensor::state::gas::off%]",
       "on": "[%key:component::binary_sensor::state::gas::on%]"
@@ -138,6 +150,10 @@
     "opening": {
       "off": "[%key:common::state::closed%]",
       "on": "[%key:common::state::open%]"
+    },
+    "plug": {
+      "off": "Unplugged",
+      "on": "Plugged in"
     },
     "presence": {
       "off": "[%key:component::device_tracker::state::_::not_home%]",

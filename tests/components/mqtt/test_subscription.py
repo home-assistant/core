@@ -1,5 +1,5 @@
 """The tests for the MQTT subscription component."""
-from unittest import mock
+from unittest.mock import ANY
 
 from homeassistant.components.mqtt.subscription import (
     async_subscribe_topics,
@@ -7,7 +7,7 @@ from homeassistant.components.mqtt.subscription import (
 )
 from homeassistant.core import callback
 
-from tests.common import async_fire_mqtt_message, async_mock_mqtt_component
+from tests.common import async_fire_mqtt_message
 
 
 async def test_subscribe_topics(hass, mqtt_mock, caplog):
@@ -119,7 +119,6 @@ async def test_modify_topics(hass, mqtt_mock, caplog):
 
 async def test_qos_encoding_default(hass, mqtt_mock, caplog):
     """Test default qos and encoding."""
-    mock_mqtt = await async_mock_mqtt_component(hass)
 
     @callback
     def msg_callback(*args):
@@ -132,14 +131,11 @@ async def test_qos_encoding_default(hass, mqtt_mock, caplog):
         sub_state,
         {"test_topic1": {"topic": "test-topic1", "msg_callback": msg_callback}},
     )
-    mock_mqtt.async_subscribe.assert_called_once_with(
-        "test-topic1", mock.ANY, 0, "utf-8"
-    )
+    mqtt_mock.async_subscribe.assert_called_once_with("test-topic1", ANY, 0, "utf-8")
 
 
 async def test_qos_encoding_custom(hass, mqtt_mock, caplog):
     """Test custom qos and encoding."""
-    mock_mqtt = await async_mock_mqtt_component(hass)
 
     @callback
     def msg_callback(*args):
@@ -159,30 +155,41 @@ async def test_qos_encoding_custom(hass, mqtt_mock, caplog):
             }
         },
     )
-    mock_mqtt.async_subscribe.assert_called_once_with(
-        "test-topic1", mock.ANY, 1, "utf-16"
-    )
+    mqtt_mock.async_subscribe.assert_called_once_with("test-topic1", ANY, 1, "utf-16")
 
 
 async def test_no_change(hass, mqtt_mock, caplog):
     """Test subscription to topics without change."""
-    mock_mqtt = await async_mock_mqtt_component(hass)
+
+    calls = []
 
     @callback
-    def msg_callback(*args):
-        """Do nothing."""
-        pass
+    def record_calls(*args):
+        """Record calls."""
+        calls.append(args)
 
     sub_state = None
     sub_state = await async_subscribe_topics(
         hass,
         sub_state,
-        {"test_topic1": {"topic": "test-topic1", "msg_callback": msg_callback}},
+        {"test_topic1": {"topic": "test-topic1", "msg_callback": record_calls}},
     )
-    call_count = mock_mqtt.async_subscribe.call_count
+    subscribe_call_count = mqtt_mock.async_subscribe.call_count
+
+    async_fire_mqtt_message(hass, "test-topic1", "test-payload")
+    assert len(calls) == 1
+
     sub_state = await async_subscribe_topics(
         hass,
         sub_state,
-        {"test_topic1": {"topic": "test-topic1", "msg_callback": msg_callback}},
+        {"test_topic1": {"topic": "test-topic1", "msg_callback": record_calls}},
     )
-    assert call_count == mock_mqtt.async_subscribe.call_count
+    assert subscribe_call_count == mqtt_mock.async_subscribe.call_count
+
+    async_fire_mqtt_message(hass, "test-topic1", "test-payload")
+    assert len(calls) == 2
+
+    await async_unsubscribe_topics(hass, sub_state)
+
+    async_fire_mqtt_message(hass, "test-topic1", "test-payload")
+    assert len(calls) == 2

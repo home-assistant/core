@@ -1,6 +1,6 @@
 """BleBox light entities tests."""
-
 import logging
+from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi
 import pytest
@@ -20,11 +20,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import color
 
 from .conftest import async_setup_entity, mock_feature
-
-from tests.async_mock import AsyncMock, PropertyMock
 
 ALL_LIGHT_FIXTURES = ["dimmer", "wlightbox_s", "wlightbox"]
 
@@ -66,7 +65,7 @@ async def test_dimmer_init(dimmer, hass, config):
     assert state.attributes[ATTR_BRIGHTNESS] == 65
     assert state.state == STATE_ON
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My dimmer"
@@ -116,7 +115,10 @@ async def test_dimmer_on(dimmer, hass, config):
 
     feature_mock.async_on = AsyncMock(side_effect=turn_on)
     await hass.services.async_call(
-        "light", SERVICE_TURN_ON, {"entity_id": entity_id}, blocking=True,
+        "light",
+        SERVICE_TURN_ON,
+        {"entity_id": entity_id},
+        blocking=True,
     )
 
     state = hass.states.get(entity_id)
@@ -186,7 +188,10 @@ async def test_dimmer_off(dimmer, hass, config):
 
     feature_mock.async_off = AsyncMock(side_effect=turn_off)
     await hass.services.async_call(
-        "light", SERVICE_TURN_OFF, {"entity_id": entity_id}, blocking=True,
+        "light",
+        SERVICE_TURN_OFF,
+        {"entity_id": entity_id},
+        blocking=True,
     )
 
     state = hass.states.get(entity_id)
@@ -231,7 +236,7 @@ async def test_wlightbox_s_init(wlightbox_s, hass, config):
     assert ATTR_BRIGHTNESS not in state.attributes
     assert state.state == STATE_OFF
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My wLightBoxS"
@@ -282,7 +287,10 @@ async def test_wlightbox_s_on(wlightbox_s, hass, config):
 
     feature_mock.async_on = AsyncMock(side_effect=turn_on)
     await hass.services.async_call(
-        "light", SERVICE_TURN_ON, {"entity_id": entity_id}, blocking=True,
+        "light",
+        SERVICE_TURN_ON,
+        {"entity_id": entity_id},
+        blocking=True,
     )
 
     state = hass.states.get(entity_id)
@@ -331,7 +339,7 @@ async def test_wlightbox_init(wlightbox, hass, config):
     assert ATTR_BRIGHTNESS not in state.attributes
     assert state.state == STATE_OFF
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My wLightBox"
@@ -523,7 +531,10 @@ async def test_wlightbox_on_to_last_color(wlightbox, hass, config):
     feature_mock.sensible_on_value = "f1e2d3e4"
 
     await hass.services.async_call(
-        "light", SERVICE_TURN_ON, {"entity_id": entity_id}, blocking=True,
+        "light",
+        SERVICE_TURN_ON,
+        {"entity_id": entity_id},
+        blocking=True,
     )
 
     state = hass.states.get(entity_id)
@@ -555,7 +566,10 @@ async def test_wlightbox_off(wlightbox, hass, config):
     feature_mock.async_off = AsyncMock(side_effect=turn_off)
 
     await hass.services.async_call(
-        "light", SERVICE_TURN_OFF, {"entity_id": entity_id}, blocking=True,
+        "light",
+        SERVICE_TURN_OFF,
+        {"entity_id": entity_id},
+        blocking=True,
     )
 
     state = hass.states.get(entity_id)
@@ -589,7 +603,10 @@ async def test_turn_on_failure(feature, hass, config, caplog):
 
     feature_mock.sensible_on_value = 123
     await hass.services.async_call(
-        "light", SERVICE_TURN_ON, {"entity_id": entity_id}, blocking=True,
+        "light",
+        SERVICE_TURN_ON,
+        {"entity_id": entity_id},
+        blocking=True,
     )
 
     assert (

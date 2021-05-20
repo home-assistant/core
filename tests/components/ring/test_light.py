@@ -1,5 +1,6 @@
 """The tests for the Ring light platform."""
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
@@ -9,7 +10,7 @@ from tests.common import load_fixture
 async def test_entity_registry(hass, requests_mock):
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, LIGHT_DOMAIN)
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get("light.front_light")
     assert entry.unique_id == 765432

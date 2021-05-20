@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u00da\u010det je ji\u017e nastaven"
+        },
+        "error": {
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Heslo",
+                    "username": "E-mail / Devolo ID"
+                }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "mydevolo_url": "mydevolo URL",
+                    "password": "Heslo",
+                    "username": "E-mail / devolo ID"
+                }
+            }
+        }
+    }
+}

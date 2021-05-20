@@ -1,4 +1,5 @@
 """Support for Amcrest IP cameras."""
+from contextlib import suppress
 from datetime import timedelta
 import logging
 import threading
@@ -33,7 +34,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_s
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.service import async_extract_entity_ids
 
-from .binary_sensor import BINARY_SENSORS
+from .binary_sensor import BINARY_POLLED_SENSORS, BINARY_SENSORS, check_binary_sensors
 from .camera import CAMERA_SERVICES, STREAM_SOURCE_LIST
 from .const import (
     CAMERAS,
@@ -98,7 +99,7 @@ AMCREST_SCHEMA = vol.Schema(
         vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
-            cv.ensure_list, [vol.In(BINARY_SENSORS)], vol.Unique()
+            cv.ensure_list, [vol.In(BINARY_SENSORS)], vol.Unique(), check_binary_sensors
         ),
         vol.Optional(CONF_SENSORS): vol.All(
             cv.ensure_list, [vol.In(SENSORS)], vol.Unique()
@@ -191,21 +192,26 @@ class AmcrestChecker(Http):
     def _wrap_test_online(self, now):
         """Test if camera is back online."""
         _LOGGER.debug("Testing if %s back online", self._wrap_name)
-        try:
-            self.current_time
-        except AmcrestError:
-            pass
+        with suppress(AmcrestError):
+            self.current_time  # pylint: disable=pointless-statement
 
 
 def _monitor_events(hass, name, api, event_codes):
-    event_codes = ",".join(event_codes)
+    event_codes = set(event_codes)
     while True:
         api.available_flag.wait()
         try:
-            for code, start in api.event_actions(event_codes, retries=5):
-                signal = service_signal(SERVICE_EVENT, name, code)
-                _LOGGER.debug("Sending signal: '%s': %s", signal, start)
-                dispatcher_send(hass, signal, start)
+            for code, payload in api.event_actions("All", retries=5):
+                event_data = {"camera": name, "event": code, "payload": payload}
+                hass.bus.fire("amcrest", event_data)
+                if code in event_codes:
+                    signal = service_signal(SERVICE_EVENT, name, code)
+                    start = any(
+                        str(key).lower() == "action" and str(val).lower() == "start"
+                        for key, val in payload.items()
+                    )
+                    _LOGGER.debug("Sending signal: '%s': %s", signal, start)
+                    dispatcher_send(hass, signal, start)
         except AmcrestError as error:
             _LOGGER.warning(
                 "Error while processing events from %s camera: %r", name, error
@@ -260,6 +266,7 @@ def setup(hass, config):
 
         discovery.load_platform(hass, CAMERA, DOMAIN, {CONF_NAME: name}, config)
 
+        event_codes = []
         if binary_sensors:
             discovery.load_platform(
                 hass,
@@ -271,10 +278,10 @@ def setup(hass, config):
             event_codes = [
                 BINARY_SENSORS[sensor_type][SENSOR_EVENT_CODE]
                 for sensor_type in binary_sensors
-                if BINARY_SENSORS[sensor_type][SENSOR_EVENT_CODE] is not None
+                if sensor_type not in BINARY_POLLED_SENSORS
             ]
-            if event_codes:
-                _start_event_monitor(hass, name, api, event_codes)
+
+        _start_event_monitor(hass, name, api, event_codes)
 
         if sensors:
             discovery.load_platform(

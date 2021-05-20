@@ -9,6 +9,9 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
 )
 
+DATA_INFO = "info"
+DATA_COORDINATOR = "coordinator"
+
 DOMAIN = "coolmaster"
 
 DEFAULT_PORT = 10102

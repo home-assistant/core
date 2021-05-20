@@ -1,0 +1,19 @@
+{
+    "state": {
+        "wolflink__state": {
+            "glt_betrieb": "BMS modu",
+            "heizbetrieb": "Is\u0131tma modu",
+            "kalibration_heizbetrieb": "Is\u0131tma modu kalibrasyonu",
+            "kalibration_kombibetrieb": "Kombi modu kalibrasyonu",
+            "reduzierter_betrieb": "S\u0131n\u0131rl\u0131 mod",
+            "solarbetrieb": "G\u00fcne\u015f modu",
+            "sparbetrieb": "Ekonomi modu",
+            "standby": "Bekleme",
+            "start": "Ba\u015flat",
+            "storung": "Hata",
+            "test": "Test",
+            "urlaubsmodus": "Tatil modu",
+            "warmwasserbetrieb": "DHW modu"
+        }
+    }
+}

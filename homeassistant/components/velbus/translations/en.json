@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "port_exists": "This port is already configured"
+            "already_configured": "Device is already configured"
         },
         "error": {
-            "connection_failed": "The velbus connection failed",
-            "port_exists": "This port is already configured"
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "user": {

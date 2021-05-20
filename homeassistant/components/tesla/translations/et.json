@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kasutaja on juba seadistatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "already_configured": "Konto on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamise viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "E-post"
+                },
+                "description": "Palun sisesta oma andmed.",
+                "title": "Tesla - seadistamine"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "enable_wake_on_start": "Sunni autod k\u00e4ivitamisel \u00e4rkama (?)",
+                    "scan_interval": "P\u00e4ringute vahe sekundites"
+                }
+            }
+        }
+    }
+}

@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "address_exists": "A c\u00edm m\u00e1r be lett \u00e1ll\u00edtva."
+            "already_configured": "A hely m\u00e1r konfigur\u00e1lva van"
         },
         "error": {
-            "connection_error": "Nem siker\u00fclt csatlakozni."
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "step": {
             "user": {

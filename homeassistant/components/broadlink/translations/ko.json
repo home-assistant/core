@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "already_in_progress": "\uae30\uae30 \uad6c\uc131\uc774 \uc774\ubbf8 \uc9c4\ud589 \uc911\uc785\ub2c8\ub2e4",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_host": "\ud638\uc2a4\ud2b8 \uc774\ub984 \ub610\ub294 IP \uc8fc\uc18c\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "not_supported": "\uae30\uae30\uac00 \uc9c0\uc6d0\ub418\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_host": "\ud638\uc2a4\ud2b8 \uc774\ub984 \ub610\ub294 IP \uc8fc\uc18c\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "flow_title": "{name} ({host}\uc758 {model})",
+        "step": {
+            "auth": {
+                "title": "\uae30\uae30\uc5d0 \uc778\uc99d\ud558\uae30"
+            },
+            "finish": {
+                "data": {
+                    "name": "\uc774\ub984"
+                },
+                "title": "\uae30\uae30\uc5d0 \ub300\ud55c \uc774\ub984 \uc120\ud0dd\ud558\uae30"
+            },
+            "reset": {
+                "description": "{name} ({host}\uc758 {model})\uc774(\uac00) \uc7a0\uaca8 \uc788\uc2b5\ub2c8\ub2e4. \uad6c\uc131\uc744 \uc778\uc99d\ud558\uace0 \uc644\ub8cc\ud558\ub824\uba74 \uae30\uae30\uc758 \uc7a0\uae08\uc744 \ud574\uc81c\ud574\uc57c \ud569\ub2c8\ub2e4. \ub2e4\uc74c\uc744 \ub530\ub77c\uc8fc\uc138\uc694:\n1. Broadlink \uc571\uc744 \uc5f4\uc5b4\uc8fc\uc138\uc694.\n2. \uae30\uae30\ub97c \ud074\ub9ad\ud574\uc8fc\uc138\uc694.\n3. \uc624\ub978\ucabd \uc0c1\ub2e8\uc758 `...`\ub97c \ud074\ub9ad\ud574\uc8fc\uc138\uc694.\n4. \ud398\uc774\uc9c0 \ub9e8 \uc544\ub798\ub85c \uc2a4\ud06c\ub864\ud574\uc8fc\uc138\uc694.\n5. \uc7a0\uae08\uc744 \ud574\uc81c\ud574\uc8fc\uc138\uc694.",
+                "title": "\uae30\uae30 \uc7a0\uae08 \ud574\uc81c\ud558\uae30"
+            },
+            "unlock": {
+                "data": {
+                    "unlock": "\uc608, \uc7a0\uae08 \ud574\uc81c\ud558\uaca0\uc2b5\ub2c8\ub2e4."
+                },
+                "description": "{name} ({host}\uc758 {model})\uc774(\uac00) \uc7a0\uaca8 \uc788\uc2b5\ub2c8\ub2e4. \uc774\ub85c \uc778\ud574 Home Assistant\uc5d0\uc11c \uc778\uc99d \ubb38\uc81c\uac00 \ubc1c\uc0dd\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4. \uc7a0\uae08\uc744 \ud574\uc81c\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
+                "title": "\uae30\uae30 \uc7a0\uae08 \ud574\uc81c\ud558\uae30 (\uc120\ud0dd \uc0ac\ud56d)"
+            },
+            "user": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "timeout": "\uc81c\ud55c \uc2dc\uac04"
+                },
+                "title": "\uae30\uae30\uc5d0 \uc5f0\uacb0\ud558\uae30"
+            }
+        }
+    }
+}

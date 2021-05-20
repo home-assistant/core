@@ -23,7 +23,8 @@
             },
             "auth_user": {
                 "data": {
-                    "password": "Senha"
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
                 }
             }
         }

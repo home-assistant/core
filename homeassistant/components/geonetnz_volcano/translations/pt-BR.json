@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Local j\u00e1 registrado"
-        },
         "step": {
             "user": {
                 "data": {

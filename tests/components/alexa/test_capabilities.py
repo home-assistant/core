@@ -1,4 +1,6 @@
 """Test Alexa capabilities."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.alexa import smart_home
@@ -237,17 +239,27 @@ async def test_report_lock_state(hass):
     properties.assert_equal("Alexa.LockController", "lockState", "JAMMED")
 
 
-async def test_report_dimmable_light_state(hass):
+@pytest.mark.parametrize(
+    "supported_color_modes", [["brightness"], ["hs"], ["color_temp"]]
+)
+async def test_report_dimmable_light_state(hass, supported_color_modes):
     """Test BrightnessController reports brightness correctly."""
     hass.states.async_set(
         "light.test_on",
         "on",
-        {"friendly_name": "Test light On", "brightness": 128, "supported_features": 1},
+        {
+            "friendly_name": "Test light On",
+            "brightness": 128,
+            "supported_color_modes": supported_color_modes,
+        },
     )
     hass.states.async_set(
         "light.test_off",
         "off",
-        {"friendly_name": "Test light Off", "supported_features": 1},
+        {
+            "friendly_name": "Test light Off",
+            "supported_color_modes": supported_color_modes,
+        },
     )
 
     properties = await reported_properties(hass, "light.test_on")
@@ -257,7 +269,8 @@ async def test_report_dimmable_light_state(hass):
     properties.assert_equal("Alexa.BrightnessController", "brightness", 0)
 
 
-async def test_report_colored_light_state(hass):
+@pytest.mark.parametrize("supported_color_modes", [["hs"], ["rgb"], ["xy"]])
+async def test_report_colored_light_state(hass, supported_color_modes):
     """Test ColorController reports color correctly."""
     hass.states.async_set(
         "light.test_on",
@@ -266,13 +279,16 @@ async def test_report_colored_light_state(hass):
             "friendly_name": "Test light On",
             "hs_color": (180, 75),
             "brightness": 128,
-            "supported_features": 17,
+            "supported_color_modes": supported_color_modes,
         },
     )
     hass.states.async_set(
         "light.test_off",
         "off",
-        {"friendly_name": "Test light Off", "supported_features": 17},
+        {
+            "friendly_name": "Test light Off",
+            "supported_color_modes": supported_color_modes,
+        },
     )
 
     properties = await reported_properties(hass, "light.test_on")
@@ -293,12 +309,16 @@ async def test_report_colored_temp_light_state(hass):
     hass.states.async_set(
         "light.test_on",
         "on",
-        {"friendly_name": "Test light On", "color_temp": 240, "supported_features": 2},
+        {
+            "friendly_name": "Test light On",
+            "color_temp": 240,
+            "supported_color_modes": ["color_temp"],
+        },
     )
     hass.states.async_set(
         "light.test_off",
         "off",
-        {"friendly_name": "Test light Off", "supported_features": 2},
+        {"friendly_name": "Test light Off", "supported_color_modes": ["color_temp"]},
     )
 
     properties = await reported_properties(hass, "light.test_on")
@@ -321,6 +341,7 @@ async def test_report_fan_speed_state(hass):
             "friendly_name": "Off fan",
             "speed": "off",
             "supported_features": 1,
+            "percentage": 0,
             "speed_list": ["off", "low", "medium", "high"],
         },
     )
@@ -331,6 +352,7 @@ async def test_report_fan_speed_state(hass):
             "friendly_name": "Low speed fan",
             "speed": "low",
             "supported_features": 1,
+            "percentage": 33,
             "speed_list": ["off", "low", "medium", "high"],
         },
     )
@@ -341,6 +363,7 @@ async def test_report_fan_speed_state(hass):
             "friendly_name": "Medium speed fan",
             "speed": "medium",
             "supported_features": 1,
+            "percentage": 66,
             "speed_list": ["off", "low", "medium", "high"],
         },
     )
@@ -351,6 +374,7 @@ async def test_report_fan_speed_state(hass):
             "friendly_name": "High speed fan",
             "speed": "high",
             "supported_features": 1,
+            "percentage": 100,
             "speed_list": ["off", "low", "medium", "high"],
         },
     )
@@ -756,3 +780,25 @@ async def test_report_image_processing(hass):
         "humanPresenceDetectionState",
         {"value": "DETECTED"},
     )
+
+
+async def test_get_property_blowup(hass, caplog):
+    """Test we handle a property blowing up."""
+    hass.states.async_set(
+        "climate.downstairs",
+        climate.HVAC_MODE_AUTO,
+        {
+            "friendly_name": "Climate Downstairs",
+            "supported_features": 91,
+            climate.ATTR_CURRENT_TEMPERATURE: 34,
+            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+        },
+    )
+    with patch(
+        "homeassistant.components.alexa.capabilities.float",
+        side_effect=Exception("Boom Fail"),
+    ):
+        properties = await reported_properties(hass, "climate.downstairs")
+        properties.assert_not_has_property("Alexa.ThermostatController", "temperature")
+
+    assert "Boom Fail" in caplog.text

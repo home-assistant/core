@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "\u039c\u03b7 \u03b1\u03bd\u03b1\u03bc\u03b5\u03bd\u03cc\u03bc\u03b5\u03bd\u03bf \u03c3\u03c6\u03ac\u03bb\u03bc\u03b1"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "\u039a\u03c9\u03b4\u03b9\u03ba\u03cc\u03c2 \u03c0\u03c1\u03cc\u03c3\u03b2\u03b1\u03c3\u03b7\u03c2"
+                }
+            }
+        }
+    }
+}

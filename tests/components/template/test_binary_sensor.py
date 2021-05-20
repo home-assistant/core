@@ -1,327 +1,272 @@
 """The tests for the Template Binary sensor platform."""
 from datetime import timedelta
-import unittest
-from unittest import mock
+import logging
+from unittest.mock import patch
 
 from homeassistant import setup
-from homeassistant.components.template import binary_sensor as template
+from homeassistant.components import binary_sensor
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     EVENT_HOMEASSISTANT_START,
-    MATCH_ALL,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template as template_hlpr
-from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.core import Context, CoreState
+from homeassistant.helpers import entity_registry
 import homeassistant.util.dt as dt_util
 
-from tests.common import (
-    assert_setup_component,
-    async_fire_time_changed,
-    get_test_home_assistant,
-)
+from tests.common import async_fire_time_changed
 
 
-class TestBinarySensorTemplate(unittest.TestCase):
-    """Test for Binary sensor template platform."""
-
-    hass = None
-    # pylint: disable=invalid-name
-
-    def setup_method(self, method):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_setup(self):
-        """Test the setup."""
-        config = {
-            "binary_sensor": {
-                "platform": "template",
-                "sensors": {
-                    "test": {
-                        "friendly_name": "virtual thingy",
-                        "value_template": "{{ foo }}",
-                        "device_class": "motion",
-                    }
-                },
-            }
+async def test_setup_legacy(hass):
+    """Test the setup."""
+    config = {
+        "binary_sensor": {
+            "platform": "template",
+            "sensors": {
+                "test": {
+                    "friendly_name": "virtual thingy",
+                    "value_template": "{{ True }}",
+                    "device_class": "motion",
+                }
+            },
         }
-        with assert_setup_component(1):
-            assert setup.setup_component(self.hass, "binary_sensor", config)
+    }
+    assert await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test")
+    assert state is not None
+    assert state.name == "virtual thingy"
+    assert state.state == "on"
+    assert state.attributes["device_class"] == "motion"
 
-    def test_setup_no_sensors(self):
-        """Test setup with no sensors."""
-        with assert_setup_component(0):
-            assert setup.setup_component(
-                self.hass, "binary_sensor", {"binary_sensor": {"platform": "template"}}
-            )
 
-    def test_setup_invalid_device(self):
-        """Test the setup with invalid devices."""
-        with assert_setup_component(0):
-            assert setup.setup_component(
-                self.hass,
-                "binary_sensor",
-                {"binary_sensor": {"platform": "template", "sensors": {"foo bar": {}}}},
-            )
-
-    def test_setup_invalid_device_class(self):
-        """Test setup with invalid sensor class."""
-        with assert_setup_component(0):
-            assert setup.setup_component(
-                self.hass,
-                "binary_sensor",
-                {
-                    "binary_sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test": {
-                                "value_template": "{{ foo }}",
-                                "device_class": "foobarnotreal",
-                            }
-                        },
-                    }
-                },
-            )
-
-    def test_setup_invalid_missing_template(self):
-        """Test setup with invalid and missing template."""
-        with assert_setup_component(0):
-            assert setup.setup_component(
-                self.hass,
-                "binary_sensor",
-                {
-                    "binary_sensor": {
-                        "platform": "template",
-                        "sensors": {"test": {"device_class": "motion"}},
-                    }
-                },
-            )
-
-    def test_icon_template(self):
-        """Test icon template."""
-        with assert_setup_component(1):
-            assert setup.setup_component(
-                self.hass,
-                "binary_sensor",
-                {
-                    "binary_sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test_template_sensor": {
-                                "value_template": "{{ states.sensor.xyz.state }}",
-                                "icon_template": "{% if "
-                                "states.binary_sensor.test_state.state == "
-                                "'Works' %}"
-                                "mdi:check"
-                                "{% endif %}",
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.block_till_done()
-        self.hass.start()
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("binary_sensor.test_template_sensor")
-        assert state.attributes.get("icon") == ""
-
-        self.hass.states.set("binary_sensor.test_state", "Works")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_template_sensor")
-        assert state.attributes["icon"] == "mdi:check"
-
-    def test_entity_picture_template(self):
-        """Test entity_picture template."""
-        with assert_setup_component(1):
-            assert setup.setup_component(
-                self.hass,
-                "binary_sensor",
-                {
-                    "binary_sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test_template_sensor": {
-                                "value_template": "{{ states.sensor.xyz.state }}",
-                                "entity_picture_template": "{% if "
-                                "states.binary_sensor.test_state.state == "
-                                "'Works' %}"
-                                "/local/sensor.png"
-                                "{% endif %}",
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.block_till_done()
-        self.hass.start()
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("binary_sensor.test_template_sensor")
-        assert state.attributes.get("entity_picture") == ""
-
-        self.hass.states.set("binary_sensor.test_state", "Works")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_template_sensor")
-        assert state.attributes["entity_picture"] == "/local/sensor.png"
-
-    def test_attribute_templates(self):
-        """Test attribute_templates template."""
-        with assert_setup_component(1):
-            assert setup.setup_component(
-                self.hass,
-                "binary_sensor",
-                {
-                    "binary_sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "test_template_sensor": {
-                                "value_template": "{{ states.sensor.xyz.state }}",
-                                "attribute_templates": {
-                                    "test_attribute": "It {{ states.sensor.test_state.state }}."
-                                },
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.block_till_done()
-        self.hass.start()
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("binary_sensor.test_template_sensor")
-        assert state.attributes.get("test_attribute") == "It ."
-
-        self.hass.states.set("sensor.test_state", "Works")
-        self.hass.block_till_done()
-        state = self.hass.states.get("binary_sensor.test_template_sensor")
-        assert state.attributes["test_attribute"] == "It Works."
-
-    @mock.patch(
-        "homeassistant.components.template.binary_sensor."
-        "BinarySensorTemplate._async_render"
+async def test_setup_no_sensors(hass):
+    """Test setup with no sensors."""
+    assert await setup.async_setup_component(
+        hass, binary_sensor.DOMAIN, {"binary_sensor": {"platform": "template"}}
     )
-    def test_match_all(self, _async_render):
-        """Test MATCH_ALL in template."""
-        with assert_setup_component(1):
-            assert setup.setup_component(
-                self.hass,
-                "binary_sensor",
-                {
-                    "binary_sensor": {
-                        "platform": "template",
-                        "sensors": {
-                            "match_all_template_sensor": {"value_template": "{{ 42 }}"}
-                        },
-                    }
-                },
-            )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == 0
 
-        self.hass.block_till_done()
-        self.hass.start()
-        self.hass.block_till_done()
-        init_calls = len(_async_render.mock_calls)
 
-        self.hass.states.set("sensor.any_state", "update")
-        self.hass.block_till_done()
-        assert len(_async_render.mock_calls) == init_calls
+async def test_setup_invalid_device(hass):
+    """Test the setup with invalid devices."""
+    assert await setup.async_setup_component(
+        hass,
+        binary_sensor.DOMAIN,
+        {"binary_sensor": {"platform": "template", "sensors": {"foo bar": {}}}},
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == 0
 
-    def test_attributes(self):
-        """Test the attributes."""
-        vs = run_callback_threadsafe(
-            self.hass.loop,
-            template.BinarySensorTemplate,
-            self.hass,
-            "parent",
-            "Parent",
-            "motion",
-            template_hlpr.Template("{{ 1 > 1 }}", self.hass),
-            None,
-            None,
-            None,
-            MATCH_ALL,
-            None,
-            None,
-            None,
-        ).result()
-        assert not vs.should_poll
-        assert "motion" == vs.device_class
-        assert "Parent" == vs.name
 
-        run_callback_threadsafe(self.hass.loop, vs.async_check_state).result()
-        assert not vs.is_on
-
-        # pylint: disable=protected-access
-        vs._template = template_hlpr.Template("{{ 2 > 1 }}", self.hass)
-
-        run_callback_threadsafe(self.hass.loop, vs.async_check_state).result()
-        assert vs.is_on
-
-    def test_event(self):
-        """Test the event."""
-        config = {
+async def test_setup_invalid_device_class(hass):
+    """Test setup with invalid sensor class."""
+    assert await setup.async_setup_component(
+        hass,
+        binary_sensor.DOMAIN,
+        {
             "binary_sensor": {
                 "platform": "template",
                 "sensors": {
                     "test": {
-                        "friendly_name": "virtual thingy",
-                        "value_template": "{{ states.sensor.test_state.state == 'on' }}",
-                        "device_class": "motion",
+                        "value_template": "{{ foo }}",
+                        "device_class": "foobarnotreal",
                     }
                 },
             }
-        }
-        with assert_setup_component(1):
-            assert setup.setup_component(self.hass, "binary_sensor", config)
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == 0
 
-        self.hass.block_till_done()
-        self.hass.start()
-        self.hass.block_till_done()
 
-        state = self.hass.states.get("binary_sensor.test")
-        assert state.state == "off"
+async def test_setup_invalid_missing_template(hass):
+    """Test setup with invalid and missing template."""
+    assert await setup.async_setup_component(
+        hass,
+        binary_sensor.DOMAIN,
+        {
+            "binary_sensor": {
+                "platform": "template",
+                "sensors": {"test": {"device_class": "motion"}},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == 0
 
-        self.hass.states.set("sensor.test_state", "on")
-        self.hass.block_till_done()
 
-        state = self.hass.states.get("binary_sensor.test")
-        assert state.state == "on"
+async def test_icon_template(hass):
+    """Test icon template."""
+    assert await setup.async_setup_component(
+        hass,
+        binary_sensor.DOMAIN,
+        {
+            "binary_sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_sensor": {
+                        "value_template": "{{ states.sensor.xyz.state }}",
+                        "icon_template": "{% if "
+                        "states.binary_sensor.test_state.state == "
+                        "'Works' %}"
+                        "mdi:check"
+                        "{% endif %}",
+                    }
+                },
+            }
+        },
+    )
 
-    @mock.patch("homeassistant.helpers.template.Template.render")
-    def test_update_template_error(self, mock_render):
-        """Test the template update error."""
-        vs = run_callback_threadsafe(
-            self.hass.loop,
-            template.BinarySensorTemplate,
-            self.hass,
-            "parent",
-            "Parent",
-            "motion",
-            template_hlpr.Template("{{ 1 > 1 }}", self.hass),
-            None,
-            None,
-            None,
-            MATCH_ALL,
-            None,
-            None,
-            None,
-        ).result()
-        mock_render.side_effect = TemplateError("foo")
-        run_callback_threadsafe(self.hass.loop, vs.async_check_state).result()
-        mock_render.side_effect = TemplateError(
-            "UndefinedError: 'None' has no attribute"
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_template_sensor")
+    assert state.attributes.get("icon") == ""
+
+    hass.states.async_set("binary_sensor.test_state", "Works")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_template_sensor")
+    assert state.attributes["icon"] == "mdi:check"
+
+
+async def test_entity_picture_template(hass):
+    """Test entity_picture template."""
+    assert await setup.async_setup_component(
+        hass,
+        binary_sensor.DOMAIN,
+        {
+            "binary_sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_sensor": {
+                        "value_template": "{{ states.sensor.xyz.state }}",
+                        "entity_picture_template": "{% if "
+                        "states.binary_sensor.test_state.state == "
+                        "'Works' %}"
+                        "/local/sensor.png"
+                        "{% endif %}",
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_template_sensor")
+    assert state.attributes.get("entity_picture") == ""
+
+    hass.states.async_set("binary_sensor.test_state", "Works")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_template_sensor")
+    assert state.attributes["entity_picture"] == "/local/sensor.png"
+
+
+async def test_attribute_templates(hass):
+    """Test attribute_templates template."""
+    assert await setup.async_setup_component(
+        hass,
+        binary_sensor.DOMAIN,
+        {
+            "binary_sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_sensor": {
+                        "value_template": "{{ states.sensor.xyz.state }}",
+                        "attribute_templates": {
+                            "test_attribute": "It {{ states.sensor.test_state.state }}."
+                        },
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_template_sensor")
+    assert state.attributes.get("test_attribute") == "It ."
+    hass.states.async_set("sensor.test_state", "Works2")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.test_state", "Works")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.test_template_sensor")
+    assert state.attributes["test_attribute"] == "It Works."
+
+
+async def test_match_all(hass):
+    """Test template that is rerendered on any state lifecycle."""
+    with patch(
+        "homeassistant.components.template.binary_sensor."
+        "BinarySensorTemplate._update_state"
+    ) as _update_state:
+        assert await setup.async_setup_component(
+            hass,
+            binary_sensor.DOMAIN,
+            {
+                "binary_sensor": {
+                    "platform": "template",
+                    "sensors": {
+                        "match_all_template_sensor": {
+                            "value_template": (
+                                "{% for state in states %}"
+                                "{% if state.entity_id == 'sensor.humidity' %}"
+                                "{{ state.entity_id }}={{ state.state }}"
+                                "{% endif %}"
+                                "{% endfor %}"
+                            ),
+                        },
+                    },
+                }
+            },
         )
-        run_callback_threadsafe(self.hass.loop, vs.async_check_state).result()
+
+        await hass.async_start()
+        await hass.async_block_till_done()
+        init_calls = len(_update_state.mock_calls)
+
+        hass.states.async_set("sensor.any_state", "update")
+        await hass.async_block_till_done()
+        assert len(_update_state.mock_calls) == init_calls
+
+
+async def test_event(hass):
+    """Test the event."""
+    config = {
+        "binary_sensor": {
+            "platform": "template",
+            "sensors": {
+                "test": {
+                    "friendly_name": "virtual thingy",
+                    "value_template": "{{ states.sensor.test_state.state == 'on' }}",
+                    "device_class": "motion",
+                }
+            },
+        }
+    }
+    assert await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    hass.states.async_set("sensor.test_state", "on")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
 
 
 async def test_template_delay_on(hass):
@@ -339,7 +284,7 @@ async def test_template_delay_on(hass):
             },
         }
     }
-    await setup.async_setup_component(hass, "binary_sensor", config)
+    await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
     await hass.async_block_till_done()
     await hass.async_start()
 
@@ -399,7 +344,7 @@ async def test_template_delay_off(hass):
         }
     }
     hass.states.async_set("sensor.test_state", "on")
-    await setup.async_setup_component(hass, "binary_sensor", config)
+    await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
     await hass.async_block_till_done()
     await hass.async_start()
 
@@ -443,6 +388,269 @@ async def test_template_delay_off(hass):
     assert state.state == "on"
 
 
+async def test_template_with_templated_delay_on(hass):
+    """Test binary sensor template with template delay on."""
+    config = {
+        "binary_sensor": {
+            "platform": "template",
+            "sensors": {
+                "test": {
+                    "friendly_name": "virtual thingy",
+                    "value_template": "{{ states.sensor.test_state.state == 'on' }}",
+                    "device_class": "motion",
+                    "delay_on": '{{ ({ "seconds": 6 / 2 }) }}',
+                }
+            },
+        }
+    }
+    await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    hass.states.async_set("sensor.test_state", "on")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    future = dt_util.utcnow() + timedelta(seconds=3)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
+
+    # check with time changes
+    hass.states.async_set("sensor.test_state", "off")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    hass.states.async_set("sensor.test_state", "on")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    hass.states.async_set("sensor.test_state", "off")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    future = dt_util.utcnow() + timedelta(seconds=3)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+
+async def test_template_with_templated_delay_off(hass):
+    """Test binary sensor template with template delay off."""
+    config = {
+        "binary_sensor": {
+            "platform": "template",
+            "sensors": {
+                "test": {
+                    "friendly_name": "virtual thingy",
+                    "value_template": "{{ states.sensor.test_state.state == 'on' }}",
+                    "device_class": "motion",
+                    "delay_off": '{{ ({ "seconds": 6 / 2 }) }}',
+                }
+            },
+        }
+    }
+    hass.states.async_set("sensor.test_state", "on")
+    await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    hass.states.async_set("sensor.test_state", "off")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
+
+    future = dt_util.utcnow() + timedelta(seconds=3)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    # check with time changes
+    hass.states.async_set("sensor.test_state", "on")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
+
+    hass.states.async_set("sensor.test_state", "off")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
+
+    hass.states.async_set("sensor.test_state", "on")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
+
+    future = dt_util.utcnow() + timedelta(seconds=3)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
+
+
+async def test_template_with_delay_on_based_on_input(hass):
+    """Test binary sensor template with template delay on based on input number."""
+    config = {
+        "binary_sensor": {
+            "platform": "template",
+            "sensors": {
+                "test": {
+                    "friendly_name": "virtual thingy",
+                    "value_template": "{{ states.sensor.test_state.state == 'on' }}",
+                    "device_class": "motion",
+                    "delay_on": '{{ ({ "seconds": states("input_number.delay")|int }) }}',
+                }
+            },
+        }
+    }
+    await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    hass.states.async_set("sensor.test_state", "off")
+    await hass.async_block_till_done()
+
+    hass.states.async_set("input_number.delay", 3)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    hass.states.async_set("sensor.test_state", "on")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    future = dt_util.utcnow() + timedelta(seconds=3)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
+
+    # set input to 4 seconds
+    hass.states.async_set("sensor.test_state", "off")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    hass.states.async_set("input_number.delay", 4)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_state", "on")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    future = dt_util.utcnow() + timedelta(seconds=2)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    future = dt_util.utcnow() + timedelta(seconds=4)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
+
+
+async def test_template_with_delay_off_based_on_input(hass):
+    """Test binary sensor template with template delay off based on input number."""
+    config = {
+        "binary_sensor": {
+            "platform": "template",
+            "sensors": {
+                "test": {
+                    "friendly_name": "virtual thingy",
+                    "value_template": "{{ states.sensor.test_state.state == 'on' }}",
+                    "device_class": "motion",
+                    "delay_off": '{{ ({ "seconds": states("input_number.delay")|int }) }}',
+                }
+            },
+        }
+    }
+    await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    hass.states.async_set("sensor.test_state", "on")
+    await hass.async_block_till_done()
+
+    hass.states.async_set("input_number.delay", 3)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
+
+    hass.states.async_set("sensor.test_state", "off")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
+
+    future = dt_util.utcnow() + timedelta(seconds=3)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    # set input to 4 seconds
+    hass.states.async_set("sensor.test_state", "on")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
+
+    hass.states.async_set("input_number.delay", 4)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_state", "off")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
+
+    future = dt_util.utcnow() + timedelta(seconds=2)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
+
+    future = dt_util.utcnow() + timedelta(seconds=4)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+
 async def test_available_without_availability_template(hass):
     """Ensure availability is true without an availability_template."""
     config = {
@@ -458,12 +666,15 @@ async def test_available_without_availability_template(hass):
             },
         }
     }
-    await setup.async_setup_component(hass, "binary_sensor", config)
+    await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.test").state != STATE_UNAVAILABLE
+    state = hass.states.get("binary_sensor.test")
+
+    assert state.state != STATE_UNAVAILABLE
+    assert state.attributes[ATTR_DEVICE_CLASS] == "motion"
 
 
 async def test_availability_template(hass):
@@ -482,7 +693,7 @@ async def test_availability_template(hass):
             },
         }
     }
-    await setup.async_setup_component(hass, "binary_sensor", config)
+    await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
@@ -495,7 +706,10 @@ async def test_availability_template(hass):
     hass.states.async_set("sensor.test_state", STATE_ON)
     await hass.async_block_till_done()
 
-    assert hass.states.get("binary_sensor.test").state != STATE_UNAVAILABLE
+    state = hass.states.get("binary_sensor.test")
+
+    assert state.state != STATE_UNAVAILABLE
+    assert state.attributes[ATTR_DEVICE_CLASS] == "motion"
 
 
 async def test_invalid_attribute_template(hass, caplog):
@@ -504,7 +718,7 @@ async def test_invalid_attribute_template(hass, caplog):
 
     await setup.async_setup_component(
         hass,
-        "binary_sensor",
+        binary_sensor.DOMAIN,
         {
             "binary_sensor": {
                 "platform": "template",
@@ -521,11 +735,11 @@ async def test_invalid_attribute_template(hass, caplog):
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 2
-    await hass.helpers.entity_component.async_update_entity(
-        "binary_sensor.invalid_template"
-    )
+    await hass.async_start()
+    await hass.async_block_till_done()
 
-    assert ("Error rendering attribute test_attribute") in caplog.text
+    assert "test_attribute" in caplog.text
+    assert "TemplateError" in caplog.text
 
 
 async def test_invalid_availability_template_keeps_component_available(hass, caplog):
@@ -533,7 +747,7 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
 
     await setup.async_setup_component(
         hass,
-        "binary_sensor",
+        binary_sensor.DOMAIN,
         {
             "binary_sensor": {
                 "platform": "template",
@@ -558,9 +772,11 @@ async def test_no_update_template_match_all(hass, caplog):
     """Test that we do not update sensors that match on all."""
     hass.states.async_set("binary_sensor.test_sensor", "true")
 
+    hass.state = CoreState.not_running
+
     await setup.async_setup_component(
         hass,
-        "binary_sensor",
+        binary_sensor.DOMAIN,
         {
             "binary_sensor": {
                 "platform": "template",
@@ -584,26 +800,6 @@ async def test_no_update_template_match_all(hass, caplog):
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 5
-    assert (
-        "Template binary sensor 'all_state' has no entity ids "
-        "configured to track nor were we able to extract the entities to "
-        "track from the value template"
-    ) in caplog.text
-    assert (
-        "Template binary sensor 'all_icon' has no entity ids "
-        "configured to track nor were we able to extract the entities to "
-        "track from the icon template"
-    ) in caplog.text
-    assert (
-        "Template binary sensor 'all_entity_picture' has no entity ids "
-        "configured to track nor were we able to extract the entities to "
-        "track from the entity_picture template"
-    ) in caplog.text
-    assert (
-        "Template binary sensor 'all_attribute' has no entity ids "
-        "configured to track nor were we able to extract the entities to "
-        "track from the test_attribute template"
-    ) in caplog.text
 
     assert hass.states.get("binary_sensor.all_state").state == "off"
     assert hass.states.get("binary_sensor.all_icon").state == "off"
@@ -622,9 +818,10 @@ async def test_no_update_template_match_all(hass, caplog):
     await hass.async_block_till_done()
 
     assert hass.states.get("binary_sensor.all_state").state == "on"
-    assert hass.states.get("binary_sensor.all_icon").state == "on"
-    assert hass.states.get("binary_sensor.all_entity_picture").state == "on"
-    assert hass.states.get("binary_sensor.all_attribute").state == "on"
+    # Will now process because we have one valid template
+    assert hass.states.get("binary_sensor.all_icon").state == "off"
+    assert hass.states.get("binary_sensor.all_entity_picture").state == "off"
+    assert hass.states.get("binary_sensor.all_attribute").state == "off"
 
     await hass.helpers.entity_component.async_update_entity("binary_sensor.all_state")
     await hass.helpers.entity_component.async_update_entity("binary_sensor.all_icon")
@@ -639,3 +836,239 @@ async def test_no_update_template_match_all(hass, caplog):
     assert hass.states.get("binary_sensor.all_icon").state == "off"
     assert hass.states.get("binary_sensor.all_entity_picture").state == "off"
     assert hass.states.get("binary_sensor.all_attribute").state == "off"
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one binary sensor per id."""
+    await setup.async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "unique_id": "group-id",
+                "binary_sensor": {
+                    "name": "top-level",
+                    "unique_id": "sensor-id",
+                    "state": "on",
+                },
+            },
+            "binary_sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_cover_01": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ true }}",
+                    },
+                    "test_template_cover_02": {
+                        "unique_id": "not-so-unique-anymore",
+                        "value_template": "{{ false }}",
+                    },
+                },
+            },
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 2
+
+    ent_reg = entity_registry.async_get(hass)
+
+    assert len(ent_reg.entities) == 2
+    assert (
+        ent_reg.async_get_entity_id("binary_sensor", "template", "group-id-sensor-id")
+        is not None
+    )
+    assert (
+        ent_reg.async_get_entity_id(
+            "binary_sensor", "template", "not-so-unique-anymore"
+        )
+        is not None
+    )
+
+
+async def test_template_validation_error(hass, caplog):
+    """Test binary sensor template delay on."""
+    caplog.set_level(logging.ERROR)
+    config = {
+        "binary_sensor": {
+            "platform": "template",
+            "sensors": {
+                "test": {
+                    "friendly_name": "virtual thingy",
+                    "value_template": "True",
+                    "icon_template": "{{ states.sensor.test_state.state }}",
+                    "device_class": "motion",
+                    "delay_on": 5,
+                },
+            },
+        },
+    }
+    await setup.async_setup_component(hass, binary_sensor.DOMAIN, config)
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.attributes.get("icon") == ""
+
+    hass.states.async_set("sensor.test_state", "mdi:check")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.attributes.get("icon") == "mdi:check"
+
+    hass.states.async_set("sensor.test_state", "invalid_icon")
+    await hass.async_block_till_done()
+    assert len(caplog.records) == 1
+    assert caplog.records[0].message.startswith(
+        "Error validating template result 'invalid_icon' from template"
+    )
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.attributes.get("icon") is None
+
+
+async def test_trigger_entity(hass):
+    """Test trigger entity works."""
+    assert await setup.async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {"invalid": "config"},
+                # Config after invalid should still be set up
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "binary_sensors": {
+                        "hello": {
+                            "friendly_name": "Hello Name",
+                            "unique_id": "hello_name-id",
+                            "device_class": "battery",
+                            "value_template": "{{ trigger.event.data.beer == 2 }}",
+                            "entity_picture_template": "{{ '/local/dogs.png' }}",
+                            "icon_template": "{{ 'mdi:pirate' }}",
+                            "attribute_templates": {
+                                "plus_one": "{{ trigger.event.data.beer + 1 }}"
+                            },
+                        },
+                    },
+                    "binary_sensor": [
+                        {
+                            "name": "via list",
+                            "unique_id": "via_list-id",
+                            "device_class": "battery",
+                            "state": "{{ trigger.event.data.beer == 2 }}",
+                            "picture": "{{ '/local/dogs.png' }}",
+                            "icon": "{{ 'mdi:pirate' }}",
+                            "attributes": {
+                                "plus_one": "{{ trigger.event.data.beer + 1 }}",
+                                "another": "{{ trigger.event.data.uno_mas or 1 }}",
+                            },
+                        }
+                    ],
+                },
+                {
+                    "trigger": [],
+                    "binary_sensors": {
+                        "bare_minimum": {
+                            "value_template": "{{ trigger.event.data.beer == 1 }}"
+                        },
+                    },
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.hello_name")
+    assert state is not None
+    assert state.state == "off"
+
+    state = hass.states.get("binary_sensor.bare_minimum")
+    assert state is not None
+    assert state.state == "off"
+
+    context = Context()
+    hass.bus.async_fire("test_event", {"beer": 2}, context=context)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.hello_name")
+    assert state.state == "on"
+    assert state.attributes.get("device_class") == "battery"
+    assert state.attributes.get("icon") == "mdi:pirate"
+    assert state.attributes.get("entity_picture") == "/local/dogs.png"
+    assert state.attributes.get("plus_one") == 3
+    assert state.context is context
+
+    ent_reg = entity_registry.async_get(hass)
+    assert len(ent_reg.entities) == 2
+    assert (
+        ent_reg.entities["binary_sensor.hello_name"].unique_id
+        == "listening-test-event-hello_name-id"
+    )
+    assert (
+        ent_reg.entities["binary_sensor.via_list"].unique_id
+        == "listening-test-event-via_list-id"
+    )
+
+    state = hass.states.get("binary_sensor.via_list")
+    assert state.state == "on"
+    assert state.attributes.get("device_class") == "battery"
+    assert state.attributes.get("icon") == "mdi:pirate"
+    assert state.attributes.get("entity_picture") == "/local/dogs.png"
+    assert state.attributes.get("plus_one") == 3
+    assert state.attributes.get("another") == 1
+    assert state.context is context
+
+    # Even if state itself didn't change, attributes might have changed
+    hass.bus.async_fire("test_event", {"beer": 2, "uno_mas": "si"})
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.via_list")
+    assert state.state == "on"
+    assert state.attributes.get("another") == "si"
+
+
+async def test_template_with_trigger_templated_delay_on(hass):
+    """Test binary sensor template with template delay on."""
+    config = {
+        "template": {
+            "trigger": {"platform": "event", "event_type": "test_event"},
+            "binary_sensor": {
+                "name": "test",
+                "state": "{{ trigger.event.data.beer == 2 }}",
+                "device_class": "motion",
+                "delay_on": '{{ ({ "seconds": 6 / 2 }) }}',
+                "auto_off": '{{ ({ "seconds": 1 + 1 }) }}',
+            },
+        }
+    }
+    await setup.async_setup_component(hass, "template", config)
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"
+
+    context = Context()
+    hass.bus.async_fire("test_event", {"beer": 2}, context=context)
+    await hass.async_block_till_done()
+
+    future = dt_util.utcnow() + timedelta(seconds=3)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "on"
+
+    # Now wait for the auto-off
+    future = dt_util.utcnow() + timedelta(seconds=2)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == "off"

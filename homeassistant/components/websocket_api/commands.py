@@ -1,16 +1,27 @@
 """Commands part of Websocket API."""
 import asyncio
+import json
 
 import voluptuous as vol
 
-from homeassistant.auth.permissions.const import POLICY_READ
+from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
+from homeassistant.bootstrap import SIGNAL_BOOTSTRAP_INTEGRATONS
+from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL
-from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, Unauthorized
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.core import callback
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotFound,
+    TemplateError,
+    Unauthorized,
+)
+from homeassistant.helpers import config_validation as cv, entity, template
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import TrackTemplate, async_track_template_result
+from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
 
 from . import const, decorators, messages
 
@@ -20,16 +31,22 @@ from . import const, decorators, messages
 @callback
 def async_register_commands(hass, async_reg):
     """Register commands."""
-    async_reg(hass, handle_subscribe_events)
-    async_reg(hass, handle_unsubscribe_events)
     async_reg(hass, handle_call_service)
-    async_reg(hass, handle_get_states)
-    async_reg(hass, handle_get_services)
+    async_reg(hass, handle_entity_source)
+    async_reg(hass, handle_execute_script)
     async_reg(hass, handle_get_config)
+    async_reg(hass, handle_get_services)
+    async_reg(hass, handle_get_states)
+    async_reg(hass, handle_manifest_get)
+    async_reg(hass, handle_integration_setup_info)
+    async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
-    async_reg(hass, handle_manifest_list)
-    async_reg(hass, handle_manifest_get)
+    async_reg(hass, handle_subscribe_bootstrap_integrations)
+    async_reg(hass, handle_subscribe_events)
+    async_reg(hass, handle_subscribe_trigger)
+    async_reg(hass, handle_test_condition)
+    async_reg(hass, handle_unsubscribe_events)
 
 
 def pong_message(iden):
@@ -48,11 +65,11 @@ def handle_subscribe_events(hass, connection, msg):
     """Handle subscribe events command."""
     # Circular dep
     # pylint: disable=import-outside-toplevel
-    from .permissions import SUBSCRIBE_WHITELIST
+    from .permissions import SUBSCRIBE_ALLOWLIST
 
     event_type = msg["event_type"]
 
-    if event_type not in SUBSCRIBE_WHITELIST and not connection.user.is_admin:
+    if event_type not in SUBSCRIBE_ALLOWLIST and not connection.user.is_admin:
         raise Unauthorized
 
     if event_type == EVENT_STATE_CHANGED:
@@ -65,7 +82,7 @@ def handle_subscribe_events(hass, connection, msg):
             ):
                 return
 
-            connection.send_message(messages.event_message(msg["id"], event))
+            connection.send_message(messages.cached_event_message(msg["id"], event))
 
     else:
 
@@ -75,10 +92,31 @@ def handle_subscribe_events(hass, connection, msg):
             if event.event_type == EVENT_TIME_CHANGED:
                 return
 
-            connection.send_message(messages.event_message(msg["id"], event.as_dict()))
+            connection.send_message(messages.cached_event_message(msg["id"], event))
 
     connection.subscriptions[msg["id"]] = hass.bus.async_listen(
         event_type, forward_events
+    )
+
+    connection.send_message(messages.result_message(msg["id"]))
+
+
+@callback
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "subscribe_bootstrap_integrations",
+    }
+)
+def handle_subscribe_bootstrap_integrations(hass, connection, msg):
+    """Handle subscribe bootstrap integrations command."""
+
+    @callback
+    def forward_bootstrap_integrations(message):
+        """Forward bootstrap integrations to websocket."""
+        connection.send_message(messages.event_message(msg["id"], message))
+
+    connection.subscriptions[msg["id"]] = async_dispatcher_connect(
+        hass, SIGNAL_BOOTSTRAP_INTEGRATONS, forward_bootstrap_integrations
     )
 
     connection.send_message(messages.result_message(msg["id"]))
@@ -111,6 +149,7 @@ def handle_unsubscribe_events(hass, connection, msg):
         vol.Required("type"): "call_service",
         vol.Required("domain"): str,
         vol.Required("service"): str,
+        vol.Optional("target"): cv.ENTITY_SERVICE_FIELDS,
         vol.Optional("service_data"): dict,
     }
 )
@@ -118,19 +157,23 @@ def handle_unsubscribe_events(hass, connection, msg):
 async def handle_call_service(hass, connection, msg):
     """Handle call service command."""
     blocking = True
-    if msg["domain"] == HASS_DOMAIN and msg["service"] in ["restart", "stop"]:
-        blocking = False
+    # We do not support templates.
+    target = msg.get("target")
+    if template.is_complex(target):
+        raise vol.Invalid("Templates are not supported here")
 
     try:
+        context = connection.context(msg)
         await hass.services.async_call(
             msg["domain"],
             msg["service"],
             msg.get("service_data"),
             blocking,
-            connection.context(msg),
+            context,
+            target=target,
         )
         connection.send_message(
-            messages.result_message(msg["id"], {"context": connection.context(msg)})
+            messages.result_message(msg["id"], {"context": context})
         )
     except ServiceNotFound as err:
         if err.domain == msg["domain"] and err.service == msg["service"]:
@@ -145,6 +188,10 @@ async def handle_call_service(hass, connection, msg):
                     msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err)
                 )
             )
+    except vol.Invalid as err:
+        connection.send_message(
+            messages.error_message(msg["id"], const.ERR_INVALID_FORMAT, str(err))
+        )
     except HomeAssistantError as err:
         connection.logger.exception(err)
         connection.send_message(
@@ -193,13 +240,9 @@ def handle_get_config(hass, connection, msg):
 @decorators.async_response
 async def handle_manifest_list(hass, connection, msg):
     """Handle integrations command."""
+    loaded_integrations = async_get_loaded_integrations(hass)
     integrations = await asyncio.gather(
-        *[
-            async_get_integration(hass, domain)
-            for domain in hass.config.components
-            # Filter out platforms.
-            if "." not in domain
-        ]
+        *[async_get_integration(hass, domain) for domain in loaded_integrations]
     )
     connection.send_result(
         msg["id"], [integration.manifest for integration in integrations]
@@ -219,6 +262,19 @@ async def handle_manifest_get(hass, connection, msg):
         connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Integration not found")
 
 
+@decorators.websocket_command({vol.Required("type"): "integration/setup_info"})
+@decorators.async_response
+async def handle_integration_setup_info(hass, connection, msg):
+    """Handle integrations command."""
+    connection.send_result(
+        msg["id"],
+        [
+            {"domain": integration, "seconds": timedelta.total_seconds()}
+            for integration, timedelta in hass.data[DATA_SETUP_TIME].items()
+        ],
+    )
+
+
 @callback
 @decorators.websocket_command({vol.Required("type"): "ping"})
 def handle_ping(hass, connection, msg):
@@ -226,40 +282,201 @@ def handle_ping(hass, connection, msg):
     connection.send_message(pong_message(msg["id"]))
 
 
-@callback
 @decorators.websocket_command(
     {
         vol.Required("type"): "render_template",
-        vol.Required("template"): cv.template,
+        vol.Required("template"): str,
         vol.Optional("entity_ids"): cv.entity_ids,
         vol.Optional("variables"): dict,
+        vol.Optional("timeout"): vol.Coerce(float),
+        vol.Optional("strict", default=False): bool,
     }
 )
-def handle_render_template(hass, connection, msg):
+@decorators.async_response
+async def handle_render_template(hass, connection, msg):
     """Handle render_template command."""
-    template = msg["template"]
-    template.hass = hass
-
+    template_str = msg["template"]
+    template_obj = template.Template(template_str, hass)
     variables = msg.get("variables")
+    timeout = msg.get("timeout")
+    info = None
 
-    entity_ids = msg.get("entity_ids")
-    if entity_ids is None:
-        entity_ids = template.extract_entities(variables)
+    if timeout:
+        try:
+            timed_out = await template_obj.async_render_will_timeout(
+                timeout, strict=msg["strict"]
+            )
+        except TemplateError as ex:
+            connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
+            return
+
+        if timed_out:
+            connection.send_error(
+                msg["id"],
+                const.ERR_TEMPLATE_ERROR,
+                f"Exceeded maximum execution time of {timeout}s",
+            )
+            return
 
     @callback
-    def state_listener(*_):
+    def _template_listener(event, updates):
+        nonlocal info
+        track_template_result = updates.pop()
+        result = track_template_result.result
+        if isinstance(result, TemplateError):
+            connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(result))
+            return
+
         connection.send_message(
             messages.event_message(
-                msg["id"], {"result": template.async_render(variables)}
+                msg["id"], {"result": result, "listeners": info.listeners}  # type: ignore
             )
         )
 
-    if entity_ids and entity_ids != MATCH_ALL:
-        connection.subscriptions[msg["id"]] = async_track_state_change(
-            hass, entity_ids, state_listener
+    try:
+        info = async_track_template_result(
+            hass,
+            [TrackTemplate(template_obj, variables)],
+            _template_listener,
+            raise_on_template_error=True,
+            strict=msg["strict"],
         )
-    else:
-        connection.subscriptions[msg["id"]] = lambda: None
+    except TemplateError as ex:
+        connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
+        return
+
+    connection.subscriptions[msg["id"]] = info.async_remove
 
     connection.send_result(msg["id"])
-    state_listener()
+
+    hass.loop.call_soon_threadsafe(info.async_refresh)
+
+
+@callback
+@decorators.websocket_command(
+    {vol.Required("type"): "entity/source", vol.Optional("entity_id"): [cv.entity_id]}
+)
+def handle_entity_source(hass, connection, msg):
+    """Handle entity source command."""
+    raw_sources = entity.entity_sources(hass)
+    entity_perm = connection.user.permissions.check_entity
+
+    if "entity_id" not in msg:
+        if connection.user.permissions.access_all_entities("read"):
+            sources = raw_sources
+        else:
+            sources = {
+                entity_id: source
+                for entity_id, source in raw_sources.items()
+                if entity_perm(entity_id, "read")
+            }
+
+        connection.send_message(messages.result_message(msg["id"], sources))
+        return
+
+    sources = {}
+
+    for entity_id in msg["entity_id"]:
+        if not entity_perm(entity_id, "read"):
+            raise Unauthorized(
+                context=connection.context(msg),
+                permission=POLICY_READ,
+                perm_category=CAT_ENTITIES,
+            )
+
+        source = raw_sources.get(entity_id)
+
+        if source is None:
+            connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
+            return
+
+        sources[entity_id] = source
+
+    connection.send_result(msg["id"], sources)
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "subscribe_trigger",
+        vol.Required("trigger"): cv.TRIGGER_SCHEMA,
+        vol.Optional("variables"): dict,
+    }
+)
+@decorators.require_admin
+@decorators.async_response
+async def handle_subscribe_trigger(hass, connection, msg):
+    """Handle subscribe trigger command."""
+    # Circular dep
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.helpers import trigger
+
+    trigger_config = await trigger.async_validate_trigger_config(hass, msg["trigger"])
+
+    @callback
+    def forward_triggers(variables, context=None):
+        """Forward events to websocket."""
+        message = messages.event_message(
+            msg["id"], {"variables": variables, "context": context}
+        )
+        connection.send_message(
+            json.dumps(message, cls=ExtendedJSONEncoder, allow_nan=False)
+        )
+
+    connection.subscriptions[msg["id"]] = (
+        await trigger.async_initialize_triggers(
+            hass,
+            trigger_config,
+            forward_triggers,
+            const.DOMAIN,
+            const.DOMAIN,
+            connection.logger.log,
+            variables=msg.get("variables"),
+        )
+    ) or (
+        # Some triggers won't return an unsub function. Since the caller expects
+        # a subscription, we're going to fake one.
+        lambda: None
+    )
+    connection.send_result(msg["id"])
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "test_condition",
+        vol.Required("condition"): cv.CONDITION_SCHEMA,
+        vol.Optional("variables"): dict,
+    }
+)
+@decorators.require_admin
+@decorators.async_response
+async def handle_test_condition(hass, connection, msg):
+    """Handle test condition command."""
+    # Circular dep
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.helpers import condition
+
+    check_condition = await condition.async_from_config(hass, msg["condition"])
+    connection.send_result(
+        msg["id"], {"result": check_condition(hass, msg.get("variables"))}
+    )
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "execute_script",
+        vol.Required("sequence"): cv.SCRIPT_SCHEMA,
+        vol.Optional("variables"): dict,
+    }
+)
+@decorators.require_admin
+@decorators.async_response
+async def handle_execute_script(hass, connection, msg):
+    """Handle execute script command."""
+    # Circular dep
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.helpers.script import Script
+
+    context = connection.context(msg)
+    script_obj = Script(hass, msg["sequence"], f"{const.DOMAIN} script", const.DOMAIN)
+    await script_obj.async_run(msg.get("variables"), context=context)
+    connection.send_message(messages.result_message(msg["id"], {"context": context}))

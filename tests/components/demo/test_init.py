@@ -1,4 +1,5 @@
 """The tests for the Demo component."""
+from contextlib import suppress
 import json
 import os
 
@@ -20,10 +21,8 @@ def mock_history(hass):
 def demo_cleanup(hass):
     """Clean up device tracker demo file."""
     yield
-    try:
+    with suppress(FileNotFoundError):
         os.remove(hass.config.path(YAML_DEVICES))
-    except FileNotFoundError:
-        pass
 
 
 async def test_setting_up_demo(hass):

@@ -1,0 +1,15 @@
+# Describes the format for available Number entity services
+
+set_value:
+  name: Set
+  description: Set the value of a Number entity.
+  target:
+    entity:
+      domain: number
+  fields:
+    value:
+      name: Value
+      description: The target value the entity should be set to.
+      example: 42
+      selector:
+        text:

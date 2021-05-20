@@ -2,7 +2,6 @@
     "config": {
         "error": {
             "internal_error": "M\u00e3 x\u00e1c th\u1ef1c l\u1ed7i n\u1ed9i b\u1ed9",
-            "invalid_code": "M\u00e3 kh\u00f4ng h\u1ee3p l\u1ec7",
             "timeout": "M\u00e3 x\u00e1c th\u1ef1c h\u1ebft th\u1eddi gian ch\u1edd",
             "unknown": "M\u00e3 x\u00e1c th\u1ef1c l\u1ed7i kh\u00f4ng x\u00e1c \u0111\u1ecbnh"
         },

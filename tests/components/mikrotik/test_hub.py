@@ -1,4 +1,6 @@
 """Test Mikrotik hub."""
+from unittest.mock import patch
+
 import librouteros
 
 from homeassistant import config_entries
@@ -6,7 +8,6 @@ from homeassistant.components import mikrotik
 
 from . import ARP_DATA, DHCP_DATA, MOCK_DATA, MOCK_OPTIONS, WIRELESS_DATA
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

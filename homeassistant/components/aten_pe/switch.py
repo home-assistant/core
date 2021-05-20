@@ -55,7 +55,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         outlets = dev.outlets()
     except AtenPEError as exc:
         _LOGGER.error("Failed to initialize %s:%s: %s", node, serv, str(exc))
-        raise PlatformNotReady
+        raise PlatformNotReady from exc
 
     switches = []
     async for outlet in outlets:

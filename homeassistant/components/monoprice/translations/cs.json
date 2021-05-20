@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Za\u0159\u00edzen\u00ed je ji\u017e nastaveno"
+        },
+        "error": {
+            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port",
+                    "source_1": "Jm\u00e9no zdroje #1",
+                    "source_2": "Jm\u00e9no zdroje #2",
+                    "source_3": "Jm\u00e9no zdroje #3",
+                    "source_4": "Jm\u00e9no zdroje #4",
+                    "source_5": "Jm\u00e9no zdroje #5",
+                    "source_6": "Jm\u00e9no zdroje #6"
+                },
+                "title": "P\u0159ipojen\u00ed k za\u0159\u00edzen\u00ed"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "source_1": "Jm\u00e9no zdroje #1",
+                    "source_2": "Jm\u00e9no zdroje #2",
+                    "source_3": "Jm\u00e9no zdroje #3",
+                    "source_4": "Jm\u00e9no zdroje #4",
+                    "source_5": "Jm\u00e9no zdroje #5",
+                    "source_6": "Jm\u00e9no zdroje #6"
+                },
+                "title": "Nastaven\u00ed zdroj\u016f"
+            }
+        }
+    }
+}

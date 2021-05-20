@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ja hi ha un compte Tibber configurat."
+            "already_configured": "El servei ja est\u00e0 configurat"
         },
         "error": {
-            "connection_error": "S'ha produ\u00eft un error en connectar-se a Tibber",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_access_token": "[%key::common::config_flow::error::invalid_access_token%]",
             "timeout": "S'ha acabat el temps d'espera durant la connexi\u00f3 a Tibber"
         },
@@ -17,6 +17,5 @@
                 "title": "Tibber"
             }
         }
-    },
-    "title": "Tibber"
+    }
 }

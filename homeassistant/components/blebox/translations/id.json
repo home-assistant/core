@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "Perangkat BleBox sudah dikonfigurasi di {address}.",
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "unknown": "Kesalahan yang tidak diharapkan",
+            "unsupported_version": "Firmware Perangkat BleBox sudah usang. Tingkatkan terlebih dulu."
+        },
+        "flow_title": "Perangkat BleBox: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Alamat IP",
+                    "port": "Port"
+                },
+                "description": "Siapkan BleBox Anda untuk diintegrasikan dengan Home Assistant.",
+                "title": "Siapkan perangkat BleBox Anda"
+            }
+        }
+    }
+}

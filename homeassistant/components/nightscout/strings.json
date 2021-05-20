@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Enter your Nightscout server information.",
+                "description": "- URL: the address of your nightscout instance. I.e.: https://myhomeassistant.duckdns.org:5423\n- API Key (Optional): Only use if your instance is protected (auth_default_roles != readable).",
+                "data": {
+                    "url": "[%key:common::config_flow::data::url%]",
+                    "api_key": "[%key:common::config_flow::data::api_key%]"
+                }
+            }
+        },
+        "error": {
+            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
+        },
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        }
+    }
+}

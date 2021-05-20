@@ -1,0 +1,74 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "create_entry": {
+            "default": "AlarmDecoder\uc5d0 \uc131\uacf5\uc801\uc73c\ub85c \uc5f0\uacb0\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "protocol": {
+                "data": {
+                    "device_baudrate": "\uae30\uae30 \uc804\uc1a1 \uc18d\ub3c4",
+                    "device_path": "\uae30\uae30 \uacbd\ub85c",
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "port": "\ud3ec\ud2b8"
+                },
+                "title": "\uc5f0\uacb0 \uc124\uc815 \uad6c\uc131\ud558\uae30"
+            },
+            "user": {
+                "data": {
+                    "protocol": "\ud504\ub85c\ud1a0\ucf5c"
+                },
+                "title": "AlarmDecoder \ud504\ub85c\ud1a0\ucf5c \uc120\ud0dd\ud558\uae30"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "int": "\uc544\ub798 \ud544\ub4dc\ub294 \uc815\uc218\uc5ec\uc57c \ud569\ub2c8\ub2e4.",
+            "loop_range": "RF \ub8e8\ud504\ub294 1\uacfc 4 \uc0ac\uc774\uc758 \uc815\uc218\uc5ec\uc57c \ud569\ub2c8\ub2e4.",
+            "loop_rfid": "RF \ub8e8\ud504\ub294 RF \uc2dc\ub9ac\uc5bc \uc5c6\uc73c\uba74 \uc0ac\uc6a9\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.",
+            "relay_inclusive": "\ub9b4\ub808\uc774 \uc8fc\uc18c\uc640 \ub9b4\ub808\uc774 \ucc44\ub110\uc740 \uc0c1\ud638 \uc758\uc874\uc801\uc774\uae30 \ub54c\ubb38\uc5d0 \ud568\uaed8 \ud3ec\ud568\ub418\uc5b4\uc57c \ud569\ub2c8\ub2e4."
+        },
+        "step": {
+            "arm_settings": {
+                "data": {
+                    "alt_night_mode": "\ub300\uccb4 \uc57c\uac04 \ubaa8\ub4dc",
+                    "auto_bypass": "\uacbd\ube44 \uc911 \uc790\ub3d9 \uc6b0\ud68c",
+                    "code_arm_required": "\uacbd\ube44\uc5d0 \ud544\uc694\ud55c \ucf54\ub4dc"
+                },
+                "title": "AlarmDecoder \uad6c\uc131\ud558\uae30"
+            },
+            "init": {
+                "data": {
+                    "edit_select": "\ud3b8\uc9d1\ud558\uae30"
+                },
+                "description": "\ubb34\uc5c7\uc744 \ud3b8\uc9d1\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
+                "title": "AlarmDecoder \uad6c\uc131\ud558\uae30"
+            },
+            "zone_details": {
+                "data": {
+                    "zone_loop": "RF \ub8e8\ud504",
+                    "zone_name": "\uad6c\uc5ed \uc774\ub984",
+                    "zone_relayaddr": "\ub9b4\ub808\uc774 \uc8fc\uc18c",
+                    "zone_relaychan": "\ub9b4\ub808\uc774 \ucc44\ub110",
+                    "zone_rfid": "RF \uc2dc\ub9ac\uc5bc",
+                    "zone_type": "\uad6c\uc5ed \uc720\ud615"
+                },
+                "description": "\uad6c\uc5ed {zone_number}\uc5d0 \ub300\ud55c \uc138\ubd80 \uc815\ubcf4\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694. \uad6c\uc5ed {zone_number}\uc744(\ub97c) \uc0ad\uc81c\ud558\ub824\uba74 \uad6c\uc5ed \uc774\ub984\uc744 \ube44\uc6cc\ub450\uc138\uc694.",
+                "title": "AlarmDecoder \uad6c\uc131\ud558\uae30"
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "\uad6c\uc5ed \ubc88\ud638"
+                },
+                "description": "\ucd94\uac00, \ud3b8\uc9d1 \ub610\ub294 \uc81c\uac70\ud560 \uad6c\uc5ed \ubc88\ud638\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.",
+                "title": "AlarmDecoder \uad6c\uc131\ud558\uae30"
+            }
+        }
+    }
+}

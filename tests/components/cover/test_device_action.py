@@ -16,6 +16,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -30,7 +31,7 @@ def entity_reg(hass):
     return mock_registry(hass)
 
 
-async def test_get_actions(hass, device_reg, entity_reg):
+async def test_get_actions(hass, device_reg, entity_reg, enable_custom_integrations):
     """Test we get the expected actions from a cover."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -46,6 +47,7 @@ async def test_get_actions(hass, device_reg, entity_reg):
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_actions = [
         {
@@ -60,12 +62,20 @@ async def test_get_actions(hass, device_reg, entity_reg):
             "device_id": device_entry.id,
             "entity_id": ent.entity_id,
         },
+        {
+            "domain": DOMAIN,
+            "type": "stop",
+            "device_id": device_entry.id,
+            "entity_id": ent.entity_id,
+        },
     ]
     actions = await async_get_device_automations(hass, "action", device_entry.id)
     assert_lists_same(actions, expected_actions)
 
 
-async def test_get_actions_tilt(hass, device_reg, entity_reg):
+async def test_get_actions_tilt(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected actions from a cover."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -81,6 +91,7 @@ async def test_get_actions_tilt(hass, device_reg, entity_reg):
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_actions = [
         {
@@ -92,6 +103,12 @@ async def test_get_actions_tilt(hass, device_reg, entity_reg):
         {
             "domain": DOMAIN,
             "type": "close",
+            "device_id": device_entry.id,
+            "entity_id": ent.entity_id,
+        },
+        {
+            "domain": DOMAIN,
+            "type": "stop",
             "device_id": device_entry.id,
             "entity_id": ent.entity_id,
         },
@@ -112,7 +129,9 @@ async def test_get_actions_tilt(hass, device_reg, entity_reg):
     assert_lists_same(actions, expected_actions)
 
 
-async def test_get_actions_set_pos(hass, device_reg, entity_reg):
+async def test_get_actions_set_pos(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected actions from a cover."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -128,6 +147,7 @@ async def test_get_actions_set_pos(hass, device_reg, entity_reg):
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_actions = [
         {
@@ -141,7 +161,9 @@ async def test_get_actions_set_pos(hass, device_reg, entity_reg):
     assert_lists_same(actions, expected_actions)
 
 
-async def test_get_actions_set_tilt_pos(hass, device_reg, entity_reg):
+async def test_get_actions_set_tilt_pos(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected actions from a cover."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -157,6 +179,7 @@ async def test_get_actions_set_tilt_pos(hass, device_reg, entity_reg):
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_actions = [
         {
@@ -173,6 +196,12 @@ async def test_get_actions_set_tilt_pos(hass, device_reg, entity_reg):
         },
         {
             "domain": DOMAIN,
+            "type": "stop",
+            "device_id": device_entry.id,
+            "entity_id": ent.entity_id,
+        },
+        {
+            "domain": DOMAIN,
             "type": "set_tilt_position",
             "device_id": device_entry.id,
             "entity_id": ent.entity_id,
@@ -182,7 +211,9 @@ async def test_get_actions_set_tilt_pos(hass, device_reg, entity_reg):
     assert_lists_same(actions, expected_actions)
 
 
-async def test_get_action_capabilities(hass, device_reg, entity_reg):
+async def test_get_action_capabilities(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected capabilities from a cover action."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -199,9 +230,10 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
     )
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == 2  # open, close
+    assert len(actions) == 3  # open, close, stop
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action
@@ -209,7 +241,9 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
         assert capabilities == {"extra_fields": []}
 
 
-async def test_get_action_capabilities_set_pos(hass, device_reg, entity_reg):
+async def test_get_action_capabilities_set_pos(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected capabilities from a cover action."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -226,6 +260,7 @@ async def test_get_action_capabilities_set_pos(hass, device_reg, entity_reg):
     )
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_capabilities = {
         "extra_fields": [
@@ -251,7 +286,9 @@ async def test_get_action_capabilities_set_pos(hass, device_reg, entity_reg):
             assert capabilities == {"extra_fields": []}
 
 
-async def test_get_action_capabilities_set_tilt_pos(hass, device_reg, entity_reg):
+async def test_get_action_capabilities_set_tilt_pos(
+    hass, device_reg, entity_reg, enable_custom_integrations
+):
     """Test we get the expected capabilities from a cover action."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -268,6 +305,7 @@ async def test_get_action_capabilities_set_tilt_pos(hass, device_reg, entity_reg
     )
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     expected_capabilities = {
         "extra_fields": [
@@ -282,7 +320,7 @@ async def test_get_action_capabilities_set_tilt_pos(hass, device_reg, entity_reg
         ]
     }
     actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == 3  # open, close, set_tilt_position
+    assert len(actions) == 4  # open, close, stop, set_tilt_position
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action
@@ -293,7 +331,7 @@ async def test_get_action_capabilities_set_tilt_pos(hass, device_reg, entity_reg
             assert capabilities == {"extra_fields": []}
 
 
-async def test_action(hass):
+async def test_action(hass, enable_custom_integrations):
     """Test for cover actions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -322,30 +360,44 @@ async def test_action(hass):
                         "type": "close",
                     },
                 },
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event_stop"},
+                    "action": {
+                        "domain": DOMAIN,
+                        "device_id": "abcdefgh",
+                        "entity_id": "cover.entity",
+                        "type": "stop",
+                    },
+                },
             ]
         },
     )
+    await hass.async_block_till_done()
 
     open_calls = async_mock_service(hass, "cover", "open_cover")
     close_calls = async_mock_service(hass, "cover", "close_cover")
+    stop_calls = async_mock_service(hass, "cover", "stop_cover")
 
     hass.bus.async_fire("test_event_open")
     await hass.async_block_till_done()
     assert len(open_calls) == 1
     assert len(close_calls) == 0
+    assert len(stop_calls) == 0
 
     hass.bus.async_fire("test_event_close")
     await hass.async_block_till_done()
     assert len(open_calls) == 1
     assert len(close_calls) == 1
+    assert len(stop_calls) == 0
 
     hass.bus.async_fire("test_event_stop")
     await hass.async_block_till_done()
     assert len(open_calls) == 1
     assert len(close_calls) == 1
+    assert len(stop_calls) == 1
 
 
-async def test_action_tilt(hass):
+async def test_action_tilt(hass, enable_custom_integrations):
     """Test for cover tilt actions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -377,6 +429,7 @@ async def test_action_tilt(hass):
             ]
         },
     )
+    await hass.async_block_till_done()
 
     open_calls = async_mock_service(hass, "cover", "open_cover_tilt")
     close_calls = async_mock_service(hass, "cover", "close_cover_tilt")
@@ -397,7 +450,7 @@ async def test_action_tilt(hass):
     assert len(close_calls) == 1
 
 
-async def test_action_set_position(hass):
+async def test_action_set_position(hass, enable_custom_integrations):
     """Test for cover set position actions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -437,6 +490,7 @@ async def test_action_set_position(hass):
             ]
         },
     )
+    await hass.async_block_till_done()
 
     cover_pos_calls = async_mock_service(hass, "cover", "set_cover_position")
     tilt_pos_calls = async_mock_service(hass, "cover", "set_cover_tilt_position")

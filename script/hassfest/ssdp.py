@@ -1,7 +1,8 @@
 """Generate ssdp file."""
+from __future__ import annotations
+
 from collections import OrderedDict, defaultdict
 import json
-from typing import Dict
 
 from .model import Config, Integration
 
@@ -22,7 +23,7 @@ def sort_dict(value):
     return OrderedDict((key, value[key]) for key in sorted(value))
 
 
-def generate_and_validate(integrations: Dict[str, Integration]):
+def generate_and_validate(integrations: dict[str, Integration]):
     """Validate and generate ssdp data."""
 
     data = defaultdict(list)
@@ -38,29 +39,13 @@ def generate_and_validate(integrations: Dict[str, Integration]):
         if not ssdp:
             continue
 
-        try:
-            with open(str(integration.path / "config_flow.py")) as fp:
-                content = fp.read()
-                if (
-                    " async_step_ssdp" not in content
-                    and "AbstractOAuth2FlowHandler" not in content
-                    and "register_discovery_flow" not in content
-                ):
-                    integration.add_error("ssdp", "Config flow has no async_step_ssdp")
-                    continue
-        except FileNotFoundError:
-            integration.add_error(
-                "ssdp", "SSDP info in a manifest requires a config flow to exist"
-            )
-            continue
-
         for matcher in ssdp:
             data[domain].append(sort_dict(matcher))
 
     return BASE.format(json.dumps(data, indent=4))
 
 
-def validate(integrations: Dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config):
     """Validate ssdp file."""
     ssdp_path = config.root / "homeassistant/generated/ssdp.py"
     config.cache["ssdp"] = content = generate_and_validate(integrations)
@@ -78,7 +63,7 @@ def validate(integrations: Dict[str, Integration], config: Config):
         return
 
 
-def generate(integrations: Dict[str, Integration], config: Config):
+def generate(integrations: dict[str, Integration], config: Config):
     """Generate ssdp file."""
     ssdp_path = config.root / "homeassistant/generated/ssdp.py"
     with open(str(ssdp_path), "w") as fp:

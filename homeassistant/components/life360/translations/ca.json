@@ -1,17 +1,17 @@
 {
     "config": {
         "abort": {
-            "invalid_credentials": "Credencials inv\u00e0lides",
-            "user_already_configured": "[%key::common::config_flow::abort::already_configured_account%]"
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
         },
         "create_entry": {
             "default": "Per configurar les opcions avan\u00e7ades mira la [documentaci\u00f3 de Life360]({docs_url})."
         },
         "error": {
-            "invalid_credentials": "Credencials inv\u00e0lides",
+            "already_configured": "El compte ja ha estat configurat",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "invalid_username": "Nom d'usuari incorrecte",
-            "unexpected": "S'ha produ\u00eft un error inesperat en comunicar-se amb el servidor de Life360.",
-            "user_already_configured": "[%key::common::config_flow::abort::already_configured_account%]"
+            "unknown": "Error inesperat"
         },
         "step": {
             "user": {

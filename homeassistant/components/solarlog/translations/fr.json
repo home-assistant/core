@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Le nom d'h\u00f4te ou l'adresse IP de votre p\u00e9riph\u00e9rique Solar-Log",
+                    "host": "H\u00f4te",
                     "name": "Le pr\u00e9fixe \u00e0 utiliser pour vos capteurs Solar-Log"
                 },
                 "title": "D\u00e9finissez votre connexion Solar-Log"

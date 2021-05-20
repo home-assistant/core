@@ -99,7 +99,7 @@ class WinkThermostat(WinkDevice, ClimateEntity):
         return TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional device state attributes."""
         data = {}
         if self.external_temperature is not None:
@@ -254,7 +254,7 @@ class WinkThermostat(WinkDevice, ClimateEntity):
             except KeyError:
                 _LOGGER.error(
                     "Invalid operation mode mapping. %s doesn't map. "
-                    "Please report this.",
+                    "Please report this",
                     mode,
                 )
         return hvac_list
@@ -396,7 +396,7 @@ class WinkAC(WinkDevice, ClimateEntity):
         return TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional device state attributes."""
         data = {}
         data[ATTR_TOTAL_CONSUMPTION] = self.wink.total_consumption()
@@ -457,7 +457,7 @@ class WinkAC(WinkDevice, ClimateEntity):
             except KeyError:
                 _LOGGER.error(
                     "Invalid operation mode mapping. %s doesn't map. "
-                    "Please report this.",
+                    "Please report this",
                     mode,
                 )
         return hvac_list

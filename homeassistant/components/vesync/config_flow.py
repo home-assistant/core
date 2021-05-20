@@ -1,6 +1,5 @@
 """Config flow utilities."""
 from collections import OrderedDict
-import logging
 
 from pyvesync import VeSync
 import voluptuous as vol
@@ -11,21 +10,11 @@ from homeassistant.core import callback
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
 
-
-@callback
-def configured_instances(hass):
-    """Return already configured instances."""
-    return hass.config_entries.async_entries(DOMAIN)
-
-
-@config_entries.HANDLERS.register(DOMAIN)
-class VeSyncFlowHandler(config_entries.ConfigFlow):
+class VeSyncFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Instantiate config flow."""
@@ -50,8 +39,8 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
-        if configured_instances(self.hass):
-            return self.async_abort(reason="already_setup")
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
 
         if not user_input:
             return self._show_form()
@@ -62,7 +51,7 @@ class VeSyncFlowHandler(config_entries.ConfigFlow):
         manager = VeSync(self._username, self._password)
         login = await self.hass.async_add_executor_job(manager.login)
         if not login:
-            return self._show_form(errors={"base": "invalid_login"})
+            return self._show_form(errors={"base": "invalid_auth"})
 
         return self.async_create_entry(
             title=self._username,

@@ -6,7 +6,7 @@ from homeassistant.const import CONF_ROOM
 LOGGER = logging.getLogger(__package__)
 DOMAIN = "dynalite"
 
-ENTITY_PLATFORMS = ["light", "switch", "cover"]
+PLATFORMS = ["light", "switch", "cover"]
 
 
 CONF_ACTIVE = "active"
@@ -19,10 +19,10 @@ CONF_BRIDGES = "bridges"
 CONF_CHANNEL = "channel"
 CONF_CHANNEL_COVER = "channel_cover"
 CONF_CLOSE_PRESET = "close"
-CONF_DEFAULT = "default"
 CONF_DEVICE_CLASS = "class"
 CONF_DURATION = "duration"
 CONF_FADE = "fade"
+CONF_LEVEL = "level"
 CONF_NO_DEFAULT = "nodefault"
 CONF_OPEN_PRESET = "open"
 CONF_POLL_TIMER = "polltimer"
@@ -49,3 +49,12 @@ DEFAULT_TEMPLATES = {
         CONF_TILT_TIME,
     ],
 }
+
+ATTR_AREA = "area"
+ATTR_CHANNEL = "channel"
+ATTR_HOST = "host"
+ATTR_PACKET = "packet"
+ATTR_PRESET = "preset"
+
+SERVICE_REQUEST_AREA_PRESET = "request_area_preset"
+SERVICE_REQUEST_CHANNEL_LEVEL = "request_channel_level"

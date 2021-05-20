@@ -2,10 +2,17 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import final
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, CONF_ENTITY_ID, CONF_NAME
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_NAME,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    CONF_SOURCE,
+)
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -39,7 +46,6 @@ ATTR_GLASSES = "glasses"
 ATTR_MOTION = "motion"
 ATTR_TOTAL_FACES = "total_faces"
 
-CONF_SOURCE = "source"
 CONF_CONFIDENCE = "confidence"
 
 DEFAULT_TIMEOUT = 10
@@ -76,7 +82,7 @@ async def async_setup(hass, config):
         update_tasks = []
         for entity in image_entities:
             entity.async_set_context(service.context)
-            update_tasks.append(entity.async_update_ha_state(True))
+            update_tasks.append(asyncio.create_task(entity.async_update_ha_state(True)))
 
         if update_tasks:
             await asyncio.wait(update_tasks)
@@ -109,7 +115,7 @@ class ImageProcessingEntity(Entity):
 
     async def async_process_image(self, image):
         """Process image."""
-        return await self.hass.async_add_job(self.process_image, image)
+        return await self.hass.async_add_executor_job(self.process_image, image)
 
     async def async_update(self):
         """Update image and process it.
@@ -170,12 +176,11 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return "face"
 
+    @final
     @property
     def state_attributes(self):
         """Return device specific state attributes."""
-        attr = {ATTR_FACES: self.faces, ATTR_TOTAL_FACES: self.total_faces}
-
-        return attr
+        return {ATTR_FACES: self.faces, ATTR_TOTAL_FACES: self.total_faces}
 
     def process_faces(self, faces, total):
         """Send event with detected faces and store data."""
@@ -203,9 +208,12 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
         """
         # Send events
         for face in faces:
-            if ATTR_CONFIDENCE in face and self.confidence:
-                if face[ATTR_CONFIDENCE] < self.confidence:
-                    continue
+            if (
+                ATTR_CONFIDENCE in face
+                and self.confidence
+                and face[ATTR_CONFIDENCE] < self.confidence
+            ):
+                continue
 
             face.update({ATTR_ENTITY_ID: self.entity_id})
             self.hass.async_add_job(self.hass.bus.async_fire, EVENT_DETECT_FACE, face)

@@ -5,7 +5,8 @@
             "not_forked_daapd": "Apparat ass kee forked-daapd server."
         },
         "error": {
-            "unknown_error": "Onbekannten Feeler.",
+            "forbidden": "Feeler beim verbannen, iwwerpr\u00e9if w.e.g Netzwierk Autorisatioun vun dengem forked-daapd.",
+            "unknown_error": "Onerwaarte Feeler",
             "websocket_not_enabled": "forked-daapd server websocket net aktiv.",
             "wrong_host_or_port": "Feeler beim verbannen, iwwerpr\u00e9if w.e.g d'Adresse a Port.",
             "wrong_password": "Ong\u00ebltegt Passwuert.",

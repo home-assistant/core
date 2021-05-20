@@ -1,17 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Csak egy Spotify-fi\u00f3kot konfigur\u00e1lhat.",
             "authorize_url_timeout": "Id\u0151t\u00fall\u00e9p\u00e9s az \u00e9rv\u00e9nyes\u00edt\u00e9si url gener\u00e1l\u00e1sa sor\u00e1n.",
-            "missing_configuration": "A Spotify integr\u00e1ci\u00f3 nincs konfigur\u00e1lva. K\u00e9rj\u00fck, k\u00f6vesse a dokument\u00e1ci\u00f3t."
+            "missing_configuration": "A Spotify integr\u00e1ci\u00f3 nincs konfigur\u00e1lva. K\u00e9rj\u00fck, k\u00f6vesse a dokument\u00e1ci\u00f3t.",
+            "no_url_available": "Nincs el\u00e9rhet\u0151 URL. A hib\u00e1r\u00f3l tov\u00e1bbi inform\u00e1ci\u00f3t [a s\u00fag\u00f3ban]({docs_url}) tal\u00e1lsz."
         },
         "create_entry": {
             "default": "A Spotify sikeresen hiteles\u00edtett."
         },
         "step": {
             "pick_implementation": {
-                "title": "V\u00e1lassza ki a hiteles\u00edt\u00e9si m\u00f3dszert"
+                "title": "V\u00e1lassz hiteles\u00edt\u00e9si m\u00f3dszert"
+            },
+            "reauth_confirm": {
+                "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "A Spotify API v\u00e9gpont el\u00e9rhet\u0151"
         }
     }
 }

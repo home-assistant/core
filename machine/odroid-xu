@@ -1,0 +1,34 @@
+ARG BUILD_VERSION
+FROM homeassistant/armv7-homeassistant:$BUILD_VERSION
+
+RUN apk --no-cache add \
+    usbutils
+
+##
+# Build libcec for HDMI-CEC
+ARG LIBCEC_VERSION=6.0.2
+RUN apk add --no-cache \
+        eudev-libs \
+        p8-platform \
+    && apk add --no-cache --virtual .build-dependencies \
+        build-base \
+        cmake \
+        eudev-dev \
+        swig \
+        p8-platform-dev \
+        linux-headers \
+    && git clone --depth 1 -b libcec-${LIBCEC_VERSION} https://github.com/Pulse-Eight/libcec /usr/src/libcec \
+    && cd /usr/src/libcec \
+    && mkdir -p /usr/src/libcec/build \
+    && cd /usr/src/libcec/build \
+    && cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local \
+        -DPYTHON_LIBRARY="/usr/local/lib/libpython3.8.so" \
+        -DPYTHON_INCLUDE_DIR="/usr/local/include/python3.8" \
+        -DHAVE_LINUX_API=1 \
+        -DHAVE_EXYNOS_API=1 \
+        .. \
+    && make -j$(nproc) \
+    && make install \
+    && echo "cec" > "/usr/local/lib/python3.8/site-packages/cec.pth" \
+    && apk del .build-dependencies \
+    && rm -rf /usr/src/libcec*

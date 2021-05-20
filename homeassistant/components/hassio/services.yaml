@@ -1,84 +1,113 @@
-addon_install:
-  description: Install a Hass.io docker add-on.
-  fields:
-    addon:
-      description: The add-on slug.
-      example: core_ssh
-    version:
-      description: Optional or it will be use the latest version.
-      example: "0.2"
-
 addon_start:
-  description: Start a Hass.io docker add-on.
+  name: Start add-on
+  description: Start add-on.
   fields:
     addon:
+      name: Add-on
+      required: true
       description: The add-on slug.
       example: core_ssh
+      selector:
+        addon:
 
 addon_restart:
-  description: Restart a Hass.io docker add-on.
+  name: Restart add-on.
+  description: Restart add-on.
   fields:
     addon:
+      name: Add-on
+      required: true
       description: The add-on slug.
       example: core_ssh
+      selector:
+        addon:
 
 addon_stdin:
-  description: Write data to a Hass.io docker add-on stdin .
+  name: Write data to add-on stdin.
+  description: Write data to add-on stdin.
   fields:
     addon:
+      name: Add-on
+      required: true
       description: The add-on slug.
       example: core_ssh
+      selector:
+        addon:
 
 addon_stop:
-  description: Stop a Hass.io docker add-on.
+  name: Stop add-on.
+  description: Stop add-on.
   fields:
     addon:
+      name: Add-on
+      required: true
       description: The add-on slug.
       example: core_ssh
-
-addon_uninstall:
-  description: Uninstall a Hass.io docker add-on.
-  fields:
-    addon:
-      description: The add-on slug.
-      example: core_ssh
+      selector:
+        addon:
 
 addon_update:
-  description: Update a Hass.io docker add-on.
+  name: Update add-on.
+  description: Update add-on. This service should be used with caution since add-on updates can contain breaking changes. It is highly recommended that you review release notes/change logs before updating an add-on.
   fields:
     addon:
+      name: Add-on
+      required: true
       description: The add-on slug.
       example: core_ssh
-    version:
-      description: Optional or it will be use the latest version.
-      example: "0.2"
-
-homeassistant_update:
-  description: Update the Home Assistant docker image.
-  fields:
-    version:
-      description: Optional or it will be use the latest version.
-      example: 0.40.1
+      selector:
+        addon:
 
 host_reboot:
+  name: Reboot the host system.
   description: Reboot the host system.
 
 host_shutdown:
+  name: Poweroff the host system.
   description: Poweroff the host system.
 
-host_update:
-  description: Update the host system.
+snapshot_full:
+  name: Create a full snapshot.
+  description: Create a full snapshot.
   fields:
-    version:
-      description: Optional or it will be use the latest version.
-      example: "0.3"
+    name:
+      name: Name
+      description: Optional or it will be the current date and time.
+      example: "Snapshot 1"
+      selector:
+        text:
+    password:
+      name: Password
+      description: Optional password.
+      example: "password"
+      selector:
+        text:
 
-supervisor_reload:
-  description: Reload the Hass.io supervisor.
-
-supervisor_update:
-  description: Update the Hass.io supervisor.
+snapshot_partial:
+  name: Create a partial snapshot.
+  description: Create a partial snapshot.
   fields:
-    version:
-      description: Optional or it will be use the latest version.
-      example: "0.3"
+    addons:
+      name: Add-ons
+      description: Optional list of addon slugs.
+      example: ["core_ssh", "core_samba", "core_mosquitto"]
+      selector:
+        object:
+    folders:
+      name: Folders
+      description: Optional list of directories.
+      example: ["homeassistant", "share"]
+      selector:
+        object:
+    name:
+      name: Name
+      description: Optional or it will be the current date and time.
+      example: "Partial Snapshot 1"
+      selector:
+        text:
+    password:
+      name: Password
+      description: Optional password.
+      example: "password"
+      selector:
+        text:

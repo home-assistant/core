@@ -12,8 +12,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_SENSORS,
+    PERCENTAGE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -124,7 +124,7 @@ SENSOR_TYPES = {
         "_chamber_",
     ],
     "current_state": ["state", None, "mdi:printer-3d", ""],
-    "current_job": ["progress", UNIT_PERCENTAGE, "mdi:file-percent", "_current_job"],
+    "current_job": ["progress", PERCENTAGE, "mdi:file-percent", "_current_job"],
     "job_end": ["progress", None, "mdi:clock-end", "_job_end"],
     "job_start": ["progress", None, "mdi:clock-start", "_job_start"],
 }
@@ -167,7 +167,7 @@ def setup(hass, config):
     for repetier in config[DOMAIN]:
         _LOGGER.debug("Repetier server config %s", repetier[CONF_HOST])
 
-        url = "http://{}".format(repetier[CONF_HOST])
+        url = f"http://{repetier[CONF_HOST]}"
         port = repetier[CONF_PORT]
         api_key = repetier[CONF_API_KEY]
 

@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il termostato \u00e8 gi\u00e0 configurato"
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi, si prega di riprovare",
+            "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
             "invalid_thermostat": "Il numero di serie del termostato non \u00e8 valido.",
             "unknown": "Errore imprevisto"

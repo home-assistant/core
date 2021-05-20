@@ -1,7 +1,7 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Ubicaci\u00f3 ja registrada"
+        "abort": {
+            "already_configured": "La ubicaci\u00f3 ja est\u00e0 configurada"
         },
         "step": {
             "user": {

@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "access_token": "Error desconocido al generar un token de acceso.",
-            "already_setup": "La cuenta de Ambiclimate est\u00e1 configurada.",
-            "no_config": "Es necesario configurar Ambiclimate antes de poder autenticarse con \u00e9l. Por favor, lea las instrucciones](https://www.home-assistant.io/components/ambiclimate/)."
+            "access_token": "Error desconocido al generar un token de acceso."
         },
         "create_entry": {
             "default": "Autenticaci\u00f3n exitosa con Ambiclimate"

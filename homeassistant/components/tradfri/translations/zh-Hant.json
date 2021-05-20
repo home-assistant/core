@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Bridge \u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3002",
-            "already_in_progress": "Bridge \u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d\u3002"
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d"
         },
         "error": {
-            "cannot_connect": "\u7121\u6cd5\u9023\u7dda\u81f3\u9598\u9053\u5668\u3002",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_key": "\u63d0\u4f9b\u4e4b\u5b89\u5168\u78bc\u8a3b\u518a\u5931\u6557\u3002\u5047\u5982\u6b64\u60c5\u6cc1\u6301\u7e8c\u767c\u751f\uff0c\u8acb\u5617\u8a66\u91cd\u555f\u9598\u9053\u5668\u3002",
             "timeout": "\u8a8d\u8b49\u78bc\u903e\u6642\u3002"
         },

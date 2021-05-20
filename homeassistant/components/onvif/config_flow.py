@@ -1,6 +1,7 @@
 """Config flow for ONVIF."""
+from __future__ import annotations
+
 from pprint import pformat
-from typing import List
 from urllib.parse import urlparse
 
 from onvif.exceptions import ONVIFError
@@ -21,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-# pylint: disable=unused-import
 from .const import (
     CONF_DEVICE_ID,
     CONF_RTSP_TRANSPORT,
@@ -36,7 +36,7 @@ from .device import get_device
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
 
-def wsdiscovery() -> List[Service]:
+def wsdiscovery() -> list[Service]:
     """Get ONVIF Profile S devices from network."""
     discovery = WSDiscovery(ttl=4)
     discovery.start()
@@ -49,7 +49,7 @@ def wsdiscovery() -> List[Service]:
 
 async def async_discovery(hass) -> bool:
     """Return if there are devices that can be discovered."""
-    LOGGER.debug("Starting ONVIF discovery...")
+    LOGGER.debug("Starting ONVIF discovery")
     services = await hass.async_add_executor_job(wsdiscovery)
 
     devices = []
@@ -76,7 +76,6 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a ONVIF config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback
@@ -169,14 +168,15 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.onvif_config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
             return await self.async_step_profiles()
 
-        # Password is optional and default empty due to some cameras not
-        # allowing you to change ONVIF user settings.
-        # See https://github.com/home-assistant/core/issues/35904
+        # Username and Password are optional and default empty
+        # due to some cameras not allowing you to change ONVIF user settings.
+        # See https://github.com/home-assistant/core/issues/39182
+        # and https://github.com/home-assistant/core/issues/35904
         return self.async_show_form(
             step_id="auth",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
+                    vol.Optional(CONF_USERNAME, default=""): str,
                     vol.Optional(CONF_PASSWORD, default=""): str,
                 }
             ),
@@ -198,9 +198,8 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.onvif_config[CONF_PASSWORD],
         )
 
-        await device.update_xaddrs()
-
         try:
+            await device.update_xaddrs()
             device_mgmt = device.create_devicemgmt_service()
 
             # Get the MAC address to use as the unique ID for the config flow
@@ -249,6 +248,8 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not h264:
                 return self.async_abort(reason="no_h264")
 
+            await device.close()
+
             title = f"{self.onvif_config[CONF_NAME]} - {self.device_id}"
             return self.async_create_entry(title=title, data=self.onvif_config)
 
@@ -258,11 +259,13 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self.onvif_config[CONF_NAME],
                 err,
             )
+            await device.close()
             return self.async_abort(reason="onvif_error")
 
         except Fault:
-            errors["base"] = "connection_failed"
+            errors["base"] = "cannot_connect"
 
+        await device.close()
         return self.async_show_form(step_id="auth", errors=errors)
 
     async def async_step_import(self, user_input):

@@ -1,7 +1,8 @@
 """Support for EverLights lights."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Tuple
 
 import pyeverlights
 import voluptuous as vol
@@ -38,7 +39,7 @@ def color_rgb_to_int(red: int, green: int, blue: int) -> int:
     return red * 256 * 256 + green * 256 + blue
 
 
-def color_int_to_rgb(value: int) -> Tuple[int, int, int]:
+def color_int_to_rgb(value: int) -> tuple[int, int, int]:
     """Return an RGB tuple from an integer."""
     return (value >> 16, (value >> 8) & 0xFF, value & 0xFF)
 
@@ -55,8 +56,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
             effects = await api.get_all_patterns()
 
-        except pyeverlights.ConnectionError:
-            raise PlatformNotReady
+        except pyeverlights.ConnectionError as err:
+            raise PlatformNotReady from err
 
         else:
             lights.append(EverLightsLight(api, pyeverlights.ZONE_1, status, effects))
@@ -160,9 +161,9 @@ class EverLightsLight(LightEntity):
             self._status = await self._api.get_status()
         except pyeverlights.ConnectionError:
             if self._available:
-                _LOGGER.warning("EverLights control box connection lost.")
+                _LOGGER.warning("EverLights control box connection lost")
             self._available = False
         else:
             if not self._available:
-                _LOGGER.warning("EverLights control box connection restored.")
+                _LOGGER.warning("EverLights control box connection restored")
             self._available = True

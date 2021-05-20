@@ -19,7 +19,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Nom d'h\u00f4te ou adresse IP du t\u00e9l\u00e9viseur"
+                    "host": "Nom d'h\u00f4te ou adresse IP"
                 },
                 "description": "Configurez l'int\u00e9gration du t\u00e9l\u00e9viseur Sony Bravia. Si vous rencontrez des probl\u00e8mes de configuration, rendez-vous sur: https://www.home-assistant.io/integrations/braviatv \n\n Assurez-vous que votre t\u00e9l\u00e9viseur est allum\u00e9.",
                 "title": "Sony Bravia TV"

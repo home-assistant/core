@@ -1,7 +1,7 @@
 """Tests for the Google Assistant integration."""
-from homeassistant.components.google_assistant import helpers
+from unittest.mock import MagicMock
 
-from tests.async_mock import MagicMock
+from homeassistant.components.google_assistant import helpers
 
 
 def mock_google_config_store(agent_user_ids=None):
@@ -128,6 +128,7 @@ DEMO_DEVICES = [
             "action.devices.traits.OnOff",
             "action.devices.traits.Brightness",
             "action.devices.traits.ColorSetting",
+            "action.devices.traits.Modes",
         ],
         "type": "action.devices.types.LIGHT",
         "willReportState": False,
@@ -135,14 +136,29 @@ DEMO_DEVICES = [
     {
         "id": "cover.living_room_window",
         "name": {"name": "Living Room Window"},
-        "traits": ["action.devices.traits.OpenClose"],
+        "traits": [
+            "action.devices.traits.StartStop",
+            "action.devices.traits.OpenClose",
+        ],
+        "type": "action.devices.types.BLINDS",
+        "willReportState": False,
+    },
+    {
+        "id": "cover.pergola_roof",
+        "name": {"name": "Pergola Roof"},
+        "traits": [
+            "action.devices.traits.OpenClose",
+        ],
         "type": "action.devices.types.BLINDS",
         "willReportState": False,
     },
     {
         "id": "cover.hall_window",
         "name": {"name": "Hall Window"},
-        "traits": ["action.devices.traits.OpenClose"],
+        "traits": [
+            "action.devices.traits.StartStop",
+            "action.devices.traits.OpenClose",
+        ],
         "type": "action.devices.types.BLINDS",
         "willReportState": False,
     },
@@ -156,13 +172,29 @@ DEMO_DEVICES = [
     {
         "id": "cover.kitchen_window",
         "name": {"name": "Kitchen Window"},
-        "traits": ["action.devices.traits.OpenClose"],
+        "traits": [
+            "action.devices.traits.StartStop",
+            "action.devices.traits.OpenClose",
+        ],
         "type": "action.devices.types.BLINDS",
         "willReportState": False,
     },
     {
         "id": "media_player.bedroom",
         "name": {"name": "Bedroom"},
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Volume",
+            "action.devices.traits.Modes",
+            "action.devices.traits.TransportControl",
+            "action.devices.traits.MediaState",
+        ],
+        "type": "action.devices.types.SETTOP",
+        "willReportState": False,
+    },
+    {
+        "id": "media_player.kitchen",
+        "name": {"name": "Kitchen"},
         "traits": [
             "action.devices.traits.OnOff",
             "action.devices.traits.Volume",
@@ -190,6 +222,7 @@ DEMO_DEVICES = [
         "id": "media_player.lounge_room",
         "name": {"name": "Lounge room"},
         "traits": [
+            "action.devices.traits.InputSelector",
             "action.devices.traits.OnOff",
             "action.devices.traits.Modes",
             "action.devices.traits.TransportControl",
@@ -226,13 +259,45 @@ DEMO_DEVICES = [
         "willReportState": False,
     },
     {
+        "id": "fan.percentage_full_fan",
+        "name": {"name": "Percentage Full Fan"},
+        "traits": ["action.devices.traits.FanSpeed", "action.devices.traits.OnOff"],
+        "type": "action.devices.types.FAN",
+        "willReportState": False,
+    },
+    {
+        "id": "fan.percentage_limited_fan",
+        "name": {"name": "Percentage Limited Fan"},
+        "traits": ["action.devices.traits.FanSpeed", "action.devices.traits.OnOff"],
+        "type": "action.devices.types.FAN",
+        "willReportState": False,
+    },
+    {
+        "id": "fan.preset_only_limited_fan",
+        "name": {"name": "Preset Only Limited Fan"},
+        "traits": ["action.devices.traits.OnOff"],
+        "type": "action.devices.types.FAN",
+        "willReportState": False,
+    },
+    {
         "id": "climate.hvac",
         "name": {"name": "Hvac"},
-        "traits": ["action.devices.traits.TemperatureSetting"],
+        "traits": [
+            "action.devices.traits.TemperatureSetting",
+            "action.devices.traits.FanSpeed",
+        ],
         "type": "action.devices.types.THERMOSTAT",
         "willReportState": False,
         "attributes": {
-            "availableThermostatModes": "off,heat,cool,heatcool,auto,dry,fan-only",
+            "availableThermostatModes": [
+                "off",
+                "heat",
+                "cool",
+                "heatcool",
+                "auto",
+                "dry",
+                "fan-only",
+            ],
             "thermostatTemperatureUnit": "C",
         },
     },
@@ -246,9 +311,46 @@ DEMO_DEVICES = [
     {
         "id": "climate.ecobee",
         "name": {"name": "Ecobee"},
-        "traits": ["action.devices.traits.TemperatureSetting"],
+        "traits": [
+            "action.devices.traits.TemperatureSetting",
+            "action.devices.traits.FanSpeed",
+        ],
         "type": "action.devices.types.THERMOSTAT",
         "willReportState": False,
+    },
+    {
+        "id": "humidifier.humidifier",
+        "name": {"name": "Humidifier"},
+        "traits": [
+            "action.devices.traits.HumiditySetting",
+            "action.devices.traits.OnOff",
+        ],
+        "type": "action.devices.types.HUMIDIFIER",
+        "willReportState": False,
+        "attributes": {"humiditySetpointRange": {"minPercent": 0, "maxPercent": 100}},
+    },
+    {
+        "id": "humidifier.dehumidifier",
+        "name": {"name": "Dehumidifier"},
+        "traits": [
+            "action.devices.traits.HumiditySetting",
+            "action.devices.traits.OnOff",
+        ],
+        "type": "action.devices.types.DEHUMIDIFIER",
+        "willReportState": False,
+        "attributes": {"humiditySetpointRange": {"minPercent": 0, "maxPercent": 100}},
+    },
+    {
+        "id": "humidifier.hygrostat",
+        "name": {"name": "Hygrostat"},
+        "traits": [
+            "action.devices.traits.HumiditySetting",
+            "action.devices.traits.Modes",
+            "action.devices.traits.OnOff",
+        ],
+        "type": "action.devices.types.HUMIDIFIER",
+        "willReportState": False,
+        "attributes": {"humiditySetpointRange": {"minPercent": 0, "maxPercent": 100}},
     },
     {
         "id": "lock.front_door",
@@ -276,6 +378,28 @@ DEMO_DEVICES = [
         "name": {"name": "Alarm"},
         "traits": ["action.devices.traits.ArmDisarm"],
         "type": "action.devices.types.SECURITYSYSTEM",
+        "willReportState": False,
+    },
+    {
+        "id": "light.living_room_rgbww_lights",
+        "name": {"name": "Living Room RGBWW Lights"},
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Brightness",
+            "action.devices.traits.ColorSetting",
+        ],
+        "type": "action.devices.types.LIGHT",
+        "willReportState": False,
+    },
+    {
+        "id": "light.office_rgbw_lights",
+        "name": {"name": "Office RGBW Lights"},
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Brightness",
+            "action.devices.traits.ColorSetting",
+        ],
+        "type": "action.devices.types.LIGHT",
         "willReportState": False,
     },
 ]

@@ -1,32 +1,23 @@
 {
     "config": {
         "abort": {
-            "client_id": "De client ID uit de configuratie is ongeldig.",
-            "client_secret": "De client secret uit de configuratie is ongeldig.",
+            "already_configured": "De geselecteerde overeenkomst is al geconfigureerd.",
+            "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
+            "missing_configuration": "De component is niet geconfigureerd. Gelieve de documentatie volgen.",
             "no_agreements": "Dit account heeft geen Toon schermen.",
-            "no_app": "Je moet Toon configureren voordat je ermee kunt aanmelden. [Lees de instructies](https://www.home-assistant.io/components/toon/).",
-            "unknown_auth_fail": "Onverwachte fout tijdens het verifi\u00ebren."
-        },
-        "error": {
-            "credentials": "De opgegeven inloggegevens zijn ongeldig.",
-            "display_exists": "Het gekozen scherm is al geconfigureerd."
+            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout [check the help section] ( {docs_url} )",
+            "unknown_authorize_url_generation": "Onbekende fout bij het genereren van een autorisatie-URL."
         },
         "step": {
-            "authenticate": {
+            "agreement": {
                 "data": {
-                    "password": "Wachtwoord",
-                    "tenant": "Huurder",
-                    "username": "Gebruikersnaam"
+                    "agreement": "Overeenkomst"
                 },
-                "description": "Verifieer met je Eneco Toon account (niet het ontwikkelaars account).",
-                "title": "Link je Toon-account"
+                "description": "Selecteer het overeenkomstadres dat u wilt toevoegen.",
+                "title": "Kies uw overeenkomst"
             },
-            "display": {
-                "data": {
-                    "display": "Kies scherm"
-                },
-                "description": "Kies het Toon-scherm om mee te verbinden.",
-                "title": "Kies scherm"
+            "pick_implementation": {
+                "title": "Kies uw leverancier om mee te authenticeren"
             }
         }
     }

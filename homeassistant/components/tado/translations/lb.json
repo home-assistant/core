@@ -4,7 +4,7 @@
             "already_configured": "Apparat ass scho konfigur\u00e9iert"
         },
         "error": {
-            "cannot_connect": "Feeler beim verbannen, prob\u00e9ier w.e.g. nach emol.",
+            "cannot_connect": "Feeler beim verbannen",
             "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "no_homes": "Keng Immobilien mat d\u00ebsem Tado Kont verbonnen.",
             "unknown": "Onerwaarte Feeler"

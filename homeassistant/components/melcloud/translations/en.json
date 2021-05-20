@@ -4,7 +4,7 @@
             "already_configured": "MELCloud integration already configured for this email. Access token has been refreshed."
         },
         "error": {
-            "cannot_connect": "Failed to connect, please try again",
+            "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },

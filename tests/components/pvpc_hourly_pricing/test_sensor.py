@@ -1,17 +1,17 @@
 """Tests for the pvpc_hourly_pricing sensor component."""
 from datetime import datetime, timedelta
 import logging
-
-from pytz import timezone
+from unittest.mock import patch
 
 from homeassistant.components.pvpc_hourly_pricing import ATTR_TARIFF, DOMAIN
 from homeassistant.const import CONF_NAME
 from homeassistant.core import ATTR_NOW, EVENT_TIME_CHANGED
+from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import check_valid_state
 
-from tests.async_mock import patch
-from tests.common import async_setup_component, date_util
+from tests.common import date_util
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -28,10 +28,10 @@ async def _process_time_step(
 
 
 async def test_sensor_availability(
-    hass, caplog, pvpc_aioclient_mock: AiohttpClientMocker
+    hass, caplog, legacy_patchable_time, pvpc_aioclient_mock: AiohttpClientMocker
 ):
     """Test sensor availability and handling of cloud access."""
-    hass.config.time_zone = timezone("Europe/Madrid")
+    hass.config.time_zone = dt_util.get_time_zone("Europe/Madrid")
     config = {DOMAIN: [{CONF_NAME: "test_dst", ATTR_TARIFF: "discrimination"}]}
     mock_data = {"return_time": datetime(2019, 10, 27, 20, 0, 0, tzinfo=date_util.UTC)}
 
@@ -54,11 +54,11 @@ async def test_sensor_availability(
         await _process_time_step(hass, mock_data, value="unavailable")
         await _process_time_step(hass, mock_data, value="unavailable")
         num_errors = sum(
-            1 for x in caplog.get_records("call") if x.levelno == logging.ERROR
+            1
+            for x in caplog.records
+            if x.levelno == logging.ERROR and "unknown job listener" not in x.msg
         )
-        num_warnings = sum(
-            1 for x in caplog.get_records("call") if x.levelno == logging.WARNING
-        )
+        num_warnings = sum(1 for x in caplog.records if x.levelno == logging.WARNING)
         assert num_warnings == 1
         assert num_errors == 0
         assert pvpc_aioclient_mock.call_count == 9

@@ -49,7 +49,7 @@ def setup(hass, base_config):
     try:
         wfconn.login()
     except WFCredentialError:
-        _LOGGER.error("Invalid credentials for waterfurnace login.")
+        _LOGGER.error("Invalid credentials for waterfurnace login")
         return False
 
     hass.data[DOMAIN] = WaterFurnaceData(hass, wfconn)
@@ -85,10 +85,10 @@ class WaterFurnaceData(threading.Thread):
 
         self._fails += 1
         if self._fails > MAX_FAILS:
-            _LOGGER.error("Failed to refresh login credentials. Thread stopped.")
+            _LOGGER.error("Failed to refresh login credentials. Thread stopped")
             self.hass.components.persistent_notification.create(
                 "Error:<br/>Connection to waterfurnace website failed "
-                "the maximum number of times. Thread has stopped.",
+                "the maximum number of times. Thread has stopped",
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID,
             )
@@ -98,7 +98,7 @@ class WaterFurnaceData(threading.Thread):
 
         # sleep first before the reconnect attempt
         _LOGGER.debug("Sleeping for fail # %s", self._fails)
-        time.sleep(self._fails * ERROR_INTERVAL.seconds)
+        time.sleep(self._fails * ERROR_INTERVAL.total_seconds())
 
         try:
             self.client.login()
@@ -118,7 +118,7 @@ class WaterFurnaceData(threading.Thread):
 
             def shutdown(event):
                 """Shutdown the thread."""
-                _LOGGER.debug("Signaled to shutdown.")
+                _LOGGER.debug("Signaled to shutdown")
                 self._shutdown = True
                 self.join()
 
@@ -149,4 +149,4 @@ class WaterFurnaceData(threading.Thread):
 
             else:
                 self.hass.helpers.dispatcher.dispatcher_send(UPDATE_TOPIC)
-                time.sleep(SCAN_INTERVAL.seconds)
+                time.sleep(SCAN_INTERVAL.total_seconds())

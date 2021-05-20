@@ -1,24 +1,20 @@
 """Support for MAX! binary sensors via MAX! Cube."""
-import logging
-
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_WINDOW,
+    BinarySensorEntity,
+)
 
 from . import DATA_KEY
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Iterate through all MAX! Devices and add window shutters."""
     devices = []
     for handler in hass.data[DATA_KEY].values():
-        cube = handler.cube
-        for device in cube.devices:
-            name = f"{cube.room_by_id(device.room_id).name} {device.name}"
-
+        for device in handler.cube.devices:
             # Only add Window Shutters
-            if cube.is_windowshutter(device):
-                devices.append(MaxCubeShutter(handler, name, device.rf_address))
+            if device.is_windowshutter():
+                devices.append(MaxCubeShutter(handler, device))
 
     if devices:
         add_entities(devices)
@@ -27,18 +23,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class MaxCubeShutter(BinarySensorEntity):
     """Representation of a MAX! Cube Binary Sensor device."""
 
-    def __init__(self, handler, name, rf_address):
+    def __init__(self, handler, device):
         """Initialize MAX! Cube BinarySensorEntity."""
-        self._name = name
-        self._sensor_type = "window"
-        self._rf_address = rf_address
+        room = handler.cube.room_by_id(device.room_id)
+        self._name = f"{room.name} {device.name}"
         self._cubehandle = handler
-        self._state = None
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
+        self._device = device
 
     @property
     def name(self):
@@ -46,17 +36,20 @@ class MaxCubeShutter(BinarySensorEntity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._device.serial
+
+    @property
     def device_class(self):
         """Return the class of this sensor."""
-        return self._sensor_type
+        return DEVICE_CLASS_WINDOW
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on/open."""
-        return self._state
+        return self._device.is_open
 
     def update(self):
         """Get latest data from MAX! Cube."""
         self._cubehandle.update()
-        device = self._cubehandle.cube.device_by_rf(self._rf_address)
-        self._state = device.is_open

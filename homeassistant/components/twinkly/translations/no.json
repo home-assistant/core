@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "device_exists": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert (eller IP-adresse) for din twinkly-enhet"
+                },
+                "description": "Sett opp Twinkly-led-strengen",
+                "title": "Twinkly"
+            }
+        }
+    }
+}
