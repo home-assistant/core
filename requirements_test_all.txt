@@ -405,7 +405,7 @@ hangups==0.4.11
 hass-nabucasa==0.43.0
 
 # homeassistant.components.tasmota
-hatasmota==0.2.12
+hatasmota==0.2.13
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.2
@@ -705,7 +705,7 @@ pyarlo==0.2.4
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==4.2.2
+pyatmo==4.2.3
 
 # homeassistant.components.apple_tv
 pyatv==0.7.7
@@ -962,7 +962,7 @@ pysmartthings==0.7.6
 pysoma==0.0.10
 
 # homeassistant.components.sonos
-pysonos==0.0.45
+pysonos==0.0.47
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
