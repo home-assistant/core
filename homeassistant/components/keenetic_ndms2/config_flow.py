@@ -135,9 +135,7 @@ class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
         self._interface_options = {}
 
-    async def async_step_init(
-        self, _user_input: ConfigType | None = None
-    ) -> FlowResult:
+    async def async_step_init(self, user_input: ConfigType | None = None) -> FlowResult:
         """Manage the options."""
         router: KeeneticRouter = self.hass.data[DOMAIN][self.config_entry.entry_id][
             ROUTER
