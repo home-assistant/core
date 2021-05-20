@@ -231,7 +231,7 @@ class AlmondOAuth(AbstractAlmondWebAuth):
         host: str,
         websession: ClientSession,
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
-    ):
+    ) -> None:
         """Initialize Almond auth."""
         super().__init__(host, websession)
         self._oauth_session = oauth_session
@@ -249,7 +249,7 @@ class AlmondAgent(conversation.AbstractConversationAgent):
 
     def __init__(
         self, hass: HomeAssistant, api: WebAlmondAPI, entry: config_entries.ConfigEntry
-    ):
+    ) -> None:
         """Initialize the agent."""
         self.hass = hass
         self.api = api

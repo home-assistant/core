@@ -33,7 +33,7 @@ def get_scanner(hass, config):
 class ArrisDeviceScanner(DeviceScanner):
     """This class queries a Arris TG2492LG router for connected devices."""
 
-    def __init__(self, connect_box: ConnectBox):
+    def __init__(self, connect_box: ConnectBox) -> None:
         """Initialize the scanner."""
         self.connect_box = connect_box
         self.last_results: list[Device] = []
