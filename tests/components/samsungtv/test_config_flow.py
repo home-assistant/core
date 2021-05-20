@@ -47,14 +47,14 @@ MOCK_USER_DATA = {CONF_HOST: "fake_host", CONF_NAME: "fake_name"}
 MOCK_SSDP_DATA = {
     ATTR_SSDP_LOCATION: "https://fake_host:12345/test",
     ATTR_UPNP_FRIENDLY_NAME: "[TV] fake_name",
-    ATTR_UPNP_MANUFACTURER: "fake_manufacturer",
+    ATTR_UPNP_MANUFACTURER: "Samsung fake_manufacturer",
     ATTR_UPNP_MODEL_NAME: "fake_model",
     ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172de",
 }
 MOCK_SSDP_DATA_NOPREFIX = {
     ATTR_SSDP_LOCATION: "http://fake2_host:12345/test",
     ATTR_UPNP_FRIENDLY_NAME: "fake2_name",
-    ATTR_UPNP_MANUFACTURER: "fake2_manufacturer",
+    ATTR_UPNP_MANUFACTURER: "Samsung fake2_manufacturer",
     ATTR_UPNP_MODEL_NAME: "fake2_model",
     ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172df",
 }
@@ -261,7 +261,7 @@ async def test_ssdp(hass: HomeAssistant, remote: Mock):
     assert result["title"] == "fake_model"
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "fake_model"
-    assert result["data"][CONF_MANUFACTURER] == "fake_manufacturer"
+    assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result["data"][CONF_MODEL] == "fake_model"
     assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
@@ -286,7 +286,7 @@ async def test_ssdp_noprefix(hass: HomeAssistant, remote: Mock):
     assert result["title"] == "fake2_model"
     assert result["data"][CONF_HOST] == "fake2_host"
     assert result["data"][CONF_NAME] == "fake2_model"
-    assert result["data"][CONF_MANUFACTURER] == "fake2_manufacturer"
+    assert result["data"][CONF_MANUFACTURER] == "Samsung fake2_manufacturer"
     assert result["data"][CONF_MODEL] == "fake2_model"
     assert result["result"].unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172df"
 

@@ -210,6 +210,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         self._manufacturer = discovery_info.get(ATTR_UPNP_MANUFACTURER)
+        if not self._manufacturer or not self._manufacturer.lower().startswith(
+            "samsung"
+        ):
+            raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
         self._name = self._title = self._model = discovery_info.get(
             ATTR_UPNP_MODEL_NAME
         )
