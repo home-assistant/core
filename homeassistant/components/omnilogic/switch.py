@@ -67,7 +67,7 @@ class OmniLogicSwitch(OmniLogicEntity, SwitchEntity):
         icon: str,
         item_id: tuple,
         state_key: str,
-    ):
+    ) -> None:
         """Initialize Entities."""
         super().__init__(
             coordinator=coordinator,
