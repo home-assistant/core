@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "auth_error": "Login was unsuccessful."
+            "auth_error": "Invalid authentication"
         },
         "step": {
             "user": {
