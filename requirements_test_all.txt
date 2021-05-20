@@ -720,7 +720,7 @@ pyarlo==0.2.4
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==4.2.3
+pyatmo==5.0.1
 
 # homeassistant.components.apple_tv
 pyatv==0.7.7
