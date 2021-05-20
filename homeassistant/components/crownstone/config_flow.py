@@ -1,7 +1,7 @@
 """Flow handler for Crownstone."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Final, cast
 
 from crownstone_cloud import CrownstoneCloud
 from crownstone_cloud.exceptions import (
@@ -27,7 +27,7 @@ from .const import CONF_USB, CONF_USB_PATH, CONF_USE_CROWNSTONE_USB
 from .const import DOMAIN  # pylint: disable=unused-import
 from .helpers import get_serial_by_id
 
-REFRESH_LIST = "Refresh list"
+REFRESH_LIST: Final = "Refresh list"
 
 
 class CrownstoneConfigFlowHandler(ConfigFlow, domain=DOMAIN):
