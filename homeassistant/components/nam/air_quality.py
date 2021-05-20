@@ -82,7 +82,7 @@ class NAMAirQuality(CoordinatorEntity, AirQualityEntity):
         # sensors. For this reason, we mark entities for which data is missing as
         # unavailable.
         return available and bool(
-            getattr(self.coordinator.data, f"{self.sensor_type}_p2", None)
+            getattr(self.coordinator.data, f"{self.sensor_type}{SUFFIX_P2}", None)
         )
 
 
