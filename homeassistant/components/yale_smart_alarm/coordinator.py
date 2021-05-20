@@ -59,8 +59,8 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                 self._yale.get_online  # type: ignore[attr-defined]
             )
 
-        except AuthenticationError as ae:
-            LOGGER.error("Authentication failed. Check credentials %s", ae)
+        except AuthenticationError as error:
+            LOGGER.error("Authentication failed. Check credentials %s", error)
             raise
 
         locks = []
@@ -108,7 +108,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             "status": status,
             "online": online,
         }
-        LOGGER.debug(f"{debug}")
+        LOGGER.debug("Coordinator output: %s", debug)
         return {
             "alarm": arm_status,
             "locks": locks,
