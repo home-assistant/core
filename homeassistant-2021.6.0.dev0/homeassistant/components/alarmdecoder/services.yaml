@@ -1,0 +1,31 @@
+alarm_keypress:
+  name: Key press
+  description: Send custom keypresses to the alarm.
+  target:
+    entity:
+      integration: alarmdecoder
+      domain: alarm_control_panel
+  fields:
+    keypress:
+      name: Key press
+      description: "String to send to the alarm panel."
+      required: true
+      example: "*71"
+      selector:
+        text:
+
+alarm_toggle_chime:
+  name: Toggle Chime
+  description: Send the alarm the toggle chime command.
+  target:
+    entity:
+      integration: alarmdecoder
+      domain: alarm_control_panel
+  fields:
+    code:
+      name: Code
+      description: A code to toggle the alarm control panel chime with.
+      required: true
+      example: 1234
+      selector:
+        text:

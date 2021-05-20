@@ -1,0 +1,9 @@
+{
+    "state": {
+        "accuweather__pressure_tendency": {
+            "falling": "Diminuzione",
+            "rising": "Aumento",
+            "steady": "Stabile"
+        }
+    }
+}

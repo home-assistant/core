@@ -1,0 +1,191 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "is_bat_low": "Bateria de {entity_name} baixa",
+            "is_cold": "{entity_name} est\u00e0 fred",
+            "is_connected": "{entity_name} est\u00e0 connectat",
+            "is_gas": "{entity_name} est\u00e0 detectant gas",
+            "is_hot": "{entity_name} est\u00e0 calent",
+            "is_light": "{entity_name} est\u00e0 detectant llum",
+            "is_locked": "{entity_name} est\u00e0 bloquejat",
+            "is_moist": "{entity_name} est\u00e0 humit",
+            "is_motion": "{entity_name} est\u00e0 detectant moviment",
+            "is_moving": "{entity_name} s'est\u00e0 movent",
+            "is_no_gas": "{entity_name} no detecta gas",
+            "is_no_light": "{entity_name} no detecta llum",
+            "is_no_motion": "{entity_name} no detecta moviment",
+            "is_no_problem": "{entity_name} no est\u00e0 detectant cap problema",
+            "is_no_smoke": "{entity_name} no detecta fum",
+            "is_no_sound": "{entity_name} no detecta so",
+            "is_no_vibration": "{entity_name} no detecta vibraci\u00f3",
+            "is_not_bat_low": "Bateria de {entity_name} normal",
+            "is_not_cold": "{entity_name} no est\u00e0 fred",
+            "is_not_connected": "{entity_name} est\u00e0 desconnectat",
+            "is_not_hot": "{entity_name} no est\u00e0 calent",
+            "is_not_locked": "{entity_name} est\u00e0 desbloquejat",
+            "is_not_moist": "{entity_name} est\u00e0 sec",
+            "is_not_moving": "{entity_name} no s'est\u00e0 movent",
+            "is_not_occupied": "{entity_name} no est\u00e0 ocupat",
+            "is_not_open": "{entity_name} est\u00e0 tancat",
+            "is_not_plugged_in": "{entity_name} est\u00e0 desendollat",
+            "is_not_powered": "{entity_name} no est\u00e0 alimentat",
+            "is_not_present": "{entity_name} no est\u00e0 present",
+            "is_not_unsafe": "{entity_name} \u00e9s segur",
+            "is_occupied": "{entity_name} est\u00e0 ocupat",
+            "is_off": "{entity_name} est\u00e0 apagat",
+            "is_on": "{entity_name} est\u00e0 enc\u00e8s",
+            "is_open": "{entity_name} est\u00e0 obert",
+            "is_plugged_in": "{entity_name} est\u00e0 endollat",
+            "is_powered": "{entity_name} est\u00e0 alimentat",
+            "is_present": "{entity_name} est\u00e0 present",
+            "is_problem": "{entity_name} est\u00e0 detectant un problema",
+            "is_smoke": "{entity_name} est\u00e0 detectant fum",
+            "is_sound": "{entity_name} est\u00e0 detectant so",
+            "is_unsafe": "{entity_name} \u00e9s insegur",
+            "is_vibration": "{entity_name} est\u00e0 detectant vibraci\u00f3"
+        },
+        "trigger_type": {
+            "bat_low": "Bateria de {entity_name} baixa",
+            "cold": "{entity_name} es torna fred",
+            "connected": "{entity_name} est\u00e0 connectat",
+            "gas": "{entity_name} ha comen\u00e7at a detectar gas",
+            "hot": "{entity_name} es torna calent",
+            "light": "{entity_name} ha comen\u00e7at a detectar llum",
+            "locked": "{entity_name} est\u00e0 bloquejat",
+            "moist": "{entity_name} es torna humit",
+            "motion": "{entity_name} ha comen\u00e7at a detectar moviment",
+            "moving": "{entity_name} ha comen\u00e7at a moure's",
+            "no_gas": "{entity_name} ha deixat de detectar gas",
+            "no_light": "{entity_name} ha deixat de detectar llum",
+            "no_motion": "{entity_name} ha deixat de detectar moviment",
+            "no_problem": "{entity_name} ha deixat de detectar un problema",
+            "no_smoke": "{entity_name} ha deixat de detectar fum",
+            "no_sound": "{entity_name} ha deixat de detectar so",
+            "no_vibration": "{entity_name} ha deixat de detectar vibraci\u00f3",
+            "not_bat_low": "Bateria de {entity_name} normal",
+            "not_cold": "{entity_name} es torna no-fred",
+            "not_connected": "{entity_name} est\u00e0 desconnectat",
+            "not_hot": "{entity_name} es torna no-calent",
+            "not_locked": "{entity_name} est\u00e0 desbloquejat",
+            "not_moist": "{entity_name} es torna sec",
+            "not_moving": "{entity_name} ha parat de moure's",
+            "not_occupied": "{entity_name} es desocupa",
+            "not_opened": "{entity_name} es tanca",
+            "not_plugged_in": "{entity_name} desendollat",
+            "not_powered": "{entity_name} no est\u00e0 alimentat",
+            "not_present": "{entity_name} no est\u00e0 present",
+            "not_unsafe": "{entity_name} es torna segur",
+            "occupied": "{entity_name} s'ocupa",
+            "opened": "{entity_name} s'ha obert",
+            "plugged_in": "{entity_name} s'ha endollat",
+            "powered": "{entity_name} alimentat",
+            "present": "{entity_name} present",
+            "problem": "{entity_name} ha comen\u00e7at a detectar un problema",
+            "smoke": "{entity_name} ha comen\u00e7at a detectar fum",
+            "sound": "{entity_name} ha comen\u00e7at a detectar so",
+            "turned_off": "{entity_name} apagat",
+            "turned_on": "{entity_name} enc\u00e8s",
+            "unsafe": "{entity_name} es torna insegur",
+            "vibration": "{entity_name} ha comen\u00e7at a detectar vibraci\u00f3"
+        }
+    },
+    "state": {
+        "_": {
+            "off": "OFF",
+            "on": "ON"
+        },
+        "battery": {
+            "off": "Normal",
+            "on": "Baixa"
+        },
+        "battery_charging": {
+            "off": "No carregant",
+            "on": "Carregant"
+        },
+        "cold": {
+            "off": "Normal",
+            "on": "Fred"
+        },
+        "connectivity": {
+            "off": "Desconnectat",
+            "on": "Connectat"
+        },
+        "door": {
+            "off": "Tancat/ada",
+            "on": "Obert/a"
+        },
+        "garage_door": {
+            "off": "Tancat/ada",
+            "on": "Obert/a"
+        },
+        "gas": {
+            "off": "Lliure",
+            "on": "Detectat"
+        },
+        "heat": {
+            "off": "Normal",
+            "on": "Calent"
+        },
+        "light": {
+            "off": "No s'ha detectat llum",
+            "on": "Llum detectada"
+        },
+        "lock": {
+            "off": "Bloquejat",
+            "on": "Desbloquejat"
+        },
+        "moisture": {
+            "off": "Sec",
+            "on": "Humit"
+        },
+        "motion": {
+            "off": "Lliure",
+            "on": "Detectat"
+        },
+        "moving": {
+            "off": "Parat",
+            "on": "En moviment"
+        },
+        "occupancy": {
+            "off": "Lliure",
+            "on": "Detectat"
+        },
+        "opening": {
+            "off": "Tancat/ada",
+            "on": "Obert/a"
+        },
+        "plug": {
+            "off": "Desendollat",
+            "on": "Endollat"
+        },
+        "presence": {
+            "off": "Fora",
+            "on": "A casa"
+        },
+        "problem": {
+            "off": "OK",
+            "on": "Problema"
+        },
+        "safety": {
+            "off": "Segur",
+            "on": "No segur"
+        },
+        "smoke": {
+            "off": "Lliure",
+            "on": "Detectat"
+        },
+        "sound": {
+            "off": "Lliure",
+            "on": "Detectat"
+        },
+        "vibration": {
+            "off": "Lliure",
+            "on": "Detectat"
+        },
+        "window": {
+            "off": "Tancat/ada",
+            "on": "Obert/a"
+        }
+    },
+    "title": "Sensor binari"
+}

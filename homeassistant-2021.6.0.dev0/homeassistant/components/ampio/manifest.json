@@ -1,0 +1,8 @@
+{
+  "domain": "ampio",
+  "name": "Ampio Smart Smog System",
+  "documentation": "https://www.home-assistant.io/integrations/ampio",
+  "requirements": ["asmog==0.0.6"],
+  "codeowners": [],
+  "iot_class": "cloud_polling"
+}

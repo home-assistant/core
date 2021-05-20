@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "No se puede conectar al servidor Almond.",
+            "missing_configuration": "Consulte la documentaci\u00f3n sobre c\u00f3mo configurar Almond.",
+            "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [consulta la secci\u00f3n de ayuda]({docs_url})",
+            "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "\u00bfDesea configurar Home Assistant para conectarse a Almond proporcionado por el complemento Supervisor: {addon} ?",
+                "title": "Almond a trav\u00e9s del complemento Supervisor"
+            },
+            "pick_implementation": {
+                "title": "Seleccione el m\u00e9todo de autenticaci\u00f3n"
+            }
+        }
+    }
+}

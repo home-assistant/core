@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Airly-integrationen f\u00f6r dessa koordinater \u00e4r redan konfigurerad."
+        },
+        "error": {
+            "wrong_location": "Inga Airly m\u00e4tstationer i detta omr\u00e5de."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Airly API-nyckel",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "name": "Integrationens namn"
+                },
+                "description": "Konfigurera integration av luftkvalitet. F\u00f6r att skapa API-nyckel, g\u00e5 till https://developer.airly.eu/register",
+                "title": "Airly"
+            }
+        }
+    }
+}

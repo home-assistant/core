@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "general_error": "Tapahtui tuntematon virhe."
+        },
+        "step": {
+            "node_pro": {
+                "data": {
+                    "password": "Salasana"
+                }
+            }
+        }
+    }
+}

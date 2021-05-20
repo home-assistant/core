@@ -1,0 +1,37 @@
+{
+  "config": {
+    "flow_title": "{name} ({host})",
+    "step": {
+      "user": {
+        "title": "Set up Axis device",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "link_local_address": "Link local addresses are not supported",
+      "not_axis_device": "Discovered device not an Axis device"
+    }
+  },
+  "options": {
+    "step": {
+      "configure_stream": {
+        "data": {
+          "stream_profile": "Select stream profile to use"
+        },
+        "title": "Axis device video stream options"
+      }
+    }
+  }
+}

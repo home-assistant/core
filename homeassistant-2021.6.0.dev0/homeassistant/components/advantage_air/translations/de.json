@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP Adresse",
+                    "port": "Port"
+                },
+                "description": "Anschluss an die API Ihres Advantage Air Wandtabletts.",
+                "title": "Verbinden"
+            }
+        }
+    }
+}

@@ -43,7 +43,6 @@ async def test_wallbox_setup_entry(hass: HomeAssistantType):
 async def test_wallbox_unload_entry(hass: HomeAssistantType):
     """Test Wallbox Unload."""
     hass.data[DOMAIN] = {"connections": {entry.entry_id: entry}}
-    print(hass.data)
 
     assert await wallbox.async_unload_entry(hass, entry)
 
@@ -59,7 +58,7 @@ async def test_wallbox_setup(hass: HomeAssistantType):
     assert await wallbox.async_setup(hass, entry)
 
 
-def test_hub_class():
+async def test_hub_class(hass: HomeAssistantType):
     """Test hub class."""
 
     station = ("12345",)
@@ -79,18 +78,18 @@ def test_hub_class():
             text='{"Temperature": 100, "Location": "Toronto", "Datetime": "2020-07-23", "Units": "Celsius"}',
             status_code=200,
         )
-        assert hub.authenticate()
-        assert hub.get_data()
+        assert await hub.async_authenticate(hass)
+        assert await hub.async_get_data(hass)
 
     with requests_mock.Mocker() as m, raises(wallbox.InvalidAuth):
         m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=403)
 
-        assert hub.authenticate()
+        assert await hub.async_authenticate(hass)
 
     with requests_mock.Mocker() as m, raises(ConnectionError):
         m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=404)
 
-        assert hub.authenticate()
+        assert await hub.async_authenticate(hass)
 
     with requests_mock.Mocker() as m, raises(wallbox.InvalidAuth):
         m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=403)
@@ -99,7 +98,7 @@ def test_hub_class():
             text="data",
             status_code=403,
         )
-        assert hub.get_data()
+        assert await hub.async_get_data(hass)
 
     with requests_mock.Mocker() as m, raises(ConnectionError):
         m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=404)
@@ -108,4 +107,4 @@ def test_hub_class():
             text="data",
             status_code=404,
         )
-        assert hub.get_data()
+        assert await hub.async_get_data(hass)

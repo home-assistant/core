@@ -1,0 +1,84 @@
+{
+    "state": {
+        "_": {
+            "off": "\u30aa\u30d5",
+            "on": "\u30aa\u30f3"
+        },
+        "battery": {
+            "off": "\u901a\u5e38",
+            "on": "\u4f4e"
+        },
+        "cold": {
+            "off": "\u901a\u5e38",
+            "on": "\u4f4e\u6e29"
+        },
+        "connectivity": {
+            "off": "\u5207\u65ad",
+            "on": "\u63a5\u7d9a\u6e08"
+        },
+        "door": {
+            "off": "\u9589\u9396",
+            "on": "\u958b\u653e"
+        },
+        "garage_door": {
+            "off": "\u9589\u9396",
+            "on": "\u958b\u653e"
+        },
+        "gas": {
+            "off": "\u672a\u691c\u51fa",
+            "on": "\u691c\u51fa"
+        },
+        "heat": {
+            "off": "\u6b63\u5e38",
+            "on": "\u9ad8\u6e29"
+        },
+        "lock": {
+            "off": "\u30ed\u30c3\u30af\u3055\u308c\u307e\u3057\u305f",
+            "on": "\u30ed\u30c3\u30af\u3055\u308c\u3066\u3044\u307e\u305b\u3093"
+        },
+        "moisture": {
+            "off": "\u30c9\u30e9\u30a4",
+            "on": "\u30a6\u30a7\u30c3\u30c8"
+        },
+        "motion": {
+            "off": "\u672a\u691c\u51fa",
+            "on": "\u691c\u51fa"
+        },
+        "occupancy": {
+            "off": "\u672a\u691c\u51fa",
+            "on": "\u691c\u51fa"
+        },
+        "opening": {
+            "off": "\u9589\u9396",
+            "on": "\u958b\u653e"
+        },
+        "presence": {
+            "off": "\u5916\u51fa",
+            "on": "\u5728\u5b85"
+        },
+        "problem": {
+            "off": "OK"
+        },
+        "safety": {
+            "off": "\u5b89\u5168",
+            "on": "\u5371\u967a"
+        },
+        "smoke": {
+            "off": "\u672a\u691c\u51fa",
+            "on": "\u691c\u51fa"
+        },
+        "sound": {
+            "off": "\u672a\u691c\u51fa",
+            "on": "\u691c\u51fa"
+        },
+        "vibration": {
+            "off": "\u672a\u691c\u51fa",
+            "on": "\u691c\u51fa"
+        },
+        "window": {
+            "off": "\u9589\u9396",
+            "on": "\u958b\u653e"
+        }
+    },
+    "title": "\u30d0\u30a4\u30ca\u30ea\u30bb\u30f3\u30b5\u30fc"
+}

@@ -1,0 +1,20 @@
+toggle:
+  name: Toggle
+  description: Toggle alert's notifications.
+  target:
+    entity:
+      domain: alert
+
+turn_off:
+  name: Turn off
+  description: Silence alert's notifications.
+  target:
+    entity:
+      domain: alert
+
+turn_on:
+  name: Turn on
+  description: Reset alert's notifications.
+  target:
+    entity:
+      domain: alert

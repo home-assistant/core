@@ -1,0 +1,35 @@
+{
+    "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "No hay servicios de notificaci\u00f3n disponibles."
+            },
+            "error": {
+                "invalid_code": "C\u00f3digo inv\u00e1lido, por favor int\u00e9ntelo de nuevo."
+            },
+            "step": {
+                "init": {
+                    "description": "Selecciona uno de los servicios de notificaci\u00f3n:",
+                    "title": "Configurar una contrase\u00f1a de un solo uso entregada por el componente de notificaci\u00f3n"
+                },
+                "setup": {
+                    "description": "Se ha enviado una contrase\u00f1a de un solo uso a trav\u00e9s de ** notify.{notify_service} **. Por favor introd\u00facela a continuaci\u00f3n:",
+                    "title": "Verificar la configuraci\u00f3n"
+                }
+            },
+            "title": "Notificar la contrase\u00f1a de un solo uso"
+        },
+        "totp": {
+            "error": {
+                "invalid_code": "C\u00f3digo inv\u00e1lido, int\u00e9ntalo de nuevo. Si recibes este error de forma consistente, aseg\u00farate de que el reloj de tu sistema Home Assistant es correcto."
+            },
+            "step": {
+                "init": {
+                    "description": "Para activar la autenticaci\u00f3n de dos factores utilizando contrase\u00f1as de un solo uso basadas en el tiempo, escanea el c\u00f3digo QR con tu aplicaci\u00f3n de autenticaci\u00f3n. Si no tienes una, te recomendamos el [Autenticador de Google](https://support.google.com/accounts/answer/1066447) o [Authy](https://authy.com/). \n\n {qr_code} \n \nDespu\u00e9s de escanear el c\u00f3digo, introduce el c\u00f3digo de seis d\u00edgitos de tu aplicaci\u00f3n para verificar la configuraci\u00f3n. Si tienes problemas para escanear el c\u00f3digo QR, realiza una configuraci\u00f3n manual con el c\u00f3digo **`{code}`**.",
+                    "title": "Configurar la autenticaci\u00f3n de dos factores usando TOTP"
+                }
+            },
+            "title": "TOTP"
+        }
+    }
+}

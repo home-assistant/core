@@ -1,0 +1,63 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cette cl\u00e9 API est d\u00e9j\u00e0 utilis\u00e9e.",
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "general_error": "Erreur inattendue",
+            "invalid_api_key": "Cl\u00e9 API invalide",
+            "location_not_found": "Emplacement introuvable"
+        },
+        "step": {
+            "geography_by_coords": {
+                "data": {
+                    "api_key": "Clef d'API",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                },
+                "description": "Utilisez l'API cloud AirVisual pour surveiller une latitude / longitude.",
+                "title": "Configurer un lieu g\u00e9ographique"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "Clef d'API",
+                    "city": "Ville",
+                    "country": "Pays",
+                    "state": "Etat"
+                },
+                "description": "Utilisez l'API cloud AirVisual pour surveiller une ville / un \u00e9tat / un pays.",
+                "title": "Configurer un lieu g\u00e9ographique"
+            },
+            "node_pro": {
+                "data": {
+                    "ip_address": "H\u00f4te",
+                    "password": "Mot de passe"
+                },
+                "description": "Surveillez une unit\u00e9 personnelle AirVisual. Le mot de passe peut \u00eatre r\u00e9cup\u00e9r\u00e9 dans l'interface utilisateur de l'unit\u00e9.",
+                "title": "Configurer un noeud AirVisual Pro"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Cl\u00e9 d'API"
+                },
+                "title": "R\u00e9-authentifier AirVisual"
+            },
+            "user": {
+                "description": "Choisissez le type de donn\u00e9es AirVisual que vous souhaitez surveiller.",
+                "title": "Configurer AirVisual"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Afficher la g\u00e9ographie surveill\u00e9e sur la carte"
+                },
+                "title": "Configurer AirVisual"
+            }
+        }
+    }
+}

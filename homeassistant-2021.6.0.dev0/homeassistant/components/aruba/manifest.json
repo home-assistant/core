@@ -1,0 +1,8 @@
+{
+  "domain": "aruba",
+  "name": "Aruba",
+  "documentation": "https://www.home-assistant.io/integrations/aruba",
+  "requirements": ["pexpect==4.6.0"],
+  "codeowners": [],
+  "iot_class": "local_polling"
+}

@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "invalid_location": "\u627e\u4e0d\u5230\u8a72\u4f4d\u7f6e\u7684\u7d50\u679c",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API \u5bc6\u9470",
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d93\u5ea6",
+                    "radius": "\u89c0\u6e2c\u7ad9\u534a\u5f91\uff08\u82f1\u91cc\uff1b\u9078\u9805\uff09"
+                },
+                "description": "\u6b32\u8a2d\u5b9a AirNow \u7a7a\u6c23\u54c1\u8cea\u6574\u5408\u3002\u8acb\u81f3 https://docs.airnowapi.org/account/request/ \u7522\u751f API \u5bc6\u9470",
+                "title": "AirNow"
+            }
+        }
+    },
+    "title": "AirNow"
+}

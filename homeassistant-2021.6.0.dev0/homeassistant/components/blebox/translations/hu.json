@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt",
+            "unsupported_version": "A BleBox eszk\u00f6z elavult firmware-rel rendelkezik. El\u0151sz\u00f6r friss\u00edtsd."
+        },
+        "flow_title": "BleBox eszk\u00f6z: {name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP c\u00edm",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,46 @@
+capture_image:
+  name: Capture image
+  description: Request a new image capture from a camera device.
+  fields:
+    entity_id:
+      name: Entity
+      description: Entity id of the camera to request an image.
+      required: true
+      example: camera.downstairs_motion_camera
+      selector:
+        entity:
+          integration: abode
+          domain: camera
+
+change_setting:
+  name: Change setting
+  description: Change an Abode system setting.
+  fields:
+    setting:
+      name: Setting
+      description: Setting to change.
+      required: true
+      example: beeper_mute
+      selector:
+        text:
+    value:
+      name: Value
+      description: Value of the setting.
+      required: true
+      example: "1"
+      selector:
+        text:
+
+trigger_automation:
+  name: Trigger automation
+  description: Trigger an Abode automation.
+  fields:
+    entity_id:
+      name: Entity
+      description: Entity id of the automation to trigger.
+      required: true
+      example: switch.my_automation
+      selector:
+        entity:
+          integration: abode
+          domain: switch

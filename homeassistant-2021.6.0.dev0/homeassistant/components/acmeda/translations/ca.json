@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No s'han trobat dispositius a la xarxa"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "ID d'amfitri\u00f3"
+                },
+                "title": "Selecci\u00f3 del Hub a afegir"
+            }
+        }
+    }
+}
