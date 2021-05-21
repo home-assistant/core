@@ -9,13 +9,13 @@
             "old_firmware": "Ancien micrologiciel non pris en charge sur l'appareil Bond - veuillez mettre \u00e0 niveau avant de continuer",
             "unknown": "Erreur inattendue"
         },
-        "flow_title": "Bond : {bond_id} ({h\u00f4te})",
+        "flow_title": "Lien : {name} ({host})",
         "step": {
             "confirm": {
                 "data": {
                     "access_token": "Jeton d'acc\u00e8s"
                 },
-                "description": "Voulez-vous configurer {bond_id} ?"
+                "description": "Voulez-vous configurer {name}?"
             },
             "user": {
                 "data": {

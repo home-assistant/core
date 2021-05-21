@@ -64,37 +64,65 @@ def setup_platform(hass, config, add_entities, discover_info=None):
     port = config[CONF_PORT]
     name = config[CONF_NAME]
 
-    try:
-        cmus_remote = CmusDevice(host, password, port, name)
-    except exceptions.InvalidPassword:
-        _LOGGER.error("The provided password was rejected by cmus")
-        return False
-    add_entities([cmus_remote], True)
+    cmus_remote = CmusRemote(server=host, port=port, password=password)
+    cmus_remote.connect()
+
+    if cmus_remote.cmus is None:
+        return
+
+    add_entities([CmusDevice(device=cmus_remote, name=name, server=host)], True)
+
+
+class CmusRemote:
+    """Representation of a cmus connection."""
+
+    def __init__(self, server, port, password):
+        """Initialize the cmus remote."""
+
+        self._server = server
+        self._port = port
+        self._password = password
+        self.cmus = None
+
+    def connect(self):
+        """Connect to the cmus server."""
+
+        try:
+            self.cmus = remote.PyCmus(
+                server=self._server, port=self._port, password=self._password
+            )
+        except exceptions.InvalidPassword:
+            _LOGGER.error("The provided password was rejected by cmus")
 
 
 class CmusDevice(MediaPlayerEntity):
     """Representation of a running cmus."""
 
-    # pylint: disable=no-member
-    def __init__(self, server, password, port, name):
+    def __init__(self, device, name, server):
         """Initialize the CMUS device."""
 
+        self._remote = device
         if server:
-            self.cmus = remote.PyCmus(server=server, password=password, port=port)
             auto_name = f"cmus-{server}"
         else:
-            self.cmus = remote.PyCmus()
             auto_name = "cmus-local"
         self._name = name or auto_name
         self.status = {}
 
     def update(self):
         """Get the latest data and update the state."""
-        status = self.cmus.get_status_dict()
-        if not status:
-            _LOGGER.warning("Received no status from cmus")
+        try:
+            status = self._remote.cmus.get_status_dict()
+        except BrokenPipeError:
+            self._remote.connect()
+        except exceptions.ConfigurationError:
+            _LOGGER.warning("A configuration error occurred")
+            self._remote.connect()
         else:
             self.status = status
+            return
+
+        _LOGGER.warning("Received no status from cmus")
 
     @property
     def name(self):
@@ -168,15 +196,15 @@ class CmusDevice(MediaPlayerEntity):
 
     def turn_off(self):
         """Service to send the CMUS the command to stop playing."""
-        self.cmus.player_stop()
+        self._remote.cmus.player_stop()
 
     def turn_on(self):
         """Service to send the CMUS the command to start playing."""
-        self.cmus.player_play()
+        self._remote.cmus.player_play()
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self.cmus.set_volume(int(volume * 100))
+        self._remote.cmus.set_volume(int(volume * 100))
 
     def volume_up(self):
         """Set the volume up."""
@@ -188,7 +216,7 @@ class CmusDevice(MediaPlayerEntity):
             current_volume = left
 
         if current_volume <= 100:
-            self.cmus.set_volume(int(current_volume) + 5)
+            self._remote.cmus.set_volume(int(current_volume) + 5)
 
     def volume_down(self):
         """Set the volume down."""
@@ -200,12 +228,12 @@ class CmusDevice(MediaPlayerEntity):
             current_volume = left
 
         if current_volume <= 100:
-            self.cmus.set_volume(int(current_volume) - 5)
+            self._remote.cmus.set_volume(int(current_volume) - 5)
 
     def play_media(self, media_type, media_id, **kwargs):
         """Send the play command."""
         if media_type in [MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST]:
-            self.cmus.player_play_file(media_id)
+            self._remote.cmus.player_play_file(media_id)
         else:
             _LOGGER.error(
                 "Invalid media type %s. Only %s and %s are supported",
@@ -216,24 +244,24 @@ class CmusDevice(MediaPlayerEntity):
 
     def media_pause(self):
         """Send the pause command."""
-        self.cmus.player_pause()
+        self._remote.cmus.player_pause()
 
     def media_next_track(self):
         """Send next track command."""
-        self.cmus.player_next()
+        self._remote.cmus.player_next()
 
     def media_previous_track(self):
         """Send next track command."""
-        self.cmus.player_prev()
+        self._remote.cmus.player_prev()
 
     def media_seek(self, position):
         """Send seek command."""
-        self.cmus.seek(position)
+        self._remote.cmus.seek(position)
 
     def media_play(self):
         """Send the play command."""
-        self.cmus.player_play()
+        self._remote.cmus.player_play()
 
     def media_stop(self):
         """Send the stop command."""
-        self.cmus.stop()
+        self._remote.cmus.stop()

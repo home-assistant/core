@@ -1,10 +1,11 @@
 """Test Home Assistant location util methods."""
+from unittest.mock import Mock, patch
+
 import aiohttp
 import pytest
 
 import homeassistant.util.location as location_util
 
-from tests.async_mock import Mock, patch
 from tests.common import load_fixture
 
 # Paris

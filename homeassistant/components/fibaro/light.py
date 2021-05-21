@@ -118,13 +118,11 @@ class FibaroLight(FibaroDevice, LightEntity):
                 # We set it to the target brightness and turn it on
                 self._brightness = scaleto100(target_brightness)
 
-        if self._supported_flags & SUPPORT_COLOR:
-            if (
-                self._reset_color
-                and kwargs.get(ATTR_WHITE_VALUE) is None
-                and kwargs.get(ATTR_HS_COLOR) is None
-                and kwargs.get(ATTR_BRIGHTNESS) is None
-            ):
+        if self._supported_flags & SUPPORT_COLOR and (
+            kwargs.get(ATTR_WHITE_VALUE) is not None
+            or kwargs.get(ATTR_HS_COLOR) is not None
+        ):
+            if self._reset_color:
                 self._color = (100, 0)
 
             # Update based on parameters
@@ -132,14 +130,14 @@ class FibaroLight(FibaroDevice, LightEntity):
             self._color = kwargs.get(ATTR_HS_COLOR, self._color)
             rgb = color_util.color_hs_to_RGB(*self._color)
             self.call_set_color(
-                round(rgb[0] * self._brightness / 100.0),
-                round(rgb[1] * self._brightness / 100.0),
-                round(rgb[2] * self._brightness / 100.0),
-                round(self._white * self._brightness / 100.0),
+                round(rgb[0]),
+                round(rgb[1]),
+                round(rgb[2]),
+                round(self._white),
             )
 
             if self.state == "off":
-                self.set_level(int(self._brightness))
+                self.set_level(min(int(self._brightness), 99))
             return
 
         if self._reset_color:
@@ -147,7 +145,7 @@ class FibaroLight(FibaroDevice, LightEntity):
             self.call_set_color(bri255, bri255, bri255, bri255)
 
         if self._supported_flags & SUPPORT_BRIGHTNESS:
-            self.set_level(int(self._brightness))
+            self.set_level(min(int(self._brightness), 99))
             return
 
         # The simplest case is left for last. No dimming, just switch on
@@ -203,4 +201,4 @@ class FibaroLight(FibaroDevice, LightEntity):
             if rgbw_list[0] or rgbw_list[1] or rgbw_list[2]:
                 self._color = color_util.color_RGB_to_hs(*rgbw_list[:3])
             if (self._supported_flags & SUPPORT_WHITE_VALUE) and self.brightness != 0:
-                self._white = min(255, max(0, rgbw_list[3] * 100.0 / self._brightness))
+                self._white = min(255, max(0, rgbw_list[3]))

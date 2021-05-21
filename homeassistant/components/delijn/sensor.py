@@ -5,11 +5,10 @@ from pydelijn.api import Passages
 from pydelijn.common import HttpException
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +16,6 @@ ATTRIBUTION = "Data provided by data.delijn.be"
 
 CONF_NEXT_DEPARTURE = "next_departure"
 CONF_STOP_ID = "stop_id"
-CONF_API_KEY = "api_key"
 CONF_NUMBER_OF_DEPARTURES = "number_of_departures"
 
 DEFAULT_NAME = "De Lijn"
@@ -59,7 +57,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors, True)
 
 
-class DeLijnPublicTransportSensor(Entity):
+class DeLijnPublicTransportSensor(SensorEntity):
     """Representation of a Ruter sensor."""
 
     def __init__(self, line):
@@ -127,6 +125,6 @@ class DeLijnPublicTransportSensor(Entity):
         return "mdi:bus"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return attributes for the sensor."""
         return self._attributes

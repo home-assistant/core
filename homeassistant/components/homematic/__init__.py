@@ -10,10 +10,13 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
     ATTR_NAME,
+    ATTR_TIME,
     CONF_HOST,
     CONF_HOSTS,
     CONF_PASSWORD,
+    CONF_PATH,
     CONF_PLATFORM,
+    CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -37,7 +40,6 @@ from .const import (
     ATTR_PARAMSET,
     ATTR_PARAMSET_KEY,
     ATTR_RX_MODE,
-    ATTR_TIME,
     ATTR_UNIQUE_ID,
     ATTR_VALUE,
     ATTR_VALUE_TYPE,
@@ -47,8 +49,6 @@ from .const import (
     CONF_JSONPORT,
     CONF_LOCAL_IP,
     CONF_LOCAL_PORT,
-    CONF_PATH,
-    CONF_PORT,
     CONF_RESOLVENAMES,
     CONF_RESOLVENAMES_OPTIONS,
     DATA_CONF,
@@ -209,7 +209,6 @@ SCHEMA_SERVICE_PUT_PARAMSET = vol.Schema(
 
 def setup(hass, config):
     """Set up the Homematic component."""
-
     conf = config[DOMAIN]
     hass.data[DATA_CONF] = remotes = {}
     hass.data[DATA_STORE] = set()
@@ -612,6 +611,8 @@ def _device_from_servicecall(hass, service):
     interface = service.data.get(ATTR_INTERFACE)
     if address == "BIDCOS-RF":
         address = "BidCoS-RF"
+    if address == "HMIP-RCV-1":
+        address = "HmIP-RCV-1"
 
     if interface:
         return hass.data[DATA_HOMEMATIC].devices[interface].get(address)

@@ -123,7 +123,7 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
         self._offset_reached = False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return {"offset_reached": self._offset_reached}
 
@@ -173,6 +173,8 @@ class WebDavCalendarData:
         event_list = []
         for event in vevent_list:
             vevent = event.instance.vevent
+            if not self.is_matching(vevent, self.search):
+                continue
             uid = None
             if hasattr(vevent, "uid"):
                 uid = vevent.uid.value

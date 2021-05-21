@@ -3,5 +3,6 @@
   "name": "Orange and Rockland Utility (ORU)",
   "documentation": "https://www.home-assistant.io/integrations/oru",
   "codeowners": ["@bvlaicu"],
-  "requirements": ["oru==0.1.11"]
+  "requirements": ["oru==0.1.11"],
+  "iot_class": "cloud_polling"
 }

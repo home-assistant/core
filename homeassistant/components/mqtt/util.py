@@ -4,7 +4,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.const import CONF_PAYLOAD
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, template
 
 from .const import (
     ATTR_PAYLOAD,
@@ -59,6 +59,16 @@ def valid_subscribe_topic(value: Any) -> str:
             )
 
     return value
+
+
+def valid_subscribe_topic_template(value: Any) -> template.Template:
+    """Validate either a jinja2 template or a valid MQTT subscription topic."""
+    tpl = template.Template(value)
+
+    if tpl.is_static:
+        valid_subscribe_topic(value)
+
+    return tpl
 
 
 def valid_publish_topic(value: Any) -> str:

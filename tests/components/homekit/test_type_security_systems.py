@@ -34,7 +34,7 @@ async def test_switch_set_state(hass, hk_driver, events):
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, config)
-    await acc.run_handler()
+    await acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -238,7 +238,7 @@ async def test_supported_states(hass, hk_driver, events):
         await hass.async_block_till_done()
 
         acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, config)
-        await acc.run_handler()
+        await acc.run()
         await hass.async_block_till_done()
 
         valid_current_values = acc.char_current_state.properties.get("ValidValues")

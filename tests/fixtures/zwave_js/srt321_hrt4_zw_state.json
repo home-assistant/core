@@ -1,0 +1,262 @@
+{
+    "nodeId": 20,
+    "index": 0,
+    "status": 4,
+    "ready": true,
+    "deviceClass": {
+      "basic": {
+        "key": 4,
+        "label": "Routing Slave"
+      },
+      "generic": {
+        "key": 8,
+        "label": "Thermostat"
+      },
+      "specific": {
+        "key": 0,
+        "label": "Unused"
+      },
+      "mandatorySupportedCCs": [],
+      "mandatoryControlledCCs": []
+    },
+    "isListening": true,
+    "isFrequentListening": false,
+    "isRouting": true,
+    "maxBaudRate": 40000,
+    "isSecure": false,
+    "version": 3,
+    "isBeaming": true,
+    "manufacturerId": 89,
+    "productId": 1,
+    "productType": 3,
+    "firmwareVersion": "2.0",
+    "name": "main_heat_actionner",
+    "location": "kitchen",
+    "deviceConfig": {
+      "filename": "/opt/node_modules/@zwave-js/config/config/devices/0x0059/asr-zw.json",
+      "manufacturerId": 89,
+      "manufacturer": "Secure Meters (UK) Ltd.",
+      "label": "SRT322",
+      "description": "Thermostat Receiver",
+      "devices": [
+        {
+          "productType": "0x0003",
+          "productId": "0x0001"
+        }
+      ],
+      "firmwareVersion": {
+        "min": "0.0",
+        "max": "255.255"
+      }
+    },
+    "label": "SRT322",
+    "neighbors": [
+      1,
+      5,
+      10,
+      12,
+      13,
+      14,
+      15,
+      18,
+      21
+    ],
+    "interviewAttempts": 1,
+    "interviewStage": 7,
+    "commandClasses": [
+      {
+        "id": 37,
+        "name": "Binary Switch",
+        "version": 1,
+        "isSecure": false
+      },
+      {
+        "id": 64,
+        "name": "Thermostat Mode",
+        "version": 1,
+        "isSecure": false
+      },
+      {
+        "id": 114,
+        "name": "Manufacturer Specific",
+        "version": 1,
+        "isSecure": false
+      },
+      {
+        "id": 134,
+        "name": "Version",
+        "version": 1,
+        "isSecure": false
+      }
+    ],
+    "endpoints": [
+      {
+        "nodeId": 20,
+        "index": 0
+      }
+    ],
+    "values": [
+      {
+        "endpoint": 0,
+        "commandClass": 37,
+        "commandClassName": "Binary Switch",
+        "property": "currentValue",
+        "propertyName": "currentValue",
+        "ccVersion": 1,
+        "metadata": {
+          "type": "boolean",
+          "readable": true,
+          "writeable": false,
+          "label": "Current value"
+        },
+        "value": false
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 37,
+        "commandClassName": "Binary Switch",
+        "property": "targetValue",
+        "propertyName": "targetValue",
+        "ccVersion": 1,
+        "metadata": {
+          "type": "boolean",
+          "readable": true,
+          "writeable": true,
+          "label": "Target value"
+        },
+        "value": false
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 64,
+        "commandClassName": "Thermostat Mode",
+        "property": "mode",
+        "propertyName": "mode",
+        "ccVersion": 1,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": true,
+          "min": 0,
+          "max": 255,
+          "states": {
+            "0": "Off",
+            "1": "Heat"
+          },
+          "label": "Thermostat mode"
+        },
+        "value": 0
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 64,
+        "commandClassName": "Thermostat Mode",
+        "property": "manufacturerData",
+        "propertyName": "manufacturerData",
+        "ccVersion": 1,
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": true
+        }
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 114,
+        "commandClassName": "Manufacturer Specific",
+        "property": "manufacturerId",
+        "propertyName": "manufacturerId",
+        "ccVersion": 1,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "min": 0,
+          "max": 65535,
+          "label": "Manufacturer ID"
+        },
+        "value": 89
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 114,
+        "commandClassName": "Manufacturer Specific",
+        "property": "productType",
+        "propertyName": "productType",
+        "ccVersion": 1,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "min": 0,
+          "max": 65535,
+          "label": "Product type"
+        },
+        "value": 3
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 114,
+        "commandClassName": "Manufacturer Specific",
+        "property": "productId",
+        "propertyName": "productId",
+        "ccVersion": 1,
+        "metadata": {
+          "type": "number",
+          "readable": true,
+          "writeable": false,
+          "min": 0,
+          "max": 65535,
+          "label": "Product ID"
+        },
+        "value": 1
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 134,
+        "commandClassName": "Version",
+        "property": "libraryType",
+        "propertyName": "libraryType",
+        "ccVersion": 1,
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": false,
+          "label": "Library type"
+        },
+        "value": 6
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 134,
+        "commandClassName": "Version",
+        "property": "protocolVersion",
+        "propertyName": "protocolVersion",
+        "ccVersion": 1,
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": false,
+          "label": "Z-Wave protocol version"
+        },
+        "value": "2.78"
+      },
+      {
+        "endpoint": 0,
+        "commandClass": 134,
+        "commandClassName": "Version",
+        "property": "firmwareVersions",
+        "propertyName": "firmwareVersions",
+        "ccVersion": 1,
+        "metadata": {
+          "type": "any",
+          "readable": true,
+          "writeable": false,
+          "label": "Z-Wave chip firmware versions"
+        },
+        "value": [
+          "2.0"
+        ]
+      }
+    ]
+  }

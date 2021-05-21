@@ -1,12 +1,14 @@
 """The tests for the Tasmota fan platform."""
 import copy
 import json
+from unittest.mock import patch
 
 from hatasmota.utils import (
     get_topic_stat_result,
     get_topic_tele_state,
     get_topic_tele_will,
 )
+import pytest
 
 from homeassistant.components import fan
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
@@ -25,7 +27,6 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
 )
 
-from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message
 from tests.components.fan import common
 
@@ -51,6 +52,7 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     state = hass.states.get("fan.tasmota")
     assert state.state == STATE_OFF
     assert state.attributes["speed"] is None
+    assert state.attributes["percentage"] is None
     assert state.attributes["speed_list"] == ["off", "low", "medium", "high"]
     assert state.attributes["supported_features"] == fan.SUPPORT_SET_SPEED
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
@@ -59,31 +61,37 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     state = hass.states.get("fan.tasmota")
     assert state.state == STATE_ON
     assert state.attributes["speed"] == "low"
+    assert state.attributes["percentage"] == 33
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"FanSpeed":2}')
     state = hass.states.get("fan.tasmota")
     assert state.state == STATE_ON
     assert state.attributes["speed"] == "medium"
+    assert state.attributes["percentage"] == 66
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"FanSpeed":3}')
     state = hass.states.get("fan.tasmota")
     assert state.state == STATE_ON
     assert state.attributes["speed"] == "high"
+    assert state.attributes["percentage"] == 100
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"FanSpeed":0}')
     state = hass.states.get("fan.tasmota")
     assert state.state == STATE_OFF
     assert state.attributes["speed"] == "off"
+    assert state.attributes["percentage"] == 0
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"FanSpeed":1}')
     state = hass.states.get("fan.tasmota")
     assert state.state == STATE_ON
     assert state.attributes["speed"] == "low"
+    assert state.attributes["percentage"] == 33
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"FanSpeed":0}')
     state = hass.states.get("fan.tasmota")
     assert state.state == STATE_OFF
     assert state.attributes["speed"] == "off"
+    assert state.attributes["percentage"] == 0
 
 
 async def test_sending_mqtt_commands(hass, mqtt_mock, setup_tasmota):
@@ -150,6 +158,61 @@ async def test_sending_mqtt_commands(hass, mqtt_mock, setup_tasmota):
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/FanSpeed", "3", 0, False
     )
+    mqtt_mock.async_publish.reset_mock()
+
+    # Set speed percentage and verify MQTT message is sent
+    await common.async_set_percentage(hass, "fan.tasmota", 0)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tasmota_49A3BC/cmnd/FanSpeed", "0", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    # Set speed percentage and verify MQTT message is sent
+    await common.async_set_percentage(hass, "fan.tasmota", 15)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tasmota_49A3BC/cmnd/FanSpeed", "1", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    # Set speed percentage and verify MQTT message is sent
+    await common.async_set_percentage(hass, "fan.tasmota", 50)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tasmota_49A3BC/cmnd/FanSpeed", "2", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    # Set speed percentage and verify MQTT message is sent
+    await common.async_set_percentage(hass, "fan.tasmota", 90)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "tasmota_49A3BC/cmnd/FanSpeed", "3", 0, False
+    )
+
+
+async def test_invalid_fan_speed(hass, mqtt_mock, setup_tasmota):
+    """Test the sending MQTT commands."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["if"] = 1
+    mac = config["mac"]
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    state = hass.states.get("fan.tasmota")
+    assert state.state == STATE_OFF
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    mqtt_mock.async_publish.reset_mock()
+
+    # Set an unsupported speed and verify MQTT message is not sent
+    with pytest.raises(ValueError) as excinfo:
+        await common.async_set_speed(hass, "fan.tasmota", "no_such_speed")
+    assert "no_such_speed" in str(excinfo.value)
+    mqtt_mock.async_publish.assert_not_called()
 
 
 async def test_availability_when_connection_lost(

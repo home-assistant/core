@@ -74,7 +74,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         return self._data.get("battery")
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific attributes."""
         return self._data.get("attributes")
 

@@ -1,9 +1,11 @@
 """Provide frame helper for finding the current frame context."""
+from __future__ import annotations
+
 import asyncio
 import functools
 import logging
 from traceback import FrameSummary, extract_stack
-from typing import Any, Callable, Optional, Tuple, TypeVar, cast
+from typing import Any, Callable, TypeVar, cast
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -13,8 +15,8 @@ CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-na
 
 
 def get_integration_frame(
-    exclude_integrations: Optional[set] = None,
-) -> Tuple[FrameSummary, str, str]:
+    exclude_integrations: set | None = None,
+) -> tuple[FrameSummary, str, str]:
     """Return the frame, integration and integration path of the current stack frame."""
     found_frame = None
     if not exclude_integrations:
@@ -64,13 +66,12 @@ def report(what: str) -> None:
 
 
 def report_integration(
-    what: str, integration_frame: Tuple[FrameSummary, str, str]
+    what: str, integration_frame: tuple[FrameSummary, str, str]
 ) -> None:
     """Report incorrect usage in an integration.
 
     Async friendly.
     """
-
     found_frame, integration, path = integration_frame
 
     index = found_frame.filename.index(path)

@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Geen apparaten gevonden op het netwerk",
+            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
+        },
+        "step": {
+            "confirm": {
+                "description": "Wil je beginnen met instellen?"
+            }
+        }
+    }
+}

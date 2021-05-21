@@ -1,5 +1,6 @@
 """Test the Ruckus Unleashed config flow."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from pyruckus.exceptions import AuthenticationError
 
@@ -7,7 +8,6 @@ from homeassistant import config_entries
 from homeassistant.components.ruckus_unleashed.const import DOMAIN
 from homeassistant.util import utcnow
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 from tests.components.ruckus_unleashed import CONFIG, DEFAULT_SYSTEM_INFO, DEFAULT_TITLE
 
@@ -30,8 +30,6 @@ async def test_form(hass):
         "homeassistant.components.ruckus_unleashed.Ruckus.system_info",
         return_value=DEFAULT_SYSTEM_INFO,
     ), patch(
-        "homeassistant.components.ruckus_unleashed.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.ruckus_unleashed.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -44,7 +42,6 @@ async def test_form(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == DEFAULT_TITLE
     assert result2["data"] == CONFIG
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

@@ -25,7 +25,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-# pylint: disable=no-member
 def setup(hass, base_config):
     """Set up the gc100 component."""
     config = base_config[DOMAIN]

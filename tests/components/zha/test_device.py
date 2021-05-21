@@ -2,6 +2,7 @@
 from datetime import timedelta
 import time
 from unittest import mock
+from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha
@@ -9,12 +10,11 @@ import zigpy.zcl.clusters.general as general
 
 import homeassistant.components.zha.core.device as zha_core_device
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
-import homeassistant.helpers.device_registry as ha_dev_reg
+import homeassistant.helpers.device_registry as dr
 import homeassistant.util.dt as dt_util
 
 from .common import async_enable_traffic, make_zcl_header
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 
@@ -227,7 +227,7 @@ async def test_ota_sw_version(hass, ota_zha_device):
     """Test device entry gets sw_version updated via OTA channel."""
 
     ota_ch = ota_zha_device.channels.pools[0].client_channels["1:0x0019"]
-    dev_registry = await ha_dev_reg.async_get_registry(hass)
+    dev_registry = dr.async_get(hass)
     entry = dev_registry.async_get(ota_zha_device.device_id)
     assert entry.sw_version is None
 

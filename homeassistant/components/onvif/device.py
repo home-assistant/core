@@ -1,8 +1,10 @@
 """ONVIF device abstraction."""
+from __future__ import annotations
+
 import asyncio
+from contextlib import suppress
 import datetime as dt
 import os
-from typing import List
 
 from httpx import RequestError
 import onvif
@@ -39,7 +41,7 @@ from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
 class ONVIFDevice:
     """Manages an ONVIF device."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry = None):
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry = None) -> None:
         """Initialize the device."""
         self.hass: HomeAssistant = hass
         self.config_entry: ConfigEntry = config_entry
@@ -50,7 +52,7 @@ class ONVIFDevice:
 
         self.info: DeviceInfo = DeviceInfo()
         self.capabilities: Capabilities = Capabilities()
-        self.profiles: List[Profile] = []
+        self.profiles: list[Profile] = []
         self.max_resolution: int = 0
 
         self._dt_diff_seconds: int = 0
@@ -240,29 +242,23 @@ class ONVIFDevice:
     async def async_get_capabilities(self):
         """Obtain information about the available services on the device."""
         snapshot = False
-        try:
+        with suppress(ONVIFError, Fault, RequestError):
             media_service = self.device.create_media_service()
             media_capabilities = await media_service.GetServiceCapabilities()
             snapshot = media_capabilities and media_capabilities.SnapshotUri
-        except (ONVIFError, Fault, RequestError):
-            pass
 
         pullpoint = False
-        try:
+        with suppress(ONVIFError, Fault, RequestError):
             pullpoint = await self.events.async_start()
-        except (ONVIFError, Fault):
-            pass
 
         ptz = False
-        try:
+        with suppress(ONVIFError, Fault, RequestError):
             self.device.get_definition("ptz")
             ptz = True
-        except ONVIFError:
-            pass
 
         return Capabilities(snapshot, pullpoint, ptz)
 
-    async def async_get_profiles(self) -> List[Profile]:
+    async def async_get_profiles(self) -> list[Profile]:
         """Obtain media profiles for this device."""
         media_service = self.device.create_media_service()
         result = await media_service.GetProfiles()
@@ -438,7 +434,7 @@ class ONVIFDevice:
                 await ptz_service.Stop(req)
         except ONVIFError as err:
             if "Bad Request" in err.reason:
-                LOGGER.warning("Device '%s' doesn't support PTZ.", self.name)
+                LOGGER.warning("Device '%s' doesn't support PTZ", self.name)
             else:
                 LOGGER.error("Error trying to perform PTZ action: %s", err)
 

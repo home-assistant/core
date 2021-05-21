@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Lokasi sudah dikonfigurasi"
+        },
+        "error": {
+            "invalid_api_key": "Kunci API tidak valid"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Kunci API",
+                    "latitude": "Lintang",
+                    "longitude": "Bujur",
+                    "name": "Nama integrasi"
+                },
+                "description": "Siapkan integrasi AEMET OpenData. Untuk menghasilkan kunci API, buka https://opendata.aemet.es/centrodedescargas/altaUsuario",
+                "title": "AEMET OpenData"
+            }
+        }
+    }
+}

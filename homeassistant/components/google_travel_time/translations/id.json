@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Lokasi sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Kunci API",
+                    "destination": "Tujuan",
+                    "origin": "Asal"
+                },
+                "description": "Saat menentukan asal dan tujuan, Anda dapat menyediakan satu atau beberapa lokasi yang dipisahkan oleh karakter pipe, dalam bentuk alamat, koordinat lintang/bujur, atau ID tempat Google. Saat menentukan lokasi menggunakan ID tempat Google, ID harus diawali dengan \"place_id:'."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid": "Hindari",
+                    "language": "Bahasa",
+                    "mode": "Mode Perjalanan",
+                    "time": "Waktu",
+                    "time_type": "Jenis Waktu",
+                    "transit_mode": "Mode Transit",
+                    "transit_routing_preference": "Preferensi Perutean Transit",
+                    "units": "Unit"
+                },
+                "description": "Anda dapat menentukan Waktu Keberangkatan atau Waktu Kedatangan secara opsional. Jika menentukan waktu keberangkatan, Anda dapat memasukkan 'sekarang', stempel waktu Unix, atau string waktu 24 jam seperti 08:00:00`. Jika menentukan waktu kedatangan, Anda dapat menggunakan stempel waktu Unix atau string waktu 24 jam seperti 08:00:00`"
+            }
+        }
+    },
+    "title": "Waktu Perjalanan Google Maps"
+}

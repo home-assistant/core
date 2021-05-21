@@ -2,7 +2,6 @@
 from homeassistant.components.humidifier import (
     ATTR_AVAILABLE_MODES,
     ATTR_HUMIDITY,
-    ATTR_MODE,
     DOMAIN,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
@@ -10,6 +9,7 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_ON,
     STATE_OFF,

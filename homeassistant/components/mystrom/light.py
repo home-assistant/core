@@ -145,7 +145,7 @@ class MyStromLight(LightEntity):
         try:
             await self._bulb.set_off()
         except MyStromConnectionError:
-            _LOGGER.warning("myStrom bulb not online")
+            _LOGGER.warning("The myStrom bulb not online")
 
     async def async_update(self):
         """Fetch new state data for this light."""

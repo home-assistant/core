@@ -3,11 +3,10 @@ import aiohttp
 from ovoenergy.ovoenergy import OVOEnergy
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 USER_SCHEMA = vol.Schema(
@@ -19,7 +18,6 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a OVO Energy config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize the flow."""
@@ -62,7 +60,6 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input and user_input.get(CONF_USERNAME):
             self.username = user_input[CONF_USERNAME]
 
-        # pylint: disable=no-member
         self.context["title_placeholders"] = {CONF_USERNAME: self.username}
 
         if user_input is not None and user_input.get(CONF_PASSWORD) is not None:
@@ -75,18 +72,15 @@ class OVOEnergyFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "connection_error"
             else:
                 if authenticated:
-                    await self.async_set_unique_id(self.username)
-
-                    for entry in self._async_current_entries():
-                        if entry.unique_id == self.unique_id:
-                            self.hass.config_entries.async_update_entry(
-                                entry,
-                                data={
-                                    CONF_USERNAME: self.username,
-                                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                                },
-                            )
-                            return self.async_abort(reason="reauth_successful")
+                    entry = await self.async_set_unique_id(self.username)
+                    self.hass.config_entries.async_update_entry(
+                        entry,
+                        data={
+                            CONF_USERNAME: self.username,
+                            CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        },
+                    )
+                    return self.async_abort(reason="reauth_successful")
 
                 errors["base"] = "authorization_error"
 

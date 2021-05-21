@@ -1,5 +1,6 @@
 """The tests for the filesize sensor."""
 import os
+from unittest.mock import patch
 
 import pytest
 
@@ -8,8 +9,6 @@ from homeassistant.components.filesize import DOMAIN
 from homeassistant.components.filesize.sensor import CONF_FILE_PATHS
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 TEST_DIR = os.path.join(os.path.dirname(__file__))
 TEST_FILE = os.path.join(TEST_DIR, "mock_file_test_filesize.txt")

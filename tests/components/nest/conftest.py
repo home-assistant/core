@@ -14,29 +14,31 @@ class FakeAuth(AbstractAuth):
     from the API.
     """
 
-    # Tests can set fake responses here.
-    responses = []
-    # The last request is recorded here.
-    method = None
-    url = None
-    json = None
-
-    # Set up by fixture
-    client = None
-
     def __init__(self):
         """Initialize FakeAuth."""
         super().__init__(None, None)
+        # Tests can set fake responses here.
+        self.responses = []
+        # The last request is recorded here.
+        self.method = None
+        self.url = None
+        self.json = None
+        self.headers = None
+        self.captured_requests = []
+        # Set up by fixture
+        self.client = None
 
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         return ""
 
-    async def request(self, method, url, json):
+    async def request(self, method, url, **kwargs):
         """Capure the request arguments for tests to assert on."""
         self.method = method
         self.url = url
-        self.json = json
+        self.json = kwargs.get("json")
+        self.headers = kwargs.get("headers")
+        self.captured_requests.append((method, url, self.json, self.headers))
         return await self.client.get("/")
 
     async def response_handler(self, request):

@@ -1,8 +1,12 @@
 {
     "device_automation": {
         "condition_type": {
-            "is_home": "{entity_name} ist Zuhause",
-            "is_not_home": "{entity_name} ist nicht zu Hause"
+            "is_home": "{entity_name} ist zuhause",
+            "is_not_home": "{entity_name} ist nicht zuhause"
+        },
+        "trigger_type": {
+            "enters": "{entity_name} betritt einen Bereich",
+            "leaves": "{entity_name} verl\u00e4sst einen Bereich"
         }
     },
     "state": {

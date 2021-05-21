@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Questo account SimpliSafe \u00e8 gi\u00e0 in uso.",
-            "reauth_successful": "La riautenticazione ha avuto successo"
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
             "identifier_exists": "Account gi\u00e0 registrato",
@@ -20,7 +20,7 @@
                     "password": "Password"
                 },
                 "description": "Il token di accesso \u00e8 scaduto o \u00e8 stato revocato. Inserisci la tua password per ricollegare il tuo account.",
-                "title": "Reautenticare l'integrazione"
+                "title": "Autenticare nuovamente l'integrazione"
             },
             "user": {
                 "data": {

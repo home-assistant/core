@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured_device": "Apparat ass scho konfigur\u00e9iert",
+            "cannot_connect": "Feeler beim verbannen",
             "updated_entry": "D\u00ebs Entr\u00e9e ass scho konfigur\u00e9iert mee d\u00e9i defin\u00e9ierten Numm an/oder Optiounen an der Konfiguratioun st\u00ebmmen net mat deene virdrun import\u00e9ierten Optiounen iwwereneen, esou gouf d'Entr\u00e9e deementspriechend aktualis\u00e9iert."
         },
         "error": {

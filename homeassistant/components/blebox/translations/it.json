@@ -9,7 +9,7 @@
             "unknown": "Errore imprevisto",
             "unsupported_version": "Il dispositivo BleBox ha un firmware obsoleto. Si prega di aggiornarlo prima."
         },
-        "flow_title": "Dispositivo BleBox: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

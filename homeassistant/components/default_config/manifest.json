@@ -6,6 +6,7 @@
     "automation",
     "cloud",
     "counter",
+    "dhcp",
     "frontend",
     "history",
     "input_boolean",
@@ -17,6 +18,7 @@
     "map",
     "media_source",
     "mobile_app",
+    "my",
     "person",
     "scene",
     "script",
@@ -30,5 +32,6 @@
     "zeroconf",
     "zone"
   ],
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }

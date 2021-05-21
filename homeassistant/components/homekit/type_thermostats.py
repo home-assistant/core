@@ -89,6 +89,20 @@ HC_HEAT_COOL_HEAT = 1
 HC_HEAT_COOL_COOL = 2
 HC_HEAT_COOL_AUTO = 3
 
+HC_HEAT_COOL_PREFER_HEAT = [
+    HC_HEAT_COOL_AUTO,
+    HC_HEAT_COOL_HEAT,
+    HC_HEAT_COOL_COOL,
+    HC_HEAT_COOL_OFF,
+]
+
+HC_HEAT_COOL_PREFER_COOL = [
+    HC_HEAT_COOL_AUTO,
+    HC_HEAT_COOL_COOL,
+    HC_HEAT_COOL_HEAT,
+    HC_HEAT_COOL_OFF,
+]
+
 HC_MIN_TEMP = 10
 HC_MAX_TEMP = 38
 
@@ -236,27 +250,47 @@ class Thermostat(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        hvac_mode = self.hass.states.get(self.entity_id).state
+        hvac_mode = state.state
         homekit_hvac_mode = HC_HASS_TO_HOMEKIT[hvac_mode]
 
-        if CHAR_TARGET_HEATING_COOLING in char_values:
-            # Homekit will reset the mode when VIEWING the temp
-            # Ignore it if its the same mode
-            if char_values[CHAR_TARGET_HEATING_COOLING] != homekit_hvac_mode:
-                target_hc = char_values[CHAR_TARGET_HEATING_COOLING]
-                if target_hc in self.hc_homekit_to_hass:
-                    service = SERVICE_SET_HVAC_MODE_THERMOSTAT
-                    hass_value = self.hc_homekit_to_hass[target_hc]
-                    params = {ATTR_HVAC_MODE: hass_value}
-                    events.append(
-                        f"{CHAR_TARGET_HEATING_COOLING} to {char_values[CHAR_TARGET_HEATING_COOLING]}"
-                    )
-                else:
-                    _LOGGER.warning(
-                        "The entity: %s does not have a %s mode",
-                        self.entity_id,
-                        target_hc,
-                    )
+        # Homekit will reset the mode when VIEWING the temp
+        # Ignore it if its the same mode
+        if (
+            CHAR_TARGET_HEATING_COOLING in char_values
+            and char_values[CHAR_TARGET_HEATING_COOLING] != homekit_hvac_mode
+        ):
+            target_hc = char_values[CHAR_TARGET_HEATING_COOLING]
+            if target_hc not in self.hc_homekit_to_hass:
+                # If the target heating cooling state we want does not
+                # exist on the device, we have to sort it out
+                # based on the the current and target temperature since
+                # siri will always send HC_HEAT_COOL_AUTO in this case
+                # and hope for the best.
+                hc_target_temp = char_values.get(CHAR_TARGET_TEMPERATURE)
+                hc_current_temp = _get_current_temperature(state, self._unit)
+                hc_fallback_order = HC_HEAT_COOL_PREFER_HEAT
+                if (
+                    hc_target_temp is not None
+                    and hc_current_temp is not None
+                    and hc_target_temp < hc_current_temp
+                ):
+                    hc_fallback_order = HC_HEAT_COOL_PREFER_COOL
+                for hc_fallback in hc_fallback_order:
+                    if hc_fallback in self.hc_homekit_to_hass:
+                        _LOGGER.debug(
+                            "Siri requested target mode: %s and the device does not support, falling back to %s",
+                            target_hc,
+                            hc_fallback,
+                        )
+                        target_hc = hc_fallback
+                        break
+
+            service = SERVICE_SET_HVAC_MODE_THERMOSTAT
+            hass_value = self.hc_homekit_to_hass[target_hc]
+            params = {ATTR_HVAC_MODE: hass_value}
+            events.append(
+                f"{CHAR_TARGET_HEATING_COOLING} to {char_values[CHAR_TARGET_HEATING_COOLING]}"
+            )
 
         if CHAR_TARGET_TEMPERATURE in char_values:
             hc_target_temp = char_values[CHAR_TARGET_TEMPERATURE]
@@ -324,7 +358,7 @@ class Thermostat(HomeAccessory):
 
         if service:
             params[ATTR_ENTITY_ID] = self.entity_id
-            self.call_service(
+            self.async_call_service(
                 DOMAIN_CLIMATE,
                 service,
                 params,
@@ -375,7 +409,7 @@ class Thermostat(HomeAccessory):
         """Set target humidity to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set target humidity to %d", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: value}
-        self.call_service(
+        self.async_call_service(
             DOMAIN_CLIMATE, SERVICE_SET_HUMIDITY, params, f"{value}{PERCENTAGE}"
         )
 
@@ -429,25 +463,27 @@ class Thermostat(HomeAccessory):
                 self.char_current_heat_cool.set_value(homekit_hvac_action)
 
         # Update current temperature
-        current_temp = new_state.attributes.get(ATTR_CURRENT_TEMPERATURE)
-        if isinstance(current_temp, (int, float)):
-            current_temp = self._temperature_to_homekit(current_temp)
-            if self.char_current_temp.value != current_temp:
-                self.char_current_temp.set_value(current_temp)
+        current_temp = _get_current_temperature(new_state, self._unit)
+        if current_temp is not None and self.char_current_temp.value != current_temp:
+            self.char_current_temp.set_value(current_temp)
 
         # Update current humidity
         if CHAR_CURRENT_HUMIDITY in self.chars:
             current_humdity = new_state.attributes.get(ATTR_CURRENT_HUMIDITY)
-            if isinstance(current_humdity, (int, float)):
-                if self.char_current_humidity.value != current_humdity:
-                    self.char_current_humidity.set_value(current_humdity)
+            if (
+                isinstance(current_humdity, (int, float))
+                and self.char_current_humidity.value != current_humdity
+            ):
+                self.char_current_humidity.set_value(current_humdity)
 
         # Update target humidity
         if CHAR_TARGET_HUMIDITY in self.chars:
             target_humdity = new_state.attributes.get(ATTR_HUMIDITY)
-            if isinstance(target_humdity, (int, float)):
-                if self.char_target_humidity.value != target_humdity:
-                    self.char_target_humidity.set_value(target_humdity)
+            if (
+                isinstance(target_humdity, (int, float))
+                and self.char_target_humidity.value != target_humdity
+            ):
+                self.char_target_humidity.set_value(target_humdity)
 
         # Update cooling threshold temperature if characteristic exists
         if self.char_cooling_thresh_temp:
@@ -466,10 +502,8 @@ class Thermostat(HomeAccessory):
                     self.char_heating_thresh_temp.set_value(heating_thresh)
 
         # Update target temperature
-        target_temp = new_state.attributes.get(ATTR_TEMPERATURE)
-        if isinstance(target_temp, (int, float)):
-            target_temp = self._temperature_to_homekit(target_temp)
-        elif features & SUPPORT_TARGET_TEMPERATURE_RANGE:
+        target_temp = _get_target_temperature(new_state, self._unit)
+        if target_temp is None and features & SUPPORT_TARGET_TEMPERATURE_RANGE:
             # Homekit expects a target temperature
             # even if the device does not support it
             hc_hvac_mode = self.char_target_heat_cool.value
@@ -546,16 +580,15 @@ class WaterHeater(HomeAccessory):
         """Change operation mode to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set heat-cool to %d", self.entity_id, value)
         hass_value = HC_HOMEKIT_TO_HASS[value]
-        if hass_value != HVAC_MODE_HEAT:
-            if self.char_target_heat_cool.value != 1:
-                self.char_target_heat_cool.set_value(1)  # Heat
+        if hass_value != HVAC_MODE_HEAT and self.char_target_heat_cool.value != 1:
+            self.char_target_heat_cool.set_value(1)  # Heat
 
     def set_target_temperature(self, value):
         """Set target temperature to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set target temperature to %.1f°C", self.entity_id, value)
         temperature = temperature_to_states(value, self._unit)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_TEMPERATURE: temperature}
-        self.call_service(
+        self.async_call_service(
             DOMAIN_WATER_HEATER,
             SERVICE_SET_TEMPERATURE_WATER_HEATER,
             params,
@@ -566,11 +599,19 @@ class WaterHeater(HomeAccessory):
     def async_update_state(self, new_state):
         """Update water_heater state after state change."""
         # Update current and target temperature
-        temperature = new_state.attributes.get(ATTR_TEMPERATURE)
-        if isinstance(temperature, (int, float)):
-            temperature = temperature_to_homekit(temperature, self._unit)
-            if temperature != self.char_current_temp.value:
-                self.char_target_temp.set_value(temperature)
+        target_temperature = _get_target_temperature(new_state, self._unit)
+        if (
+            target_temperature is not None
+            and target_temperature != self.char_target_temp.value
+        ):
+            self.char_target_temp.set_value(target_temperature)
+
+        current_temperature = _get_current_temperature(new_state, self._unit)
+        if (
+            current_temperature is not None
+            and current_temperature != self.char_current_temp.value
+        ):
+            self.char_current_temp.set_value(current_temperature)
 
         # Update display units
         if self._unit and self._unit in UNIT_HASS_TO_HOMEKIT:
@@ -606,3 +647,19 @@ def _get_temperature_range_from_state(state, unit, default_min, default_max):
         max_temp = min_temp
 
     return min_temp, max_temp
+
+
+def _get_target_temperature(state, unit):
+    """Calculate the target temperature from a state."""
+    target_temp = state.attributes.get(ATTR_TEMPERATURE)
+    if isinstance(target_temp, (int, float)):
+        return temperature_to_homekit(target_temp, unit)
+    return None
+
+
+def _get_current_temperature(state, unit):
+    """Calculate the current temperature from a state."""
+    target_temp = state.attributes.get(ATTR_CURRENT_TEMPERATURE)
+    if isinstance(target_temp, (int, float)):
+        return temperature_to_homekit(target_temp, unit)
+    return None

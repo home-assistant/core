@@ -16,6 +16,7 @@
             },
             "user": {
                 "data": {
+                    "scan_interval": "Aktualisierungsintervall (Sekunden, mindestens 30)",
                     "usn": "Ger\u00e4t"
                 }
             }

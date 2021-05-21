@@ -14,13 +14,12 @@ from homeassistant.components.ffmpeg import (
     DATA_FFMPEG,
     FFmpegBase,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_REPEAT
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 CONF_RESET = "reset"
 CONF_CHANGES = "changes"
-CONF_REPEAT = "repeat"
 CONF_REPEAT_TIME = "repeat_time"
 
 DEFAULT_NAME = "FFmpeg Motion"
@@ -88,7 +87,6 @@ class FFmpegMotion(FFmpegBinarySensor):
 
     def __init__(self, hass, manager, config):
         """Initialize FFmpeg motion binary sensor."""
-
         super().__init__(config)
         self.ffmpeg = ffmpeg_sensor.SensorMotion(manager.binary, self._async_callback)
 

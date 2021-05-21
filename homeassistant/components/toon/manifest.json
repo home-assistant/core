@@ -6,5 +6,12 @@
   "requirements": ["toonapi==0.2.0"],
   "dependencies": ["http"],
   "after_dependencies": ["cloud"],
-  "codeowners": ["@frenck"]
+  "codeowners": ["@frenck"],
+  "dhcp": [
+    {
+      "hostname": "eneco-*",
+      "macaddress": "74C63B*"
+    }
+  ],
+  "iot_class": "cloud_push"
 }

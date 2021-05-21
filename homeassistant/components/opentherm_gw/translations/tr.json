@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "device": "Yol veya URL"
+                },
+                "title": "OpenTherm A\u011f Ge\u00e7idi"
+            }
+        }
+    }
+}

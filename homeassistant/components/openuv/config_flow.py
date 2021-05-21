@@ -12,7 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -28,7 +28,6 @@ class OpenUvFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle an OpenUV config flow."""
 
     VERSION = 2
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def _show_form(self, errors=None):
         """Show the form to the user."""

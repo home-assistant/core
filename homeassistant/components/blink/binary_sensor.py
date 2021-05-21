@@ -45,6 +45,11 @@ class BlinkBinarySensor(BinarySensorEntity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return self._unique_id
+
+    @property
     def device_class(self):
         """Return the class of this device."""
         return self._device_class

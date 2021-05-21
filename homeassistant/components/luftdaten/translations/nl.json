@@ -2,6 +2,7 @@
     "config": {
         "error": {
             "already_configured": "Service is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_sensor": "Sensor niet beschikbaar of ongeldig"
         },
         "step": {

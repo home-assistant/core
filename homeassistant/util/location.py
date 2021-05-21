@@ -3,10 +3,12 @@ Module with location helpers.
 
 detect_location_info and elevation are mocked by default during tests.
 """
+from __future__ import annotations
+
 import asyncio
 import collections
 import math
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 import aiohttp
 
@@ -47,7 +49,7 @@ LocationInfo = collections.namedtuple(
 
 async def async_detect_location_info(
     session: aiohttp.ClientSession,
-) -> Optional[LocationInfo]:
+) -> LocationInfo | None:
     """Detect location information."""
     data = await _get_ipapi(session)
 
@@ -63,8 +65,8 @@ async def async_detect_location_info(
 
 
 def distance(
-    lat1: Optional[float], lon1: Optional[float], lat2: float, lon2: float
-) -> Optional[float]:
+    lat1: float | None, lon1: float | None, lat2: float, lon2: float
+) -> float | None:
     """Calculate the distance in meters between two points.
 
     Async friendly.
@@ -81,8 +83,8 @@ def distance(
 # Source: https://github.com/maurycyp/vincenty
 # License: https://github.com/maurycyp/vincenty/blob/master/LICENSE
 def vincenty(
-    point1: Tuple[float, float], point2: Tuple[float, float], miles: bool = False
-) -> Optional[float]:
+    point1: tuple[float, float], point2: tuple[float, float], miles: bool = False
+) -> float | None:
     """
     Vincenty formula (inverse method) to calculate the distance.
 
@@ -162,7 +164,7 @@ def vincenty(
     return round(s, 6)
 
 
-async def _get_ipapi(session: aiohttp.ClientSession) -> Optional[Dict[str, Any]]:
+async def _get_ipapi(session: aiohttp.ClientSession) -> dict[str, Any] | None:
     """Query ipapi.co for location data."""
     try:
         resp = await session.get(IPAPI, timeout=5)
@@ -192,7 +194,7 @@ async def _get_ipapi(session: aiohttp.ClientSession) -> Optional[Dict[str, Any]]
     }
 
 
-async def _get_ip_api(session: aiohttp.ClientSession) -> Optional[Dict[str, Any]]:
+async def _get_ip_api(session: aiohttp.ClientSession) -> dict[str, Any] | None:
     """Query ip-api.com for location data."""
     try:
         resp = await session.get(IP_API, timeout=5)

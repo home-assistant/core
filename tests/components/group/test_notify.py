@@ -1,5 +1,6 @@
 """The tests for the notify.group platform."""
 from os import path
+from unittest.mock import MagicMock, patch
 
 from homeassistant import config as hass_config
 import homeassistant.components.demo.notify as demo
@@ -7,8 +8,6 @@ from homeassistant.components.group import SERVICE_RELOAD
 import homeassistant.components.group.notify as group
 import homeassistant.components.notify as notify
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import MagicMock, patch
 
 
 async def test_send_message_with_data(hass):

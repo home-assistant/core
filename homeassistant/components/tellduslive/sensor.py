@@ -1,5 +1,6 @@
 """Support for Tellstick Net/Telstick Live sensors."""
 from homeassistant.components import sensor, tellduslive
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -71,7 +72,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class TelldusLiveSensor(TelldusLiveEntity):
+class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
     """Representation of a Telldus Live sensor."""
 
     @property

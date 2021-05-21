@@ -1,5 +1,6 @@
 """The tests for mqtt camera component."""
 import json
+from unittest.mock import patch
 
 import pytest
 
@@ -30,7 +31,6 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message
 
 DEFAULT_CONFIG = {

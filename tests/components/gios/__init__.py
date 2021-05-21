@@ -1,9 +1,9 @@
 """Tests for GIOS."""
 import json
+from unittest.mock import patch
 
 from homeassistant.components.gios.const import DOMAIN
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 STATIONS = [
@@ -17,7 +17,7 @@ async def init_integration(hass, incomplete_data=False) -> MockConfigEntry:
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
-        unique_id=123,
+        unique_id="123",
         data={"station_id": 123, "name": "Home"},
     )
 
@@ -26,8 +26,8 @@ async def init_integration(hass, incomplete_data=False) -> MockConfigEntry:
     sensors = json.loads(load_fixture("gios/sensors.json"))
     if incomplete_data:
         indexes["stIndexLevel"]["indexLevelName"] = "foo"
-        sensors["PM10"]["values"][0]["value"] = None
-        sensors["PM10"]["values"][1]["value"] = None
+        sensors["pm10"]["values"][0]["value"] = None
+        sensors["pm10"]["values"][1]["value"] = None
 
     with patch(
         "homeassistant.components.gios.Gios._get_stations", return_value=STATIONS

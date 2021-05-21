@@ -1,19 +1,28 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
+        },
         "error": {
-            "unknown": "Unbekannter Awair-API-Fehler."
+            "invalid_access_token": "Ung\u00fcltiger Zugriffs-Token",
+            "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "reauth": {
                 "data": {
+                    "access_token": "Zugangstoken",
                     "email": "E-Mail"
                 },
-                "description": "Bitte geben Sie Ihr Awair-Entwicklerzugriffstoken erneut ein."
+                "description": "Bitte gib dein Awair-Entwicklerzugriffstoken erneut ein."
             },
             "user": {
                 "data": {
+                    "access_token": "Zugangstoken",
                     "email": "E-Mail"
-                }
+                },
+                "description": "Du musst dich f\u00fcr ein Awair Entwickler-Zugangs-Token registrieren unter: https://developer.getawair.com/onboard/login"
             }
         }
     }

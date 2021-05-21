@@ -56,7 +56,7 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
         async_dispatcher_connect(self.hass, SIGNAL_ZONE_UPDATE, self._update_callback)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attr = {}
 

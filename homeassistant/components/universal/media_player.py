@@ -1,9 +1,15 @@
 """Combination of multiple media players for a universal controller."""
+from __future__ import annotations
+
 from copy import copy
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    DEVICE_CLASSES_SCHEMA,
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+)
 from homeassistant.components.media_player.const import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
@@ -20,6 +26,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_PLAYLIST,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
+    ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SEASON,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SERIES_TITLE,
@@ -28,13 +35,24 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_SOUND_MODE,
+    ATTR_SOUND_MODE_LIST,
     DOMAIN,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
+    SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_REPEAT_SET,
+    SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
+    SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
@@ -45,6 +63,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
     ATTR_SUPPORTED_FEATURES,
+    CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_STATE,
     CONF_STATE_TEMPLATE,
@@ -55,7 +74,9 @@ from homeassistant.const import (
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_SEEK,
     SERVICE_MEDIA_STOP,
+    SERVICE_REPEAT_SET,
     SERVICE_SHUFFLE_SET,
+    SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
@@ -75,13 +96,10 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.service import async_call_from_config
 
 ATTR_ACTIVE_CHILD = "active_child"
-ATTR_DATA = "data"
 
 CONF_ATTRS = "attributes"
 CONF_CHILDREN = "children"
 CONF_COMMANDS = "commands"
-CONF_SERVICE = "service"
-CONF_SERVICE_DATA = "service_data"
 
 OFF_STATES = [STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE]
 
@@ -96,6 +114,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ATTRS, default={}): vol.Or(
             cv.ensure_list(ATTRS_SCHEMA), ATTRS_SCHEMA
         ),
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_TEMPLATE): cv.template,
     },
     extra=vol.REMOVE_EXTRA,
@@ -104,7 +123,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the universal media players."""
-
     await async_setup_reload_service(hass, "universal", ["media_player"])
 
     player = UniversalMediaPlayer(
@@ -113,6 +131,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         config.get(CONF_CHILDREN),
         config.get(CONF_COMMANDS),
         config.get(CONF_ATTRS),
+        config.get(CONF_DEVICE_CLASS),
         config.get(CONF_STATE_TEMPLATE),
     )
 
@@ -122,7 +141,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class UniversalMediaPlayer(MediaPlayerEntity):
     """Representation of an universal media player."""
 
-    def __init__(self, hass, name, children, commands, attributes, state_template=None):
+    def __init__(
+        self,
+        hass,
+        name,
+        children,
+        commands,
+        attributes,
+        device_class=None,
+        state_template=None,
+    ):
         """Initialize the Universal media device."""
         self.hass = hass
         self._name = name
@@ -137,6 +165,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         self._child_state = None
         self._state_template_result = None
         self._state_template = state_template
+        self._device_class = device_class
 
     async def async_added_to_hass(self):
         """Subscribe to children and template state changes."""
@@ -241,6 +270,11 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def device_class(self) -> str | None:
+        """Return the class of this device."""
+        return self._device_class
 
     @property
     def master_state(self):
@@ -383,6 +417,16 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         return self._child_attr(ATTR_APP_NAME)
 
     @property
+    def sound_mode(self):
+        """Return the current sound mode of the device."""
+        return self._override_or_child_attr(ATTR_SOUND_MODE)
+
+    @property
+    def sound_mode_list(self):
+        """List of available sound modes."""
+        return self._override_or_child_attr(ATTR_SOUND_MODE_LIST)
+
+    @property
     def source(self):
         """Return the current input source of the device."""
         return self._override_or_child_attr(ATTR_INPUT_SOURCE)
@@ -391,6 +435,11 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     def source_list(self):
         """List of available input sources."""
         return self._override_or_child_attr(ATTR_INPUT_SOURCE_LIST)
+
+    @property
+    def repeat(self):
+        """Boolean if repeating is enabled."""
+        return self._override_or_child_attr(ATTR_MEDIA_REPEAT)
 
     @property
     def shuffle(self):
@@ -407,7 +456,23 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         if SERVICE_TURN_OFF in self._cmds:
             flags |= SUPPORT_TURN_OFF
 
-        if any([cmd in self._cmds for cmd in [SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN]]):
+        if SERVICE_MEDIA_PLAY_PAUSE in self._cmds:
+            flags |= SUPPORT_PLAY | SUPPORT_PAUSE
+        else:
+            if SERVICE_MEDIA_PLAY in self._cmds:
+                flags |= SUPPORT_PLAY
+            if SERVICE_MEDIA_PAUSE in self._cmds:
+                flags |= SUPPORT_PAUSE
+
+        if SERVICE_MEDIA_STOP in self._cmds:
+            flags |= SUPPORT_STOP
+
+        if SERVICE_MEDIA_NEXT_TRACK in self._cmds:
+            flags |= SUPPORT_NEXT_TRACK
+        if SERVICE_MEDIA_PREVIOUS_TRACK in self._cmds:
+            flags |= SUPPORT_PREVIOUS_TRACK
+
+        if any(cmd in self._cmds for cmd in [SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN]):
             flags |= SUPPORT_VOLUME_STEP
         if SERVICE_VOLUME_SET in self._cmds:
             flags |= SUPPORT_VOLUME_SET
@@ -415,8 +480,14 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         if SERVICE_VOLUME_MUTE in self._cmds and ATTR_MEDIA_VOLUME_MUTED in self._attrs:
             flags |= SUPPORT_VOLUME_MUTE
 
-        if SERVICE_SELECT_SOURCE in self._cmds:
+        if (
+            SERVICE_SELECT_SOURCE in self._cmds
+            and ATTR_INPUT_SOURCE_LIST in self._attrs
+        ):
             flags |= SUPPORT_SELECT_SOURCE
+
+        if SERVICE_PLAY_MEDIA in self._cmds:
+            flags |= SUPPORT_PLAY_MEDIA
 
         if SERVICE_CLEAR_PLAYLIST in self._cmds:
             flags |= SUPPORT_CLEAR_PLAYLIST
@@ -424,10 +495,19 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         if SERVICE_SHUFFLE_SET in self._cmds and ATTR_MEDIA_SHUFFLE in self._attrs:
             flags |= SUPPORT_SHUFFLE_SET
 
+        if SERVICE_REPEAT_SET in self._cmds and ATTR_MEDIA_REPEAT in self._attrs:
+            flags |= SUPPORT_REPEAT_SET
+
+        if (
+            SERVICE_SELECT_SOUND_MODE in self._cmds
+            and ATTR_SOUND_MODE_LIST in self._attrs
+        ):
+            flags |= SUPPORT_SELECT_SOUND_MODE
+
         return flags
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         active_child = self._child_state
         return {ATTR_ACTIVE_CHILD: active_child.entity_id} if active_child else {}
@@ -462,23 +542,25 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     async def async_media_play(self):
         """Send play command."""
-        await self._async_call_service(SERVICE_MEDIA_PLAY)
+        await self._async_call_service(SERVICE_MEDIA_PLAY, allow_override=True)
 
     async def async_media_pause(self):
         """Send pause command."""
-        await self._async_call_service(SERVICE_MEDIA_PAUSE)
+        await self._async_call_service(SERVICE_MEDIA_PAUSE, allow_override=True)
 
     async def async_media_stop(self):
         """Send stop command."""
-        await self._async_call_service(SERVICE_MEDIA_STOP)
+        await self._async_call_service(SERVICE_MEDIA_STOP, allow_override=True)
 
     async def async_media_previous_track(self):
         """Send previous track command."""
-        await self._async_call_service(SERVICE_MEDIA_PREVIOUS_TRACK)
+        await self._async_call_service(
+            SERVICE_MEDIA_PREVIOUS_TRACK, allow_override=True
+        )
 
     async def async_media_next_track(self):
         """Send next track command."""
-        await self._async_call_service(SERVICE_MEDIA_NEXT_TRACK)
+        await self._async_call_service(SERVICE_MEDIA_NEXT_TRACK, allow_override=True)
 
     async def async_media_seek(self, position):
         """Send seek command."""
@@ -488,7 +570,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         data = {ATTR_MEDIA_CONTENT_TYPE: media_type, ATTR_MEDIA_CONTENT_ID: media_id}
-        await self._async_call_service(SERVICE_PLAY_MEDIA, data)
+        await self._async_call_service(SERVICE_PLAY_MEDIA, data, allow_override=True)
 
     async def async_volume_up(self):
         """Turn volume up for media player."""
@@ -500,7 +582,14 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     async def async_media_play_pause(self):
         """Play or pause the media player."""
-        await self._async_call_service(SERVICE_MEDIA_PLAY_PAUSE)
+        await self._async_call_service(SERVICE_MEDIA_PLAY_PAUSE, allow_override=True)
+
+    async def async_select_sound_mode(self, sound_mode):
+        """Select sound mode."""
+        data = {ATTR_SOUND_MODE: sound_mode}
+        await self._async_call_service(
+            SERVICE_SELECT_SOUND_MODE, data, allow_override=True
+        )
 
     async def async_select_source(self, source):
         """Set the input source."""
@@ -509,12 +598,21 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     async def async_clear_playlist(self):
         """Clear players playlist."""
-        await self._async_call_service(SERVICE_CLEAR_PLAYLIST)
+        await self._async_call_service(SERVICE_CLEAR_PLAYLIST, allow_override=True)
 
     async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffling."""
         data = {ATTR_MEDIA_SHUFFLE: shuffle}
         await self._async_call_service(SERVICE_SHUFFLE_SET, data, allow_override=True)
+
+    async def async_set_repeat(self, repeat):
+        """Set repeat mode."""
+        data = {ATTR_MEDIA_REPEAT: repeat}
+        await self._async_call_service(SERVICE_REPEAT_SET, data, allow_override=True)
+
+    async def async_toggle(self):
+        """Toggle the power on the media player."""
+        await self._async_call_service(SERVICE_TOGGLE, allow_override=True)
 
     async def async_update(self):
         """Update state in HA."""
