@@ -10,6 +10,9 @@
             "reauth_successful": "Re-authentication was successful",
             "unknown": "Unexpected error"
         },
+        "error": {
+            "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Please check your TV's settings to authorize Home Assistant."
+        },
         "flow_title": "{device}",
         "step": {
             "confirm": {
