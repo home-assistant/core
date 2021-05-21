@@ -1,16 +1,14 @@
 {
   "domain": "wallbox",
   "name": "Wallbox",
+  "version": "1.0.0",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wallbox",
-  "requirements": [
-    "wallbox==0.4.4"
-  ],
+  "requirements": ["wallbox==0.4.4"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
-  "codeowners": [
-    "@hesselonline"
-  ]
+  "codeowners": ["@hesselonline"],
+  "iot_class": "cloud_polling"
 }

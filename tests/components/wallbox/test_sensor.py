@@ -29,11 +29,11 @@ test_response_rounding_error = json.loads(
     '{"charging_power": "XX","max_available_power": "xx","charging_speed": 0,"added_range": "xx","added_energy": "XX"}'
 )
 
-station = ("12345",)
-username = ("test-username",)
-password = "test-password"
+CONF_STATION = ("12345",)
+CONF_USERNAME = ("test-username",)
+CONF_PASSWORD = "test-password"
 
-wallbox = WallboxHub(station, username, password)
+wallbox = WallboxHub(CONF_STATION, CONF_USERNAME, CONF_PASSWORD)
 
 
 async def test_wallbox_sensor_class():

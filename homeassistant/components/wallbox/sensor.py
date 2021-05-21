@@ -1,6 +1,7 @@
 """Home Assistant component for accessing the Wallbox Portal API. The sensor component creates multiple sensors regarding wallbox performance."""
 
 from datetime import timedelta
+from homeassistant.const import CONF_UNIT_OF_MEASUREMENT
 import logging
 
 from homeassistant.helpers.entity import Entity
@@ -9,7 +10,15 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONF_CONNECTIONS, DOMAIN, SENSOR_TYPES
+from .const import (
+    CONF_CONNECTIONS,
+    DOMAIN,
+    CONF_SENSOR_TYPES,
+    CONF_ROUND,
+    CONF_ICON,
+    CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT,
+)
 
 CONF_STATION = "station"
 UPDATE_INTERVAL = 30
@@ -22,10 +31,10 @@ async def wallbox_updater(wallbox, hass):
     """Get new sensor data for Wallbox component."""
     data = await wallbox.async_get_data(hass)
 
-    filtered_data = {k: data[k] for k in SENSOR_TYPES if k in data}
+    filtered_data = {k: data[k] for k in CONF_SENSOR_TYPES if k in data}
 
     for key, value in filtered_data.items():
-        sensor_round = SENSOR_TYPES[key]["ST_ROUND"]
+        sensor_round = CONF_SENSOR_TYPES[key][CONF_ROUND]
         if sensor_round:
             try:
                 filtered_data[key] = round(value, sensor_round)
@@ -52,7 +61,7 @@ async def async_setup_entry(hass, config, async_add_entities):
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     async_add_entities(
         WallboxSensor(coordinator, idx, ent, config)
@@ -66,10 +75,10 @@ class WallboxSensor(CoordinatorEntity, Entity):
     def __init__(self, coordinator, idx, ent, config):
         """Initialize a Wallbox sensor."""
         super().__init__(coordinator)
-        self._properties = SENSOR_TYPES[ent]
-        self._name = f"{config.title} {self._properties['ST_LABEL']}"
-        self._icon = self._properties["ST_ICON"]
-        self._unit = self._properties["ST_UNIT"]
+        self._properties = CONF_SENSOR_TYPES[ent]
+        self._name = f"{config.title} {self._properties[CONF_NAME]}"
+        self._icon = self._properties[CONF_ICON]
+        self._unit = self._properties[CONF_UNIT_OF_MEASUREMENT]
         self._ent = ent
 
     @property
