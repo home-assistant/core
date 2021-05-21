@@ -90,6 +90,11 @@ class HTU21DSensor(SensorEntity):
         """Return the state of the sensor."""
         return self._state
 
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of the sensor."""
+        return self._unit_of_measurement
+
     async def async_update(self):
         """Get the latest data from the HTU21D sensor and update the state."""
         await self.hass.async_add_executor_job(self._client.update)

@@ -86,6 +86,11 @@ class VL53L1XSensor(SensorEntity):
         """Return the state of the sensor."""
         return self._state
 
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement."""
+        return self._unit_of_measurement
+
     def update(self):
         """Get the latest measurement and update state."""
         if self.init:

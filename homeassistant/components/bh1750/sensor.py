@@ -118,6 +118,11 @@ class BH1750Sensor(SensorEntity):
         return self._state
 
     @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of the sensor."""
+        return self._unit_of_measurement
+
+    @property
     def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASS_ILLUMINANCE

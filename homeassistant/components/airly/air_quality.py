@@ -73,6 +73,11 @@ class AirlyAirQuality(CoordinatorEntity, AirQualityEntity):
         return self._name
 
     @property
+    def icon(self) -> str:
+        """Return the icon."""
+        return self._icon
+
+    @property
     def air_quality_index(self) -> float | None:
         """Return the air quality index."""
         return round_state(self.coordinator.data[ATTR_API_CAQI])

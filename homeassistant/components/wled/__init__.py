@@ -154,6 +154,11 @@ class WLEDEntity(CoordinatorEntity):
         return self._name
 
     @property
+    def icon(self) -> str:
+        """Return the mdi icon of the entity."""
+        return self._icon
+
+    @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._enabled_default
