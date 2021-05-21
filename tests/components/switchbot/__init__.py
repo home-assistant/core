@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.switchbot.const import DOMAIN
-from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD
+from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -23,6 +23,7 @@ YAML_CONFIG = {
     CONF_NAME: "test-name",
     CONF_PASSWORD: "test-password",
     CONF_MAC: "00:00:00",
+    CONF_SENSOR_TYPE: "bot",
 }
 
 

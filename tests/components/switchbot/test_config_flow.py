@@ -4,6 +4,7 @@ from pygatt.exceptions import NotConnectedError
 
 from homeassistant.components.switchbot.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -35,10 +36,10 @@ async def test_user_form(hass, switchbot_config_flow):
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "test-name"
     assert result["data"] == {
-        "mac": "00:00:00",
-        "name": "test-name",
-        "password": "test-password",
-        "sensor_type": "bot",
+        CONF_MAC: "00:00:00",
+        CONF_NAME: "test-name",
+        CONF_PASSWORD: "test-password",
+        CONF_SENSOR_TYPE: "bot",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -72,10 +73,10 @@ async def test_async_step_import(hass):
         )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
-        "mac": "00:00:00",
-        "name": "test-name",
-        "password": "test-password",
-        "sensor_type": "bot",
+        CONF_MAC: "00:00:00",
+        CONF_NAME: "test-name",
+        CONF_PASSWORD: "test-password",
+        CONF_SENSOR_TYPE: "bot",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1

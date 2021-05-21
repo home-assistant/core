@@ -35,7 +35,12 @@ def setup_platform(hass, config, async_add_entities, discovery_info=None):
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data=config,
+            data={
+                CONF_NAME: config[CONF_NAME],
+                CONF_PASSWORD: config.get(CONF_PASSWORD, None),
+                CONF_MAC: config[CONF_MAC],
+                CONF_SENSOR_TYPE: ATTR_BOT,
+            },
         )
     )
 
@@ -43,26 +48,18 @@ def setup_platform(hass, config, async_add_entities, discovery_info=None):
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Switchbot based on a config entry."""
 
-    switchbot_config_entries = hass.config_entries.async_entries(DOMAIN)
+    device = []
 
-    switchbot_bot_entries = [
-        item
-        for item in switchbot_config_entries
-        if item.data[CONF_SENSOR_TYPE] == ATTR_BOT
-    ]
-
-    devices = []
-
-    for device in switchbot_bot_entries:
-        devices.append(
+    if entry.data[CONF_SENSOR_TYPE] == ATTR_BOT:
+        device.append(
             SwitchBot(
-                device.data[CONF_MAC],
-                device.data[CONF_NAME],
-                device.data.get(CONF_PASSWORD, None),
+                entry.data[CONF_MAC],
+                entry.data[CONF_NAME],
+                entry.data.get(CONF_PASSWORD, None),
             )
         )
 
-    async_add_entities(devices)
+    async_add_entities(device)
 
 
 class SwitchBot(SwitchEntity, RestoreEntity):

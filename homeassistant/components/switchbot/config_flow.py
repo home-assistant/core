@@ -87,11 +87,6 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(import_config[CONF_MAC].replace(":", ""))
         self._abort_if_unique_id_configured()
 
-        # Add type to import_config.
-        # Currently integration only supports bot.
-        # More than one type exists.
-        import_config[CONF_SENSOR_TYPE] = ATTR_BOT
-
         return self.async_create_entry(
             title=import_config[CONF_NAME], data=import_config
         )
