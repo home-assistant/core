@@ -94,7 +94,10 @@ class SamsungTVDevice(MediaPlayerEntity):
         self.hass.add_job(
             self.hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": SOURCE_REAUTH},
+                context={
+                    "source": SOURCE_REAUTH,
+                    "entry_id": self._config_entry.entry_id,
+                },
                 data=self._config_entry.data,
             )
         )
