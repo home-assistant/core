@@ -32,13 +32,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         await base.update_data()
     except TimeoutError as err:
         raise exceptions.ConfigEntryNotReady from err
+
     base_uh = Alpha2BaseUpdateHandler(base, 60)
     hass.data.setdefault(DOMAIN, {"connections": {}, "devices": set()})
     hass.data[DOMAIN]["connections"][entry.entry_id] = base_uh
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
     return True
 
 
