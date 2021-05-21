@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow
-from homeassistant.components.totalconnect.const import CONF_LOCATION, DOMAIN
+from homeassistant.components.totalconnect.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD
 
