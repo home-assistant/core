@@ -168,6 +168,11 @@ class Entity(ABC):
     # If entity is added to an entity platform
     _added = False
 
+    # Entity Properties
+    DEVICE_CLASS: str | None = None
+    ICON: str | None = None
+    UNIT_OF_MEASUREMENT: str | None = None
+
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -240,17 +245,17 @@ class Entity(ABC):
     @property
     def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return None
+        return self.DEVICE_CLASS
 
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
-        return None
+        return self.UNIT_OF_MEASUREMENT
 
     @property
     def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
-        return None
+        return self.ICON
 
     @property
     def entity_picture(self) -> str | None:

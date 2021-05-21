@@ -49,6 +49,9 @@ good-names = [
     "k",
     "Run",
     "T",
+    "DEVICE_CLASS",
+    "ICON",
+    "UNIT_OF_MEASUREMENT",
 ]
 
 [tool.pylint."MESSAGES CONTROL"]
