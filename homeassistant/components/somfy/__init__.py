@@ -20,9 +20,8 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import api
+from . import api, config_flow
 from .const import API, COORDINATOR, DOMAIN
-from .somfy import config_flow
 
 _LOGGER = logging.getLogger(__name__)
 
