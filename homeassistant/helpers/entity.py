@@ -169,9 +169,9 @@ class Entity(ABC):
     _added = False
 
     # Entity Properties
-    attr_device_class: str | None = None
-    attr_icon: str | None = None
-    attr_unit_of_measurement: str | None = None
+    _attr_device_class: str | None = None
+    _attr_icon: str | None = None
+    _attr_unit_of_measurement: str | None = None
 
     @property
     def should_poll(self) -> bool:
@@ -245,17 +245,17 @@ class Entity(ABC):
     @property
     def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return self.attr_device_class
+        return self._attr_device_class
 
     @property
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
-        return self.attr_unit_of_measurement
+        return self._attr_unit_of_measurement
 
     @property
     def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
-        return self.attr_icon
+        return self._attr_icon
 
     @property
     def entity_picture(self) -> str | None:

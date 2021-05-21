@@ -102,9 +102,9 @@ class NUTSensor(CoordinatorEntity, SensorEntity):
         self._data = data
         self._unique_id = unique_id
 
-        self.attr_device_class = SENSOR_TYPES[self._type][SENSOR_DEVICE_CLASS]
-        self.attr_icon = SENSOR_TYPES[self._type][SENSOR_ICON]
-        self.attr_unit_of_measurement = SENSOR_TYPES[sensor_type][SENSOR_UNIT]
+        self._attr_device_class = SENSOR_TYPES[self._type][SENSOR_DEVICE_CLASS]
+        self._attr_icon = SENSOR_TYPES[self._type][SENSOR_ICON]
+        self._attr_unit_of_measurement = SENSOR_TYPES[sensor_type][SENSOR_UNIT]
 
     @property
     def device_info(self):
