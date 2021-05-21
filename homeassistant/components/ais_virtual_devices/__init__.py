@@ -36,9 +36,9 @@ async def async_setup(hass, config):
         {"friendly_name": "Unikalny identyfikator bramki"},
     )
     hass.states.async_set("sensor.selected_entity", "", {})
-
+    hass.states.async_set("sensor.ais_speech_status", "DONE", {})
     hass.states.async_set(
-        "binary_sensor.ais_remote_button", "", {"friendly_name": "Przycisk w pilocie"}
+        "binary_sensor.ais_remote_button", "", {"friendly_name": "Kod przycisku"}
     )
 
     hass.states.async_set(

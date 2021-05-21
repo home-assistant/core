@@ -3357,9 +3357,12 @@ def _process_command_from_frame(hass, service):
         _say_it(hass, service.data["payload"])
         return
     elif service.data["topic"] == "ais/speech_status":
-        # TODO pause/resume, service.data["payload"] can be: START -> DONE/ERROR
+        # AIS service.data["payload"] can be: START -> DONE/ERROR
         event_data = {"status": str(service.data["payload"])}
-        hass.bus.fire("ais_speech_done", event_data)
+        hass.bus.fire("ais_speech_status", event_data)
+        hass.states.async_set(
+            "sensor.ais_speech_status", str(service.data["payload"]), {}
+        )
         _LOGGER.debug("speech_status: " + str(service.data["payload"]))
         return
     elif service.data["topic"] == "ais/add_bookmark":

@@ -1,20 +1,15 @@
 #!/bin/sh
-echo "AIS release script starting for 21.02.19 on chanel 3" 
+echo "AIS release script starting for 21.03.24 on chanel 2" 
+pip install python-miio==0.5.5 -U  
+
+echo "21.04.08" > /data/data/pl.sviete.dom/files/home/AIS/.ais_apt  
 apt update 
 
-apt upgrade  -y 
+DEBIAN_FRONTEND=noninteractive apt -y upgrade 
 
 apt reinstall python 
 
-curl -o "/sdcard/AisLauncher.apk" -L https://powiedz.co/ota/android/AisLauncher.apk 
+pip install python-miio==0.5.5 -U  
 
-su -c "pm install -r /sdcard/AisLauncher.apk" 
-
-echo "# AIS Config file for mosquitto" > "/data/data/pl.sviete.dom/files/usr/etc/mosquitto/mosquitto.conf"  
-
-echo "listener 1883 0.0.0.0" >> "/data/data/pl.sviete.dom/files/usr/etc/mosquitto/mosquitto.conf"  
-
-echo "allow_anonymous true" >> "/data/data/pl.sviete.dom/files/usr/etc/mosquitto/mosquitto.conf"  
-
-echo "21.03.24" > /data/data/pl.sviete.dom/files/home/AIS/.ais_apt  
+echo "21.05.18" > /data/data/pl.sviete.dom/files/home/AIS/.ais_apt  
 
