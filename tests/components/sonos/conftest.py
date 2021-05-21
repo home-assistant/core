@@ -32,6 +32,7 @@ def soco_fixture(music_library, speaker_info, battery_info, dummy_soco_service):
         mock_soco.zoneGroupTopology = dummy_soco_service
         mock_soco.contentDirectory = dummy_soco_service
         mock_soco.deviceProperties = dummy_soco_service
+        mock_soco.alarmClock = dummy_soco_service
         mock_soco.mute = False
         mock_soco.night_mode = True
         mock_soco.dialog_mode = True

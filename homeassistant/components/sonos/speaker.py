@@ -218,8 +218,8 @@ class SonosSpeaker:
         self.available_alarms, _ = fetch_alarms_for_speaker(self.soco)
         if bool(self.available_alarms):
             dispatcher_send(self.hass, SONOS_CREATE_ALARM, self)
-
-        self._platforms_ready.update({SWITCH_DOMAIN})
+        else:
+            self._platforms_ready.add(SWITCH_DOMAIN)
 
         dispatcher_send(self.hass, SONOS_CREATE_MEDIA_PLAYER, self)
 
@@ -412,11 +412,11 @@ class SonosSpeaker:
             if alarm_id not in all_alarm_ids:
                 self.hass.data[DATA_SONOS].alarms.remove(alarm_id)
 
-        async_dispatcher_send(self.hass, SONOS_ALARM_UPDATE, self)
-
         for alarm in self.available_alarms:
             if alarm.alarm_id not in self.hass.data[DATA_SONOS].alarms:
                 async_dispatcher_send(self.hass, SONOS_CREATE_ALARM, self)
+
+        async_dispatcher_send(self.hass, SONOS_ALARM_UPDATE, self)
 
         self.async_write_entity_states()
 
