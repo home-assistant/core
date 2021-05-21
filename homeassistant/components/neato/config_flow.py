@@ -1,10 +1,10 @@
 """Config flow for Neato Botvac."""
+from __future__ import annotations
+
 import logging
-from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -17,14 +17,13 @@ class OAuth2FlowHandler(
     """Config flow to handle Neato Botvac OAuth2 authentication."""
 
     DOMAIN = NEATO_DOMAIN
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
-    async def async_step_user(self, user_input: Optional[dict] = None) -> dict:
+    async def async_step_user(self, user_input: dict | None = None) -> dict:
         """Create an entry for the flow."""
         current_entries = self._async_current_entries()
         if current_entries and CONF_TOKEN in current_entries[0].data:
@@ -37,9 +36,7 @@ class OAuth2FlowHandler(
         """Perform reauth upon migration of old entries."""
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(
-        self, user_input: Optional[dict] = None
-    ) -> dict:
+    async def async_step_reauth_confirm(self, user_input: dict | None = None) -> dict:
         """Confirm reauth upon migration of old entries."""
         if user_input is None:
             return self.async_show_form(

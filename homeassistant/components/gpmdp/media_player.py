@@ -227,9 +227,8 @@ class GPMDP(MediaPlayerEntity):
                 return
             while True:
                 msg = json.loads(websocket.recv())
-                if "requestID" in msg:
-                    if msg["requestID"] == self._request_id:
-                        return msg
+                if "requestID" in msg and msg["requestID"] == self._request_id:
+                    return msg
         except (
             ConnectionRefusedError,
             ConnectionResetError,

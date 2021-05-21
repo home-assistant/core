@@ -21,6 +21,7 @@
         "step": {
             "init": {
                 "data": {
+                    "ph_offset": "Desplazamiento del pH (positivo o negativo)",
                     "polling_interval": "Intervalo de sondeo (en segundos)"
                 }
             }

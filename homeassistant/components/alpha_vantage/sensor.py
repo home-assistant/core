@@ -6,10 +6,9 @@ from alpha_vantage.foreignexchange import ForeignExchange
 from alpha_vantage.timeseries import TimeSeries
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_CURRENCY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,7 +104,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     _LOGGER.debug("Setup completed")
 
 
-class AlphaVantageSensor(Entity):
+class AlphaVantageSensor(SensorEntity):
     """Representation of a Alpha Vantage sensor."""
 
     def __init__(self, timeseries, symbol):
@@ -156,7 +155,7 @@ class AlphaVantageSensor(Entity):
         _LOGGER.debug("Received new values for symbol %s", self._symbol)
 
 
-class AlphaVantageForeignExchange(Entity):
+class AlphaVantageForeignExchange(SensorEntity):
     """Sensor for foreign exchange rates."""
 
     def __init__(self, foreign_exchange, config):

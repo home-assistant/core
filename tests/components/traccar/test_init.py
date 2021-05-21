@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import traccar, zone
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.traccar import DOMAIN, TRACKER_UPDATE
@@ -66,7 +66,7 @@ async def webhook_id_fixture(hass, client):
         {"external_url": "http://example.com"},
     )
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM, result
 
@@ -114,7 +114,7 @@ async def test_enter_and_exit(hass, client, webhook_id):
     state_name = hass.states.get(
         "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
     ).state
-    assert STATE_HOME == state_name
+    assert state_name == STATE_HOME
 
     # Enter Home again
     req = await client.post(url, params=data)
@@ -123,7 +123,7 @@ async def test_enter_and_exit(hass, client, webhook_id):
     state_name = hass.states.get(
         "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
     ).state
-    assert STATE_HOME == state_name
+    assert state_name == STATE_HOME
 
     data["lon"] = 0
     data["lat"] = 0
@@ -135,7 +135,7 @@ async def test_enter_and_exit(hass, client, webhook_id):
     state_name = hass.states.get(
         "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
     ).state
-    assert STATE_NOT_HOME == state_name
+    assert state_name == STATE_NOT_HOME
 
     dev_reg = dr.async_get(hass)
     assert len(dev_reg.devices) == 1
@@ -237,7 +237,7 @@ async def test_load_unload_entry(hass, client, webhook_id):
     state_name = hass.states.get(
         "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
     ).state
-    assert STATE_HOME == state_name
+    assert state_name == STATE_HOME
     assert len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE]) == 1
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]

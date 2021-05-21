@@ -6,8 +6,7 @@
   "codeowners": ["@Swamp-Ig"],
   "config_flow": true,
   "homekit": {
-    "models": [
-      "iZone"
-    ]
-  }  
+    "models": ["iZone"]
+  },
+  "iot_class": "local_push"
 }

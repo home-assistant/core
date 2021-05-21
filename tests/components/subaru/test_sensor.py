@@ -1,4 +1,6 @@
 """Test Subaru sensors."""
+from unittest.mock import patch
+
 from homeassistant.components.subaru.const import VEHICLE_NAME
 from homeassistant.components.subaru.sensor import (
     API_GEN_2_SENSORS,
@@ -19,20 +21,25 @@ from .api_responses import (
     VEHICLE_STATUS_EV,
 )
 
-from tests.components.subaru.conftest import setup_subaru_integration
+from tests.components.subaru.conftest import (
+    MOCK_API_FETCH,
+    MOCK_API_GET_DATA,
+    advance_time_to_next_fetch,
+)
 
 VEHICLE_NAME = VEHICLE_DATA[TEST_VIN_2_EV][VEHICLE_NAME]
 
 
-async def test_sensors_ev_imperial(hass):
+async def test_sensors_ev_imperial(hass, ev_entry):
     """Test sensors supporting imperial units."""
     hass.config.units = IMPERIAL_SYSTEM
-    await setup_subaru_integration(
-        hass,
-        vehicle_list=[TEST_VIN_2_EV],
-        vehicle_data=VEHICLE_DATA[TEST_VIN_2_EV],
-        vehicle_status=VEHICLE_STATUS_EV,
-    )
+
+    with patch(MOCK_API_FETCH), patch(
+        MOCK_API_GET_DATA, return_value=VEHICLE_STATUS_EV
+    ):
+        advance_time_to_next_fetch(hass)
+        await hass.async_block_till_done()
+
     _assert_data(hass, EXPECTED_STATE_EV_IMPERIAL)
 
 
@@ -41,14 +48,12 @@ async def test_sensors_ev_metric(hass, ev_entry):
     _assert_data(hass, EXPECTED_STATE_EV_METRIC)
 
 
-async def test_sensors_missing_vin_data(hass):
+async def test_sensors_missing_vin_data(hass, ev_entry):
     """Test for missing VIN dataset."""
-    await setup_subaru_integration(
-        hass,
-        vehicle_list=[TEST_VIN_2_EV],
-        vehicle_data=VEHICLE_DATA[TEST_VIN_2_EV],
-        vehicle_status=None,
-    )
+    with patch(MOCK_API_FETCH), patch(MOCK_API_GET_DATA, return_value=None):
+        advance_time_to_next_fetch(hass)
+        await hass.async_block_till_done()
+
     _assert_data(hass, EXPECTED_STATE_EV_UNAVAILABLE)
 
 

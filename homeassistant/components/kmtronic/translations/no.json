@@ -17,5 +17,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "reverse": "Omvendt bryterlogikk (bruk NC)"
+                }
+            }
+        }
     }
 }

@@ -1,4 +1,5 @@
 """Support for SolarEdge-local Monitoring API."""
+from contextlib import suppress
 from copy import deepcopy
 from datetime import timedelta
 import logging
@@ -8,7 +9,7 @@ from requests.exceptions import ConnectTimeout, HTTPError
 from solaredge_local import SolarEdge
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -21,7 +22,6 @@ from homeassistant.const import (
     VOLT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 DOMAIN = "solaredge_local"
@@ -231,7 +231,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities, True)
 
 
-class SolarEdgeSensor(Entity):
+class SolarEdgeSensor(SensorEntity):
     """Representation of an SolarEdge Monitoring API sensor."""
 
     def __init__(self, platform_name, data, json_key, name, unit, icon, attr):
@@ -351,19 +351,15 @@ class SolarEdgeData:
             self.info["optimizers"] = status.optimizersStatus.total
             self.info["invertertemperature"] = INVERTER_MODES[status.status]
 
-            try:
+            with suppress(IndexError):
                 if status.metersList[1]:
                     self.data["currentPowerimport"] = status.metersList[1].currentPower
                     self.data["totalEnergyimport"] = status.metersList[1].totalEnergy
-            except IndexError:
-                pass
 
-            try:
+            with suppress(IndexError):
                 if status.metersList[0]:
                     self.data["currentPowerexport"] = status.metersList[0].currentPower
                     self.data["totalEnergyexport"] = status.metersList[0].totalEnergy
-            except IndexError:
-                pass
 
         if maintenance.system.name:
             self.data["optimizertemperature"] = round(statistics.mean(temperature), 2)

@@ -15,7 +15,7 @@ from .common import ComponentFactory, new_profile_config
 
 
 async def test_binary_sensor(
-    hass: HomeAssistant, component_factory: ComponentFactory
+    hass: HomeAssistant, component_factory: ComponentFactory, current_request_with_host
 ) -> None:
     """Test binary sensor."""
     in_bed_attribute = WITHINGS_MEASUREMENTS_MAP[Measurement.IN_BED]

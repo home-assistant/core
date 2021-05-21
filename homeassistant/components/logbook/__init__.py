@@ -1,4 +1,5 @@
 """Event parser and human readable log generator."""
+from contextlib import suppress
 from datetime import timedelta
 from itertools import groupby
 import json
@@ -384,10 +385,8 @@ def humanify(hass, events, entity_attr_cache, context_lookup):
                 domain = event_data.get(ATTR_DOMAIN)
                 entity_id = event_data.get(ATTR_ENTITY_ID)
                 if domain is None and entity_id is not None:
-                    try:
+                    with suppress(IndexError):
                         domain = split_entity_id(str(entity_id))[0]
-                    except IndexError:
-                        pass
 
                 data = {
                     "when": event.time_fired_isoformat,
@@ -648,7 +647,7 @@ def _augment_data_with_context(
         return
 
     attr_entity_id = event_data.get(ATTR_ENTITY_ID)
-    if not attr_entity_id or (
+    if not isinstance(attr_entity_id, str) or (
         event_type in SCRIPT_AUTOMATION_EVENTS and attr_entity_id == entity_id
     ):
         return

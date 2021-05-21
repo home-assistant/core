@@ -4,19 +4,24 @@
             "authorize_url_timeout": "\uc778\uc99d URL \uc0dd\uc131 \uc2dc\uac04\uc774 \ucd08\uacfc\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
             "missing_configuration": "Spotify \uad6c\uc131\uc694\uc18c\uac00 \uad6c\uc131\ub418\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4. \uc124\uba85\uc11c\ub97c \ucc38\uace0\ud574\uc8fc\uc138\uc694.",
             "no_url_available": "\uc0ac\uc6a9 \uac00\ub2a5\ud55c URL\uc774 \uc5c6\uc2b5\ub2c8\ub2e4. \uc774 \uc624\ub958\uc5d0 \ub300\ud55c \uc790\uc138\ud55c \ub0b4\uc6a9\uc740 [\ub3c4\uc6c0\ub9d0 \uc139\uc158]({docs_url}) \uc744(\ub97c) \ucc38\uc870\ud574\uc8fc\uc138\uc694.",
-            "reauth_account_mismatch": "\uc778\uc99d\ub41c Spotify \uacc4\uc815\uc740 \uc7ac\uc778\uc99d\uc774 \ud544\uc694\ud55c \uacc4\uc815\uacfc \uc77c\uce58\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4."
+            "reauth_account_mismatch": "\uc778\uc99d \ubc1b\uc740 Spotify \uacc4\uc815\uc774 \uc7ac\uc778\uc99d\ud574\uc57c \ud558\ub294 \uacc4\uc815\uacfc \uc77c\uce58\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4."
         },
         "create_entry": {
-            "default": "Spotify \ub85c \uc131\uacf5\uc801\uc73c\ub85c \uc778\uc99d\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+            "default": "Spotify\ub85c \uc131\uacf5\uc801\uc73c\ub85c \uc778\uc99d\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
         },
         "step": {
             "pick_implementation": {
                 "title": "\uc778\uc99d \ubc29\ubc95 \uc120\ud0dd\ud558\uae30"
             },
             "reauth_confirm": {
-                "description": "Spotify \ud1b5\ud569\uc740 \uacc4\uc815 {account} \ub300\ud574 Spotify\ub85c \ub2e4\uc2dc \uc778\uc99d\ud574\uc57c\ud569\ub2c8\ub2e4.",
-                "title": "\ud1b5\ud569 \uad6c\uc131\uc694\uc18c \uc7ac\uc778\uc99d"
+                "description": "Spotify \uad6c\uc131\uc694\uc18c\ub294 {account} \uacc4\uc815\uc5d0 \ub300\ud574 Spotify\ub97c \uc0ac\uc6a9\ud558\uc5ec \ub2e4\uc2dc \uc778\uc99d\ud574\uc57c \ud569\ub2c8\ub2e4.",
+                "title": "\ud1b5\ud569 \uad6c\uc131\uc694\uc18c \uc7ac\uc778\uc99d\ud558\uae30"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Spotify API \uc5d4\ub4dc \ud3ec\uc778\ud2b8 \uc5f0\uacb0"
         }
     }
 }

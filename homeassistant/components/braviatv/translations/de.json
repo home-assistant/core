@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "no_ip_control": "IP-Steuerung ist auf deinen Fernseher deaktiviert oder der Fernseher wird nicht unterst\u00fctzt."
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",

@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     DOMAIN as SENSOR_DOMAIN,
+    SensorEntity,
 )
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
@@ -57,7 +58,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class ZwaveSensorBase(ZWaveDeviceEntity):
+class ZwaveSensorBase(ZWaveDeviceEntity, SensorEntity):
     """Basic Representation of a Z-Wave sensor."""
 
     @property

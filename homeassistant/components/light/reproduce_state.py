@@ -1,8 +1,11 @@
 """Reproduce an Light state."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Iterable
 import logging
 from types import MappingProxyType
-from typing import Any, Dict, Iterable, Optional
+from typing import Any
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -11,12 +14,12 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Context, State
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import Context, HomeAssistant, State
 
 from . import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
@@ -25,9 +28,18 @@ from . import (
     ATTR_KELVIN,
     ATTR_PROFILE,
     ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_HS,
+    COLOR_MODE_RGB,
+    COLOR_MODE_RGBW,
+    COLOR_MODE_RGBWW,
+    COLOR_MODE_UNKNOWN,
+    COLOR_MODE_XY,
     DOMAIN,
 )
 
@@ -48,12 +60,23 @@ COLOR_GROUP = [
     ATTR_HS_COLOR,
     ATTR_COLOR_TEMP,
     ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
     ATTR_XY_COLOR,
     # The following color attributes are deprecated
     ATTR_PROFILE,
     ATTR_COLOR_NAME,
     ATTR_KELVIN,
 ]
+
+COLOR_MODE_TO_ATTRIBUTE = {
+    COLOR_MODE_COLOR_TEMP: ATTR_COLOR_TEMP,
+    COLOR_MODE_HS: ATTR_HS_COLOR,
+    COLOR_MODE_RGB: ATTR_RGB_COLOR,
+    COLOR_MODE_RGBW: ATTR_RGBW_COLOR,
+    COLOR_MODE_RGBWW: ATTR_RGBWW_COLOR,
+    COLOR_MODE_XY: ATTR_XY_COLOR,
+}
 
 DEPRECATED_GROUP = [
     ATTR_BRIGHTNESS_PCT,
@@ -71,11 +94,11 @@ DEPRECATION_WARNING = (
 
 
 async def _async_reproduce_state(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     state: State,
     *,
-    context: Optional[Context] = None,
-    reproduce_options: Optional[Dict[str, Any]] = None,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce a single state."""
     cur_state = hass.states.get(state.entity_id)
@@ -102,7 +125,7 @@ async def _async_reproduce_state(
     ):
         return
 
-    service_data: Dict[str, Any] = {ATTR_ENTITY_ID: state.entity_id}
+    service_data: dict[str, Any] = {ATTR_ENTITY_ID: state.entity_id}
 
     if reproduce_options is not None and ATTR_TRANSITION in reproduce_options:
         service_data[ATTR_TRANSITION] = reproduce_options[ATTR_TRANSITION]
@@ -114,11 +137,29 @@ async def _async_reproduce_state(
             if attr in state.attributes:
                 service_data[attr] = state.attributes[attr]
 
-        for color_attr in COLOR_GROUP:
-            # Choose the first color that is specified
-            if color_attr in state.attributes:
+        if (
+            state.attributes.get(ATTR_COLOR_MODE, COLOR_MODE_UNKNOWN)
+            != COLOR_MODE_UNKNOWN
+        ):
+            # Remove deprecated white value if we got a valid color mode
+            service_data.pop(ATTR_WHITE_VALUE, None)
+            color_mode = state.attributes[ATTR_COLOR_MODE]
+            if color_attr := COLOR_MODE_TO_ATTRIBUTE.get(color_mode):
+                if color_attr not in state.attributes:
+                    _LOGGER.warning(
+                        "Color mode %s specified but attribute %s missing for: %s",
+                        color_mode,
+                        color_attr,
+                        state.entity_id,
+                    )
+                    return
                 service_data[color_attr] = state.attributes[color_attr]
-                break
+        else:
+            # Fall back to Choosing the first color that is specified
+            for color_attr in COLOR_GROUP:
+                if color_attr in state.attributes:
+                    service_data[color_attr] = state.attributes[color_attr]
+                    break
 
     elif state.state == STATE_OFF:
         service = SERVICE_TURN_OFF
@@ -129,11 +170,11 @@ async def _async_reproduce_state(
 
 
 async def async_reproduce_states(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     states: Iterable[State],
     *,
-    context: Optional[Context] = None,
-    reproduce_options: Optional[Dict[str, Any]] = None,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce Light states."""
     await asyncio.gather(

@@ -11,8 +11,11 @@
                 "data": {
                     "api_key": "API-Schl\u00fcssel",
                     "latitude": "Breitengrad",
-                    "longitude": "L\u00e4ngengrad"
-                }
+                    "longitude": "L\u00e4ngengrad",
+                    "name": "Name der Integration"
+                },
+                "description": "Richte die AEMET OpenData Integration ein. Um den API-Schl\u00fcssel zu generieren, besuche https://opendata.aemet.es/centrodedescargas/altaUsuario",
+                "title": "[void]"
             }
         }
     }

@@ -5,7 +5,7 @@ import logging
 import praw
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ID,
     CONF_CLIENT_ID,
@@ -15,7 +15,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Reddit sensor platform."""
     subreddits = config[CONF_SUBREDDITS]
-    user_agent = "{}_home_assistant_sensor".format(config[CONF_USERNAME])
+    user_agent = f"{config[CONF_USERNAME]}_home_assistant_sensor"
     limit = config[CONF_MAXIMUM]
     sort_by = config[CONF_SORT_BY]
 
@@ -82,7 +81,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class RedditSensor(Entity):
+class RedditSensor(SensorEntity):
     """Representation of a Reddit sensor."""
 
     def __init__(self, reddit, subreddit: str, limit: int, sort_by: str):

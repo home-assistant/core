@@ -24,8 +24,6 @@ async def test_form(hass):
         "homeassistant.components.dexcom.config_flow.Dexcom.create_session",
         return_value="test_session_id",
     ), patch(
-        "homeassistant.components.dexcom.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.dexcom.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -38,7 +36,6 @@ async def test_form(hass):
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == CONFIG[CONF_USERNAME]
     assert result2["data"] == CONFIG
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

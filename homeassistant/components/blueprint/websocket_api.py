@@ -1,5 +1,5 @@
 """Websocket API for blueprint."""
-from typing import Dict, Optional
+from __future__ import annotations
 
 import async_timeout
 import voluptuous as vol
@@ -33,7 +33,7 @@ def async_setup(hass: HomeAssistant):
 )
 async def ws_list_blueprints(hass, connection, msg):
     """List available blueprints."""
-    domain_blueprints: Optional[Dict[str, models.DomainBlueprints]] = hass.data.get(
+    domain_blueprints: dict[str, models.DomainBlueprints] | None = hass.data.get(
         DOMAIN, {}
     )
     results = {}
@@ -102,7 +102,7 @@ async def ws_save_blueprint(hass, connection, msg):
     path = msg["path"]
     domain = msg["domain"]
 
-    domain_blueprints: Optional[Dict[str, models.DomainBlueprints]] = hass.data.get(
+    domain_blueprints: dict[str, models.DomainBlueprints] | None = hass.data.get(
         DOMAIN, {}
     )
 
@@ -149,7 +149,7 @@ async def ws_delete_blueprint(hass, connection, msg):
     path = msg["path"]
     domain = msg["domain"]
 
-    domain_blueprints: Optional[Dict[str, models.DomainBlueprints]] = hass.data.get(
+    domain_blueprints: dict[str, models.DomainBlueprints] | None = hass.data.get(
         DOMAIN, {}
     )
 

@@ -1,8 +1,10 @@
 """Provides core stream functionality."""
+from __future__ import annotations
+
 import asyncio
 from collections import deque
 import io
-from typing import Any, Callable, List
+from typing import TYPE_CHECKING, Callable
 
 from aiohttp import web
 import attr
@@ -14,6 +16,10 @@ from homeassistant.util.decorator import Registry
 
 from .const import ATTR_STREAMS, DOMAIN
 
+if TYPE_CHECKING:
+    import av.container
+    import av.video
+
 PROVIDERS = Registry()
 
 
@@ -22,9 +28,9 @@ class StreamBuffer:
     """Represent a segment."""
 
     segment: io.BytesIO = attr.ib()
-    output = attr.ib()  # type=av.OutputContainer
-    vstream = attr.ib()  # type=av.VideoStream
-    astream = attr.ib(default=None)  # type=Optional[av.AudioStream]
+    output: av.container.OutputContainer = attr.ib()
+    vstream: av.video.VideoStream = attr.ib()
+    astream = attr.ib(default=None)  # type=Optional[av.audio.AudioStream]
 
 
 @attr.s
@@ -47,7 +53,7 @@ class IdleTimer:
 
     def __init__(
         self, hass: HomeAssistant, timeout: int, idle_callback: Callable[[], None]
-    ):
+    ) -> None:
         """Initialize IdleTimer."""
         self._hass = hass
         self._timeout = timeout
@@ -89,12 +95,12 @@ class StreamOutput:
         """Initialize a stream output."""
         self._hass = hass
         self._idle_timer = idle_timer
-        self._cursor = None
+        self._cursor: int | None = None
         self._event = asyncio.Event()
-        self._segments = deque(maxlen=deque_maxlen)
+        self._segments: deque[Segment] = deque(maxlen=deque_maxlen)
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return provider name."""
         return None
 
@@ -104,7 +110,7 @@ class StreamOutput:
         return self._idle_timer.idle
 
     @property
-    def segments(self) -> List[int]:
+    def segments(self) -> list[int]:
         """Return current sequence from segments."""
         return [s.sequence for s in self._segments]
 
@@ -117,19 +123,21 @@ class StreamOutput:
         durations = [s.duration for s in self._segments]
         return round(max(durations)) or 1
 
-    def get_segment(self, sequence: int = None) -> Any:
-        """Retrieve a specific segment, or the whole list."""
+    def get_segment(self, sequence: int) -> Segment | None:
+        """Retrieve a specific segment."""
         self._idle_timer.awake()
-
-        if not sequence:
-            return self._segments
 
         for segment in self._segments:
             if segment.sequence == sequence:
                 return segment
         return None
 
-    async def recv(self) -> Segment:
+    def get_segments(self) -> deque[Segment]:
+        """Retrieve all segments."""
+        self._idle_timer.awake()
+        return self._segments
+
+    async def recv(self) -> Segment | None:
         """Wait for and retrieve the latest segment."""
         last_segment = max(self.segments, default=0)
         if self._cursor is None or self._cursor <= last_segment:
@@ -138,7 +146,7 @@ class StreamOutput:
         if not self._segments:
             return None
 
-        segment = self.get_segment()[-1]
+        segment = self.get_segments()[-1]
         self._cursor = segment.sequence
         return segment
 

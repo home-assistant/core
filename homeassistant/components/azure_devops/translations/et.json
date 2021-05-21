@@ -9,7 +9,7 @@
             "invalid_auth": "Tuvastamise viga",
             "project_error": "Projekti teavet ei \u00f5nnestunud hankida."
         },
-        "flow_title": "Azure DevOps: {project_url}",
+        "flow_title": "{project_url}",
         "step": {
             "reauth": {
                 "data": {

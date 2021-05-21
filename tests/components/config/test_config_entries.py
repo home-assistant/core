@@ -50,14 +50,13 @@ async def test_get_entries(hass, client):
                 pass
 
         hass.helpers.config_entry_flow.register_discovery_flow(
-            "comp2", "Comp 2", lambda: None, core_ce.CONN_CLASS_ASSUMED
+            "comp2", "Comp 2", lambda: None
         )
 
         entry = MockConfigEntry(
             domain="comp1",
             title="Test 1",
             source="bla",
-            connection_class=core_ce.CONN_CLASS_LOCAL_POLL,
         )
         entry.supports_unload = True
         entry.add_to_hass(hass)
@@ -65,14 +64,14 @@ async def test_get_entries(hass, client):
             domain="comp2",
             title="Test 2",
             source="bla2",
-            state=core_ce.ENTRY_STATE_LOADED,
-            connection_class=core_ce.CONN_CLASS_ASSUMED,
+            state=core_ce.ConfigEntryState.SETUP_ERROR,
+            reason="Unsupported API",
         ).add_to_hass(hass)
         MockConfigEntry(
             domain="comp3",
             title="Test 3",
             source="bla3",
-            disabled_by="user",
+            disabled_by=core_ce.DISABLED_USER,
         ).add_to_hass(hass)
 
         resp = await client.get("/api/config/config_entries/entry")
@@ -85,38 +84,38 @@ async def test_get_entries(hass, client):
                 "domain": "comp1",
                 "title": "Test 1",
                 "source": "bla",
-                "state": "not_loaded",
-                "connection_class": "local_poll",
+                "state": core_ce.ConfigEntryState.NOT_LOADED.value,
                 "supports_options": True,
                 "supports_unload": True,
                 "disabled_by": None,
+                "reason": None,
             },
             {
                 "domain": "comp2",
                 "title": "Test 2",
                 "source": "bla2",
-                "state": "loaded",
-                "connection_class": "assumed",
+                "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
                 "supports_options": False,
                 "supports_unload": False,
                 "disabled_by": None,
+                "reason": "Unsupported API",
             },
             {
                 "domain": "comp3",
                 "title": "Test 3",
                 "source": "bla3",
-                "state": "not_loaded",
-                "connection_class": "unknown",
+                "state": core_ce.ConfigEntryState.NOT_LOADED.value,
                 "supports_options": False,
                 "supports_unload": False,
-                "disabled_by": "user",
+                "disabled_by": core_ce.DISABLED_USER,
+                "reason": None,
             },
         ]
 
 
 async def test_remove_entry(hass, client):
     """Test removing an entry via the API."""
-    entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_LOADED)
+    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     resp = await client.delete(f"/api/config/config_entries/entry/{entry.entry_id}")
     assert resp.status == 200
@@ -127,7 +126,7 @@ async def test_remove_entry(hass, client):
 
 async def test_reload_entry(hass, client):
     """Test reloading an entry via the API."""
-    entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_LOADED)
+    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
@@ -147,7 +146,7 @@ async def test_reload_invalid_entry(hass, client):
 async def test_remove_entry_unauth(hass, client, hass_admin_user):
     """Test removing an entry via the API."""
     hass_admin_user.groups = []
-    entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_LOADED)
+    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     resp = await client.delete(f"/api/config/config_entries/entry/{entry.entry_id}")
     assert resp.status == 401
@@ -157,7 +156,7 @@ async def test_remove_entry_unauth(hass, client, hass_admin_user):
 async def test_reload_entry_unauth(hass, client, hass_admin_user):
     """Test reloading an entry via the API."""
     hass_admin_user.groups = []
-    entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_LOADED)
+    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
@@ -168,7 +167,7 @@ async def test_reload_entry_unauth(hass, client, hass_admin_user):
 
 async def test_reload_entry_in_failed_state(hass, client, hass_admin_user):
     """Test reloading an entry via the API that has already failed to unload."""
-    entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_FAILED_UNLOAD)
+    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.FAILED_UNLOAD)
     entry.add_to_hass(hass)
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
@@ -235,6 +234,7 @@ async def test_initialize_flow(hass, client):
             "show_advanced_options": True,
         },
         "errors": {"username": "Should be unique."},
+        "last_step": None,
     }
 
 
@@ -287,7 +287,7 @@ async def test_abort(hass, client):
     }
 
 
-async def test_create_account(hass, client):
+async def test_create_account(hass, client, enable_custom_integrations):
     """Test a flow that creates an account."""
     mock_entity_platform(hass, "config_flow.test", None)
 
@@ -320,13 +320,24 @@ async def test_create_account(hass, client):
         "title": "Test Entry",
         "type": "create_entry",
         "version": 1,
-        "result": entries[0].entry_id,
+        "result": {
+            "disabled_by": None,
+            "domain": "test",
+            "entry_id": entries[0].entry_id,
+            "source": core_ce.SOURCE_USER,
+            "state": core_ce.ConfigEntryState.LOADED.value,
+            "supports_options": False,
+            "supports_unload": False,
+            "title": "Test Entry",
+            "reason": None,
+        },
         "description": None,
         "description_placeholders": None,
+        "options": {},
     }
 
 
-async def test_two_step_flow(hass, client):
+async def test_two_step_flow(hass, client, enable_custom_integrations):
     """Test we can finish a two step flow."""
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
@@ -360,6 +371,7 @@ async def test_two_step_flow(hass, client):
             "data_schema": [{"name": "user_title", "type": "string"}],
             "description_placeholders": None,
             "errors": None,
+            "last_step": None,
         }
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
@@ -379,9 +391,20 @@ async def test_two_step_flow(hass, client):
             "type": "create_entry",
             "title": "user-title",
             "version": 1,
-            "result": entries[0].entry_id,
+            "result": {
+                "disabled_by": None,
+                "domain": "test",
+                "entry_id": entries[0].entry_id,
+                "source": core_ce.SOURCE_USER,
+                "state": core_ce.ConfigEntryState.LOADED.value,
+                "supports_options": False,
+                "supports_unload": False,
+                "title": "user-title",
+                "reason": None,
+            },
             "description": None,
             "description_placeholders": None,
+            "options": {},
         }
 
 
@@ -419,6 +442,7 @@ async def test_continue_flow_unauth(hass, client, hass_admin_user):
             "data_schema": [{"name": "user_title", "type": "string"}],
             "description_placeholders": None,
             "errors": None,
+            "last_step": None,
         }
 
     hass_admin_user.groups = []
@@ -447,7 +471,7 @@ async def test_get_progress_index(hass, hass_ws_client):
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         form = await hass.config_entries.flow.async_init(
-            "test", context={"source": "hassio"}
+            "test", context={"source": core_ce.SOURCE_HASSIO}
         )
 
     await ws_client.send_json({"id": 5, "type": "config_entries/flow/progress"})
@@ -459,7 +483,7 @@ async def test_get_progress_index(hass, hass_ws_client):
             "flow_id": form["flow_id"],
             "handler": "test",
             "step_id": "account",
-            "context": {"source": "hassio"},
+            "context": {"source": core_ce.SOURCE_HASSIO},
         }
     ]
 
@@ -567,9 +591,8 @@ async def test_options_flow(hass, client):
         domain="test",
         entry_id="test1",
         source="bla",
-        connection_class=core_ce.CONN_CLASS_LOCAL_POLL,
     ).add_to_hass(hass)
-    entry = hass.config_entries._entries[0]
+    entry = hass.config_entries.async_entries()[0]
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         url = "/api/config/config_entries/options/flow"
@@ -586,6 +609,7 @@ async def test_options_flow(hass, client):
         "data_schema": [{"name": "enabled", "required": True, "type": "boolean"}],
         "description_placeholders": {"enabled": "Set to true to be true"},
         "errors": None,
+        "last_step": None,
     }
 
 
@@ -616,9 +640,8 @@ async def test_two_step_options_flow(hass, client):
         domain="test",
         entry_id="test1",
         source="bla",
-        connection_class=core_ce.CONN_CLASS_LOCAL_POLL,
     ).add_to_hass(hass)
-    entry = hass.config_entries._entries[0]
+    entry = hass.config_entries.async_entries()[0]
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         url = "/api/config/config_entries/options/flow"
@@ -634,6 +657,7 @@ async def test_two_step_options_flow(hass, client):
             "data_schema": [{"name": "enabled", "type": "boolean"}],
             "description_placeholders": None,
             "errors": None,
+            "last_step": None,
         }
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
@@ -764,7 +788,7 @@ async def test_disable_entry(hass, hass_ws_client):
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    entry = MockConfigEntry(domain="demo", state="loaded")
+    entry = MockConfigEntry(domain="demo", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     assert entry.disabled_by is None
 
@@ -774,15 +798,15 @@ async def test_disable_entry(hass, hass_ws_client):
             "id": 5,
             "type": "config_entries/disable",
             "entry_id": entry.entry_id,
-            "disabled_by": "user",
+            "disabled_by": core_ce.DISABLED_USER,
         }
     )
     response = await ws_client.receive_json()
 
     assert response["success"]
     assert response["result"] == {"require_restart": True}
-    assert entry.disabled_by == "user"
-    assert entry.state == "failed_unload"
+    assert entry.disabled_by == core_ce.DISABLED_USER
+    assert entry.state is core_ce.ConfigEntryState.FAILED_UNLOAD
 
     # Enable
     await ws_client.send_json(
@@ -798,7 +822,7 @@ async def test_disable_entry(hass, hass_ws_client):
     assert response["success"]
     assert response["result"] == {"require_restart": True}
     assert entry.disabled_by is None
-    assert entry.state == "failed_unload"
+    assert entry.state == core_ce.ConfigEntryState.FAILED_UNLOAD
 
     # Enable again -> no op
     await ws_client.send_json(
@@ -814,7 +838,7 @@ async def test_disable_entry(hass, hass_ws_client):
     assert response["success"]
     assert response["result"] == {"require_restart": False}
     assert entry.disabled_by is None
-    assert entry.state == "failed_unload"
+    assert entry.state == core_ce.ConfigEntryState.FAILED_UNLOAD
 
 
 async def test_disable_entry_nonexisting(hass, hass_ws_client):
@@ -827,7 +851,7 @@ async def test_disable_entry_nonexisting(hass, hass_ws_client):
             "id": 5,
             "type": "config_entries/disable",
             "entry_id": "non_existing",
-            "disabled_by": "user",
+            "disabled_by": core_ce.DISABLED_USER,
         }
     )
     response = await ws_client.receive_json()
@@ -855,7 +879,7 @@ async def test_ignore_flow(hass, hass_ws_client):
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         result = await hass.config_entries.flow.async_init(
-            "test", context={"source": "user"}
+            "test", context={"source": core_ce.SOURCE_USER}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 

@@ -1,6 +1,7 @@
 """Support for Luftdaten sensors."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -9,7 +10,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from . import (
     DATA_LUFTDATEN,
@@ -45,7 +45,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(sensors, True)
 
 
-class LuftdatenSensor(Entity):
+class LuftdatenSensor(SensorEntity):
     """Implementation of a Luftdaten sensor."""
 
     def __init__(self, luftdaten, sensor_type, name, icon, unit, show):

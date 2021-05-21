@@ -3,10 +3,10 @@ from datetime import datetime
 import logging
 import time
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from . import REPETIER_API, SENSOR_TYPES, UPDATE_SIGNAL
 
@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities, True)
 
 
-class RepetierSensor(Entity):
+class RepetierSensor(SensorEntity):
     """Class to create and populate a Repetier Sensor."""
 
     def __init__(self, api, temp_id, name, printer_id, sensor_type):

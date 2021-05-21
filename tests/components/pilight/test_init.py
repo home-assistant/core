@@ -64,29 +64,31 @@ class PilightDaemonSim:
 @patch("homeassistant.components.pilight._LOGGER.error")
 async def test_connection_failed_error(mock_error, hass):
     """Try to connect at 127.0.0.1:5001 with socket error."""
-    with assert_setup_component(4):
-        with patch("pilight.pilight.Client", side_effect=socket.error) as mock_client:
-            assert not await async_setup_component(
-                hass, pilight.DOMAIN, {pilight.DOMAIN: {}}
-            )
-            mock_client.assert_called_once_with(
-                host=pilight.DEFAULT_HOST, port=pilight.DEFAULT_PORT
-            )
-            assert mock_error.call_count == 1
+    with assert_setup_component(4), patch(
+        "pilight.pilight.Client", side_effect=socket.error
+    ) as mock_client:
+        assert not await async_setup_component(
+            hass, pilight.DOMAIN, {pilight.DOMAIN: {}}
+        )
+        mock_client.assert_called_once_with(
+            host=pilight.DEFAULT_HOST, port=pilight.DEFAULT_PORT
+        )
+        assert mock_error.call_count == 1
 
 
 @patch("homeassistant.components.pilight._LOGGER.error")
 async def test_connection_timeout_error(mock_error, hass):
     """Try to connect at 127.0.0.1:5001 with socket timeout."""
-    with assert_setup_component(4):
-        with patch("pilight.pilight.Client", side_effect=socket.timeout) as mock_client:
-            assert not await async_setup_component(
-                hass, pilight.DOMAIN, {pilight.DOMAIN: {}}
-            )
-            mock_client.assert_called_once_with(
-                host=pilight.DEFAULT_HOST, port=pilight.DEFAULT_PORT
-            )
-            assert mock_error.call_count == 1
+    with assert_setup_component(4), patch(
+        "pilight.pilight.Client", side_effect=socket.timeout
+    ) as mock_client:
+        assert not await async_setup_component(
+            hass, pilight.DOMAIN, {pilight.DOMAIN: {}}
+        )
+        mock_client.assert_called_once_with(
+            host=pilight.DEFAULT_HOST, port=pilight.DEFAULT_PORT
+        )
+        assert mock_error.call_count == 1
 
 
 @patch("pilight.pilight.Client", PilightDaemonSim)
@@ -134,23 +136,22 @@ async def test_send_code(mock_pilight_error, hass):
 @patch("homeassistant.components.pilight._LOGGER.error")
 async def test_send_code_fail(mock_pilight_error, hass):
     """Check IOError exception error message."""
-    with assert_setup_component(4):
-        with patch("pilight.pilight.Client.send_code", side_effect=IOError):
-            assert await async_setup_component(
-                hass, pilight.DOMAIN, {pilight.DOMAIN: {}}
-            )
+    with assert_setup_component(4), patch(
+        "pilight.pilight.Client.send_code", side_effect=IOError
+    ):
+        assert await async_setup_component(hass, pilight.DOMAIN, {pilight.DOMAIN: {}})
 
-            # Call with protocol info, should not give error
-            service_data = {"protocol": "test", "value": 42}
-            await hass.services.async_call(
-                pilight.DOMAIN,
-                pilight.SERVICE_NAME,
-                service_data=service_data,
-                blocking=True,
-            )
-            await hass.async_block_till_done()
-            error_log_call = mock_pilight_error.call_args_list[-1]
-            assert "Pilight send failed" in str(error_log_call)
+        # Call with protocol info, should not give error
+        service_data = {"protocol": "test", "value": 42}
+        await hass.services.async_call(
+            pilight.DOMAIN,
+            pilight.SERVICE_NAME,
+            service_data=service_data,
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        error_log_call = mock_pilight_error.call_args_list[-1]
+        assert "Pilight send failed" in str(error_log_call)
 
 
 @patch("homeassistant.components.pilight._LOGGER.error")
@@ -360,7 +361,7 @@ async def test_whitelist_no_match(mock_debug, hass):
         await hass.async_block_till_done()
         debug_log_call = mock_debug.call_args_list[-3]
 
-        assert not ("Event pilight_received" in debug_log_call)
+        assert "Event pilight_received" not in debug_log_call
 
 
 async def test_call_rate_delay_throttle_enabled(hass):

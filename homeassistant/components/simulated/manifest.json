@@ -3,5 +3,6 @@
   "name": "Simulated",
   "documentation": "https://www.home-assistant.io/integrations/simulated",
   "codeowners": [],
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "iot_class": "local_polling"
 }

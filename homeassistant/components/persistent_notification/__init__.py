@@ -1,7 +1,10 @@
 """Support for displaying persistent notifications."""
+from __future__ import annotations
+
 from collections import OrderedDict
+from collections.abc import Mapping, MutableMapping
 import logging
-from typing import Any, Mapping, MutableMapping, Optional
+from typing import Any
 
 import voluptuous as vol
 
@@ -71,8 +74,8 @@ def dismiss(hass, notification_id):
 def async_create(
     hass: HomeAssistant,
     message: str,
-    title: Optional[str] = None,
-    notification_id: Optional[str] = None,
+    title: str | None = None,
+    notification_id: str | None = None,
 ) -> None:
     """Generate a notification."""
     data = {

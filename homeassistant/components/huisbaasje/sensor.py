@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, POWER_WATT
 from homeassistant.core import HomeAssistant
@@ -23,7 +24,7 @@ async def async_setup_entry(
     )
 
 
-class HuisbaasjeSensor(CoordinatorEntity):
+class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
     """Defines a Huisbaasje sensor."""
 
     def __init__(
@@ -37,7 +38,7 @@ class HuisbaasjeSensor(CoordinatorEntity):
         unit_of_measurement: str = POWER_WATT,
         icon: str = "mdi:lightning-bolt",
         precision: int = 0,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._user_id = user_id

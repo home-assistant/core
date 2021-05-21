@@ -1,11 +1,16 @@
 """An abstract class for entities."""
+from __future__ import annotations
+
 from abc import ABC
 import asyncio
+from collections.abc import Awaitable, Iterable, Mapping
 from datetime import datetime, timedelta
 import functools as ft
 import logging
+import math
+import sys
 from timeit import default_timer as timer
-from typing import Any, Awaitable, Dict, Iterable, List, Optional
+from typing import Any, TypedDict
 
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
@@ -26,6 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
@@ -39,19 +45,23 @@ DATA_ENTITY_SOURCE = "entity_info"
 SOURCE_CONFIG_ENTRY = "config_entry"
 SOURCE_PLATFORM_CONFIG = "platform_config"
 
+# Used when converting float states to string: limit precision according to machine
+# epsilon to make the string representation readable
+FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
+
 
 @callback
 @bind_hass
-def entity_sources(hass: HomeAssistant) -> Dict[str, Dict[str, str]]:
+def entity_sources(hass: HomeAssistant) -> dict[str, dict[str, str]]:
     """Get the entity sources."""
     return hass.data.get(DATA_ENTITY_SOURCE, {})
 
 
 def generate_entity_id(
     entity_id_format: str,
-    name: Optional[str],
-    current_ids: Optional[List[str]] = None,
-    hass: Optional[HomeAssistant] = None,
+    name: str | None,
+    current_ids: list[str] | None = None,
+    hass: HomeAssistant | None = None,
 ) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
     return async_generate_entity_id(entity_id_format, name, current_ids, hass)
@@ -60,9 +70,9 @@ def generate_entity_id(
 @callback
 def async_generate_entity_id(
     entity_id_format: str,
-    name: Optional[str],
-    current_ids: Optional[Iterable[str]] = None,
-    hass: Optional[HomeAssistant] = None,
+    name: str | None,
+    current_ids: Iterable[str] | None = None,
+    hass: HomeAssistant | None = None,
 ) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
     name = (name or DEVICE_DEFAULT_NAME).lower()
@@ -83,6 +93,40 @@ def async_generate_entity_id(
     return test_string
 
 
+def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
+    """Get supported features for an entity.
+
+    First try the statemachine, then entity registry.
+    """
+    state = hass.states.get(entity_id)
+    if state:
+        return state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(entity_id)
+    if not entry:
+        raise HomeAssistantError(f"Unknown entity {entity_id}")
+
+    return entry.supported_features or 0
+
+
+class DeviceInfo(TypedDict, total=False):
+    """Entity device information for device registry."""
+
+    name: str
+    connections: set[tuple[str, str]]
+    identifiers: set[tuple[str, str]]
+    manufacturer: str
+    model: str
+    suggested_area: str
+    sw_version: str
+    via_device: tuple[str, str]
+    entry_type: str | None
+    default_name: str
+    default_manufacturer: str
+    default_model: str
+
+
 class Entity(ABC):
     """An abstract class for Home Assistant entities."""
 
@@ -94,11 +138,10 @@ class Entity(ABC):
     # Owning hass instance. Will be set by EntityPlatform
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
-    # Ignore types: https://github.com/PyCQA/pylint/issues/3167
     hass: HomeAssistant = None  # type: ignore
 
     # Owning platform instance. Will be set by EntityPlatform
-    platform: Optional[EntityPlatform] = None
+    platform: EntityPlatform | None = None
 
     # If we reported if this entity was slow
     _slow_reported = False
@@ -110,17 +153,17 @@ class Entity(ABC):
     _update_staged = False
 
     # Process updates in parallel
-    parallel_updates: Optional[asyncio.Semaphore] = None
+    parallel_updates: asyncio.Semaphore | None = None
 
     # Entry in the entity registry
-    registry_entry: Optional[RegistryEntry] = None
+    registry_entry: RegistryEntry | None = None
 
     # Hold list for functions to call on remove.
-    _on_remove: Optional[List[CALLBACK_TYPE]] = None
+    _on_remove: list[CALLBACK_TYPE] | None = None
 
     # Context
-    _context: Optional[Context] = None
-    _context_set: Optional[datetime] = None
+    _context: Context | None = None
+    _context_set: datetime | None = None
 
     # If entity is added to an entity platform
     _added = False
@@ -134,12 +177,12 @@ class Entity(ABC):
         return True
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         return None
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the entity."""
         return None
 
@@ -149,7 +192,7 @@ class Entity(ABC):
         return STATE_UNKNOWN
 
     @property
-    def capability_attributes(self) -> Optional[Dict[str, Any]]:
+    def capability_attributes(self) -> Mapping[str, Any] | None:
         """Return the capability attributes.
 
         Attributes that explain the capabilities of an entity.
@@ -160,7 +203,7 @@ class Entity(ABC):
         return None
 
     @property
-    def state_attributes(self) -> Optional[Dict[str, Any]]:
+    def state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes.
 
         Implemented by component base class, should not be extended by integrations.
@@ -169,7 +212,7 @@ class Entity(ABC):
         return None
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def device_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes.
 
         This method is deprecated, platform classes should implement
@@ -178,7 +221,7 @@ class Entity(ABC):
         return None
 
     @property
-    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes.
 
         Implemented by platform classes. Convention for attribute names
@@ -187,7 +230,7 @@ class Entity(ABC):
         return None
 
     @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
+    def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes.
 
         Implemented by platform classes.
@@ -195,22 +238,22 @@ class Entity(ABC):
         return None
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return None
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
         return None
 
     @property
-    def icon(self) -> Optional[str]:
+    def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
         return None
 
     @property
-    def entity_picture(self) -> Optional[str]:
+    def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
         return None
 
@@ -234,7 +277,7 @@ class Entity(ABC):
         return False
 
     @property
-    def supported_features(self) -> Optional[int]:
+    def supported_features(self) -> int | None:
         """Flag supported features."""
         return None
 
@@ -306,6 +349,19 @@ class Entity(ABC):
 
         self._async_write_ha_state()
 
+    def _stringify_state(self) -> str:
+        """Convert state to string."""
+        if not self.available:
+            return STATE_UNAVAILABLE
+        state = self.state
+        if state is None:
+            return STATE_UNKNOWN
+        if isinstance(state, float):
+            # If the entity's state is a float, limit precision according to machine
+            # epsilon to make the string representation readable
+            return f"{state:.{FLOAT_PRECISION}}"
+        return str(state)
+
     @callback
     def _async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
@@ -325,11 +381,8 @@ class Entity(ABC):
         attr = self.capability_attributes
         attr = dict(attr) if attr else {}
 
-        if not self.available:
-            state = STATE_UNAVAILABLE
-        else:
-            sstate = self.state
-            state = STATE_UNKNOWN if sstate is None else str(sstate)
+        state = self._stringify_state()
+        if self.available:
             attr.update(self.state_attributes or {})
             extra_state_attributes = self.extra_state_attributes
             # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
@@ -516,7 +569,7 @@ class Entity(ABC):
         self,
         hass: HomeAssistant,
         platform: EntityPlatform,
-        parallel_updates: Optional[asyncio.Semaphore],
+        parallel_updates: asyncio.Semaphore | None,
     ) -> None:
         """Start adding an entity to a platform."""
         if self._added:
@@ -696,7 +749,7 @@ class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """Return the state."""
         return STATE_ON if self.is_on else STATE_OFF
 

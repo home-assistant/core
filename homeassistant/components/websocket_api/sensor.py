@@ -1,7 +1,7 @@
 """Entity to track connections to websocket API."""
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 
 from .const import (
     DATA_CONNECTIONS,
@@ -19,7 +19,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([entity])
 
 
-class APICount(Entity):
+class APICount(SensorEntity):
     """Entity to represent how many people are connected to the stream API."""
 
     def __init__(self):

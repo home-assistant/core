@@ -17,12 +17,12 @@ from .const import (
     CONF_USE_WEBHOOK,
     DEFAULT_SCAN_INTERVAL,
     DOCS_URL,
+    DOMAIN,
     PLACEHOLDER_DEVICE_NAME,
     PLACEHOLDER_DEVICE_TYPE,
     PLACEHOLDER_DOCS_URL,
     PLACEHOLDER_WEBHOOK_URL,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -31,7 +31,6 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handles a Plaato config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize."""
@@ -172,7 +171,7 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class PlaatoOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Plaato options."""
 
-    def __init__(self, config_entry: ConfigEntry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize domain options flow."""
         super().__init__()
 

@@ -93,7 +93,7 @@ class PushsaferNotificationService(BaseNotificationService):
                 _LOGGER.debug("Loading image from file %s", local_path)
                 picture1_encoded = self.load_from_file(local_path)
             else:
-                _LOGGER.warning("missing url or local_path for picture1")
+                _LOGGER.warning("Missing url or local_path for picture1")
         else:
             _LOGGER.debug("picture1 is not specified")
 
@@ -143,7 +143,7 @@ class PushsaferNotificationService(BaseNotificationService):
             else:
                 response = requests.get(url, timeout=CONF_TIMEOUT)
             return self.get_base64(response.content, response.headers["content-type"])
-        _LOGGER.warning("url not found in param")
+        _LOGGER.warning("No url was found in param")
 
         return None
 

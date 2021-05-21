@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_METHOD,
@@ -83,7 +83,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([integral])
 
 
-class IntegrationSensor(RestoreEntity):
+class IntegrationSensor(RestoreEntity, SensorEntity):
     """Representation of an integration sensor."""
 
     def __init__(

@@ -27,6 +27,7 @@
             "device_tracker": {
                 "data": {
                     "arp_ping": "ARP-Ping aktivieren",
+                    "detection_time": "Heimintervall ber\u00fccksichtigen",
                     "force_dhcp": "Erzwingen Sie das Scannen \u00fcber DHCP"
                 }
             }

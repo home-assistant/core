@@ -5,7 +5,6 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-# pylint: disable=unused-import
 from . import DOMAIN
 
 CONF_STRING = "string"

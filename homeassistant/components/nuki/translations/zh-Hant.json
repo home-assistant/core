@@ -1,11 +1,21 @@
 {
     "config": {
+        "abort": {
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+        },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "token": "\u5b58\u53d6\u6b0a\u6756"
+                },
+                "description": "Nuki \u6574\u5408\u9700\u8981\u91cd\u65b0\u8a8d\u8b49 Bridge\u3002",
+                "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
+            },
             "user": {
                 "data": {
                     "host": "\u4e3b\u6a5f\u7aef",

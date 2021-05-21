@@ -2,19 +2,33 @@
     "config": {
         "abort": {
             "already_configured_device": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "already_configured_local_device": "\ub85c\uceec \uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5b4 \uc788\uc2b5\ub2c8\ub2e4. \ud074\ub77c\uc6b0\ub4dc \uae30\uae30\ub97c \uad6c\uc131\ud558\uae30 \uc804\uc5d0 \uc774\ub7ec\ud55c \uae30\uae30\ub97c \uba3c\uc800 \uc81c\uac70\ud574\uc8fc\uc138\uc694.",
             "authorize_url_timeout": "\uc778\uc99d URL \uc0dd\uc131 \uc2dc\uac04\uc774 \ucd08\uacfc\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
             "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_mdns": "Smappee \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\uc5d0\uc11c \uc9c0\uc6d0\ud558\uc9c0 \uc54a\ub294 \uae30\uae30\uc785\ub2c8\ub2e4.",
             "missing_configuration": "\uad6c\uc131\uc694\uc18c\uac00 \uad6c\uc131\ub418\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4. \uc124\uba85\uc11c\ub97c \ucc38\uace0\ud574\uc8fc\uc138\uc694.",
             "no_url_available": "\uc0ac\uc6a9 \uac00\ub2a5\ud55c URL\uc774 \uc5c6\uc2b5\ub2c8\ub2e4. \uc774 \uc624\ub958\uc5d0 \ub300\ud55c \uc790\uc138\ud55c \ub0b4\uc6a9\uc740 [\ub3c4\uc6c0\ub9d0 \uc139\uc158]({docs_url}) \uc744(\ub97c) \ucc38\uc870\ud574\uc8fc\uc138\uc694."
         },
+        "flow_title": "Smappee: {name}",
         "step": {
+            "environment": {
+                "data": {
+                    "environment": "\ud658\uacbd"
+                },
+                "description": "Home Assistant\uc5d0 Smappee \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\ub97c \uc124\uc815\ud569\ub2c8\ub2e4."
+            },
             "local": {
                 "data": {
                     "host": "\ud638\uc2a4\ud2b8"
-                }
+                },
+                "description": "Smappee \ub85c\uceec \uc5f0\ub3d9\uc744 \uc2dc\uc791\ud560 \ud638\uc2a4\ud2b8\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694"
             },
             "pick_implementation": {
                 "title": "\uc778\uc99d \ubc29\ubc95 \uc120\ud0dd\ud558\uae30"
+            },
+            "zeroconf_confirm": {
+                "description": "\uc2dc\ub9ac\uc5bc \ubc88\ud638 `{serialnumber}`\uc758 Smappee \uae30\uae30\ub97c Home Assistant\uc5d0 \ucd94\uac00\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
+                "title": "\ubc1c\uacac\ub41c Smpappee \uae30\uae30"
             }
         }
     }

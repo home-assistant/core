@@ -1,7 +1,10 @@
 """Base for Hass.io entities."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 from homeassistant.const import ATTR_NAME
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DOMAIN, HassioDataUpdateCoordinator
@@ -14,7 +17,7 @@ class HassioAddonEntity(CoordinatorEntity):
     def __init__(
         self,
         coordinator: HassioDataUpdateCoordinator,
-        addon: Dict[str, Any],
+        addon: dict[str, Any],
         attribute_name: str,
         sensor_name: str,
     ) -> None:
@@ -27,7 +30,7 @@ class HassioAddonEntity(CoordinatorEntity):
         super().__init__(coordinator)
 
     @property
-    def addon_info(self) -> Dict[str, Any]:
+    def addon_info(self) -> dict[str, Any]:
         """Return add-on info."""
         return self.coordinator.data[self._data_key][self.addon_slug]
 
@@ -47,7 +50,7 @@ class HassioAddonEntity(CoordinatorEntity):
         return f"{self.addon_slug}_{self.attribute_name}"
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return {"identifiers": {(DOMAIN, self.addon_slug)}}
 
@@ -68,7 +71,7 @@ class HassioOSEntity(CoordinatorEntity):
         super().__init__(coordinator)
 
     @property
-    def os_info(self) -> Dict[str, Any]:
+    def os_info(self) -> dict[str, Any]:
         """Return OS info."""
         return self.coordinator.data[self._data_key]
 
@@ -88,6 +91,6 @@ class HassioOSEntity(CoordinatorEntity):
         return f"home_assistant_os_{self.attribute_name}"
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return {"identifiers": {(DOMAIN, "OS")}}

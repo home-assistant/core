@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan.",
+            "authorize_url_timeout": "Tenggang waktu pembuatan URL otorisasi habis.",
+            "external_setup": "Point berhasil dikonfigurasi dari alur konfigurasi lainnya.",
+            "no_flows": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
+            "unknown_authorize_url_generation": "Kesalahan tidak dikenal ketika menghasilkan URL otorisasi."
+        },
+        "create_entry": {
+            "default": "Berhasil diautentikasi"
+        },
+        "error": {
+            "follow_link": "Buka tautan dan autentikasi sebelum menekan Kirim",
+            "no_token": "Token akses tidak valid"
+        },
+        "step": {
+            "auth": {
+                "description": "Buka tautan di bawah ini dan **Terima** akses ke akun Minut Anda, lalu kembali dan tekan tombol **Kirim** di bawah ini.\n\n[Tautan] ({authorization_url})",
+                "title": "Autentikasi Point"
+            },
+            "user": {
+                "data": {
+                    "flow_impl": "Penyedia"
+                },
+                "description": "Ingin memulai penyiapan?",
+                "title": "Pilih Metode Autentikasi"
+            }
+        }
+    }
+}

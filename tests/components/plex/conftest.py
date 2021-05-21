@@ -108,10 +108,34 @@ def library_music_sort_fixture():
     return load_fixture("plex/library_music_sort.xml")
 
 
+@pytest.fixture(name="library_movies_filtertypes", scope="session")
+def library_movies_filtertypes_fixture():
+    """Load filtertypes payload for movie library and return it."""
+    return load_fixture("plex/library_movies_filtertypes.xml")
+
+
 @pytest.fixture(name="library", scope="session")
 def library_fixture():
     """Load library payload and return it."""
     return load_fixture("plex/library.xml")
+
+
+@pytest.fixture(name="library_tvshows_size", scope="session")
+def library_tvshows_size_fixture():
+    """Load tvshow library size payload and return it."""
+    return load_fixture("plex/library_tvshows_size.xml")
+
+
+@pytest.fixture(name="library_tvshows_size_episodes", scope="session")
+def library_tvshows_size_episodes_fixture():
+    """Load tvshow library size in episodes payload and return it."""
+    return load_fixture("plex/library_tvshows_size_episodes.xml")
+
+
+@pytest.fixture(name="library_tvshows_size_seasons", scope="session")
+def library_tvshows_size_seasons_fixture():
+    """Load tvshow library size in seasons payload and return it."""
+    return load_fixture("plex/library_tvshows_size_seasons.xml")
 
 
 @pytest.fixture(name="library_sections", scope="session")
@@ -254,6 +278,30 @@ def session_plexweb_fixture():
     return load_fixture("plex/session_plexweb.xml")
 
 
+@pytest.fixture(name="session_transient", scope="session")
+def session_transient_fixture():
+    """Load a transient session payload and return it."""
+    return load_fixture("plex/session_transient.xml")
+
+
+@pytest.fixture(name="session_unknown", scope="session")
+def session_unknown_fixture():
+    """Load a hypothetical unknown session payload and return it."""
+    return load_fixture("plex/session_unknown.xml")
+
+
+@pytest.fixture(name="session_live_tv", scope="session")
+def session_live_tv_fixture():
+    """Load a Live TV session payload and return it."""
+    return load_fixture("plex/session_live_tv.xml")
+
+
+@pytest.fixture(name="livetv_sessions", scope="session")
+def livetv_sessions_fixture():
+    """Load livetv/sessions payload and return it."""
+    return load_fixture("plex/livetv_sessions.xml")
+
+
 @pytest.fixture(name="security_token", scope="session")
 def security_token_fixture():
     """Load a security token payload and return it."""
@@ -369,18 +417,23 @@ def mock_plex_calls(
 def setup_plex_server(
     hass,
     entry,
+    livetv_sessions,
     mock_websocket,
     mock_plex_calls,
     requests_mock,
     empty_payload,
     session_default,
+    session_live_tv,
     session_photo,
     session_plexweb,
+    session_transient,
+    session_unknown,
 ):
     """Set up and return a mocked Plex server instance."""
 
     async def _wrapper(**kwargs):
         """Wrap the fixture to allow passing arguments to the setup method."""
+        url = plex_server_url(entry)
         config_entry = kwargs.get("config_entry", entry)
         disable_clients = kwargs.pop("disable_clients", False)
         disable_gdm = kwargs.pop("disable_gdm", True)
@@ -391,10 +444,16 @@ def setup_plex_server(
             session = session_plexweb
         elif session_type == "photo":
             session = session_photo
+        elif session_type == "live_tv":
+            session = session_live_tv
+            requests_mock.get(f"{url}/livetv/sessions/live_tv_1", text=livetv_sessions)
+        elif session_type == "transient":
+            session = session_transient
+        elif session_type == "unknown":
+            session = session_unknown
         else:
             session = session_default
 
-        url = plex_server_url(entry)
         requests_mock.get(f"{url}/status/sessions", text=session)
 
         if disable_clients:

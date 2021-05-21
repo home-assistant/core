@@ -1,8 +1,9 @@
 """Message templates for websocket commands."""
+from __future__ import annotations
 
 from functools import lru_cache
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import voluptuous as vol
 
@@ -32,12 +33,12 @@ IDEN_TEMPLATE = "__IDEN__"
 IDEN_JSON_TEMPLATE = '"__IDEN__"'
 
 
-def result_message(iden: int, result: Any = None) -> Dict:
+def result_message(iden: int, result: Any = None) -> dict:
     """Return a success result message."""
     return {"id": iden, "type": const.TYPE_RESULT, "success": True, "result": result}
 
 
-def error_message(iden: int, code: str, message: str) -> Dict:
+def error_message(iden: int, code: str, message: str) -> dict:
     """Return an error result message."""
     return {
         "id": iden,
@@ -47,7 +48,7 @@ def error_message(iden: int, code: str, message: str) -> Dict:
     }
 
 
-def event_message(iden: JSON_TYPE, event: Any) -> Dict:
+def event_message(iden: JSON_TYPE, event: Any) -> dict:
     """Return an event message."""
     return {"id": iden, "type": "event", "event": event}
 

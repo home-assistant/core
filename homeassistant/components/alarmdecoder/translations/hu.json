@@ -1,10 +1,40 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
         "create_entry": {
             "default": "Sikeres csatlakoz\u00e1s az AlarmDecoderhez."
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "step": {
+            "protocol": {
+                "data": {
+                    "host": "Hoszt",
+                    "port": "Port"
+                }
+            },
+            "user": {
+                "data": {
+                    "protocol": "Protokoll"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "edit_select": "Szerkeszt\u00e9s"
+                }
+            },
+            "zone_details": {
+                "data": {
+                    "zone_name": "Z\u00f3na neve"
+                }
+            }
         }
     }
 }

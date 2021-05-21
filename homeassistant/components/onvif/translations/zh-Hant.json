@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
             "no_h264": "\u8a72\u88dd\u7f6e\u4e0d\u652f\u63f4 H264 \u4e32\u6d41\uff0c\u8acb\u6aa2\u67e5\u88dd\u7f6e\u8a2d\u5b9a\u3002",
             "no_mac": "\u7121\u6cd5\u70ba ONVIF \u88dd\u7f6e\u8a2d\u5b9a\u552f\u4e00 ID\u3002",

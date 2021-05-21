@@ -4,7 +4,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 
-# pylint: disable=unused-import
 from .const import CALC_METHODS, CONF_CALC_METHOD, DEFAULT_CALC_METHOD, DOMAIN, NAME
 
 
@@ -12,7 +11,6 @@ class IslamicPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle the Islamic Prayer config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback

@@ -13,7 +13,7 @@
                 "data": {
                     "station": "\uc2a4\ud14c\uc774\uc158 / \uc8fc\uc18c"
                 },
-                "title": "\uc2a4\ud14c\uc774\uc158 / \uc8fc\uc18c \uc785\ub825\ud558\uae30"
+                "title": "\uc2a4\ud14c\uc774\uc158 / \uc8fc\uc18c\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694"
             },
             "station_select": {
                 "data": {
@@ -27,7 +27,7 @@
                     "password": "\ube44\ubc00\ubc88\ud638",
                     "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
                 },
-                "title": "HVV API \uc5d0 \uc5f0\uacb0\ud558\uae30"
+                "title": "HVV API\uc5d0 \uc5f0\uacb0\ud558\uae30"
             }
         }
     },

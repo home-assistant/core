@@ -1,20 +1,23 @@
 """Handle MySensors gateways."""
+from __future__ import annotations
+
 import asyncio
 from collections import defaultdict
+from collections.abc import Coroutine
 import logging
 import socket
 import sys
-from typing import Any, Callable, Coroutine, Dict, Optional
+from typing import Any, Callable
 
 import async_timeout
 from mysensors import BaseAsyncGateway, Message, Sensor, mysensors
 import voluptuous as vol
 
+from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, callback
+from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     CONF_BAUD_RATE,
@@ -63,7 +66,7 @@ def is_socket_address(value):
         raise vol.Invalid("Device is not a valid domain name or ip address") from err
 
 
-async def try_connect(hass: HomeAssistantType, user_input: Dict[str, str]) -> bool:
+async def try_connect(hass: HomeAssistant, user_input: dict[str, str]) -> bool:
     """Try to connect to a gateway and report if it worked."""
     if user_input[CONF_DEVICE] == MQTT_COMPONENT:
         return True  # dont validate mqtt. mqtt gateways dont send ready messages :(
@@ -73,7 +76,7 @@ async def try_connect(hass: HomeAssistantType, user_input: Dict[str, str]) -> bo
         def on_conn_made(_: BaseAsyncGateway) -> None:
             gateway_ready.set()
 
-        gateway: Optional[BaseAsyncGateway] = await _get_gateway(
+        gateway: BaseAsyncGateway | None = await _get_gateway(
             hass,
             device=user_input[CONF_DEVICE],
             version=user_input[CONF_VERSION],
@@ -109,8 +112,8 @@ async def try_connect(hass: HomeAssistantType, user_input: Dict[str, str]) -> bo
 
 
 def get_mysensors_gateway(
-    hass: HomeAssistantType, gateway_id: GatewayId
-) -> Optional[BaseAsyncGateway]:
+    hass: HomeAssistant, gateway_id: GatewayId
+) -> BaseAsyncGateway | None:
     """Return the Gateway for a given GatewayId."""
     if MYSENSORS_GATEWAYS not in hass.data[DOMAIN]:
         hass.data[DOMAIN][MYSENSORS_GATEWAYS] = {}
@@ -119,8 +122,8 @@ def get_mysensors_gateway(
 
 
 async def setup_gateway(
-    hass: HomeAssistantType, entry: ConfigEntry
-) -> Optional[BaseAsyncGateway]:
+    hass: HomeAssistant, entry: ConfigEntry
+) -> BaseAsyncGateway | None:
     """Set up the Gateway for the given ConfigEntry."""
 
     ready_gateway = await _get_gateway(
@@ -141,18 +144,18 @@ async def setup_gateway(
 
 
 async def _get_gateway(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     device: str,
     version: str,
     event_callback: Callable[[Message], None],
-    persistence_file: Optional[str] = None,
-    baud_rate: Optional[int] = None,
-    tcp_port: Optional[int] = None,
-    topic_in_prefix: Optional[str] = None,
-    topic_out_prefix: Optional[str] = None,
+    persistence_file: str | None = None,
+    baud_rate: int | None = None,
+    tcp_port: int | None = None,
+    topic_in_prefix: str | None = None,
+    topic_out_prefix: str | None = None,
     retain: bool = False,
     persistence: bool = True,  # old persistence option has been deprecated. kwarg is here so we can run try_connect() without persistence
-) -> Optional[BaseAsyncGateway]:
+) -> BaseAsyncGateway | None:
     """Return gateway after setup of the gateway."""
 
     if persistence_file is not None:
@@ -160,9 +163,10 @@ async def _get_gateway(
         persistence_file = hass.config.path(persistence_file)
 
     if device == MQTT_COMPONENT:
-        # what is the purpose of this?
-        # if not await async_setup_component(hass, MQTT_COMPONENT, entry):
-        #    return None
+        # Make sure the mqtt integration is set up.
+        # Naive check that doesn't consider config entry state.
+        if MQTT_DOMAIN not in hass.config.components:
+            return None
         mqtt = hass.components.mqtt
 
         def pub_callback(topic, payload, qos, retain):
@@ -228,7 +232,7 @@ async def _get_gateway(
 
 
 async def finish_setup(
-    hass: HomeAssistantType, entry: ConfigEntry, gateway: BaseAsyncGateway
+    hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncGateway
 ):
     """Load any persistent devices and platforms and start gateway."""
     discover_tasks = []
@@ -243,7 +247,7 @@ async def finish_setup(
 
 
 async def _discover_persistent_devices(
-    hass: HomeAssistantType, entry: ConfigEntry, gateway: BaseAsyncGateway
+    hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncGateway
 ):
     """Discover platforms for devices loaded via persistence file."""
     tasks = []
@@ -273,9 +277,7 @@ async def gw_stop(hass, entry: ConfigEntry, gateway: BaseAsyncGateway):
     await gateway.stop()
 
 
-async def _gw_start(
-    hass: HomeAssistantType, entry: ConfigEntry, gateway: BaseAsyncGateway
-):
+async def _gw_start(hass: HomeAssistant, entry: ConfigEntry, gateway: BaseAsyncGateway):
     """Start the gateway."""
     gateway_ready = asyncio.Event()
 
@@ -314,7 +316,7 @@ async def _gw_start(
 
 
 def _gw_callback_factory(
-    hass: HomeAssistantType, gateway_id: GatewayId
+    hass: HomeAssistant, gateway_id: GatewayId
 ) -> Callable[[Message], None]:
     """Return a new callback for the gateway."""
 

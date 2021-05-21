@@ -1,5 +1,5 @@
 """Support for HomeKit Controller humidifier."""
-from typing import List, Optional
+from __future__ import annotations
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
@@ -69,14 +69,14 @@ class HomeKitHumidifier(HomeKitEntity, HumidifierEntity):
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
 
     @property
-    def target_humidity(self) -> Optional[int]:
+    def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
         return self.service.value(
             CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
         )
 
     @property
-    def mode(self) -> Optional[str]:
+    def mode(self) -> str | None:
         """Return the current mode, e.g., home, auto, baby.
 
         Requires SUPPORT_MODES.
@@ -87,7 +87,7 @@ class HomeKitHumidifier(HomeKitEntity, HumidifierEntity):
         return MODE_AUTO if mode == 1 else MODE_NORMAL
 
     @property
-    def available_modes(self) -> Optional[List[str]]:
+    def available_modes(self) -> list[str] | None:
         """Return a list of available modes.
 
         Requires SUPPORT_MODES.
@@ -175,14 +175,14 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
 
     @property
-    def target_humidity(self) -> Optional[int]:
+    def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
         return self.service.value(
             CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
         )
 
     @property
-    def mode(self) -> Optional[str]:
+    def mode(self) -> str | None:
         """Return the current mode, e.g., home, auto, baby.
 
         Requires SUPPORT_MODES.
@@ -193,7 +193,7 @@ class HomeKitDehumidifier(HomeKitEntity, HumidifierEntity):
         return MODE_AUTO if mode == 1 else MODE_NORMAL
 
     @property
-    def available_modes(self) -> Optional[List[str]]:
+    def available_modes(self) -> list[str] | None:
         """Return a list of available modes.
 
         Requires SUPPORT_MODES.

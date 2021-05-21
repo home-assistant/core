@@ -344,9 +344,7 @@ async def test_full_user_flow_implementation(
     assert result["step_id"] == "user"
     assert result["type"] == RESULT_TYPE_FORM
 
-    with patch(
-        "homeassistant.components.ipp.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.ipp.async_setup", return_value=True):
+    with patch("homeassistant.components.ipp.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_HOST: "192.168.1.31", CONF_BASE_PATH: "/ipp/print"},
@@ -379,9 +377,7 @@ async def test_full_zeroconf_flow_implementation(
     assert result["step_id"] == "zeroconf_confirm"
     assert result["type"] == RESULT_TYPE_FORM
 
-    with patch(
-        "homeassistant.components.ipp.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.ipp.async_setup", return_value=True):
+    with patch("homeassistant.components.ipp.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
@@ -416,9 +412,7 @@ async def test_full_zeroconf_tls_flow_implementation(
     assert result["type"] == RESULT_TYPE_FORM
     assert result["description_placeholders"] == {CONF_NAME: "EPSON XP-6000 Series"}
 
-    with patch(
-        "homeassistant.components.ipp.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.ipp.async_setup", return_value=True):
+    with patch("homeassistant.components.ipp.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )

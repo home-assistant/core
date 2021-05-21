@@ -5,7 +5,11 @@
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
+        "flow_title": "Arcam FMJ auf {host}",
         "step": {
+            "confirm": {
+                "description": "M\u00f6chtest du Arcam FMJ auf `{host}` zum Home Assistant hinzuf\u00fcgen?"
+            },
             "user": {
                 "data": {
                     "host": "Host",

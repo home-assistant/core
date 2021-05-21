@@ -1,4 +1,6 @@
 """Helpers to install PyPi packages."""
+from __future__ import annotations
+
 import asyncio
 from importlib.metadata import PackageNotFoundError, version
 import logging
@@ -6,7 +8,6 @@ import os
 from pathlib import Path
 from subprocess import PIPE, Popen
 import sys
-from typing import Optional
 from urllib.parse import urlparse
 
 import pkg_resources
@@ -59,10 +60,10 @@ def is_installed(package: str) -> bool:
 def install_package(
     package: str,
     upgrade: bool = True,
-    target: Optional[str] = None,
-    constraints: Optional[str] = None,
-    find_links: Optional[str] = None,
-    no_cache_dir: Optional[bool] = False,
+    target: str | None = None,
+    constraints: str | None = None,
+    find_links: str | None = None,
+    no_cache_dir: bool | None = False,
 ) -> bool:
     """Install a package on PyPi. Accepts pip compatible package strings.
 
@@ -89,15 +90,15 @@ def install_package(
             # Workaround for incompatible prefix setting
             # See http://stackoverflow.com/a/4495175
             args += ["--prefix="]
-    process = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
-    _, stderr = process.communicate()
-    if process.returncode != 0:
-        _LOGGER.error(
-            "Unable to install package %s: %s",
-            package,
-            stderr.decode("utf-8").lstrip().strip(),
-        )
-        return False
+    with Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env) as process:
+        _, stderr = process.communicate()
+        if process.returncode != 0:
+            _LOGGER.error(
+                "Unable to install package %s: %s",
+                package,
+                stderr.decode("utf-8").lstrip().strip(),
+            )
+            return False
 
     return True
 
