@@ -14,12 +14,12 @@ from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA,
     ImageProcessingFaceEntity,
 )
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_NAME = "name"
 CONF_FACES = "faces"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

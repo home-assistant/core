@@ -1,5 +1,8 @@
 """Support for Ambient Weather Station binary sensors."""
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR,
+    BinarySensorEntity,
+)
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import callback
 
@@ -15,16 +18,13 @@ from . import (
     TYPE_BATT8,
     TYPE_BATT9,
     TYPE_BATT10,
+    TYPE_BATT_CO2,
     TYPE_BATTOUT,
+    TYPE_PM25_BATT,
+    TYPE_PM25IN_BATT,
     AmbientWeatherEntity,
 )
-from .const import (
-    ATTR_LAST_DATA,
-    ATTR_MONITORED_CONDITIONS,
-    DATA_CLIENT,
-    DOMAIN,
-    TYPE_BINARY_SENSOR,
-)
+from .const import ATTR_LAST_DATA, ATTR_MONITORED_CONDITIONS, DATA_CLIENT, DOMAIN
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -35,7 +35,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     for mac_address, station in ambient.stations.items():
         for condition in station[ATTR_MONITORED_CONDITIONS]:
             name, _, kind, device_class = SENSOR_TYPES[condition]
-            if kind == TYPE_BINARY_SENSOR:
+            if kind == BINARY_SENSOR:
                 binary_sensor_list.append(
                     AmbientWeatherBinarySensor(
                         ambient,
@@ -67,7 +67,10 @@ class AmbientWeatherBinarySensor(AmbientWeatherEntity, BinarySensorEntity):
             TYPE_BATT7,
             TYPE_BATT8,
             TYPE_BATT9,
+            TYPE_BATT_CO2,
             TYPE_BATTOUT,
+            TYPE_PM25_BATT,
+            TYPE_PM25IN_BATT,
         ):
             return self._state == 0
 

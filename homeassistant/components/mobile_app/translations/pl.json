@@ -8,5 +8,11 @@
                 "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?"
             }
         }
-    }
+    },
+    "device_automation": {
+        "action_type": {
+            "notify": "wy\u015blij powiadomienie"
+        }
+    },
+    "title": "Aplikacja mobilna"
 }

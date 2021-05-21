@@ -11,10 +11,6 @@ NEATO_ROBOTS = "neato_robots"
 
 SCAN_INTERVAL_MINUTES = 1
 
-SERVICE_NEATO_CUSTOM_CLEANING = "custom_cleaning"
-
-VALID_VENDORS = ["neato", "vorwerk"]
-
 MODE = {1: "Eco", 2: "Turbo"}
 
 ACTION = {
@@ -123,6 +119,7 @@ ERRORS = {
     "nav_backdrop_frontbump": "Clear my path",
     "nav_backdrop_leftbump": "Clear my path",
     "nav_backdrop_wheelextended": "Clear my path",
+    "nav_floorplan_zone_path_blocked": "Clear my path",
     "nav_mag_sensor": "Clear my path",
     "nav_no_exit": "Clear my path",
     "nav_no_movement": "Clear my path",

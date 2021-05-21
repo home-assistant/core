@@ -1,8 +1,8 @@
 """Tests for the aws component config and setup."""
+from unittest.mock import AsyncMock, MagicMock, patch as async_patch
+
 from homeassistant.components import aws
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import AsyncMock, MagicMock, patch as async_patch
 
 
 class MockAioSession:

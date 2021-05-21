@@ -8,9 +8,11 @@ from logi_circle.exception import AuthorizationFailed
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.camera import ATTR_FILENAME, CAMERA_SERVICE_SCHEMA
+from homeassistant.components.camera import ATTR_FILENAME
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_MODE,
+    CONF_API_KEY,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_MONITORED_CONDITIONS,
@@ -22,7 +24,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import config_flow
 from .const import (
-    CONF_API_KEY,
     CONF_REDIRECT_URI,
     DATA_LOGI,
     DEFAULT_CACHEDB,
@@ -47,6 +48,8 @@ SERVICE_LIVESTREAM_RECORD = "livestream_record"
 ATTR_VALUE = "value"
 ATTR_DURATION = "duration"
 
+PLATFORMS = ["camera", "sensor"]
+
 SENSOR_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_MONITORED_CONDITIONS, default=list(LOGI_SENSORS)): vol.All(
@@ -70,19 +73,24 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-LOGI_CIRCLE_SERVICE_SET_CONFIG = CAMERA_SERVICE_SCHEMA.extend(
+LOGI_CIRCLE_SERVICE_SET_CONFIG = vol.Schema(
     {
+        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
         vol.Required(ATTR_MODE): vol.In([LED_MODE_KEY, RECORDING_MODE_KEY]),
         vol.Required(ATTR_VALUE): cv.boolean,
     }
 )
 
-LOGI_CIRCLE_SERVICE_SNAPSHOT = CAMERA_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_FILENAME): cv.template}
+LOGI_CIRCLE_SERVICE_SNAPSHOT = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
+        vol.Required(ATTR_FILENAME): cv.template,
+    }
 )
 
-LOGI_CIRCLE_SERVICE_RECORD = CAMERA_SERVICE_SCHEMA.extend(
+LOGI_CIRCLE_SERVICE_RECORD = vol.Schema(
     {
+        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
         vol.Required(ATTR_FILENAME): cv.template,
         vol.Required(ATTR_DURATION): cv.positive_int,
     }
@@ -117,7 +125,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Logi Circle from a config entry."""
-
     logi_circle = LogiCircle(
         client_id=entry.data[CONF_CLIENT_ID],
         client_secret=entry.data[CONF_CLIENT_SECRET],
@@ -172,10 +179,7 @@ async def async_setup_entry(hass, entry):
 
     hass.data[DATA_LOGI] = logi_circle
 
-    for component in "camera", "sensor":
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def service_handler(service):
         """Dispatch service calls to target entities."""
@@ -213,15 +217,16 @@ async def async_setup_entry(hass, entry):
         """Close Logi Circle aiohttp session."""
         await logi_circle.auth_provider.close()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
+    )
 
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    for component in "camera", "sensor":
-        await hass.config_entries.async_forward_entry_unload(entry, component)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     logi_circle = hass.data.pop(DATA_LOGI)
 
@@ -229,4 +234,4 @@ async def async_unload_entry(hass, entry):
     # and clear all locally cached tokens
     await logi_circle.auth_provider.clear_authorization()
 
-    return True
+    return unload_ok

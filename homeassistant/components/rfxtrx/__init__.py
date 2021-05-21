@@ -3,6 +3,7 @@ import asyncio
 import binascii
 from collections import OrderedDict
 import copy
+import functools
 import logging
 
 import RFXtrx as rfxtrxmod
@@ -12,6 +13,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_DEVICE,
@@ -37,6 +39,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -148,7 +151,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-DOMAINS = ["switch", "sensor", "light", "binary_sensor", "cover"]
+PLATFORMS = ["switch", "sensor", "light", "binary_sensor", "cover"]
 
 
 async def async_setup(hass, config):
@@ -199,24 +202,14 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
         )
         return False
 
-    for domain in DOMAINS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, domain)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass, entry: config_entries.ConfigEntry):
     """Unload RFXtrx component."""
-    if not all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in DOMAINS
-            ]
-        )
-    ):
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
 
     hass.services.async_remove(DOMAIN, SERVICE_SEND)
@@ -275,6 +268,10 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
     # Setup some per device config
     devices = _get_device_lookup(config[CONF_DEVICES])
 
+    device_registry: DeviceRegistry = (
+        await hass.helpers.device_registry.async_get_registry()
+    )
+
     # Declare the Handle event
     @callback
     def async_handle_receive(event):
@@ -297,9 +294,17 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
         data_bits = get_device_data_bits(event.device, devices)
         device_id = get_device_id(event.device, data_bits=data_bits)
 
-        # Register new devices
-        if config[CONF_AUTOMATIC_ADD] and device_id not in devices:
-            _add_device(event, device_id)
+        if device_id not in devices:
+            if config[CONF_AUTOMATIC_ADD]:
+                _add_device(event, device_id)
+            else:
+                return
+
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, *device_id)},
+        )
+        if device_entry:
+            event_data[ATTR_DEVICE_ID] = device_entry.id
 
         # Callback to HA registered components.
         hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_EVENT, event, device_id)
@@ -413,7 +418,7 @@ def find_possible_pt2262_device(device_ids, device_id):
             if size is not None:
                 size = len(dev_id) - size - 1
                 _LOGGER.info(
-                    "rfxtrx: found possible device %s for %s "
+                    "Found possible device %s for %s "
                     "with the following configuration:\n"
                     "data_bits=%d\n"
                     "command_on=0x%s\n"
@@ -474,7 +479,8 @@ class RfxtrxEntity(RestoreEntity):
 
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
-                f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{self._device_id}", self.async_remove
+                f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{self._device_id}",
+                functools.partial(self.async_remove, force_remove=True),
             )
         )
 
@@ -489,7 +495,7 @@ class RfxtrxEntity(RestoreEntity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         if not self._event:
             return None

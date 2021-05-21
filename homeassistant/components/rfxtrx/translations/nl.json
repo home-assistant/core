@@ -10,9 +10,22 @@
         "step": {
             "setup_network": {
                 "data": {
+                    "host": "Host",
                     "port": "Poort"
                 },
                 "title": "Selecteer verbindingsadres"
+            },
+            "setup_serial": {
+                "data": {
+                    "device": "Selecteer apparaat"
+                },
+                "title": "Apparaat"
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "USB-apparaatpad"
+                },
+                "title": "Pad"
             },
             "user": {
                 "data": {
@@ -25,7 +38,37 @@
     "options": {
         "error": {
             "already_configured_device": "Apparaat is al geconfigureerd",
+            "invalid_event_code": "Ongeldige gebeurteniscode",
+            "invalid_input_2262_off": "Ongeldige invoer voor commando uit",
+            "invalid_input_2262_on": "Ongeldige invoer voor commando aan",
+            "invalid_input_off_delay": "Ongeldige invoer voor uitschakelvertraging",
             "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "prompt_options": {
+                "data": {
+                    "automatic_add": "Schakel automatisch toevoegen in",
+                    "debug": "Foutopsporing inschakelen",
+                    "device": "Selecteer het apparaat om te configureren",
+                    "event_code": "Voer de gebeurteniscode in om toe te voegen",
+                    "remove_device": "Apparaat selecteren dat u wilt verwijderen"
+                },
+                "title": "Rfxtrx-opties"
+            },
+            "set_device_options": {
+                "data": {
+                    "command_off": "Waarde gegevensbits voor commando uit",
+                    "command_on": "Waarde gegevensbits voor commando aan",
+                    "data_bit": "Aantal databits",
+                    "fire_event": "Schakel apparaatgebeurtenis in",
+                    "off_delay": "Uitschakelvertraging",
+                    "off_delay_enabled": "Schakel uitschakelvertraging in",
+                    "replace_device": "Selecteer apparaat dat u wilt vervangen",
+                    "signal_repetitions": "Aantal signaalherhalingen",
+                    "venetian_blind_mode": "Venetiaanse jaloezie modus"
+                },
+                "title": "Configureer apparaatopties"
+            }
         }
     }
 }

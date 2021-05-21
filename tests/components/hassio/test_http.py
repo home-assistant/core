@@ -1,11 +1,10 @@
 """The tests for the hassio component."""
 import asyncio
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.hassio.http import _need_auth
-
-from tests.async_mock import patch
 
 
 async def test_forward_request(hassio_client, aioclient_mock):
@@ -129,8 +128,8 @@ async def test_forwarding_user_info(hassio_client, hass_admin_user, aioclient_mo
     assert len(aioclient_mock.mock_calls) == 1
 
     req_headers = aioclient_mock.mock_calls[0][-1]
-    req_headers["X-Hass-User-ID"] == hass_admin_user.id
-    req_headers["X-Hass-Is-Admin"] == "1"
+    assert req_headers["X-Hass-User-ID"] == hass_admin_user.id
+    assert req_headers["X-Hass-Is-Admin"] == "1"
 
 
 async def test_snapshot_upload_headers(hassio_client, aioclient_mock):
@@ -148,7 +147,7 @@ async def test_snapshot_upload_headers(hassio_client, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 1
 
     req_headers = aioclient_mock.mock_calls[0][-1]
-    req_headers["Content-Type"] == content_type
+    assert req_headers["Content-Type"] == content_type
 
 
 async def test_snapshot_download_headers(hassio_client, aioclient_mock):
@@ -169,7 +168,7 @@ async def test_snapshot_download_headers(hassio_client, aioclient_mock):
 
     assert len(aioclient_mock.mock_calls) == 1
 
-    resp.headers["Content-Disposition"] == content_disposition
+    assert resp.headers["Content-Disposition"] == content_disposition
 
 
 def test_need_auth(hass):

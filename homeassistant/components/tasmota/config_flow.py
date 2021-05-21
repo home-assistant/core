@@ -4,18 +4,13 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.mqtt import valid_subscribe_topic
 
-from .const import (  # pylint:disable=unused-import
-    CONF_DISCOVERY_PREFIX,
-    DEFAULT_PREFIX,
-    DOMAIN,
-)
+from .const import CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX, DOMAIN
 
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize flow."""

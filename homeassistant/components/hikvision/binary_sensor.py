@@ -14,6 +14,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (
     ATTR_LAST_TRIP_TIME,
     CONF_CUSTOMIZE,
+    CONF_DELAY,
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
@@ -30,7 +31,6 @@ from homeassistant.util.dt import utcnow
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IGNORED = "ignored"
-CONF_DELAY = "delay"
 
 DEFAULT_PORT = 80
 DEFAULT_IGNORED = False
@@ -139,7 +139,6 @@ class HikvisionData:
 
     def __init__(self, hass, url, port, name, username, password):
         """Initialize the data object."""
-
         self._url = url
         self._port = port
         self._name = name
@@ -253,7 +252,7 @@ class HikvisionBinarySensor(BinarySensorEntity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attr = {ATTR_LAST_TRIP_TIME: self._sensor_last_update()}
 

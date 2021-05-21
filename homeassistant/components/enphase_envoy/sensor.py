@@ -1,46 +1,27 @@
 """Support for Enphase Envoy solar energy monitor."""
+
 import logging
 
-from envoy_reader.envoy_reader import EnvoyReader
-import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    ENERGY_WATT_HOUR,
-    POWER_WATT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
-
-SENSORS = {
-    "production": ("Envoy Current Energy Production", POWER_WATT),
-    "daily_production": ("Envoy Today's Energy Production", ENERGY_WATT_HOUR),
-    "seven_days_production": (
-        "Envoy Last Seven Days Energy Production",
-        ENERGY_WATT_HOUR,
-    ),
-    "lifetime_production": ("Envoy Lifetime Energy Production", ENERGY_WATT_HOUR),
-    "consumption": ("Envoy Current Energy Consumption", POWER_WATT),
-    "daily_consumption": ("Envoy Today's Energy Consumption", ENERGY_WATT_HOUR),
-    "seven_days_consumption": (
-        "Envoy Last Seven Days Energy Consumption",
-        ENERGY_WATT_HOUR,
-    ),
-    "lifetime_consumption": ("Envoy Lifetime Energy Consumption", ENERGY_WATT_HOUR),
-    "inverters": ("Envoy Inverter", POWER_WATT),
-}
-
+from .const import COORDINATOR, DOMAIN, NAME, SENSORS
 
 ICON = "mdi:flash"
 CONST_DEFAULT_HOST = "envoy"
+_LOGGER = logging.getLogger(__name__)
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -57,61 +38,88 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Enphase Envoy sensor."""
-    ip_address = config[CONF_IP_ADDRESS]
-    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
-    name = config[CONF_NAME]
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
+    _LOGGER.warning(
+        "Loading enphase_envoy via platform config is deprecated; The configuration"
+        " has been migrated to a config entry and can be safely removed"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
 
-    envoy_reader = EnvoyReader(ip_address, username, password)
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up envoy sensor platform."""
+    data = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = data[COORDINATOR]
+    name = data[NAME]
 
     entities = []
-    # Iterate through the list of sensors
-    for condition in monitored_conditions:
-        if condition == "inverters":
-            try:
-                inverters = await envoy_reader.inverters_production()
-            except requests.exceptions.HTTPError:
-                _LOGGER.warning(
-                    "Authentication for Inverter data failed during setup: %s",
-                    ip_address,
+    for condition in SENSORS:
+        entity_name = ""
+        if (
+            condition == "inverters"
+            and coordinator.data.get("inverters_production") is not None
+        ):
+            for inverter in coordinator.data["inverters_production"]:
+                entity_name = f"{name} {SENSORS[condition][0]} {inverter}"
+                split_name = entity_name.split(" ")
+                serial_number = split_name[-1]
+                entities.append(
+                    Envoy(
+                        condition,
+                        entity_name,
+                        name,
+                        config_entry.unique_id,
+                        serial_number,
+                        SENSORS[condition][1],
+                        coordinator,
+                    )
                 )
+        elif condition != "inverters":
+            data = coordinator.data.get(condition)
+            if isinstance(data, str) and "not available" in data:
                 continue
 
-            if isinstance(inverters, dict):
-                for inverter in inverters:
-                    entities.append(
-                        Envoy(
-                            envoy_reader,
-                            condition,
-                            f"{name}{SENSORS[condition][0]} {inverter}",
-                            SENSORS[condition][1],
-                        )
-                    )
-
-        else:
+            entity_name = f"{name} {SENSORS[condition][0]}"
             entities.append(
                 Envoy(
-                    envoy_reader,
                     condition,
-                    f"{name}{SENSORS[condition][0]}",
+                    entity_name,
+                    name,
+                    config_entry.unique_id,
+                    None,
                     SENSORS[condition][1],
+                    coordinator,
                 )
             )
+
     async_add_entities(entities)
 
 
-class Envoy(Entity):
-    """Implementation of the Enphase Envoy sensors."""
+class Envoy(CoordinatorEntity, SensorEntity):
+    """Envoy entity."""
 
-    def __init__(self, envoy_reader, sensor_type, name, unit):
-        """Initialize the sensor."""
-        self._envoy_reader = envoy_reader
+    def __init__(
+        self,
+        sensor_type,
+        name,
+        device_name,
+        device_serial_number,
+        serial_number,
+        unit,
+        coordinator,
+    ):
+        """Initialize Envoy entity."""
         self._type = sensor_type
         self._name = name
+        self._serial_number = serial_number
+        self._device_name = device_name
+        self._device_serial_number = device_serial_number
         self._unit_of_measurement = unit
-        self._state = None
-        self._last_reported = None
+
+        super().__init__(coordinator)
 
     @property
     def name(self):
@@ -119,9 +127,30 @@ class Envoy(Entity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        if self._serial_number:
+            return self._serial_number
+        if self._device_serial_number:
+            return f"{self._device_serial_number}_{self._type}"
+
+    @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        if self._type != "inverters":
+            value = self.coordinator.data.get(self._type)
+
+        elif (
+            self._type == "inverters"
+            and self.coordinator.data.get("inverters_production") is not None
+        ):
+            value = self.coordinator.data.get("inverters_production").get(
+                self._serial_number
+            )[0]
+        else:
+            return None
+
+        return value
 
     @property
     def unit_of_measurement(self):
@@ -134,35 +163,27 @@ class Envoy(Entity):
         return ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        if self._type == "inverters":
-            return {"last_reported": self._last_reported}
+        if (
+            self._type == "inverters"
+            and self.coordinator.data.get("inverters_production") is not None
+        ):
+            value = self.coordinator.data.get("inverters_production").get(
+                self._serial_number
+            )[1]
+            return {"last_reported": value}
 
         return None
 
-    async def async_update(self):
-        """Get the energy production data from the Enphase Envoy."""
-        if self._type != "inverters":
-            _state = await getattr(self._envoy_reader, self._type)()
-            if isinstance(_state, int):
-                self._state = _state
-            else:
-                _LOGGER.error(_state)
-                self._state = None
-
-        elif self._type == "inverters":
-            try:
-                inverters = await (self._envoy_reader.inverters_production())
-            except requests.exceptions.HTTPError:
-                _LOGGER.warning(
-                    "Authentication for Inverter data failed during update: %s",
-                    self._envoy_reader.host,
-                )
-
-            if isinstance(inverters, dict):
-                serial_number = self._name.split(" ")[2]
-                self._state = inverters[serial_number][0]
-                self._last_reported = inverters[serial_number][1]
-            else:
-                self._state = None
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        if not self._device_serial_number:
+            return None
+        return {
+            "identifiers": {(DOMAIN, str(self._device_serial_number))},
+            "name": self._device_name,
+            "model": "Envoy",
+            "manufacturer": "Enphase",
+        }

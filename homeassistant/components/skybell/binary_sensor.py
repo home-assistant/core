@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 
 from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 # Sensor types: Name, device_class, event
 SENSOR_TYPES = {
@@ -76,9 +76,9 @@ class SkybellBinarySensor(SkybellDevice, BinarySensorEntity):
         return self._device_class
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        attrs = super().device_state_attributes
+        attrs = super().extra_state_attributes
 
         attrs["event_date"] = self._event.get("createdAt")
 

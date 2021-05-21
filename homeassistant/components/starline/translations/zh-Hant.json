@@ -26,7 +26,7 @@
                     "mfa_code": "\u7c21\u8a0a\u5bc6\u78bc"
                 },
                 "description": "\u8f38\u5165\u50b3\u9001\u81f3 {phone_number} \u7684\u9a57\u8b49\u78bc",
-                "title": "\u96d9\u91cd\u9a57\u8b49"
+                "title": "\u96d9\u91cd\u8a8d\u8b49"
             },
             "auth_user": {
                 "data": {

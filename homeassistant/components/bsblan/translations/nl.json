@@ -6,13 +6,15 @@
         "error": {
             "cannot_connect": "Kan geen verbinding maken"
         },
-        "flow_title": "BSB-Lan: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
                     "passkey": "Passkey-tekenreeks",
-                    "port": "Poort"
+                    "password": "Wachtwoord",
+                    "port": "Poort",
+                    "username": "Gebruikersnaam"
                 },
                 "description": "Stel uw BSB-Lan-apparaat in om te integreren met Home Assistant.",
                 "title": "Maak verbinding met het BSB-Lan-apparaat"

@@ -31,6 +31,7 @@ from .const import (
     IS_WIRELESS,
     MIKROTIK_SERVICES,
     NAME,
+    PLATFORMS,
     WIRELESS,
 )
 from .errors import CannotConnect, LoginError
@@ -53,6 +54,11 @@ class Device:
     def name(self):
         """Return device name."""
         return self._params.get("host-name", self.mac)
+
+    @property
+    def ip_address(self):
+        """Return device primary ip address."""
+        return self._params.get("address")
 
     @property
     def mac(self):
@@ -271,9 +277,8 @@ class MikrotikData:
 
     def update(self):
         """Update device_tracker from Mikrotik API."""
-        if not self.available or not self.api:
-            if not self.connect_to_hub():
-                return
+        if (not self.available or not self.api) and not self.connect_to_hub():
+            return
         _LOGGER.debug("updating network devices for host: %s", self._host)
         self.update_devices()
 
@@ -381,11 +386,7 @@ class MikrotikHub:
         await self.hass.async_add_executor_job(self._mk_data.get_hub_details)
         await self.hass.async_add_executor_job(self._mk_data.update)
 
-        self.hass.async_create_task(
-            self.hass.config_entries.async_forward_entry_setup(
-                self.config_entry, "device_tracker"
-            )
-        )
+        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
         return True
 
 

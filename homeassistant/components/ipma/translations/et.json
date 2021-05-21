@@ -15,5 +15,10 @@
                 "title": "Asukoht"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "IPMA API l\u00f5pp-punkt on k\u00e4ttesaadav"
+        }
     }
 }

@@ -71,4 +71,4 @@ DEFAULT_AQI_STANDARD = "us"
 DEFAULT_PREFERRED_UNIT = []
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
-KAITERRA_COMPONENTS = ["sensor", "air_quality"]
+PLATFORMS = ["sensor", "air_quality"]

@@ -15,5 +15,10 @@
                 "title": "Plassering"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "IPMA API-endepunkt n\u00e5s"
+        }
     }
 }

@@ -1,4 +1,6 @@
 """Test HomeKit initialization."""
+from unittest.mock import patch
+
 from homeassistant.components import logbook
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
@@ -9,7 +11,6 @@ from homeassistant.components.homekit.const import (
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SERVICE
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.components.logbook.test_init import MockLazyEventPartialState
 
 

@@ -1,10 +1,12 @@
 """Helper functions for cloud components."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 from aiohttp import payload, web
 
 
-def aiohttp_serialize_response(response: web.Response) -> Dict[str, Any]:
+def aiohttp_serialize_response(response: web.Response) -> dict[str, Any]:
     """Serialize an aiohttp response to a dictionary."""
     body = response.body
 

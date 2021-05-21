@@ -1,7 +1,9 @@
 """Helper to help coordinating calls."""
+from __future__ import annotations
+
 import asyncio
 import functools
-from typing import Callable, Optional, TypeVar, cast
+from typing import Callable, TypeVar, cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
@@ -24,7 +26,7 @@ def singleton(data_key: str) -> Callable[[FUNC], FUNC]:
             @bind_hass
             @functools.wraps(func)
             def wrapped(hass: HomeAssistant) -> T:
-                obj: Optional[T] = hass.data.get(data_key)
+                obj: T | None = hass.data.get(data_key)
                 if obj is None:
                     obj = hass.data[data_key] = func(hass)
                 return obj

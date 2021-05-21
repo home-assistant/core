@@ -19,7 +19,7 @@ def entities(hass):
     yield platform.ENTITIES[0:2]
 
 
-async def test_config_yaml_alias_anchor(hass, entities):
+async def test_config_yaml_alias_anchor(hass, entities, enable_custom_integrations):
     """Test the usage of YAML aliases and anchors.
 
     The following test scene configuration is equivalent to:
@@ -60,11 +60,11 @@ async def test_config_yaml_alias_anchor(hass, entities):
 
     assert light.is_on(hass, light_1.entity_id)
     assert light.is_on(hass, light_2.entity_id)
-    assert 100 == light_1.last_call("turn_on")[1].get("brightness")
-    assert 100 == light_2.last_call("turn_on")[1].get("brightness")
+    assert light_1.last_call("turn_on")[1].get("brightness") == 100
+    assert light_2.last_call("turn_on")[1].get("brightness") == 100
 
 
-async def test_config_yaml_bool(hass, entities):
+async def test_config_yaml_bool(hass, entities, enable_custom_integrations):
     """Test parsing of booleans in yaml config."""
     light_1, light_2 = await setup_lights(hass, entities)
 
@@ -88,10 +88,10 @@ async def test_config_yaml_bool(hass, entities):
 
     assert light.is_on(hass, light_1.entity_id)
     assert light.is_on(hass, light_2.entity_id)
-    assert 100 == light_2.last_call("turn_on")[1].get("brightness")
+    assert light_2.last_call("turn_on")[1].get("brightness") == 100
 
 
-async def test_activate_scene(hass, entities):
+async def test_activate_scene(hass, entities, enable_custom_integrations):
     """Test active scene."""
     light_1, light_2 = await setup_lights(hass, entities)
 

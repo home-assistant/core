@@ -10,9 +10,21 @@
             "user": {
                 "data": {
                     "host": "Servidor",
+                    "name": "Nome",
                     "password": "Palavra-passe",
                     "port": "Porta",
-                    "username": "Nome de Utilizador"
+                    "ssl": "Utiliza um certificado SSL",
+                    "username": "Nome de Utilizador",
+                    "verify_ssl": "Verificar o certificado SSL"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Frequ\u00eancia de atualiza\u00e7\u00e3o"
                 }
             }
         }

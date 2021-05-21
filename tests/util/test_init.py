@@ -1,28 +1,55 @@
 """Test Home Assistant util methods."""
 from datetime import datetime, timedelta
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant import util
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import MagicMock, patch
-
 
 def test_sanitize_filename():
     """Test sanitize_filename."""
     assert util.sanitize_filename("test") == "test"
-    assert util.sanitize_filename("/test") == "test"
-    assert util.sanitize_filename("..test") == "test"
-    assert util.sanitize_filename("\\test") == "test"
-    assert util.sanitize_filename("\\../test") == "test"
+    assert util.sanitize_filename("/test") == ""
+    assert util.sanitize_filename("..test") == ""
+    assert util.sanitize_filename("\\test") == ""
+    assert util.sanitize_filename("\\../test") == ""
 
 
 def test_sanitize_path():
     """Test sanitize_path."""
     assert util.sanitize_path("test/path") == "test/path"
-    assert util.sanitize_path("~test/path") == "test/path"
-    assert util.sanitize_path("~/../test/path") == "//test/path"
+    assert util.sanitize_path("~test/path") == ""
+    assert util.sanitize_path("~/../test/path") == ""
+
+
+def test_raise_if_invalid_filename():
+    """Test raise_if_invalid_filename."""
+    assert util.raise_if_invalid_filename("test") is None
+
+    with pytest.raises(ValueError):
+        util.raise_if_invalid_filename("/test")
+
+    with pytest.raises(ValueError):
+        util.raise_if_invalid_filename("..test")
+
+    with pytest.raises(ValueError):
+        util.raise_if_invalid_filename("\\test")
+
+    with pytest.raises(ValueError):
+        util.raise_if_invalid_filename("\\../test")
+
+
+def test_raise_if_invalid_path():
+    """Test raise_if_invalid_path."""
+    assert util.raise_if_invalid_path("test/path") is None
+
+    with pytest.raises(ValueError):
+        assert util.raise_if_invalid_path("~test/path")
+
+    with pytest.raises(ValueError):
+        assert util.raise_if_invalid_path("~/../test/path")
 
 
 def test_slugify():
@@ -41,6 +68,12 @@ def test_slugify():
     assert util.slugify("Tèst_äöüß_ÄÖÜ") == "test_aouss_aou"
     assert util.slugify("影師嗎") == "ying_shi_ma"
     assert util.slugify("けいふぉんと") == "keihuonto"
+    assert util.slugify("$") == "unknown"
+    assert util.slugify("Ⓐ") == "unknown"
+    assert util.slugify("ⓑ") == "unknown"
+    assert util.slugify("$$$") == "unknown"
+    assert util.slugify("$something") == "something"
+    assert util.slugify("") == ""
 
 
 def test_repr_helper():

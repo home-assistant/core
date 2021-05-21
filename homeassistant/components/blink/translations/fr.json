@@ -14,7 +14,7 @@
                 "data": {
                     "2fa": "Code \u00e0 deux facteurs"
                 },
-                "description": "Entrez le code PIN envoy\u00e9 \u00e0 votre e-mail",
+                "description": "Entrez le NIP envoy\u00e9 \u00e0 votre e-mail",
                 "title": "Authentification \u00e0 deux facteurs"
             },
             "user": {

@@ -1,5 +1,5 @@
-"""Provides device automations for NEW_NAME."""
-from typing import List, Optional
+"""Provides device actions for NEW_NAME."""
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -29,7 +29,7 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device actions for NEW_NAME devices."""
     registry = await entity_registry.async_get_registry(hass)
     actions = []
@@ -69,11 +69,9 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
 
 
 async def async_call_action_from_config(
-    hass: HomeAssistant, config: dict, variables: dict, context: Optional[Context]
+    hass: HomeAssistant, config: dict, variables: dict, context: Context | None
 ) -> None:
     """Execute a device action."""
-    config = ACTION_SCHEMA(config)
-
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
 
     if config[CONF_TYPE] == "turn_on":

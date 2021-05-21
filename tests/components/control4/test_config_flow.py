@@ -1,5 +1,6 @@
 """Test the Control4 config flow."""
 import datetime
+from unittest.mock import AsyncMock, patch
 
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
@@ -14,7 +15,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 
@@ -62,8 +62,6 @@ async def test_form(hass):
         "homeassistant.components.control4.config_flow.C4Director",
         return_value=c4_director,
     ), patch(
-        "homeassistant.components.control4.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.control4.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -85,7 +83,6 @@ async def test_form(hass):
         CONF_PASSWORD: "test-password",
         "controller_unique_id": "control4_model_00AA00AA00AA",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 

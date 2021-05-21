@@ -6,7 +6,7 @@
             "unknown": "Uventet feil"
         },
         "error": {
-            "invalid_sgtin_or_pin": "Ugyldig SGTIN eller PIN-kode , pr\u00f8v igjen.",
+            "invalid_sgtin_or_pin": "Ugyldig SGTIN eller PIN kode , pr\u00f8v igjen.",
             "press_the_button": "Vennligst trykk p\u00e5 den bl\u00e5 knappen.",
             "register_failed": "Kunne ikke registrere, vennligst pr\u00f8v igjen.",
             "timeout_button": "Bl\u00e5 knapp-trykk tok for lang tid, vennligst pr\u00f8v igjen."
@@ -16,7 +16,7 @@
                 "data": {
                     "hapid": "Tilgangspunkt ID (SGTIN)",
                     "name": "Navn (valgfritt, brukes som navneprefiks for alle enheter)",
-                    "pin": "PIN-kode"
+                    "pin": "PIN kode"
                 },
                 "title": "Velg HomematicIP tilgangspunkt"
             },

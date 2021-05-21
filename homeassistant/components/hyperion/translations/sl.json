@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Storitev je \u017ee name\u0161\u010dena",
+            "already_in_progress": "Name\u0161\u010danje se \u017ee izvaja",
+            "auth_new_token_not_granted_error": "Uporabni\u0161ki vmesnik Hyperion UI ni potrdil novo ustvarjenega \u017eetona",
+            "auth_new_token_not_work_error": "Overjanje s pomo\u010djo novo ustvarjenega \u017eetona ni uspelo",
+            "auth_required_error": "Ni mogo\u010de dolo\u010diti ali je overjanje potrebno",
+            "cannot_connect": "Povezovanje ni bilo uspe\u0161no",
+            "no_id": "Hyperion Ambilight instanca ni prijavila tega id",
+            "reauth_successful": "Ponovno overjanje je uspelo."
+        },
+        "error": {
+            "cannot_connect": "Neuspelo povezovanje",
+            "invalid_access_token": "Neveljaven \u017eeton za dostop"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "create_token": "Samodejno ustvari nov \u017eeton",
+                    "token": "ali zagotovite \u017ee obstoje\u010di \u017eeton"
+                },
+                "description": "Nastavite overitev za Hyperion Ambilight stre\u017enik"
+            },
+            "confirm": {
+                "description": "\u017delite dodati ta Hyperion Ambilight v  Home Assistant?\n\n**Gostitelj:** {host}\n**Vrata:** {port}\n**ID**: {id}",
+                "title": "Potrdi dodajanje storitve Hyperion Ambilight"
+            },
+            "create_token": {
+                "description": "Izberite **Posreduj*, \u010de \u017eelite zahtevati nov overitveni \u017eeton. Preusmerjeni boste na uporabni\u0161ki vmesnik Hyperion, da potrdite zahtevek. Prepri\u010dajte se, da je prikazani id \"{auth_id}\"",
+                "title": "Samodejno ustvari nov overitveni \u017eeton"
+            },
+            "create_token_external": {
+                "title": "Sprejmi nov \u017eeton v uporabni\u0161kem vmesniku Hyperion"
+            },
+            "user": {
+                "data": {
+                    "host": "Gostitelj",
+                    "port": "Vrata"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "priority": "Prednostna raba Hyperiona za barve in u\u010dinke"
+                }
+            }
+        }
+    }
+}

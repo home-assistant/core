@@ -5,7 +5,12 @@ import logging
 from pyenvisalink import EnvisalinkAlarmPanel
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_TIMEOUT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_CODE,
+    CONF_HOST,
+    CONF_TIMEOUT,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -18,7 +23,6 @@ DOMAIN = "envisalink"
 
 DATA_EVL = "envisalink"
 
-CONF_CODE = "code"
 CONF_EVL_KEEPALIVE = "keepalive_interval"
 CONF_EVL_PORT = "port"
 CONF_EVL_VERSION = "evl_version"
@@ -99,7 +103,6 @@ SERVICE_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up for Envisalink devices."""
-
     conf = config.get(DOMAIN)
 
     host = conf.get(CONF_HOST)
@@ -141,9 +144,7 @@ async def async_setup(hass, config):
     @callback
     def connection_fail_callback(data):
         """Network failure callback."""
-        _LOGGER.error(
-            "Could not establish a connection with the Envisalink- retrying..."
-        )
+        _LOGGER.error("Could not establish a connection with the Envisalink- retrying")
         if not sync_connect.done():
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
             sync_connect.set_result(True)
@@ -159,13 +160,13 @@ async def async_setup(hass, config):
     @callback
     def zones_updated_callback(data):
         """Handle zone timer updates."""
-        _LOGGER.debug("Envisalink sent a zone update event. Updating zones...")
+        _LOGGER.debug("Envisalink sent a zone update event. Updating zones")
         async_dispatcher_send(hass, SIGNAL_ZONE_UPDATE, data)
 
     @callback
     def alarm_data_updated_callback(data):
         """Handle non-alarm based info updates."""
-        _LOGGER.debug("Envisalink sent new alarm info. Updating alarms...")
+        _LOGGER.debug("Envisalink sent new alarm info. Updating alarms")
         async_dispatcher_send(hass, SIGNAL_KEYPAD_UPDATE, data)
 
     @callback

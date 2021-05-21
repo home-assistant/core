@@ -14,6 +14,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -30,7 +31,7 @@ ATTR_SYSTEM_NAME = "system_name"
 DEFAULT_ATTRIBUTION = "Data provided by Notion"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.119")
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -97,26 +98,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=async_update,
     )
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a Notion config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
 
@@ -150,7 +141,7 @@ class NotionEntity(CoordinatorEntity):
         system_id: str,
         name: str,
         device_class: str,
-    ):
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
@@ -171,6 +162,7 @@ class NotionEntity(CoordinatorEntity):
         return (
             self.coordinator.last_update_success
             and self.task_id in self.coordinator.data["tasks"]
+            and self._state
         )
 
     @property
@@ -179,12 +171,12 @@ class NotionEntity(CoordinatorEntity):
         return self._device_class
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return self._attrs
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         bridge = self.coordinator.data["bridges"].get(self._bridge_id, {})
         sensor = self.coordinator.data["sensors"][self._sensor_id]
@@ -230,10 +222,10 @@ class NotionEntity(CoordinatorEntity):
         device_registry = await dr.async_get_registry(self.hass)
         bridge = self.coordinator.data["bridges"][self._bridge_id]
         bridge_device = device_registry.async_get_device(
-            {DOMAIN: bridge["hardware_id"]}, set()
+            {(DOMAIN, bridge["hardware_id"])}
         )
         this_device = device_registry.async_get_device(
-            {DOMAIN: sensor["hardware_id"]}, set()
+            {(DOMAIN, sensor["hardware_id"])}
         )
 
         device_registry.async_update_device(

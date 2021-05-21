@@ -1,7 +1,10 @@
 """Decorator for view methods to help with data validation."""
+from __future__ import annotations
+
+from collections.abc import Awaitable
 from functools import wraps
 import logging
-from typing import Any, Awaitable, Callable
+from typing import Any, Callable
 
 from aiohttp import web
 import voluptuous as vol
@@ -16,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 class RequestDataValidator:
     """Decorator that will validate the incoming data.
 
-    Takes in a voluptuous schema and adds 'post_data' as
+    Takes in a voluptuous schema and adds 'data' as
     keyword argument to the function call.
 
     Will return a 400 if no JSON provided or doesn't match schema.

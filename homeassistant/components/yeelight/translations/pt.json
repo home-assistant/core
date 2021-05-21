@@ -14,6 +14,9 @@
                 }
             },
             "user": {
+                "data": {
+                    "host": "Servidor"
+                },
                 "description": "Se voc\u00ea deixar o modelo vazio, ele ser\u00e1 detectado automaticamente."
             }
         }

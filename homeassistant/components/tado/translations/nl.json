@@ -4,7 +4,7 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
             "no_homes": "Er zijn geen huizen gekoppeld aan dit tado-account.",
             "unknown": "Onverwachte fout"

@@ -1,10 +1,11 @@
 """NuHeat component tests."""
+from unittest.mock import patch
+
 from homeassistant.components.nuheat.const import DOMAIN
-from homeassistant.setup import async_setup_component
 
-from .mocks import _get_mock_nuheat
+from .mocks import MOCK_CONFIG_ENTRY, _get_mock_nuheat
 
-from tests.async_mock import patch
+from tests.common import MockConfigEntry
 
 VALID_CONFIG = {
     "nuheat": {"username": "warm", "password": "feet", "devices": "thermostat123"}
@@ -20,5 +21,7 @@ async def test_init_success(hass):
         "homeassistant.components.nuheat.nuheat.NuHeat",
         return_value=mock_nuheat,
     ):
-        assert await async_setup_component(hass, DOMAIN, VALID_CONFIG)
+        config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG_ENTRY)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

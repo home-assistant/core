@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "A hely m\u00e1r konfigur\u00e1lva van"
+        },
         "step": {
             "user": {
                 "data": {

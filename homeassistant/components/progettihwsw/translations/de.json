@@ -1,5 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
         "step": {
             "relay_modes": {
                 "data": {
@@ -19,13 +26,15 @@
                     "relay_7": "Relais 7",
                     "relay_8": "Relais 8",
                     "relay_9": "Relais 9"
-                }
+                },
+                "title": "Relais einrichten"
             },
             "user": {
                 "data": {
                     "host": "Host",
                     "port": "Port"
-                }
+                },
+                "title": "Board einrichten"
             }
         }
     }

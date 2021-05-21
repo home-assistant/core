@@ -3,5 +3,6 @@
   "name": "Rain Bird",
   "documentation": "https://www.home-assistant.io/integrations/rainbird",
   "requirements": ["pyrainbird==0.4.2"],
-  "codeowners": ["@konikvranik"]
+  "codeowners": ["@konikvranik"],
+  "iot_class": "local_polling"
 }

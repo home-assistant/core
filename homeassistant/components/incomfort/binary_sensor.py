@@ -1,5 +1,7 @@
 """Support for an Intergas heater via an InComfort/InTouch Lan2RF gateway."""
-from typing import Any, Dict, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -40,6 +42,6 @@ class IncomfortFailed(IncomfortChild, BinarySensorEntity):
         return self._heater.status["is_failed"]
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""
         return {"fault_code": self._heater.status["fault_code"]}

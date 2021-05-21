@@ -1,12 +1,15 @@
 """Common test tools."""
 import asyncio
+from unittest.mock import MagicMock, patch
 
 from dsmr_parser.clients.protocol import DSMRProtocol
-from dsmr_parser.obis_references import EQUIPMENT_IDENTIFIER, EQUIPMENT_IDENTIFIER_GAS
+from dsmr_parser.obis_references import (
+    EQUIPMENT_IDENTIFIER,
+    EQUIPMENT_IDENTIFIER_GAS,
+    LUXEMBOURG_EQUIPMENT_IDENTIFIER,
+)
 from dsmr_parser.objects import CosemObject
 import pytest
-
-from tests.async_mock import MagicMock, patch
 
 
 @pytest.fixture
@@ -38,16 +41,26 @@ async def dsmr_connection_send_validate_fixture(hass):
     transport = MagicMock(spec=asyncio.Transport)
     protocol = MagicMock(spec=DSMRProtocol)
 
-    async def connection_factory(*args, **kwargs):
-        """Return mocked out Asyncio classes."""
-        return (transport, protocol)
-
-    connection_factory = MagicMock(wraps=connection_factory)
-
     protocol.telegram = {
         EQUIPMENT_IDENTIFIER: CosemObject([{"value": "12345678", "unit": ""}]),
         EQUIPMENT_IDENTIFIER_GAS: CosemObject([{"value": "123456789", "unit": ""}]),
     }
+
+    async def connection_factory(*args, **kwargs):
+        """Return mocked out Asyncio classes."""
+        if args[1] == "5L":
+            protocol.telegram = {
+                LUXEMBOURG_EQUIPMENT_IDENTIFIER: CosemObject(
+                    [{"value": "12345678", "unit": ""}]
+                ),
+                EQUIPMENT_IDENTIFIER_GAS: CosemObject(
+                    [{"value": "123456789", "unit": ""}]
+                ),
+            }
+
+        return (transport, protocol)
+
+    connection_factory = MagicMock(wraps=connection_factory)
 
     async def wait_closed():
         if isinstance(connection_factory.call_args_list[0][0][2], str):

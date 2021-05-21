@@ -19,7 +19,7 @@ from tests.common import (
     mock_device_registry,
     mock_registry,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -91,7 +91,7 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
         assert capabilities == expected_capabilities
 
 
-async def test_if_fires_on_state_change(hass, calls):
+async def test_if_fires_on_state_change(hass, calls, enable_custom_integrations):
     """Test for turn_on and turn_off triggers firing."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 
@@ -178,7 +178,9 @@ async def test_if_fires_on_state_change(hass, calls):
     )
 
 
-async def test_if_fires_on_state_change_with_for(hass, calls):
+async def test_if_fires_on_state_change_with_for(
+    hass, calls, enable_custom_integrations
+):
     """Test for triggers firing with delay."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 

@@ -1,5 +1,6 @@
 """The tests for the Met Office sensor component."""
 import json
+from unittest.mock import patch
 
 from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
 
@@ -15,7 +16,6 @@ from .const import (
     WAVERTREE_SENSOR_RESULTS,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 

@@ -1,8 +1,10 @@
 """Common fixtures and objects for the Switcher integration tests."""
+from __future__ import annotations
 
 from asyncio import Queue
 from datetime import datetime
-from typing import Any, Generator, Optional
+from typing import Any, Generator
+from unittest.mock import AsyncMock, patch
 
 from pytest import fixture
 
@@ -10,6 +12,7 @@ from .consts import (
     DUMMY_AUTO_OFF_SET,
     DUMMY_DEVICE_ID,
     DUMMY_DEVICE_NAME,
+    DUMMY_DEVICE_PASSWORD,
     DUMMY_DEVICE_STATE,
     DUMMY_ELECTRIC_CURRENT,
     DUMMY_IP_ADDRESS,
@@ -18,8 +21,6 @@ from .consts import (
     DUMMY_POWER_CONSUMPTION,
     DUMMY_REMAINING_TIME,
 )
-
-from tests.async_mock import AsyncMock, patch
 
 
 @patch("aioswitcher.devices.SwitcherV2Device")
@@ -56,7 +57,7 @@ class MockSwitcherV2Device:
         return DUMMY_DEVICE_STATE
 
     @property
-    def remaining_time(self) -> Optional[str]:
+    def remaining_time(self) -> str | None:
         """Return the time left to auto-off."""
         return DUMMY_REMAINING_TIME
 
@@ -79,6 +80,11 @@ class MockSwitcherV2Device:
     def phone_id(self) -> str:
         """Return the phone id."""
         return DUMMY_PHONE_ID
+
+    @property
+    def device_password(self) -> str:
+        """Return the device password."""
+        return DUMMY_DEVICE_PASSWORD
 
     @property
     def last_data_update(self) -> datetime:
@@ -170,10 +176,11 @@ def mock_api_fixture() -> Generator[AsyncMock, Any, None]:
 
     patchers = [
         patch(
-            "homeassistant.components.switcher_kis.SwitcherV2Api.connect", new=mock_api
+            "homeassistant.components.switcher_kis.switch.SwitcherV2Api.connect",
+            new=mock_api,
         ),
         patch(
-            "homeassistant.components.switcher_kis.SwitcherV2Api.disconnect",
+            "homeassistant.components.switcher_kis.switch.SwitcherV2Api.disconnect",
             new=mock_api,
         ),
     ]

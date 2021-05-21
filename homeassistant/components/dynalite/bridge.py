@@ -1,6 +1,7 @@
 """Code to handle a Dynalite bridge."""
+from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 from dynalite_devices_lib.dynalite_devices import (
     CONF_AREA as dyn_CONF_AREA,
@@ -16,21 +17,14 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import (
-    ATTR_AREA,
-    ATTR_HOST,
-    ATTR_PACKET,
-    ATTR_PRESET,
-    ENTITY_PLATFORMS,
-    LOGGER,
-)
+from .const import ATTR_AREA, ATTR_HOST, ATTR_PACKET, ATTR_PRESET, LOGGER, PLATFORMS
 from .convert_config import convert_config
 
 
 class DynaliteBridge:
     """Manages a single Dynalite bridge."""
 
-    def __init__(self, hass: HomeAssistant, config: Dict[str, Any]) -> None:
+    def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
         """Initialize the system based on host parameter."""
         self.hass = hass
         self.area = {}
@@ -51,12 +45,12 @@ class DynaliteBridge:
         LOGGER.debug("Setting up bridge - host %s", self.host)
         return await self.dynalite_devices.async_setup()
 
-    def reload_config(self, config: Dict[str, Any]) -> None:
+    def reload_config(self, config: dict[str, Any]) -> None:
         """Reconfigure a bridge when config changes."""
         LOGGER.debug("Reloading bridge - host %s, config %s", self.host, config)
         self.dynalite_devices.configure(convert_config(config))
 
-    def update_signal(self, device: Optional[DynaliteBaseDevice] = None) -> str:
+    def update_signal(self, device: DynaliteBaseDevice | None = None) -> str:
         """Create signal to use to trigger entity update."""
         if device:
             signal = f"dynalite-update-{self.host}-{device.unique_id}"
@@ -65,7 +59,7 @@ class DynaliteBridge:
         return signal
 
     @callback
-    def update_device(self, device: Optional[DynaliteBaseDevice] = None) -> None:
+    def update_device(self, device: DynaliteBaseDevice | None = None) -> None:
         """Call when a device or all devices should be updated."""
         if not device:
             # This is used to signal connection or disconnection, so all devices may become available or not.
@@ -105,9 +99,9 @@ class DynaliteBridge:
         if platform in self.waiting_devices:
             self.async_add_devices[platform](self.waiting_devices[platform])
 
-    def add_devices_when_registered(self, devices: List[DynaliteBaseDevice]) -> None:
+    def add_devices_when_registered(self, devices: list[DynaliteBaseDevice]) -> None:
         """Add the devices to HA if the add devices callback was registered, otherwise queue until it is."""
-        for platform in ENTITY_PLATFORMS:
+        for platform in PLATFORMS:
             platform_devices = [
                 device for device in devices if device.category == platform
             ]

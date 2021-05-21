@@ -1,26 +1,30 @@
 """Preference management for camera component."""
+from __future__ import annotations
+
+from typing import Final
+
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+
 from .const import DOMAIN, PREF_PRELOAD_STREAM
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
-
-STORAGE_KEY = DOMAIN
-STORAGE_VERSION = 1
-_UNDEF = object()
+STORAGE_KEY: Final = DOMAIN
+STORAGE_VERSION: Final = 1
 
 
 class CameraEntityPreferences:
     """Handle preferences for camera entity."""
 
-    def __init__(self, prefs):
+    def __init__(self, prefs: dict[str, bool]) -> None:
         """Initialize prefs."""
         self._prefs = prefs
 
-    def as_dict(self):
+    def as_dict(self) -> dict[str, bool]:
         """Return dictionary version."""
         return self._prefs
 
     @property
-    def preload_stream(self):
+    def preload_stream(self) -> bool:
         """Return if stream is loaded on hass start."""
         return self._prefs.get(PREF_PRELOAD_STREAM, False)
 
@@ -28,13 +32,13 @@ class CameraEntityPreferences:
 class CameraPreferences:
     """Handle camera preferences."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize camera prefs."""
         self._hass = hass
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-        self._prefs = None
+        self._prefs: dict[str, dict[str, bool]] | None = None
 
-    async def async_initialize(self):
+    async def async_initialize(self) -> None:
         """Finish initializing the preferences."""
         prefs = await self._store.async_load()
 
@@ -44,18 +48,26 @@ class CameraPreferences:
         self._prefs = prefs
 
     async def async_update(
-        self, entity_id, *, preload_stream=_UNDEF, stream_options=_UNDEF
-    ):
+        self,
+        entity_id: str,
+        *,
+        preload_stream: bool | UndefinedType = UNDEFINED,
+        stream_options: dict[str, str] | UndefinedType = UNDEFINED,
+    ) -> None:
         """Update camera preferences."""
+        # Prefs already initialized.
+        assert self._prefs is not None
         if not self._prefs.get(entity_id):
             self._prefs[entity_id] = {}
 
         for key, value in ((PREF_PRELOAD_STREAM, preload_stream),):
-            if value is not _UNDEF:
+            if value is not UNDEFINED:
                 self._prefs[entity_id][key] = value
 
         await self._store.async_save(self._prefs)
 
-    def get(self, entity_id):
+    def get(self, entity_id: str) -> CameraEntityPreferences:
         """Get preferences for an entity."""
+        # Prefs are already initialized.
+        assert self._prefs is not None
         return CameraEntityPreferences(self._prefs.get(entity_id, {}))
