@@ -3,9 +3,18 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_METHOD,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_TOKEN,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
+from .bridge import SamsungTVBridge
 from .const import CONF_ON_ACTION, DEFAULT_NAME, DOMAIN, LOGGER
 
 
@@ -60,15 +69,48 @@ async def async_setup(hass, config):
     return True
 
 
+@callback
+def _async_get_device_bridge(data):
+    """Get device bridge."""
+    return SamsungTVBridge.get_bridge(
+        data[CONF_METHOD],
+        data[CONF_HOST],
+        data[CONF_PORT],
+        data.get(CONF_TOKEN),
+    )
+
+
 async def async_setup_entry(hass, entry):
     """Set up the Samsung TV platform."""
+
+    # Initialize bridge
+    data = entry.data.copy()
+    bridge = _async_get_device_bridge(data)
+    if bridge.port is None and bridge.default_port is not None:
+        # For backward compat, set default port for websocket tv
+        data[CONF_PORT] = bridge.default_port
+        hass.config_entries.async_update_entry(entry, data=data)
+        bridge = _async_get_device_bridge(data)
+
+    def stop_bridge(event):
+        """Stop SamsungTV bridge connection."""
+        bridge.stop()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
+    )
+
+    hass.data[DOMAIN][entry.entry_id] = bridge
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    return hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN][entry.entry_id].stop()
+    return unload_ok
 
 
 async def async_migrate_entry(hass, config_entry):
