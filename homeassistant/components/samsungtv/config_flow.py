@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TOKEN,
 )
-from homeassistant.core import callback
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .bridge import SamsungTVBridge
@@ -63,6 +62,12 @@ async def async_get_device_info(hass, bridge, host):
     return await hass.async_add_executor_job(_get_device_info, host)
 
 
+def _strip_uuid(udn):
+    if udn is None:
+        return None
+    return udn[5:] if udn.startswith("uuid:") else udn
+
+
 class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Samsung TV config flow."""
 
@@ -101,25 +106,14 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_set_device_unique_id(self, raise_on_progress=True):
         """Set device unique_id."""
         await self._async_get_and_check_device_info()
-        udn = self._device_info.get("device", {}).get(ATTR_UPNP_UDN.lower())
-        await self._async_set_unique_id_from_udn(udn, raise_on_progress)
+        await self._async_set_unique_id_from_udn(raise_on_progress)
 
-    async def _async_set_unique_id_from_udn(self, udn, raise_on_progress=True):
+    async def _async_set_unique_id_from_udn(self, raise_on_progress=True):
         """Set the unique id from the udn."""
-        if not udn:
-            LOGGER.debug(
-                "Property " "%s" " is missing for host %s",
-                ATTR_UPNP_UDN.lower(),
-                self._host,
-            )
-            return self.async_abort(reason=RESULT_ID_MISSING)
-
-        if udn.startswith("uuid:"):
-            unique_id = udn[5:]
-        else:
-            unique_id = udn
-
-        await self.async_set_unique_id(unique_id, raise_on_progress=raise_on_progress)
+        if not self._udn:
+            LOGGER.debug("UDN is missing for host %s", self._host)
+            raise data_entry_flow.AbortFlow(RESULT_ID_MISSING)
+        await self.async_set_unique_id(self._udn, raise_on_progress=raise_on_progress)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
     def _try_connect(self):
@@ -139,23 +133,22 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_and_check_device_info(self):
         """Try to get the device info."""
-        device_info = await async_get_device_info(self.hass, self._bridge, self._host)
-        if not device_info:
+        info = await async_get_device_info(self.hass, self._bridge, self._host)
+        if not info:
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
-        dev_info = device_info.get("device", {})
+        dev_info = info.get("device", {})
         device_type = dev_info.get("type")
-        if device_type and device_type != "Samsung SmartTV":
+        if device_type != "Samsung SmartTV":
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
         self._model = dev_info.get("modelName")
         self._manufacturer = "Samsung"
-        if "name" in dev_info:
-            self._name = dev_info.get("name").replace("[TV] ", "")
-        else:
-            self._name = device_type
+        name = dev_info.get("name")
+        self._name = name.replace("[TV] ", "") if name else device_type
         self._title = f"{self._name} ({self._model})"
+        self._udn = _strip_uuid(dev_info.get("udn")) or _strip_uuid(info.get("id"))
         if dev_info.get("networkType") == "wireless":
             self._mac = dev_info.get("wifiMac")
-        self._device_info = device_info
+        self._device_info = info
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
@@ -197,8 +190,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
-    @callback
-    def _async_start_discovery_for_host(self, host):
+    async def _async_start_discovery_for_host(self, host):
         """Start discovery for a host."""
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_HOST] == host:
@@ -217,12 +209,12 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info: DiscoveryInfoType):
         """Handle a flow initialized by ssdp discovery."""
-        await self._async_set_unique_id_from_udn(discovery_info.get(ATTR_UPNP_UDN))
-        self._async_start_discovery_for_host(
+        self._udn = _strip_uuid(discovery_info.get(ATTR_UPNP_UDN))
+        await self._async_set_unique_id_from_udn()
+        await self._async_start_discovery_for_host(
             urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
         )
-
-        self._manufacturer = discovery_info.get(ATTR_UPNP_MANUFACTURER)
+        self._manufacturer = discovery_info[ATTR_UPNP_MANUFACTURER]
         if not self._manufacturer or not self._manufacturer.lower().startswith(
             "samsung"
         ):
@@ -230,30 +222,21 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = self._title = self._model = discovery_info.get(
             ATTR_UPNP_MODEL_NAME
         )
-
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 
     async def async_step_dhcp(self, discovery_info: DiscoveryInfoType):
         """Handle a flow initialized by dhcp discovery."""
-
-        self._async_start_discovery_for_host(discovery_info[IP_ADDRESS])
+        await self._async_start_discovery_for_host(discovery_info[IP_ADDRESS])
         await self._async_set_device_unique_id()
-
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle a flow initialized by zeroconf discovery."""
-
-        self._async_start_discovery_for_host(discovery_info[CONF_HOST])
+        await self._async_start_discovery_for_host(discovery_info[CONF_HOST])
         await self._async_set_device_unique_id()
-
-        self._mac = discovery_info[ATTR_PROPERTIES].get("deviceid")
-        self._manufacturer = discovery_info[ATTR_PROPERTIES].get("manufacturer")
-        if not self._model:
-            self._model = discovery_info[ATTR_PROPERTIES].get("model")
-
+        self._mac = discovery_info[ATTR_PROPERTIES]["deviceid"]
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 

@@ -163,7 +163,7 @@ async def test_user_websocket(hass: HomeAssistant, remotews: Mock):
         assert result["data"][CONF_METHOD] == "websocket"
         assert result["data"][CONF_MANUFACTURER] == "Samsung"
         assert result["data"][CONF_MODEL] == "82GXARRS"
-        assert result["result"].unique_id is None
+        assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
 async def test_user_legacy_missing_auth(hass: HomeAssistant, remote: Mock):
@@ -464,72 +464,29 @@ async def test_ssdp_already_configured(hass: HomeAssistant, remote: Mock):
     assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
-async def test_zeroconf(hass: HomeAssistant, remote: Mock):
+async def test_zeroconf(hass: HomeAssistant, remotews: Mock):
     """Test starting a flow from discovery."""
-    with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote:
-        remote().rest_device_info.return_value = {
-            "device": {
-                "modelName": "fake_model2",
-                "name": "[TV] Fake Name",
-                "udn": "uuid:fake_serial",
-            }
-        }
+    # confirm to add the entry
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DATA,
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "confirm"
 
-        # confirm to add the entry
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=MOCK_ZEROCONF_DATA,
-        )
-        assert result["type"] == "form"
-        assert result["step_id"] == "confirm"
-
-        # entry was added
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input="whatever"
-        )
-        assert result["type"] == "create_entry"
-        assert result["title"] == "Fake Name (fake_model2)"
-        assert result["data"][CONF_HOST] == "fake_host"
-        assert result["data"][CONF_NAME] == "Fake Name"
-        assert result["data"][CONF_MAC] == "fake_mac"
-        assert result["data"][CONF_MANUFACTURER] == "fake_manufacturer"
-        assert result["data"][CONF_MODEL] == "fake_model2"
-        assert result["result"].unique_id == "fake_serial"
-
-
-async def test_zeroconf_device_info(hass: HomeAssistant, remote: Mock):
-    """Test starting a flow from discovery."""
-    with patch("homeassistant.components.samsungtv.bridge.SamsungTVWS") as remote:
-        remote().rest_device_info.return_value = {
-            "device": {
-                "modelName": "fake_model2",
-                "name": "[TV] Fake Name",
-                "udn": "uuid:fake_serial",
-            }
-        }
-
-        # confirm to add the entry
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=MOCK_ZEROCONF_DATA,
-        )
-        assert result["type"] == "form"
-        assert result["step_id"] == "confirm"
-
-        # entry was added
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input="whatever"
-        )
-        assert result["type"] == "create_entry"
-        assert result["title"] == "Fake Name (fake_model2)"
-        assert result["data"][CONF_HOST] == "fake_host"
-        assert result["data"][CONF_NAME] == "Fake Name"
-        assert result["data"][CONF_MAC] == "fake_mac"
-        assert result["data"][CONF_MANUFACTURER] == "fake_manufacturer"
-        assert result["data"][CONF_MODEL] == "fake_model2"
-        assert result["result"].unique_id == "fake_serial"
+    # entry was added
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input="whatever"
+    )
+    assert result["type"] == "create_entry"
+    assert result["title"] == "Living Room (82GXARRS)"
+    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["data"][CONF_NAME] == "Living Room"
+    assert result["data"][CONF_MAC] == "fake_mac"
+    assert result["data"][CONF_MANUFACTURER] == "Samsung"
+    assert result["data"][CONF_MODEL] == "82GXARRS"
+    assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
 async def test_autodetect_websocket(hass: HomeAssistant, remote: Mock, remotews: Mock):
@@ -549,7 +506,15 @@ async def test_autodetect_websocket(hass: HomeAssistant, remote: Mock, remotews:
         remote.__enter__ = Mock(return_value=enter)
         remote.__exit__ = Mock(return_value=False)
         remote.rest_device_info.return_value = {
-            "device": {"type": "Samsung SmartTV", "name": "[TV] Fake Name"}
+            "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
+            "device": {
+                "modelName": "82GXARRS",
+                "wifiMac": "aa:bb:cc:dd:ee:ff",
+                "udn": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
+                "mac": "aa:bb:cc:dd:ee:ff",
+                "name": "[TV] Living Room",
+                "type": "Samsung SmartTV",
+            },
         }
         remotews.return_value = remote
 

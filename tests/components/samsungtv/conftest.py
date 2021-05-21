@@ -38,13 +38,15 @@ def remotews_fixture():
         remotews.__enter__ = Mock()
         remotews.__exit__ = Mock()
         remotews.rest_device_info.return_value = {
+            "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
             "device": {
                 "modelName": "82GXARRS",
                 "wifiMac": "aa:bb:cc:dd:ee:ff",
+                "udn": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
                 "mac": "aa:bb:cc:dd:ee:ff",
                 "name": "[TV] Living Room",
                 "type": "Samsung SmartTV",
-            }
+            },
         }
         remotews_class.return_value = remotews
         remotews_class().__enter__().token = "FAKE_TOKEN"
