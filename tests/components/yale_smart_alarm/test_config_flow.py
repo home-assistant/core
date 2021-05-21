@@ -31,7 +31,6 @@ async def test_form(hass: HomeAssistant) -> None:
             {
                 "username": "test-username",
                 "password": "test-password",
-                "code": "12345",
                 "name": "Yale Smart Alarm",
                 "area_id": "1",
             },
@@ -43,7 +42,6 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
-        "code": "12345",
         "name": "Yale Smart Alarm",
         "area_id": "1",
     }
@@ -65,7 +63,6 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             {
                 "username": "test-username",
                 "password": "test-password",
-                "code": "12345",
                 "name": "Yale Smart Alarm",
                 "area_id": "1",
             },
