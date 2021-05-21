@@ -63,7 +63,7 @@ async def async_setup_entry(
     ffmpeg_arguments: str = entry.options.get(
         CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
     )
-    cameras = []
+    cameras: list[CanaryCamera] = []
 
     for location_id, location in coordinator.data["locations"].items():
         for device in location.devices:

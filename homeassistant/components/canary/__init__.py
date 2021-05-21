@@ -49,7 +49,7 @@ CONFIG_SCHEMA: Final = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS: Final = ["alarm_control_panel", "camera", "sensor"]
+PLATFORMS: Final[list[str]] = ["alarm_control_panel", "camera", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

@@ -1,9 +1,9 @@
 """Provides the Canary DataUpdateCoordinator."""
 from __future__ import annotations
 
+from collections.abc import ValuesView
 from datetime import timedelta
 import logging
-from typing import ValuesView
 
 from async_timeout import timeout
 from canary.api import Api, Location

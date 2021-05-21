@@ -187,9 +187,9 @@ class CanarySensor(CoordinatorEntity, SensorEntity):
                 air_quality = STATE_AIR_QUALITY_VERY_ABNORMAL
             elif reading <= 0.59:
                 air_quality = STATE_AIR_QUALITY_ABNORMAL
-            elif reading <= 1.0:
+            else:
                 air_quality = STATE_AIR_QUALITY_NORMAL
 
-            return {ATTR_AIR_QUALITY: air_quality} if air_quality is not None else None
+            return {ATTR_AIR_QUALITY: air_quality}
 
         return None
