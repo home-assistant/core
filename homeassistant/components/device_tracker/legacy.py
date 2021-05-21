@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from datetime import timedelta
 import hashlib
 from types import ModuleType
-from typing import Any, Callable, final
+from typing import Any, Callable, Final, final
 
 import attr
 import voluptuous as vol
@@ -82,7 +82,7 @@ NEW_DEVICE_DEFAULTS_SCHEMA = vol.Any(
     None,
     vol.Schema({vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean}),
 )
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA: Final = cv.PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
         vol.Optional(CONF_TRACK_NEW): cv.boolean,
