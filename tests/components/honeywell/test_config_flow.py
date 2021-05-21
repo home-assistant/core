@@ -30,7 +30,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         side_effect=somecomfort.AuthError,
     ):
         result = await flow.async_step_user(user_input=FAKE_CONFIG)
-        assert result["errors"] == {"base": "auth_error"}
+        assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:
