@@ -20,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .base_platform import BasePlatform
@@ -96,12 +97,15 @@ async def async_setup_platform(
     async_add_entities(sensors)
 
 
-class ModbusBinarySensor(BasePlatform, BinarySensorEntity):
+class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
     """Modbus binary sensor."""
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
+        state = await self.async_get_last_state()
+        if state:
+            self._value = state.state
 
     @property
     def is_on(self):

@@ -18,8 +18,11 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import State
 
 from .conftest import ReadResult, base_config_test, base_test, prepare_service_update
+
+from tests.common import mock_restore_cache
 
 
 @pytest.mark.parametrize("do_discovery", [False, True])
@@ -130,3 +133,26 @@ async def test_service_binary_sensor_update(hass, mock_pymodbus):
         "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
     )
     assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_restore_state_binary_sensor(hass):
+    """Run test for binary sensor restore state."""
+
+    sensor_name = "test_binary_sensor"
+    test_value = STATE_ON
+    config_sensor = {CONF_NAME: sensor_name, CONF_ADDRESS: 17}
+    mock_restore_cache(
+        hass,
+        (State(f"{SENSOR_DOMAIN}.{sensor_name}", test_value),),
+    )
+    await base_config_test(
+        hass,
+        config_sensor,
+        sensor_name,
+        SENSOR_DOMAIN,
+        CONF_BINARY_SENSORS,
+        None,
+        method_discovery=True,
+    )
+    entity_id = f"{SENSOR_DOMAIN}.{sensor_name}"
+    assert hass.states.get(entity_id).state == test_value
