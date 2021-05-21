@@ -600,7 +600,7 @@ class DeviceTracker:
             await dev.async_added_to_hass()
             dev.async_write_ha_state()
 
-        tasks: list[asyncio.tasks.Task] = []
+        tasks: list[asyncio.Task] = []
         for device in self.devices.values():
             if device.track and not device.last_seen:
                 tasks.append(
