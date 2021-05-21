@@ -37,8 +37,8 @@ async def async_setup_entry(hass, config):
             ):
                 devices.append(device)
 
-    if len(devices) != 1:
-        _LOGGER.debug("Honeyell integration only supports a single device")
+    if len(devices) == 0:
+        _LOGGER.debug("No devices found")
         return False
 
     data = HoneywellService(hass, client, username, password, devices[0])
