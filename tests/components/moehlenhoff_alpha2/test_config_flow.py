@@ -1,4 +1,5 @@
 """Test the moehlenhoff_alpha2 config flow."""
+import asyncio
 from unittest.mock import PropertyMock, patch
 
 from moehlenhoff_alpha2 import Alpha2Base
@@ -45,18 +46,21 @@ async def test_user(hass: HomeAssistantType):
 
 async def test_connection_error(hass: HomeAssistantType):
     """Test connection error."""
+    with patch(
+        "moehlenhoff_alpha2.Alpha2Base._fetch_static_data",
+        side_effect=asyncio.TimeoutError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
+        assert result["type"] == "form"
+        assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"host": "127.0.0.1"}
-    )
-    assert result["type"] == "form"
-    assert result["errors"]["base"] == "cannot_connect"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"host": "127.0.0.1"}
+        )
+        assert result["type"] == "form"
+        assert result["errors"]["base"] == "cannot_connect"
 
 
 async def test_unexpected_error(hass: HomeAssistantType):
