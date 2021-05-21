@@ -39,11 +39,12 @@ class Alpha2BaseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
+                info = await validate_input(self.hass, user_input)
+
                 for entry in self.hass.config_entries.async_entries(DOMAIN):
                     if entry.data["host"] == user_input["host"]:
                         return self.async_abort(reason="already_configured")
 
-                info = await validate_input(self.hass, user_input)
                 return self.async_create_entry(title=info["title"], data=user_input)
             except (
                 aiohttp.client_exceptions.ClientConnectorError,
