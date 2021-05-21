@@ -274,7 +274,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 return self.async_abort(reason="reauth_successful")
             elif result in (RESULT_AUTH_MISSING, RESULT_CANNOT_CONNECT):
-                errors = {"base": result}
+                # On websocket we will get RESULT_CANNOT_CONNECT
+                # when auth is missing
+                errors = {"base": RESULT_AUTH_MISSING}
             else:
                 return self.async_abort(reason=result)
 
