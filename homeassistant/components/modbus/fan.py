@@ -55,7 +55,7 @@ class ModbusFan(BasePlatform, FanEntity, RestoreEntity):
         """Initialize the fan."""
         config[CONF_INPUT_TYPE] = ""
         super().__init__(hub, config)
-        self._is_on = None
+        self._is_on: bool = False
         if config[CONF_WRITE_TYPE] == CALL_TYPE_COIL:
             self._write_type = CALL_TYPE_WRITE_COIL
         else:
@@ -89,7 +89,13 @@ class ModbusFan(BasePlatform, FanEntity, RestoreEntity):
         """Return true if fan is on."""
         return self._is_on
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(
+        self,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs,
+    ) -> None:
         """Set fan on."""
 
         result = await self._hub.async_pymodbus_call(
