@@ -50,6 +50,9 @@ class VerisureThermometer(CoordinatorEntity, SensorEntity):
 
     coordinator: VerisureDataUpdateCoordinator
 
+    DEVICE_CLASS = DEVICE_CLASS_TEMPERATURE
+    UNIT_OF_MEASUREMENT = TEMP_CELSIUS
+
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
     ) -> None:
@@ -67,11 +70,6 @@ class VerisureThermometer(CoordinatorEntity, SensorEntity):
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
         return f"{self.serial_number}_temperature"
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this entity."""
-        return DEVICE_CLASS_TEMPERATURE
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -103,16 +101,14 @@ class VerisureThermometer(CoordinatorEntity, SensorEntity):
             and "temperature" in self.coordinator.data["climate"][self.serial_number]
         )
 
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity."""
-        return TEMP_CELSIUS
-
 
 class VerisureHygrometer(CoordinatorEntity, SensorEntity):
     """Representation of a Verisure hygrometer."""
 
     coordinator: VerisureDataUpdateCoordinator
+
+    DEVICE_CLASS = DEVICE_CLASS_HUMIDITY
+    UNIT_OF_MEASUREMENT = PERCENTAGE
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
@@ -131,11 +127,6 @@ class VerisureHygrometer(CoordinatorEntity, SensorEntity):
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
         return f"{self.serial_number}_humidity"
-
-    @property
-    def device_class(self) -> str:
-        """Return the class of this entity."""
-        return DEVICE_CLASS_HUMIDITY
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -167,16 +158,13 @@ class VerisureHygrometer(CoordinatorEntity, SensorEntity):
             and "humidity" in self.coordinator.data["climate"][self.serial_number]
         )
 
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity."""
-        return PERCENTAGE
-
 
 class VerisureMouseDetection(CoordinatorEntity, SensorEntity):
     """Representation of a Verisure mouse detector."""
 
     coordinator: VerisureDataUpdateCoordinator
+
+    UNIT_OF_MEASUREMENT = "Mice"
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
@@ -222,8 +210,3 @@ class VerisureMouseDetection(CoordinatorEntity, SensorEntity):
             and self.serial_number in self.coordinator.data["mice"]
             and "detections" in self.coordinator.data["mice"][self.serial_number]
         )
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity."""
-        return "Mice"
