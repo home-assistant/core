@@ -12,7 +12,6 @@
           "data": {
             "username": "Username",
             "password": "Password",
-            "code": "Code to open/close door lock",
             "name": "Name of alarm",
             "area_id": "Area ID"
           }

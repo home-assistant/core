@@ -5,7 +5,7 @@ import voluptuous as vol
 from yalesmartalarmclient.client import AuthenticationError, YaleSmartAlarmClient
 
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_CODE, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_AREA_ID, DEFAULT_AREA_ID, DEFAULT_NAME, DOMAIN, LOGGER
@@ -14,9 +14,8 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_CODE): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_AREA_ID, default=DEFAULT_AREA_ID): cv.string,
+        vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_AREA_ID, default=DEFAULT_AREA_ID): cv.string,
     }
 )
 
@@ -46,7 +45,6 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
-            code = user_input.get(CONF_CODE, "")
             name = user_input.get(CONF_NAME, DEFAULT_NAME)
             area = user_input.get(CONF_AREA_ID, DEFAULT_AREA_ID)
 
@@ -71,7 +69,6 @@ class YaleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_USERNAME: username,
                     CONF_PASSWORD: password,
-                    CONF_CODE: code,
                     CONF_NAME: name,
                     CONF_AREA_ID: area,
                 },

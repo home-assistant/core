@@ -12,7 +12,6 @@
           "data": {
             "username": "[%key:common::config_flow::data::username%]",
             "password": "[%key:common::config_flow::data::password%]",
-            "code": "Code to open/close door lock",
             "name": "Name of alarm",
             "area_id": "Area ID"
           }
