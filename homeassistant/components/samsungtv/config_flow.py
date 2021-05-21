@@ -33,7 +33,6 @@ from .const import (
     METHOD_LEGACY,
     METHOD_WEBSOCKET,
     RESULT_CANNOT_CONNECT,
-    RESULT_ID_MISSING,
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
     RESULT_UNKNOWN_HOST,
@@ -47,10 +46,9 @@ SUPPORTED_METHODS = [METHOD_LEGACY, METHOD_WEBSOCKET]
 def _get_device_info(host):
     """Fetch device info by any websocket method."""
     for port in WEBSOCKET_PORTS:
-        if device_info := SamsungTVBridge.get_bridge(
-            METHOD_WEBSOCKET, host, port
-        ).device_info():
-            return device_info
+        bridge = SamsungTVBridge.get_bridge(METHOD_WEBSOCKET, host, port)
+        if info := bridge.device_info():
+            return info
     return None
 
 
@@ -63,8 +61,6 @@ async def async_get_device_info(hass, bridge, host):
 
 
 def _strip_uuid(udn):
-    if udn is None:
-        return None
     return udn[5:] if udn.startswith("uuid:") else udn
 
 
@@ -110,17 +106,11 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_set_unique_id_from_udn(self, raise_on_progress=True):
         """Set the unique id from the udn."""
-        if not self._udn:
-            LOGGER.debug("UDN is missing for host %s", self._host)
-            raise data_entry_flow.AbortFlow(RESULT_ID_MISSING)
         await self.async_set_unique_id(self._udn, raise_on_progress=raise_on_progress)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
     def _try_connect(self):
         """Try to connect and check auth."""
-        if self._bridge:
-            return
-
         for method in SUPPORTED_METHODS:
             self._bridge = SamsungTVBridge.get_bridge(method, self._host)
             result = self._bridge.try_connect()
@@ -145,7 +135,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         name = dev_info.get("name")
         self._name = name.replace("[TV] ", "") if name else device_type
         self._title = f"{self._name} ({self._model})"
-        self._udn = _strip_uuid(dev_info.get("udn")) or _strip_uuid(info.get("id"))
+        self._udn = _strip_uuid(dev_info.get("udn", info["id"]))
         if dev_info.get("networkType") == "wireless":
             self._mac = dev_info.get("wifiMac")
         self._device_info = info
@@ -209,7 +199,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info: DiscoveryInfoType):
         """Handle a flow initialized by ssdp discovery."""
-        self._udn = _strip_uuid(discovery_info.get(ATTR_UPNP_UDN))
+        self._udn = _strip_uuid(discovery_info[ATTR_UPNP_UDN])
         await self._async_set_unique_id_from_udn()
         await self._async_start_discovery_for_host(
             urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname

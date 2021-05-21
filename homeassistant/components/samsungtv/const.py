@@ -17,7 +17,6 @@ CONF_MODEL = "model"
 CONF_ON_ACTION = "turn_on_action"
 
 RESULT_AUTH_MISSING = "auth_missing"
-RESULT_ID_MISSING = "id_missing"
 RESULT_SUCCESS = "success"
 RESULT_CANNOT_CONNECT = "cannot_connect"
 RESULT_NOT_SUPPORTED = "not_supported"

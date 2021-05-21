@@ -465,7 +465,7 @@ async def test_ssdp_already_configured(hass: HomeAssistant, remote: Mock):
 
 
 async def test_zeroconf(hass: HomeAssistant, remotews: Mock):
-    """Test starting a flow from discovery."""
+    """Test starting a flow from zero."""
     # confirm to add the entry
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -487,6 +487,32 @@ async def test_zeroconf(hass: HomeAssistant, remotews: Mock):
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "82GXARRS"
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
+
+
+async def test_zeroconf_ignores_soundbar(hass: HomeAssistant, remotews_soundbar: Mock):
+    """Test starting a flow from zeroconf where the device is actually a soundbar."""
+    # confirm to add the entry
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DATA,
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_supported"
+
+
+async def test_zeroconf_no_device_info(
+    hass: HomeAssistant, remotews_no_device_info: Mock
+):
+    """Test starting a flow from zeroconf where device_info returns None."""
+    # confirm to add the entry
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DATA,
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_supported"
 
 
 async def test_autodetect_websocket(hass: HomeAssistant, remote: Mock, remotews: Mock):
