@@ -166,6 +166,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_METHOD] = METHOD_WEBSOCKET
         else:
             user_input[CONF_METHOD] = METHOD_LEGACY
+            user_input[CONF_PORT] = 55000
         return self.async_create_entry(
             title=self._title,
             data=user_input,
@@ -184,7 +185,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if user_input is not None:
-            await self._async_set_name_host_from_input()
+            await self._async_set_name_host_from_input(user_input)
             await self.hass.async_add_executor_job(self._try_connect)
             if self._bridge.method == METHOD_LEGACY:
                 # Legacy bridge does not provide device info
