@@ -183,9 +183,11 @@ class Scanner:
             )
             return
 
-        for source in await self._async_build_source_set():
+        for source_ip in await self._async_build_source_set():
             self._ssdp_listeners.append(
-                SSDPListener(async_callback=self._async_on_ssdp_response, source=source)
+                SSDPListener(
+                    async_callback=self._async_on_ssdp_response, source_ip=source_ip
+                )
             )
 
         await asyncio.gather(
