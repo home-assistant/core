@@ -29,6 +29,7 @@ from .const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
     DOMAIN,
+    LEGACY_PORT,
     LOGGER,
     METHOD_LEGACY,
     METHOD_WEBSOCKET,
@@ -166,7 +167,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_METHOD] = METHOD_WEBSOCKET
         else:
             user_input[CONF_METHOD] = METHOD_LEGACY
-            user_input[CONF_PORT] = 55000
+            user_input[CONF_PORT] = LEGACY_PORT
         return self.async_create_entry(
             title=self._title,
             data=user_input,
