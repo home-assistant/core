@@ -16,7 +16,7 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -57,7 +57,7 @@ _CONFIGURING: dict[str, str] = {}
 
 SCAN_INTERVAL: Final = datetime.timedelta(minutes=30)
 
-PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(
             CONF_MONITORED_RESOURCES, default=FITBIT_DEFAULT_RESOURCES
