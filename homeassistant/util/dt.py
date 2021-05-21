@@ -81,8 +81,9 @@ def as_utc(dattim: dt.datetime) -> dt.datetime:
 
 def as_timestamp(dt_value: dt.datetime | str) -> float:
     """Convert a date/time into a unix time (seconds since 1970)."""
-    if hasattr(dt_value, "timestamp"):
-        parsed_dt: dt.datetime | None = cast(dt.datetime, dt_value)
+    parsed_dt: dt.datetime | None
+    if isinstance(dt_value, dt.datetime):
+        parsed_dt = dt_value
     else:
         parsed_dt = parse_datetime(str(dt_value))
     if parsed_dt is None:
