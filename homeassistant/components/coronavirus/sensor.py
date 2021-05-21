@@ -38,8 +38,9 @@ class CoronavirusSensor(CoordinatorEntity, SensorEntity):
         else:
             self.name = f"{coordinator.data[country].country} Coronavirus {info_type}"
         self.unique_id = f"{country}-{info_type}"
-        self.country = country
-        self.info_type = info_type
+
+        self._icon = SENSORS[self.info_type]
+        self._unit_of_measurement = "people"
 
     @property
     def available(self):
@@ -62,16 +63,6 @@ class CoronavirusSensor(CoordinatorEntity, SensorEntity):
             return sum_cases
 
         return getattr(self.coordinator.data[self.country], self.info_type)
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return SENSORS[self.info_type]
-
-    @property
-    def unit_of_measurement(self):
-        """Return unit of measurement."""
-        return "people"
 
     @property
     def extra_state_attributes(self):
