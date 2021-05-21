@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SOURCE_TYPE_ROUTER,
 )
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_HOST),
     cv.deprecated(CONF_USERNAME),
     cv.deprecated(CONF_PASSWORD),
-    PLATFORM_SCHEMA.extend(
+    PARENT_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_HOST, default=YAML_DEFAULT_HOST): cv.string,
             vol.Optional(CONF_USERNAME, default=YAML_DEFAULT_USERNAME): cv.string,
