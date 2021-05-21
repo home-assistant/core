@@ -41,6 +41,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -234,12 +235,18 @@ async def test_update_access_denied(hass, remote, mock_now):
         with patch("homeassistant.util.dt.utcnow", return_value=next_update):
             async_fire_time_changed(hass, next_update)
             await hass.async_block_till_done()
+        next_update = mock_now + timedelta(minutes=10)
+        with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+            async_fire_time_changed(hass, next_update)
+            await hass.async_block_till_done()
 
     assert [
         flow
         for flow in hass.config_entries.flow.async_progress()
         if flow["context"]["source"] == "reauth"
     ]
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_update_connection_failure(hass, remotews, mock_now):
@@ -258,12 +265,18 @@ async def test_update_connection_failure(hass, remotews, mock_now):
             with patch("homeassistant.util.dt.utcnow", return_value=next_update):
                 async_fire_time_changed(hass, next_update)
             await hass.async_block_till_done()
+            next_update = mock_now + timedelta(minutes=10)
+            with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+                async_fire_time_changed(hass, next_update)
+            await hass.async_block_till_done()
 
     assert [
         flow
         for flow in hass.config_entries.flow.async_progress()
         if flow["context"]["source"] == "reauth"
     ]
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_update_unhandled_response(hass, remote, mock_now):
@@ -518,6 +531,15 @@ async def test_media_play(hass, remote):
     assert remote.close.call_count == 1
     assert remote.close.call_args_list == [call()]
 
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    # key and update called
+    assert remote.control.call_count == 2
+    assert remote.control.call_args_list == [call("KEY_PLAY"), call("KEY_PAUSE")]
+    assert remote.close.call_count == 2
+    assert remote.close.call_args_list == [call(), call()]
+
 
 async def test_media_pause(hass, remote):
     """Test for media_pause."""
@@ -530,6 +552,15 @@ async def test_media_pause(hass, remote):
     assert remote.control.call_args_list == [call("KEY_PAUSE")]
     assert remote.close.call_count == 1
     assert remote.close.call_args_list == [call()]
+
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_MEDIA_PLAY_PAUSE, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    # key and update called
+    assert remote.control.call_count == 2
+    assert remote.control.call_args_list == [call("KEY_PAUSE"), call("KEY_PLAY")]
+    assert remote.close.call_count == 2
+    assert remote.close.call_args_list == [call(), call()]
 
 
 async def test_media_next_track(hass, remote):

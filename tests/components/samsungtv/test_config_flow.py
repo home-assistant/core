@@ -4,7 +4,7 @@ from unittest.mock import Mock, PropertyMock, call, patch
 
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
 from samsungtvws.exceptions import ConnectionFailure
-from websocket import WebSocketProtocolException
+from websocket import WebSocketException, WebSocketProtocolException
 
 from homeassistant import config_entries
 from homeassistant.components.dhcp import IP_ADDRESS
@@ -100,6 +100,13 @@ MOCK_OLD_ENTRY = {
     CONF_IP_ADDRESS: "fake_ip_old",
     CONF_METHOD: "legacy",
     CONF_PORT: None,
+}
+MOCK_WS_ENTRY = {
+    CONF_HOST: "fake_host",
+    CONF_METHOD: METHOD_WEBSOCKET,
+    CONF_PORT: 8002,
+    CONF_MODEL: "any",
+    CONF_NAME: "any",
 }
 
 AUTODETECT_LEGACY = {
@@ -569,7 +576,6 @@ async def test_dhcp(hass: HomeAssistant, remotews: Mock):
 
 async def test_zeroconf(hass: HomeAssistant, remotews: Mock):
     """Test starting a flow from zeroconf."""
-    # confirm to add the entry
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -621,7 +627,6 @@ async def test_zeroconf_no_device_info(
 
 async def test_zeroconf_and_dhcp_same_time(hass: HomeAssistant, remotews: Mock):
     """Test starting a flow from zeroconf and dhcp."""
-    # confirm to add the entry
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
@@ -799,3 +804,115 @@ async def test_update_old_entry(hass: HomeAssistant, remote: Mock):
         assert entry2.data.get(CONF_ID) is not None
         assert entry2.data.get(CONF_IP_ADDRESS) is not None
         assert entry2.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
+
+
+async def test_form_reauth_legacy(hass, remote: Mock):
+    """Test reauthenticate legacy."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY)
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"entry_id": entry.entry_id, "source": config_entries.SOURCE_REAUTH},
+        data=entry.data,
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    await hass.async_block_till_done()
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "reauth_successful"
+
+
+async def test_form_reauth_websocket(hass, remotews: Mock):
+    """Test reauthenticate websocket."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_WS_ENTRY)
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"entry_id": entry.entry_id, "source": config_entries.SOURCE_REAUTH},
+        data=entry.data,
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    await hass.async_block_till_done()
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "reauth_successful"
+
+
+async def test_form_reauth_websocket_cannot_connect(hass, remotews: Mock):
+    """Test reauthenticate websocket when we cannot connect on the first attempt."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_WS_ENTRY)
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"entry_id": entry.entry_id, "source": config_entries.SOURCE_REAUTH},
+        data=entry.data,
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS",
+        side_effect=ConnectionFailure,
+    ), patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        return_value="fake_host",
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    import pprint
+
+    pprint.pprint(result2)
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": RESULT_AUTH_MISSING}
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] == "abort"
+    assert result3["reason"] == "reauth_successful"
+
+
+async def test_form_reauth_websocket_not_supported(hass, remotews: Mock):
+    """Test reauthenticate websocket when the device is not supported."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_WS_ENTRY)
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"entry_id": entry.entry_id, "source": config_entries.SOURCE_REAUTH},
+        data=entry.data,
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS",
+        side_effect=WebSocketException,
+    ), patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        return_value="fake_host",
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "not_supported"
