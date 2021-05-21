@@ -12,6 +12,7 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_FLASH,
     ATTR_HS_COLOR,
+    ATTR_COLOR_MODE,
     ATTR_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
@@ -25,6 +26,7 @@ from homeassistant.components.light import (
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
     COLOR_MODE_HS,
+    COLOR_MODE_COLOR_TEMP,
     LightEntity,
 )
 from homeassistant.const import (
@@ -163,7 +165,7 @@ class BroadlinkLight(LightEntity):#, ToggleEntity, ABC):
         self._blue = 255
         self._green = 255
         self._brightness = 255
-        self._colormode = 1
+        self._colormode = COLOR_MODE_HS
         self._hs_color = [0, 100]
         self._colortemp = 2700
         self._coordinator = device.update_manager.coordinator
@@ -200,6 +202,10 @@ class BroadlinkLight(LightEntity):#, ToggleEntity, ABC):
         return self._hs_color
 
     @property
+    def color_temp(self):
+        return self._colortemp
+
+    @property
     def should_poll(self):
         """Return True if the switch has to be polled for state."""
         return False
@@ -211,11 +217,15 @@ class BroadlinkLight(LightEntity):#, ToggleEntity, ABC):
 
     @property
     def supported_features(self):
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
+        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_COLOR_TEMP
 
     @property
     def color_mode(self):
-        return COLOR_MODE_HS
+        return self._colormode
+
+    @property
+    def supported_color_modes(self):
+        return [COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS]
 
     @property
     def device_info(self):
@@ -241,6 +251,8 @@ class BroadlinkLight(LightEntity):#, ToggleEntity, ABC):
             self._state = data['pwr']
             self._brightness = round(data['brightness']*2.55)
             self._hs_color = [data['hue'], data['saturation']]
+            self._colormode = COLOR_MODE_COLOR_TEMP if data['bulb_colormode'] == 1 else COLOR_MODE_HS
+            self._colortemp = (data['colortemp']-2700)/100+153
         self.async_on_remove(self._coordinator.async_add_listener(self.update_data))
 
     async def async_update(self):
@@ -255,28 +267,39 @@ class BroadlinkLight(LightEntity):#, ToggleEntity, ABC):
 
     async def async_turn_on(self, **kwargs):
         """Turn on the switch."""
-        hs_color = kwargs.get(ATTR_HS_COLOR, self._hs_color)
+        hs_color = [int(i) for i in kwargs.get(ATTR_HS_COLOR, self._hs_color)]
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
+        colortemp = kwargs.get(ATTR_COLOR_TEMP, self._colortemp)
+        if ATTR_COLOR_TEMP in kwargs:
+            colormode = COLOR_MODE_COLOR_TEMP
+        elif ATTR_HS_COLOR in kwargs:
+            colormode = COLOR_MODE_HS
+        else:
+            colormode = self._colormode
+        
         data = {
             "hue": hs_color[0], 
             "saturation": hs_color[1], 
-            "bulb_colormode": 1 if hs_color[1] == 0 else 0,
+            "bulb_colormode": 1 if colormode == COLOR_MODE_COLOR_TEMP else 0,
+            "colortemp": (colortemp-153)*100+2700,
             "brightness": round(brightness/2.55),
             "pwr": 1
         }
 
-        _LOGGER.info(f"light async turn on with hs_color {hs_color} and brightness {brightness} and state {self._state}")
+        _LOGGER.info(f"light async turn on with hs_color {hs_color} and brightness {brightness} set to mode {colormode} and temp {colortemp} and state {self._state} with kwargs {kwargs}")
 
         if await self._async_send_packet(data):
             self._hs_color = hs_color
             self._brightness = brightness
+            self._colormode = colormode
+            self._colortemp = colortemp
             self._state = True
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn off the switch."""
         _LOGGER.info(f"light async turn off with state {self._state}")
-        if await self._async_send_packet("pwr",0):
+        if await self._async_send_packet({"pwr":0}):
             self._state = False
             self.async_write_ha_state()
 
@@ -292,6 +315,11 @@ class BroadlinkLB1Light(BroadlinkLight):
         """Initialize the switch."""
         super().__init__(device)
         self._name = f"{device.name} Light"
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the switch."""
+        return self._device.unique_id
 
     @property
     def name(self):
