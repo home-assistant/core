@@ -63,6 +63,7 @@ from .const import (
     CONF_CURRENT_TEMP_REGISTER_TYPE,
     CONF_DATA_COUNT,
     CONF_DATA_TYPE,
+    CONF_FANS,
     CONF_INPUT_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
@@ -266,6 +267,32 @@ LIGHT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     }
 )
 
+FAN_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
+    {
+        vol.Required(CONF_ADDRESS): cv.positive_int,
+        vol.Optional(CONF_WRITE_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+            [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_COIL]
+        ),
+        vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
+        vol.Optional(CONF_COMMAND_ON, default=0x01): cv.positive_int,
+        vol.Optional(CONF_VERIFY): vol.Maybe(
+            {
+                vol.Optional(CONF_ADDRESS): cv.positive_int,
+                vol.Optional(CONF_INPUT_TYPE): vol.In(
+                    [
+                        CALL_TYPE_REGISTER_HOLDING,
+                        CALL_TYPE_DISCRETE,
+                        CALL_TYPE_REGISTER_INPUT,
+                        CALL_TYPE_COIL,
+                    ]
+                ),
+                vol.Optional(CONF_STATE_OFF): cv.positive_int,
+                vol.Optional(CONF_STATE_ON): cv.positive_int,
+            }
+        ),
+    }
+)
+
 SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
         vol.Required(CONF_ADDRESS): cv.positive_int,
@@ -319,6 +346,7 @@ MODBUS_SCHEMA = vol.Schema(
         vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHT_SCHEMA]),
         vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSOR_SCHEMA]),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
+        vol.Optional(CONF_FANS): vol.All(cv.ensure_list, [FAN_SCHEMA]),
     }
 )
 
