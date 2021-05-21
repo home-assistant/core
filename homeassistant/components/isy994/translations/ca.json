@@ -36,5 +36,11 @@
                 "title": "Opcions d'ISY994"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "device_connected": "ISY connectat",
+            "host_reachable": "Amfitri\u00f3 accessible"
+        }
     }
 }
