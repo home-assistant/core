@@ -10,7 +10,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.garmin_connect.const import DOMAIN
-from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_SOURCE, CONF_USERNAME
+from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 
 MOCK_CONF = {
     CONF_ID: "my@email.address",
@@ -33,7 +33,7 @@ async def test_show_form(hass):
     """Test that the form is served with no input."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -51,7 +51,7 @@ async def test_step_user(hass):
         "homeassistant.components.garmin_connect.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: config_entries.SOURCE_USER}, data=MOCK_CONF
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_CONF
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == MOCK_CONF
@@ -61,7 +61,7 @@ async def test_connection_error(hass, mock_garmin_connect):
     """Test for connection error."""
     mock_garmin_connect.login.side_effect = GarminConnectConnectionError("errormsg")
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: config_entries.SOURCE_USER}, data=MOCK_CONF
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_CONF
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "cannot_connect"}
@@ -71,7 +71,7 @@ async def test_authentication_error(hass, mock_garmin_connect):
     """Test for authentication error."""
     mock_garmin_connect.login.side_effect = GarminConnectAuthenticationError("errormsg")
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: config_entries.SOURCE_USER}, data=MOCK_CONF
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_CONF
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "invalid_auth"}
@@ -83,7 +83,7 @@ async def test_toomanyrequest_error(hass, mock_garmin_connect):
         "errormsg"
     )
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: config_entries.SOURCE_USER}, data=MOCK_CONF
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_CONF
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "too_many_requests"}
@@ -93,7 +93,7 @@ async def test_unknown_error(hass, mock_garmin_connect):
     """Test for unknown error."""
     mock_garmin_connect.login.side_effect = Exception
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: config_entries.SOURCE_USER}, data=MOCK_CONF
+        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_CONF
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "unknown"}
