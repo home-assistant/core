@@ -68,7 +68,8 @@ class SamsungTVBridge(ABC):
 
     def is_on(self):
         """Tells if the TV is on."""
-        self.close_remote()
+        if self._remote:
+            self.close_remote()
 
         try:
             return self._get_remote() is not None

@@ -100,7 +100,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
     )
 
-    async_add_entities([SamsungTVDevice(bridge, config_entry, on_script)])
+    async_add_entities([SamsungTVDevice(bridge, config_entry, on_script)], True)
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
