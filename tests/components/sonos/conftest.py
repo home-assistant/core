@@ -40,7 +40,7 @@ def soco_fixture(
         mock_soco.dialog_mode = True
         mock_soco.volume = 19
         mock_soco.get_battery_info.return_value = battery_info
-
+        mock_soco.all_zones = [mock_soco]
         yield mock_soco
 
 
@@ -82,6 +82,7 @@ def music_library_fixture():
 def alarmClock_fixture():
     """Create music_library fixture."""
     alarmClock = Mock()
+    alarmClock.subscribe = AsyncMock()
     alarmClock.ListAlarms.return_value = {
         "CurrentAlarmList": "<Alarms>"
         '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
