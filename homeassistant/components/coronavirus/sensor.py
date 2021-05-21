@@ -29,10 +29,13 @@ class CoronavirusSensor(CoordinatorEntity, SensorEntity):
 
     name = None
     unique_id = None
+    attr_unit_of_measurement = "people"
 
     def __init__(self, coordinator, country, info_type):
         """Initialize coronavirus sensor."""
         super().__init__(coordinator)
+        self.attr_icon = SENSORS[info_type]
+
         if country == OPTION_WORLDWIDE:
             self.name = f"Worldwide Coronavirus {info_type}"
         else:
