@@ -163,7 +163,7 @@ def async_register_api(hass: HomeAssistant) -> None:
         hass, websocket_subscribe_firmware_update_status
     )
     hass.http.register_view(DumpView())
-    hass.http.register_view(FirmwareUploadView)  # type: ignore
+    hass.http.register_view(FirmwareUploadView())
 
 
 @websocket_api.require_admin
@@ -1042,8 +1042,7 @@ class DumpView(HomeAssistantView):
         )
 
 
-@websocket_api.require_admin  # type: ignore
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/abort_firmware_update",
@@ -1051,6 +1050,7 @@ class DumpView(HomeAssistantView):
         vol.Required(NODE_ID): int,
     }
 )
+@websocket_api.async_response
 @async_get_node
 async def websocket_abort_firmware_update(
     hass: HomeAssistant,
@@ -1063,8 +1063,7 @@ async def websocket_abort_firmware_update(
     connection.send_result(msg[ID])
 
 
-@websocket_api.require_admin  # type: ignore
-@websocket_api.async_response
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/subscribe_firmware_update_status",
@@ -1072,6 +1071,7 @@ async def websocket_abort_firmware_update(
         vol.Required(NODE_ID): int,
     }
 )
+@websocket_api.async_response
 @async_get_node
 async def websocket_subscribe_firmware_update_status(
     hass: HomeAssistant,
