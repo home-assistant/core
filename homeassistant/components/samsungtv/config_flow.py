@@ -260,6 +260,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(self, user_input=None):
         """Confirm reauth."""
+        errors = {}
         if user_input is not None:
             bridge = SamsungTVBridge.get_bridge(
                 self._reauth_entry.data[CONF_METHOD], self._reauth_entry.data[CONF_HOST]
