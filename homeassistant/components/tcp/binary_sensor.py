@@ -1,15 +1,17 @@
 """Provides a binary sensor which gets its values from a TCP socket."""
 from __future__ import annotations
 
+from typing import Final
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_VALUE_ON
-from .sensor import PLATFORM_SCHEMA, TcpSensor
+from .sensor import PLATFORM_SCHEMA as TCP_PLATFORM_SCHEMA, TcpSensor
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({})
+PLATFORM_SCHEMA: Final = TCP_PLATFORM_SCHEMA
 
 
 def setup_platform(
