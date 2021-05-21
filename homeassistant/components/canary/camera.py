@@ -5,8 +5,7 @@ import asyncio
 from datetime import timedelta
 from typing import Final
 
-from aiohttp.web_request import Request
-from aiohttp.web_response import StreamResponse
+from aiohttp.web import Request, StreamResponse
 from canary.api import Device, Location
 from canary.live_stream_api import LiveStreamSession
 from haffmpeg.camera import CameraMjpeg

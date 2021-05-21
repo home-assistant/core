@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, Tuple, TypedDict, ValuesView
+from collections.abc import ValuesView
+from typing import List, Optional, Tuple, TypedDict
 
 from canary.api import Location
 
