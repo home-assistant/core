@@ -107,7 +107,7 @@ class HKDevice:
         # Useful when routing events to triggers
         self.devices = {}
 
-        self.available = True
+        self.available = False
 
         self.signal_state_updated = "_".join((DOMAIN, self.unique_id, "state_updated"))
 
