@@ -11,11 +11,6 @@ from .coordinator import YaleDataUpdateCoordinator
 PLATFORMS = ["alarm_control_panel"]
 
 
-async def async_setup(hass, config):
-    """No setup from yaml for Yale."""
-    return True
-
-
 async def async_setup_entry(hass, entry):
     """Set up Yale from a config entry."""
     hass.data.setdefault(DOMAIN, {})

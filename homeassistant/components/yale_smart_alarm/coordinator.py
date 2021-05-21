@@ -24,9 +24,9 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Verisure hub."""
-        self._entry = entry
+        self.entry = entry
         self._hass = hass
-        self._yale = None
+        self.yale = None
 
         super().__init__(
             hass,
@@ -38,25 +38,25 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch data from Yale."""
 
-        if self._yale is None:
-            self._yale = await self._hass.async_add_executor_job(
+        if self.yale is None:
+            self.yale = await self._hass.async_add_executor_job(
                 YaleSmartAlarmClient,
-                self._entry.data[CONF_USERNAME],
-                self._entry.data[CONF_PASSWORD],
+                self.entry.data[CONF_USERNAME],
+                self.entry.data[CONF_PASSWORD],
             )
 
         try:
             arm_status = await self._hass.async_add_executor_job(
-                self._yale.get_armed_status  # type: ignore[attr-defined]
+                self.yale.get_armed_status  # type: ignore[attr-defined]
             )
             cycle = await self._hass.async_add_executor_job(
-                self._yale.get_cycle  # type: ignore[attr-defined]
+                self.yale.get_cycle  # type: ignore[attr-defined]
             )
             status = await self._hass.async_add_executor_job(
-                self._yale.get_status  # type: ignore[attr-defined]
+                self.yale.get_status  # type: ignore[attr-defined]
             )
             online = await self._hass.async_add_executor_job(
-                self._yale.get_online  # type: ignore[attr-defined]
+                self.yale.get_online  # type: ignore[attr-defined]
             )
 
         except AuthenticationError as error:
