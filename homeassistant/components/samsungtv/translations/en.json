@@ -11,7 +11,8 @@
             "unknown": "Unexpected error"
         },
         "error": {
-            "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Please check your TV's settings to authorize Home Assistant."
+            "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Please check your TV's settings to authorize Home Assistant.",
+            "cannot_connect": "Failed to connect"
         },
         "flow_title": "{device}",
         "step": {

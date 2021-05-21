@@ -17,7 +17,8 @@
       }      
     },
     "error": {
-      "auth_missing": "[%key:component::samsungtv::config::abort::auth_missing%]"
+      "auth_missing": "[%key:component::samsungtv::config::abort::auth_missing%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
