@@ -170,7 +170,7 @@ class Entity(ABC):
 
     # Entity Properties
     _attr_assumed_state: bool = False
-    _attr_available: bool = False
+    _attr_available: bool = True
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None = None
     _attr_device_info: DeviceInfo | None = None
