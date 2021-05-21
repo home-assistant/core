@@ -22,7 +22,10 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
 
     base = Alpha2Base(data["host"])
-    await base.update_data()
+    try:
+        await base.update_data()
+    except (aiohttp.client_exceptions.ClientConnectorError, asyncio.TimeoutError):
+        return {"error": "cannot_connect"}
 
     # Return info that you want to store in the config entry.
     return {"title": base.name}
@@ -39,18 +42,17 @@ class Alpha2BaseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
-
                 for entry in self.hass.config_entries.async_entries(DOMAIN):
                     if entry.data["host"] == user_input["host"]:
                         return self.async_abort(reason="already_configured")
 
-                return self.async_create_entry(title=info["title"], data=user_input)
-            except (
-                aiohttp.client_exceptions.ClientConnectorError,
-                asyncio.TimeoutError,
-            ):
-                errors["base"] = "cannot_connect"
+                result = await validate_input(self.hass, user_input)
+                if result.get("error"):
+                    errors["base"] = result["error"]
+                else:
+                    return self.async_create_entry(
+                        title=result["title"], data=user_input
+                    )
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
