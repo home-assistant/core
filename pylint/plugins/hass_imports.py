@@ -18,7 +18,7 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
         "W0011": (
             "Relative import should be used",
             "hass-relative-import",
-            "Used when absolute import can be replaced with relative import",
+            "Used when absolute import should be replaced with relative import",
         ),
     }
     options = ()
