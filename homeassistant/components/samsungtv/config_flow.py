@@ -33,6 +33,7 @@ from .const import (
     LOGGER,
     METHOD_LEGACY,
     METHOD_WEBSOCKET,
+    RESULT_AUTH_MISSING,
     RESULT_CANNOT_CONNECT,
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
@@ -272,7 +273,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._reauth_entry, data=new_data
                 )
                 return self.async_abort(reason="reauth_successful")
-            errors = {"base": result}
+            elif result == RESULT_AUTH_MISSING:
+                errors = {"base": result}
+            else:
+                return self.async_abort(reason=result)
 
         self.context["title_placeholders"] = {"device": self._title}
         return self.async_show_form(
