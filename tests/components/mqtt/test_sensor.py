@@ -381,6 +381,51 @@ async def test_valid_device_class(hass, mqtt_mock):
     assert "device_class" not in state.attributes
 
 
+async def test_invalid_state_class(hass, mqtt_mock):
+    """Test state_class option with invalid value."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "state_class": "foobarnotreal",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is None
+
+
+async def test_valid_state_class(hass, mqtt_mock):
+    """Test state_class option with valid values."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "mqtt",
+                    "name": "Test 1",
+                    "state_topic": "test-topic",
+                    "state_class": "measurement",
+                },
+                {"platform": "mqtt", "name": "Test 2", "state_topic": "test-topic"},
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_1")
+    assert state.attributes["state_class"] == "measurement"
+    state = hass.states.get("sensor.test_2")
+    assert "state_class" not in state.attributes
+
+
 async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
