@@ -15,7 +15,7 @@ class HomeKitCamera(AccessoryEntity, Camera):
     async def async_added_to_hass(self):
         """Entity added to hass."""
         self._accessory.available = True
-        await super().async_added_to_hass(self)
+        await super().async_added_to_hass()
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
