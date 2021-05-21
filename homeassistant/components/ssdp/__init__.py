@@ -4,24 +4,25 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from datetime import timedelta
-from ipaddress import IPv4Address
+from ipaddress import IPv4Address, IPv6Address
 import logging
 from typing import Any
 
 import aiohttp
 from async_upnp_client.ssdp import (
     SSDP_IP_V4,
+    SSDP_IP_V6,
     SSDP_MX,
     SSDP_ST_ALL,
     SSDP_TARGET_V4,
     SsdpProtocol,
     build_ssdp_search_packet,
-    get_source_ip_from_target_ip,
     get_ssdp_socket,
 )
 from defusedxml import ElementTree
 from netdisco import ssdp, util
 
+from homeassistant.components import network
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_time_interval
@@ -75,10 +76,11 @@ async def async_setup(hass, config):
 class SSDPListener:
     """Class to listen for SSDP."""
 
-    def __init__(self, async_callback):
+    def __init__(self, async_callback, source_ip):
         """Init the ssdp listener class."""
         self._async_callback = async_callback
-        self._target = None
+        self._source_ip = source_ip
+        self._targets = None
         self._transport = None
 
     @callback
@@ -98,9 +100,11 @@ class SSDPListener:
 
     async def async_start(self):
         """Start the listener."""
-        target_ip = IPv4Address(SSDP_IP_V4)
-        source_ip = get_source_ip_from_target_ip(target_ip)
-        sock, source, self._target = get_ssdp_socket(source_ip, target_ip)
+        if isinstance(self._source_ip, IPv4Address):
+            target_ip = IPv4Address(SSDP_IP_V4)
+        else:
+            target_ip = IPv6Address(SSDP_IP_V6)
+        sock, source, self._target = get_ssdp_socket(self._source_ip, target_ip)
         sock.bind(source)
         loop = asyncio.get_running_loop()
         await loop.create_datagram_endpoint(
@@ -116,6 +120,13 @@ class SSDPListener:
         self._transport.close()
 
 
+def _async_use_default_interface(adapters) -> bool:
+    for adapter in adapters:
+        if adapter["enabled"] and not adapter["default"]:
+            return False
+    return True
+
+
 class Scanner:
     """Class to manage SSDP scanning."""
 
@@ -125,7 +136,7 @@ class Scanner:
         self.seen = set()
         self._integration_matchers = integration_matchers
         self._description_cache = {}
-        self._ssdp_listener = None
+        self._ssdp_listeners = None
 
     async def _async_on_ssdp_response(self, data: Mapping[str, Any]) -> None:
         """Process an ssdp response."""
@@ -140,17 +151,46 @@ class Scanner:
 
     async def async_stop(self):
         """Stop the scanner."""
-        self._ssdp_listener.async_stop()
-        self._ssdp_listener = None
+        for listener in self._ssdp_listeners:
+            listener.async_stop()
+        self._ssdp_listeners = None
+
+    async def _async_build_source_set(self):
+        """Build the list of ssdp sources."""
+        adapters = await network.async_get_adapters(self.hass)
+        sources = set()
+        if _async_use_default_interface(adapters):
+            sources.add(IPv4Address("0.0.0.0"))
+            return sources
+
+        for adapter in adapters:
+            if not adapter["enabled"]:
+                continue
+            if adapter["ipv4"]:
+                ipv4 = adapter["ipv4"][0]
+                sources.add(IPv4Address(ipv4.address))
+            if adapter["ipv6"]:
+                for ipv6 in adapter["ipv6"]:
+                    sources.add(IPv6Address(f"::%{ipv6.scope_id}"))
+
+        return sources
 
     async def async_scan(self, *_):
         """Scan for new entries."""
-        if self._ssdp_listener:
-            self._ssdp_listener.async_search()
+        if self._ssdp_listeners:
+            await asyncio.gather(
+                *[listener.async_search() for listener in self._ssdp_listeners]
+            )
             return
 
-        self._ssdp_listener = SSDPListener(async_callback=self._async_on_ssdp_response)
-        await self._ssdp_listener.async_start()
+        for source in await self._async_build_source_set():
+            self._ssdp_listeners.append(
+                SSDPListener(async_callback=self._async_on_ssdp_response, source=source)
+            )
+
+        await asyncio.gather(
+            *[listener.async_start() for listener in self._ssdp_listeners]
+        )
 
     async def _async_process_entry(self, entry):
         """Process SSDP entries."""
