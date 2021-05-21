@@ -169,9 +169,10 @@ class Scanner:
             if adapter["ipv4"]:
                 ipv4 = adapter["ipv4"][0]
                 sources.add(IPv4Address(ipv4["address"]))
-            if adapter["ipv6"]:
-                for ipv6 in adapter["ipv6"]:
-                    sources.add(IPv6Address(f"::%{ipv6['scope_id']}"))
+            if not adapter["ipv6"]:
+                continue
+            for ipv6 in adapter["ipv6"]:
+                sources.add(IPv6Address(f"::%{ipv6['scope_id']}"))
 
         return sources
 
