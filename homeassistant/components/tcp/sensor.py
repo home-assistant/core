@@ -5,11 +5,12 @@ import logging
 import select
 import socket
 import ssl
+from typing import Final
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -27,6 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -40,9 +42,9 @@ from .const import (
 )
 from .model import TcpSensorConfig
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.port,
@@ -75,7 +77,7 @@ class TcpSensor(SensorEntity):
     def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Set all the config values if they exist and get initial state."""
 
-        value_template = config.get(CONF_VALUE_TEMPLATE)
+        value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
             value_template.hass = hass
 
