@@ -80,7 +80,7 @@ def music_library_fixture():
 
 @pytest.fixture(name="alarmClock")
 def alarmClock_fixture():
-    """Create music_library fixture."""
+    """Create alarmClock fixture."""
     alarmClock = Mock()
     alarmClock.subscribe = AsyncMock()
     alarmClock.ListAlarms.return_value = {
