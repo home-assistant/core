@@ -15,6 +15,7 @@ from async_upnp_client.ssdp import (
     SSDP_MX,
     SSDP_ST_ALL,
     SSDP_TARGET_V4,
+    SSDP_TARGET_V6,
     SsdpProtocol,
     build_ssdp_search_packet,
     get_ssdp_socket,
@@ -82,12 +83,13 @@ class SSDPListener:
         self._source_ip = source_ip
         self._targets = None
         self._transport = None
+        self._is_ipv4 = None
 
     @callback
     def async_search(self) -> None:
         """Start an SSDP search."""
         self._transport.sendto(
-            build_ssdp_search_packet(SSDP_TARGET_V4, SSDP_MX, SSDP_ST_ALL), self._target
+            build_ssdp_search_packet(self._target_data, SSDP_MX, SSDP_ST_ALL), self._target
         )
 
     async def _async_on_data(self, request_line, headers) -> None:
@@ -100,10 +102,9 @@ class SSDPListener:
 
     async def async_start(self):
         """Start the listener."""
-        if isinstance(self._source_ip, IPv4Address):
-            target_ip = IPv4Address(SSDP_IP_V4)
-        else:
-            target_ip = IPv6Address(SSDP_IP_V6)
+        self._is_ipv4 = self._source_ip.version == 4 
+        self._target_data = SSDP_TARGET_V4 if self._is_ipv4 else SSDP_TARGET_V6
+        target_ip = IPv4Address(SSDP_IP_V4) if self._is_ipv4 else IPv6Address(SSDP_IP_V6)
         sock, source, self._target = get_ssdp_socket(self._source_ip, target_ip)
         sock.bind(source)
         loop = asyncio.get_running_loop()
