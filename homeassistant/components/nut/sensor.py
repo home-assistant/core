@@ -98,12 +98,12 @@ class NUTSensor(CoordinatorEntity, SensorEntity):
         self._firmware = firmware
         self._model = model
         self._device_name = name
-        self._name = f"{name} {SENSOR_TYPES[sensor_type][SENSOR_NAME]}"
         self._data = data
         self._unique_id = unique_id
 
         self._attr_device_class = SENSOR_TYPES[self._type][SENSOR_DEVICE_CLASS]
         self._attr_icon = SENSOR_TYPES[self._type][SENSOR_ICON]
+        self._attr_name = f"{name} {SENSOR_TYPES[sensor_type][SENSOR_NAME]}"
         self._attr_unit_of_measurement = SENSOR_TYPES[sensor_type][SENSOR_UNIT]
 
     @property
@@ -129,11 +129,6 @@ class NUTSensor(CoordinatorEntity, SensorEntity):
         if not self._unique_id:
             return None
         return f"{self._unique_id}_{self._type}"
-
-    @property
-    def name(self):
-        """Return the name of the UPS sensor."""
-        return self._name
 
     @property
     def state(self):
