@@ -86,11 +86,13 @@ class SamsungTVDevice(MediaPlayerEntity):
         # sending the next command to avoid turning the TV back ON).
         self._end_of_power_off = None
         self._bridge = bridge
+        self._auth_failed = False
         self._bridge.register_reauth_callback(self.access_denied)
 
     def access_denied(self):
         """Access denied callback."""
         LOGGER.debug("Access denied in getting remote object")
+        self._auth_failed = True
         self.hass.add_job(
             self.hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -104,6 +106,8 @@ class SamsungTVDevice(MediaPlayerEntity):
 
     def update(self):
         """Update state of device."""
+        if self._auth_failed:
+            return
         if self._power_off_in_progress():
             self._state = STATE_OFF
         else:
@@ -140,6 +144,8 @@ class SamsungTVDevice(MediaPlayerEntity):
     @property
     def available(self):
         """Return the availability of the device."""
+        if self._auth_failed:
+            return False
         return self._state == STATE_ON or self._on_script
 
     @property
