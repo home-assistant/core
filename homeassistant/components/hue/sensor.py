@@ -77,7 +77,6 @@ class HueTemperature(GenericHueGaugeSensorEntity):
     """The temperature sensor entity for a Hue motion sensor device."""
 
     device_class = DEVICE_CLASS_TEMPERATURE
-    state_class = STATE_CLASS_MEASUREMENT
     unit_of_measurement = TEMP_CELSIUS
 
     @property
@@ -87,6 +86,11 @@ class HueTemperature(GenericHueGaugeSensorEntity):
             return None
 
         return self.sensor.temperature / 100
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return STATE_CLASS_MEASUREMENT
 
 
 class HueBattery(GenericHueSensor, SensorEntity):
