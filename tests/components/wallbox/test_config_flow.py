@@ -110,11 +110,6 @@ async def test_configflow_class():
     ), raises(Exception):
         assert await configflow.async_step_user(True)
 
-    with patch(
-        "homeassistant.components.wallbox.config_flow.validate_input",
-    ), raises(Exception):
-        assert await configflow.async_step_user(True)
-
 
 def test_cannot_connect_class():
     """Test cannot Connect class."""
