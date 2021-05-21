@@ -59,8 +59,6 @@ class VerisureThermometer(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.serial_number = serial_number
-        self._device_class = DEVICE_CLASS_TEMPERATURE
-        self._unit_of_measurement = TEMP_CELSIUS
 
     @property
     def name(self) -> str:
@@ -117,9 +115,6 @@ class VerisureHygrometer(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._device_class = DEVICE_CLASS_HUMIDITY
-        self._unit_of_measurement = PERCENTAGE
-
         self.serial_number = serial_number
 
     @property
@@ -176,8 +171,6 @@ class VerisureMouseDetection(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._unit_of_measurement = "Mice"
-
         self.serial_number = serial_number
 
     @property

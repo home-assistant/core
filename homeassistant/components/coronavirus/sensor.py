@@ -41,9 +41,8 @@ class CoronavirusSensor(CoordinatorEntity, SensorEntity):
         else:
             self.name = f"{coordinator.data[country].country} Coronavirus {info_type}"
         self.unique_id = f"{country}-{info_type}"
-
-        self._icon = SENSORS[self.info_type]
-        self._unit_of_measurement = "people"
+        self.country = country
+        self.info_type = info_type
 
     @property
     def available(self):
