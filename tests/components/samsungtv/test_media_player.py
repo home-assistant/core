@@ -49,6 +49,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -399,7 +400,8 @@ async def test_state_without_turnon(hass, remote):
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID_NOTURNON}, True
     )
     state = hass.states.get(ENTITY_ID_NOTURNON)
-    assert state.state == STATE_OFF
+    # Should be STATE_UNAVAILABLE since there is no way to turn it back on
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_supported_features_with_turnon(hass, remote):
