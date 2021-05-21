@@ -79,7 +79,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._bridge = None
         self._device_info = None
 
-    def _get_entry(self):
+    def _get_entry_from_bridge(self):
         """Get device entry."""
         data = {
             CONF_HOST: self._host,
@@ -158,6 +158,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
+        # We need to import even if we cannot validate
+        # since the TV may be off at startup
         await self._async_set_name_host_from_input(user_input)
         self._async_abort_entries_match({CONF_HOST: self._host})
         if user_input.get(CONF_PORT) in WEBSOCKET_PORTS:
@@ -184,14 +186,12 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             await self._async_set_name_host_from_input()
             await self.hass.async_add_executor_job(self._try_connect)
-
             if self._bridge.method == METHOD_LEGACY:
                 # Legacy bridge does not provide device info
                 self._async_abort_entries_match({CONF_HOST: self._host})
             else:
                 await self._async_set_device_unique_id(raise_on_progress=False)
-
-            return self._get_entry()
+            return self._get_entry_from_bridge()
 
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
@@ -260,7 +260,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
 
             await self.hass.async_add_executor_job(self._try_connect)
-            return self._get_entry()
+            return self._get_entry_from_bridge()
 
         self._set_confirm_only()
         return self.async_show_form(
