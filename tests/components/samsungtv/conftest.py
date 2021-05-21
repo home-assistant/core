@@ -38,13 +38,59 @@ def remotews_fixture():
         remotews.__enter__ = Mock()
         remotews.__exit__ = Mock()
         remotews.rest_device_info.return_value = {
+            "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
+            "device": {
+                "modelName": "82GXARRS",
+                "wifiMac": "aa:bb:cc:dd:ee:ff",
+                "name": "[TV] Living Room",
+                "type": "Samsung SmartTV",
+                "networkType": "wifi",
+            },
+        }
+        remotews_class.return_value = remotews
+        remotews_class().__enter__().token = "FAKE_TOKEN"
+        yield remotews
+
+
+@pytest.fixture(name="remotews_no_device_info")
+def remotews_no_device_info_fixture():
+    """Patch the samsungtvws SamsungTVWS."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+    ) as remotews_class, patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        return_value="fake_host",
+    ):
+        remotews = Mock()
+        remotews.__enter__ = Mock()
+        remotews.__exit__ = Mock()
+        remotews.rest_device_info.return_value = None
+        remotews_class.return_value = remotews
+        remotews_class().__enter__().token = "FAKE_TOKEN"
+        yield remotews
+
+
+@pytest.fixture(name="remotews_soundbar")
+def remotews_soundbar_fixture():
+    """Patch the samsungtvws SamsungTVWS."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
+    ) as remotews_class, patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        return_value="fake_host",
+    ):
+        remotews = Mock()
+        remotews.__enter__ = Mock()
+        remotews.__exit__ = Mock()
+        remotews.rest_device_info.return_value = {
+            "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
             "device": {
                 "modelName": "82GXARRS",
                 "wifiMac": "aa:bb:cc:dd:ee:ff",
                 "mac": "aa:bb:cc:dd:ee:ff",
                 "name": "[TV] Living Room",
-                "type": "Samsung SmartTV",
-            }
+                "type": "Samsung SoundBar",
+            },
         }
         remotews_class.return_value = remotews
         remotews_class().__enter__().token = "FAKE_TOKEN"
