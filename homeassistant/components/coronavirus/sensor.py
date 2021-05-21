@@ -29,10 +29,13 @@ class CoronavirusSensor(CoordinatorEntity, SensorEntity):
 
     name = None
     unique_id = None
+    attr_unit_of_measurement = "people"
 
     def __init__(self, coordinator, country, info_type):
         """Initialize coronavirus sensor."""
         super().__init__(coordinator)
+        self.attr_icon = SENSORS[info_type]
+
         if country == OPTION_WORLDWIDE:
             self.name = f"Worldwide Coronavirus {info_type}"
         else:
@@ -62,16 +65,6 @@ class CoronavirusSensor(CoordinatorEntity, SensorEntity):
             return sum_cases
 
         return getattr(self.coordinator.data[self.country], self.info_type)
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return SENSORS[self.info_type]
-
-    @property
-    def unit_of_measurement(self):
-        """Return unit of measurement."""
-        return "people"
 
     @property
     def extra_state_attributes(self):
