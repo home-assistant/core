@@ -1,6 +1,7 @@
 """Support for Yale Alarm."""
 from __future__ import annotations
 
+import voluptuous as vol
 from yalesmartalarmclient.client import (
     YALE_STATE_ARM_FULL,
     YALE_STATE_ARM_PARTIAL,
@@ -11,14 +12,17 @@ from homeassistant.components.alarm_control_panel import (
     ATTR_CHANGED_BY,
     ATTR_CODE_ARM_REQUIRED,
     ATTR_CODE_FORMAT,
+    PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_NAME,
+    CONF_PASSWORD,
     CONF_USERNAME,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -26,11 +30,35 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOGGER
+from .const import CONF_AREA_ID, DEFAULT_AREA_ID, DEFAULT_NAME, DOMAIN, LOGGER
 from .coordinator import YaleDataUpdateCoordinator
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_AREA_ID, default=DEFAULT_AREA_ID): cv.string,
+    }
+)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Import Yale configuration from YAML."""
+    LOGGER.warning(
+        "Loading Yale Alarm via platform setup is depreciated; Please remove it from your configuration"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -62,7 +90,7 @@ class YaleAlarmDevice(CoordinatorEntity, AlarmControlPanelEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
-        return str(self.coordinator.entry.unique_id)
+        return str(self.coordinator.entry.entry_id)
 
     @property
     def device_info(self) -> DeviceInfo:
