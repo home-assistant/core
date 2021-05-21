@@ -1,4 +1,5 @@
 """Tests for Samsung TV config flow."""
+import socket
 from unittest.mock import Mock, PropertyMock, call, patch
 
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
@@ -6,15 +7,19 @@ from samsungtvws.exceptions import ConnectionFailure
 from websocket import WebSocketProtocolException
 
 from homeassistant import config_entries
+from homeassistant.components.dhcp import IP_ADDRESS
 from homeassistant.components.samsungtv.const import (
     ATTR_PROPERTIES,
     CONF_MANUFACTURER,
     CONF_MODEL,
     DEFAULT_MANUFACTURER,
     DOMAIN,
+    METHOD_LEGACY,
+    METHOD_WEBSOCKET,
     RESULT_AUTH_MISSING,
     RESULT_CANNOT_CONNECT,
     RESULT_NOT_SUPPORTED,
+    RESULT_UNKNOWN_HOST,
     TIMEOUT_REQUEST,
     TIMEOUT_WEBSOCKET,
 )
@@ -44,6 +49,16 @@ from tests.components.samsungtv.conftest import (
     RESULT_ALREADY_IN_PROGRESS,
 )
 
+MOCK_IMPORT_DATA = {
+    CONF_HOST: "fake_host",
+    CONF_NAME: "fake",
+    CONF_PORT: 55000,
+}
+MOCK_IMPORT_WSDATA = {
+    CONF_HOST: "fake_host",
+    CONF_NAME: "fake",
+    CONF_PORT: 8002,
+}
 MOCK_USER_DATA = {CONF_HOST: "fake_host", CONF_NAME: "fake_name"}
 MOCK_SSDP_DATA = {
     ATTR_SSDP_LOCATION: "https://fake_host:12345/test",
@@ -65,6 +80,9 @@ MOCK_SSDP_DATA_WRONGMODEL = {
     ATTR_UPNP_MANUFACTURER: "fake2_manufacturer",
     ATTR_UPNP_MODEL_NAME: "HW-Qfake",
     ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172df",
+}
+MOCK_DHCP_DATA = {
+    IP_ADDRESS: "fake_host",
 }
 MOCK_ZEROCONF_DATA = {
     CONF_HOST: "fake_host",
@@ -465,14 +483,99 @@ async def test_ssdp_already_configured(hass: HomeAssistant, remote: Mock):
     assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
 
 
+async def test_import_legacy(hass: HomeAssistant):
+    """Test importing from yaml with hostname."""
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        return_value="fake_host",
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=MOCK_IMPORT_DATA,
+        )
+    await hass.async_block_till_done()
+    assert result["type"] == "create_entry"
+    assert result["title"] == "fake"
+    assert result["data"][CONF_METHOD] == METHOD_LEGACY
+    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["data"][CONF_NAME] == "fake"
+    assert result["data"][CONF_MANUFACTURER] == "Samsung"
+    assert result["result"].unique_id is None
+
+
+async def test_import_websocket(hass: HomeAssistant):
+    """Test importing from yaml with hostname."""
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        return_value="fake_host",
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=MOCK_IMPORT_WSDATA,
+        )
+    await hass.async_block_till_done()
+    assert result["type"] == "create_entry"
+    assert result["title"] == "fake"
+    assert result["data"][CONF_METHOD] == METHOD_WEBSOCKET
+    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["data"][CONF_NAME] == "fake"
+    assert result["data"][CONF_MANUFACTURER] == "Samsung"
+    assert result["result"].unique_id is None
+
+
+async def test_import_unknown_host(hass: HomeAssistant, remotews: Mock):
+    """Test importing from yaml with hostname that does not resolve."""
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        side_effect=socket.gaierror,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=MOCK_IMPORT_DATA,
+        )
+    await hass.async_block_till_done()
+    assert result["type"] == "abort"
+    assert result["reason"] == RESULT_UNKNOWN_HOST
+
+
+async def test_dhcp(hass: HomeAssistant, remotews: Mock):
+    """Test starting a flow from dhcp."""
+    # confirm to add the entry
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=MOCK_DHCP_DATA,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "form"
+    assert result["step_id"] == "confirm"
+
+    # entry was added
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input="whatever"
+    )
+    assert result["type"] == "create_entry"
+    assert result["title"] == "Living Room (82GXARRS)"
+    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["data"][CONF_NAME] == "Living Room"
+    assert result["data"][CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert result["data"][CONF_MANUFACTURER] == "Samsung"
+    assert result["data"][CONF_MODEL] == "82GXARRS"
+    assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
+
+
 async def test_zeroconf(hass: HomeAssistant, remotews: Mock):
-    """Test starting a flow from zero."""
+    """Test starting a flow from zeroconf."""
     # confirm to add the entry
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=MOCK_ZEROCONF_DATA,
     )
+    await hass.async_block_till_done()
     assert result["type"] == "form"
     assert result["step_id"] == "confirm"
 
@@ -492,12 +595,12 @@ async def test_zeroconf(hass: HomeAssistant, remotews: Mock):
 
 async def test_zeroconf_ignores_soundbar(hass: HomeAssistant, remotews_soundbar: Mock):
     """Test starting a flow from zeroconf where the device is actually a soundbar."""
-    # confirm to add the entry
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=MOCK_ZEROCONF_DATA,
     )
+    await hass.async_block_till_done()
     assert result["type"] == "abort"
     assert result["reason"] == "not_supported"
 
@@ -506,14 +609,36 @@ async def test_zeroconf_no_device_info(
     hass: HomeAssistant, remotews_no_device_info: Mock
 ):
     """Test starting a flow from zeroconf where device_info returns None."""
-    # confirm to add the entry
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=MOCK_ZEROCONF_DATA,
     )
+    await hass.async_block_till_done()
     assert result["type"] == "abort"
     assert result["reason"] == "not_supported"
+
+
+async def test_zeroconf_and_dhcp_same_time(hass: HomeAssistant, remotews: Mock):
+    """Test starting a flow from zeroconf and dhcp."""
+    # confirm to add the entry
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=MOCK_DHCP_DATA,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "form"
+    assert result["step_id"] == "confirm"
+
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DATA,
+    )
+    await hass.async_block_till_done()
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_in_progress"
 
 
 async def test_autodetect_websocket(hass: HomeAssistant, remote: Mock, remotews: Mock):

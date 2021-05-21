@@ -151,6 +151,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             user_input[CONF_METHOD] = METHOD_LEGACY
             user_input[CONF_PORT] = LEGACY_PORT
+        user_input[CONF_MANUFACTURER] = DEFAULT_MANUFACTURER
         return self.async_create_entry(
             title=self._title,
             data=user_input,

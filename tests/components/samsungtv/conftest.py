@@ -44,7 +44,7 @@ def remotews_fixture():
                 "wifiMac": "aa:bb:cc:dd:ee:ff",
                 "name": "[TV] Living Room",
                 "type": "Samsung SmartTV",
-                "networkType": "wifi",
+                "networkType": "wireless",
             },
         }
         remotews_class.return_value = remotews
