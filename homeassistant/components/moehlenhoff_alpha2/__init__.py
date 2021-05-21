@@ -34,8 +34,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         raise exceptions.ConfigEntryNotReady from err
 
     base_uh = Alpha2BaseUpdateHandler(base, 60)
-    hass.data.setdefault(DOMAIN, {"connections": {}, "devices": set()})
-    hass.data[DOMAIN]["connections"][entry.entry_id] = base_uh
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {"connection": base_uh, "devices": set()}
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

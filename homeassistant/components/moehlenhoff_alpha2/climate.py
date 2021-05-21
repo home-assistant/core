@@ -25,7 +25,7 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add Alpha2Climate entities from a config_entry."""
 
-    base_update_handler = hass.data[DOMAIN]["connections"][config_entry.entry_id]
+    base_update_handler = hass.data[DOMAIN][config_entry.entry_id]["connection"]
     await base_update_handler.async_update()
 
     entities = []
