@@ -65,21 +65,15 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
     ) -> None:
         """Initialize the Verisure lock."""
         super().__init__(coordinator)
+
+        self._attr_name = coordinator.data["locks"][serial_number]["area"]
+        self._attr_unique_id = serial_number
+
         self.serial_number = serial_number
         self._state = None
         self._digits = coordinator.entry.options.get(
             CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
         )
-
-    @property
-    def name(self) -> str:
-        """Return the name of this entity."""
-        return self.coordinator.data["locks"][self.serial_number]["area"]
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self.serial_number
 
     @property
     def device_info(self) -> DeviceInfo:

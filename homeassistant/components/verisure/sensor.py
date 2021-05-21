@@ -58,6 +58,7 @@ class VerisureThermometer(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+        self._attr_unique_id = f"{serial_number}_temperature"
         self.serial_number = serial_number
 
     @property
@@ -65,11 +66,6 @@ class VerisureThermometer(CoordinatorEntity, SensorEntity):
         """Return the name of the entity."""
         name = self.coordinator.data["climate"][self.serial_number]["deviceArea"]
         return f"{name} Temperature"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return f"{self.serial_number}_temperature"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -115,6 +111,7 @@ class VerisureHygrometer(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+        self._attr_unique_id = f"{serial_number}_humidity"
         self.serial_number = serial_number
 
     @property
@@ -122,11 +119,6 @@ class VerisureHygrometer(CoordinatorEntity, SensorEntity):
         """Return the name of the entity."""
         name = self.coordinator.data["climate"][self.serial_number]["deviceArea"]
         return f"{name} Humidity"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return f"{self.serial_number}_humidity"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -171,6 +163,7 @@ class VerisureMouseDetection(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+        self._attr_unique_id = f"{serial_number}_mice"
         self.serial_number = serial_number
 
     @property
@@ -178,11 +171,6 @@ class VerisureMouseDetection(CoordinatorEntity, SensorEntity):
         """Return the name of the entity."""
         name = self.coordinator.data["mice"][self.serial_number]["area"]
         return f"{name} Mouse"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return f"{self.serial_number}_mice"
 
     @property
     def device_info(self) -> DeviceInfo:
