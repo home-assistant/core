@@ -38,26 +38,26 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
+def _create_sensor(xknx: XKNX, config: ConfigType) -> XknxSensor:
+    """Return a KNX sensor to be used within XKNX."""
+    return XknxSensor(
+        xknx,
+        name=config[CONF_NAME],
+        group_address_state=config[SensorSchema.CONF_STATE_ADDRESS],
+        sync_state=config[SensorSchema.CONF_SYNC_STATE],
+        always_callback=config[SensorSchema.CONF_ALWAYS_CALLBACK],
+        value_type=config[CONF_TYPE],
+    )
+
+
 class KNXSensor(KnxEntity, SensorEntity):
     """Representation of a KNX sensor."""
 
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of a KNX sensor."""
         self._device: XknxSensor
-        super().__init__(self._create_sensor(xknx, config))
+        super().__init__(_create_sensor(xknx, config))
         self._unique_id = f"{self._device.sensor_value.group_address_state}"
-
-    @staticmethod
-    def _create_sensor(xknx: XKNX, config: ConfigType) -> XknxSensor:
-        """Return a KNX sensor to be used within XKNX."""
-        return XknxSensor(
-            xknx,
-            name=config[CONF_NAME],
-            group_address_state=config[SensorSchema.CONF_STATE_ADDRESS],
-            sync_state=config[SensorSchema.CONF_SYNC_STATE],
-            always_callback=config[SensorSchema.CONF_ALWAYS_CALLBACK],
-            value_type=config[CONF_TYPE],
-        )
 
     @property
     def state(self) -> StateType:
