@@ -1,10 +1,9 @@
 """Support for the Moehlenhoff Alpha2."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import aiohttp
-
 from moehlenhoff_alpha2 import Alpha2Base
 
 from homeassistant import exceptions
@@ -47,7 +46,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    await base_uh.async_init()
+    # Trigger updates at regular intervals.
+    async_track_time_interval(hass, base_uh.async_update, UPDATE_INTERVAL)
 
     return True
 
@@ -77,25 +77,14 @@ class Alpha2BaseUpdateHandler:
         self._heatarea_update_callbacks = {}
         self._loop = asyncio.get_event_loop()
 
-    async def async_init(self):
-        """Schedule initial and updates at regular intervals."""
-
-        async def update(event_time):
-            """Update."""
-            await self.async_update()
-
-        # Trigger updates at regular intervals.
-        async_track_time_interval(update, UPDATE_INTERVAL)
-
     def add_heatarea_update_callback(self, callback, heatarea_nr):
         """Add a callback which will be run when data of the given heatarea is updated."""
         if heatarea_nr not in self._heatarea_update_callbacks:
             self._heatarea_update_callbacks[heatarea_nr] = []
         self._heatarea_update_callbacks[heatarea_nr].append(callback)
 
-    async def async_update(self):
+    async def async_update(self, now=None):
         """Pull the latest data from the Alpha2 base."""
-        _LOGGER.debug("Updating")
         await self.base.update_data()
         for heatarea in self.base.heatareas:
             _LOGGER.debug("Heatarea: %s", heatarea)

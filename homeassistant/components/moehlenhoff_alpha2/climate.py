@@ -173,7 +173,3 @@ class Alpha2Climate(ClimateEntity):
         data["LOCK_AVAILABLE"] = self._data.get("LOCK_AVAILABLE", False)
         data["BLOCK_HC"] = self._data.get("BLOCK_HC", False)
         return data
-
-    def update(self):
-        """Get latest data from Alpha2 base."""
-        self._base_update_handler.update()
