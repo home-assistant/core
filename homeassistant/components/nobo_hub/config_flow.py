@@ -149,7 +149,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             on_commands = {}
             for key, value in user_input.items():
                 if key.startswith(CONF_COMMAND_ON + "_zone_") and value != "Default":
-                    zone = key.removeprefix(CONF_COMMAND_ON + "_zone_")
+                    zone = key[16:]
                     on_commands[hub.zones[zone]["name"].replace("\xa0", " ")] = value
 
             data = {CONF_COMMAND_OFF: off_command, CONF_COMMAND_ON: on_commands}
