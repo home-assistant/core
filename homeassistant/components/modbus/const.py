@@ -4,6 +4,7 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.climate.const import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -24,7 +25,6 @@ CONF_CURRENT_TEMP = "current_temp_register"
 CONF_CURRENT_TEMP_REGISTER_TYPE = "current_temp_register_type"
 CONF_DATA_COUNT = "data_count"
 CONF_DATA_TYPE = "data_type"
-CONF_FAN = "fan"
 CONF_FANS = "fans"
 CONF_HUB = "hub"
 CONF_INPUTS = "inputs"
@@ -107,6 +107,7 @@ PLATFORMS = (
     (CLIMATE_DOMAIN, CONF_CLIMATES),
     (COVER_DOMAIN, CONF_COVERS),
     (LIGHT_DOMAIN, CONF_LIGHTS),
+    (FAN_DOMAIN, CONF_FANS),
     (SENSOR_DOMAIN, CONF_SENSORS),
     (SWITCH_DOMAIN, CONF_SWITCHES),
 )
