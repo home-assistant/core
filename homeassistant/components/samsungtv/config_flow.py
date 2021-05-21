@@ -72,8 +72,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize flow."""
+        self._reauth_entry = None
         self._host = None
         self._mac = None
+        self._udn = None
         self._manufacturer = None
         self._model = None
         self._name = None
@@ -243,15 +245,33 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="confirm", description_placeholders={"device": self._title}
         )
 
-    async def async_step_reauth(self, user_input):
+    async def async_step_reauth(self, data):
         """Handle configuration by re-auth."""
-        self._host = user_input[CONF_HOST]
-        self._manufacturer = user_input.get(CONF_MANUFACTURER)
-        self._model = user_input.get(CONF_MODEL)
-        self._name = user_input.get(CONF_NAME)
-        self._title = f"{self._name} ({self._model})"
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        self._host = self._reauth_entry.data[CONF_HOST]
+        data = self._reauth_entry
+        if data.get(CONF_MODEL) and data.get(CONF_NAME):
+            self._title = f"{data[CONF_NAME]} ({data[CONF_MODEL]})"
+        else:
+            self._title = data.get(CONF_NAME) or self._host
+        return await self.async_step_reauth_confirm()
 
-        await self.async_set_unique_id(self._id)
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Confirm reauth."""
+        if user_input is not None:
+            self._bridge = SamsungTVBridge.get_bridge(
+                self._reauth_entry.data[CONF_METHOD], self._host
+            )
+            result = self._bridge.try_connect()
+            if result == RESULT_SUCCESS:
+                return self.async_abort(reason="reauth_successful")
+            errors = {"base": result}
+
         self.context["title_placeholders"] = {"device": self._title}
-
-        return await self.async_step_confirm()
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            errors=errors,
+            description_placeholders={"device": self._title},
+        )
