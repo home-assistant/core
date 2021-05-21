@@ -7,7 +7,7 @@
             "cannot_connect": "Impossibile connettersi",
             "not_supported": "Questo dispositivo Samsung TV non \u00e8 attualmente supportato."
         },
-        "flow_title": "Samsung TV: {model}",
+        "flow_title": "{model}",
         "step": {
             "confirm": {
                 "description": "Vuoi configurare Samsung TV {model}? Se non hai mai connesso Home Assistant in precedenza, dovresti vedere un messaggio sul tuo TV in cui \u00e8 richiesta l'autorizzazione. Le configurazioni manuali per questo TV verranno sovrascritte.",

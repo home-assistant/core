@@ -1,4 +1,14 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_cold": "{entity_name} \u05e7\u05e8",
+            "is_not_cold": "{entity_name} \u05dc\u05d0 \u05e7\u05e8"
+        },
+        "trigger_type": {
+            "cold": "{entity_name} \u05e0\u05d4\u05d9\u05d4 \u05e7\u05e8",
+            "not_cold": "{entity_name} \u05e0\u05d4\u05d9\u05d4 \u05dc\u05d0 \u05e7\u05e8"
+        }
+    },
     "state": {
         "_": {
             "off": "\u05db\u05d1\u05d5\u05d9",
@@ -57,8 +67,8 @@
             "on": "\u05e0\u05d5\u05db\u05d7"
         },
         "problem": {
-            "off": "\u05d0\u05d5\u05e7\u05d9\u05d9",
-            "on": "\u05d1\u05e2\u05d9\u05d9\u05d4"
+            "off": "\u05ea\u05e7\u05d9\u05df",
+            "on": "\u05d1\u05e2\u05d9\u05d4"
         },
         "safety": {
             "off": "\u05d1\u05d8\u05d5\u05d7",

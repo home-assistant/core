@@ -1,7 +1,5 @@
 name: Report an issue with Home Assistant Core
 description: Report an issue with Home Assistant Core.
-title: ""
-issue_body: true
 body:
   - type: markdown
     attributes:
@@ -85,13 +83,10 @@ body:
       label: Anything in the logs that might be useful for us?
       description: For example, error message, or stack traces.
       render: txt
-  - type: markdown
+  - type: textarea
     attributes:
-      value: |
-        ## Additional information
-  - type: markdown
-    attributes:
-      value: >
+      label: Additional information
+      description: >
         If you have any additional information for us, use the field below.
         Please note, you can attach screenshots or screen recordings here, by
         dragging and dropping files in the field below.

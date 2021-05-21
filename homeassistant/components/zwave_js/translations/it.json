@@ -4,7 +4,6 @@
             "addon_get_discovery_info_failed": "Impossibile ottenere le informazioni sul rilevamento del componente aggiuntivo Z-Wave JS.",
             "addon_info_failed": "Impossibile ottenere le informazioni sul componente aggiuntivo Z-Wave JS.",
             "addon_install_failed": "Impossibile installare il componente aggiuntivo Z-Wave JS.",
-            "addon_missing_discovery_info": "Informazioni sul rilevamento del componente aggiuntivo Z-Wave JS mancanti.",
             "addon_set_config_failed": "Impossibile impostare la configurazione di Z-Wave JS.",
             "addon_start_failed": "Impossibile avviare il componente aggiuntivo Z-Wave JS.",
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
@@ -49,11 +48,6 @@
             },
             "start_addon": {
                 "title": "Il componente aggiuntivo Z-Wave JS si sta avviando."
-            },
-            "user": {
-                "data": {
-                    "url": "URL"
-                }
             }
         }
     },

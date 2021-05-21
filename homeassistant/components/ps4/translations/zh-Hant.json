@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "credential_error": "\u53d6\u5f97\u6191\u8b49\u932f\u8aa4\u3002",
             "no_devices_found": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230\u88dd\u7f6e",
             "port_987_bind_error": "\u7121\u6cd5\u7d81\u5b9a\u901a\u8a0a\u57e0 987\u3002\u8acb\u53c3\u8003 [documentation](https://www.home-assistant.io/components/ps4/) \u4ee5\u7372\u5f97\u66f4\u591a\u8cc7\u8a0a\u3002",

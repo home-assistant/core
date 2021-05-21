@@ -1,7 +1,7 @@
 """Support for August lock."""
 import logging
 
-from yalexs.activity import ActivityType
+from yalexs.activity import SOURCE_PUBNUB, ActivityType
 from yalexs.lock import LockStatus
 from yalexs.util import update_lock_detail_from_activity
 
@@ -19,13 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up August locks."""
     data = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
-    devices = []
-
-    for lock in data.locks:
-        _LOGGER.debug("Adding lock for %s", lock.device_name)
-        devices.append(AugustLock(data, lock))
-
-    async_add_entities(devices, True)
+    async_add_entities([AugustLock(data, lock) for lock in data.locks])
 
 
 class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
@@ -80,6 +74,9 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
         if lock_activity is not None:
             self._changed_by = lock_activity.operated_by
             update_lock_detail_from_activity(self._detail, lock_activity)
+            # If the source is pubnub the lock must be online since its a live update
+            if lock_activity.source == SOURCE_PUBNUB:
+                self._detail.set_online(True)
 
         bridge_activity = self._data.activity_stream.get_latest_device_activity(
             self._device_id, {ActivityType.BRIDGE_OPERATION}

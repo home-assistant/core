@@ -67,7 +67,7 @@ def round_state(func):
 
 
 class AirSensor(AirQualityEntity):
-    """Representation of an Yr.no sensor."""
+    """Representation of an air quality sensor."""
 
     def __init__(self, name, coordinates, forecast, session):
         """Initialize the sensor."""

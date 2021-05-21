@@ -26,10 +26,10 @@ def websocket_connected(mock_websocket):
     callback(SIGNAL_CONNECTION_STATE, STATE_CONNECTED, None)
 
 
-def trigger_plex_update(mock_websocket, payload=UPDATE_PAYLOAD):
+def trigger_plex_update(mock_websocket, msgtype="playing", payload=UPDATE_PAYLOAD):
     """Call the websocket callback method with a Plex update."""
     callback = mock_websocket.call_args[0][1]
-    callback("playing", payload, None)
+    callback(msgtype, payload, None)
 
 
 async def wait_for_debouncer(hass):

@@ -3,7 +3,8 @@
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
-            "not_irobot_device": "A felfedezett eszk\u00f6z nem iRobot eszk\u00f6z"
+            "not_irobot_device": "A felfedezett eszk\u00f6z nem iRobot eszk\u00f6z",
+            "short_blid": "fel lett oldva"
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"

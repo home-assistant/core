@@ -9,7 +9,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
-    SIGNAL_STRENGTH_DECIBELS,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     VOLT,
 )
 
@@ -128,22 +128,22 @@ SENSORS = {
     ("sensor", "concentration"): BlockAttributeDescription(
         name="Gas Concentration",
         unit=CONCENTRATION_PARTS_PER_MILLION,
-        value=lambda value: value,
         icon="mdi:gauge",
-        # "sensorOp" is "normal" when the Shelly Gas is working properly and taking measurements.
-        available=lambda block: block.sensorOp == "normal",
     ),
     ("sensor", "extTemp"): BlockAttributeDescription(
         name="Temperature",
         unit=temperature_unit,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_TEMPERATURE,
+        state_class=sensor.STATE_CLASS_MEASUREMENT,
+        available=lambda block: block.extTemp != 999,
     ),
     ("sensor", "humidity"): BlockAttributeDescription(
         name="Humidity",
         unit=PERCENTAGE,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_HUMIDITY,
+        available=lambda block: block.extTemp != 999,
     ),
     ("sensor", "luminosity"): BlockAttributeDescription(
         name="Luminosity",
@@ -170,12 +170,18 @@ SENSORS = {
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_VOLTAGE,
     ),
+    ("sensor", "sensorOp"): BlockAttributeDescription(
+        name="Operation",
+        icon="mdi:cog-transfer",
+        value=lambda value: value,
+        extra_state_attributes=lambda block: {"self_test": block.selfTest},
+    ),
 }
 
 REST_SENSORS = {
     "rssi": RestAttributeDescription(
         name="RSSI",
-        unit=SIGNAL_STRENGTH_DECIBELS,
+        unit=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         value=lambda status, _: status["wifi_sta"]["rssi"],
         device_class=sensor.DEVICE_CLASS_SIGNAL_STRENGTH,
         default_enabled=False,
@@ -225,6 +231,11 @@ class ShellyRestSensor(ShellyRestAttributeEntity, SensorEntity):
     def state(self):
         """Return value of sensor."""
         return self.attribute_value
+
+    @property
+    def state_class(self):
+        """State class of sensor."""
+        return self.description.state_class
 
     @property
     def unit_of_measurement(self):

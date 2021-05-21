@@ -1,6 +1,7 @@
 """Support for MQTT fans."""
 import functools
 import logging
+import math
 
 import voluptuous as vol
 
@@ -27,11 +28,12 @@ from homeassistant.const import (
     CONF_PAYLOAD_ON,
     CONF_STATE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.percentage import (
+    int_states_in_range,
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
     percentage_to_ranged_value,
@@ -57,6 +59,7 @@ CONF_PERCENTAGE_STATE_TOPIC = "percentage_state_topic"
 CONF_PERCENTAGE_COMMAND_TOPIC = "percentage_command_topic"
 CONF_PERCENTAGE_VALUE_TEMPLATE = "percentage_value_template"
 CONF_PERCENTAGE_COMMAND_TEMPLATE = "percentage_command_template"
+CONF_PAYLOAD_RESET_PERCENTAGE = "payload_reset_percentage"
 CONF_SPEED_RANGE_MIN = "speed_range_min"
 CONF_SPEED_RANGE_MAX = "speed_range_max"
 CONF_PRESET_MODE_STATE_TOPIC = "preset_mode_state_topic"
@@ -64,6 +67,7 @@ CONF_PRESET_MODE_COMMAND_TOPIC = "preset_mode_command_topic"
 CONF_PRESET_MODE_VALUE_TEMPLATE = "preset_mode_value_template"
 CONF_PRESET_MODE_COMMAND_TEMPLATE = "preset_mode_command_template"
 CONF_PRESET_MODES_LIST = "preset_modes"
+CONF_PAYLOAD_RESET_PRESET_MODE = "payload_reset_preset_mode"
 CONF_SPEED_STATE_TOPIC = "speed_state_topic"
 CONF_SPEED_COMMAND_TOPIC = "speed_command_topic"
 CONF_SPEED_VALUE_TEMPLATE = "speed_value_template"
@@ -82,6 +86,7 @@ CONF_SPEED_LIST = "speeds"
 DEFAULT_NAME = "MQTT Fan"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
+DEFAULT_PAYLOAD_RESET = "None"
 DEFAULT_OPTIMISTIC = False
 DEFAULT_SPEED_RANGE_MIN = 1
 DEFAULT_SPEED_RANGE_MAX = 100
@@ -108,6 +113,13 @@ def valid_speed_range_configuration(config):
         raise ValueError("speed_range_min must be > 0")
     if config.get(CONF_SPEED_RANGE_MIN) >= config.get(CONF_SPEED_RANGE_MAX):
         raise ValueError("speed_range_max must be > speed_range_min")
+    return config
+
+
+def valid_preset_mode_configuration(config):
+    """Validate that the preset mode reset payload is not one of the preset modes."""
+    if config.get(CONF_PAYLOAD_RESET_PRESET_MODE) in config.get(CONF_PRESET_MODES_LIST):
+        raise ValueError("preset_modes must not contain payload_reset_preset_mode")
     return config
 
 
@@ -151,6 +163,12 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(
                 CONF_SPEED_RANGE_MAX, default=DEFAULT_SPEED_RANGE_MAX
             ): cv.positive_int,
+            vol.Optional(
+                CONF_PAYLOAD_RESET_PERCENTAGE, default=DEFAULT_PAYLOAD_RESET
+            ): cv.string,
+            vol.Optional(
+                CONF_PAYLOAD_RESET_PRESET_MODE, default=DEFAULT_PAYLOAD_RESET
+            ): cv.string,
             vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH): cv.string,
             vol.Optional(CONF_PAYLOAD_LOW_SPEED, default=SPEED_LOW): cv.string,
             vol.Optional(CONF_PAYLOAD_MEDIUM_SPEED, default=SPEED_MEDIUM): cv.string,
@@ -175,11 +193,12 @@ PLATFORM_SCHEMA = vol.All(
     ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema),
     valid_fan_speed_configuration,
     valid_speed_range_configuration,
+    valid_preset_mode_configuration,
 )
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT fan through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
@@ -223,6 +242,9 @@ class MqttFan(MqttEntity, FanEntity):
         self._optimistic_percentage = None
         self._optimistic_preset_mode = None
         self._optimistic_speed = None
+
+        self._legacy_speeds_list = []
+        self._legacy_speeds_list_no_off = []
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
@@ -276,6 +298,8 @@ class MqttFan(MqttEntity, FanEntity):
             "SPEED_MEDIUM": config[CONF_PAYLOAD_MEDIUM_SPEED],
             "SPEED_HIGH": config[CONF_PAYLOAD_HIGH_SPEED],
             "SPEED_OFF": config[CONF_PAYLOAD_OFF_SPEED],
+            "PERCENTAGE_RESET": config[CONF_PAYLOAD_RESET_PERCENTAGE],
+            "PRESET_MODE_RESET": config[CONF_PAYLOAD_RESET_PRESET_MODE],
         }
         # The use of legacy speeds is deprecated in the schema, support will be removed after a quarter (2021.7)
         self._feature_legacy_speeds = not self._topic[CONF_SPEED_COMMAND_TOPIC] is None
@@ -284,28 +308,18 @@ class MqttFan(MqttEntity, FanEntity):
             self._legacy_speeds_list_no_off = speed_list_without_preset_modes(
                 self._legacy_speeds_list
             )
-        else:
-            self._legacy_speeds_list = []
 
         self._feature_percentage = CONF_PERCENTAGE_COMMAND_TOPIC in config
         self._feature_preset_mode = CONF_PRESET_MODE_COMMAND_TOPIC in config
         if self._feature_preset_mode:
-            self._speeds_list = speed_list_without_preset_modes(
-                self._legacy_speeds_list + config[CONF_PRESET_MODES_LIST]
-            )
-            self._preset_modes = (
-                self._legacy_speeds_list + config[CONF_PRESET_MODES_LIST]
-            )
+            self._preset_modes = config[CONF_PRESET_MODES_LIST]
         else:
-            self._speeds_list = speed_list_without_preset_modes(
-                self._legacy_speeds_list
-            )
             self._preset_modes = []
 
-        if not self._speeds_list or self._feature_percentage:
-            self._speed_count = 100
+        if self._feature_percentage:
+            self._speed_count = min(int_states_in_range(self._speed_range), 100)
         else:
-            self._speed_count = len(self._speeds_list)
+            self._speed_count = len(self._legacy_speeds_list_no_off) or 100
 
         optimistic = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or self._topic[CONF_STATE_TOPIC] is None
@@ -327,11 +341,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is not None
             and SUPPORT_OSCILLATE
         )
-        if self._feature_preset_mode and self._speeds_list:
-            self._supported_features |= SUPPORT_SET_SPEED
-        if self._feature_percentage:
-            self._supported_features |= SUPPORT_SET_SPEED
-        if self._feature_legacy_speeds:
+        if self._feature_percentage or self._feature_legacy_speeds:
             self._supported_features |= SUPPORT_SET_SPEED
         if self._feature_preset_mode:
             self._supported_features |= SUPPORT_PRESET_MODE
@@ -344,7 +354,7 @@ class MqttFan(MqttEntity, FanEntity):
                     tpl.hass = self.hass
                     tpl_dict[key] = tpl.async_render_with_possible_json_value
 
-    async def _subscribe_topics(self):
+    async def _subscribe_topics(self):  # noqa: C901
         """(Re)Subscribe to topics."""
         topics = {}
 
@@ -353,6 +363,9 @@ class MqttFan(MqttEntity, FanEntity):
         def state_received(msg):
             """Handle new received MQTT message."""
             payload = self._value_templates[CONF_STATE](msg.payload)
+            if not payload:
+                _LOGGER.debug("Ignoring empty state from '%s'", msg.topic)
+                return
             if payload == self._payload["STATE_ON"]:
                 self._state = True
             elif payload == self._payload["STATE_OFF"]:
@@ -370,23 +383,35 @@ class MqttFan(MqttEntity, FanEntity):
         @log_messages(self.hass, self.entity_id)
         def percentage_received(msg):
             """Handle new received MQTT message for the percentage."""
-            numeric_val_str = self._value_templates[ATTR_PERCENTAGE](msg.payload)
+            rendered_percentage_payload = self._value_templates[ATTR_PERCENTAGE](
+                msg.payload
+            )
+            if not rendered_percentage_payload:
+                _LOGGER.debug("Ignoring empty speed from '%s'", msg.topic)
+                return
+            if rendered_percentage_payload == self._payload["PERCENTAGE_RESET"]:
+                self._percentage = None
+                self._speed = None
+                self.async_write_ha_state()
+                return
             try:
                 percentage = ranged_value_to_percentage(
-                    self._speed_range, int(numeric_val_str)
+                    self._speed_range, int(rendered_percentage_payload)
                 )
             except ValueError:
                 _LOGGER.warning(
-                    "'%s' received on topic %s is not a valid speed within the speed range",
+                    "'%s' received on topic %s. '%s' is not a valid speed within the speed range",
                     msg.payload,
                     msg.topic,
+                    rendered_percentage_payload,
                 )
                 return
             if percentage < 0 or percentage > 100:
                 _LOGGER.warning(
-                    "'%s' received on topic %s is not a valid speed within the speed range",
+                    "'%s' received on topic %s. '%s' is not a valid speed within the speed range",
                     msg.payload,
                     msg.topic,
+                    rendered_percentage_payload,
                 )
                 return
             self._percentage = percentage
@@ -405,19 +430,23 @@ class MqttFan(MqttEntity, FanEntity):
         def preset_mode_received(msg):
             """Handle new received MQTT message for preset mode."""
             preset_mode = self._value_templates[ATTR_PRESET_MODE](msg.payload)
+            if preset_mode == self._payload["PRESET_MODE_RESET"]:
+                self._preset_mode = None
+                self.async_write_ha_state()
+                return
+            if not preset_mode:
+                _LOGGER.debug("Ignoring empty preset_mode from '%s'", msg.topic)
+                return
             if preset_mode not in self.preset_modes:
                 _LOGGER.warning(
-                    "'%s' received on topic %s is not a valid preset mode",
+                    "'%s' received on topic %s. '%s' is not a valid preset mode",
                     msg.payload,
                     msg.topic,
+                    preset_mode,
                 )
                 return
 
             self._preset_mode = preset_mode
-            if not self._implemented_percentage and (preset_mode in self.speed_list):
-                self._percentage = ordered_list_item_to_percentage(
-                    self.speed_list, preset_mode
-                )
             self.async_write_ha_state()
 
         if self._topic[CONF_PRESET_MODE_STATE_TOPIC] is not None:
@@ -449,19 +478,19 @@ class MqttFan(MqttEntity, FanEntity):
                 self._speed = speed
             else:
                 _LOGGER.warning(
-                    "'%s' received on topic %s is not a valid speed",
+                    "'%s' received on topic %s. '%s' is not a valid speed",
                     msg.payload,
                     msg.topic,
+                    speed,
                 )
                 return
 
-            if not self._implemented_percentage:
-                if speed in self._speeds_list:
-                    self._percentage = ordered_list_item_to_percentage(
-                        self._speeds_list, speed
-                    )
-                elif speed == SPEED_OFF:
-                    self._percentage = 0
+            if speed in self._legacy_speeds_list_no_off:
+                self._percentage = ordered_list_item_to_percentage(
+                    self._legacy_speeds_list_no_off, speed
+                )
+            elif speed == SPEED_OFF:
+                self._percentage = 0
 
             self.async_write_ha_state()
 
@@ -478,6 +507,9 @@ class MqttFan(MqttEntity, FanEntity):
         def oscillation_received(msg):
             """Handle new received MQTT message for the oscillation."""
             payload = self._value_templates[ATTR_OSCILLATING](msg.payload)
+            if not payload:
+                _LOGGER.debug("Ignoring empty oscillation from '%s'", msg.topic)
+                return
             if payload == self._payload["OSCILLATE_ON_PAYLOAD"]:
                 self._oscillation = True
             elif payload == self._payload["OSCILLATE_OFF_PAYLOAD"]:
@@ -506,19 +538,9 @@ class MqttFan(MqttEntity, FanEntity):
         """Return true if device is on."""
         return self._state
 
-    @property
-    def _implemented_percentage(self):
-        """Return true if percentage has been implemented."""
-        return self._feature_percentage
-
-    @property
-    def _implemented_preset_mode(self):
-        """Return true if preset_mode has been implemented."""
-        return self._feature_preset_mode
-
     # The use of legacy speeds is deprecated in the schema, support will be removed after a quarter (2021.7)
     @property
-    def _implemented_speed(self):
+    def _implemented_speed(self) -> bool:
         """Return true if speed has been implemented."""
         return self._feature_legacy_speeds
 
@@ -541,7 +563,7 @@ class MqttFan(MqttEntity, FanEntity):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        return self._speeds_list
+        return self._legacy_speeds_list_no_off
 
     @property
     def supported_features(self) -> int:
@@ -555,7 +577,7 @@ class MqttFan(MqttEntity, FanEntity):
 
     @property
     def speed_count(self) -> int:
-        """Return the number of speeds the fan supports or 100 if percentage is supported."""
+        """Return the number of speeds the fan supports."""
         return self._speed_count
 
     @property
@@ -616,24 +638,12 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
-        percentage_payload = int(
+        percentage_payload = math.ceil(
             percentage_to_ranged_value(self._speed_range, percentage)
         )
         mqtt_payload = self._command_templates[ATTR_PERCENTAGE](percentage_payload)
-        if self._implemented_preset_mode:
-            if percentage:
-                await self.async_set_preset_mode(
-                    preset_mode=percentage_to_ordered_list_item(
-                        self.speed_list, percentage
-                    )
-                )
-            # Legacy are deprecated in the schema, support will be removed after a quarter (2021.7)
-            elif self._feature_legacy_speeds and (
-                SPEED_OFF in self._legacy_speeds_list
-            ):
-                await self.async_set_preset_mode(SPEED_OFF)
         # Legacy are deprecated in the schema, support will be removed after a quarter (2021.7)
-        elif self._feature_legacy_speeds:
+        if self._feature_legacy_speeds:
             if percentage:
                 await self.async_set_speed(
                     percentage_to_ordered_list_item(
@@ -644,7 +654,7 @@ class MqttFan(MqttEntity, FanEntity):
             elif SPEED_OFF in self._legacy_speeds_list:
                 await self.async_set_speed(SPEED_OFF)
 
-        if self._implemented_percentage:
+        if self._feature_percentage:
             mqtt.async_publish(
                 self.hass,
                 self._topic[CONF_PERCENTAGE_COMMAND_TOPIC],
@@ -665,13 +675,7 @@ class MqttFan(MqttEntity, FanEntity):
         if preset_mode not in self.preset_modes:
             _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
             return
-        # Legacy are deprecated in the schema, support will be removed after a quarter (2021.7)
-        if preset_mode in self._legacy_speeds_list:
-            await self.async_set_speed(speed=preset_mode)
-        if not self._implemented_percentage and preset_mode in self.speed_list:
-            self._percentage = ordered_list_item_to_percentage(
-                self.speed_list, preset_mode
-            )
+
         mqtt_payload = self._command_templates[ATTR_PRESET_MODE](preset_mode)
 
         mqtt.async_publish(
@@ -684,7 +688,7 @@ class MqttFan(MqttEntity, FanEntity):
 
         if self._optimistic_preset_mode:
             self._preset_mode = preset_mode
-        self.async_write_ha_state()
+            self.async_write_ha_state()
 
     # async_set_speed is deprecated, support will be removed after a quarter (2021.7)
     async def async_set_speed(self, speed: str) -> None:
@@ -693,18 +697,18 @@ class MqttFan(MqttEntity, FanEntity):
         This method is a coroutine.
         """
         speed_payload = None
-        if self._feature_legacy_speeds:
+        if speed in self._legacy_speeds_list:
             if speed == SPEED_LOW:
                 speed_payload = self._payload["SPEED_LOW"]
             elif speed == SPEED_MEDIUM:
                 speed_payload = self._payload["SPEED_MEDIUM"]
             elif speed == SPEED_HIGH:
                 speed_payload = self._payload["SPEED_HIGH"]
-            elif speed == SPEED_OFF:
-                speed_payload = self._payload["SPEED_OFF"]
             else:
-                _LOGGER.warning("'%s'is not a valid speed", speed)
-                return
+                speed_payload = self._payload["SPEED_OFF"]
+        else:
+            _LOGGER.warning("'%s' is not a valid speed", speed)
+            return
 
         if speed_payload:
             mqtt.async_publish(
@@ -717,7 +721,7 @@ class MqttFan(MqttEntity, FanEntity):
 
             if self._optimistic_speed and speed_payload:
                 self._speed = speed
-            self.async_write_ha_state()
+                self.async_write_ha_state()
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation.

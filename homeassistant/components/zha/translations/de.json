@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
+        "flow_title": "ZHA: {name}",
         "step": {
             "pick_radio": {
                 "data": {
@@ -30,6 +31,19 @@
                 "description": "W\u00e4hlen Sie die serielle Schnittstelle f\u00fcr den ZigBee-Funk",
                 "title": "ZHA"
             }
+        }
+    },
+    "config_panel": {
+        "zha_alarm_options": {
+            "alarm_arm_requires_code": "Code f\u00fcr Scharfschaltaktionen erforderlich",
+            "alarm_failed_tries": "Die Anzahl aufeinanderfolgender fehlgeschlagener Codeeintr\u00e4ge, um einen Alarm auszul\u00f6sen",
+            "alarm_master_code": "Mastercode f\u00fcr die Alarmzentrale(n)",
+            "title": "Optionen f\u00fcr die Alarmsteuerung"
+        },
+        "zha_options": {
+            "default_light_transition": "Standardlicht\u00fcbergangszeit (Sekunden)",
+            "enable_identify_on_join": "Aktivieren Sie den Identifikationseffekt, wenn Ger\u00e4te dem Netzwerk beitreten",
+            "title": "Globale Optionen"
         }
     },
     "device_automation": {
@@ -65,6 +79,7 @@
             "device_dropped": "Ger\u00e4t ist gefallen",
             "device_flipped": "Ger\u00e4t umgedreht \"{subtype}\"",
             "device_knocked": "Ger\u00e4t klopfte \"{subtype}\"",
+            "device_offline": "Ger\u00e4t offline",
             "device_rotated": "Ger\u00e4t wurde gedreht \"{subtype}\"",
             "device_shaken": "Ger\u00e4t ersch\u00fcttert",
             "device_slid": "Ger\u00e4t gerutscht \"{subtype}\"",

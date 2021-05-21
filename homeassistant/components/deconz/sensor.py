@@ -1,8 +1,10 @@
 """Support for deCONZ sensors."""
 from pydeconz.sensor import (
+    AncillaryControl,
     Battery,
     Consumption,
     Daylight,
+    DoorLock,
     Humidity,
     LightLevel,
     Power,
@@ -12,7 +14,11 @@ from pydeconz.sensor import (
     Thermostat,
 )
 
-from homeassistant.components.sensor import DOMAIN, SensorEntity
+from homeassistant.components.sensor import (
+    DOMAIN,
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_VOLTAGE,
@@ -56,6 +62,10 @@ ICON = {
     Daylight: "mdi:white-balance-sunny",
     Pressure: "mdi:gauge",
     Temperature: "mdi:thermometer",
+}
+
+STATE_CLASS = {
+    Temperature: STATE_CLASS_MEASUREMENT,
 }
 
 UNIT_OF_MEASUREMENT = {
@@ -103,15 +113,25 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if (
                 not sensor.BINARY
                 and sensor.type
-                not in Battery.ZHATYPE + Switch.ZHATYPE + Thermostat.ZHATYPE
+                not in AncillaryControl.ZHATYPE
+                + Battery.ZHATYPE
+                + DoorLock.ZHATYPE
+                + Switch.ZHATYPE
+                + Thermostat.ZHATYPE
                 and sensor.uniqueid not in gateway.entities[DOMAIN]
             ):
                 entities.append(DeconzSensor(sensor, gateway))
 
+            if sensor.secondary_temperature:
+                known_temperature_sensors = set(gateway.entities[DOMAIN])
+                new_temperature_sensor = DeconzTemperature(sensor, gateway)
+                if new_temperature_sensor.unique_id not in known_temperature_sensors:
+                    entities.append(new_temperature_sensor)
+
         if entities:
             async_add_entities(entities)
 
-    gateway.listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(
             hass, gateway.async_signal_new_device(NEW_SENSOR), async_add_sensor
         )
@@ -150,6 +170,11 @@ class DeconzSensor(DeconzDevice, SensorEntity):
         return ICON.get(type(self._device))
 
     @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return STATE_CLASS.get(type(self._device))
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this sensor."""
         return UNIT_OF_MEASUREMENT.get(type(self._device))
@@ -184,6 +209,52 @@ class DeconzSensor(DeconzDevice, SensorEntity):
             attr[ATTR_VOLTAGE] = self._device.voltage
 
         return attr
+
+
+class DeconzTemperature(DeconzDevice, SensorEntity):
+    """Representation of a deCONZ temperature sensor.
+
+    Extra temperature sensor on certain Xiaomi devices.
+    """
+
+    TYPE = DOMAIN
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier for this device."""
+        return f"{self.serial}-temperature"
+
+    @callback
+    def async_update_callback(self, force_update=False):
+        """Update the sensor's state."""
+        keys = {"temperature", "reachable"}
+        if force_update or self._device.changed_keys.intersection(keys):
+            super().async_update_callback(force_update=force_update)
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._device.secondary_temperature
+
+    @property
+    def name(self):
+        """Return the name of the temperature sensor."""
+        return f"{self._device.name} Temperature"
+
+    @property
+    def device_class(self):
+        """Return the class of the sensor."""
+        return DEVICE_CLASS_TEMPERATURE
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return STATE_CLASS_MEASUREMENT
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this sensor."""
+        return TEMP_CELSIUS
 
 
 class DeconzBattery(DeconzDevice, SensorEntity):

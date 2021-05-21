@@ -83,12 +83,10 @@ def ensure_pin_format(pin):
     return "-".join(match.groups())
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class HomekitControllerFlowHandler(config_entries.ConfigFlow):
+class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a HomeKit config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the homekit_controller flow."""
@@ -209,8 +207,11 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         }
 
         if "id" not in properties:
-            _LOGGER.warning(
-                "HomeKit device %s: id not exposed, in violation of spec", properties
+            # This can happen if the TXT record is received after the PTR record
+            # we will wait for the next update in this case
+            _LOGGER.debug(
+                "HomeKit device %s: id not exposed; TXT record may have not yet been received",
+                properties,
             )
             return self.async_abort(reason="invalid_properties")
 

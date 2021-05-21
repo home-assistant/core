@@ -17,10 +17,11 @@ from homeassistant.components.lutron_caseta.const import (
     ERROR_CANNOT_CONNECT,
     STEP_IMPORT_FAILED,
 )
-from homeassistant.components.zeroconf import ATTR_HOSTNAME
 from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
+
+ATTR_HOSTNAME = "hostname"
 
 EMPTY_MOCK_CONFIG_ENTRY = {
     CONF_HOST: "",
@@ -188,7 +189,7 @@ async def test_duplicate_bridge_import(hass):
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == CasetaConfigFlow.ABORT_REASON_ALREADY_CONFIGURED
+    assert result["reason"] == "already_configured"
     assert len(mock_setup_entry.mock_calls) == 0
 
 
@@ -196,7 +197,9 @@ async def test_already_configured_with_ignored(hass):
     """Test ignored entries do not break checking for existing entries."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, source="ignore")
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, source=config_entries.SOURCE_IGNORE
+    )
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(

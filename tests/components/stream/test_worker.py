@@ -588,4 +588,4 @@ async def test_worker_log(hass, caplog):
         )
         await hass.async_block_till_done()
     assert "https://abcd:efgh@foo.bar" not in caplog.text
-    assert "https://foo.bar" in caplog.text
+    assert "https://****:****@foo.bar" in caplog.text

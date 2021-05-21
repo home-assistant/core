@@ -66,6 +66,7 @@ async def test_if_fires_on_zone_enter(hass, calls):
                                 "from_state.state",
                                 "to_state.state",
                                 "zone.name",
+                                "id",
                             )
                         )
                     },
@@ -84,7 +85,7 @@ async def test_if_fires_on_zone_enter(hass, calls):
 
     assert len(calls) == 1
     assert calls[0].context.parent_id == context.id
-    assert calls[0].data["some"] == "zone - test.entity - hello - hello - test"
+    assert calls[0].data["some"] == "zone - test.entity - hello - hello - test - 0"
 
     # Set out of zone again so we can trigger call
     hass.states.async_set(

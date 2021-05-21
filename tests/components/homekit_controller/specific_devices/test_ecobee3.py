@@ -14,7 +14,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.components.homekit_controller.common import (
@@ -143,7 +143,7 @@ async def test_ecobee3_setup_connection_failure(hass):
         # If there is no cached entity map and the accessory connection is
         # failing then we have to fail the config entry setup.
         config_entry, pairing = await setup_test_accessories(hass, accessories)
-        assert config_entry.state == ENTRY_STATE_SETUP_RETRY
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
     climate = entity_registry.async_get("climate.homew")
     assert climate is None

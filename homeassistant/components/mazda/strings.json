@@ -11,15 +11,6 @@
             "unknown": "[%key:common::config_flow::error::unknown%]"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "email": "[%key:common::config_flow::data::email%]",
-                    "password": "[%key:common::config_flow::data::password%]",
-                    "region": "Region"
-                },
-                "description": "Authentication failed for Mazda Connected Services. Please enter your current credentials.",
-                "title": "Mazda Connected Services - Authentication Failed"
-            },
             "user": {
                 "data": {
                     "email": "[%key:common::config_flow::data::email%]",

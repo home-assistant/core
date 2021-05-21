@@ -8,8 +8,15 @@ from homeassistant.components import blueprint
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
+from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
 from homeassistant.config import async_log_exception, config_without_domain
-from homeassistant.const import CONF_ALIAS, CONF_CONDITION, CONF_ID, CONF_VARIABLES
+from homeassistant.const import (
+    CONF_ALIAS,
+    CONF_CONDITION,
+    CONF_DESCRIPTION,
+    CONF_ID,
+    CONF_VARIABLES,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, config_validation as cv, script
 from homeassistant.helpers.condition import async_validate_condition_config
@@ -18,9 +25,9 @@ from homeassistant.loader import IntegrationNotFound
 
 from .const import (
     CONF_ACTION,
-    CONF_DESCRIPTION,
     CONF_HIDE_ENTITY,
     CONF_INITIAL_STATE,
+    CONF_TRACE,
     CONF_TRIGGER,
     CONF_TRIGGER_VARIABLES,
     DOMAIN,
@@ -40,6 +47,7 @@ PLATFORM_SCHEMA = vol.All(
             CONF_ID: str,
             CONF_ALIAS: cv.string,
             vol.Optional(CONF_DESCRIPTION): cv.string,
+            vol.Optional(CONF_TRACE, default={}): TRACE_CONFIG_SCHEMA,
             vol.Optional(CONF_INITIAL_STATE): cv.boolean,
             vol.Optional(CONF_HIDE_ENTITY): cv.boolean,
             vol.Required(CONF_TRIGGER): cv.TRIGGER_SCHEMA,

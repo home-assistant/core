@@ -86,9 +86,10 @@ def assert_element(trace_element, expected_element, path):
         assert not trace_element._variables
 
 
-def assert_action_trace(expected):
+def assert_action_trace(expected, expected_script_execution="finished"):
     """Assert a trace condition sequence is as expected."""
     action_trace = trace.trace_get(clear=False)
+    script_execution = trace.script_execution_get()
     trace.trace_clear()
     expected_trace_keys = list(expected.keys())
     assert list(action_trace.keys()) == expected_trace_keys
@@ -97,6 +98,8 @@ def assert_action_trace(expected):
         for index, element in enumerate(expected[key]):
             path = f"[{trace_key_index}][{index}]"
             assert_element(action_trace[key][index], element, path)
+
+    assert script_execution == expected_script_execution
 
 
 def async_watch_for_action(script_obj, message):
@@ -619,8 +622,9 @@ async def test_delay_template_invalid(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": script._StopScript}],
-        }
+            "1": [{"error_type": vol.MultipleInvalid}],
+        },
+        expected_script_execution="aborted",
     )
 
 
@@ -679,8 +683,9 @@ async def test_delay_template_complex_invalid(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": script._StopScript}],
-        }
+            "1": [{"error_type": vol.MultipleInvalid}],
+        },
+        expected_script_execution="aborted",
     )
 
 
@@ -717,7 +722,8 @@ async def test_cancel_delay(hass):
     assert_action_trace(
         {
             "0": [{"result": {"delay": 5.0, "done": False}}],
-        }
+        },
+        expected_script_execution="cancelled",
     )
 
 
@@ -969,13 +975,15 @@ async def test_cancel_wait(hass, action_type):
         assert_action_trace(
             {
                 "0": [{"result": {"wait": {"completed": False, "remaining": None}}}],
-            }
+            },
+            expected_script_execution="cancelled",
         )
     else:
         assert_action_trace(
             {
                 "0": [{"result": {"wait": {"trigger": None, "remaining": None}}}],
-            }
+            },
+            expected_script_execution="cancelled",
         )
 
 
@@ -1130,7 +1138,8 @@ async def test_wait_continue_on_timeout(
     }
     if continue_on_timeout is False:
         expected_trace["0"][0]["result"]["timeout"] = True
-        expected_trace["0"][0]["error_type"] = script._StopScript
+        expected_trace["0"][0]["error_type"] = asyncio.TimeoutError
+        expected_script_execution = "aborted"
     else:
         expected_trace["1"] = [
             {
@@ -1138,7 +1147,8 @@ async def test_wait_continue_on_timeout(
                 "variables": variable_wait,
             }
         ]
-    assert_action_trace(expected_trace)
+        expected_script_execution = "finished"
+    assert_action_trace(expected_trace, expected_script_execution)
 
 
 async def test_wait_template_variables_in(hass):
@@ -1402,9 +1412,9 @@ async def test_condition_warning(hass, caplog):
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
             "1": [{"error_type": script._StopScript, "result": {"result": False}}],
-            "1/condition": [{"error_type": ConditionError}],
-            "1/condition/entity_id/0": [{"error_type": ConditionError}],
-        }
+            "1/entity_id/0": [{"error_type": ConditionError}],
+        },
+        expected_script_execution="aborted",
     )
 
 
@@ -1437,8 +1447,7 @@ async def test_condition_basic(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"result": {"result": True}}],
-            "1/condition": [{"result": {"result": True}}],
+            "1": [{"result": {"entities": ["test.entity"], "result": True}}],
             "2": [{"result": {"event": "test_event", "event_data": {}}}],
         }
     )
@@ -1454,9 +1463,14 @@ async def test_condition_basic(hass, caplog):
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error_type": script._StopScript, "result": {"result": False}}],
-            "1/condition": [{"result": {"result": False}}],
-        }
+            "1": [
+                {
+                    "error_type": script._StopScript,
+                    "result": {"entities": ["test.entity"], "result": False},
+                }
+            ],
+        },
+        expected_script_execution="aborted",
     )
 
 
@@ -1752,9 +1766,9 @@ async def test_repeat_var_in_condition(hass, condition):
                 },
             ],
             "0/repeat/while/0": [
-                {"result": {"result": True}},
-                {"result": {"result": True}},
-                {"result": {"result": False}},
+                {"result": {"entities": [], "result": True}},
+                {"result": {"entities": [], "result": True}},
+                {"result": {"entities": [], "result": False}},
             ],
             "0/repeat/sequence/0": [
                 {"result": {"event": "test_event", "event_data": {}}}
@@ -1785,8 +1799,8 @@ async def test_repeat_var_in_condition(hass, condition):
                 },
             ],
             "0/repeat/until/0": [
-                {"result": {"result": False}},
-                {"result": {"result": True}},
+                {"result": {"entities": [], "result": False}},
+                {"result": {"entities": [], "result": True}},
             ],
         }
     assert_action_trace(expected_trace)
@@ -2046,10 +2060,14 @@ async def test_choose(hass, caplog, var, result):
     expected_trace = {"0": [{"result": {"choice": expected_choice}}]}
     if var >= 1:
         expected_trace["0/choose/0"] = [{"result": {"result": var == 1}}]
-        expected_trace["0/choose/0/conditions/0"] = [{"result": {"result": var == 1}}]
+        expected_trace["0/choose/0/conditions/0"] = [
+            {"result": {"entities": [], "result": var == 1}}
+        ]
     if var >= 2:
         expected_trace["0/choose/1"] = [{"result": {"result": var == 2}}]
-        expected_trace["0/choose/1/conditions/0"] = [{"result": {"result": var == 2}}]
+        expected_trace["0/choose/1/conditions/0"] = [
+            {"result": {"entities": [], "result": var == 2}}
+        ]
     if var == 1:
         expected_trace["0/choose/0/sequence/0"] = [
             {"result": {"event": "test_event", "event_data": {"choice": "first"}}}
@@ -2141,7 +2159,7 @@ async def test_propagate_error_service_not_found(hass):
             }
         ],
     }
-    assert_action_trace(expected_trace)
+    assert_action_trace(expected_trace, expected_script_execution="error")
 
 
 async def test_propagate_error_invalid_service_data(hass):
@@ -2178,7 +2196,7 @@ async def test_propagate_error_invalid_service_data(hass):
             }
         ],
     }
-    assert_action_trace(expected_trace)
+    assert_action_trace(expected_trace, expected_script_execution="error")
 
 
 async def test_propagate_error_service_exception(hass):
@@ -2219,7 +2237,7 @@ async def test_propagate_error_service_exception(hass):
             }
         ],
     }
-    assert_action_trace(expected_trace)
+    assert_action_trace(expected_trace, expected_script_execution="error")
 
 
 async def test_referenced_entities(hass):

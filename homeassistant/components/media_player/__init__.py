@@ -307,7 +307,7 @@ async def async_setup(hass, config):
     )
     component.async_register_entity_service(
         SERVICE_JOIN,
-        {vol.Required(ATTR_GROUP_MEMBERS): list},
+        {vol.Required(ATTR_GROUP_MEMBERS): vol.All(cv.ensure_list, [cv.entity_id])},
         "async_join_players",
         [SUPPORT_GROUPING],
     )
@@ -1161,7 +1161,7 @@ class BrowseMedia:
         children: list[BrowseMedia] | None = None,
         children_media_class: str | None = None,
         thumbnail: str | None = None,
-    ):
+    ) -> None:
         """Initialize browse media item."""
         self.media_class = media_class
         self.media_content_id = media_content_id

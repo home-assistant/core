@@ -1,7 +1,6 @@
 """Support for MySensors covers."""
 from enum import Enum, unique
 import logging
-from typing import Callable
 
 from homeassistant.components import mysensors
 from homeassistant.components.cover import ATTR_POSITION, DOMAIN, CoverEntity
@@ -9,8 +8,9 @@ from homeassistant.components.mysensors import on_unload
 from homeassistant.components.mysensors.const import MYSENSORS_DISCOVERY
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,9 @@ class CoverState(Enum):
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ):
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
 
@@ -70,12 +72,12 @@ class MySensorsCover(mysensors.device.MySensorsEntity, CoverEntity):
         else:
             amount = 100 if self._values.get(set_req.V_LIGHT) == STATE_ON else 0
 
+        if amount == 0:
+            return CoverState.CLOSED
         if v_up and not v_down and not v_stop:
             return CoverState.OPENING
         if not v_up and v_down and not v_stop:
             return CoverState.CLOSING
-        if not v_up and not v_down and v_stop and amount == 0:
-            return CoverState.CLOSED
         return CoverState.OPEN
 
     @property
