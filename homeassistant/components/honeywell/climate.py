@@ -5,9 +5,10 @@ import datetime
 from typing import Any
 
 import somecomfort
+import voluptuous as vol
 
 import homeassistant
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -34,21 +35,48 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    CONF_PASSWORD,
+    CONF_REGION,
+    CONF_USERNAME,
     PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+import homeassistant.helpers.config_validation as cv
 
 from .const import (
     _LOGGER,
     CONF_COOL_AWAY_TEMPERATURE,
+    CONF_DEV_ID,
     CONF_HEAT_AWAY_TEMPERATURE,
+    CONF_LOC_ID,
+    DEFAULT_COOL_AWAY_TEMPERATURE,
+    DEFAULT_HEAT_AWAY_TEMPERATURE,
     DOMAIN,
 )
 
 ATTR_FAN_ACTION = "fan_action"
 
 ATTR_PERMANENT_HOLD = "permanent_hold"
+
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_REGION),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+            vol.Optional(
+                CONF_COOL_AWAY_TEMPERATURE, default=DEFAULT_COOL_AWAY_TEMPERATURE
+            ): vol.Coerce(int),
+            vol.Optional(
+                CONF_HEAT_AWAY_TEMPERATURE, default=DEFAULT_HEAT_AWAY_TEMPERATURE
+            ): vol.Coerce(int),
+            vol.Optional(CONF_REGION): cv.string,
+            vol.Optional(CONF_DEV_ID): cv.string,
+            vol.Optional(CONF_LOC_ID): cv.string,
+        }
+    ),
+)
 
 HVAC_MODE_TO_HW_MODE = {
     "SwitchOffAllowed": {HVAC_MODE_OFF: "off"},
