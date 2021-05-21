@@ -50,6 +50,9 @@ class VerisureThermometer(CoordinatorEntity, SensorEntity):
 
     coordinator: VerisureDataUpdateCoordinator
 
+    attr_device_class = DEVICE_CLASS_TEMPERATURE
+    attr_unit_of_measurement = TEMP_CELSIUS
+
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
     ) -> None:
@@ -105,6 +108,9 @@ class VerisureHygrometer(CoordinatorEntity, SensorEntity):
     """Representation of a Verisure hygrometer."""
 
     coordinator: VerisureDataUpdateCoordinator
+
+    attr_device_class = DEVICE_CLASS_HUMIDITY
+    attr_unit_of_measurement = PERCENTAGE
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
@@ -162,6 +168,8 @@ class VerisureMouseDetection(CoordinatorEntity, SensorEntity):
     """Representation of a Verisure mouse detector."""
 
     coordinator: VerisureDataUpdateCoordinator
+
+    attr_unit_of_measurement = "Mice"
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
