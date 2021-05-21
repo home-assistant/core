@@ -84,7 +84,7 @@ async def async_unload_entry(hass, config_entry):
 class MelCloudDevice:
     """MELCloud Device instance."""
 
-    def __init__(self, device: Device):
+    def __init__(self, device: Device) -> None:
         """Construct a device wrapper."""
         self.device = device
         self.name = device.name

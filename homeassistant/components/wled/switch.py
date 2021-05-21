@@ -135,7 +135,7 @@ class WLEDSyncSendSwitch(WLEDSwitch):
 class WLEDSyncReceiveSwitch(WLEDSwitch):
     """Defines a WLED sync receive switch."""
 
-    def __init__(self, entry_id: str, coordinator: WLEDDataUpdateCoordinator):
+    def __init__(self, entry_id: str, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED sync receive switch."""
         super().__init__(
             coordinator=coordinator,

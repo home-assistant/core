@@ -196,7 +196,7 @@ class NumberStorageCollection(collection.StorageCollection):
 class InputNumber(RestoreEntity):
     """Representation of a slider."""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """Initialize an input number."""
         self._config = config
         self.editable = True

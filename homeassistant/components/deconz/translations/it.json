@@ -11,7 +11,7 @@
         "error": {
             "no_key": "Impossibile ottenere una API key"
         },
-        "flow_title": "Gateway Zigbee deCONZ ({host})",
+        "flow_title": "{host}",
         "step": {
             "hassio_confirm": {
                 "description": "Vuoi configurare Home Assistant per connettersi al gateway deCONZ fornito dal componente aggiuntivo: {addon}?",

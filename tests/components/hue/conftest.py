@@ -32,6 +32,7 @@ def create_mock_bridge(hass):
         allow_unreachable=False,
         allow_groups=False,
         api=create_mock_api(hass),
+        config_entry=None,
         reset_jobs=[],
         spec=hue.HueBridge,
     )
@@ -41,10 +42,25 @@ def create_mock_bridge(hass):
     bridge.mock_group_responses = bridge.api.mock_group_responses
     bridge.mock_sensor_responses = bridge.api.mock_sensor_responses
 
+    async def async_setup():
+        if bridge.config_entry:
+            hass.data.setdefault(hue.DOMAIN, {})[bridge.config_entry.entry_id] = bridge
+        return True
+
+    bridge.async_setup = async_setup
+
     async def async_request_call(task):
         await task()
 
     bridge.async_request_call = async_request_call
+
+    async def async_reset():
+        if bridge.config_entry:
+            hass.data[hue.DOMAIN].pop(bridge.config_entry.entry_id)
+        return True
+
+    bridge.async_reset = async_reset
+
     return bridge
 
 
@@ -80,11 +96,19 @@ def create_mock_api(hass):
 
     logger = logging.getLogger(__name__)
 
-    api.config.apiversion = "9.9.9"
-    api.lights = Lights(logger, {}, mock_request)
-    api.groups = Groups(logger, {}, mock_request)
-    api.sensors = Sensors(logger, {}, mock_request)
-    api.scenes = Scenes(logger, {}, mock_request)
+    api.config = Mock(
+        bridgeid="ff:ff:ff:ff:ff:ff",
+        mac="aa:bb:cc:dd:ee:ff",
+        modelid="BSB002",
+        apiversion="9.9.9",
+        swversion="1935144040",
+    )
+    api.config.name = "Home"
+
+    api.lights = Lights(logger, {}, [], mock_request)
+    api.groups = Groups(logger, {}, [], mock_request)
+    api.sensors = Sensors(logger, {}, [], mock_request)
+    api.scenes = Scenes(logger, {}, [], mock_request)
     return api
 
 

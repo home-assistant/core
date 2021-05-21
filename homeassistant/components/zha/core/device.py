@@ -91,7 +91,7 @@ class ZHADevice(LogMixin):
         hass: HomeAssistant,
         zigpy_device: zha_typing.ZigpyDeviceType,
         zha_gateway: zha_typing.ZhaGatewayType,
-    ):
+    ) -> None:
         """Initialize the gateway."""
         self.hass = hass
         self._zigpy_device = zigpy_device
