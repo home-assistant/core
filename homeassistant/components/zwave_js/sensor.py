@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DOMAIN as SENSOR_DOMAIN,
+    STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -87,6 +88,7 @@ class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
         super().__init__(config_entry, client, info)
         self._name = self.generate_name(include_value_name=True)
         self._device_class = self._get_device_class()
+        self._state_class = self._get_state_class()
 
     def _get_device_class(self) -> str | None:
         """
@@ -113,10 +115,28 @@ class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
             return DEVICE_CLASS_ILLUMINANCE
         return None
 
+    def _get_state_class(self) -> str | None:
+        """
+        Get the state class of the sensor.
+
+        This should be run once during initialization so we don't have to calculate
+        this value on every state update.
+        """
+        if isinstance(self.info.primary_value.property_, str):
+            property_lower = self.info.primary_value.property_.lower()
+            if "temperature" in property_lower:
+                return STATE_CLASS_MEASUREMENT
+        return None
+
     @property
     def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._device_class
+
+    @property
+    def state_class(self) -> str | None:
+        """Return the state class of the sensor."""
+        return self._state_class
 
     @property
     def entity_registry_enabled_default(self) -> bool:
