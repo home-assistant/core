@@ -18,25 +18,13 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MAC,
-    CONF_METHOD,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TOKEN,
-    EVENT_HOMEASSISTANT_STOP,
-    STATE_OFF,
-    STATE_ON,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
-from .bridge import SamsungTVBridge
 from .const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
@@ -62,52 +50,19 @@ SUPPORT_SAMSUNGTV = (
 )
 
 
-@callback
-def _async_get_device_bridge(data):
-    """Get device bridge."""
-    return SamsungTVBridge.get_bridge(
-        data[CONF_METHOD],
-        data[CONF_HOST],
-        data[CONF_PORT],
-        data.get(CONF_TOKEN),
-    )
-
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Samsung TV from a config entry."""
-    host = config_entry.data[CONF_HOST]
+    bridge = hass.data[DOMAIN][entry.entry_id]
+
+    host = entry.data[CONF_HOST]
     on_script = None
     data = hass.data[DOMAIN]
     if turn_on_action := data.get(host, {}).get(CONF_ON_ACTION):
         on_script = Script(
-            hass, turn_on_action, config_entry.data.get(CONF_NAME, DEFAULT_NAME), DOMAIN
+            hass, turn_on_action, entry.data.get(CONF_NAME, DEFAULT_NAME), DOMAIN
         )
 
-    # Initialize bridge
-    data = config_entry.data.copy()
-    bridge = _async_get_device_bridge(data)
-    if bridge.port is None and bridge.default_port is not None:
-        # For backward compat, set default port for websocket tv
-        data[CONF_PORT] = bridge.default_port
-        hass.config_entries.async_update_entry(config_entry, data=data)
-        bridge = _async_get_device_bridge(data)
-
-    async def stop_bridge(event):
-        """Stop SamsungTV bridge connection."""
-        bridge.stop()
-
-    config_entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_bridge)
-    )
-
-    async_add_entities([SamsungTVDevice(bridge, config_entry, on_script)], True)
-
-
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Unload Samsung TV config entry."""
-    data = config_entry.data.copy()
-    bridge = _async_get_device_bridge(data)
-    bridge.stop()
+    async_add_entities([SamsungTVDevice(bridge, entry, on_script)], True)
 
 
 class SamsungTVDevice(MediaPlayerEntity):
