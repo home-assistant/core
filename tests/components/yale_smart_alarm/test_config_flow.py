@@ -70,3 +70,34 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_import_flow_success(hass):
+    """Test a successful import form yaml for a device."""
+    with patch(
+        "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.yale_smart_alarm.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "username": "test-username",
+                "password": "test-password",
+                "name": "Yale Smart Alarm",
+                "area_id": "1",
+            },
+        )
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "test-username"
+    assert result2["data"] == {
+        "username": "test-username",
+        "password": "test-password",
+        "name": "Yale Smart Alarm",
+        "area_id": "1",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
