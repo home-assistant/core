@@ -17,6 +17,8 @@ def ensure_unique_hosts(value):
     return value
 
 
+PLATFORMS = [MP_DOMAIN]
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
@@ -42,28 +44,34 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the Samsung TV integration."""
     hass.data[DOMAIN] = {}
-    if DOMAIN in config:
-        for entry_config in config[DOMAIN]:
-            host = entry_config[CONF_HOST]
-            hass.data[DOMAIN][host] = {CONF_ON_ACTION: entry_config.get(CONF_ON_ACTION)}
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
-                    data=entry_config,
-                )
-            )
+    if DOMAIN not in config:
+        return True
 
+    for entry_config in config[DOMAIN]:
+        host = entry_config[CONF_HOST]
+        hass.data[DOMAIN][host] = {CONF_ON_ACTION: entry_config.get(CONF_ON_ACTION)}
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data=entry_config,
+            )
+        )
     return True
 
 
 async def async_setup_entry(hass, entry):
     """Set up the Samsung TV platform."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, MP_DOMAIN)
-    )
-
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok
 
 
 async def async_migrate_entry(hass, config_entry):
