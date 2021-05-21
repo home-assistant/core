@@ -3,7 +3,11 @@ from contextlib import contextmanager
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
+    STATE_CLASS_MEASUREMENT,
+)
 from homeassistant.components.utility_meter.const import (
     ATTR_TARIFF,
     ATTR_VALUE,
@@ -18,6 +22,7 @@ from homeassistant.components.utility_meter.sensor import (
     PAUSED,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
@@ -191,14 +196,16 @@ async def test_device_class(hass):
     state = hass.states.get("sensor.energy_meter")
     assert state is not None
     assert state.state == "0"
-    assert state.attributes.get("device_class") is None
-    assert state.attributes.get("state_class") == "measurement"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
     state = hass.states.get("sensor.gas_meter")
     assert state is not None
     assert state.state == "0"
-    assert state.attributes.get("device_class") is None
-    assert state.attributes.get("state_class") == "measurement"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
     hass.states.async_set(
         entity_id_energy, 3, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
@@ -211,14 +218,16 @@ async def test_device_class(hass):
     state = hass.states.get("sensor.energy_meter")
     assert state is not None
     assert state.state == "1"
-    assert state.attributes.get("device_class") == "energy"
-    assert state.attributes.get("state_class") == "measurement"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == "energy"
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
 
     state = hass.states.get("sensor.gas_meter")
     assert state is not None
     assert state.state == "1"
-    assert state.attributes.get("device_class") is None
-    assert state.attributes.get("state_class") == "measurement"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
 
 
 async def test_restore_state(hass):
