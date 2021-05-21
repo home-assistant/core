@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Device is already configured",
             "already_in_progress": "Configuration flow is already in progress",
-            "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Please check your TV's settings to authorize Home Assistant.",
+            "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Check your TV's External Device Manager settings to authorize Home Assistant.",
             "cannot_connect": "Failed to connect",
             "id_missing": "This Samsung device doesn't have a SerialNumber.",
             "not_supported": "This Samsung device is currently not supported.",
@@ -11,8 +11,7 @@
             "unknown": "Unexpected error"
         },
         "error": {
-            "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Please check your TV's settings to authorize Home Assistant.",
-            "cannot_connect": "Failed to connect"
+            "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Check your TV's External Device Manager settings to authorize Home Assistant."
         },
         "flow_title": "{device}",
         "step": {
