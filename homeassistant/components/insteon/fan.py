@@ -17,7 +17,7 @@ from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
 from .utils import async_add_insteon_entities
 
-SPEED_RANGE = (0x00, 0xFF)  # off is not included
+SPEED_RANGE = (1, 255)  # off is not included
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

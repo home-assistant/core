@@ -5,11 +5,7 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.components.camera import (
-    CAMERA_SERVICE_SCHEMA,
-    PLATFORM_SCHEMA,
-    Camera,
-)
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import ATTR_ENTITY_ID, CONF_FILE_PATH, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 
@@ -24,8 +20,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-CAMERA_SERVICE_UPDATE_FILE_PATH = CAMERA_SERVICE_SCHEMA.extend(
-    {vol.Required(CONF_FILE_PATH): cv.string}
+CAMERA_SERVICE_UPDATE_FILE_PATH = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
+        vol.Required(CONF_FILE_PATH): cv.string,
+    }
 )
 
 
@@ -105,6 +104,6 @@ class LocalFile(Camera):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the camera state attributes."""
         return {"file_path": self._file_path}

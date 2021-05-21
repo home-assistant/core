@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components import onboarding
 from homeassistant.components.onboarding import const, views
 from homeassistant.const import HTTP_FORBIDDEN
+from homeassistant.helpers import area_registry as ar
 from homeassistant.setup import async_setup_component
 
 from . import mock_storage
@@ -74,7 +75,7 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
         return_value={},
     ), patch(
         "homeassistant.components.hassio.HassIO.get_supervisor_info",
-        return_value={},
+        return_value={"diagnostics": True},
     ), patch(
         "homeassistant.components.hassio.HassIO.get_os_info",
         return_value={},
@@ -181,7 +182,7 @@ async def test_onboarding_user(hass, hass_storage, aiohttp_client):
     )
 
     # Validate created areas
-    area_registry = await hass.helpers.area_registry.async_get_registry()
+    area_registry = ar.async_get(hass)
     assert len(area_registry.areas) == 3
     assert sorted([area.name for area in area_registry.async_list_areas()]) == [
         "Bedroom",
@@ -417,3 +418,22 @@ async def test_onboarding_core_no_rpi_power(
 
     rpi_power_state = hass.states.get("binary_sensor.rpi_power_status")
     assert not rpi_power_state
+
+
+async def test_onboarding_analytics(hass, hass_storage, hass_client, hass_admin_user):
+    """Test finishing analytics step."""
+    mock_storage(hass_storage, {"done": [const.STEP_USER]})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    resp = await client.post("/api/onboarding/analytics")
+
+    assert resp.status == 200
+
+    assert const.STEP_ANALYTICS in hass_storage[const.DOMAIN]["data"]["done"]
+
+    resp = await client.post("/api/onboarding/analytics")
+    assert resp.status == 403

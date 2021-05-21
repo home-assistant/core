@@ -1,10 +1,13 @@
 """Light platform support for yeelight."""
+from __future__ import annotations
+
 from functools import partial
 import logging
 
 import voluptuous as vol
 import yeelight
 from yeelight import (
+    Bulb,
     BulbException,
     Flow,
     RGBTransition,
@@ -372,7 +375,7 @@ def _async_setup_services(hass: HomeAssistant):
             )
         )
 
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
         SERVICE_SET_MODE,
@@ -529,9 +532,8 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Return the current effect."""
         return self._effect
 
-    # F821: https://github.com/PyCQA/pyflakes/issues/373
     @property
-    def _bulb(self) -> "Bulb":  # noqa: F821
+    def _bulb(self) -> Bulb:
         return self.device.bulb
 
     @property
@@ -560,7 +562,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         return YEELIGHT_MONO_EFFECT_LIST
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attributes = {
             "flowing": self.device.is_color_flow_enabled,

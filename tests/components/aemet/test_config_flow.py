@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 import requests_mock
 
 from homeassistant import data_entry_flow
-from homeassistant.components.aemet.const import DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_LOADED, SOURCE_USER
+from homeassistant.components.aemet.const import CONF_STATION_UPDATES, DOMAIN
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 import homeassistant.util.dt as dt_util
 
@@ -26,8 +26,6 @@ async def test_form(hass):
     """Test that the form is served with valid input."""
 
     with patch(
-        "homeassistant.components.aemet.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.aemet.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, requests_mock.mock() as _m:
@@ -49,7 +47,7 @@ async def test_form(hass):
 
         conf_entries = hass.config_entries.async_entries(DOMAIN)
         entry = conf_entries[0]
-        assert entry.state == ENTRY_STATE_LOADED
+        assert entry.state is ConfigEntryState.LOADED
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == CONFIG[CONF_NAME]
@@ -57,12 +55,67 @@ async def test_form(hass):
         assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
         assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
 
-        assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_options(hass):
+    """Test the form options."""
+
+    now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
+    with patch("homeassistant.util.dt.now", return_value=now), patch(
+        "homeassistant.util.dt.utcnow", return_value=now
+    ), requests_mock.mock() as _m:
+        aemet_requests_mock(_m)
+
+        entry = MockConfigEntry(
+            domain=DOMAIN, unique_id="40.30403754--3.72935236", data=CONFIG
+        )
+        entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert entry.state is ConfigEntryState.LOADED
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_STATION_UPDATES: False}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert entry.options == {
+            CONF_STATION_UPDATES: False,
+        }
+
+        await hass.async_block_till_done()
+
+        assert entry.state is ConfigEntryState.LOADED
+
+        result = await hass.config_entries.options.async_init(entry.entry_id)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_STATION_UPDATES: True}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert entry.options == {
+            CONF_STATION_UPDATES: True,
+        }
+
+        await hass.async_block_till_done()
+
+        assert entry.state is ConfigEntryState.LOADED
+
+
 async def test_form_duplicated_id(hass):
-    """Test that the options form."""
+    """Test setting up duplicated entry."""
 
     now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
     with patch("homeassistant.util.dt.now", return_value=now), patch(

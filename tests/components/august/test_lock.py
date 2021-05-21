@@ -1,4 +1,8 @@
 """The lock tests for the august platform."""
+import datetime
+from unittest.mock import Mock
+
+from yalexs.pubnub_async import AugustPubNub
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import (
@@ -6,10 +10,14 @@ from homeassistant.const import (
     SERVICE_LOCK,
     SERVICE_UNLOCK,
     STATE_LOCKED,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+import homeassistant.util.dt as dt_util
 
+from tests.common import async_fire_time_changed
 from tests.components.august.mocks import (
     _create_august_with_devices,
     _mock_activities_from_fixture,
@@ -23,7 +31,7 @@ async def test_lock_device_registry(hass):
     lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
     await _create_august_with_devices(hass, [lock_one])
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
 
     reg_device = device_registry.async_get_device(
         identifiers={("august", "online_with_doorsense")}
@@ -90,7 +98,7 @@ async def test_one_lock_operation(hass):
     assert lock_online_with_doorsense_name.state == STATE_LOCKED
 
     # No activity means it will be unavailable until the activity feed has data
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     lock_operator_sensor = entity_registry.async_get(
         "sensor.online_with_doorsense_name_operator"
     )
@@ -112,3 +120,116 @@ async def test_one_lock_unknown_state(hass):
     lock_brokenid_name = hass.states.get("lock.brokenid_name")
 
     assert lock_brokenid_name.state == STATE_UNKNOWN
+
+
+async def test_lock_bridge_offline(hass):
+    """Test creation of a lock with doorsense and bridge that goes offline."""
+    lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
+
+    activities = await _mock_activities_from_fixture(
+        hass, "get_activity.bridge_offline.json"
+    )
+    await _create_august_with_devices(hass, [lock_one], activities=activities)
+
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+
+    assert lock_online_with_doorsense_name.state == STATE_UNAVAILABLE
+
+
+async def test_lock_bridge_online(hass):
+    """Test creation of a lock with doorsense and bridge that goes offline."""
+    lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
+
+    activities = await _mock_activities_from_fixture(
+        hass, "get_activity.bridge_online.json"
+    )
+    await _create_august_with_devices(hass, [lock_one], activities=activities)
+
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+
+    assert lock_online_with_doorsense_name.state == STATE_LOCKED
+
+
+async def test_lock_update_via_pubnub(hass):
+    """Test creation of a lock with doorsense and bridge."""
+    lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
+    assert lock_one.pubsub_channel == "pubsub"
+    pubnub = AugustPubNub()
+
+    activities = await _mock_activities_from_fixture(hass, "get_activity.lock.json")
+    config_entry = await _create_august_with_devices(
+        hass, [lock_one], activities=activities, pubnub=pubnub
+    )
+
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+
+    assert lock_online_with_doorsense_name.state == STATE_LOCKED
+
+    pubnub.message(
+        pubnub,
+        Mock(
+            channel=lock_one.pubsub_channel,
+            timetoken=dt_util.utcnow().timestamp() * 10000000,
+            message={
+                "status": "kAugLockState_Unlocking",
+            },
+        ),
+    )
+
+    await hass.async_block_till_done()
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+    assert lock_online_with_doorsense_name.state == STATE_UNLOCKED
+
+    pubnub.message(
+        pubnub,
+        Mock(
+            channel=lock_one.pubsub_channel,
+            timetoken=dt_util.utcnow().timestamp() * 10000000,
+            message={
+                "status": "kAugLockState_Locking",
+            },
+        ),
+    )
+
+    await hass.async_block_till_done()
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+    assert lock_online_with_doorsense_name.state == STATE_LOCKED
+
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
+    await hass.async_block_till_done()
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+    assert lock_online_with_doorsense_name.state == STATE_LOCKED
+
+    pubnub.connected = True
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
+    await hass.async_block_till_done()
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+    assert lock_online_with_doorsense_name.state == STATE_LOCKED
+
+    # Ensure pubnub status is always preserved
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=2))
+    await hass.async_block_till_done()
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+    assert lock_online_with_doorsense_name.state == STATE_LOCKED
+
+    pubnub.message(
+        pubnub,
+        Mock(
+            channel=lock_one.pubsub_channel,
+            timetoken=dt_util.utcnow().timestamp() * 10000000,
+            message={
+                "status": "kAugLockState_Unlocking",
+            },
+        ),
+    )
+    await hass.async_block_till_done()
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+    assert lock_online_with_doorsense_name.state == STATE_UNLOCKED
+
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=4))
+    await hass.async_block_till_done()
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+    assert lock_online_with_doorsense_name.state == STATE_UNLOCKED
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()

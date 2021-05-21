@@ -2,18 +2,18 @@
 
 Can only be used by integrations that have pillow in their requirements.
 """
-from typing import Tuple
+from __future__ import annotations
 
 from PIL import ImageDraw
 
 
 def draw_box(
     draw: ImageDraw,
-    box: Tuple[float, float, float, float],
+    box: tuple[float, float, float, float],
     img_width: int,
     img_height: int,
     text: str = "",
-    color: Tuple[int, int, int] = (255, 255, 0),
+    color: tuple[int, int, int] = (255, 255, 0),
 ) -> None:
     """
     Draw a bounding box on and image.

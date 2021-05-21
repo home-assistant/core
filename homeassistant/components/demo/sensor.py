@@ -1,12 +1,15 @@
 """Demo platform that has a couple of fake sensors."""
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
+    CONCENTRATION_PARTS_PER_MILLION,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
 
@@ -20,6 +23,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "Outside Temperature",
                 15.6,
                 DEVICE_CLASS_TEMPERATURE,
+                STATE_CLASS_MEASUREMENT,
                 TEMP_CELSIUS,
                 12,
             ),
@@ -28,8 +32,27 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "Outside Humidity",
                 54,
                 DEVICE_CLASS_HUMIDITY,
+                STATE_CLASS_MEASUREMENT,
                 PERCENTAGE,
                 None,
+            ),
+            DemoSensor(
+                "sensor_3",
+                "Carbon monoxide",
+                54,
+                DEVICE_CLASS_CO,
+                STATE_CLASS_MEASUREMENT,
+                CONCENTRATION_PARTS_PER_MILLION,
+                None,
+            ),
+            DemoSensor(
+                "sensor_4",
+                "Carbon dioxide",
+                54,
+                DEVICE_CLASS_CO2,
+                STATE_CLASS_MEASUREMENT,
+                CONCENTRATION_PARTS_PER_MILLION,
+                14,
             ),
         ]
     )
@@ -40,19 +63,27 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await async_setup_platform(hass, {}, async_add_entities)
 
 
-class DemoSensor(Entity):
+class DemoSensor(SensorEntity):
     """Representation of a Demo sensor."""
 
     def __init__(
-        self, unique_id, name, state, device_class, unit_of_measurement, battery
+        self,
+        unique_id,
+        name,
+        state,
+        device_class,
+        state_class,
+        unit_of_measurement,
+        battery,
     ):
         """Initialize the sensor."""
-        self._unique_id = unique_id
+        self._battery = battery
+        self._device_class = device_class
         self._name = name
         self._state = state
-        self._device_class = device_class
+        self._state_class = state_class
+        self._unique_id = unique_id
         self._unit_of_measurement = unit_of_measurement
-        self._battery = battery
 
     @property
     def device_info(self):
@@ -81,6 +112,11 @@ class DemoSensor(Entity):
         return self._device_class
 
     @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return self._state_class
+
+    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
@@ -96,7 +132,7 @@ class DemoSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._battery:
             return {ATTR_BATTERY_LEVEL: self._battery}

@@ -33,6 +33,7 @@
             "invalid_serial": "Sobimatu jadaport",
             "invalid_subscribe_topic": "Kehtetu tellimisteema",
             "invalid_version": "Sobimatu MySensors versioon",
+            "mqtt_required": "MQTT sidumine on loomata",
             "not_a_number": "Sisesta number",
             "port_out_of_range": "Pordi number peab olema v\u00e4hemalt 1 ja k\u00f5ige rohkem 65535",
             "same_topic": "Tellimise ja avaldamise teemad kattuvad",

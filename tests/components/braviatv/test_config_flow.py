@@ -239,6 +239,39 @@ async def test_create_entry(hass):
         }
 
 
+async def test_create_entry_with_ipv6_address(hass):
+    """Test that the user step works with device IPv6 address."""
+    with patch("bravia_tv.BraviaRC.connect", return_value=True), patch(
+        "bravia_tv.BraviaRC.is_connected", return_value=True
+    ), patch(
+        "bravia_tv.BraviaRC.get_system_info", return_value=BRAVIA_SYSTEM_INFO
+    ), patch(
+        "homeassistant.components.braviatv.async_setup_entry", return_value=True
+    ):
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_HOST: "2001:db8::1428:57ab"},
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "authorize"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PIN: "1234"}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["result"].unique_id == "very_unique_string"
+        assert result["title"] == "TV-Model"
+        assert result["data"] == {
+            CONF_HOST: "2001:db8::1428:57ab",
+            CONF_PIN: "1234",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+        }
+
+
 async def test_options_flow(hass):
     """Test config flow options."""
     config_entry = MockConfigEntry(

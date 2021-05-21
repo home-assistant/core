@@ -1,7 +1,8 @@
 """Support for Supla devices."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Optional
 
 import async_timeout
 from asyncpysupla import SuplaAPI
@@ -180,7 +181,7 @@ class SuplaChannel(CoordinatorEntity):
         )
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the device."""
         return self.channel_data["caption"]
 

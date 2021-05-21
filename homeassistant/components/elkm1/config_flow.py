@@ -21,8 +21,7 @@ from homeassistant.const import (
 from homeassistant.util import slugify
 
 from . import async_wait_for_elk_to_sync
-from .const import CONF_AUTO_CONFIGURE
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import CONF_AUTO_CONFIGURE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +87,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Elk-M1 Control."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self):
         """Initialize the elkm1 config flow."""

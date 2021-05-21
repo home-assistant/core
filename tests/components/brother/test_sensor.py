@@ -14,6 +14,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import UTC, utcnow
 
@@ -28,7 +29,7 @@ async def test_sensors(hass):
     """Test states of the sensors."""
     entry = await init_integration(hass, skip_setup=True)
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     # Pre-create registry entries for disabled by default sensors
     registry.async_get_or_create(
@@ -241,7 +242,7 @@ async def test_disabled_by_default_sensors(hass):
     """Test the disabled by default Brother sensors."""
     await init_integration(hass)
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     state = hass.states.get("sensor.hl_l2340dw_uptime")
     assert state is None
 
@@ -249,7 +250,7 @@ async def test_disabled_by_default_sensors(hass):
     assert entry
     assert entry.unique_id == "0123456789_uptime"
     assert entry.disabled
-    assert entry.disabled_by == "integration"
+    assert entry.disabled_by == er.DISABLED_INTEGRATION
 
 
 async def test_availability(hass):
@@ -288,8 +289,12 @@ async def test_manual_update_entity(hass):
     """Test manual update entity via service homeasasistant/update_entity."""
     await init_integration(hass)
 
+    data = json.loads(load_fixture("brother_printer_data.json"))
+
     await async_setup_component(hass, "homeassistant", {})
-    with patch("homeassistant.components.brother.Brother.async_update") as mock_update:
+    with patch(
+        "homeassistant.components.brother.Brother.async_update", return_value=data
+    ) as mock_update:
         await hass.services.async_call(
             "homeassistant",
             "update_entity",

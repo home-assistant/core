@@ -30,7 +30,12 @@ def mock_addon_info(addon_info_side_effect):
         "homeassistant.components.zwave_js.addon.async_get_addon_info",
         side_effect=addon_info_side_effect,
     ) as addon_info:
-        addon_info.return_value = {}
+        addon_info.return_value = {
+            "options": {},
+            "state": None,
+            "update_available": False,
+            "version": None,
+        }
         yield addon_info
 
 
@@ -52,7 +57,6 @@ def mock_addon_installed(addon_info):
 @pytest.fixture(name="addon_options")
 def mock_addon_options(addon_info):
     """Mock add-on options."""
-    addon_info.return_value["options"] = {}
     return addon_info.return_value["options"]
 
 
@@ -228,10 +232,22 @@ def climate_danfoss_lc_13_state_fixture():
     return json.loads(load_fixture("zwave_js/climate_danfoss_lc_13_state.json"))
 
 
+@pytest.fixture(name="climate_eurotronic_spirit_z_state", scope="session")
+def climate_eurotronic_spirit_z_state_fixture():
+    """Load the climate Eurotronic Spirit Z thermostat node state fixture data."""
+    return json.loads(load_fixture("zwave_js/climate_eurotronic_spirit_z_state.json"))
+
+
 @pytest.fixture(name="climate_heatit_z_trm3_state", scope="session")
 def climate_heatit_z_trm3_state_fixture():
     """Load the climate HEATIT Z-TRM3 thermostat node state fixture data."""
     return json.loads(load_fixture("zwave_js/climate_heatit_z_trm3_state.json"))
+
+
+@pytest.fixture(name="climate_heatit_z_trm2fx_state", scope="session")
+def climate_heatit_z_trm2fx_state_fixture():
+    """Load the climate HEATIT Z-TRM2fx thermostat node state fixture data."""
+    return json.loads(load_fixture("zwave_js/climate_heatit_z_trm2fx_state.json"))
 
 
 @pytest.fixture(name="nortek_thermostat_state", scope="session")
@@ -270,6 +286,12 @@ def iblinds_v2_state_fixture():
     return json.loads(load_fixture("zwave_js/cover_iblinds_v2_state.json"))
 
 
+@pytest.fixture(name="qubino_shutter_state", scope="session")
+def qubino_shutter_state_fixture():
+    """Load the Qubino Shutter node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_qubino_shutter_state.json"))
+
+
 @pytest.fixture(name="aeon_smart_switch_6_state", scope="session")
 def aeon_smart_switch_6_state_fixture():
     """Load the AEON Labs (ZW096) Smart Switch 6 node state fixture data."""
@@ -298,6 +320,49 @@ def inovelli_lzw36_state_fixture():
 def null_name_check_state_fixture():
     """Load the null name check node state fixture data."""
     return json.loads(load_fixture("zwave_js/null_name_check_state.json"))
+
+
+@pytest.fixture(name="lock_id_lock_as_id150_state", scope="session")
+def lock_id_lock_as_id150_state_fixture():
+    """Load the id lock id-150 lock node state fixture data."""
+    return json.loads(load_fixture("zwave_js/lock_id_lock_as_id150_state.json"))
+
+
+@pytest.fixture(
+    name="climate_radio_thermostat_ct101_multiple_temp_units_state", scope="session"
+)
+def climate_radio_thermostat_ct101_multiple_temp_units_state_fixture():
+    """Load the climate multiple temp units node state fixture data."""
+    return json.loads(
+        load_fixture(
+            "zwave_js/climate_radio_thermostat_ct101_multiple_temp_units_state.json"
+        )
+    )
+
+
+@pytest.fixture(
+    name="climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state",
+    scope="session",
+)
+def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state_fixture():
+    """Load the climate device with mode and setpoint on different endpoints node state fixture data."""
+    return json.loads(
+        load_fixture(
+            "zwave_js/climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state.json"
+        )
+    )
+
+
+@pytest.fixture(name="vision_security_zl7432_state", scope="session")
+def vision_security_zl7432_state_fixture():
+    """Load the vision security zl7432 switch node state fixture data."""
+    return json.loads(load_fixture("zwave_js/vision_security_zl7432_state.json"))
+
+
+@pytest.fixture(name="zen_31_state", scope="session")
+def zem_31_state_fixture():
+    """Load the zen_31 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/zen_31_state.json"))
 
 
 @pytest.fixture(name="client")
@@ -419,10 +484,26 @@ def climate_danfoss_lc_13_fixture(client, climate_danfoss_lc_13_state):
     return node
 
 
+@pytest.fixture(name="climate_eurotronic_spirit_z")
+def climate_eurotronic_spirit_z_fixture(client, climate_eurotronic_spirit_z_state):
+    """Mock a climate radio danfoss LC-13 node."""
+    node = Node(client, climate_eurotronic_spirit_z_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="climate_heatit_z_trm3")
 def climate_heatit_z_trm3_fixture(client, climate_heatit_z_trm3_state):
     """Mock a climate radio HEATIT Z-TRM3 node."""
     node = Node(client, copy.deepcopy(climate_heatit_z_trm3_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_heatit_z_trm2fx")
+def climate_heatit_z_trm2fx_fixture(client, climate_heatit_z_trm2fx_state):
+    """Mock a climate radio HEATIT Z-TRM2fx node."""
+    node = Node(client, copy.deepcopy(climate_heatit_z_trm2fx_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -532,6 +613,14 @@ def iblinds_cover_fixture(client, iblinds_v2_state):
     return node
 
 
+@pytest.fixture(name="qubino_shutter")
+def qubino_shutter_cover_fixture(client, qubino_shutter_state):
+    """Mock a Qubino flush shutter node."""
+    node = Node(client, copy.deepcopy(qubino_shutter_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="aeon_smart_switch_6")
 def aeon_smart_switch_6_fixture(client, aeon_smart_switch_6_state):
     """Mock an AEON Labs (ZW096) Smart Switch 6 node."""
@@ -552,5 +641,59 @@ def ge_12730_fixture(client, ge_12730_state):
 def inovelli_lzw36_fixture(client, inovelli_lzw36_state):
     """Mock a Inovelli LZW36 fan controller node."""
     node = Node(client, copy.deepcopy(inovelli_lzw36_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="lock_id_lock_as_id150")
+def lock_id_lock_as_id150(client, lock_id_lock_as_id150_state):
+    """Mock an id lock id-150 lock node."""
+    node = Node(client, copy.deepcopy(lock_id_lock_as_id150_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_radio_thermostat_ct101_multiple_temp_units")
+def climate_radio_thermostat_ct101_multiple_temp_units_fixture(
+    client, climate_radio_thermostat_ct101_multiple_temp_units_state
+):
+    """Mock a climate device with multiple temp units node."""
+    node = Node(
+        client, copy.deepcopy(climate_radio_thermostat_ct101_multiple_temp_units_state)
+    )
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(
+    name="climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints"
+)
+def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_fixture(
+    client,
+    climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state,
+):
+    """Mock a climate device with mode and setpoint on differenet endpoints node."""
+    node = Node(
+        client,
+        copy.deepcopy(
+            climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state
+        ),
+    )
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="vision_security_zl7432")
+def vision_security_zl7432_fixture(client, vision_security_zl7432_state):
+    """Mock a vision security zl7432 node."""
+    node = Node(client, copy.deepcopy(vision_security_zl7432_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="zen_31")
+def zen_31_fixture(client, zen_31_state):
+    """Mock a bulb 6 multi-color node."""
+    node = Node(client, copy.deepcopy(zen_31_state))
     client.driver.controller.nodes[node.node_id] = node
     return node

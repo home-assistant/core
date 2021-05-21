@@ -1,7 +1,9 @@
 """Config flow for Z-Wave JS integration."""
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import Any, Dict, Optional, cast
+from typing import Any
 
 import aiohttp
 from async_timeout import timeout
@@ -12,11 +14,11 @@ from homeassistant import config_entries, exceptions
 from homeassistant.components.hassio import is_hassio
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .addon import AddonError, AddonManager, get_addon_manager
-from .const import (  # pylint:disable=unused-import
+from .addon import AddonError, AddonInfo, AddonManager, AddonState, get_addon_manager
+from .const import (
     CONF_ADDON_DEVICE,
     CONF_ADDON_NETWORK_KEY,
     CONF_INTEGRATION_CREATED_ADDON,
@@ -72,32 +74,30 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Z-Wave JS."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
         """Set up flow instance."""
-        self.network_key: Optional[str] = None
-        self.usb_path: Optional[str] = None
+        self.network_key: str | None = None
+        self.usb_path: str | None = None
         self.use_addon = False
-        self.ws_address: Optional[str] = None
+        self.ws_address: str | None = None
         # If we install the add-on we should uninstall it on entry remove.
         self.integration_created_addon = False
-        self.install_task: Optional[asyncio.Task] = None
-        self.start_task: Optional[asyncio.Task] = None
+        self.install_task: asyncio.Task | None = None
+        self.start_task: asyncio.Task | None = None
 
     async def async_step_user(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
-        assert self.hass  # typing
-        if is_hassio(self.hass):  # type: ignore  # no-untyped-call
+        if is_hassio(self.hass):
             return await self.async_step_on_supervisor()
 
         return await self.async_step_manual()
 
     async def async_step_manual(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a manual configuration."""
         if user_input is None:
             return self.async_show_form(
@@ -133,9 +133,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="manual", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_hassio(  # type: ignore # override
-        self, discovery_info: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def async_step_hassio(self, discovery_info: dict[str, Any]) -> FlowResult:
         """Receive configuration from add-on discovery info.
 
         This flow is triggered by the Z-Wave JS add-on.
@@ -152,8 +150,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_hassio_confirm()
 
     async def async_step_hassio_confirm(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Confirm the add-on discovery."""
         if user_input is not None:
             return await self.async_step_on_supervisor(
@@ -163,7 +161,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="hassio_confirm")
 
     @callback
-    def _async_create_entry_from_vars(self) -> Dict[str, Any]:
+    def _async_create_entry_from_vars(self) -> FlowResult:
         """Return a config entry for the flow."""
         return self.async_create_entry(
             title=TITLE,
@@ -177,8 +175,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_on_supervisor(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle logic when on Supervisor host."""
         if user_input is None:
             return self.async_show_form(
@@ -189,20 +187,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.use_addon = True
 
-        if await self._async_is_addon_running():
-            addon_config = await self._async_get_addon_config()
+        addon_info = await self._async_get_addon_info()
+
+        if addon_info.state == AddonState.RUNNING:
+            addon_config = addon_info.options
             self.usb_path = addon_config[CONF_ADDON_DEVICE]
             self.network_key = addon_config.get(CONF_ADDON_NETWORK_KEY, "")
             return await self.async_step_finish_addon_setup()
 
-        if await self._async_is_addon_installed():
+        if addon_info.state == AddonState.NOT_RUNNING:
             return await self.async_step_configure_addon()
 
         return await self.async_step_install_addon()
 
     async def async_step_install_addon(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Install Z-Wave JS add-on."""
         if not self.install_task:
             self.install_task = self.hass.async_create_task(self._async_install_addon())
@@ -213,7 +213,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await self.install_task
         except AddonError as err:
-            _LOGGER.error("Failed to install Z-Wave JS add-on: %s", err)
+            _LOGGER.error(err)
             return self.async_show_progress_done(next_step_id="install_failed")
 
         self.integration_created_addon = True
@@ -221,18 +221,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_progress_done(next_step_id="configure_addon")
 
     async def async_step_install_failed(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Add-on installation failed."""
         return self.async_abort(reason="addon_install_failed")
 
     async def async_step_configure_addon(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Ask for config for Z-Wave JS add-on."""
-        addon_config = await self._async_get_addon_config()
+        addon_info = await self._async_get_addon_info()
+        addon_config = addon_info.options
 
-        errors: Dict[str, str] = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             self.network_key = user_input[CONF_NETWORK_KEY]
@@ -263,10 +264,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_start_addon(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Start Z-Wave JS add-on."""
-        assert self.hass
         if not self.start_task:
             self.start_task = self.hass.async_create_task(self._async_start_addon())
             return self.async_show_progress(
@@ -276,20 +276,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await self.start_task
         except (CannotConnect, AddonError) as err:
-            _LOGGER.error("Failed to start Z-Wave JS add-on: %s", err)
+            _LOGGER.error(err)
             return self.async_show_progress_done(next_step_id="start_failed")
 
         return self.async_show_progress_done(next_step_id="finish_addon_setup")
 
     async def async_step_start_failed(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Add-on start failed."""
         return self.async_abort(reason="addon_start_failed")
 
     async def _async_start_addon(self) -> None:
         """Start the Z-Wave JS add-on."""
-        assert self.hass
         addon_manager: AddonManager = get_addon_manager(self.hass)
         try:
             await addon_manager.async_schedule_start_addon()
@@ -312,7 +311,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else:
                     break
             else:
-                raise CannotConnect("Failed to start add-on: timeout")
+                raise CannotConnect("Failed to start Z-Wave JS add-on: timeout")
         finally:
             # Continue the flow after show progress when the task is done.
             self.hass.async_create_task(
@@ -320,14 +319,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
     async def async_step_finish_addon_setup(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Prepare info needed to complete the config entry.
 
         Get add-on discovery info and server version info.
         Set unique id and abort if already configured.
         """
-        assert self.hass
         if not self.ws_address:
             discovery_info = await self._async_get_addon_discovery_info()
             self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
@@ -350,40 +348,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self._async_create_entry_from_vars()
 
-    async def _async_get_addon_info(self) -> dict:
+    async def _async_get_addon_info(self) -> AddonInfo:
         """Return and cache Z-Wave JS add-on info."""
         addon_manager: AddonManager = get_addon_manager(self.hass)
         try:
-            addon_info: dict = await addon_manager.async_get_addon_info()
+            addon_info: AddonInfo = await addon_manager.async_get_addon_info()
         except AddonError as err:
-            _LOGGER.error("Failed to get Z-Wave JS add-on info: %s", err)
+            _LOGGER.error(err)
             raise AbortFlow("addon_info_failed") from err
 
         return addon_info
 
-    async def _async_is_addon_running(self) -> bool:
-        """Return True if Z-Wave JS add-on is running."""
-        addon_info = await self._async_get_addon_info()
-        return bool(addon_info["state"] == "started")
-
-    async def _async_is_addon_installed(self) -> bool:
-        """Return True if Z-Wave JS add-on is installed."""
-        addon_info = await self._async_get_addon_info()
-        return addon_info["version"] is not None
-
-    async def _async_get_addon_config(self) -> dict:
-        """Get Z-Wave JS add-on config."""
-        addon_info = await self._async_get_addon_info()
-        return cast(dict, addon_info["options"])
-
     async def _async_set_addon_config(self, config: dict) -> None:
         """Set Z-Wave JS add-on config."""
-        options = {"options": config}
         addon_manager: AddonManager = get_addon_manager(self.hass)
         try:
-            await addon_manager.async_set_addon_options(options)
+            await addon_manager.async_set_addon_options(config)
         except AddonError as err:
-            _LOGGER.error("Failed to set Z-Wave JS add-on config: %s", err)
+            _LOGGER.error(err)
             raise AbortFlow("addon_set_config_failed") from err
 
     async def _async_install_addon(self) -> None:
@@ -403,7 +385,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             discovery_info_config = await addon_manager.async_get_addon_discovery_info()
         except AddonError as err:
-            _LOGGER.error("Failed to get Z-Wave JS add-on discovery info: %s", err)
+            _LOGGER.error(err)
             raise AbortFlow("addon_get_discovery_info_failed") from err
 
         return discovery_info_config

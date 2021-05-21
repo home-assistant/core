@@ -1,381 +1,602 @@
 """The tests for UVC camera module."""
-from datetime import datetime
-import socket
-import unittest
-from unittest import mock
+from datetime import datetime, timedelta, timezone
+from unittest.mock import call, patch
 
 import pytest
 import requests
-from uvcclient import camera, nvr
+from uvcclient import camera as camera, nvr
 
-from homeassistant.components.camera import SUPPORT_STREAM
-from homeassistant.components.uvc import camera as uvc
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.setup import setup_component
+from homeassistant.components.camera import (
+    DEFAULT_CONTENT_TYPE,
+    SERVICE_DISABLE_MOTION,
+    SERVICE_ENABLE_MOTION,
+    STATE_RECORDING,
+    SUPPORT_STREAM,
+    async_get_image,
+    async_get_stream_source,
+)
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
+from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
-from tests.common import get_test_home_assistant
+from tests.common import async_fire_time_changed
 
 
-class TestUVCSetup(unittest.TestCase):
-    """Test the UVC camera platform."""
+@pytest.fixture(name="mock_remote")
+def mock_remote_fixture(camera_info):
+    """Mock the nvr.UVCRemote class."""
+    with patch("homeassistant.components.uvc.camera.nvr.UVCRemote") as mock_remote:
 
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.addCleanup(self.hass.stop)
+        def setup(host, port, apikey, ssl=False):
+            """Set instance attributes."""
+            mock_remote.return_value._host = host
+            mock_remote.return_value._port = port
+            mock_remote.return_value._apikey = apikey
+            mock_remote.return_value._ssl = ssl
+            return mock_remote.return_value
 
-    @mock.patch("uvcclient.nvr.UVCRemote")
-    @mock.patch.object(uvc, "UnifiVideoCamera")
-    def test_setup_full_config(self, mock_uvc, mock_remote):
-        """Test the setup with full configuration."""
-        config = {
-            "platform": "uvc",
-            "nvr": "foo",
-            "password": "bar",
-            "port": 123,
-            "key": "secret",
-        }
+        mock_remote.side_effect = setup
+        mock_remote.return_value.get_camera.return_value = camera_info
         mock_cameras = [
             {"uuid": "one", "name": "Front", "id": "id1"},
             {"uuid": "two", "name": "Back", "id": "id2"},
-            {"uuid": "three", "name": "Old AirCam", "id": "id3"},
         ]
-
-        def mock_get_camera(uuid):
-            """Create a mock camera."""
-            if uuid == "id3":
-                return {"model": "airCam"}
-            return {"model": "UVC"}
-
         mock_remote.return_value.index.return_value = mock_cameras
-        mock_remote.return_value.get_camera.side_effect = mock_get_camera
         mock_remote.return_value.server_version = (3, 2, 0)
-
-        assert setup_component(self.hass, "camera", {"camera": config})
-        self.hass.block_till_done()
-
-        assert mock_remote.call_count == 1
-        assert mock_remote.call_args == mock.call("foo", 123, "secret", ssl=False)
-        mock_uvc.assert_has_calls(
-            [
-                mock.call(mock_remote.return_value, "id1", "Front", "bar"),
-                mock.call(mock_remote.return_value, "id2", "Back", "bar"),
-            ]
-        )
-
-    @mock.patch("uvcclient.nvr.UVCRemote")
-    @mock.patch.object(uvc, "UnifiVideoCamera")
-    def test_setup_partial_config(self, mock_uvc, mock_remote):
-        """Test the setup with partial configuration."""
-        config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
-        mock_cameras = [
-            {"uuid": "one", "name": "Front", "id": "id1"},
-            {"uuid": "two", "name": "Back", "id": "id2"},
-        ]
-        mock_remote.return_value.index.return_value = mock_cameras
-        mock_remote.return_value.get_camera.return_value = {"model": "UVC"}
-        mock_remote.return_value.server_version = (3, 2, 0)
-
-        assert setup_component(self.hass, "camera", {"camera": config})
-        self.hass.block_till_done()
-
-        assert mock_remote.call_count == 1
-        assert mock_remote.call_args == mock.call("foo", 7080, "secret", ssl=False)
-        mock_uvc.assert_has_calls(
-            [
-                mock.call(mock_remote.return_value, "id1", "Front", "ubnt"),
-                mock.call(mock_remote.return_value, "id2", "Back", "ubnt"),
-            ]
-        )
-
-    @mock.patch("uvcclient.nvr.UVCRemote")
-    @mock.patch.object(uvc, "UnifiVideoCamera")
-    def test_setup_partial_config_v31x(self, mock_uvc, mock_remote):
-        """Test the setup with a v3.1.x server."""
-        config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
-        mock_cameras = [
-            {"uuid": "one", "name": "Front", "id": "id1"},
-            {"uuid": "two", "name": "Back", "id": "id2"},
-        ]
-        mock_remote.return_value.index.return_value = mock_cameras
-        mock_remote.return_value.get_camera.return_value = {"model": "UVC"}
-        mock_remote.return_value.server_version = (3, 1, 3)
-
-        assert setup_component(self.hass, "camera", {"camera": config})
-        self.hass.block_till_done()
-
-        assert mock_remote.call_count == 1
-        assert mock_remote.call_args == mock.call("foo", 7080, "secret", ssl=False)
-        mock_uvc.assert_has_calls(
-            [
-                mock.call(mock_remote.return_value, "one", "Front", "ubnt"),
-                mock.call(mock_remote.return_value, "two", "Back", "ubnt"),
-            ]
-        )
-
-    @mock.patch.object(uvc, "UnifiVideoCamera")
-    def test_setup_incomplete_config(self, mock_uvc):
-        """Test the setup with incomplete configuration."""
-        assert setup_component(self.hass, "camera", {"platform": "uvc", "nvr": "foo"})
-        self.hass.block_till_done()
-
-        assert not mock_uvc.called
-        assert setup_component(
-            self.hass, "camera", {"platform": "uvc", "key": "secret"}
-        )
-        self.hass.block_till_done()
-
-        assert not mock_uvc.called
-        assert setup_component(
-            self.hass, "camera", {"platform": "uvc", "port": "invalid"}
-        )
-        self.hass.block_till_done()
-
-        assert not mock_uvc.called
-
-    @mock.patch.object(uvc, "UnifiVideoCamera")
-    @mock.patch("uvcclient.nvr.UVCRemote")
-    def setup_nvr_errors_during_indexing(self, error, mock_remote, mock_uvc):
-        """Set up test for NVR errors during indexing."""
-        config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
-        mock_remote.return_value.index.side_effect = error
-        assert setup_component(self.hass, "camera", {"camera": config})
-        self.hass.block_till_done()
-
-        assert not mock_uvc.called
-
-    def test_setup_nvr_error_during_indexing_notauthorized(self):
-        """Test for error: nvr.NotAuthorized."""
-        self.setup_nvr_errors_during_indexing(nvr.NotAuthorized)
-
-    def test_setup_nvr_error_during_indexing_nvrerror(self):
-        """Test for error: nvr.NvrError."""
-        self.setup_nvr_errors_during_indexing(nvr.NvrError)
-        pytest.raises(PlatformNotReady)
-
-    def test_setup_nvr_error_during_indexing_connectionerror(self):
-        """Test for error: requests.exceptions.ConnectionError."""
-        self.setup_nvr_errors_during_indexing(requests.exceptions.ConnectionError)
-        pytest.raises(PlatformNotReady)
-
-    @mock.patch.object(uvc, "UnifiVideoCamera")
-    @mock.patch("uvcclient.nvr.UVCRemote.__init__")
-    def setup_nvr_errors_during_initialization(self, error, mock_remote, mock_uvc):
-        """Set up test for NVR errors during initialization."""
-        config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
-        mock_remote.return_value = None
-        mock_remote.side_effect = error
-        assert setup_component(self.hass, "camera", {"camera": config})
-        self.hass.block_till_done()
-
-        assert not mock_remote.index.called
-        assert not mock_uvc.called
-
-    def test_setup_nvr_error_during_initialization_notauthorized(self):
-        """Test for error: nvr.NotAuthorized."""
-        self.setup_nvr_errors_during_initialization(nvr.NotAuthorized)
-
-    def test_setup_nvr_error_during_initialization_nvrerror(self):
-        """Test for error: nvr.NvrError."""
-        self.setup_nvr_errors_during_initialization(nvr.NvrError)
-        pytest.raises(PlatformNotReady)
-
-    def test_setup_nvr_error_during_initialization_connectionerror(self):
-        """Test for error: requests.exceptions.ConnectionError."""
-        self.setup_nvr_errors_during_initialization(requests.exceptions.ConnectionError)
-        pytest.raises(PlatformNotReady)
+        yield mock_remote
 
 
-class TestUVC(unittest.TestCase):
-    """Test class for UVC."""
-
-    def setup_method(self, method):
-        """Set up the mock camera."""
-        self.nvr = mock.MagicMock()
-        self.uuid = "uuid"
-        self.name = "name"
-        self.password = "seekret"
-        self.uvc = uvc.UnifiVideoCamera(self.nvr, self.uuid, self.name, self.password)
-        self.nvr.get_camera.return_value = {
-            "model": "UVC Fake",
-            "uuid": "06e3ff29-8048-31c2-8574-0852d1bd0e03",
-            "recordingSettings": {
-                "fullTimeRecordEnabled": True,
-                "motionRecordEnabled": False,
+@pytest.fixture(name="camera_info")
+def camera_info_fixture():
+    """Mock the camera info of a camera."""
+    return {
+        "model": "UVC",
+        "recordingSettings": {
+            "fullTimeRecordEnabled": True,
+            "motionRecordEnabled": False,
+        },
+        "host": "host-a",
+        "internalHost": "host-b",
+        "username": "admin",
+        "lastRecordingStartTime": 1610070992367,
+        "channels": [
+            {
+                "id": "0",
+                "width": 1920,
+                "height": 1080,
+                "fps": 25,
+                "bitrate": 6000000,
+                "isRtspEnabled": True,
+                "rtspUris": [
+                    "rtsp://host-a:7447/uuid_rtspchannel_0",
+                    "rtsp://foo:7447/uuid_rtspchannel_0",
+                ],
             },
-            "host": "host-a",
-            "internalHost": "host-b",
-            "username": "admin",
-            "lastRecordingStartTime": 1610070992367,
-            "channels": [
-                {
-                    "id": "0",
-                    "width": 1920,
-                    "height": 1080,
-                    "fps": 25,
-                    "bitrate": 6000000,
-                    "isRtspEnabled": True,
-                    "rtspUris": [
-                        "rtsp://host-a:7447/uuid_rtspchannel_0",
-                        "rtsp://foo:7447/uuid_rtspchannel_0",
-                    ],
-                },
-                {
-                    "id": "1",
-                    "width": 1024,
-                    "height": 576,
-                    "fps": 15,
-                    "bitrate": 1200000,
-                    "isRtspEnabled": False,
-                    "rtspUris": [
-                        "rtsp://host-a:7447/uuid_rtspchannel_1",
-                        "rtsp://foo:7447/uuid_rtspchannel_1",
-                    ],
-                },
-            ],
-        }
-        self.nvr.server_version = (3, 2, 0)
-        self.uvc.update()
+            {
+                "id": "1",
+                "width": 1024,
+                "height": 576,
+                "fps": 15,
+                "bitrate": 1200000,
+                "isRtspEnabled": False,
+                "rtspUris": [
+                    "rtsp://host-a:7447/uuid_rtspchannel_1",
+                    "rtsp://foo:7447/uuid_rtspchannel_1",
+                ],
+            },
+        ],
+    }
 
-    def test_properties(self):
-        """Test the properties."""
-        assert self.name == self.uvc.name
-        assert self.uvc.is_recording
-        assert "Ubiquiti" == self.uvc.brand
-        assert "UVC Fake" == self.uvc.model
-        assert SUPPORT_STREAM == self.uvc.supported_features
-        assert "uuid" == self.uvc.unique_id
 
-    def test_motion_recording_mode_properties(self):
-        """Test the properties."""
-        self.nvr.get_camera.return_value["recordingSettings"][
-            "fullTimeRecordEnabled"
-        ] = False
-        self.nvr.get_camera.return_value["recordingSettings"][
-            "motionRecordEnabled"
-        ] = True
-        assert not self.uvc.is_recording
-        assert (
-            datetime(2021, 1, 8, 1, 56, 32, 367000)
-            == self.uvc.device_state_attributes["last_recording_start_time"]
-        )
+@pytest.fixture(name="camera_v320")
+def camera_v320_fixture():
+    """Mock the v320 camera."""
+    with patch(
+        "homeassistant.components.uvc.camera.uvc_camera.UVCCameraClientV320"
+    ) as camera:
+        camera.return_value.get_snapshot.return_value = "test_image"
+        yield camera
 
-        self.nvr.get_camera.return_value["recordingIndicator"] = "DISABLED"
-        assert not self.uvc.is_recording
 
-        self.nvr.get_camera.return_value["recordingIndicator"] = "MOTION_INPROGRESS"
-        assert self.uvc.is_recording
+@pytest.fixture(name="camera_v313")
+def camera_v313_fixture():
+    """Mock the v320 camera."""
+    with patch(
+        "homeassistant.components.uvc.camera.uvc_camera.UVCCameraClient"
+    ) as camera:
+        camera.return_value.get_snapshot.return_value = "test_image"
+        yield camera
 
-        self.nvr.get_camera.return_value["recordingIndicator"] = "MOTION_FINISHED"
-        assert self.uvc.is_recording
 
-    def test_stream(self):
-        """Test the RTSP stream URI."""
-        stream_source = yield from self.uvc.stream_source()
-        assert stream_source == "rtsp://foo:7447/uuid_rtspchannel_0"
+async def test_setup_full_config(hass, mock_remote, camera_info):
+    """Test the setup with full configuration."""
+    config = {
+        "platform": "uvc",
+        "nvr": "foo",
+        "password": "bar",
+        "port": 123,
+        "key": "secret",
+    }
 
-    @mock.patch("uvcclient.store.get_info_store")
-    @mock.patch("uvcclient.camera.UVCCameraClientV320")
-    def test_login(self, mock_camera, mock_store):
-        """Test the login."""
-        self.uvc._login()
-        assert mock_camera.call_count == 1
-        assert mock_camera.call_args == mock.call("host-a", "admin", "seekret")
-        assert mock_camera.return_value.login.call_count == 1
-        assert mock_camera.return_value.login.call_args == mock.call()
+    def mock_get_camera(uuid):
+        """Create a mock camera."""
+        if uuid == "id3":
+            camera_info["model"] = "airCam"
 
-    @mock.patch("uvcclient.store.get_info_store")
-    @mock.patch("uvcclient.camera.UVCCameraClient")
-    def test_login_v31x(self, mock_camera, mock_store):
-        """Test login with v3.1.x server."""
-        self.nvr.server_version = (3, 1, 3)
-        self.uvc._login()
-        assert mock_camera.call_count == 1
-        assert mock_camera.call_args == mock.call("host-a", "admin", "seekret")
-        assert mock_camera.return_value.login.call_count == 1
-        assert mock_camera.return_value.login.call_args == mock.call()
+        return camera_info
 
-    @mock.patch("uvcclient.store.get_info_store")
-    @mock.patch("uvcclient.camera.UVCCameraClientV320")
-    def test_login_tries_both_addrs_and_caches(self, mock_camera, mock_store):
-        """Test the login tries."""
-        responses = [0]
+    mock_remote.return_value.index.return_value.append(
+        {"uuid": "three", "name": "Old AirCam", "id": "id3"}
+    )
+    mock_remote.return_value.get_camera.side_effect = mock_get_camera
 
-        def mock_login(*a):
-            """Mock login."""
-            try:
-                responses.pop(0)
-                raise OSError
-            except IndexError:
-                pass
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
 
-        mock_store.return_value.get_camera_password.return_value = None
-        mock_camera.return_value.login.side_effect = mock_login
-        self.uvc._login()
-        assert 2 == mock_camera.call_count
-        assert "host-b" == self.uvc._connect_addr
+    assert mock_remote.call_count == 1
+    assert mock_remote.call_args == call("foo", 123, "secret", ssl=False)
 
-        mock_camera.reset_mock()
-        self.uvc._login()
-        assert mock_camera.call_count == 1
-        assert mock_camera.call_args == mock.call("host-b", "admin", "seekret")
-        assert mock_camera.return_value.login.call_count == 1
-        assert mock_camera.return_value.login.call_args == mock.call()
+    camera_states = hass.states.async_all("camera")
 
-    @mock.patch("uvcclient.store.get_info_store")
-    @mock.patch("uvcclient.camera.UVCCameraClientV320")
-    def test_login_fails_both_properly(self, mock_camera, mock_store):
-        """Test if login fails properly."""
-        mock_camera.return_value.login.side_effect = socket.error
-        assert self.uvc._login() is None
-        assert self.uvc._connect_addr is None
+    assert len(camera_states) == 2
 
-    def test_camera_image_tries_login_bails_on_failure(self):
-        """Test retrieving failure."""
-        with mock.patch.object(self.uvc, "_login") as mock_login:
-            mock_login.return_value = False
-            assert self.uvc.camera_image() is None
-            assert mock_login.call_count == 1
-            assert mock_login.call_args == mock.call()
+    state = hass.states.get("camera.front")
 
-    def test_camera_image_logged_in(self):
-        """Test the login state."""
-        self.uvc._camera = mock.MagicMock()
-        assert self.uvc._camera.get_snapshot.return_value == self.uvc.camera_image()
+    assert state
+    assert state.name == "Front"
 
-    def test_camera_image_error(self):
-        """Test the camera image error."""
-        self.uvc._camera = mock.MagicMock()
-        self.uvc._camera.get_snapshot.side_effect = camera.CameraConnectError
-        assert self.uvc.camera_image() is None
+    state = hass.states.get("camera.back")
 
-    def test_camera_image_reauths(self):
-        """Test the re-authentication."""
-        responses = [0]
+    assert state
+    assert state.name == "Back"
 
-        def mock_snapshot():
-            """Mock snapshot."""
-            try:
-                responses.pop()
-                raise camera.CameraAuthError()
-            except IndexError:
-                pass
-            return "image"
+    entity_registry = async_get_entity_registry(hass)
+    entity_entry = entity_registry.async_get("camera.front")
 
-        self.uvc._camera = mock.MagicMock()
-        self.uvc._camera.get_snapshot.side_effect = mock_snapshot
-        with mock.patch.object(self.uvc, "_login") as mock_login:
-            assert "image" == self.uvc.camera_image()
-            assert mock_login.call_count == 1
-            assert mock_login.call_args == mock.call()
-            assert [] == responses
+    assert entity_entry.unique_id == "id1"
 
-    def test_camera_image_reauths_only_once(self):
-        """Test if the re-authentication only happens once."""
-        self.uvc._camera = mock.MagicMock()
-        self.uvc._camera.get_snapshot.side_effect = camera.CameraAuthError
-        with mock.patch.object(self.uvc, "_login") as mock_login:
-            with pytest.raises(camera.CameraAuthError):
-                self.uvc.camera_image()
-            assert mock_login.call_count == 1
-            assert mock_login.call_args == mock.call()
+    entity_entry = entity_registry.async_get("camera.back")
+
+    assert entity_entry.unique_id == "id2"
+
+
+async def test_setup_partial_config(hass, mock_remote):
+    """Test the setup with partial configuration."""
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    assert mock_remote.call_count == 1
+    assert mock_remote.call_args == call("foo", 7080, "secret", ssl=False)
+
+    camera_states = hass.states.async_all("camera")
+
+    assert len(camera_states) == 2
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert state.name == "Front"
+
+    state = hass.states.get("camera.back")
+
+    assert state
+    assert state.name == "Back"
+
+    entity_registry = async_get_entity_registry(hass)
+    entity_entry = entity_registry.async_get("camera.front")
+
+    assert entity_entry.unique_id == "id1"
+
+    entity_entry = entity_registry.async_get("camera.back")
+
+    assert entity_entry.unique_id == "id2"
+
+
+async def test_setup_partial_config_v31x(hass, mock_remote):
+    """Test the setup with a v3.1.x server."""
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    mock_remote.return_value.server_version = (3, 1, 3)
+
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    assert mock_remote.call_count == 1
+    assert mock_remote.call_args == call("foo", 7080, "secret", ssl=False)
+
+    camera_states = hass.states.async_all("camera")
+
+    assert len(camera_states) == 2
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert state.name == "Front"
+
+    state = hass.states.get("camera.back")
+
+    assert state
+    assert state.name == "Back"
+
+    entity_registry = async_get_entity_registry(hass)
+    entity_entry = entity_registry.async_get("camera.front")
+
+    assert entity_entry.unique_id == "one"
+
+    entity_entry = entity_registry.async_get("camera.back")
+
+    assert entity_entry.unique_id == "two"
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        {"platform": "uvc", "nvr": "foo"},
+        {"platform": "uvc", "key": "secret"},
+        {"platform": "uvc", "nvr": "foo", "key": "secret", "port": "invalid"},
+    ],
+)
+async def test_setup_incomplete_config(hass, mock_remote, config):
+    """Test the setup with incomplete or invalid configuration."""
+    assert await async_setup_component(hass, "camera", config)
+    await hass.async_block_till_done()
+
+    camera_states = hass.states.async_all("camera")
+
+    assert not camera_states
+
+
+@pytest.mark.parametrize(
+    "error, ready_states",
+    [
+        (nvr.NotAuthorized, 0),
+        (nvr.NvrError, 2),
+        (requests.exceptions.ConnectionError, 2),
+    ],
+)
+async def test_setup_nvr_errors_during_indexing(hass, mock_remote, error, ready_states):
+    """Set up test for NVR errors during indexing."""
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    now = utcnow()
+    mock_remote.return_value.index.side_effect = error
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    camera_states = hass.states.async_all("camera")
+
+    assert not camera_states
+
+    # resolve the error
+    mock_remote.return_value.index.side_effect = None
+
+    async_fire_time_changed(hass, now + timedelta(seconds=31))
+    await hass.async_block_till_done()
+
+    camera_states = hass.states.async_all("camera")
+
+    assert len(camera_states) == ready_states
+
+
+@pytest.mark.parametrize(
+    "error, ready_states",
+    [
+        (nvr.NotAuthorized, 0),
+        (nvr.NvrError, 2),
+        (requests.exceptions.ConnectionError, 2),
+    ],
+)
+async def test_setup_nvr_errors_during_initialization(
+    hass, mock_remote, error, ready_states
+):
+    """Set up test for NVR errors during initialization."""
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    now = utcnow()
+    mock_remote.side_effect = error
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    assert not mock_remote.index.called
+
+    camera_states = hass.states.async_all("camera")
+
+    assert not camera_states
+
+    # resolve the error
+    mock_remote.side_effect = None
+
+    async_fire_time_changed(hass, now + timedelta(seconds=31))
+    await hass.async_block_till_done()
+
+    camera_states = hass.states.async_all("camera")
+
+    assert len(camera_states) == ready_states
+
+
+async def test_properties(hass, mock_remote):
+    """Test the properties."""
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    camera_states = hass.states.async_all("camera")
+
+    assert len(camera_states) == 2
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert state.name == "Front"
+    assert state.state == STATE_RECORDING
+    assert state.attributes["brand"] == "Ubiquiti"
+    assert state.attributes["model_name"] == "UVC"
+    assert state.attributes["supported_features"] == SUPPORT_STREAM
+
+
+async def test_motion_recording_mode_properties(hass, mock_remote):
+    """Test the properties."""
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    now = utcnow()
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert state.state == STATE_RECORDING
+
+    mock_remote.return_value.get_camera.return_value["recordingSettings"][
+        "fullTimeRecordEnabled"
+    ] = False
+    mock_remote.return_value.get_camera.return_value["recordingSettings"][
+        "motionRecordEnabled"
+    ] = True
+
+    async_fire_time_changed(hass, now + timedelta(seconds=31))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert state.state != STATE_RECORDING
+    assert state.attributes["last_recording_start_time"] == datetime(
+        2021, 1, 8, 1, 56, 32, 367000, tzinfo=timezone.utc
+    )
+
+    mock_remote.return_value.get_camera.return_value["recordingIndicator"] = "DISABLED"
+
+    async_fire_time_changed(hass, now + timedelta(seconds=61))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert state.state != STATE_RECORDING
+
+    mock_remote.return_value.get_camera.return_value[
+        "recordingIndicator"
+    ] = "MOTION_INPROGRESS"
+
+    async_fire_time_changed(hass, now + timedelta(seconds=91))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert state.state == STATE_RECORDING
+
+    mock_remote.return_value.get_camera.return_value[
+        "recordingIndicator"
+    ] = "MOTION_FINISHED"
+
+    async_fire_time_changed(hass, now + timedelta(seconds=121))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert state.state == STATE_RECORDING
+
+
+async def test_stream(hass, mock_remote):
+    """Test the RTSP stream URI."""
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    stream_source = await async_get_stream_source(hass, "camera.front")
+
+    assert stream_source == "rtsp://foo:7447/uuid_rtspchannel_0"
+
+
+async def test_login(hass, mock_remote, camera_v320):
+    """Test the login."""
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    image = await async_get_image(hass, "camera.front")
+
+    assert camera_v320.call_count == 1
+    assert camera_v320.call_args == call("host-a", "admin", "ubnt")
+    assert camera_v320.return_value.login.call_count == 1
+    assert image.content_type == DEFAULT_CONTENT_TYPE
+    assert image.content == "test_image"
+
+
+async def test_login_v31x(hass, mock_remote, camera_v313):
+    """Test login with v3.1.x server."""
+    mock_remote.return_value.server_version = (3, 1, 3)
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    image = await async_get_image(hass, "camera.front")
+
+    assert camera_v313.call_count == 1
+    assert camera_v313.call_args == call("host-a", "admin", "ubnt")
+    assert camera_v313.return_value.login.call_count == 1
+    assert image.content_type == DEFAULT_CONTENT_TYPE
+    assert image.content == "test_image"
+
+
+@pytest.mark.parametrize(
+    "error", [OSError, camera.CameraConnectError, camera.CameraAuthError]
+)
+async def test_login_tries_both_addrs_and_caches(hass, mock_remote, camera_v320, error):
+    """Test the login tries."""
+    responses = [0]
+
+    def mock_login(*a):
+        """Mock login."""
+        try:
+            responses.pop(0)
+            raise error
+        except IndexError:
+            pass
+
+    snapshots = [0]
+
+    def mock_snapshots(*a):
+        """Mock get snapshots."""
+        try:
+            snapshots.pop(0)
+            raise camera.CameraAuthError()
+        except IndexError:
+            pass
+        return "test_image"
+
+    camera_v320.return_value.login.side_effect = mock_login
+
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    image = await async_get_image(hass, "camera.front")
+
+    assert camera_v320.call_count == 2
+    assert camera_v320.call_args == call("host-b", "admin", "ubnt")
+    assert image.content_type == DEFAULT_CONTENT_TYPE
+    assert image.content == "test_image"
+
+    camera_v320.reset_mock()
+    camera_v320.return_value.get_snapshot.side_effect = mock_snapshots
+
+    image = await async_get_image(hass, "camera.front")
+
+    assert camera_v320.call_count == 1
+    assert camera_v320.call_args == call("host-b", "admin", "ubnt")
+    assert camera_v320.return_value.login.call_count == 1
+    assert image.content_type == DEFAULT_CONTENT_TYPE
+    assert image.content == "test_image"
+
+
+async def test_login_fails_both_properly(hass, mock_remote, camera_v320):
+    """Test if login fails properly."""
+    camera_v320.return_value.login.side_effect = OSError
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError):
+        await async_get_image(hass, "camera.front")
+
+    assert camera_v320.return_value.get_snapshot.call_count == 0
+
+
+@pytest.mark.parametrize(
+    "source_error, raised_error, snapshot_calls",
+    [
+        (camera.CameraConnectError, HomeAssistantError, 1),
+        (camera.CameraAuthError, camera.CameraAuthError, 2),
+    ],
+)
+async def test_camera_image_error(
+    hass, mock_remote, camera_v320, source_error, raised_error, snapshot_calls
+):
+    """Test the camera image error."""
+    camera_v320.return_value.get_snapshot.side_effect = source_error
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    with pytest.raises(raised_error):
+        await async_get_image(hass, "camera.front")
+
+    assert camera_v320.return_value.get_snapshot.call_count == snapshot_calls
+
+
+async def test_enable_disable_motion_detection(hass, mock_remote, camera_info):
+    """Test enable and disable motion detection."""
+
+    def set_recordmode(uuid, mode):
+        """Set record mode."""
+        motion_record_enabled = mode == "motion"
+        camera_info["recordingSettings"]["motionRecordEnabled"] = motion_record_enabled
+
+    mock_remote.return_value.set_recordmode.side_effect = set_recordmode
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert "motion_detection" not in state.attributes
+
+    await hass.services.async_call(
+        "camera", SERVICE_ENABLE_MOTION, {"entity_id": "camera.front"}, True
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert state.attributes["motion_detection"]
+
+    await hass.services.async_call(
+        "camera", SERVICE_DISABLE_MOTION, {"entity_id": "camera.front"}, True
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert "motion_detection" not in state.attributes
+
+    mock_remote.return_value.set_recordmode.side_effect = nvr.NvrError
+
+    await hass.services.async_call(
+        "camera", SERVICE_ENABLE_MOTION, {"entity_id": "camera.front"}, True
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert "motion_detection" not in state.attributes
+
+    mock_remote.return_value.set_recordmode.side_effect = set_recordmode
+
+    await hass.services.async_call(
+        "camera", SERVICE_ENABLE_MOTION, {"entity_id": "camera.front"}, True
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert state.attributes["motion_detection"]
+
+    mock_remote.return_value.set_recordmode.side_effect = nvr.NvrError
+
+    await hass.services.async_call(
+        "camera", SERVICE_DISABLE_MOTION, {"entity_id": "camera.front"}, True
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert state.attributes["motion_detection"]

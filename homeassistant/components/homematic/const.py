@@ -60,6 +60,7 @@ HM_DEVICE_TYPES = {
         "IPWSwitch",
         "IOSwitchWireless",
         "IPWIODevice",
+        "IPSwitchBattery",
     ],
     DISCOVER_LIGHTS: [
         "Dimmer",
@@ -119,6 +120,8 @@ HM_DEVICE_TYPES = {
         "ValveBox",
         "IPKeyBlind",
         "IPKeyBlindTilt",
+        "IPLanRouter",
+        "TempModuleSTE2",
     ],
     DISCOVER_CLIMATE: [
         "Thermostat",
@@ -163,6 +166,7 @@ HM_DEVICE_TYPES = {
         "IPWMotionDection",
         "IPAlarmSensor",
         "IPRainSensor",
+        "IPLanRouter",
     ],
     DISCOVER_COVER: [
         "Blind",

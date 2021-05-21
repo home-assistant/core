@@ -11,9 +11,16 @@ from homeassistant.components.yeelight import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    CONF_DEVICES,
+    CONF_HOST,
+    CONF_ID,
+    CONF_NAME,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -33,6 +40,77 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
+
+
+async def test_ip_changes_fallback_discovery(hass: HomeAssistant):
+    """Test Yeelight ip changes and we fallback to discovery."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ID: ID,
+            CONF_HOST: "5.5.5.5",
+        },
+        unique_id=ID,
+    )
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb(True)
+    mocked_bulb.bulb_type = BulbType.WhiteTempMood
+    mocked_bulb.get_capabilities = MagicMock(
+        side_effect=[OSError, CAPABILITIES, CAPABILITIES]
+    )
+
+    _discovered_devices = [
+        {
+            "capabilities": CAPABILITIES,
+            "ip": IP_ADDRESS,
+        }
+    ]
+    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb), patch(
+        f"{MODULE}.discover_bulbs", return_value=_discovered_devices
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    binary_sensor_entity_id = ENTITY_BINARY_SENSOR_TEMPLATE.format(
+        f"yeelight_color_{ID}"
+    )
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(binary_sensor_entity_id) is None
+
+    await hass.async_block_till_done()
+
+    type(mocked_bulb).get_properties = MagicMock(None)
+
+    hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE].update()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(binary_sensor_entity_id) is not None
+
+
+async def test_ip_changes_id_missing_cannot_fallback(hass: HomeAssistant):
+    """Test Yeelight ip changes and we fallback to discovery."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "5.5.5.5",
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb(True)
+    mocked_bulb.bulb_type = BulbType.WhiteTempMood
+    mocked_bulb.get_capabilities = MagicMock(
+        side_effect=[OSError, CAPABILITIES, CAPABILITIES]
+    )
+
+    with patch(f"{MODULE}.Bulb", return_value=mocked_bulb):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_discovery(hass: HomeAssistant):
@@ -106,11 +184,14 @@ async def test_unique_ids_device(hass: HomeAssistant):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    er = await entity_registry.async_get_registry(hass)
-    assert er.async_get(ENTITY_BINARY_SENSOR).unique_id == f"{ID}-nightlight_sensor"
-    assert er.async_get(ENTITY_LIGHT).unique_id == ID
-    assert er.async_get(ENTITY_NIGHTLIGHT).unique_id == f"{ID}-nightlight"
-    assert er.async_get(ENTITY_AMBILIGHT).unique_id == f"{ID}-ambilight"
+    entity_registry = er.async_get(hass)
+    assert (
+        entity_registry.async_get(ENTITY_BINARY_SENSOR).unique_id
+        == f"{ID}-nightlight_sensor"
+    )
+    assert entity_registry.async_get(ENTITY_LIGHT).unique_id == ID
+    assert entity_registry.async_get(ENTITY_NIGHTLIGHT).unique_id == f"{ID}-nightlight"
+    assert entity_registry.async_get(ENTITY_AMBILIGHT).unique_id == f"{ID}-ambilight"
 
 
 async def test_unique_ids_entry(hass: HomeAssistant):
@@ -131,18 +212,19 @@ async def test_unique_ids_entry(hass: HomeAssistant):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    er = await entity_registry.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     assert (
-        er.async_get(ENTITY_BINARY_SENSOR).unique_id
+        entity_registry.async_get(ENTITY_BINARY_SENSOR).unique_id
         == f"{config_entry.entry_id}-nightlight_sensor"
     )
-    assert er.async_get(ENTITY_LIGHT).unique_id == config_entry.entry_id
+    assert entity_registry.async_get(ENTITY_LIGHT).unique_id == config_entry.entry_id
     assert (
-        er.async_get(ENTITY_NIGHTLIGHT).unique_id
+        entity_registry.async_get(ENTITY_NIGHTLIGHT).unique_id
         == f"{config_entry.entry_id}-nightlight"
     )
     assert (
-        er.async_get(ENTITY_AMBILIGHT).unique_id == f"{config_entry.entry_id}-ambilight"
+        entity_registry.async_get(ENTITY_AMBILIGHT).unique_id
+        == f"{config_entry.entry_id}-ambilight"
     )
 
 
@@ -170,14 +252,15 @@ async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant):
     binary_sensor_entity_id = ENTITY_BINARY_SENSOR_TEMPLATE.format(
         IP_ADDRESS.replace(".", "_")
     )
-    er = await entity_registry.async_get_registry(hass)
-    assert er.async_get(binary_sensor_entity_id) is None
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(binary_sensor_entity_id) is None
 
     type(mocked_bulb).get_capabilities = MagicMock(CAPABILITIES)
     type(mocked_bulb).get_properties = MagicMock(None)
 
     hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE].update()
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-    er = await entity_registry.async_get_registry(hass)
-    assert er.async_get(binary_sensor_entity_id) is not None
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(binary_sensor_entity_id) is not None

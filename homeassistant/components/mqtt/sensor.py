@@ -1,66 +1,60 @@
 """Support for MQTT sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import functools
-from typing import Optional
 
 import voluptuous as vol
 
 from homeassistant.components import sensor
-from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
+from homeassistant.components.sensor import (
+    DEVICE_CLASSES_SCHEMA,
+    STATE_CLASSES_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
-    CONF_DEVICE,
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
-    CONF_ICON,
     CONF_NAME,
-    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from . import CONF_QOS, CONF_STATE_TOPIC, DOMAIN, PLATFORMS, subscription
 from .. import mqtt
 from .debug_info import log_messages
 from .mixins import (
-    MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-    MQTT_JSON_ATTRS_SCHEMA,
+    MQTT_ENTITY_COMMON_SCHEMA,
     MqttAvailability,
     MqttEntity,
     async_setup_entry_helper,
 )
 
 CONF_EXPIRE_AFTER = "expire_after"
+CONF_STATE_CLASS = "state_class"
 
 DEFAULT_NAME = "MQTT Sensor"
 DEFAULT_FORCE_UPDATE = False
-PLATFORM_SCHEMA = (
-    mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
-            vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-            vol.Optional(CONF_ICON): cv.icon,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        }
-    )
-    .extend(MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
-)
+PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
+        vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    }
+).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 
 async def async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+    hass: HomeAssistant, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT sensors through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
@@ -82,7 +76,7 @@ async def _async_setup_entity(
     async_add_entities([MqttSensor(hass, config, config_entry, discovery_data)])
 
 
-class MqttSensor(MqttEntity, Entity):
+class MqttSensor(MqttEntity, SensorEntity):
     """Representation of a sensor that can be updated using MQTT."""
 
     def __init__(self, hass, config, config_entry, discovery_data):
@@ -105,7 +99,6 @@ class MqttSensor(MqttEntity, Entity):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        self._config = config
         template = self._config.get(CONF_VALUE_TEMPLATE)
         if template is not None:
             template.hass = self.hass
@@ -138,8 +131,11 @@ class MqttSensor(MqttEntity, Entity):
 
             template = self._config.get(CONF_VALUE_TEMPLATE)
             if template is not None:
+                variables = {"entity_id": self.entity_id}
                 payload = template.async_render_with_possible_json_value(
-                    payload, self._state
+                    payload,
+                    self._state,
+                    variables=variables,
                 )
             self._state = payload
             self.async_write_ha_state()
@@ -164,11 +160,6 @@ class MqttSensor(MqttEntity, Entity):
         self.async_write_ha_state()
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._config[CONF_NAME]
-
-    @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
@@ -184,14 +175,14 @@ class MqttSensor(MqttEntity, Entity):
         return self._state
 
     @property
-    def icon(self):
-        """Return the icon."""
-        return self._config.get(CONF_ICON)
-
-    @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._config.get(CONF_DEVICE_CLASS)
+
+    @property
+    def state_class(self) -> str | None:
+        """Return the state class of the sensor."""
+        return self._config.get(CONF_STATE_CLASS)
 
     @property
     def available(self) -> bool:

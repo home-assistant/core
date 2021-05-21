@@ -1,5 +1,5 @@
 """Config flow for Keenetic NDMS2."""
-from typing import List
+from __future__ import annotations
 
 from ndms2_client import Client, ConnectionException, InterfaceInfo, TelnetConnection
 import voluptuous as vol
@@ -36,7 +36,6 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback
@@ -48,9 +47,7 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            for entry in self.hass.config_entries.async_entries(DOMAIN):
-                if entry.data[CONF_HOST] == user_input[CONF_HOST]:
-                    return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
             _client = Client(
                 TelnetConnection(
@@ -92,7 +89,7 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options."""
 
-    def __init__(self, config_entry: ConfigEntry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
         self._interface_options = {}
@@ -103,7 +100,7 @@ class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
             ROUTER
         ]
 
-        interfaces: List[InterfaceInfo] = await self.hass.async_add_executor_job(
+        interfaces: list[InterfaceInfo] = await self.hass.async_add_executor_job(
             router.client.get_interfaces
         )
 

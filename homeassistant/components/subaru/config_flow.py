@@ -16,7 +16,6 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN, CONF_US
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-# pylint: disable=unused-import
 from .const import CONF_COUNTRY, CONF_UPDATE_ENABLED, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,19 +26,18 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Subaru."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
-    config_data = {CONF_PIN: None}
-    controller = None
+
+    def __init__(self):
+        """Initialize config flow."""
+        self.config_data = {CONF_PIN: None}
+        self.controller = None
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
         error = None
 
         if user_input:
-            if user_input[CONF_USERNAME] in [
-                entry.data[CONF_USERNAME] for entry in self._async_current_entries()
-            ]:
-                return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
 
             try:
                 await self.validate_login_creds(user_input)
@@ -105,9 +103,8 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             device_name=device_name,
             country=data[CONF_COUNTRY],
         )
-        _LOGGER.debug("Using subarulink %s", self.controller.version)
         _LOGGER.debug(
-            "Setting up first time connection to Subuaru API.  This may take up to 20 seconds."
+            "Setting up first time connection to Subaru API.  This may take up to 20 seconds"
         )
         if await self.controller.connect():
             _LOGGER.debug("Successfully authenticated and authorized with Subaru API")
@@ -116,28 +113,27 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_pin(self, user_input=None):
         """Handle second part of config flow, if required."""
         error = None
-        if user_input:
-            if self.controller.update_saved_pin(user_input[CONF_PIN]):
-                try:
-                    vol.Match(r"[0-9]{4}")(user_input[CONF_PIN])
-                    await self.controller.test_pin()
-                except vol.Invalid:
-                    error = {"base": "bad_pin_format"}
-                except InvalidPIN:
-                    error = {"base": "incorrect_pin"}
-                else:
-                    _LOGGER.debug("PIN successfully tested")
-                    self.config_data.update(user_input)
-                    return self.async_create_entry(
-                        title=self.config_data[CONF_USERNAME], data=self.config_data
-                    )
+        if user_input and self.controller.update_saved_pin(user_input[CONF_PIN]):
+            try:
+                vol.Match(r"[0-9]{4}")(user_input[CONF_PIN])
+                await self.controller.test_pin()
+            except vol.Invalid:
+                error = {"base": "bad_pin_format"}
+            except InvalidPIN:
+                error = {"base": "incorrect_pin"}
+            else:
+                _LOGGER.debug("PIN successfully tested")
+                self.config_data.update(user_input)
+                return self.async_create_entry(
+                    title=self.config_data[CONF_USERNAME], data=self.config_data
+                )
         return self.async_show_form(step_id="pin", data_schema=PIN_SCHEMA, errors=error)
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for Subaru."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 

@@ -226,9 +226,9 @@ async def test_valid_credential(mock_get, mock_post, hass):
     }
     scanner = get_scanner(hass, config)
     assert scanner is not None
-    assert 2 == len(scanner.scan_devices())
-    assert "Device1" == scanner.get_device_name("23:83:BF:F6:38:A0")
-    assert "Device2" == scanner.get_device_name("1D:98:EC:5E:D5:A6")
+    assert len(scanner.scan_devices()) == 2
+    assert scanner.get_device_name("23:83:BF:F6:38:A0") == "Device1"
+    assert scanner.get_device_name("1D:98:EC:5E:D5:A6") == "Device2"
 
 
 @patch("requests.get", side_effect=mocked_requests)
@@ -250,6 +250,6 @@ async def test_token_timed_out(mock_get, mock_post, hass):
     }
     scanner = get_scanner(hass, config)
     assert scanner is not None
-    assert 2 == len(scanner.scan_devices())
-    assert "Device1" == scanner.get_device_name("23:83:BF:F6:38:A0")
-    assert "Device2" == scanner.get_device_name("1D:98:EC:5E:D5:A6")
+    assert len(scanner.scan_devices()) == 2
+    assert scanner.get_device_name("23:83:BF:F6:38:A0") == "Device1"
+    assert scanner.get_device_name("1D:98:EC:5E:D5:A6") == "Device2"

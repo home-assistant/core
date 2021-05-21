@@ -1,11 +1,12 @@
 {
     "config": {
         "abort": {
-            "unknown": "V\u00e1ratlan hiba"
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
-            "invalid_auth": "\u00c9rv\u00e9nytelen autentik\u00e1ci\u00f3",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "invalid_zone": "\u00c9rv\u00e9nytelen z\u00f3na"
         },
         "flow_title": "Cloudflare: {name}",

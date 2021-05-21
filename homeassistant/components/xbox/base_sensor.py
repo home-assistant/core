@@ -1,5 +1,5 @@
 """Base Sensor for the Xbox Integration."""
-from typing import Optional
+from __future__ import annotations
 
 from yarl import URL
 
@@ -12,7 +12,9 @@ from .const import DOMAIN
 class XboxBaseSensorEntity(CoordinatorEntity):
     """Base Sensor for the Xbox Integration."""
 
-    def __init__(self, coordinator: XboxUpdateCoordinator, xuid: str, attribute: str):
+    def __init__(
+        self, coordinator: XboxUpdateCoordinator, xuid: str, attribute: str
+    ) -> None:
         """Initialize Xbox binary sensor."""
         super().__init__(coordinator)
         self.xuid = xuid
@@ -24,7 +26,7 @@ class XboxBaseSensorEntity(CoordinatorEntity):
         return f"{self.xuid}_{self.attribute}"
 
     @property
-    def data(self) -> Optional[PresenceData]:
+    def data(self) -> PresenceData | None:
         """Return coordinator data for this console."""
         return self.coordinator.data.presence.get(self.xuid)
 

@@ -19,7 +19,7 @@ from sqlalchemy import (
     Text,
     distinct,
 )
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 
 from homeassistant.core import Event, EventOrigin, State, split_entity_id
 from homeassistant.helpers.json import JSONEncoder
@@ -170,5 +170,5 @@ def _process_timestamp(ts):
     if ts is None:
         return None
     if ts.tzinfo is None:
-        return dt_util.UTC.localize(ts)
+        return ts.replace(tzinfo=dt_util.UTC)
     return dt_util.as_utc(ts)

@@ -6,6 +6,7 @@ This will return a request id that has to be used for future calls.
 A callback has to be provided to `request_config` which will be called when
 the user has submitted configuration information.
 """
+from contextlib import suppress
 import functools as ft
 
 from homeassistant.const import (
@@ -96,11 +97,8 @@ def request_config(hass, *args, **kwargs):
 @async_callback
 def async_notify_errors(hass, request_id, error):
     """Add errors to a config request."""
-    try:
+    with suppress(KeyError):  # If request_id does not exist
         hass.data[DATA_REQUESTS][request_id].async_notify_errors(request_id, error)
-    except KeyError:
-        # If request_id does not exist
-        pass
 
 
 @bind_hass
@@ -115,11 +113,8 @@ def notify_errors(hass, request_id, error):
 @async_callback
 def async_request_done(hass, request_id):
     """Mark a configuration request as done."""
-    try:
+    with suppress(KeyError):  # If request_id does not exist
         hass.data[DATA_REQUESTS].pop(request_id).async_request_done(request_id)
-    except KeyError:
-        # If request_id does not exist
-        pass
 
 
 @bind_hass

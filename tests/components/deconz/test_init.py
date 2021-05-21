@@ -1,7 +1,6 @@
 """Test deCONZ component setup process."""
 
 import asyncio
-from copy import deepcopy
 from unittest.mock import patch
 
 from homeassistant.components.deconz import (
@@ -16,7 +15,7 @@ from homeassistant.components.deconz.const import (
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
@@ -71,15 +70,14 @@ async def test_setup_entry_multiple_gateways(hass, aioclient_mock):
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
     aioclient_mock.clear_requests()
 
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    data["config"]["bridgeid"] = "01234E56789B"
-    config_entry2 = await setup_deconz_integration(
-        hass,
-        aioclient_mock,
-        get_state_response=data,
-        entry_id="2",
-        unique_id="01234E56789B",
-    )
+    data = {"config": {"bridgeid": "01234E56789B"}}
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry2 = await setup_deconz_integration(
+            hass,
+            aioclient_mock,
+            entry_id="2",
+            unique_id="01234E56789B",
+        )
 
     assert len(hass.data[DECONZ_DOMAIN]) == 2
     assert hass.data[DECONZ_DOMAIN][config_entry.unique_id].master
@@ -100,15 +98,14 @@ async def test_unload_entry_multiple_gateways(hass, aioclient_mock):
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
     aioclient_mock.clear_requests()
 
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    data["config"]["bridgeid"] = "01234E56789B"
-    config_entry2 = await setup_deconz_integration(
-        hass,
-        aioclient_mock,
-        get_state_response=data,
-        entry_id="2",
-        unique_id="01234E56789B",
-    )
+    data = {"config": {"bridgeid": "01234E56789B"}}
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry2 = await setup_deconz_integration(
+            hass,
+            aioclient_mock,
+            entry_id="2",
+            unique_id="01234E56789B",
+        )
 
     assert len(hass.data[DECONZ_DOMAIN]) == 2
 
@@ -133,7 +130,7 @@ async def test_update_group_unique_id(hass):
         },
     )
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
     # Create entity entry to migrate to new unique ID
     registry.async_get_or_create(
         LIGHT_DOMAIN,
@@ -154,12 +151,8 @@ async def test_update_group_unique_id(hass):
     await async_update_group_unique_id(hass, entry)
 
     assert entry.data == {CONF_API_KEY: "1", CONF_HOST: "2", CONF_PORT: "3"}
-
-    old_entity = registry.async_get(f"{LIGHT_DOMAIN}.old")
-    assert old_entity.unique_id == f"{new_unique_id}-OLD"
-
-    new_entity = registry.async_get(f"{LIGHT_DOMAIN}.new")
-    assert new_entity.unique_id == f"{new_unique_id}-NEW"
+    assert registry.async_get(f"{LIGHT_DOMAIN}.old").unique_id == f"{new_unique_id}-OLD"
+    assert registry.async_get(f"{LIGHT_DOMAIN}.new").unique_id == f"{new_unique_id}-NEW"
 
 
 async def test_update_group_unique_id_no_legacy_group_id(hass):
@@ -172,7 +165,7 @@ async def test_update_group_unique_id_no_legacy_group_id(hass):
         data={},
     )
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
     # Create entity entry to migrate to new unique ID
     registry.async_get_or_create(
         LIGHT_DOMAIN,
@@ -184,5 +177,4 @@ async def test_update_group_unique_id_no_legacy_group_id(hass):
 
     await async_update_group_unique_id(hass, entry)
 
-    old_entity = registry.async_get(f"{LIGHT_DOMAIN}.old")
-    assert old_entity.unique_id == f"{old_unique_id}-OLD"
+    assert registry.async_get(f"{LIGHT_DOMAIN}.old").unique_id == f"{old_unique_id}-OLD"

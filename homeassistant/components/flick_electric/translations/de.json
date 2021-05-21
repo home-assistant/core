@@ -12,9 +12,11 @@
             "user": {
                 "data": {
                     "client_id": "Client-ID (optional)",
+                    "client_secret": "Client Secret (optional)",
                     "password": "Passwort",
                     "username": "Benutzername"
-                }
+                },
+                "title": "Flick Anmeldedaten"
             }
         }
     }

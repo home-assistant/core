@@ -1,10 +1,13 @@
 """Provide functionality to record stream."""
+from __future__ import annotations
+
+from collections import deque
 import logging
 import os
 import threading
-from typing import Deque, List
 
 import av
+from av.container import OutputContainer
 
 from homeassistant.core import HomeAssistant, callback
 
@@ -19,7 +22,7 @@ def async_setup_recorder(hass):
     """Only here so Provider Registry works."""
 
 
-def recorder_save_worker(file_out: str, segments: Deque[Segment]):
+def recorder_save_worker(file_out: str, segments: deque[Segment]):
     """Handle saving stream."""
 
     if not segments:
@@ -29,8 +32,8 @@ def recorder_save_worker(file_out: str, segments: Deque[Segment]):
     if not os.path.exists(os.path.dirname(file_out)):
         os.makedirs(os.path.dirname(file_out), exist_ok=True)
 
-    pts_adjuster = {"video": None, "audio": None}
-    output = None
+    pts_adjuster: dict[str, int | None] = {"video": None, "audio": None}
+    output: OutputContainer | None = None
     output_v = None
     output_a = None
 
@@ -98,7 +101,8 @@ def recorder_save_worker(file_out: str, segments: Deque[Segment]):
 
         source.close()
 
-    output.close()
+    if output is not None:
+        output.close()
 
 
 @PROVIDERS.register("recorder")
@@ -115,7 +119,7 @@ class RecorderOutput(StreamOutput):
         """Return provider name."""
         return "recorder"
 
-    def prepend(self, segments: List[Segment]) -> None:
+    def prepend(self, segments: list[Segment]) -> None:
         """Prepend segments to existing list."""
         self._segments.extendleft(reversed(segments))
 

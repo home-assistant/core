@@ -59,7 +59,7 @@ class WemoSwitch(WemoSubscriptionEntity, SwitchEntity):
         self._mode_string = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {}
         if self.maker_params:

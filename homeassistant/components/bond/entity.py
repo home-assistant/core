@@ -1,16 +1,17 @@
 """An abstract class common to all Bond entities."""
+from __future__ import annotations
+
 from abc import abstractmethod
 from asyncio import Lock, TimeoutError as AsyncIOTimeoutError
 from datetime import timedelta
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from aiohttp import ClientError
 from bond_api import BPUPSubscriptions
 
-from homeassistant.const import ATTR_NAME
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN
@@ -29,8 +30,8 @@ class BondEntity(Entity):
         hub: BondHub,
         device: BondDevice,
         bpup_subs: BPUPSubscriptions,
-        sub_device: Optional[str] = None,
-    ):
+        sub_device: str | None = None,
+    ) -> None:
         """Initialize entity with API and device info."""
         self._hub = hub
         self._device = device
@@ -38,11 +39,11 @@ class BondEntity(Entity):
         self._sub_device = sub_device
         self._available = True
         self._bpup_subs = bpup_subs
-        self._update_lock: Optional[Lock] = None
+        self._update_lock: Lock | None = None
         self._initialized = False
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Get unique ID for the entity."""
         hub_id = self._hub.bond_id
         device_id = self._device_id
@@ -50,7 +51,7 @@ class BondEntity(Entity):
         return f"{hub_id}_{device_id}{sub_device_id}"
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Get entity name."""
         if self._sub_device:
             sub_device_name = self._sub_device.replace("_", " ").title()
@@ -63,18 +64,24 @@ class BondEntity(Entity):
         return False
 
     @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
+    def device_info(self) -> DeviceInfo:
         """Get a an HA device representing this Bond controlled device."""
-        device_info = {
-            ATTR_NAME: self.name,
+        device_info: DeviceInfo = {
             "manufacturer": self._hub.make,
-            "identifiers": {(DOMAIN, self._hub.bond_id, self._device.device_id)},
-            "suggested_area": self._device.location,
-            "via_device": (DOMAIN, self._hub.bond_id),
+            # type ignore: tuple items should not be Optional
+            "identifiers": {(DOMAIN, self._hub.bond_id, self._device.device_id)},  # type: ignore[arg-type]
         }
+        if self.name is not None:
+            device_info["name"] = self.name
+        if self._hub.bond_id is not None:
+            device_info["via_device"] = (DOMAIN, self._hub.bond_id)
+        if self._device.location is not None:
+            device_info["suggested_area"] = self._device.location
         if not self._hub.is_bridge:
-            device_info["model"] = self._hub.model
-            device_info["sw_version"] = self._hub.fw_ver
+            if self._hub.model is not None:
+                device_info["model"] = self._hub.model
+            if self._hub.fw_ver is not None:
+                device_info["sw_version"] = self._hub.fw_ver
         else:
             model_data = []
             if self._device.branding_profile:
@@ -102,7 +109,12 @@ class BondEntity(Entity):
 
     async def _async_update_if_bpup_not_alive(self, *_: Any) -> None:
         """Fetch via the API if BPUP is not alive."""
-        if self._bpup_subs.alive and self._initialized and self._available:
+        if (
+            self.hass.is_stopping
+            or self._bpup_subs.alive
+            and self._initialized
+            and self._available
+        ):
             return
 
         assert self._update_lock is not None
@@ -158,7 +170,6 @@ class BondEntity(Entity):
         await super().async_added_to_hass()
         self._update_lock = Lock()
         self._bpup_subs.subscribe(self._device_id, self._async_bpup_callback)
-        assert self.hass is not None
         self.async_on_remove(
             async_track_time_interval(
                 self.hass, self._async_update_if_bpup_not_alive, _FALLBACK_SCAN_INTERVAL

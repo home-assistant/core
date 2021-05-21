@@ -1,4 +1,5 @@
 """Support for the sensors in a GreenEye Monitor."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONF_NAME,
     CONF_SENSOR_TYPE,
@@ -9,7 +10,6 @@ from homeassistant.const import (
     TIME_SECONDS,
     VOLT,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import (
     CONF_COUNTED_QUANTITY,
@@ -85,7 +85,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class GEMSensor(Entity):
+class GEMSensor(SensorEntity):
     """Base class for GreenEye Monitor sensors."""
 
     def __init__(self, monitor_serial_number, name, sensor_type, number):
@@ -175,7 +175,7 @@ class CurrentSensor(GEMSensor):
         return self._sensor.watts
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return total wattseconds in the state dictionary."""
         if not self._sensor:
             return None
@@ -242,7 +242,7 @@ class PulseCounter(GEMSensor):
         return f"{self._counted_quantity}/{self._time_unit}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return total pulses in the data dictionary."""
         if not self._sensor:
             return None

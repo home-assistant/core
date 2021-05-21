@@ -9,6 +9,7 @@ import pytest
 import homeassistant.components.sensor as sensor
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
 import homeassistant.core as ha
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -36,6 +37,7 @@ from .test_common import (
     help_test_entity_device_info_update,
     help_test_entity_device_info_with_connection,
     help_test_entity_device_info_with_identifier,
+    help_test_entity_disabled_by_default,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
     help_test_setting_attribute_via_mqtt_json_message,
@@ -379,6 +381,51 @@ async def test_valid_device_class(hass, mqtt_mock):
     assert "device_class" not in state.attributes
 
 
+async def test_invalid_state_class(hass, mqtt_mock):
+    """Test state_class option with invalid value."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "state_class": "foobarnotreal",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is None
+
+
+async def test_valid_state_class(hass, mqtt_mock):
+    """Test state_class option with valid values."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "mqtt",
+                    "name": "Test 1",
+                    "state_topic": "test-topic",
+                    "state_class": "measurement",
+                },
+                {"platform": "mqtt", "name": "Test 2", "state_topic": "test-topic"},
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_1")
+    assert state.attributes["state_class"] == "measurement"
+    state = hass.states.get("sensor.test_2")
+    assert "state_class" not in state.attributes
+
+
 async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
@@ -574,7 +621,7 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 
 async def test_entity_device_info_with_hub(hass, mqtt_mock):
     """Test MQTT sensor device registry integration."""
-    registry = await hass.helpers.device_registry.async_get_registry()
+    registry = dr.async_get(hass)
     hub = registry.async_get_or_create(
         config_entry_id="123",
         connections=set(),
@@ -631,3 +678,38 @@ async def test_entity_debug_info_update_entity_id(hass, mqtt_mock):
     await help_test_entity_debug_info_update_entity_id(
         hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
     )
+
+
+async def test_entity_disabled_by_default(hass, mqtt_mock):
+    """Test entity disabled by default."""
+    await help_test_entity_disabled_by_default(
+        hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+async def test_value_template_with_entity_id(hass, mqtt_mock):
+    """Test the access to attributes in value_template via the entity_id."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "unit_of_measurement": "fav unit",
+                "value_template": '\
+                {% if state_attr(entity_id, "friendly_name") == "test" %} \
+                    {{ value | int + 1 }} \
+                {% else %} \
+                    {{ value }} \
+                {% endif %}',
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "test-topic", "100")
+    state = hass.states.get("sensor.test")
+
+    assert state.state == "101"

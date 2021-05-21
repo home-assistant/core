@@ -24,7 +24,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     ENTITY_NAME,
@@ -45,8 +45,8 @@ def async_get_device(state=Dyson360EyeMode.FULL_CLEAN_RUNNING) -> Dyson360Eye:
 
 async def test_state(hass: HomeAssistant, device: Dyson360Eye) -> None:
     """Test the state of the vacuum."""
-    er = await entity_registry.async_get_registry(hass)
-    assert er.async_get(ENTITY_ID).unique_id == SERIAL
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(ENTITY_ID).unique_id == SERIAL
 
     state = hass.states.get(ENTITY_ID)
     assert state.name == NAME

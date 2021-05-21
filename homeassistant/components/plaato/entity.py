@@ -68,7 +68,7 @@ class PlaatoEntity(entity.Entity):
         return device_info
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the monitored installation."""
         if self._attributes:
             return {

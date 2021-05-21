@@ -1,5 +1,4 @@
 """The airvisual component."""
-import asyncio
 from datetime import timedelta
 from math import ceil
 
@@ -11,7 +10,6 @@ from pyairvisual.errors import (
     NodeProError,
 )
 
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -23,7 +21,7 @@ from homeassistant.const import (
     CONF_STATE,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -80,9 +78,9 @@ def async_get_cloud_api_update_interval(hass, api_key, num_consumers):
     This will shift based on the number of active consumers, thus keeping the user
     under the monthly API limit.
     """
-    # Assuming 10,000 calls per month and a "smallest possible month" of 28 days; note
+    # Assuming 10,000 calls per month and a "largest possible month" of 31 days; note
     # that we give a buffer of 1500 API calls for any drift, restarts, etc.:
-    minutes_between_api_calls = ceil(1 / (8500 / 28 / 24 / 60 / num_consumers))
+    minutes_between_api_calls = ceil(num_consumers * 31 * 24 * 60 / 8500)
 
     LOGGER.debug(
         "Leveling API key usage (%s): %s consumers, %s minutes between updates",
@@ -207,27 +205,8 @@ async def async_setup_entry(hass, config_entry):
 
             try:
                 return await api_coro
-            except (InvalidKeyError, KeyExpiredError):
-                matching_flows = [
-                    flow
-                    for flow in hass.config_entries.flow.async_progress()
-                    if flow["context"]["source"] == SOURCE_REAUTH
-                    and flow["context"]["unique_id"] == config_entry.unique_id
-                ]
-
-                if not matching_flows:
-                    hass.async_create_task(
-                        hass.config_entries.flow.async_init(
-                            DOMAIN,
-                            context={
-                                "source": SOURCE_REAUTH,
-                                "unique_id": config_entry.unique_id,
-                            },
-                            data=config_entry.data,
-                        )
-                    )
-
-                return {}
+            except (InvalidKeyError, KeyExpiredError) as ex:
+                raise ConfigEntryAuthFailed from ex
             except AirVisualError as err:
                 raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
@@ -241,10 +220,6 @@ async def async_setup_entry(hass, config_entry):
             # update interval:
             update_interval=timedelta(minutes=5),
             update_method=async_update_data,
-        )
-
-        async_sync_geo_coordinator_update_intervals(
-            hass, config_entry.data[CONF_API_KEY]
         )
 
         # Only geography-based entries have options:
@@ -272,16 +247,17 @@ async def async_setup_entry(hass, config_entry):
             update_method=async_update_data,
         )
 
-    await coordinator.async_refresh()
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id] = coordinator
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
+    # Reassess the interval between 2 server requests
+    if CONF_API_KEY in config_entry.data:
+        async_sync_geo_coordinator_update_intervals(
+            hass, config_entry.data[CONF_API_KEY]
         )
+
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
@@ -330,23 +306,16 @@ async def async_migrate_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload an AirVisual config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(config_entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
     )
+
     if unload_ok:
         hass.data[DOMAIN][DATA_COORDINATOR].pop(config_entry.entry_id)
         remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(config_entry.entry_id)
         remove_listener()
 
-        if (
-            config_entry.data[CONF_INTEGRATION_TYPE]
-            == INTEGRATION_TYPE_GEOGRAPHY_COORDS
-        ):
+        if CONF_API_KEY in config_entry.data:
             # Re-calculate the update interval period for any remaining consumers of
             # this API key:
             async_sync_geo_coordinator_update_intervals(
@@ -372,7 +341,7 @@ class AirVisualEntity(CoordinatorEntity):
         self._unit = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return self._attrs
 

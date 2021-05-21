@@ -1,14 +1,16 @@
 """Support for Tasmota sensors."""
-from typing import Optional
+from __future__ import annotations
 
 from hatasmota import const as hc, status_sensor
 
 from homeassistant.components import sensor
+from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
@@ -27,6 +29,7 @@ from homeassistant.const import (
     POWER_WATT,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
@@ -37,13 +40,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
 from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
 
 DEVICE_CLASS = "device_class"
+STATE_CLASS = "state_class"
 ICON = "icon"
 
 # A Tasmota sensor type may be mapped to either a device class or an icon, not both
@@ -52,7 +55,7 @@ SENSOR_DEVICE_CLASS_ICON_MAP = {
     hc.SENSOR_APPARENT_POWERUSAGE: {DEVICE_CLASS: DEVICE_CLASS_POWER},
     hc.SENSOR_BATTERY: {DEVICE_CLASS: DEVICE_CLASS_BATTERY},
     hc.SENSOR_CCT: {ICON: "mdi:temperature-kelvin"},
-    hc.SENSOR_CO2: {ICON: "mdi:molecule-co2"},
+    hc.SENSOR_CO2: {DEVICE_CLASS: DEVICE_CLASS_CO2},
     hc.SENSOR_COLOR_BLUE: {ICON: "mdi:palette"},
     hc.SENSOR_COLOR_GREEN: {ICON: "mdi:palette"},
     hc.SENSOR_COLOR_RED: {ICON: "mdi:palette"},
@@ -87,7 +90,10 @@ SENSOR_DEVICE_CLASS_ICON_MAP = {
     hc.SENSOR_STATUS_SIGNAL: {DEVICE_CLASS: DEVICE_CLASS_SIGNAL_STRENGTH},
     hc.SENSOR_STATUS_RSSI: {ICON: "mdi:access-point"},
     hc.SENSOR_STATUS_SSID: {ICON: "mdi:access-point-network"},
-    hc.SENSOR_TEMPERATURE: {DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE},
+    hc.SENSOR_TEMPERATURE: {
+        DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+        STATE_CLASS: STATE_CLASS_MEASUREMENT,
+    },
     hc.SENSOR_TODAY: {DEVICE_CLASS: DEVICE_CLASS_POWER},
     hc.SENSOR_TOTAL: {DEVICE_CLASS: DEVICE_CLASS_POWER},
     hc.SENSOR_TOTAL_START_TIME: {ICON: "mdi:progress-clock"},
@@ -112,6 +118,7 @@ SENSOR_UNIT_MAP = {
     hc.POWER_WATT: POWER_WATT,
     hc.PRESSURE_HPA: PRESSURE_HPA,
     hc.SIGNAL_STRENGTH_DECIBELS: SIGNAL_STRENGTH_DECIBELS,
+    hc.SIGNAL_STRENGTH_DECIBELS_MILLIWATT: SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     hc.SPEED_KILOMETERS_PER_HOUR: SPEED_KILOMETERS_PER_HOUR,
     hc.SPEED_METERS_PER_SECOND: SPEED_METERS_PER_SECOND,
     hc.SPEED_MILES_PER_HOUR: SPEED_MILES_PER_HOUR,
@@ -144,7 +151,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, Entity):
+class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
     """Representation of a Tasmota sensor."""
 
     def __init__(self, **kwds):
@@ -162,12 +169,20 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, Entity):
         self.async_write_ha_state()
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         class_or_icon = SENSOR_DEVICE_CLASS_ICON_MAP.get(
             self._tasmota_entity.quantity, {}
         )
         return class_or_icon.get(DEVICE_CLASS)
+
+    @property
+    def state_class(self) -> str | None:
+        """Return the state class of the sensor."""
+        class_or_icon = SENSOR_DEVICE_CLASS_ICON_MAP.get(
+            self._tasmota_entity.quantity, {}
+        )
+        return class_or_icon.get(STATE_CLASS)
 
     @property
     def entity_registry_enabled_default(self) -> bool:

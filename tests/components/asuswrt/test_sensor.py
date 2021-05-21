@@ -19,6 +19,7 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -64,7 +65,7 @@ def mock_controller_connect():
 
 async def test_sensors(hass, connect):
     """Test creating an AsusWRT sensor."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
 
     # init config entry
     config_entry = MockConfigEntry(

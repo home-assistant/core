@@ -3,5 +3,6 @@
   "name": "Nissan Leaf",
   "documentation": "https://www.home-assistant.io/integrations/nissan_leaf",
   "requirements": ["pycarwings2==2.10"],
-  "codeowners": ["@filcole"]
+  "codeowners": ["@filcole"],
+  "iot_class": "cloud_polling"
 }

@@ -1,7 +1,44 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "unsupported_firmware": "Az eszk\u00f6z nem t\u00e1mogatott firmware verzi\u00f3t haszn\u00e1l."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Hoszt"
+                },
+                "description": "A be\u00e1ll\u00edt\u00e1s el\u0151tt az akkumul\u00e1toros eszk\u00f6z\u00f6ket fel kell \u00e9breszteni, most egy rajta l\u00e9v\u0151 gombbal fel\u00e9bresztheted az eszk\u00f6zt."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Gomb",
+            "button1": "Els\u0151 gomb",
+            "button2": "M\u00e1sodik gomb",
+            "button3": "Harmadik gomb"
+        },
+        "trigger_type": {
+            "double": "{subtype} dupla kattint\u00e1s",
+            "long": "{subtype} hosszan nyomva",
+            "long_single": "{subtype} hosszan nyomva, majd egy kattint\u00e1s",
+            "single": "{subtype} egy kattint\u00e1s",
+            "single_long": "{subtype} egy kattint\u00e1s, majd hosszan nyomva",
+            "triple": "{subtype} tripla kattint\u00e1s"
         }
     }
 }

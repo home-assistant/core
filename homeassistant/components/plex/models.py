@@ -1,4 +1,6 @@
 """Models to represent various Plex objects used in the integration."""
+import logging
+
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
@@ -7,7 +9,15 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.util import dt as dt_util
 
-LIVE_TV_SECTION = "-4"
+LIVE_TV_SECTION = "Live TV"
+TRANSIENT_SECTION = "Preroll"
+UNKNOWN_SECTION = "Unknown"
+SPECIAL_SECTIONS = {
+    -2: TRANSIENT_SECTION,
+    -4: LIVE_TV_SECTION,
+}
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class PlexSession:
@@ -66,8 +76,15 @@ class PlexSession:
         if media.duration:
             self.media_duration = int(media.duration / 1000)
 
-        if media.librarySectionID == LIVE_TV_SECTION:
-            self.media_library_title = "Live TV"
+        if media.librarySectionID in SPECIAL_SECTIONS:
+            self.media_library_title = SPECIAL_SECTIONS[media.librarySectionID]
+        elif media.librarySectionID < 1:
+            self.media_library_title = UNKNOWN_SECTION
+            _LOGGER.warning(
+                "Unknown library section ID (%s) for title '%s', please create an issue",
+                media.librarySectionID,
+                media.title,
+            )
         else:
             self.media_library_title = (
                 media.section().title if media.librarySectionID is not None else ""
@@ -115,7 +132,7 @@ class PlexSession:
         """Get the image URL from a media object."""
         thumb_url = media.thumbUrl
         if media.type == "episode" and not self.plex_server.option_use_episode_art:
-            if media.librarySectionID == LIVE_TV_SECTION:
+            if SPECIAL_SECTIONS.get(media.librarySectionID) == LIVE_TV_SECTION:
                 thumb_url = media.grandparentThumb
             else:
                 thumb_url = media.url(media.grandparentThumb)

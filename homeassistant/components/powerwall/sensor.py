@@ -3,6 +3,7 @@ import logging
 
 from tesla_powerwall import MeterType
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_BATTERY, DEVICE_CLASS_POWER, PERCENTAGE
 
 from .const import (
@@ -10,6 +11,7 @@ from .const import (
     ATTR_ENERGY_IMPORTED,
     ATTR_FREQUENCY,
     ATTR_INSTANT_AVERAGE_VOLTAGE,
+    ATTR_INSTANT_TOTAL_CURRENT,
     ATTR_IS_ACTIVE,
     DOMAIN,
     ENERGY_KILO_WATT,
@@ -59,7 +61,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class PowerWallChargeSensor(PowerWallEntity):
+class PowerWallChargeSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall charge sensor."""
 
     @property
@@ -88,7 +90,7 @@ class PowerWallChargeSensor(PowerWallEntity):
         return round(self.coordinator.data[POWERWALL_API_CHARGE])
 
 
-class PowerWallEnergySensor(PowerWallEntity):
+class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Energy sensor."""
 
     def __init__(
@@ -136,13 +138,14 @@ class PowerWallEnergySensor(PowerWallEntity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         meter = self.coordinator.data[POWERWALL_API_METERS].get_meter(self._meter)
         return {
             ATTR_FREQUENCY: round(meter.frequency, 1),
             ATTR_ENERGY_EXPORTED: meter.get_energy_exported(),
             ATTR_ENERGY_IMPORTED: meter.get_energy_imported(),
-            ATTR_INSTANT_AVERAGE_VOLTAGE: round(meter.avarage_voltage, 1),
+            ATTR_INSTANT_AVERAGE_VOLTAGE: round(meter.average_voltage, 1),
+            ATTR_INSTANT_TOTAL_CURRENT: meter.get_instant_total_current(),
             ATTR_IS_ACTIVE: meter.is_active(),
         }

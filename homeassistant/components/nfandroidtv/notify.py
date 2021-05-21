@@ -266,7 +266,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
             if local_path is not None:
                 # Check whether path is whitelisted in configuration.yaml
                 if self.is_allowed_path(local_path):
-                    return open(local_path, "rb")
+                    return open(local_path, "rb")  # pylint: disable=consider-using-with
                 _LOGGER.warning("'%s' is not secure to load data from!", local_path)
             else:
                 _LOGGER.warning("Neither URL nor local path found in params!")

@@ -11,17 +11,16 @@ and everything else custom is for the old api.  When configured with the
 new api via NestFlowHandler.register_sdm_api, the custom methods just
 invoke the AbstractOAuth2FlowHandler methods.
 """
+from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
 import logging
 import os
-from typing import Dict
 
 import async_timeout
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -65,7 +64,6 @@ class UnexpectedStateError(HomeAssistantError):
     """Raised when the config flow is invoked in a 'should not happen' case."""
 
 
-@config_entries.HANDLERS.register(DOMAIN)
 class NestFlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
@@ -73,7 +71,6 @@ class NestFlowHandler(
 
     DOMAIN = DOMAIN
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     def __init__(self):
         """Initialize NestFlowHandler."""
@@ -98,7 +95,7 @@ class NestFlowHandler(
         return logging.getLogger(__name__)
 
     @property
-    def extra_authorize_data(self) -> Dict[str, str]:
+    def extra_authorize_data(self) -> dict[str, str]:
         """Extra data that needs to be appended to the authorize url."""
         return {
             "scope": " ".join(SDM_SCOPES),
@@ -115,7 +112,7 @@ class NestFlowHandler(
         # Update existing config entry when in the reauth flow.  This
         # integration only supports one config entry so remove any prior entries
         # added before the "single_instance_allowed" check was added
-        existing_entries = self.hass.config_entries.async_entries(DOMAIN)
+        existing_entries = self._async_current_entries()
         if existing_entries:
             updated = False
             for entry in existing_entries:
@@ -151,7 +148,7 @@ class NestFlowHandler(
         """Handle a flow initialized by the user."""
         if self.is_sdm_api():
             # Reauth will update an existing entry
-            if self.hass.config_entries.async_entries(DOMAIN) and not self._reauth:
+            if self._async_current_entries() and not self._reauth:
                 return self.async_abort(reason="single_instance_allowed")
             return await super().async_step_user(user_input)
         return await self.async_step_init(user_input)
@@ -162,7 +159,7 @@ class NestFlowHandler(
 
         flows = self.hass.data.get(DATA_FLOW_IMPL, {})
 
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
         if not flows:
@@ -232,7 +229,7 @@ class NestFlowHandler(
         """Import existing auth from Nest."""
         assert not self.is_sdm_api(), "Step only supported for legacy API"
 
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
         config_path = info["nest_conf_path"]

@@ -1,8 +1,10 @@
 """The Philips TV integration."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 from haphilipsjs import ConnectionFailure, PhilipsTV
 
@@ -16,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -24,12 +25,6 @@ from .const import DOMAIN
 PLATFORMS = ["media_player", "remote"]
 
 LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Philips TV component."""
-    hass.data[DOMAIN] = {}
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -45,26 +40,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coordinator = PhilipsTVDataUpdateCoordinator(hass, tvapi)
 
     await coordinator.async_refresh()
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
@@ -74,17 +60,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class PluggableAction:
     """A pluggable action handler."""
 
-    def __init__(self, update: Callable[[], None]):
+    def __init__(self, update: Callable[[], None]) -> None:
         """Initialize."""
         self._update = update
-        self._actions: Dict[Any, AutomationActionType] = {}
+        self._actions: dict[Any, AutomationActionType] = {}
 
     def __bool__(self):
         """Return if we have something attached."""
         return bool(self._actions)
 
     @callback
-    def async_attach(self, action: AutomationActionType, variables: Dict[str, Any]):
+    def async_attach(self, action: AutomationActionType, variables: dict[str, Any]):
         """Attach a device trigger for turn on."""
 
         @callback
@@ -99,9 +85,7 @@ class PluggableAction:
 
         return _remove
 
-    async def async_run(
-        self, hass: HomeAssistantType, context: Optional[Context] = None
-    ):
+    async def async_run(self, hass: HomeAssistant, context: Context | None = None):
         """Run all turn on triggers."""
         for job, variables in self._actions.values():
             hass.async_run_hass_job(job, variables, context)
@@ -113,7 +97,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def __init__(self, hass, api: PhilipsTV) -> None:
         """Set up the coordinator."""
         self.api = api
-        self._notify_future: Optional[asyncio.Task] = None
+        self._notify_future: asyncio.Task | None = None
 
         @callback
         def _update_listeners():
@@ -134,8 +118,12 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _notify_task(self):
         while self.api.on and self.api.notify_change_supported:
-            if await self.api.notifyChange(130):
+            res = await self.api.notifyChange(130)
+            if res:
                 self.async_set_updated_data(None)
+            elif res is None:
+                LOGGER.debug("Aborting notify due to unexpected return")
+                break
 
     @callback
     def _async_notify_stop(self):

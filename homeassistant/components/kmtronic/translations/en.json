@@ -13,8 +13,7 @@
                 "data": {
                     "host": "Host",
                     "password": "Password",
-                    "username": "Username",
-                    "reverse": "Reverse switch logic (use NC)"
+                    "username": "Username"
                 }
             }
         }

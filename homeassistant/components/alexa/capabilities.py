@@ -1,6 +1,7 @@
 """Alexa capabilities."""
+from __future__ import annotations
+
 import logging
-from typing import List, Optional
 
 from homeassistant.components import (
     cover,
@@ -72,7 +73,7 @@ class AlexaCapability:
 
     supported_locales = {"en-US"}
 
-    def __init__(self, entity: State, instance: Optional[str] = None):
+    def __init__(self, entity: State, instance: str | None = None) -> None:
         """Initialize an Alexa capability."""
         self.entity = entity
         self.instance = instance
@@ -82,7 +83,7 @@ class AlexaCapability:
         raise NotImplementedError
 
     @staticmethod
-    def properties_supported() -> List[dict]:
+    def properties_supported() -> list[dict]:
         """Return what properties this entity supports."""
         return []
 
@@ -1918,6 +1919,10 @@ class AlexaEqualizerController(AlexaCapability):
         Either bands, mode or both can be specified. Only mode is supported at this time.
         """
         return [{"name": "mode"}]
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return True
 
     def get_property(self, name):
         """Read and return a property."""

@@ -20,7 +20,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import (
     HOST,
@@ -55,7 +56,7 @@ def mock_dummy_device_from_host_light_fan():
 
 
 async def test_loading_light_fan(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     dummy_device_from_host_light_fan,
 ) -> None:
     """Test the WiLight configuration entry loading."""
@@ -64,7 +65,7 @@ async def test_loading_light_fan(
     assert entry
     assert entry.unique_id == WILIGHT_ID
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     # First segment of the strip
     state = hass.states.get("fan.wl000000000099_2")
@@ -77,7 +78,7 @@ async def test_loading_light_fan(
 
 
 async def test_on_off_fan_state(
-    hass: HomeAssistantType, dummy_device_from_host_light_fan
+    hass: HomeAssistant, dummy_device_from_host_light_fan
 ) -> None:
     """Test the change of state of the fan switches."""
     await setup_integration(hass)
@@ -124,7 +125,7 @@ async def test_on_off_fan_state(
 
 
 async def test_speed_fan_state(
-    hass: HomeAssistantType, dummy_device_from_host_light_fan
+    hass: HomeAssistant, dummy_device_from_host_light_fan
 ) -> None:
     """Test the change of speed of the fan switches."""
     await setup_integration(hass)
@@ -170,7 +171,7 @@ async def test_speed_fan_state(
 
 
 async def test_direction_fan_state(
-    hass: HomeAssistantType, dummy_device_from_host_light_fan
+    hass: HomeAssistant, dummy_device_from_host_light_fan
 ) -> None:
     """Test the change of direction of the fan switches."""
     await setup_integration(hass)

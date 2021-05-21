@@ -5,7 +5,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import CONF_USERCODES, DOMAIN  # pylint: disable=unused-import
+from .const import CONF_USERCODES, DOMAIN
 
 CONF_LOCATION = "location"
 

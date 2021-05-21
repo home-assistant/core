@@ -1,13 +1,15 @@
 """Flo device object."""
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from typing import Any
 
 from aioflo.api import API
 from aioflo.errors import RequestError
 from async_timeout import timeout
 
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
@@ -18,16 +20,16 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     """Flo device object."""
 
     def __init__(
-        self, hass: HomeAssistantType, api_client: API, location_id: str, device_id: str
-    ):
+        self, hass: HomeAssistant, api_client: API, location_id: str, device_id: str
+    ) -> None:
         """Initialize the device."""
-        self.hass: HomeAssistantType = hass
+        self.hass: HomeAssistant = hass
         self.api_client: API = api_client
         self._flo_location_id: str = location_id
         self._flo_device_id: str = device_id
         self._manufacturer: str = "Flo by Moen"
-        self._device_information: Optional[Dict[str, Any]] = None
-        self._water_usage: Optional[Dict[str, Any]] = None
+        self._device_information: dict[str, Any] | None = None
+        self._water_usage: dict[str, Any] | None = None
         super().__init__(
             hass,
             LOGGER,

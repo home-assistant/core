@@ -10,6 +10,7 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER,
     STATE_CLOSED,
 )
+from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
@@ -19,7 +20,7 @@ DEVICE_ID = "cover.garage_door"
 async def test_entity_registry(hass):
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, COVER_DOMAIN)
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(DEVICE_ID)
     assert entry.unique_id == "61cbz3b542d2o33ed2fz02721bda3324"

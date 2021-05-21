@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit"
         },
+        "flow_title": "ZHA: {name}",
         "step": {
             "port_config": {
                 "data": {

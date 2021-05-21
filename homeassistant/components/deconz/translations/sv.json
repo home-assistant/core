@@ -13,8 +13,8 @@
         "flow_title": "deCONZ Zigbee gateway ({host})",
         "step": {
             "hassio_confirm": {
-                "description": "Vill du konfigurera Home Assistant att ansluta till den deCONZ-gateway som tillhandah\u00e5lls av Hass.io-till\u00e4gget {addon}?",
-                "title": "deCONZ Zigbee gateway via Hass.io till\u00e4gg"
+                "description": "Vill du konfigurera Home Assistant att ansluta till den deCONZ-gateway som tillhandah\u00e5lls av Supervisor-till\u00e4gget {addon}?",
+                "title": "deCONZ Zigbee gateway via Supervisor till\u00e4gg"
             },
             "link": {
                 "description": "L\u00e5s upp din deCONZ-gateway f\u00f6r att registrera dig med Home Assistant. \n\n 1. G\u00e5 till deCONZ-systeminst\u00e4llningarna \n 2. Tryck p\u00e5 \"L\u00e5s upp gateway\"-knappen",
@@ -35,6 +35,10 @@
             "button_2": "Andra knappen",
             "button_3": "Tredje knappen",
             "button_4": "Fj\u00e4rde knappen",
+            "button_5": "Femte knappen",
+            "button_6": "Sj\u00e4tte knappen",
+            "button_7": "Sjunde knappen",
+            "button_8": "\u00c5ttonde knappen",
             "close": "St\u00e4ng",
             "dim_down": "Dimma ned",
             "dim_up": "Dimma upp",

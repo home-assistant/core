@@ -33,7 +33,7 @@ class NexiaEntity(CoordinatorEntity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

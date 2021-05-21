@@ -1,5 +1,6 @@
 """Support for hunter douglas shades."""
 import asyncio
+from contextlib import suppress
 import logging
 
 from aiopvapi.helpers.constants import ATTR_POSITION1, ATTR_POSITION_DATA
@@ -65,12 +66,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
         # possible
         shade = PvShade(raw_shade, pv_request)
         name_before_refresh = shade.name
-        try:
+        with suppress(asyncio.TimeoutError):
             async with async_timeout.timeout(1):
                 await shade.refresh()
-        except asyncio.TimeoutError:
-            # Forced refresh is not required for setup
-            pass
+
         if ATTR_POSITION_DATA not in shade.raw_data:
             _LOGGER.info(
                 "The %s shade was skipped because it is missing position data",
@@ -111,7 +110,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         self._current_cover_position = MIN_POSITION
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
 

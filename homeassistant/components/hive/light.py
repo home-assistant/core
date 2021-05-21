@@ -12,19 +12,18 @@ from homeassistant.components.light import (
 )
 import homeassistant.util.color as color_util
 
-from . import ATTR_AVAILABLE, ATTR_MODE, DATA_HIVE, DOMAIN, HiveEntity, refresh_system
+from . import HiveEntity, refresh_system
+from .const import ATTR_MODE, DOMAIN
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Hive Light."""
-    if discovery_info is None:
-        return
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up Hive thermostat based on a config entry."""
 
-    hive = hass.data[DOMAIN].get(DATA_HIVE)
-    devices = hive.devices.get("light")
+    hive = hass.data[DOMAIN][entry.entry_id]
+    devices = hive.session.deviceList.get("light")
     entities = []
     if devices:
         for dev in devices:
@@ -43,7 +42,14 @@ class HiveDeviceLight(HiveEntity, LightEntity):
     @property
     def device_info(self):
         """Return device information."""
-        return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
+        return {
+            "identifiers": {(DOMAIN, self.device["device_id"])},
+            "name": self.device["device_name"],
+            "model": self.device["deviceData"]["model"],
+            "manufacturer": self.device["deviceData"]["manufacturer"],
+            "sw_version": self.device["deviceData"]["version"],
+            "via_device": (DOMAIN, self.device["parentDevice"]),
+        }
 
     @property
     def name(self):
@@ -56,10 +62,9 @@ class HiveDeviceLight(HiveEntity, LightEntity):
         return self.device["deviceData"]["online"]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Show Device Attributes."""
         return {
-            ATTR_AVAILABLE: self.attributes.get(ATTR_AVAILABLE),
             ATTR_MODE: self.attributes.get(ATTR_MODE),
         }
 
@@ -117,14 +122,14 @@ class HiveDeviceLight(HiveEntity, LightEntity):
             saturation = int(get_new_color[1])
             new_color = (hue, saturation, 100)
 
-        await self.hive.light.turn_on(
+        await self.hive.light.turnOn(
             self.device, new_brightness, new_color_temp, new_color
         )
 
     @refresh_system
     async def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        await self.hive.light.turn_off(self.device)
+        await self.hive.light.turnOff(self.device)
 
     @property
     def supported_features(self):
@@ -142,5 +147,5 @@ class HiveDeviceLight(HiveEntity, LightEntity):
     async def async_update(self):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
-        self.device = await self.hive.light.get_light(self.device)
+        self.device = await self.hive.light.getLight(self.device)
         self.attributes.update(self.device.get("attributes", {}))

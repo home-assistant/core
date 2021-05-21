@@ -56,7 +56,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         return self._data.get(ATTR_BATTERY)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific attributes."""
         attrs = {}
         for key in ATTR_KEYS:

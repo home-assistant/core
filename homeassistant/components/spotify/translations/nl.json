@@ -11,12 +11,17 @@
         },
         "step": {
             "pick_implementation": {
-                "title": "Kies Authenticatiemethode"
+                "title": "Kies een authenticatie methode"
             },
             "reauth_confirm": {
                 "description": "De Spotify integratie moet opnieuw worden geverifieerd met Spotify voor account: {account}",
                 "title": "Verifieer de integratie opnieuw"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Spotify API-eindpunt is bereikbaar"
         }
     }
 }

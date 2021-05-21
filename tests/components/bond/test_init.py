@@ -5,11 +5,7 @@ from aiohttp import ClientConnectionError, ClientResponseError
 from bond_api import DeviceType
 
 from homeassistant.components.bond.const import DOMAIN
-from homeassistant.config_entries import (
-    ENTRY_STATE_LOADED,
-    ENTRY_STATE_NOT_LOADED,
-    ENTRY_STATE_SETUP_RETRY,
-)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -47,7 +43,7 @@ async def test_async_setup_raises_entry_not_ready(hass: HomeAssistant):
 
     with patch_bond_version(side_effect=ClientConnectionError()):
         await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ENTRY_STATE_SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAssistant):
@@ -75,11 +71,11 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAss
         await hass.async_block_till_done()
 
     assert config_entry.entry_id in hass.data[DOMAIN]
-    assert config_entry.state == ENTRY_STATE_LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "test-bond-id"
 
     # verify hub device is registered correctly
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     hub = device_registry.async_get_device(identifiers={(DOMAIN, "test-bond-id")})
     assert hub.name == "bond-name"
     assert hub.manufacturer == "Olibra"
@@ -115,7 +111,7 @@ async def test_unload_config_entry(hass: HomeAssistant):
     await hass.async_block_till_done()
 
     assert config_entry.entry_id not in hass.data[DOMAIN]
-    assert config_entry.state == ENTRY_STATE_NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_old_identifiers_are_removed(hass: HomeAssistant):
@@ -127,7 +123,7 @@ async def test_old_identifiers_are_removed(hass: HomeAssistant):
 
     old_identifers = (DOMAIN, "device_id")
     new_identifiers = (DOMAIN, "test-bond-id", "device_id")
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={old_identifers},
@@ -159,7 +155,7 @@ async def test_old_identifiers_are_removed(hass: HomeAssistant):
         await hass.async_block_till_done()
 
     assert config_entry.entry_id in hass.data[DOMAIN]
-    assert config_entry.state == ENTRY_STATE_LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "test-bond-id"
 
     # verify the device info is cleaned up
@@ -201,10 +197,10 @@ async def test_smart_by_bond_device_suggested_area(hass: HomeAssistant):
         await hass.async_block_till_done()
 
     assert config_entry.entry_id in hass.data[DOMAIN]
-    assert config_entry.state == ENTRY_STATE_LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "test-bond-id"
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, "test-bond-id")})
     assert device is not None
     assert device.suggested_area == "Den"
@@ -247,10 +243,10 @@ async def test_bridge_device_suggested_area(hass: HomeAssistant):
         await hass.async_block_till_done()
 
     assert config_entry.entry_id in hass.data[DOMAIN]
-    assert config_entry.state == ENTRY_STATE_LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "test-bond-id"
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, "test-bond-id")})
     assert device is not None
     assert device.suggested_area == "Office"

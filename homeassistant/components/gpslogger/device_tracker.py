@@ -7,11 +7,10 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import HomeAssistantType
 
 from . import DOMAIN as GPL_DOMAIN, TRACKER_UPDATE
 from .const import (
@@ -23,7 +22,7 @@ from .const import (
 )
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, entry, async_add_entities):
     """Configure a dispatcher connection based on a config entry."""
 
     @callback
@@ -79,7 +78,7 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
         return self._battery
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific attributes."""
         return self._attributes
 

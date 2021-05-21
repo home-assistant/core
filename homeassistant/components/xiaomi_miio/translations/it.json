@@ -9,7 +9,7 @@
             "no_device_selected": "Nessun dispositivo selezionato, selezionare un dispositivo.",
             "unknown_device": "Il modello del dispositivo non \u00e8 noto, non \u00e8 possibile configurare il dispositivo utilizzando il flusso di configurazione."
         },
-        "flow_title": "Xiaomi Miio: {name}",
+        "flow_title": "{name}",
         "step": {
             "device": {
                 "data": {
@@ -18,7 +18,7 @@
                     "name": "Nome del dispositivo",
                     "token": "Token API"
                 },
-                "description": "Avrai bisogno dei 32 caratteri Token API , vedi https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token per istruzioni. Tieni presente che questa Token API \u00e8 diversa dalla chiave utilizzata dall'integrazione Xiaomi Aqara.",
+                "description": "Avrai bisogno dei 32 caratteri della Token API, vedi https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token per istruzioni. Tieni presente che questa Token API \u00e8 diversa dalla chiave utilizzata dall'integrazione Xiaomi Aqara.",
                 "title": "Connettiti a un dispositivo Xiaomi Miio o Xiaomi Gateway"
             },
             "gateway": {

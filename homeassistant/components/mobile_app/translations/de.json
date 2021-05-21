@@ -13,5 +13,6 @@
         "action_type": {
             "notify": "Sende eine Benachrichtigung"
         }
-    }
+    },
+    "title": "Mobile App"
 }

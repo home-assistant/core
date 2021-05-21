@@ -1,4 +1,5 @@
 """Support for Velbus sensors."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_POWER, ENERGY_KILO_WATT_HOUR
 
 from . import VelbusEntity
@@ -18,7 +19,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class VelbusSensor(VelbusEntity):
+class VelbusSensor(VelbusEntity, SensorEntity):
     """Representation of a sensor."""
 
     def __init__(self, module, channel, counter=False):

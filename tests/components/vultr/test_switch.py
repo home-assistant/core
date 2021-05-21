@@ -77,7 +77,7 @@ class TestVultrSwitchSetup(unittest.TestCase):
                 tested += 1
 
             device.update()
-            device_attrs = device.device_state_attributes
+            device_attrs = device.extra_state_attributes
 
             if device.subscription == "555555":
                 assert device.name == "Vultr Another Server"

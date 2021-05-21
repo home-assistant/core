@@ -263,7 +263,7 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the classifier attributes."""
         return {
             "matched_faces": self._matched,

@@ -25,8 +25,18 @@ purge:
       selector:
         boolean:
 
+    apply_filter:
+      name: Apply filter
+      description: Apply entity_id and event_type filter in addition to time based purge.
+      example: true
+      default: false
+      selector:
+        boolean:
+
 disable:
+  name: Disable
   description: Stop the recording of events and state changes
 
-enabled:
+enable:
+  name: Enable
   description: Start the recording of events and state changes
