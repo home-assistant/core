@@ -1,6 +1,8 @@
 """Alerts source for the news integration."""
+from __future__ import annotations
+
 import asyncio
-from typing import TYPE_CHECKING, Set
+from typing import TYPE_CHECKING
 
 from awesomeversion import AwesomeVersion
 
@@ -45,7 +47,7 @@ async def source_update_alerts(hass: HomeAssistant, manager: "NewsManager") -> N
 
         event_key = await manager.register_event(
             source=NewsSource.ALERTS,
-            id=alert[ATTR_CREATED],
+            event_id=alert[ATTR_CREATED],
             event_data={
                 ATTR_TITLE: alert[ATTR_TITLE],
                 ATTR_URL: alert[ATTR_ALERT_URL],
@@ -70,7 +72,7 @@ async def source_update_alerts(hass: HomeAssistant, manager: "NewsManager") -> N
     )
 
 
-def _alert_has_impact(alert: dict, configured_integrations: Set[str]) -> bool:
+def _alert_has_impact(alert: dict, configured_integrations: set) -> bool:
     """Check if an alert has impact."""
     if (
         ATTR_MIN in alert[ATTR_HOMEASSISTANT]
@@ -84,13 +86,11 @@ def _alert_has_impact(alert: dict, configured_integrations: Set[str]) -> bool:
         return False
 
     if not any(
-        [
-            integration
-            for integration in [
-                integration[ATTR_PACKAGE] for integration in alert[ATTR_INTEGRATIONS]
-            ]
-            if integration in configured_integrations
+        integration
+        for integration in [
+            integration[ATTR_PACKAGE] for integration in alert[ATTR_INTEGRATIONS]
         ]
+        if integration in configured_integrations
     ):
         return False
 

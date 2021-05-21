@@ -19,7 +19,9 @@ from .const import (
 from .manager import NewsManager
 
 
-async def register_news_event(hass: HomeAssistant, id: str, event_data: dict) -> None:
+async def register_news_event(
+    hass: HomeAssistant, event_id: str, event_data: dict
+) -> None:
     """Register a news event from other integrations."""
     _, integration, path = get_integration_frame({DOMAIN})
     if path == "custom_components/":
@@ -27,7 +29,7 @@ async def register_news_event(hass: HomeAssistant, id: str, event_data: dict) ->
         return
 
     manager: NewsManager = hass.data[DOMAIN]
-    await manager.register_event(f"integration.{integration}", id, event_data)
+    await manager.register_event(f"integration.{integration}", event_id, event_data)
 
 
 async def async_setup(hass: HomeAssistant, _) -> bool:
@@ -54,7 +56,6 @@ async def async_setup(hass: HomeAssistant, _) -> bool:
 
 
 @websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command({vol.Required("type"): "news"})
 def websocket_news(
     hass: HomeAssistant,

@@ -92,10 +92,10 @@ class NewsManager:
         await asyncio.gather(*enabled_sources)
 
     async def register_event(
-        self, source: str, id: str, event_data: dict
+        self, source: str, event_id: str, event_data: dict
     ) -> str | None:
         """Register a news event."""
-        event_key = f"{source}.{slugify(id)}".lower()
+        event_key = f"{source}.{slugify(event_id)}".lower()
         event_data = EVENT_DATA_SCHEMA(event_data)
 
         if (
