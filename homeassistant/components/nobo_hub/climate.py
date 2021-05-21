@@ -71,9 +71,9 @@ async def async_setup_platform(
     ip_address = config.get(CONF_IP_ADDRESS)
     if ip_address == "discover":
         _LOGGER.debug("discovering and connecting to %s", serial)
-        hub = nobo(serial=serial)
+        hub = nobo(serial=serial, loop=hass.loop)
     else:
-        _LOGGER.debug("connecting to %s:%s", ip_address, serial)
+        _LOGGER.debug("connecting to %s:%s", ip_address, serial, loop=hass.loop)
         hub = nobo(serial=serial, ip=ip_address, discover=False)
     return await _setup(hass, config, async_add_entities, hub)
 
