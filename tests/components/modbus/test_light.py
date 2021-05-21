@@ -19,7 +19,6 @@ from homeassistant.const import (
     CONF_ADDRESS,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
-    CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_LIGHTS,
     CONF_NAME,
@@ -53,7 +52,6 @@ from tests.common import mock_restore_cache
             CONF_SLAVE: 1,
             CONF_COMMAND_OFF: 0x00,
             CONF_COMMAND_ON: 0x01,
-            CONF_DEVICE_CLASS: "switch",
             CONF_VERIFY: {
                 CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                 CONF_ADDRESS: 1235,
@@ -66,7 +64,6 @@ from tests.common import mock_restore_cache
             CONF_SLAVE: 1,
             CONF_COMMAND_OFF: 0x00,
             CONF_COMMAND_ON: 0x01,
-            CONF_DEVICE_CLASS: "switch",
             CONF_VERIFY: {
                 CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
                 CONF_ADDRESS: 1235,
@@ -79,7 +76,6 @@ from tests.common import mock_restore_cache
             CONF_SLAVE: 1,
             CONF_COMMAND_OFF: 0x00,
             CONF_COMMAND_ON: 0x01,
-            CONF_DEVICE_CLASS: "switch",
             CONF_VERIFY: {
                 CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
                 CONF_ADDRESS: 1235,
@@ -92,7 +88,6 @@ from tests.common import mock_restore_cache
             CONF_SLAVE: 1,
             CONF_COMMAND_OFF: 0x00,
             CONF_COMMAND_ON: 0x01,
-            CONF_DEVICE_CLASS: "switch",
             CONF_VERIFY: None,
         },
     ],
