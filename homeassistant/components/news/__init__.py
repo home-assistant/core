@@ -70,13 +70,13 @@ def websocket_news(
 
 
 @websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "news/dismiss_event",
         vol.Required("event_key"): str,
     }
 )
+@websocket_api.async_response
 async def websocket_news_dismiss_event(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
@@ -89,13 +89,13 @@ async def websocket_news_dismiss_event(
 
 
 @websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "news/sources",
         vol.Required("sources"): SOURCES_SCHEMA,
     }
 )
+@websocket_api.async_response
 async def websocket_news_sources(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
@@ -112,8 +112,8 @@ async def websocket_news_sources(
 
 
 @websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command({vol.Required("type"): "news/subscribe"})
+@websocket_api.async_response
 async def websocket_subscribe(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
