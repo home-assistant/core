@@ -22,6 +22,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
+    VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
@@ -157,6 +158,67 @@ async def test_state(hass):
     state = hass.states.get("sensor.energy_bill_midpeak")
     assert state is not None
     assert state.state == "0.123"
+
+
+async def test_device_class(hass):
+    """Test utility device_class."""
+    config = {
+        "utility_meter": {
+            "energy_meter": {
+                "source": "sensor.energy",
+            },
+            "gas_meter": {
+                "source": "sensor.gas",
+            },
+        }
+    }
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    entity_id_energy = config[DOMAIN]["energy_meter"]["source"]
+    hass.states.async_set(
+        entity_id_energy, 2, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
+    )
+    entity_id_gas = config[DOMAIN]["gas_meter"]["source"]
+    hass.states.async_set(
+        entity_id_gas, 2, {ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_meter")
+    assert state is not None
+    assert state.state == "0"
+    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("state_class") == "measurement"
+
+    state = hass.states.get("sensor.gas_meter")
+    assert state is not None
+    assert state.state == "0"
+    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("state_class") == "measurement"
+
+    hass.states.async_set(
+        entity_id_energy, 3, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
+    )
+    hass.states.async_set(
+        entity_id_gas, 3, {ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_meter")
+    assert state is not None
+    assert state.state == "1"
+    assert state.attributes.get("device_class") == "energy"
+    assert state.attributes.get("state_class") == "measurement"
+
+    state = hass.states.get("sensor.gas_meter")
+    assert state is not None
+    assert state.state == "1"
+    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("state_class") == "measurement"
 
 
 async def test_restore_state(hass):
