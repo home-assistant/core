@@ -65,6 +65,8 @@ ICON = {
 }
 
 STATE_CLASS = {
+    Humidity: STATE_CLASS_MEASUREMENT,
+    Pressure: STATE_CLASS_MEASUREMENT,
     Temperature: STATE_CLASS_MEASUREMENT,
 }
 
