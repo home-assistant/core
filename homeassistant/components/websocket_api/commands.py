@@ -12,7 +12,7 @@ from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
 from homeassistant.bootstrap import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Context, Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceNotFound,
@@ -451,7 +451,9 @@ async def handle_subscribe_trigger(
     trigger_config = await trigger.async_validate_trigger_config(hass, msg["trigger"])
 
     @callback
-    def forward_triggers(variables: Any, context: Any = None) -> None:
+    def forward_triggers(
+        variables: dict[str, Any], context: Context | None = None
+    ) -> None:
         """Forward events to websocket."""
         message = messages.event_message(
             msg["id"], {"variables": variables, "context": context}
