@@ -100,6 +100,7 @@ FLOWS = [
     "hangouts",
     "harmony",
     "heos",
+    "hifiberry",
     "hisense_aehw4a1",
     "hive",
     "hlk_sw16",

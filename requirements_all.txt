@@ -1451,6 +1451,9 @@ pyhaversion==21.5.0
 # homeassistant.components.heos
 pyheos==0.7.2
 
+# homeassistant.components.hifiberry
+pyhifiberry==0.0.2
+
 # homeassistant.components.hikvision
 pyhik==0.2.8
 

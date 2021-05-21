@@ -149,6 +149,12 @@ ZEROCONF = {
             "domain": "xiaomi_miio"
         }
     ],
+    "_mpd._tcp.local.": [
+        {
+            "domain": "hifiberry",
+            "name": "music player*"
+        }
+    ],
     "_nut._tcp.local.": [
         {
             "domain": "nut"
