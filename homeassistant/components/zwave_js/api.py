@@ -11,7 +11,12 @@ import voluptuous as vol
 from zwave_js_server import dump
 from zwave_js_server.client import Client
 from zwave_js_server.const import CommandClass, LogLevel
-from zwave_js_server.exceptions import InvalidNewValue, NotFoundError, SetValueFailed
+from zwave_js_server.exceptions import (
+    BaseZwaveJSServerError,
+    InvalidNewValue,
+    NotFoundError,
+    SetValueFailed,
+)
 from zwave_js_server.firmware import begin_firmware_update
 from zwave_js_server.model.firmware import (
     FirmwareUpdateFinished,
@@ -1149,12 +1154,15 @@ class FirmwareUploadView(HomeAssistantView):
 
         uploaded_file: web_request.FileField = data["file"]
 
-        await begin_firmware_update(
-            entry.data[CONF_URL],
-            node,
-            uploaded_file.filename,
-            await hass.async_add_executor_job(uploaded_file.file.read),
-            async_get_clientsession(hass),
-        )
+        try:
+            await begin_firmware_update(
+                entry.data[CONF_URL],
+                node,
+                uploaded_file.filename,
+                await hass.async_add_executor_job(uploaded_file.file.read),
+                async_get_clientsession(hass),
+            )
+        except BaseZwaveJSServerError as err:
+            raise web_exceptions.HTTPBadRequest from err
 
         return self.json(None)
