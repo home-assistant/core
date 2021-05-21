@@ -39,7 +39,6 @@ from homeassistant.const import (
     CONF_HOSTS,
     CONF_MAC,
     CONF_NAME,
-    CONF_SWITCHES,
     CONF_LIGHTS,
     CONF_TIMEOUT,
     CONF_TYPE,
@@ -59,39 +58,6 @@ from .helpers import data_packet, import_device, mac_address
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SLOTS = "slots"
-
-# SWITCH_SCHEMA = vol.Schema(
-#     {
-#         vol.Required(CONF_NAME): cv.string,
-#         vol.Optional(CONF_COMMAND_OFF): data_packet,
-#         vol.Optional(CONF_COMMAND_ON): data_packet,
-#     }
-# )
-
-# OLD_SWITCH_SCHEMA = vol.Schema(
-#     {
-#         vol.Optional(CONF_COMMAND_OFF): data_packet,
-#         vol.Optional(CONF_COMMAND_ON): data_packet,
-#         vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-#     }
-# )
-
-# PLATFORM_SCHEMA = vol.All(
-#     cv.deprecated(CONF_HOST),
-#     cv.deprecated(CONF_SLOTS),
-#     cv.deprecated(CONF_TIMEOUT),
-#     cv.deprecated(CONF_TYPE),
-#     PLATFORM_SCHEMA.extend(
-#         {
-#             vol.Required(CONF_MAC): mac_address,
-#             vol.Optional(CONF_HOST): cv.string,
-#             vol.Optional(CONF_SWITCHES, default=[]): vol.Any(
-#                 cv.schema_with_slug_keys(OLD_SWITCH_SCHEMA),
-#                 vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
-#             ),
-#         }
-#     ),
-# )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string])}
@@ -129,9 +95,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     else:
         _LOGGER.warning(
-            "The switch platform is deprecated, except for custom IR/RF "
-            "switches. Please refer to the Broadlink documentation to "
-            "catch up"
+            "Your configuration for the light platform is deprecated. "
+            "Please refer to the Broadlink documentation to catch up"
         )
 
     if host:
@@ -142,20 +107,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Broadlink light."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
 
-    # if device.api.type == "LB1":
-    #     platform_data = hass.data[DOMAIN].platforms.get(SWITCH_DOMAIN, {})
-    #     user_defined_lights = platform_data.get(device.api.mac, {})
-    #     switches = [
-    #         BroadlinkRMSwitch(device, config) for config in user_defined_switches
-    #     ]
-
     if device.api.type == "LB1":
         lights = [BroadlinkLB1Light(device)]
 
     async_add_entities(lights)
 
 
-class BroadlinkLight(LightEntity):#, ToggleEntity, ABC):
+class BroadlinkLight(LightEntity):
     """Representation of a Broadlink light."""
 
     def __init__(self, device):
@@ -178,17 +136,17 @@ class BroadlinkLight(LightEntity):#, ToggleEntity, ABC):
 
     @property
     def assumed_state(self):
-        """Return True if unable to access real state of the switch."""
+        """Return True if unable to access real state of the light."""
         return True
 
     @property
     def available(self):
-        """Return True if the switch is available."""
+        """Return True if the light is available."""
         return self._device.update_manager.available
 
     @property
     def is_on(self):
-        """Return True if the switch is on."""
+        """Return True if the light is on."""
         return self._state
 
     @property
@@ -207,7 +165,7 @@ class BroadlinkLight(LightEntity):#, ToggleEntity, ABC):
 
     @property
     def should_poll(self):
-        """Return True if the switch has to be polled for state."""
+        """Return True if the light has to be polled for state."""
         return False
 
     @property
@@ -247,7 +205,6 @@ class BroadlinkLight(LightEntity):#, ToggleEntity, ABC):
         """Call when the light is added to hass."""
         if self._state is None:
             data = await self._device.async_request(self._device.api.get_state)
-            _LOGGER.info(f"add to hass with data {data}")
             self._state = data['pwr']
             self._brightness = round(data['brightness']*2.55)
             self._hs_color = [data['hue'], data['saturation']]
@@ -256,17 +213,11 @@ class BroadlinkLight(LightEntity):#, ToggleEntity, ABC):
         self.async_on_remove(self._coordinator.async_add_listener(self.update_data))
 
     async def async_update(self):
-        """Update the switch."""
+        """Update the light."""
         await self._coordinator.async_request_refresh()
 
-    async def async_toggle(self, **kwargs):
-        _LOGGER.info(f"light async toggle with state {self._state}")
-        if await self._async_send_packet("pwr", 0 if self._state else 1):
-            self._state = not self._state
-            self.async_write_ha_state()
-
     async def async_turn_on(self, **kwargs):
-        """Turn on the switch."""
+        """Turn on the light."""
         hs_color = [int(i) for i in kwargs.get(ATTR_HS_COLOR, self._hs_color)]
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._brightness)
         colortemp = kwargs.get(ATTR_COLOR_TEMP, self._colortemp)
@@ -286,8 +237,6 @@ class BroadlinkLight(LightEntity):#, ToggleEntity, ABC):
             "pwr": 1
         }
 
-        _LOGGER.info(f"light async turn on with hs_color {hs_color} and brightness {brightness} set to mode {colormode} and temp {colortemp} and state {self._state} with kwargs {kwargs}")
-
         if await self._async_send_packet(data):
             self._hs_color = hs_color
             self._brightness = brightness
@@ -297,8 +246,7 @@ class BroadlinkLight(LightEntity):#, ToggleEntity, ABC):
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
-        """Turn off the switch."""
-        _LOGGER.info(f"light async turn off with state {self._state}")
+        """Turn off the light."""
         if await self._async_send_packet({"pwr":0}):
             self._state = False
             self.async_write_ha_state()
@@ -309,26 +257,25 @@ class BroadlinkLight(LightEntity):#, ToggleEntity, ABC):
 
 
 class BroadlinkLB1Light(BroadlinkLight):
-    """Representation of a Broadlink RM switch."""
+    """Representation of a Broadlink LB1 light."""
 
     def __init__(self, device):
-        """Initialize the switch."""
+        """Initialize the light."""
         super().__init__(device)
         self._name = f"{device.name} Light"
 
     @property
     def unique_id(self):
-        """Return the unique id of the switch."""
+        """Return the unique id of the light."""
         return self._device.unique_id
 
     @property
     def name(self):
-        """Return the name of the switch."""
+        """Return the name of the light."""
         return self._name
 
     async def _async_send_packet(self, request):
         """Send a packet to the device."""
-        _LOGGER.info(f"async send packet with packet {request}")
         if request is None:
             return True
 
