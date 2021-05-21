@@ -3,11 +3,7 @@ from contextlib import contextmanager
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    DOMAIN as SENSOR_DOMAIN,
-    STATE_CLASS_MEASUREMENT,
-)
+from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
 from homeassistant.components.utility_meter.const import (
     ATTR_TARIFF,
     ATTR_VALUE,
@@ -27,7 +23,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
-    VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
@@ -58,7 +53,6 @@ async def test_state(hass):
     }
 
     assert await async_setup_component(hass, DOMAIN, config)
-    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -179,7 +173,6 @@ async def test_device_class(hass):
     }
 
     assert await async_setup_component(hass, DOMAIN, config)
-    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -189,7 +182,7 @@ async def test_device_class(hass):
     )
     entity_id_gas = config[DOMAIN]["gas_meter"]["source"]
     hass.states.async_set(
-        entity_id_gas, 2, {ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS}
+        entity_id_gas, 2, {ATTR_UNIT_OF_MEASUREMENT: "some_archaic_unit"}
     )
     await hass.async_block_till_done()
 
@@ -211,7 +204,7 @@ async def test_device_class(hass):
         entity_id_energy, 3, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
     )
     hass.states.async_set(
-        entity_id_gas, 3, {ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS}
+        entity_id_gas, 3, {ATTR_UNIT_OF_MEASUREMENT: "some_archaic_unit"}
     )
     await hass.async_block_till_done()
 
@@ -227,7 +220,7 @@ async def test_device_class(hass):
     assert state.state == "1"
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "some_archaic_unit"
 
 
 async def test_restore_state(hass):
@@ -264,7 +257,6 @@ async def test_restore_state(hass):
     )
 
     assert await async_setup_component(hass, DOMAIN, config)
-    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     # restore from cache
@@ -301,7 +293,6 @@ async def test_net_consumption(hass):
     }
 
     assert await async_setup_component(hass, DOMAIN, config)
-    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -336,7 +327,6 @@ async def test_non_net_consumption(hass):
     }
 
     assert await async_setup_component(hass, DOMAIN, config)
-    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -381,7 +371,6 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
     now = dt_util.parse_datetime(start_time)
     with alter_time(now):
         assert await async_setup_component(hass, DOMAIN, config)
-        assert await async_setup_component(hass, SENSOR_DOMAIN, config)
         await hass.async_block_till_done()
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
