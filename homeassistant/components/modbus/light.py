@@ -8,7 +8,6 @@ from homeassistant.const import (
     CONF_ADDRESS,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
-    CONF_DEVICE_CLASS,
     CONF_LIGHTS,
     CONF_NAME,
     STATE_ON,
@@ -54,7 +53,6 @@ class ModbusLight(BasePlatform, LightEntity, RestoreEntity):
     def __init__(self, hub: ModbusHub, config: dict) -> None:
         """Initialize the light."""
         config[CONF_INPUT_TYPE] = ""
-        config[CONF_DEVICE_CLASS] = ""
         super().__init__(hub, config)
         self._is_on = None
         if config[CONF_WRITE_TYPE] == CALL_TYPE_COIL:
@@ -91,7 +89,7 @@ class ModbusLight(BasePlatform, LightEntity, RestoreEntity):
         return self._is_on
 
     async def async_turn_on(self, **kwargs):
-        """Set switch on."""
+        """Set light on."""
 
         result = await self._hub.async_pymodbus_call(
             self._slave, self._address, self._command_on, self._write_type
@@ -108,7 +106,7 @@ class ModbusLight(BasePlatform, LightEntity, RestoreEntity):
                 self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
-        """Set switch off."""
+        """Set light off."""
         result = await self._hub.async_pymodbus_call(
             self._slave, self._address, self._command_off, self._write_type
         )
