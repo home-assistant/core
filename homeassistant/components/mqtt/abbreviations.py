@@ -160,6 +160,7 @@ ABBREVIATIONS = {
     "spd_val_tpl": "speed_value_template",
     "spds": "speeds",
     "src_type": "source_type",
+    "stat_cla": "state_class",
     "stat_clsd": "state_closed",
     "stat_closing": "state_closing",
     "stat_off": "state_off",
