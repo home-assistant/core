@@ -27,6 +27,7 @@ from .const import (
     ATTR_PROPERTIES,
     CONF_MANUFACTURER,
     CONF_MODEL,
+    DEFAULT_MANUFACTURER,
     DOMAIN,
     LEGACY_PORT,
     LOGGER,
@@ -86,7 +87,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data = {
             CONF_HOST: self._host,
             CONF_MAC: self._mac,
-            CONF_MANUFACTURER: self._manufacturer,
+            CONF_MANUFACTURER: self._manufacturer or DEFAULT_MANUFACTURER,
             CONF_METHOD: self._bridge.method,
             CONF_MODEL: self._model,
             CONF_NAME: self._name,
@@ -131,7 +132,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if device_type != "Samsung SmartTV":
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
         self._model = dev_info.get("modelName")
-        self._manufacturer = "Samsung"
         name = dev_info.get("name")
         self._name = name.replace("[TV] ", "") if name else device_type
         self._title = f"{self._name} ({self._model})"

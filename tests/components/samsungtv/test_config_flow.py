@@ -10,6 +10,7 @@ from homeassistant.components.samsungtv.const import (
     ATTR_PROPERTIES,
     CONF_MANUFACTURER,
     CONF_MODEL,
+    DEFAULT_MANUFACTURER,
     DOMAIN,
     RESULT_AUTH_MISSING,
     RESULT_CANNOT_CONNECT,
@@ -134,7 +135,7 @@ async def test_user_legacy(hass: HomeAssistant, remote: Mock):
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "fake_name"
     assert result["data"][CONF_METHOD] == "legacy"
-    assert result["data"][CONF_MANUFACTURER] is None
+    assert result["data"][CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
     assert result["data"][CONF_MODEL] is None
     assert result["result"].unique_id is None
 
@@ -449,7 +450,7 @@ async def test_ssdp_already_configured(hass: HomeAssistant, remote: Mock):
     )
     assert result["type"] == "create_entry"
     entry = result["result"]
-    assert entry.data[CONF_MANUFACTURER] is None
+    assert entry.data[CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
     assert entry.data[CONF_MODEL] is None
     assert entry.unique_id is None
 
