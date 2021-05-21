@@ -190,11 +190,6 @@ class KNXClimate(KnxEntity, ClimateEntity):
             await self._device.mode.sync()
 
     @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
-
-    @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._device.temperature.value

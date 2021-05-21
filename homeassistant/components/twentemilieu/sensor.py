@@ -98,11 +98,6 @@ class TwenteMilieuSensor(SensorEntity):
         return self._name
 
     @property
-    def icon(self) -> str:
-        """Return the mdi icon of the entity."""
-        return self._icon
-
-    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
