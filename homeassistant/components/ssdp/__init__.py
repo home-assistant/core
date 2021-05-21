@@ -136,7 +136,7 @@ class Scanner:
         self.seen = set()
         self._integration_matchers = integration_matchers
         self._description_cache = {}
-        self._ssdp_listeners = None
+        self._ssdp_listeners = []
 
     async def _async_on_ssdp_response(self, data: Mapping[str, Any]) -> None:
         """Process an ssdp response."""
@@ -153,7 +153,7 @@ class Scanner:
         """Stop the scanner."""
         for listener in self._ssdp_listeners:
             listener.async_stop()
-        self._ssdp_listeners = None
+        self._ssdp_listeners = []
 
     async def _async_build_source_set(self):
         """Build the list of ssdp sources."""
