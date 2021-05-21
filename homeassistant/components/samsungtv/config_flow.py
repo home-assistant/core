@@ -251,19 +251,18 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        self._host = self._reauth_entry.data[CONF_HOST]
-        data = self._reauth_entry
+        data = self._reauth_entry.data
         if data.get(CONF_MODEL) and data.get(CONF_NAME):
             self._title = f"{data[CONF_NAME]} ({data[CONF_MODEL]})"
         else:
-            self._title = data.get(CONF_NAME) or self._host
+            self._title = data.get(CONF_NAME) or data[CONF_HOST]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input=None):
         """Confirm reauth."""
         if user_input is not None:
             bridge = SamsungTVBridge.get_bridge(
-                self._reauth_entry.data[CONF_METHOD], self._host
+                self._reauth_entry.data[CONF_METHOD], self._reauth_entry.data[CONF_HOST]
             )
             result = bridge.try_connect()
             if result == RESULT_SUCCESS:
