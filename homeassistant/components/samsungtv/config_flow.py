@@ -158,20 +158,31 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
-        return await self.async_step_user(user_input)
+        await self._async_set_name_host_from_input(user_input)
+        self._async_abort_entries_match({CONF_HOST: self._host})
+        if user_input.get(CONF_PORT) in WEBSOCKET_PORTS:
+            user_input[CONF_METHOD] = METHOD_WEBSOCKET
+        else:
+            user_input[CONF_METHOD] = METHOD_LEGACY
+        return self.async_create_entry(
+            title=self._title,
+            data=user_input,
+        )
+
+    async def _async_set_name_host_from_input(self, user_input):
+        try:
+            self._host = await self.hass.async_add_executor_job(
+                socket.gethostbyname, user_input[CONF_HOST]
+            )
+        except socket.gaierror as err:
+            raise data_entry_flow.AbortFlow(RESULT_UNKNOWN_HOST) from err
+        self._name = user_input[CONF_NAME]
+        self._title = self._name
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if user_input is not None:
-            try:
-                self._host = await self.hass.async_add_executor_job(
-                    socket.gethostbyname, user_input[CONF_HOST]
-                )
-            except socket.gaierror as err:
-                raise data_entry_flow.AbortFlow(RESULT_UNKNOWN_HOST) from err
-            self._name = user_input[CONF_NAME]
-            self._title = self._name
-
+            await self._async_set_name_host_from_input()
             await self.hass.async_add_executor_job(self._try_connect)
 
             if self._bridge.method == METHOD_LEGACY:

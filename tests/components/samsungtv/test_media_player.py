@@ -80,8 +80,8 @@ MOCK_CONFIGWS = {
 MOCK_CALLS_WS = {
     "host": "fake_host",
     "port": 8001,
-    "token": None,
-    "timeout": 31,
+    "token": "123456789",
+    "timeout": 5,
     "name": "HomeAssistant",
 }
 
