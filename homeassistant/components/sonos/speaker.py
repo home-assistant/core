@@ -67,7 +67,7 @@ UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 _LOGGER = logging.getLogger(__name__)
 
 
-def fetch_alarms_for_speaker(soco: SoCo) -> set[Alarm] | None:
+def fetch_alarms_for_speaker(soco: SoCo) -> tuple[set[Alarm], set[int]]:
     """Update current alarm instances.
 
     Returns a set of alarm instances that belong to a speaker and the list of all alarm ids
