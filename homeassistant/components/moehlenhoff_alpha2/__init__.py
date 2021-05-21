@@ -1,8 +1,9 @@
 """Support for the Moehlenhoff Alpha2."""
 import asyncio
 import logging
-import time
 from datetime import timedelta
+
+import aiohttp
 
 from moehlenhoff_alpha2 import Alpha2Base
 
@@ -34,7 +35,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     base = Alpha2Base(entry.data["host"])
     try:
         await base.update_data()
-    except TimeoutError as err:
+    except (
+        aiohttp.client_exceptions.ClientConnectorError,
+        asyncio.TimeoutError,
+    ) as err:
         raise exceptions.ConfigEntryNotReady from err
 
     base_uh = Alpha2BaseUpdateHandler(base, 60)
