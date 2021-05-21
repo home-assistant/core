@@ -83,7 +83,16 @@ def alarmClock_fixture():
     """Create music_library fixture."""
     alarmClock = Mock()
     alarmClock.ListAlarms.return_value = {
-        "CurrentAlarmList": '<Alarms><Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" Enabled="1" RoomUUID="RINCON_000ZZZZZZ1400" ProgramURI="x-rincon-buzzer:0" ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" IncludeLinkedZones="0"/><Alarm ID="15" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" Enabled="1" RoomUUID="RINCON_000ZZZZZZ01400" ProgramURI="x-rincon-buzzer:0" ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" IncludeLinkedZones="0"/></Alarms>'
+        "CurrentAlarmList": "<Alarms>"
+        '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
+        'Enabled="1" RoomUUID="RINCON_test" ProgramURI="x-rincon-buzzer:0" '
+        'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
+        'IncludeLinkedZones="0"/>'
+        '<Alarm ID="15" StartTime="07:00:00" Duration="02:00:00" '
+        'Recurrence="DAILY" Enabled="1" RoomUUID="RINCON_test" '
+        'ProgramURI="x-rincon-buzzer:0" ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" '
+        'Volume="25" IncludeLinkedZones="0"/>'
+        "</Alarms> "
     }
     return alarmClock
 
