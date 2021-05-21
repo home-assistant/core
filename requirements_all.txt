@@ -623,7 +623,7 @@ fritzconnection==1.4.0
 gTTS==2.2.2
 
 # homeassistant.components.garmin_connect
-garminconnect==0.1.22
+garminconnect_ha==0.1.3
 
 # homeassistant.components.geizhals
 geizhals==0.0.9

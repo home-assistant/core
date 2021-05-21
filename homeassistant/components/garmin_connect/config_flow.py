@@ -1,7 +1,7 @@
 """Config flow for Garmin Connect integration."""
 import logging
 
-from garminconnect import (
+from garminconnect_ha import (
     Garmin,
     GarminConnectAuthenticationError,
     GarminConnectConnectionError,
@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +21,6 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Garmin Connect."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def _show_setup_form(self, errors=None):
         """Show the setup form to the user."""
@@ -42,7 +41,7 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         try:
-            await self.hass.async_add_executor_job(garmin_client.login)
+            unique_id = await self.hass.async_add_executor_job(garmin_client.login)
         except GarminConnectConnectionError:
             errors["base"] = "cannot_connect"
             return await self._show_setup_form(errors)
@@ -56,8 +55,6 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
             return await self._show_setup_form(errors)
-
-        unique_id = garmin_client.get_full_name()
 
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()

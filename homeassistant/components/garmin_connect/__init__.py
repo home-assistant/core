@@ -1,9 +1,8 @@
 """The Garmin Connect integration."""
-import asyncio
 from datetime import date, timedelta
 import logging
 
-from garminconnect import (
+from garminconnect_ha import (
     Garmin,
     GarminConnectAuthenticationError,
     GarminConnectConnectionError,
@@ -21,13 +20,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
-MIN_SCAN_INTERVAL = timedelta(minutes=5)
-
-
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Garmin Connect component."""
-    hass.data[DOMAIN] = {}
-    return True
+MIN_SCAN_INTERVAL = timedelta(minutes=10)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -55,29 +48,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return False
 
     garmin_data = GarminConnectData(hass, garmin_client)
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = garmin_data
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok
 
 
@@ -108,7 +91,7 @@ class GarminConnectData:
 
         try:
             self.data = await self.hass.async_add_executor_job(
-                self.client.get_stats_and_body, today.isoformat()
+                self.client.get_user_data, today.isoformat()
             )
             self.data["nextAlarm"] = await self._get_combined_alarms_of_all_devices()
         except (
