@@ -1,9 +1,0 @@
-{
-    "state": {
-        "accuweather__pressure_tendency": {
-            "falling": "spada",
-            "rising": "ro\u015bnie",
-            "steady": "bez zmian"
-        }
-    }
-}

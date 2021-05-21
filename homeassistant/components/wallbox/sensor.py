@@ -12,7 +12,6 @@ from homeassistant.helpers.update_coordinator import (
 from .const import CONF_CONNECTIONS, DOMAIN, SENSOR_TYPES
 
 CONF_STATION = "station"
-UPDATE_INTERVAL = 30
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,12 +19,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def wallbox_updater(wallbox, hass):
     """Get new sensor data for Wallbox component."""
-    data = await wallbox.async_get_data(hass)
+    data = await hass.async_add_executor_job(wallbox.get_data)
 
     filtered_data = {k: data[k] for k in SENSOR_TYPES if k in data}
 
     for key, value in filtered_data.items():
-        sensor_round = SENSOR_TYPES[key]["ST_ROUND"]
+        sensor_round = SENSOR_TYPES[key]["ATTR_ROUND"]
         if sensor_round:
             try:
                 filtered_data[key] = round(value, sensor_round)
@@ -49,7 +48,7 @@ async def async_setup_entry(hass, config, async_add_entities):
         name="wallbox",
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=UPDATE_INTERVAL),
+        update_interval=timedelta(seconds=30),
     )
 
     await coordinator.async_refresh()
@@ -67,9 +66,9 @@ class WallboxSensor(CoordinatorEntity, Entity):
         """Initialize a Wallbox sensor."""
         super().__init__(coordinator)
         self._properties = SENSOR_TYPES[ent]
-        self._name = f"{config.title} {self._properties['ST_LABEL']}"
-        self._icon = self._properties["ST_ICON"]
-        self._unit = self._properties["ST_UNIT"]
+        self._name = f"{config.title} {self._properties['ATTR_LABEL']}"
+        self._icon = self._properties["ATTR_ICON"]
+        self._unit = self._properties["ATTR_UNIT"]
         self._ent = ent
 
     @property

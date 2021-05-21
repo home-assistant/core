@@ -26,25 +26,23 @@ class WallboxHub:
         self._username = username
         self._password = password
 
-    async def async_authenticate(self, hass) -> bool:
+    def authenticate(self) -> bool:
         """Authenticate using Wallbox API."""
         try:
             wallbox = Wallbox(self._username, self._password)
-            await hass.async_add_executor_job(wallbox.authenticate)
+            wallbox.authenticate()
             return True
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
                 raise InvalidAuth from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
 
-    async def async_get_data(self, hass) -> bool:
+    def get_data(self) -> bool:
         """Get new sensor data for Wallbox component."""
         try:
             wallbox = Wallbox(self._username, self._password)
-            await hass.async_add_executor_job(wallbox.authenticate)
-            data = await hass.async_add_executor_job(
-                wallbox.getChargerStatus, self._station
-            )
+            wallbox.authenticate()
+            data = wallbox.getChargerStatus(self._station)
             return data
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
@@ -65,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.data[CONF_PASSWORD],
     )
 
-    await wallbox.async_authenticate(hass)
+    await hass.async_add_executor_job(wallbox.authenticate)
 
     hass.data.setdefault(DOMAIN, {CONF_CONNECTIONS: {}})
     hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id] = wallbox

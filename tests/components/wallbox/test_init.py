@@ -43,6 +43,7 @@ async def test_wallbox_setup_entry(hass: HomeAssistantType):
 async def test_wallbox_unload_entry(hass: HomeAssistantType):
     """Test Wallbox Unload."""
     hass.data[DOMAIN] = {"connections": {entry.entry_id: entry}}
+    print(hass.data)
 
     assert await wallbox.async_unload_entry(hass, entry)
 
@@ -58,7 +59,7 @@ async def test_wallbox_setup(hass: HomeAssistantType):
     assert await wallbox.async_setup(hass, entry)
 
 
-async def test_hub_class(hass: HomeAssistantType):
+def test_hub_class():
     """Test hub class."""
 
     station = ("12345",)
@@ -78,18 +79,18 @@ async def test_hub_class(hass: HomeAssistantType):
             text='{"Temperature": 100, "Location": "Toronto", "Datetime": "2020-07-23", "Units": "Celsius"}',
             status_code=200,
         )
-        assert await hub.async_authenticate(hass)
-        assert await hub.async_get_data(hass)
+        assert hub.authenticate()
+        assert hub.get_data()
 
     with requests_mock.Mocker() as m, raises(wallbox.InvalidAuth):
         m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=403)
 
-        assert await hub.async_authenticate(hass)
+        assert hub.authenticate()
 
     with requests_mock.Mocker() as m, raises(ConnectionError):
         m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=404)
 
-        assert await hub.async_authenticate(hass)
+        assert hub.authenticate()
 
     with requests_mock.Mocker() as m, raises(wallbox.InvalidAuth):
         m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=403)
@@ -98,7 +99,7 @@ async def test_hub_class(hass: HomeAssistantType):
             text="data",
             status_code=403,
         )
-        assert await hub.async_get_data(hass)
+        assert hub.get_data()
 
     with requests_mock.Mocker() as m, raises(ConnectionError):
         m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=404)
@@ -107,4 +108,4 @@ async def test_hub_class(hass: HomeAssistantType):
             text="data",
             status_code=404,
         )
-        assert await hub.async_get_data(hass)
+        assert hub.get_data()
