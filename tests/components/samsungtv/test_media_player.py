@@ -62,28 +62,22 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake"
 MOCK_CONFIG = {
-    SAMSUNGTV_DOMAIN: [
-        {
-            CONF_HOST: "fake",
-            CONF_NAME: "fake",
-            CONF_PORT: 55000,
-            CONF_ON_ACTION: [{"delay": "00:00:01"}],
-            CONF_METHOD: METHOD_WEBSOCKET,
-        }
-    ]
+    CONF_HOST: "fake",
+    CONF_NAME: "fake",
+    CONF_PORT: 55000,
+    CONF_ON_ACTION: [{"delay": "00:00:01"}],
+    CONF_METHOD: METHOD_WEBSOCKET,
 }
+
 MOCK_CONFIGWS = {
-    SAMSUNGTV_DOMAIN: [
-        {
-            CONF_HOST: "fake",
-            CONF_NAME: "fake",
-            CONF_PORT: 8001,
-            CONF_TOKEN: "123456789",
-            CONF_ON_ACTION: [{"delay": "00:00:01"}],
-            CONF_METHOD: METHOD_WEBSOCKET,
-        }
-    ]
+    CONF_HOST: "fake",
+    CONF_NAME: "fake",
+    CONF_PORT: 8001,
+    CONF_TOKEN: "123456789",
+    CONF_ON_ACTION: [{"delay": "00:00:01"}],
+    CONF_METHOD: METHOD_WEBSOCKET,
 }
+
 MOCK_CALLS_WS = {
     "host": "fake",
     "port": 8002,

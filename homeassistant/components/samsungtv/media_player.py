@@ -77,13 +77,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Samsung TV from a config entry."""
     host = config_entry.data[CONF_HOST]
     on_script = None
-    if (
-        DOMAIN in hass.data
-        and host in hass.data[DOMAIN]
-        and CONF_ON_ACTION in hass.data[DOMAIN][host]
-        and hass.data[DOMAIN][host][CONF_ON_ACTION]
-    ):
-        turn_on_action = hass.data[DOMAIN][host][CONF_ON_ACTION]
+    data = hass.data[DOMAIN]
+    if turn_on_action := data.get(host, {}).get(CONF_ON_ACTION):
         on_script = Script(
             hass, turn_on_action, config_entry.data.get(CONF_NAME, DEFAULT_NAME), DOMAIN
         )

@@ -19,8 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import setup_samsungtv
-
 ENTITY_ID = f"{DOMAIN}.fake_name"
 MOCK_CONFIG = {
     SAMSUNGTV_DOMAIN: [
@@ -39,16 +37,19 @@ REMOTE_CALL = {
     "host": MOCK_CONFIG[SAMSUNGTV_DOMAIN][0][CONF_HOST],
     "method": "legacy",
     "port": None,
-    "timeout": 1,
+    "timeout": 31,
 }
 
 
 async def test_setup(hass: HomeAssistant, remote: Mock):
     """Test Samsung TV integration is setup."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
-        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname"
+        "homeassistant.components.samsungtv.config_flow.socket.gethostbyname",
+        return_value="fake_host",
     ):
-        await setup_samsungtv(hass, MOCK_CONFIG)
+        with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
+            await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
+            await hass.async_block_till_done()
         state = hass.states.get(ENTITY_ID)
 
         # test name and turn_on
