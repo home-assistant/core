@@ -68,10 +68,7 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass, config_entry):
@@ -90,6 +87,6 @@ async def async_migrate_entry(hass, config_entry):
 
         version = config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry)
-    LOGGER.info("Migration to version %s successful", version)
+    LOGGER.debug("Migration to version %s successful", version)
 
     return True
