@@ -2,18 +2,22 @@
 import asyncio
 import logging
 import time
+from datetime import timedelta
 
 from moehlenhoff_alpha2 import Alpha2Base
 
 from homeassistant import exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["climate"]
+
+UPDATE_INTERVAL = timedelta(seconds=60)
 
 
 class CannotConnect(exceptions.HomeAssistantError):
@@ -38,6 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = {"connection": base_uh, "devices": set()}
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    await base_uh.async_init()
 
     return True
 
@@ -64,9 +70,18 @@ class Alpha2BaseUpdateHandler:
         """Initialize the base handle."""
         self.base = base
         self.scan_interval = scan_interval
-        self._last_update = 0
         self._heatarea_update_callbacks = {}
         self._loop = asyncio.get_event_loop()
+
+    async def async_init(self):
+        """Schedule initial and updates at regular intervals."""
+
+        async def update(event_time):
+            """Update."""
+            await self.async_update()
+
+        # Trigger updates at regular intervals.
+        async_track_time_interval(update, UPDATE_INTERVAL)
 
     def add_heatarea_update_callback(self, callback, heatarea_nr):
         """Add a callback which will be run when data of the given heatarea is updated."""
@@ -76,22 +91,15 @@ class Alpha2BaseUpdateHandler:
 
     async def async_update(self):
         """Pull the latest data from the Alpha2 base."""
-        # Only update every update_interval
-        if (time.monotonic() - self._last_update) >= self.scan_interval:
-            self._last_update = time.monotonic()
-            _LOGGER.debug("Updating")
-            await self.base.update_data()
-            for heatarea in self.base.heatareas:
-                _LOGGER.debug("Heatarea: %s", heatarea)
-                for callback in self._heatarea_update_callbacks.get(heatarea["NR"], []):
-                    try:
-                        callback(heatarea)
-                    except Exception as cb_err:  # pylint: disable=broad-except
-                        _LOGGER.error(
-                            "Failed to run callback '%s': %s", callback, cb_err
-                        )
-        else:
-            _LOGGER.debug("Skipping update")
+        _LOGGER.debug("Updating")
+        await self.base.update_data()
+        for heatarea in self.base.heatareas:
+            _LOGGER.debug("Heatarea: %s", heatarea)
+            for callback in self._heatarea_update_callbacks.get(heatarea["NR"], []):
+                try:
+                    callback(heatarea)
+                except Exception as cb_err:  # pylint: disable=broad-except
+                    _LOGGER.error("Failed to run callback '%s': %s", callback, cb_err)
 
     def update(self):
         """Pull the latest data from the Alpha2 base (sync version)."""
