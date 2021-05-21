@@ -7,6 +7,7 @@ DOMAIN = "samsungtv"
 ATTR_PROPERTIES = "properties"
 
 DEFAULT_NAME = "Samsung TV"
+DEFAULT_MANUFACTURER = "Samsung"
 
 VALUE_CONF_NAME = "HomeAssistant"
 VALUE_CONF_ID = "ha.component.samsung"
