@@ -178,9 +178,8 @@ class Scanner:
     async def async_scan(self, *_):
         """Scan for new entries."""
         if self._ssdp_listeners:
-            await asyncio.gather(
-                *[listener.async_search() for listener in self._ssdp_listeners]
-            )
+            for listener in self._ssdp_listeners:
+                listener.async_search()
             return
 
         for source_ip in await self._async_build_source_set():
