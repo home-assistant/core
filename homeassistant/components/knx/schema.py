@@ -12,6 +12,7 @@ from xknx.telegram.address import IndividualAddress, parse_device_group_address
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BINARY_SENSOR_DEVICE_CLASSES,
 )
+from homeassistant.components.cover import DEVICE_CLASSES as COVER_DEVICE_CLASSES
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
@@ -283,7 +284,7 @@ class CoverSchema:
                 ): cv.positive_float,
                 vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
                 vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
-                vol.Optional(CONF_DEVICE_CLASS): cv.string,
+                vol.Optional(CONF_DEVICE_CLASS): vol.In(COVER_DEVICE_CLASSES),
             }
         ),
     )
