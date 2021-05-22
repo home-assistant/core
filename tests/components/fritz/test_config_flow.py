@@ -450,7 +450,4 @@ async def test_options_flow(hass: HomeAssistant, fc_class_mock):
             },
         )
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert (
-            mock_config.options[CONF_CONSIDER_HOME]
-            == DEFAULT_CONSIDER_HOME.total_seconds()
-        )
+        assert mock_config.options[CONF_CONSIDER_HOME] == 37
