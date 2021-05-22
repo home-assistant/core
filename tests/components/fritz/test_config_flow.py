@@ -446,7 +446,7 @@ async def test_options_flow(hass: HomeAssistant, fc_class_mock):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
-                CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME.total_seconds(),
+                CONF_CONSIDER_HOME: 37,
             },
         )
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
