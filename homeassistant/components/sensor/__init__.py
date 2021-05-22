@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 import logging
-from typing import Any, cast, final
+from typing import Any, Final, cast, final
 
 import voluptuous as vol
 
@@ -34,17 +34,17 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
-ATTR_LAST_RESET = "last_reset"
-ATTR_STATE_CLASS = "state_class"
+ATTR_LAST_RESET: Final = "last_reset"
+ATTR_STATE_CLASS: Final = "state_class"
 
-DOMAIN = "sensor"
+DOMAIN: Final = "sensor"
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
+ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
-SCAN_INTERVAL = timedelta(seconds=30)
-DEVICE_CLASSES = [
+SCAN_INTERVAL: Final = timedelta(seconds=30)
+DEVICE_CLASSES: Final[list[str]] = [
     DEVICE_CLASS_BATTERY,  # % of battery that is left
     DEVICE_CLASS_CO,  # ppm (parts per million) Carbon Monoxide gas concentration
     DEVICE_CLASS_CO2,  # ppm (parts per million) Carbon Dioxide gas concentration
@@ -61,14 +61,14 @@ DEVICE_CLASSES = [
     DEVICE_CLASS_VOLTAGE,  # voltage (V)
 ]
 
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
+DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 # The state represents a measurement in present time
-STATE_CLASS_MEASUREMENT = "measurement"
+STATE_CLASS_MEASUREMENT: Final = "measurement"
 
-STATE_CLASSES = [STATE_CLASS_MEASUREMENT]
+STATE_CLASSES: Final[list[str]] = [STATE_CLASS_MEASUREMENT]
 
-STATE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(STATE_CLASSES))
+STATE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.In(STATE_CLASSES))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
